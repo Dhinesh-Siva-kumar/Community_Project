@@ -1,0 +1,400 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="page-loading">
+    <div class="page-loading-inner">
+      <div class="page-loading-spinner">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <p class="page-loading-text">Loading communities...</p>
+    </div>
+  </div>
+} @else {
+
+  <!-- ── Page Header ──────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <div class="page-header-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div>
+        <h4 class="page-title">Communities</h4>
+        <p class="page-subtitle">Manage all communities on the platform</p>
+      </div>
+    </div>
+    <button class="page-cta-btn" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-2"></i>Create Community
+    </button>
+  </div>
+
+  <!-- ── Toolbar ───────────────────────────────────────────── -->
+  <div class="page-toolbar">
+    <div class="page-search-wrap">
+      <i class="bi bi-search page-search-icon"></i>
+      <input
+        type="text"
+        class="page-search-input"
+        placeholder="Search communities..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+    </div>
+    <span class="page-count-badge">
+      <i class="bi bi-grid-3x3-gap-fill me-1"></i>
+      {{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }}
+    </span>
+  </div>
+
+  <!-- ── Empty State ───────────────────────────────────────── -->
+  @if (filteredCommunities().length === 0) {
+    <div class="page-empty">
+      <div class="page-empty-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h5 class="page-empty-title">
+        {{ searchTerm() ? 'No results found' : 'No communities yet' }}
+      </h5>
+      <p class="page-empty-text">
+        @if (searchTerm()) {
+          No communities match "<strong>{{ searchTerm() }}</strong>". Try a different term.
+        } @else {
+          Get started by creating your first community.
+        }
+      </p>
+      @if (!searchTerm()) {
+        <button class="page-cta-btn" (click)="openCreateModal()">
+          <i class="bi bi-plus-lg me-2"></i>Create Community
+        </button>
+      }
+    </div>
+
+  } @else {
+
+    <!-- ── Cards Grid ───────────────────────────────────────── -->
+    <div class="row g-4 mb-2">
+      @for (community of filteredCommunities(); track community.id) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="community-card h-100">
+
+            <!-- Cover Image -->
+            <div class="cc-cover">
+              @if (community.image) {
+                <img [src]="community.image" [alt]="community.name" class="cc-cover-img" />
+              } @else {
+                <div class="cc-cover-placeholder">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+              }
+              <!-- Badges overlay -->
+              <div class="cc-badges">
+                <span class="cc-badge cc-badge-global">
+                  <i class="bi bi-globe2 me-1"></i>Community
+                </span>
+
+                <!-- Status Badge -->
+              <span class="status-badge badge" [class.bg-success]="community.isActive" [class.bg-secondary]="!community.isActive">
+                {{ community.isActive ? 'Active' : 'Inactive' }}
+              </span>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="cc-body">
+              <a [routerLink]="['/admin/community', community.id]" class="cc-name">
+                {{ community.name }}
+              </a>
+              <p class="cc-desc">{{ truncate(community.description, 110) }}</p>
+
+              <!-- Stats -->
+              <div class="cc-stats">
+                <span class="cc-stat">
+                  <i class="bi bi-people-fill cc-stat-icon cc-stat-members"></i>
+                  <span class="cc-stat-value">{{ community?._count?.members ?? 0 }}</span>
+                  <span class="cc-stat-label">members</span>
+                </span>
+                <span class="cc-stat-divider"></span>
+                <span class="cc-stat">
+                  <i class="bi bi-file-earmark-text-fill cc-stat-icon cc-stat-posts"></i>
+                  <span class="cc-stat-value">{{ community?._count?.posts ?? 0 }}</span>
+                  <span class="cc-stat-label">posts</span>
+                </span>
+              </div>
+
+              <!-- Meta -->
+              <div class="cc-meta">
+                @if (community.location) {
+                  <span class="cc-meta-item">
+                    <i class="bi bi-geo-alt-fill"></i>{{ community.location }}
+                  </span>
+                }
+                <span class="cc-meta-item">
+                  <i class="bi bi-calendar3"></i>{{ formatDate(community.createdAt) }}
+                </span>
+              </div>
+
+              <!-- Actions -->
+              <div class="cc-actions">
+                <a [routerLink]="['/admin/community', community.id]" class="cc-btn-view">
+                  <i class="bi bi-eye-fill me-1"></i>View
+                </a>
+                <button class="cc-btn-icon" title="Edit community" (click)="openEditModal(community)">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                @if (deleteConfirmId() === community.id) {
+                  <button class="cc-btn-icon cc-btn-confirm" title="Confirm delete" (click)="deleteCommunity(community.id)">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="cc-btn-icon" title="Cancel" (click)="cancelDelete()">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                } @else {
+                  <button class="cc-btn-icon cc-btn-danger" title="Delete community" (click)="confirmDelete(community.id)">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                }
+              </div>
+            </div>
+
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ── Pagination ────────────────────────────────────────── -->
+    @if (totalPages() > 1) {
+      <nav class="page-pagination">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <button class="page-link" (click)="goToPage(currentPage() - 1)">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          @for (page of getPages(); track page) {
+            <li class="page-item" [class.active]="page === currentPage()">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <button class="page-link" (click)="goToPage(currentPage() + 1)">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+
+  }
+}
+
+<!-- Create / Edit Modal Backdrop -->
+@if (showModal()) {
+  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+
+        <!-- Modal Header -->
+        <div class="cm-modal-header">
+          <div class="cm-modal-header-inner">
+            <div class="cm-modal-icon">
+              <i class="bi" [class.bi-people-fill]="!isEditing()" [class.bi-pencil-square]="isEditing()"></i>
+            </div>
+            <div>
+              <h5 class="cm-modal-title">{{ modalTitle() }}</h5>
+              <p class="cm-modal-subtitle">
+                {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
+              </p>
+            </div>
+          </div>
+          <button type="button" class="cm-close-btn" (click)="closeModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body px-4 py-0">
+          <form [formGroup]="communityForm" (ngSubmit)="submitForm()" class="cm-form">
+
+            <!-- ── SECTION 1: Basic Information ── -->
+            <div class="cm-section">
+              <div class="cm-section-header">
+                <span class="cm-section-badge">
+                  <i class="bi bi-info-circle-fill"></i>
+                </span>
+                <span class="cm-section-title">Basic Information</span>
+              </div>
+
+              <div class="cm-field-row">
+                <!-- Community Name -->
+                <div class="cm-field-group">
+                  <label class="cm-label">Community Name <span class="cm-required">*</span></label>
+                  <div class="cm-input-wrap">
+                    <i class="bi bi-people cm-input-icon"></i>
+                    <input
+                      type="text"
+                      formControlName="communityName"
+                      maxlength="150"
+                      placeholder="e.g. Developers India"
+                      class="cm-input"
+                      [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
+                    />
+                  </div>
+                  @if (f['communityName'].touched && f['communityName'].invalid) {
+                    <div class="cm-error-msg">
+                      <i class="bi bi-exclamation-circle me-1"></i>
+                      @if (f['communityName'].errors?.['required']) { Community Name is required. }
+                      @else if (f['communityName'].errors?.['minlength']) { Minimum 3 characters required. }
+                      @else if (f['communityName'].errors?.['maxlength']) { Maximum 150 characters allowed. }
+                    </div>
+                  }
+                </div>
+
+                <!-- Category -->
+                <div class="cm-field-group">
+                  <label class="cm-label">Category <span class="cm-required">*</span></label>
+                  <div class="cm-input-wrap">
+                    <i class="bi bi-bookmark-star cm-input-icon"></i>
+                    <select formControlName="interests" class="cm-input cm-select">
+                      <option value="" disabled selected>Select a category</option>
+                      <option *ngFor="let i of interests" [value]="i.interest_id">{{ i.interest_name }}</option>
+                    </select>
+                  </div>
+                  @if (f['interests'].touched && f['interests'].invalid) {
+                    <div class="cm-error-msg">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="cm-field-group">
+                <div class="cm-label-row">
+                  <label class="cm-label">Description</label>
+                  <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/500</span>
+                </div>
+                <div class="cm-input-wrap cm-textarea-wrap">
+                  <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+                  <textarea
+                    formControlName="description"
+                    rows="3"
+                    maxlength="500"
+                    placeholder="Tell people what this community is about..."
+                    class="cm-input cm-textarea"
+                    [class.cm-input-error]="f['description'].touched && f['description'].invalid"
+                  ></textarea>
+                </div>
+                @if (f['description'].touched && f['description'].errors?.['maxlength']) {
+                  <div class="cm-error-msg">
+                    <i class="bi bi-exclamation-circle me-1"></i>Maximum 500 characters allowed.
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- ── SECTION 2: Settings ── -->
+            <div class="cm-section">
+              <div class="cm-section-header">
+                <span class="cm-section-badge">
+                  <i class="bi bi-gear-fill"></i>
+                </span>
+                <span class="cm-section-title">Settings</span>
+              </div>
+
+              <div class="cm-field-row">
+                <!-- Country -->
+                <div class="cm-field-group">
+                  <label class="cm-label">Country</label>
+                  <div class="cm-input-wrap">
+                    <i class="bi bi-globe cm-input-icon"></i>
+                    <select formControlName="countryId" class="cm-input cm-select">
+                      <option value="">Select country</option>
+                      <option *ngFor="let c of countries" [value]="c.country_id">{{ c.country_name }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Visibility Toggles -->
+                <div class="cm-field-group">
+                  <label class="cm-label">Visibility Options</label>
+                  <div class="cm-toggle-group">
+                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isPrivate'].value">
+                      <input type="checkbox" formControlName="isPrivate" id="isPrivate" hidden />
+                      <i class="bi bi-lock-fill me-1"></i> Private
+                    </label>
+                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isGlobal'].value">
+                      <input type="checkbox" formControlName="isGlobal" id="isGlobal" hidden />
+                      <i class="bi bi-globe2 me-1"></i> Global
+                    </label>
+                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isDefault'].value">
+                      <input type="checkbox" formControlName="isDefault" id="isDefault" hidden />
+                      <i class="bi bi-star-fill me-1"></i> Default
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── SECTION 3: Media ── -->
+            <div class="cm-section cm-section-last">
+              <div class="cm-section-header">
+                <span class="cm-section-badge">
+                  <i class="bi bi-image-fill"></i>
+                </span>
+                <span class="cm-section-title">Community Image</span>
+              </div>
+
+              @if (imagePreview()) {
+                <div class="cm-image-preview">
+                  <img [src]="imagePreview()" alt="Preview" />
+                  <button type="button" class="cm-image-remove" (click)="removeImage()">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                  <div class="cm-image-overlay">
+                    <button type="button" class="cm-image-change-btn" (click)="imageInput.click()">
+                      <i class="bi bi-arrow-repeat me-1"></i>Change Image
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="cm-upload-zone" (click)="imageInput.click()">
+                  <div class="cm-upload-icon">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                  </div>
+                  <p class="cm-upload-title">Click to upload a cover image</p>
+                  <p class="cm-upload-hint">PNG, JPG, WEBP supported &middot; Max 5 MB</p>
+                </div>
+              }
+
+              <input #imageInput type="file" hidden accept="image/*" (change)="onImageSelect($event)" />
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="cm-modal-footer">
+          <button type="button" class="cm-btn-cancel" (click)="closeModal()">
+            <i class="bi bi-x me-1"></i>Cancel
+          </button>
+          <button
+            type="button"
+            class="cm-btn-submit"
+            [disabled]="submitting() || communityForm.invalid"
+            (click)="submitForm()"
+          >
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              {{ isEditing() ? 'Updating...' : 'Creating...' }}
+            } @else {
+              <i class="bi me-2" [class.bi-check-lg]="isEditing()" [class.bi-plus-lg]="!isEditing()"></i>
+              {{ isEditing() ? 'Update Community' : 'Create Community' }}
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

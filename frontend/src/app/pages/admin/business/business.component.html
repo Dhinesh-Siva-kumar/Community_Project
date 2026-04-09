@@ -1,0 +1,460 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted">Loading businesses...</p>
+    </div>
+  </div>
+} @else {
+
+  <!-- ==================== STATS BAR ==================== -->
+  @if (currentView() === 'categories') {
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon-wrapper" style="background-color: #ecfdf5;">
+              <i class="bi bi-shop" style="color: #059669;"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-0">{{ totalBusinesses() }}</h3>
+              <small class="text-muted">Total Businesses</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon-wrapper" style="background-color: #eef2ff;">
+              <i class="bi bi-grid" style="color: #4f46e5;"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-0">{{ totalCategories() }}</h3>
+              <small class="text-muted">Total Categories</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ==================== CATEGORIES VIEW ==================== -->
+  @if (currentView() === 'categories') {
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <h4 class="fw-bold mb-1">Business Directory</h4>
+        <p class="text-muted mb-0">Manage business categories and listings</p>
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="openAddCategory()">
+        <i class="bi bi-plus-circle me-1"></i> Add Category
+      </button>
+    </div>
+
+    @if (categories().length === 0) {
+      <div class="empty-state text-center py-5">
+        <div class="empty-icon mb-3">
+          <i class="bi bi-shop"></i>
+        </div>
+        <h5 class="fw-bold text-dark">No categories yet</h5>
+        <p class="text-muted">Create a category to start listing businesses.</p>
+      </div>
+    } @else {
+      <div class="row g-3">
+        @for (cat of categories(); track cat.id) {
+          <div class="col-6 col-md-4 col-lg-3">
+            <div class="card category-card border-0 shadow-sm h-100 text-center" role="button" (click)="loadBusinesses(cat)">
+              <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="category-icon-wrapper mb-3">
+                  <i class="bi" [ngClass]="getCategoryIcon(cat.icon)"></i>
+                </div>
+                <h6 class="fw-bold mb-1">{{ cat.name }}</h6>
+                <span class="badge bg-primary bg-opacity-10 text-primary small">
+                  {{ cat._count?.businesses ?? 0 }} businesses
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ==================== BUSINESS LIST VIEW ==================== -->
+  @if (currentView() === 'list') {
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a role="button" (click)="goToCategories()" class="text-decoration-none text-primary">
+            <i class="bi bi-grid me-1"></i>Categories
+          </a>
+        </li>
+        <li class="breadcrumb-item active">{{ selectedCategory()?.name }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <h4 class="fw-bold mb-1">{{ selectedCategory()?.name }}</h4>
+        <p class="text-muted mb-0">{{ totalItems() }} businesses found</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" (click)="goToCategories()">
+          <i class="bi bi-arrow-left me-1"></i> Back
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="openAddBusiness()">
+          <i class="bi bi-plus-circle me-1"></i> Add Business
+        </button>
+      </div>
+    </div>
+
+    @if (businesses().length === 0) {
+      <div class="empty-state text-center py-5">
+        <div class="empty-icon mb-3">
+          <i class="bi bi-shop-window"></i>
+        </div>
+        <h5 class="fw-bold text-dark">No businesses found</h5>
+        <p class="text-muted">No businesses in this category yet.</p>
+      </div>
+    } @else {
+      <div class="row g-3 mb-4">
+        @for (biz of businesses(); track biz.id) {
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card business-card border-0 shadow-sm h-100" role="button" (click)="loadBusinessDetail(biz)">
+              <div class="card-img-top-wrapper">
+                @if (biz.images && biz.images.length > 0) {
+                  <img [src]="biz.images[0]" [alt]="biz.name" class="card-img-top" />
+                } @else {
+                  <div class="card-img-placeholder d-flex align-items-center justify-content-center">
+                    <i class="bi bi-shop"></i>
+                  </div>
+                }
+              </div>
+              <div class="card-body">
+                <h6 class="fw-bold mb-1">{{ biz.name }}</h6>
+                @if (biz.address) {
+                  <p class="text-muted small mb-1">
+                    <i class="bi bi-geo-alt me-1 text-danger"></i>{{ biz.address }}
+                  </p>
+                }
+                @if (biz.phone) {
+                  <p class="text-muted small mb-2">
+                    <i class="bi bi-telephone me-1 text-success"></i>{{ biz.phone }}
+                  </p>
+                }
+                <!-- Admin delete -->
+                <button
+                  class="btn btn-outline-danger btn-sm w-100 mt-auto"
+                  [disabled]="deletingId() === biz.id"
+                  (click)="deleteBusiness($event, biz.id)"
+                >
+                  @if (deletingId() === biz.id) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  } @else {
+                    <i class="bi bi-trash me-1"></i>
+                  }
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="d-flex justify-content-center">
+          <ul class="pagination pagination-sm">
+            <li class="page-item" [class.disabled]="currentPage() === 1">
+              <button class="page-link" (click)="goToPage(currentPage() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            @for (page of getPages(); track page) {
+              <li class="page-item" [class.active]="page === currentPage()">
+                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+              <button class="page-link" (click)="goToPage(currentPage() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    }
+  }
+
+  <!-- ==================== BUSINESS DETAIL VIEW ==================== -->
+  @if (currentView() === 'detail') {
+    @if (selectedBusiness(); as biz) {
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a role="button" (click)="goToCategories()" class="text-decoration-none text-primary">Categories</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a role="button" (click)="goToList()" class="text-decoration-none text-primary">{{ selectedCategory()?.name }}</a>
+          </li>
+          <li class="breadcrumb-item active">{{ biz.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-outline-secondary btn-sm" (click)="goToList()">
+          <i class="bi bi-arrow-left me-1"></i> Back
+        </button>
+        <button class="btn btn-outline-danger btn-sm" (click)="deleteBusiness($event, biz.id)" [disabled]="deletingId() === biz.id">
+          @if (deletingId() === biz.id) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          } @else {
+            <i class="bi bi-trash me-1"></i>
+          }
+          Delete Business
+        </button>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        @if (biz.images && biz.images.length > 0) {
+          <div class="detail-gallery position-relative">
+            <img [src]="biz.images[activeImageIndex()]" [alt]="biz.name" class="gallery-main-img" />
+            @if (biz.images.length > 1) {
+              <button class="btn btn-light gallery-nav gallery-prev" (click)="prevImage()">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button class="btn btn-light gallery-nav gallery-next" (click)="nextImage()">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <div class="gallery-dots d-flex justify-content-center gap-1 mt-2 p-2">
+                @for (img of biz.images; track $index) {
+                  <button class="dot-btn" [class.active]="$index === activeImageIndex()" (click)="setActiveImage($index)"></button>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="detail-placeholder d-flex align-items-center justify-content-center">
+            <i class="bi bi-shop" style="font-size: 4rem; opacity: 0.2;"></i>
+          </div>
+        }
+
+        <div class="card-body p-4">
+          <h4 class="fw-bold mb-3">{{ biz.name }}</h4>
+
+          @if (biz.description) {
+            <p class="text-muted mb-4">{{ biz.description }}</p>
+          }
+
+          <div class="row g-3 mb-4">
+            @if (biz.address) {
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="bi bi-geo-alt-fill text-danger mt-1"></i>
+                  <div>
+                    <small class="text-muted d-block">Address</small>
+                    <span>{{ biz.address }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+            @if (biz.phone) {
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="bi bi-telephone-fill text-success mt-1"></i>
+                  <div>
+                    <small class="text-muted d-block">Phone</small>
+                    <a [href]="'tel:' + biz.phone" class="text-decoration-none">{{ biz.phone }}</a>
+                  </div>
+                </div>
+              </div>
+            }
+            @if (biz.email) {
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="bi bi-envelope-fill text-primary mt-1"></i>
+                  <div>
+                    <small class="text-muted d-block">Email</small>
+                    <a [href]="'mailto:' + biz.email" class="text-decoration-none">{{ biz.email }}</a>
+                  </div>
+                </div>
+              </div>
+            }
+            @if (biz.website) {
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="bi bi-globe2 text-info mt-1"></i>
+                  <div>
+                    <small class="text-muted d-block">Website</small>
+                    <a [href]="biz.website" target="_blank" class="text-decoration-none">{{ biz.website }}</a>
+                  </div>
+                </div>
+              </div>
+            }
+            @if (biz.openingHours) {
+              <div class="col-md-6">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="bi bi-clock-fill text-warning mt-1"></i>
+                  <div>
+                    <small class="text-muted d-block">Opening Hours</small>
+                    <span>{{ biz.openingHours }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="map-placeholder rounded-3 mb-3 d-flex align-items-center justify-content-center">
+            <div class="text-center text-muted">
+              <i class="bi bi-geo-alt" style="font-size: 2rem;"></i>
+              <p class="small mb-0 mt-1">Map view</p>
+            </div>
+          </div>
+
+          <a [href]="getDirectionsUrl()" target="_blank" class="btn btn-primary btn-sm">
+            <i class="bi bi-sign-turn-right me-1"></i> Get Directions
+          </a>
+        </div>
+      </div>
+    }
+  }
+}
+
+<!-- ==================== ADD CATEGORY MODAL ==================== -->
+@if (showAddCategoryModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0">
+          <h6 class="modal-title fw-bold">Add Category</h6>
+          <button type="button" class="btn-close" (click)="closeAddCategory()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Category Name</label>
+              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Restaurants" />
+              @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                <small class="text-danger">Name is required (min 2 chars)</small>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Icon (Bootstrap Icons class)</label>
+              <input type="text" class="form-control" formControlName="icon" placeholder="e.g. bi-shop" />
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+              <button type="button" class="btn btn-light btn-sm" (click)="closeAddCategory()">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="categoryForm.invalid || submitting()">
+                @if (submitting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                Create
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ==================== ADD BUSINESS MODAL ==================== -->
+@if (showAddBusinessModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0">
+          <h6 class="modal-title fw-bold">Add Business</h6>
+          <button type="button" class="btn-close" (click)="closeAddBusiness()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="businessForm" (ngSubmit)="submitBusiness()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Business Name *</label>
+                <input type="text" class="form-control" formControlName="name" placeholder="Business name" />
+                @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
+                  <small class="text-danger">Name is required</small>
+                }
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Category *</label>
+                <select class="form-select" formControlName="categoryId">
+                  <option value="">Select category</option>
+                  @for (cat of categories(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Description</label>
+                <textarea class="form-control" formControlName="description" rows="3" placeholder="Describe the business"></textarea>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold">Address</label>
+                <input type="text" class="form-control" formControlName="address" placeholder="Full address" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Pincode</label>
+                <input type="text" class="form-control" formControlName="pincode" placeholder="Pincode" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Phone</label>
+                <input type="text" class="form-control" formControlName="phone" placeholder="Phone number" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Email</label>
+                <input type="email" class="form-control" formControlName="email" placeholder="Email" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Website</label>
+                <input type="url" class="form-control" formControlName="website" placeholder="https://..." />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Opening Hours</label>
+                <input type="text" class="form-control" formControlName="openingHours" placeholder="e.g. Mon-Fri 9am-5pm" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold">Latitude</label>
+                <input type="text" class="form-control" formControlName="latitude" placeholder="Optional" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold">Longitude</label>
+                <input type="text" class="form-control" formControlName="longitude" placeholder="Optional" />
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Images</label>
+                <input type="file" class="form-control" multiple accept="image/*" (change)="onImagesSelected($event)" />
+                @if (imagePreviews().length > 0) {
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    @for (preview of imagePreviews(); track $index) {
+                      <div class="position-relative preview-thumb">
+                        <img [src]="preview" class="rounded" width="80" height="80" style="object-fit: cover;" />
+                        <button type="button" class="btn btn-sm btn-danger preview-remove" (click)="removeImage($index)">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <button type="button" class="btn btn-light" (click)="closeAddBusiness()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="businessForm.invalid || submitting()">
+                @if (submitting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                Create Business
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+}

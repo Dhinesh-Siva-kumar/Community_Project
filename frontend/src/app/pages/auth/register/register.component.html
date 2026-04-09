@@ -1,0 +1,408 @@
+<div class="auth-page">
+  <!-- Theme toggle -->
+  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+    <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
+  </button>
+
+  <div class="auth-container">
+    <!-- ===== LEFT PANEL — Branding ===== -->
+    <div class="auth-branding">
+      <!-- Decorative blobs -->
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+
+      <div class="branding-content">
+        <div class="brand-logo-row">
+          <div class="brand-logo-icon">
+            <i class="bi bi-globe2"></i>
+          </div>
+          <span class="brand-name">Community</span>
+        </div>
+        @if (step() === "form") {
+          <!-- Step-reactive headline -->
+          <div class="step-brand-text step-enter">
+            <h1 class="brand-headline">
+              Start your journey<br />
+              <span class="brand-headline-sub">today. It's free.</span>
+            </h1>
+            <p class="brand-desc">
+              Create your account in seconds and join thousands of passionate
+              people building meaningful connections.
+            </p>
+          </div>
+
+          <ul class="feature-list">
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>10,000+ active members across the UK</span>
+            </li>
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>500+ communities across every topic</span>
+            </li>
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>Free forever — no credit card needed</span>
+            </li>
+          </ul>
+
+          <div class="avatar-row">
+            <div class="avatar-stack">
+              <div class="av av-1">A</div>
+              <div class="av av-2">B</div>
+              <div class="av av-3">C</div>
+              <div class="av av-4">D</div>
+            </div>
+            <span class="avatar-row-text"
+              >Join thousands already connected</span
+            >
+          </div>
+        }
+        @if (step() === "otp") {
+          <div class="step-brand-text step-enter">
+            <h1 class="brand-headline">
+              One last step!<br />
+              <span class="brand-headline-sub">Verify your identity.</span>
+            </h1>
+            <p class="brand-desc">
+              Enter the OTP we sent to your phone number to confirm your identity.
+            </p>
+          </div>
+
+          <ul class="feature-list">
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>Check your SMS inbox</span>
+            </li>
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>OTP is valid for 10 minutes only</span>
+            </li>
+            <li>
+              <span class="feature-icon"
+                ><i class="bi bi-check-circle-fill"></i
+              ></span>
+              <span>Never share your OTP with anyone</span>
+            </li>
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- ===== RIGHT PANEL — Form ===== -->
+    <div class="auth-form-wrapper">
+      <!-- Mobile-only top logo -->
+      <div class="mobile-logo">
+        <div class="mobile-logo-icon">
+          <i class="bi bi-globe2"></i>
+        </div>
+        <span>Community</span>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-card-header">
+          @if (step() === "form") {
+            <h2>Create your account</h2>
+            <p class="subtitle">Fill in your details to get started for free</p>
+          } @else if (step() === "otp") {
+            <h2>Verify OTP</h2>
+            <p class="subtitle">Last step to register</p>
+          }
+        </div>
+
+        <div class="step-form-enter">
+          @if (step() === "form") {
+            <form
+              [formGroup]="registerForm"
+              (ngSubmit)="onSubmit()"
+              class="auth-form"
+              autocomplete="on"
+            >
+              <!-- Name row -->
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label" for="reg-userName"
+                    >User Name</label
+                  >
+                  <div class="field-input-wrap">
+                    <i class="bi bi-person field-icon"></i>
+                    <input
+                      id="reg-userName"
+                      type="text"
+                      maxlength="15"
+                      formControlName="userName"
+                      placeholder="username"
+                      autocomplete="given-name"
+                      class="field-input"
+                      (input)="sanitizeUsername($event)"
+                      [class.is-invalid]="
+                        f1['userName'].touched && f1['userName'].invalid
+                      "
+                    />
+                  </div>
+                  @if (f1["userName"].touched && f1["userName"].invalid) {
+                    <div class="field-error">
+                      @if (f1["userName"].errors?.["required"]) {
+                        User name is required.
+                      } @else if (f1["userName"].errors?.["minlength"]) {
+                        Minimum 3 characters.
+                      } @else if (f1["userName"].errors?.["maxlength"]) {
+                        Maximum 15 characters allowed.
+                      } @else if (f1["userName"].errors?.["pattern"]) {
+                        Only letters allowed (no spaces or numbers).
+                      } @else if (f1["userName"].errors?.["usernameTaken"]) {
+                        Username already exists.
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="reg-displayName"
+                    >Display Name</label
+                  >
+                  <div class="field-input-wrap">
+                    <i class="bi bi-person-badge field-icon"></i>
+                    <input
+                      id="reg-displayName"
+                      type="text"
+                      maxlength="30"
+                      formControlName="displayName"
+                      placeholder="displayname"
+                      autocomplete="family-name"
+                      class="field-input"
+                      [class.is-invalid]="
+                        f1['displayName'].touched && f1['displayName'].invalid
+                      "
+                    />
+                  </div>
+                  @if (f1["displayName"].touched && f1["displayName"].invalid) {
+                    <div class="field-error">
+                      @if (f1["displayName"].errors?.["required"]) {
+                        Display name is required.
+                      } @else if (f1["displayName"].errors?.["maxlength"]) {
+                        Maximum 30 characters allowed.
+                      } @else if (f1["displayName"].errors?.["pattern"]) {
+                        Only letters and spaces allowed.
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div class="field-row custom-mobile-row">
+                <!-- Country -->
+                <div class="field-group">
+                  <label class="field-label">Country</label>
+                  <div class="field-input-wrap">
+                    <i class="bi bi-globe2 field-icon"></i>
+                    <select
+                      formControlName="countryID"
+                      class="field-input field-select"
+                      (change)="onCountryChange()"
+                    >
+                      <option
+                        *ngFor="let country of countries"
+                        [value]="country.country_id"
+                      >
+                        {{ getFlagEmoji(country.country_flag) }}
+                        {{ country.country_code }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Mobile -->
+                <div class="field-group">
+                  <label class="field-label">Mobile Number</label>
+                  <div class="field-input-wrap">
+                    <i class="bi bi-phone field-icon"></i>
+                    <input
+                      type="tel"
+                      maxlength="15"
+                      inputmode="numeric"
+                      (input)="sanitizeMobile($event)"
+                      formControlName="mobile"
+                      placeholder="Enter mobile number"
+                      class="field-input"
+                      [class.is-invalid]="
+                        f1['mobile'].touched && f1['mobile'].invalid
+                      "
+                    />
+                  </div>
+
+                  @if (f1["mobile"].touched && f1["mobile"].invalid) {
+                    <div class="field-error">
+                      @if (f1["mobile"].errors?.["required"]) {
+                        Mobile number is required.
+                      } @else if (f1["mobile"].errors?.["mobile"]) {
+                        Please enter a valid Mobile number.
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="field-group">
+                <label class="field-label" for="reg-password">Password</label>
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input
+                    id="reg-password"
+                    maxlength="20"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="At least 6 characters"
+                    autocomplete="new-password"
+                    class="field-input"
+                    [class.is-invalid]="
+                      f1['password'].touched && f1['password'].invalid
+                    "
+                  />
+                  <button
+                    type="button"
+                    class="toggle-pw-btn"
+                    (click)="showPassword.set(!showPassword())"
+                    tabindex="-1"
+                    aria-label="Toggle password visibility"
+                  >
+                    <i
+                      class="bi"
+                      [class.bi-eye-slash]="!showPassword()"
+                      [class.bi-eye]="showPassword()"
+                    ></i>
+                  </button>
+                </div>
+                @if (f1["password"].touched && f1["password"].invalid) {
+                  <div class="field-error">
+                    @if (f1["password"].errors?.["required"]) {
+                      Password is required.
+                    } @else if (f1["password"].errors?.["minlength"]) {
+                      Password must be at least 6 characters.
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Confirm Password -->
+              <div class="field-group">
+                <label class="field-label" for="reg-confirmPassword"
+                  >Confirm Password</label
+                >
+                <div class="field-input-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input
+                    id="reg-confirmPassword"
+                    maxlength="20"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    formControlName="confirmPassword"
+                    placeholder="Re-enter your password"
+                    autocomplete="new-password"
+                    class="field-input"
+                    [class.is-invalid]="
+                      f1['confirmPassword'].touched &&
+                      f1['confirmPassword'].invalid
+                    "
+                  />
+                </div>
+                @if (
+                  f1["confirmPassword"].touched && f1["confirmPassword"].invalid
+                ) {
+                  <div class="field-error">
+                    @if (f1["confirmPassword"].errors?.["required"]) {
+                      Please confirm your password.
+                    } @else if (
+                      f1["confirmPassword"].errors?.["passwordMismatch"]
+                    ) {
+                      Passwords do not match.
+                    }
+                  </div>
+                }
+              </div>
+              <div class="btn-row">
+                <button type="submit" class="submit-btn" [disabled]="loading()">
+                  @if (loading()) {
+                    Sending OTP...
+                  } @else {
+                    Register <i class="bi bi-arrow-right ms-1"></i>
+                  }
+                </button>
+              </div>
+            </form>
+          }
+          @if (step() === "otp") {
+            <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()">
+              <div class="otp-group">
+                <div class="otp-icon-wrap">
+                  <div class="otp-shield-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                  </div>
+                  <p class="otp-hint">Enter the 6-digit code sent to your phone</p>
+                </div>
+                <div class="otp-field-group">
+                  <div class="otp-boxes" [class.otp-error]="otpError()">
+                    @for (digit of otpDigits; track $index) {
+                      <input
+                        #otpBox
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="1"
+                        autocomplete="one-time-code"
+                        class="otp-box"
+                        [class.filled]="digit !== ''"
+                        [class.is-invalid]="otpError()"
+                        [value]="digit"
+                        (input)="onOtpInput($event, $index)"
+                        (keydown)="onOtpKeydown($event, $index)"
+                        (paste)="onOtpPaste($event)"
+                      />
+                    }
+                  </div>
+                  @if (otpError()) {
+                    <div class="otp-error-msg">
+                      <i class="bi bi-x-circle-fill"></i>
+                      OTP is incorrect. Please try again.
+                    </div>
+                  } @else {
+                    <p class="otp-expire-note"><i class="bi bi-clock"></i> Code expires in 10 minutes</p>
+                  }
+                </div>
+              </div>
+              <div class="btn-row">
+                <button type="submit" class="submit-btn" [disabled]="loading()">
+                  @if (loading()) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Verifying OTP...
+                  } @else {
+                    <i class="bi bi-check2-circle"></i>
+                    Verify OTP
+                  }
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+
+        <!-- Switch auth -->
+         @if (step() === 'form') {
+        <p class="switch-auth">
+          Already have an account?
+          <a routerLink="/auth/login" class="switch-link">Sign in &rarr;</a>
+        </p>
+        }
+      </div>
+    </div>
+  </div>
+</div>

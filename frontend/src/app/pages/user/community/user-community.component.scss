@@ -1,0 +1,504 @@
+@use '../../../../assets/styles/index' as *;
+
+// ============================================================
+// User Community Page Styles
+// ============================================================
+
+// ── Loading State ────────────────────────────────────────────
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.page-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-loading-spinner .spinner-border {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-width: 3px;
+  color: $indigo-600;
+}
+
+.page-loading-text {
+  font-size: 14px;
+  color: $slate-500;
+  margin: 0;
+}
+
+// ── Page Header ───────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 1.75rem;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+}
+
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: $slate-800;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: $slate-500;
+  margin: 0;
+}
+
+// ── Toolbar (search + count badge) ───────────────────────────
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 340px;
+  min-width: 200px;
+}
+
+.page-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: $muted;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.page-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 38px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 14px;
+  color: $dark;
+  background: $white;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: $muted;
+  }
+
+  &:focus {
+    border-color: $indigo-600;
+    box-shadow: 0 0 0 3px rgba($indigo-600, 0.1);
+  }
+}
+
+.page-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: $indigo-50;
+  color: $indigo-600;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: auto;
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.page-empty-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: $indigo-50;
+  box-shadow: 0 0 0 12px rgba($indigo-600, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+
+  i {
+    font-size: 2.4rem;
+    color: $indigo-600;
+  }
+}
+
+.page-empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $slate-800;
+  margin: 0 0 8px;
+}
+
+.page-empty-text {
+  font-size: 14px;
+  color: $slate-500;
+  max-width: 340px;
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+}
+
+// ── Pagination ─────────────────────────────────────────────────
+.page-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+
+  .pagination {
+    .page-link {
+      border-radius: 8px !important;
+      margin: 0 2px;
+      border: none;
+      color: $slate-500;
+      padding: 0.4rem 0.75rem;
+      font-size: 13px;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background-color: $indigo-50;
+        color: $indigo-600;
+      }
+    }
+
+    .page-item.active .page-link {
+      background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+    }
+
+    .page-item.disabled .page-link {
+      opacity: 0.4;
+    }
+  }
+}
+
+// ── Community Card ────────────────────────────────────────────
+.community-card {
+  background: $white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: $shadow-card-default;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $shadow-xl;
+
+    .cc-cover-img {
+      transform: scale(1.05);
+    }
+
+    .cc-name {
+      color: $indigo-600;
+    }
+  }
+}
+
+// Cover
+.cc-cover {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: $slate-100;
+  flex-shrink: 0;
+}
+
+.cc-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.cc-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 3.2rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+// Badges overlay
+.cc-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(6px);
+
+  i {
+    font-size: 10px;
+  }
+}
+
+.cc-badge-global {
+  background: rgba($indigo-600, 0.88);
+  color: #fff;
+}
+
+.cc-badge-inactive {
+  background: rgba(255, 255, 255, 0.82);
+  color: $slate-500;
+  border: 1px solid rgba($slate-200, 0.7);
+}
+
+.cc-badge-default {
+  background: rgba(245, 158, 11, 0.88);
+  color: #fff;
+}
+
+.cc-badge-joined {
+  background: rgba(16, 185, 129, 0.88);
+  color: #fff;
+}
+
+// Body
+.cc-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.1rem 1.2rem 1.1rem;
+}
+
+.cc-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: $slate-800;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  transition: color 0.18s;
+}
+
+.cc-desc {
+  font-size: 13px;
+  color: $slate-500;
+  line-height: 1.55;
+  margin-bottom: 14px;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Stats row
+.cc-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cc-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cc-stat-icon {
+  font-size: 12px;
+}
+
+.cc-stat-members {
+  color: $indigo-600;
+}
+
+.cc-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: $slate-800;
+}
+
+.cc-stat-label {
+  font-size: 12px;
+  color: $slate-500;
+}
+
+// Meta row
+.cc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cc-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: $slate-500;
+
+  i {
+    font-size: 11px;
+    color: $muted;
+  }
+}
+
+// Actions row
+.cc-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid $gray-200;
+}
+
+// Join button
+.cc-btn-join {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
+  box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba($indigo-600, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// Leave button
+.cc-btn-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 34px;
+  border: 1.5px solid rgba($danger, 0.4);
+  border-radius: 8px;
+  background: rgba($danger, 0.05);
+  color: $danger;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+
+  &:hover {
+    background: rgba($danger, 0.12);
+    border-color: $danger;
+  }
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// ── Responsive ─────────────────────────────────────────────────
+@include media-sm-max {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-count-badge {
+    margin-left: 0;
+  }
+
+  .cc-cover {
+    height: 150px;
+  }
+}
+
+// ── Reduced motion ─────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .community-card {
+    transition: none !important;
+  }
+
+  .cc-cover-img {
+    transition: none !important;
+  }
+}

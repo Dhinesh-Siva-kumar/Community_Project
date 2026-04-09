@@ -1,0 +1,21 @@
+// ============================================================
+// ASSETS STYLES - MAIN ENTRY POINT
+// ============================================================
+// Complete design system with tokens, utilities, and components
+// Import order is critical - dependencies first, utilities last
+
+// ============================================================
+// 1. DESIGN TOKENS (Variables - ordered by dependency)
+// ============================================================
+
+@import 'colors';                       // Color palette + semantic aliases
+@import 'typography';                   // Font families, sizes, weights, mixins
+@import 'breakpoints';                  // Responsive breakpoints + media mixins
+@import 'shadows';                      // Elevation system + shadow mixins
+@import 'animations';                   // Transitions, keyframes, animations
+
+// ============================================================
+// 2. REMAINING TOKENS
+// ============================================================
+
+@import 'variables';                    // Spacing, z-index, component tokens

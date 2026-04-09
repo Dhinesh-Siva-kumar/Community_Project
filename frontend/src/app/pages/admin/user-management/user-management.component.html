@@ -1,0 +1,234 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted">Loading users...</p>
+    </div>
+  </div>
+} @else {
+  <!-- Page Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h4 class="fw-bold mb-1">User Management</h4>
+      <p class="text-muted mb-0">Manage all platform users</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" (click)="loadUsers()">
+      <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+    </button>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="stat-icon-wrapper" style="background-color: #eef2ff;">
+            <i class="bi bi-people-fill" style="color: #4f46e5;"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold mb-0">{{ totalUsersCount() }}</h3>
+            <small class="text-muted">Total Users</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="stat-icon-wrapper" style="background-color: #ecfdf5;">
+            <i class="bi bi-check-circle-fill" style="color: #059669;"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold mb-0">{{ activeUsers() }}</h3>
+            <small class="text-muted">Active</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="stat-icon-wrapper" style="background-color: #fef2f2;">
+            <i class="bi bi-slash-circle-fill" style="color: #dc2626;"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold mb-0">{{ blockedUsers() }}</h3>
+            <small class="text-muted">Blocked</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card stat-card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="stat-icon-wrapper" style="background-color: #fffbeb;">
+            <i class="bi bi-shield-fill-check" style="color: #d97706;"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold mb-0">{{ trustedUsers() }}</h3>
+            <small class="text-muted">Trusted</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="row mb-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="input-group search-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control border-start-0 ps-0"
+          placeholder="Search users by name, email, location..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  @if (filteredUsers().length === 0) {
+    <div class="empty-state text-center py-5">
+      <div class="empty-icon mb-3">
+        <i class="bi bi-people"></i>
+      </div>
+      <h5 class="fw-bold text-dark">No users found</h5>
+      <p class="text-muted">
+        @if (searchTerm()) {
+          No users match your search criteria.
+        } @else {
+          There are no registered users.
+        }
+      </p>
+    </div>
+  } @else {
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr class="bg-light">
+              <th class="border-0 ps-3" style="width: 50px;">Avatar</th>
+              <th class="border-0">Name</th>
+              <th class="border-0">Email</th>
+              <th class="border-0 d-none d-md-table-cell">Location</th>
+              <th class="border-0">Role</th>
+              <th class="border-0">Status</th>
+              <th class="border-0">Trust</th>
+              <th class="border-0 d-none d-lg-table-cell">Joined</th>
+              <th class="border-0 pe-3 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers(); track user.id) {
+              <tr>
+                <td class="ps-3">
+                  @if (user.avatar) {
+                    <img [src]="user.avatar" class="rounded-circle" width="36" height="36" style="object-fit: cover;" />
+                  } @else {
+                    <div class="user-avatar-placeholder rounded-circle d-flex align-items-center justify-content-center">
+                      <span class="small fw-bold">{{ (user.displayName ?? user.userName)?.charAt(0)?.toUpperCase() }}</span>
+                    </div>
+                  }
+                </td>
+                <td>
+                  <span class="fw-semibold small">{{ user.displayName ?? user.userName }}</span>
+                </td>
+                <td>
+                  <span class="small text-muted">{{ user.email }}</span>
+                </td>
+                <td class="d-none d-md-table-cell">
+                  <span class="small text-muted">{{ user.location || '-' }}</span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="user.role === 'ADMIN' ? 'bg-danger' : 'bg-primary bg-opacity-10 text-primary'">
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td>
+                  @if (user.isBlocked) {
+                    <span class="badge bg-danger bg-opacity-10 text-danger">Blocked</span>
+                  } @else {
+                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                  }
+                </td>
+                <td>
+                  @if (user.isTrusted) {
+                    <span class="badge bg-warning bg-opacity-10 text-warning">Trusted</span>
+                  } @else {
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Untrusted</span>
+                  }
+                </td>
+                <td class="d-none d-lg-table-cell">
+                  <small class="text-muted">{{ user.createdAt | date:'mediumDate' }}</small>
+                </td>
+                <td class="pe-3 text-end">
+                  <div class="d-flex gap-1 justify-content-end">
+                    <!-- Block/Unblock -->
+                    <button
+                      class="btn btn-sm"
+                      [ngClass]="user.isBlocked ? 'btn-outline-success' : 'btn-outline-danger'"
+                      [disabled]="blockingId() === user.id"
+                      (click)="toggleBlock(user)"
+                      [title]="user.isBlocked ? 'Unblock' : 'Block'"
+                    >
+                      @if (blockingId() === user.id) {
+                        <span class="spinner-border spinner-border-sm"></span>
+                      } @else {
+                        <i class="bi" [ngClass]="user.isBlocked ? 'bi-unlock' : 'bi-lock'"></i>
+                      }
+                    </button>
+                    <!-- Trust/Untrust -->
+                    <button
+                      class="btn btn-sm"
+                      [ngClass]="user.isTrusted ? 'btn-outline-secondary' : 'btn-outline-warning'"
+                      [disabled]="trustingId() === user.id"
+                      (click)="toggleTrust(user)"
+                      [title]="user.isTrusted ? 'Remove trust' : 'Trust'"
+                    >
+                      @if (trustingId() === user.id) {
+                        <span class="spinner-border spinner-border-sm"></span>
+                      } @else {
+                        <i class="bi" [ngClass]="user.isTrusted ? 'bi-shield-x' : 'bi-shield-check'"></i>
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <button class="page-link" (click)="goToPage(currentPage() - 1)">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          @for (page of getPages(); track page) {
+            <li class="page-item" [class.active]="page === currentPage()">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <button class="page-link" (click)="goToPage(currentPage() + 1)">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+  }
+}

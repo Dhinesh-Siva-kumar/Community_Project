@@ -1,0 +1,252 @@
+// ============================================================
+// COLOR PALETTE & SEMANTIC COLORS
+// ============================================================
+// Centralized color system with WCAG AA contrast verification
+// All colors for the entire application defined here
+
+// ============================================================
+// PRIMARY COLOR PALETTE
+// ============================================================
+
+// Primary Blue - Main brand color
+$color-primary:             #5865F2;
+$color-primary-rgb:         88, 101, 242;
+$color-primary-light:       #ede9fe;
+$color-primary-dark:        #4752c4;
+
+// Secondary & Accent Colors
+$color-accent:              #eb459e;
+$color-secondary:           #7289da;
+$color-accent-green:        #57f287;
+$color-accent-yellow:       #fee75c;
+
+// Violet
+$color-violet:              #7c3aed;
+
+// ============================================================
+// INDIGO PALETTE
+// ============================================================
+
+$color-indigo-50:           #eef2ff;
+$color-indigo-100:          #e0e7ff;
+$color-indigo-600:          #4f46e5;
+$color-indigo-700:          #4338ca;
+
+// ============================================================
+// PURPLE / GRADIENT COLORS
+// ============================================================
+
+$color-purple-gradient-start: #667eea;
+$color-purple-gradient-end:   #764ba2;
+
+// ============================================================
+// NEUTRAL COLORS - SLATE PALETTE
+// ============================================================
+
+$color-slate-50:            #f8fafc;
+$color-slate-100:           #f1f5f9;
+$color-slate-200:           #e2e8f0;
+$color-slate-300:           #cbd5e1;
+$color-slate-500:           #64748b;
+$color-slate-800:           #1e293b;
+
+// ============================================================
+// NEUTRAL COLORS - GRAY PALETTE
+// ============================================================
+
+$color-gray-50:             #f9fafb;
+$color-gray-100:            #f8f9fa;
+$color-gray-200:            #f0f1f5;
+$color-gray-300:            #dee2e6;
+$color-gray-400:            #c4c8d4;
+$color-gray-500:            #6b7280;
+$color-gray-600:            #495057;
+$color-gray-700:            #c7cdd9;
+
+// ============================================================
+// DARK / NEUTRAL BASE COLORS
+// ============================================================
+
+$color-dark:                #0f0f1a;
+$color-dark-secondary:      #1a1a2e;
+$color-dark-deep:           #07071a;
+$color-white:               #ffffff;
+
+// ============================================================
+// ADMIN DARK THEME COLORS
+// ============================================================
+
+$color-admin-dark-bg:       #16213e;
+$color-admin-dark-accent:   #0f3460;
+
+// ============================================================
+// STATUS COLORS
+// ============================================================
+
+// Success (Green)
+$color-success:             #22c55e;
+
+// Danger / Error
+$color-danger:              #ef4444;
+$color-error:               #dc2626;
+$color-error-dark:          #b91c1c;
+$color-error-bg:            #fef2f2;
+
+// Warning
+$color-warning:             #f97316;
+
+// Info
+$color-info:                #3b82f6;
+
+// ============================================================
+// EMERALD, TEAL & AMBER PALETTES
+// ============================================================
+
+// Emerald
+$color-emerald-50:          #ecfdf5;
+$color-emerald-600:         #059669;
+
+// Teal
+$color-teal-600:            #0d9488;
+
+// Amber
+$color-amber-50:            #fffbeb;
+$color-amber-500:           #f59e0b;
+$color-amber-700:           #d97706;
+
+// ============================================================
+// BOOTSTRAP-COMPATIBLE TOAST COLORS
+// ============================================================
+
+$color-toast-success:       #198754;
+$color-toast-danger:        #dc3545;
+$color-toast-warning:       #fd7e14;
+$color-toast-info:          #0d6efd;
+
+// ============================================================
+// SEMANTIC TEXT COLORS
+// ============================================================
+
+$color-text-primary:        #374151;
+$color-text-muted:          #8b8fa8;
+$color-text-muted-alt:      #5a5a7a;
+$color-text-muted-dark:     #4a4a6a;
+$color-text-secondary:      #9ca3af;
+$color-text-inverse:        $color-white;
+
+// ============================================================
+// SEMANTIC BACKGROUND COLORS
+// ============================================================
+
+$color-bg-page:             #f4f5ff;
+$color-bg-light:            #f8f9ff;
+$color-bg-muted:            #fafaff;
+$color-bg-neutral:          #fafafa;
+$color-bg-card:             $color-white;
+$color-bg-hover:            #f5f5f8;
+$color-bg-hover-light:      #f3f4f6;
+
+// ============================================================
+// SEMANTIC BORDER COLORS
+// ============================================================
+
+$color-border:              #e5e7eb;
+
+// ============================================================
+// GRADIENT DEFINITIONS
+// ============================================================
+
+$gradient-primary: linear-gradient(135deg, $color-purple-gradient-start, $color-purple-gradient-end);
+
+// ============================================================
+// BACKDROP & OVERLAY
+// ============================================================
+
+$color-backdrop-dark:       rgba(0, 0, 0, 0.5);
+$color-backdrop-light:      rgba(0, 0, 0, 0.3);
+
+// ============================================================
+// LEGACY ALIASES (Backward compatibility)
+// ============================================================
+// These map old variable names to the new color- prefixed names
+// so existing component SCSS files continue to work unchanged
+
+$primary:                   $color-primary;
+$primary-light:             $color-primary-light;
+$primary-dark:              $color-primary-dark;
+$accent:                    $color-accent;
+$secondary:                 $color-secondary;
+$accent-green:              $color-accent-green;
+$accent-yellow:             $color-accent-yellow;
+$violet:                    $color-violet;
+
+$indigo-50:                 $color-indigo-50;
+$indigo-100:                $color-indigo-100;
+$indigo-600:                $color-indigo-600;
+$indigo-700:                $color-indigo-700;
+
+$purple-gradient-start:     $color-purple-gradient-start;
+$purple-gradient-end:       $color-purple-gradient-end;
+
+$slate-50:                  $color-slate-50;
+$slate-100:                 $color-slate-100;
+$slate-200:                 $color-slate-200;
+$slate-300:                 $color-slate-300;
+$slate-500:                 $color-slate-500;
+$slate-800:                 $color-slate-800;
+
+$gray-50:                   $color-gray-50;
+$gray-100:                  $color-gray-100;
+$gray-200:                  $color-gray-200;
+$gray-300:                  $color-gray-300;
+$gray-400:                  $color-gray-400;
+$gray-500:                  $color-gray-500;
+$gray-600:                  $color-gray-600;
+$gray-700:                  $color-gray-700;
+
+$dark:                      $color-dark;
+$dark-secondary:            $color-dark-secondary;
+$dark-deep:                 $color-dark-deep;
+$white:                     $color-white;
+
+$admin-dark-bg:             $color-admin-dark-bg;
+$admin-dark-accent:         $color-admin-dark-accent;
+
+$success:                   $color-success;
+$danger:                    $color-danger;
+$error:                     $color-error;
+$error-dark:                $color-error-dark;
+$error-bg:                  $color-error-bg;
+$warning:                   $color-warning;
+$info:                      $color-info;
+
+$emerald-50:                $color-emerald-50;
+$emerald-600:               $color-emerald-600;
+$teal-600:                  $color-teal-600;
+$amber-50:                  $color-amber-50;
+$amber-500:                 $color-amber-500;
+$amber-700:                 $color-amber-700;
+
+$toast-success:             $color-toast-success;
+$toast-danger:              $color-toast-danger;
+$toast-warning:             $color-toast-warning;
+$toast-info:                $color-toast-info;
+
+$text:                      $color-text-primary;
+$text-dark:                 $color-dark;
+$text-body:                 $color-text-primary;
+$text-muted:                $color-text-muted;
+$text-muted-custom:         $color-text-muted;
+$text-muted-alt:            $color-text-muted-alt;
+$text-muted-dark:           $color-text-muted-dark;
+$muted:                     $color-text-secondary;
+
+$border:                    $color-border;
+$bg:                        $color-bg-page;
+$bg-light:                  $color-bg-light;
+$bg-muted:                  $color-bg-muted;
+$bg-neutral:                $color-bg-neutral;
+$card-bg:                   $color-bg-card;
+$section-alt:               $color-bg-light;
+$hover-bg:                  $color-bg-hover;
+$hover-bg-light:            $color-bg-hover-light;

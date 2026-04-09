@@ -1,0 +1,636 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// Community Detail Styles (Enhanced)
+// ===========================
+
+// Header entrance animation
+.header-entrance {
+  opacity: 0;
+  animation: headerSlideIn 0.6s ease 0.1s forwards;
+}
+
+@keyframes headerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Community Header
+.community-header {
+  border-radius: 16px;
+
+  .header-banner {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+
+    .banner-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .banner-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+      position: relative;
+
+      .banner-pattern {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.15;
+        pointer-events: none;
+      }
+    }
+
+    .banner-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+    }
+
+    // Animated gradient overlay
+    .animated-gradient-overlay {
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(79, 70, 229, 0.1) 0%,
+          rgba(124, 58, 237, 0.05) 50%,
+          transparent 100%
+        );
+        animation: gradientShift 8s ease-in-out infinite alternate;
+      }
+    }
+  }
+
+  .header-content {
+    margin-top: -40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .community-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+
+      i {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+
+  // Pulse on member count badge
+  .badge-pulse {
+    animation: badgePulse 3s ease-in-out infinite;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+// Tab Navigation with slide indicator
+.community-tabs {
+  background-color: $gray-100;
+  border-radius: 12px;
+  padding: 4px;
+
+  .nav-link {
+    border-radius: 10px;
+    color: $slate-500;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+
+    &:hover {
+      color: $indigo-600;
+      background-color: rgba(79, 70, 229, 0.05);
+    }
+
+    &.active {
+      background-color: #fff;
+      color: $indigo-600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// Tab content transition
+.tab-content-wrapper {
+  transition: opacity 0.15s ease;
+
+  &.tab-transitioning {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.tab-enter {
+  animation: tabFadeSlideIn 0.3s ease forwards;
+}
+
+@keyframes tabFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Create Post Card
+.create-post-card {
+  border-radius: 14px;
+
+  textarea {
+    border-radius: 12px;
+    resize: none;
+    border-color: $slate-200;
+
+    &:focus {
+      border-color: $indigo-600;
+      box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.1);
+    }
+  }
+}
+
+// Post Card
+.post-card {
+  border-radius: 14px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .post-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
+  }
+
+  .action-btn {
+    border-radius: 8px;
+    font-size: 0.8rem;
+    border: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: $indigo-50;
+    }
+  }
+
+  // Heartbeat on liked state
+  .heartbeat-active {
+    .bi-heart-fill {
+      animation: heartbeatOnce 0.4s ease;
+    }
+  }
+}
+
+// Post stagger-in animation
+.post-stagger-in {
+  opacity: 0;
+  animation: postSlideIn 0.4s ease forwards;
+}
+
+@keyframes postSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heartbeatOnce {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.3);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Comments expand animation
+.comments-expand {
+  animation: commentsExpand 0.3s ease forwards;
+  overflow: hidden;
+}
+
+@keyframes commentsExpand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+// Comment fade-in animation
+.comment-fade-in {
+  opacity: 0;
+  animation: commentFadeIn 0.3s ease forwards;
+}
+
+@keyframes commentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Post Images
+.post-images {
+  .single-image {
+    max-height: 400px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+
+    img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+  }
+}
+
+// Post Image Preview
+.post-image-preview {
+  width: 80px;
+  height: 80px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .remove-img-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}
+
+// Avatars
+.post-avatar {
+  width: 40px;
+  height: 40px;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+  }
+
+  .avatar-initials {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.comment-avatar {
+  width: 30px;
+  height: 30px;
+
+  img {
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+  }
+}
+
+.avatar-initials {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.avatar-initials-sm {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+  }
+}
+
+// Comments
+.comments-section {
+  .comment-bubble {
+    background-color: $slate-100;
+    border-radius: 12px;
+  }
+
+  .form-control-sm {
+    border-radius: 20px;
+    font-size: 0.8rem;
+
+    &:focus {
+      border-color: $indigo-600;
+      box-shadow: none;
+    }
+  }
+}
+
+// About Tab - info item animation
+.info-item-animate {
+  opacity: 0;
+  animation: infoItemSlideIn 0.4s ease forwards;
+}
+
+@keyframes infoItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+  background-color: $indigo-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.1rem;
+    color: $indigo-600;
+  }
+}
+
+// Member List
+.member-list {
+  max-height: 500px;
+  overflow-y: auto;
+
+  .member-item {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: $slate-50;
+    }
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $slate-300;
+    border-radius: 4px;
+  }
+}
+
+// Member fade-in from left
+.member-fade-in {
+  opacity: 0;
+  animation: memberFadeIn 0.3s ease forwards;
+}
+
+@keyframes memberFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Empty State
+.empty-state {
+  .empty-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: $indigo-50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+
+    i {
+      font-size: 1.75rem;
+      color: $indigo-600;
+    }
+
+    &.emergency-icon {
+      background-color: $error-bg;
+
+      i {
+        color: $error;
+      }
+    }
+  }
+}
+
+// Form
+.form-control {
+  border-radius: 10px;
+
+  &:focus {
+    border-color: $indigo-600;
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.1);
+  }
+}
+
+// Card shared styles
+.card {
+  border-radius: 14px;
+
+  .card-header {
+    border-radius: 14px 14px 0 0 !important;
+  }
+}
+
+// Responsive
+@include media-md-max {
+  .community-header {
+    .header-banner {
+      height: 150px;
+    }
+
+    .community-avatar {
+      width: 60px;
+      height: 60px;
+    }
+  }
+
+  .community-tabs {
+    .nav-link {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+    }
+  }
+
+  .post-images .image-grid {
+    grid-template-columns: 1fr;
+
+    img {
+      height: 160px;
+    }
+  }
+}
+
+@include media-sm-max {
+  .community-header {
+    .header-banner {
+      height: 120px;
+    }
+
+    .header-content {
+      margin-top: -30px;
+    }
+
+    .community-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+    }
+  }
+
+  .btn-group-sm .btn {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .header-entrance,
+  .tab-enter,
+  .post-stagger-in,
+  .comment-fade-in,
+  .member-fade-in,
+  .info-item-animate,
+  .comments-expand {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .tab-content-wrapper {
+    transition: none !important;
+  }
+
+  .badge-pulse,
+  .animated-gradient-overlay::before {
+    animation: none !important;
+  }
+
+  .heartbeat-active .bi-heart-fill {
+    animation: none !important;
+  }
+}

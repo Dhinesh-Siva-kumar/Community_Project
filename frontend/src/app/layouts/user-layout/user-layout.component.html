@@ -1,0 +1,102 @@
+<!-- Mobile overlay -->
+@if (isMobile() && mobileSidebarOpen()) {
+  <div class="sidebar-overlay" (click)="closeMobileSidebar()"></div>
+}
+
+<!-- Sidebar -->
+<aside
+  class="sidebar"
+  [class.collapsed]="!isMobile() && sidebarCollapsed()"
+  [class.mobile-open]="isMobile() && mobileSidebarOpen()"
+>
+  <div class="sidebar-header">
+    @if (!sidebarCollapsed() || isMobile()) {
+      <span class="sidebar-brand">Community Platform</span>
+    } @else {
+      <span class="sidebar-brand-icon"><i class="bi bi-people-fill"></i></span>
+    }
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of navItems; track item.route) {
+      <a
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.route === '/user/dashboard' }"
+        (click)="onNavClick()"
+        [title]="item.label"
+      >
+        <i class="bi" [ngClass]="item.icon"></i>
+        @if (!sidebarCollapsed() || isMobile()) {
+          <span class="nav-label">{{ item.label }}</span>
+        }
+      </a>
+    }
+  </nav>
+</aside>
+
+<!-- Main wrapper -->
+<div
+  class="main-wrapper"
+  [class.sidebar-collapsed]="!isMobile() && sidebarCollapsed()"
+  [class.sidebar-hidden]="isMobile()"
+>
+  <!-- Header -->
+  <header class="top-header">
+    <div class="header-left">
+      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="header-title d-none d-sm-inline">Community Platform</span>
+    </div>
+
+    <div class="header-right">
+      <!-- Notifications -->
+      <div class="header-icon-btn" routerLink="/user/dashboard" title="Notifications">
+        <i class="bi bi-bell"></i>
+        @if (notificationService.unreadCount() > 0) {
+          <span class="notification-badge">
+            {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
+          </span>
+        }
+      </div>
+
+      <!-- User dropdown -->
+      <div class="user-dropdown-wrapper">
+        <button class="user-avatar-btn" (click)="toggleUserDropdown()">
+          @if (authService.currentUser()?.avatar) {
+            <img
+              [src]="authService.currentUser()!.avatar"
+              alt="avatar"
+              class="avatar-img"
+            />
+          } @else {
+            <div class="avatar-initials">{{ getUserInitials() }}</div>
+          }
+        </button>
+
+        @if (userDropdownOpen()) {
+          <div class="user-dropdown-menu">
+            <div class="dropdown-user-info">
+              <strong>{{ getUserFullName() }}</strong>
+              <small>{{ authService.currentUser()?.email }}</small>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" routerLink="/user/profile" (click)="userDropdownOpen.set(false)">
+              <i class="bi bi-person"></i> Profile
+            </a>
+            <button class="dropdown-item text-danger" (click)="logout()">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>

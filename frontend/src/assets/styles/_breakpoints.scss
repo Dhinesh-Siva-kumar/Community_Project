@@ -1,0 +1,98 @@
+// ============================================================
+// BREAKPOINTS & MEDIA QUERIES
+// ============================================================
+// Centralized responsive design breakpoints for consistent
+// responsive behavior across the entire application
+
+// ============================================================
+// BREAKPOINT VARIABLES
+// ============================================================
+
+// Extra Small Devices (phones)
+$breakpoint-xs: 480px;
+
+// Small Devices (tablets, small phones in landscape)
+$breakpoint-sm: 600px;
+
+// Medium Devices (tablets, small laptops)
+$breakpoint-md: 768px;
+
+// Large Devices (laptops, desktops)
+$breakpoint-lg: 1024px;
+
+// Extra Large Devices (large desktops)
+$breakpoint-xl: 1200px;
+
+// Custom breakpoint for sidebar behavior
+$breakpoint-sidebar: 992px;
+
+// ============================================================
+// BOOTSTRAP-COMPATIBLE BREAKPOINTS (max-width: bp - 0.02px)
+// ============================================================
+// These match Bootstrap's convention of subtracting 0.02px
+// for max-width media queries to avoid overlap
+
+$breakpoint-sm-max: 575.98px;   // Below Bootstrap sm (576px)
+$breakpoint-md-max: 767.98px;   // Below Bootstrap md (768px)
+$breakpoint-lg-max: 991.98px;   // Below Bootstrap lg (992px)
+$breakpoint-xl-max: 1199.98px;  // Below Bootstrap xl (1200px)
+
+// ============================================================
+// MEDIA QUERY MIXINS
+// ============================================================
+// Convenient mixins for responsive styles
+// Usage: @include media-sm { ... }
+
+@mixin media-xs {
+  @media (max-width: $breakpoint-xs) {
+    @content;
+  }
+}
+
+@mixin media-sm {
+  @media (max-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin media-sm-max {
+  @media (max-width: $breakpoint-sm-max) {
+    @content;
+  }
+}
+
+@mixin media-md {
+  @media (max-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin media-md-max {
+  @media (max-width: $breakpoint-md-max) {
+    @content;
+  }
+}
+
+@mixin media-lg {
+  @media (max-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin media-lg-max {
+  @media (max-width: $breakpoint-lg-max) {
+    @content;
+  }
+}
+
+@mixin media-xl {
+  @media (max-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+@mixin media-sidebar {
+  @media (max-width: $breakpoint-sidebar) {
+    @content;
+  }
+}

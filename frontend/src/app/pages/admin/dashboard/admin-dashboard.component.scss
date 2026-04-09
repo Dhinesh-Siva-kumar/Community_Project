@@ -1,0 +1,146 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// Admin Dashboard Styles
+// ===========================
+
+// Stat Cards
+.stat-card {
+  border-radius: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.4rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: $slate-800;
+  }
+}
+
+// Activity List
+.activity-list {
+  max-height: 400px;
+  overflow-y: auto;
+
+  .activity-item {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: $slate-50;
+    }
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+
+    .activity-icon-wrapper {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+// Quick Actions
+.quick-action-card {
+  .d-flex {
+    transition: all 0.2s ease;
+    border-color: $slate-200 !important;
+
+    &:hover {
+      background-color: $slate-50;
+      border-color: $slate-300 !important;
+      transform: translateX(4px);
+    }
+  }
+
+  .quick-action-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+// Chart Placeholder
+.chart-placeholder {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 30px,
+    $slate-100 30px,
+    $slate-100 31px
+  );
+  border-radius: 12px;
+  min-height: 200px;
+}
+
+// Card shared styles
+.card {
+  border-radius: 14px;
+
+  .card-header {
+    border-radius: 14px 14px 0 0 !important;
+  }
+}
+
+// Scrollbar styling
+.activity-list {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $slate-300;
+    border-radius: 4px;
+  }
+}
+
+// Responsive
+@include media-sm-max {
+  .stat-card {
+    .card-body {
+      padding: 0.75rem !important;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+  }
+}

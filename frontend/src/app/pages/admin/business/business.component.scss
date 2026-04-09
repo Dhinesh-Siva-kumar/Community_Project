@@ -1,0 +1,275 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// Admin Business Styles
+// ===========================
+
+// Stat Cards
+.stat-card {
+  border-radius: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.4rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: $slate-800;
+  }
+}
+
+// Category Card
+.category-card {
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+
+    .category-icon-wrapper {
+      transform: scale(1.1);
+    }
+  }
+
+  .category-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+
+    i {
+      font-size: 1.5rem;
+      color: #fff;
+    }
+  }
+}
+
+// Business Card
+.business-card {
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+
+    h6 {
+      color: $indigo-600 !important;
+    }
+  }
+
+  .card-img-top-wrapper {
+    height: 160px;
+    overflow: hidden;
+    background-color: $slate-100;
+
+    .card-img-top {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover .card-img-top {
+      transform: scale(1.05);
+    }
+
+    .card-img-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, $emerald-600 0%, $teal-600 100%);
+
+      i {
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+}
+
+// Detail Gallery
+.detail-gallery {
+  height: 350px;
+  overflow: hidden;
+  background-color: $slate-100;
+
+  .gallery-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    padding: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .gallery-prev {
+    left: 12px;
+  }
+
+  .gallery-next {
+    right: 12px;
+  }
+
+  .gallery-dots {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+
+    .dot-btn {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &.active {
+        background: #fff;
+      }
+    }
+  }
+}
+
+.detail-placeholder {
+  height: 200px;
+  background-color: $slate-100;
+}
+
+// Map Placeholder
+.map-placeholder {
+  height: 200px;
+  background-color: $slate-100;
+  border: 2px dashed $gray-300;
+}
+
+// Preview Thumbnails
+.preview-thumb {
+  position: relative;
+
+  .preview-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+  }
+}
+
+// Empty State
+.empty-state {
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: $emerald-50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+
+    i {
+      font-size: 2rem;
+      color: $emerald-600;
+    }
+  }
+}
+
+// Pagination
+.pagination {
+  .page-link {
+    border-radius: 8px !important;
+    margin: 0 2px;
+    border: none;
+    color: $slate-500;
+    padding: 0.4rem 0.75rem;
+
+    &:hover {
+      background-color: $indigo-50;
+      color: $indigo-600;
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: $indigo-600;
+    color: #fff;
+  }
+
+  .page-item.disabled .page-link {
+    opacity: 0.5;
+  }
+}
+
+// Breadcrumb
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
+.card {
+  border-radius: 14px;
+}
+
+.modal-content {
+  border-radius: 14px;
+}
+
+@include media-sm-max {
+  .detail-gallery {
+    height: 220px;
+  }
+
+  .stat-card h3 {
+    font-size: 1.25rem;
+  }
+}

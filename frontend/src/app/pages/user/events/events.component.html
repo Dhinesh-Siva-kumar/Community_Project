@@ -1,0 +1,182 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted">Loading events...</p>
+    </div>
+  </div>
+} @else {
+  <!-- Page Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h4 class="fw-bold mb-1">Events</h4>
+      <p class="text-muted mb-0">Discover events happening near you</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-warning bg-opacity-10 text-warning">
+        <i class="bi bi-calendar-event me-1"></i>{{ totalItems() }} events
+      </span>
+      <button class="btn btn-primary btn-sm" (click)="openAddModal()">
+        <i class="bi bi-plus-circle me-1"></i> Add Event
+      </button>
+    </div>
+  </div>
+
+  <!-- Event Cards -->
+  @if (events().length === 0) {
+    <div class="empty-state text-center py-5">
+      <div class="empty-icon mb-3">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+      <h5 class="fw-bold text-dark">No events found</h5>
+      <p class="text-muted">There are no events in your area right now. Create one!</p>
+      <button class="btn btn-primary btn-sm" (click)="openAddModal()">
+        <i class="bi bi-plus-circle me-1"></i> Create Event
+      </button>
+    </div>
+  } @else {
+    <div class="row g-3 mb-4">
+      @for (evt of events(); track evt.id) {
+        <div class="col-12 col-md-6">
+          <div class="card event-card border-0 shadow-sm h-100">
+            <div class="row g-0 h-100">
+              <div class="col-4">
+                <div class="event-img-wrapper h-100">
+                  @if (evt.images && evt.images.length > 0) {
+                    <img [src]="evt.images[0]" [alt]="evt.title" class="event-img" />
+                  } @else {
+                    <div class="event-img-placeholder d-flex align-items-center justify-content-center h-100">
+                      <i class="bi bi-calendar-event"></i>
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="col-8">
+                <div class="card-body d-flex flex-column h-100 py-3">
+                  <h6 class="fw-bold mb-1">{{ evt.title }}</h6>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-warning bg-opacity-10 text-warning small">
+                      <i class="bi bi-calendar me-1"></i>{{ evt.eventDate | date:'mediumDate' }}
+                    </span>
+                    @if (evt.eventTime) {
+                      <span class="small text-muted">
+                        <i class="bi bi-clock me-1"></i>{{ evt.eventTime }}
+                      </span>
+                    }
+                  </div>
+                  @if (evt.location || evt.address) {
+                    <p class="text-muted small mb-1">
+                      <i class="bi bi-geo-alt me-1 text-danger"></i>{{ evt.location || evt.address }}
+                    </p>
+                  }
+                  @if (evt.description) {
+                    <p class="text-muted small mb-0 mt-auto">{{ truncate(evt.description, 100) }}</p>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav class="d-flex justify-content-center">
+        <ul class="pagination pagination-sm">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <button class="page-link" (click)="goToPage(currentPage() - 1)">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          @for (page of getPages(); track page) {
+            <li class="page-item" [class.active]="page === currentPage()">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <button class="page-link" (click)="goToPage(currentPage() + 1)">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+  }
+}
+
+<!-- ==================== ADD EVENT MODAL ==================== -->
+@if (showAddModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0">
+          <h6 class="modal-title fw-bold">Create Event</h6>
+          <button type="button" class="btn-close" (click)="closeAddModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="eventForm" (ngSubmit)="submitEvent()">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Event Title *</label>
+                <input type="text" class="form-control" formControlName="title" placeholder="Event title" />
+                @if (eventForm.get('title')?.invalid && eventForm.get('title')?.touched) {
+                  <small class="text-danger">Title is required (min 3 chars)</small>
+                }
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Description</label>
+                <textarea class="form-control" formControlName="description" rows="3" placeholder="Describe the event"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Event Date *</label>
+                <input type="date" class="form-control" formControlName="eventDate" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Event Time</label>
+                <input type="time" class="form-control" formControlName="eventTime" />
+              </div>
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold">Address</label>
+                <input type="text" class="form-control" formControlName="address" placeholder="Event address" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Pincode</label>
+                <input type="text" class="form-control" formControlName="pincode" placeholder="Pincode" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Location</label>
+                <input type="text" class="form-control" formControlName="location" placeholder="e.g. City Hall, Park" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Image</label>
+                <input type="file" class="form-control" accept="image/*" (change)="onImageSelected($event)" />
+                @if (imagePreview()) {
+                  <div class="position-relative d-inline-block mt-2">
+                    <img [src]="imagePreview()" class="rounded" width="120" height="80" style="object-fit: cover;" />
+                    <button type="button" class="btn btn-sm btn-danger preview-remove" (click)="removeImage()">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end mt-4">
+              <button type="button" class="btn btn-light" (click)="closeAddModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="eventForm.invalid || submitting()">
+                @if (submitting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                Create Event
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+}

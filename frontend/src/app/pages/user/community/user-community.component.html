@@ -1,0 +1,179 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="page-loading">
+    <div class="page-loading-inner">
+      <div class="page-loading-spinner">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <p class="page-loading-text">Loading communities...</p>
+    </div>
+  </div>
+} @else {
+
+  <!-- ── Page Header ──────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <div class="page-header-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div>
+        <h4 class="page-title">Communities</h4>
+        <p class="page-subtitle">Discover and join communities near you</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ───────────────────────────────────────────── -->
+  <div class="page-toolbar">
+    <div class="page-search-wrap">
+      <i class="bi bi-search page-search-icon"></i>
+      <input
+        type="text"
+        class="page-search-input"
+        placeholder="Search communities..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+    </div>
+    <span class="page-count-badge">
+      <i class="bi bi-grid-3x3-gap-fill me-1"></i>
+      {{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }}
+    </span>
+  </div>
+
+  <!-- ── Empty State ───────────────────────────────────────── -->
+  @if (filteredCommunities().length === 0) {
+    <div class="page-empty">
+      <div class="page-empty-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h5 class="page-empty-title">
+        {{ searchTerm() ? 'No results found' : 'No communities yet' }}
+      </h5>
+      <p class="page-empty-text">
+        @if (searchTerm()) {
+          No communities match "<strong>{{ searchTerm() }}</strong>". Try a different term.
+        } @else {
+          There are no communities available at the moment. Check back later!
+        }
+      </p>
+    </div>
+
+  } @else {
+
+    <!-- ── Cards Grid ───────────────────────────────────────── -->
+    <div class="row g-4 mb-2">
+      @for (community of filteredCommunities(); track community.id) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="community-card h-100" (click)="navigateToCommunity(community.id)" role="button">
+
+            <!-- Cover Image -->
+            <div class="cc-cover">
+              @if (community.image) {
+                <img [src]="community.image" [alt]="community.name" class="cc-cover-img" />
+              } @else {
+                <div class="cc-cover-placeholder">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+              }
+              <!-- Badges overlay -->
+              <div class="cc-badges">
+                @if (community.is_joined || isJoined(community.id)) {
+                  <span class="cc-badge cc-badge-joined">
+                    <i class="bi bi-check-circle-fill me-1"></i>Joined
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="cc-body">
+              <span class="cc-name">
+                {{ community.name }}
+              </span>
+              <p class="cc-desc">{{ truncate(community.description, 110) }}</p>
+
+              <!-- Stats -->
+              <div class="cc-stats">
+                <span class="cc-stat">
+                  <i class="bi bi-people-fill cc-stat-icon cc-stat-members"></i>
+                  <span class="cc-stat-value">{{ community?._count?.members ?? 0 }}</span>
+                  <span class="cc-stat-label">members</span>
+                </span>
+              </div>
+
+              <!-- Meta -->
+              <div class="cc-meta">
+                @if (community.location) {
+                  <span class="cc-meta-item">
+                    <i class="bi bi-geo-alt-fill"></i>{{ community.location }}
+                  </span>
+                }
+                @if (community.createdAt) {
+                  <span class="cc-meta-item">
+                    <i class="bi bi-calendar3"></i>{{ formatDate(community.createdAt) }}
+                  </span>
+                }
+              </div>
+
+              <!-- Join / Leave Action -->
+              <div class="cc-actions">
+                @if (community.is_joined || isJoined(community.id)) {
+                  <button
+                    class="cc-btn-leave"
+                    (click)="leaveCommunity($event, community.id)"
+                  >
+                    @if (leavingId() === community.id) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>Leaving...
+                    } @else {
+                      <i class="bi bi-box-arrow-right me-1"></i>Leave
+                    }
+                  </button>
+                } @else {
+                  <button
+                    class="cc-btn-join"
+                    [disabled]="joiningId() === community.id"
+                    (click)="joinCommunity($event, community.id)"
+                  >
+                    @if (joiningId() === community.id) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>Joining...
+                    } @else {
+                      <i class="bi bi-plus-circle me-1"></i>Join Community
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ── Pagination ────────────────────────────────────────── -->
+    @if (totalPages() > 1) {
+      <nav class="page-pagination">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <button class="page-link" (click)="goToPage(currentPage() - 1)">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          @for (page of getPages(); track page) {
+            <li class="page-item" [class.active]="page === currentPage()">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <button class="page-link" (click)="goToPage(currentPage() + 1)">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+
+  }
+}

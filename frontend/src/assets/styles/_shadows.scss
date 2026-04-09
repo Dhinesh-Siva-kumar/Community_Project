@@ -1,0 +1,153 @@
+// ============================================================
+// SHADOW SYSTEM & ELEVATION
+// ============================================================
+// 6-level elevation system + named shadows for depth and layering
+
+// ============================================================
+// ELEVATION LEVELS (6 levels)
+// ============================================================
+
+// Level 1: Subtle elevation - borders, slight depth
+$shadow-1:                  0 1px 2px rgba(0, 0, 0, 0.05);
+
+// Level 2: Small elevation - cards, buttons on hover
+$shadow-2:                  0 2px 4px rgba(0, 0, 0, 0.08);
+
+// Level 3: Medium elevation - elevated cards, dropdown menus
+$shadow-3:                  0 4px 8px rgba(0, 0, 0, 0.1);
+
+// Level 4: Large elevation - modals, popovers
+$shadow-4:                  0 8px 16px rgba(0, 0, 0, 0.12);
+
+// Level 5: Extra large elevation - floating action buttons
+$shadow-5:                  0 12px 24px rgba(0, 0, 0, 0.15);
+
+// Level 6: Maximum elevation - tooltip, context menu
+$shadow-6:                  0 16px 32px rgba(0, 0, 0, 0.2);
+
+// ============================================================
+// NAMED SHADOW SCALE (sm through 2xl)
+// ============================================================
+
+$shadow-sm:                 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md:                 0 4px 12px rgba(0, 0, 0, 0.10);
+$shadow-lg:                 0 6px 16px rgba(0, 0, 0, 0.12);
+$shadow-xl:                 0 8px 24px rgba(0, 0, 0, 0.15);
+$shadow-2xl:                0 20px 40px rgba(0, 0, 0, 0.20);
+
+// Primary Shadow (with primary color tint)
+$shadow-primary-sm:         0 4px 12px rgba(88, 101, 242, 0.3);
+$shadow-primary-md:         0 6px 16px rgba(88, 101, 242, 0.4);
+
+// ============================================================
+// SEMANTIC SHADOW ALIASES
+// ============================================================
+
+// Card shadows
+$shadow-card-default:       $shadow-2;
+$shadow-card-hover:         $shadow-3;
+$shadow-card-active:        $shadow-4;
+
+// Button shadows
+$shadow-button-hover:       $shadow-2;
+$shadow-button-active:      $shadow-3;
+$shadow-button-focus:       0 0 0 3px rgba(88, 101, 242, 0.1);
+
+// Modal/Dialog shadows
+$shadow-modal:              $shadow-6;
+$shadow-modal-sm:           $shadow-5;
+
+// Floating element shadows
+$shadow-floating:           $shadow-5;
+$shadow-floating-hover:     $shadow-6;
+
+// Navigation shadows
+$shadow-navbar:             0 2px 8px rgba(88, 101, 242, 0.08);
+$shadow-sidebar:            0 2px 8px rgba(0, 0, 0, 0.06);
+
+// ============================================================
+// SHADOW MIXINS
+// ============================================================
+
+// Elevation mixins
+@mixin shadow-elevation-1 { box-shadow: $shadow-1; }
+@mixin shadow-elevation-2 { box-shadow: $shadow-2; }
+@mixin shadow-elevation-3 { box-shadow: $shadow-3; }
+@mixin shadow-elevation-4 { box-shadow: $shadow-4; }
+@mixin shadow-elevation-5 { box-shadow: $shadow-5; }
+@mixin shadow-elevation-6 { box-shadow: $shadow-6; }
+
+// Card shadow mixin (with hover/active transitions)
+@mixin shadow-card {
+  box-shadow: $shadow-card-default;
+  transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+
+  &:active {
+    box-shadow: $shadow-card-active;
+  }
+}
+
+// Button shadow mixin
+@mixin shadow-button {
+  box-shadow: none;
+  transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    box-shadow: $shadow-button-hover;
+  }
+
+  &:active {
+    box-shadow: $shadow-button-active;
+  }
+
+  &:focus {
+    box-shadow: $shadow-button-focus;
+  }
+}
+
+// Modal shadow mixin
+@mixin shadow-modal {
+  box-shadow: $shadow-modal;
+}
+
+// ============================================================
+// SHADOW UTILITY CLASSES
+// ============================================================
+
+.shadow-1     { box-shadow: $shadow-1; }
+.shadow-2     { box-shadow: $shadow-2; }
+.shadow-3     { box-shadow: $shadow-3; }
+.shadow-4     { box-shadow: $shadow-4; }
+.shadow-5     { box-shadow: $shadow-5; }
+.shadow-6     { box-shadow: $shadow-6; }
+
+.shadow-none  { box-shadow: none; }
+
+// Semantic shadow utility classes
+.shadow-card    { @include shadow-card; }
+.shadow-button  { @include shadow-button; }
+.shadow-modal   { @include shadow-modal; }
+.shadow-floating { box-shadow: $shadow-floating; }
+
+// Hover shadow utilities
+.shadow-hover-1:hover { box-shadow: $shadow-1; }
+.shadow-hover-2:hover { box-shadow: $shadow-2; }
+.shadow-hover-3:hover { box-shadow: $shadow-3; }
+.shadow-hover-4:hover { box-shadow: $shadow-4; }
+.shadow-hover-5:hover { box-shadow: $shadow-5; }
+.shadow-hover-6:hover { box-shadow: $shadow-6; }
+
+// ============================================================
+// SHORTHAND SHADOW MIXINS
+// ============================================================
+
+@mixin box-shadow-sm  { @include shadow-elevation-1; }
+@mixin box-shadow-md  { @include shadow-elevation-2; }
+@mixin box-shadow-lg  { @include shadow-elevation-3; }
+@mixin box-shadow-xl  { @include shadow-elevation-4; }
+@mixin box-shadow-2xl { @include shadow-elevation-5; }
+@mixin box-shadow-3xl { @include shadow-elevation-6; }

@@ -1,0 +1,750 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted">Loading community...</p>
+    </div>
+  </div>
+} @else if (community()) {
+  <!-- Back Button -->
+  <div class="mb-3">
+    <a [routerLink]="backRoute()" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Back to Communities
+    </a>
+  </div>
+
+  <!-- Community Header with parallax & animated overlay -->
+  <div class="community-header card border-0 shadow-sm mb-4 overflow-hidden header-entrance">
+    <div class="header-banner">
+      @if (community()!.image) {
+        <img [src]="community()!.image" [alt]="community()!.name" class="banner-img" />
+      } @else {
+        <div class="banner-placeholder">
+          <!-- Community activity pattern behind header -->
+          <div class="banner-pattern">
+            <app-community-activity width="300" height="200"></app-community-activity>
+          </div>
+        </div>
+      }
+      <div class="banner-overlay animated-gradient-overlay"></div>
+    </div>
+    <div class="header-content p-4">
+      <div class="d-flex flex-wrap align-items-end gap-3">
+        <div class="community-avatar">
+          @if (community()!.image) {
+            <img [src]="community()!.image" [alt]="community()!.name" />
+          } @else {
+            <div class="avatar-placeholder d-flex align-items-center justify-content-center">
+              <i class="bi bi-people-fill"></i>
+            </div>
+          }
+        </div>
+        <div class="flex-grow-1">
+          <h4 class="fw-bold mb-1 text-dark">{{ community()!.name }}</h4>
+          @if (community()!.description) {
+            <p class="text-muted mb-2">{{ community()!.description }}</p>
+          }
+          <div class="d-flex flex-wrap gap-3">
+            <span class="badge bg-primary bg-opacity-10 text-primary badge-pulse">
+              <i class="bi bi-people-fill me-1"></i>{{ memberCount() }} members
+            </span>
+            <span class="badge bg-success bg-opacity-10 text-success">
+              <i class="bi bi-file-earmark-text-fill me-1"></i>{{ postCount() }} posts
+            </span>
+            @if (community()!.location) {
+              <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                <i class="bi bi-geo-alt-fill me-1"></i>{{ community()!.location }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation with sliding indicator -->
+  <ul class="nav nav-pills community-tabs mb-4">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'posts'" (click)="setTab('posts')">
+        <i class="bi bi-card-text me-1"></i>Posts
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'help'" (click)="setTab('help')">
+        <i class="bi bi-hand-thumbs-up me-1"></i>Help
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'emergency'" (click)="setTab('emergency')">
+        <i class="bi bi-exclamation-triangle me-1"></i>Emergency
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'about'" (click)="setTab('about')">
+        <i class="bi bi-info-circle me-1"></i>About
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content with fade+slide transition -->
+  <div class="tab-content-wrapper" [class.tab-transitioning]="tabTransition()">
+    @switch (activeTab()) {
+      @case ('posts') {
+        <div class="tab-posts tab-enter">
+          <!-- Create Post Form -->
+          <div class="card border-0 shadow-sm mb-4 create-post-card">
+            <div class="card-body">
+              <div class="d-flex gap-3">
+                <div class="post-avatar flex-shrink-0">
+                  @if (currentUser()?.avatar) {
+                    <img [src]="currentUser()!.avatar" [alt]="currentUser()!.displayName ?? currentUser()!.userName" class="rounded-circle" />
+                  } @else {
+                    <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                      {{ getUserInitials(currentUser()) }}
+                    </div>
+                  }
+                </div>
+                <div class="flex-grow-1">
+                  <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+                    <textarea
+                      class="form-control mb-2"
+                      formControlName="content"
+                      rows="3"
+                      placeholder="Share something with the community..."
+                      [class.is-invalid]="postForm.get('content')?.touched && postForm.get('content')?.invalid"
+                    ></textarea>
+                    @if (postForm.get('content')?.touched && postForm.get('content')?.errors?.['required']) {
+                      <div class="text-danger small mb-2">Post content is required.</div>
+                    }
+
+                    <!-- Image Previews -->
+                    @if (postImagePreviews().length > 0) {
+                      <div class="d-flex flex-wrap gap-2 mb-2">
+                        @for (preview of postImagePreviews(); track $index) {
+                          <div class="post-image-preview position-relative">
+                            <img [src]="preview" alt="Preview" class="rounded" />
+                            <button type="button" class="btn btn-sm btn-danger remove-img-btn" (click)="removePostImage($index)">
+                              <i class="bi bi-x"></i>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                      <div class="d-flex gap-2 align-items-center">
+                        <!-- Post Type Selection -->
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button
+                            type="button"
+                            class="btn"
+                            [class.btn-primary]="selectedPostType() === 'GENERAL'"
+                            [class.btn-outline-primary]="selectedPostType() !== 'GENERAL'"
+                            (click)="setPostType('GENERAL')"
+                          >General</button>
+                          <button
+                            type="button"
+                            class="btn"
+                            [class.btn-warning]="selectedPostType() === 'HELP'"
+                            [class.btn-outline-warning]="selectedPostType() !== 'HELP'"
+                            (click)="setPostType('HELP')"
+                          >Help</button>
+                          <button
+                            type="button"
+                            class="btn"
+                            [class.btn-danger]="selectedPostType() === 'EMERGENCY'"
+                            [class.btn-outline-danger]="selectedPostType() !== 'EMERGENCY'"
+                            (click)="setPostType('EMERGENCY')"
+                          >Emergency</button>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="postImageInput.click()">
+                          <i class="bi bi-image"></i>
+                        </button>
+                        <input
+                          #postImageInput
+                          type="file"
+                          class="d-none"
+                          accept="image/*"
+                          multiple
+                          (change)="onPostImageSelect($event)"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-primary btn-ripple"
+                        [disabled]="submittingPost() || postForm.invalid"
+                      >
+                        @if (submittingPost()) {
+                          <span class="spinner-border spinner-border-sm me-1"></span>Posting...
+                        } @else {
+                          <i class="bi bi-send me-1"></i>Post
+                        }
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Posts List -->
+          @if (loadingPosts()) {
+            <div class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+              <span class="text-muted">Loading posts...</span>
+            </div>
+          } @else if (filteredPosts().length === 0) {
+            <div class="empty-state text-center py-5">
+              <div class="empty-icon mb-3">
+                <i class="bi bi-chat-square-text"></i>
+              </div>
+              <h6 class="fw-bold">No posts yet</h6>
+              <p class="text-muted small">Be the first to share something with this community!</p>
+            </div>
+          } @else {
+            @for (post of filteredPosts(); track post.id; let i = $index) {
+              <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+                <div class="card-body fade-in-up">
+                  <!-- Post Header -->
+                  <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="post-avatar flex-shrink-0">
+                      @if (post.user?.avatar) {
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                          {{ getUserInitials(post.user) }}
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
+                      <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
+                    </div>
+                    <span class="badge {{ getPostTypeBadge(post.type).class }} rounded-pill">
+                      <i class="bi {{ getPostTypeBadge(post.type).icon }} me-1"></i>
+                      {{ getPostTypeBadge(post.type).label }}
+                    </span>
+                  </div>
+
+                  <!-- Post Content -->
+                  <p class="post-content mb-3">{{ post.content }}</p>
+
+                  <!-- Post Images -->
+                  @if (post.images && post.images.length > 0) {
+                    <div class="post-images mb-3">
+                      @if (post.images.length === 1) {
+                        <img [src]="post.images[0]" alt="Post image" class="img-fluid rounded single-image" />
+                      } @else {
+                        <div class="image-grid">
+                          @for (img of post.images; track $index) {
+                            <img [src]="img" alt="Post image" class="rounded" />
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- Post Actions -->
+                  <div class="d-flex gap-1 border-top pt-2">
+                    <button
+                      class="btn btn-sm btn-light flex-grow-1 action-btn"
+                      [class.text-primary]="post.isLiked"
+                      [class.fw-semibold]="post.isLiked"
+                      [class.heartbeat-active]="post.isLiked"
+                      [disabled]="likingPost() === post.id"
+                      (click)="toggleLike(post)"
+                    >
+                      <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>
+                      {{ post._count?.likes ?? 0 }}
+                    </button>
+                    <button
+                      class="btn btn-sm btn-light flex-grow-1 action-btn"
+                      [class.text-primary]="isCommentsExpanded(post.id)"
+                      (click)="toggleComments(post.id)"
+                    >
+                      <i class="bi bi-chat me-1"></i>
+                      {{ post._count?.comments ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn btn-ripple" (click)="sharePost(post)">
+                      <i class="bi bi-share me-1"></i>Share
+                    </button>
+                  </div>
+
+                  <!-- Comments Section (smooth expand) -->
+                  @if (isCommentsExpanded(post.id)) {
+                    <div class="comments-section mt-3 pt-3 border-top comments-expand">
+                      @if (isLoadingComments(post.id)) {
+                        <div class="text-center py-2">
+                          <div class="spinner-border spinner-border-sm text-muted"></div>
+                        </div>
+                      } @else {
+                        <!-- Comment List -->
+                        @for (comment of getComments(post.id); track comment.id; let ci = $index) {
+                          <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (comment.user?.avatar) {
+                                <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                                  {{ getUserInitials(comment.user) }}
+                                </div>
+                              }
+                            </div>
+                            <div class="comment-body">
+                              <div class="comment-bubble p-2 rounded">
+                                <span class="fw-semibold small">{{ getUserFullName(comment.user) }}</span>
+                                <p class="mb-0 small">{{ comment.content }}</p>
+                              </div>
+                              <small class="text-muted ps-2">{{ getTimeAgo(comment.createdAt) }}</small>
+                            </div>
+                          </div>
+                        }
+
+                        @if (getComments(post.id).length === 0) {
+                          <p class="text-muted small text-center mb-3">No comments yet. Be the first!</p>
+                        }
+
+                        <!-- Add Comment -->
+                        <div class="d-flex gap-2">
+                          <div class="comment-avatar flex-shrink-0">
+                            @if (currentUser()?.avatar) {
+                              <img [src]="currentUser()!.avatar" class="rounded-circle" />
+                            } @else {
+                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                                {{ getUserInitials(currentUser()) }}
+                              </div>
+                            }
+                          </div>
+                          <form class="flex-grow-1 d-flex gap-2" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                            <input
+                              type="text"
+                              class="form-control form-control-sm"
+                              formControlName="content"
+                              placeholder="Write a comment..."
+                            />
+                            <button
+                              type="submit"
+                              class="btn btn-sm btn-primary btn-ripple"
+                              [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid"
+                            >
+                              @if (submittingComment() === post.id) {
+                                <span class="spinner-border spinner-border-sm"></span>
+                              } @else {
+                                <i class="bi bi-send"></i>
+                              }
+                            </button>
+                          </form>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Load More -->
+            @if (currentPage() < totalPages()) {
+              <div class="text-center mb-4">
+                <button class="btn btn-outline-primary btn-ripple" [disabled]="loadingMore()" (click)="loadMore()">
+                  @if (loadingMore()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>Loading...
+                  } @else {
+                    <i class="bi bi-arrow-down-circle me-1"></i>Load More Posts
+                  }
+                </button>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @case ('help') {
+        <div class="tab-help tab-enter">
+          <!-- Create Help Post Form -->
+          <div class="card border-0 shadow-sm mb-4 create-post-card border-start border-4 border-warning">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3">
+                <i class="bi bi-hand-thumbs-up-fill text-warning me-2"></i>Ask for Help
+              </h6>
+              <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+                <textarea
+                  class="form-control mb-2"
+                  formControlName="content"
+                  rows="3"
+                  placeholder="What do you need help with?"
+                ></textarea>
+                <div class="d-flex justify-content-between align-items-center">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="postImageInput2.click()">
+                    <i class="bi bi-image me-1"></i>Add Image
+                  </button>
+                  <input #postImageInput2 type="file" class="d-none" accept="image/*" multiple (change)="onPostImageSelect($event)" />
+                  <button type="submit" class="btn btn-sm btn-warning btn-ripple" [disabled]="submittingPost() || postForm.invalid">
+                    @if (submittingPost()) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>Posting...
+                    } @else {
+                      <i class="bi bi-send me-1"></i>Post Help Request
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Help Posts -->
+          @if (filteredPosts().length === 0) {
+            <div class="empty-state text-center py-5">
+              <div class="empty-icon mb-3">
+                <i class="bi bi-hand-thumbs-up"></i>
+              </div>
+              <h6 class="fw-bold">No help requests yet</h6>
+              <p class="text-muted small">Post a help request to get assistance from the community.</p>
+            </div>
+          } @else {
+            @for (post of filteredPosts(); track post.id; let i = $index) {
+              <div class="card border-0 shadow-sm mb-3 post-card border-start border-3 border-warning post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+                <div class="card-body fade-in-up">
+                  <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="post-avatar flex-shrink-0">
+                      @if (post.user?.avatar) {
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                          {{ getUserInitials(post.user) }}
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
+                      <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
+                    </div>
+                    <span class="badge bg-warning text-dark rounded-pill">
+                      <i class="bi bi-hand-thumbs-up-fill me-1"></i>Help
+                    </span>
+                  </div>
+                  <p class="post-content mb-3">{{ post.content }}</p>
+                  @if (post.images && post.images.length > 0) {
+                    <div class="post-images mb-3">
+                      @for (img of post.images; track $index) {
+                        <img [src]="img" alt="Post image" class="img-fluid rounded me-2 mb-2" style="max-height: 200px;" />
+                      }
+                    </div>
+                  }
+                  <div class="d-flex gap-1 border-top pt-2">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" (click)="toggleLike(post)">
+                      <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn" (click)="toggleComments(post.id)">
+                      <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn btn-ripple" (click)="sharePost(post)">
+                      <i class="bi bi-share me-1"></i>Share
+                    </button>
+                  </div>
+                  @if (isCommentsExpanded(post.id)) {
+                    <div class="comments-section mt-3 pt-3 border-top comments-expand">
+                      @if (isLoadingComments(post.id)) {
+                        <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-muted"></div></div>
+                      } @else {
+                        @for (comment of getComments(post.id); track comment.id; let ci = $index) {
+                          <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (comment.user?.avatar) {
+                                <img [src]="comment.user?.avatar" class="rounded-circle" />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                                  {{ getUserInitials(comment.user) }}
+                                </div>
+                              }
+                            </div>
+                            <div class="comment-body">
+                              <div class="comment-bubble p-2 rounded">
+                                <span class="fw-semibold small">{{ getUserFullName(comment.user) }}</span>
+                                <p class="mb-0 small">{{ comment.content }}</p>
+                              </div>
+                              <small class="text-muted ps-2">{{ getTimeAgo(comment.createdAt) }}</small>
+                            </div>
+                          </div>
+                        }
+                        <div class="d-flex gap-2">
+                          <div class="comment-avatar flex-shrink-0">
+                            <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                              {{ getUserInitials(currentUser()) }}
+                            </div>
+                          </div>
+                          <form class="flex-grow-1 d-flex gap-2" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                            <input type="text" class="form-control form-control-sm" formControlName="content" placeholder="Write a comment..." />
+                            <button type="submit" class="btn btn-sm btn-primary btn-ripple" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                              <i class="bi bi-send"></i>
+                            </button>
+                          </form>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @case ('emergency') {
+        <div class="tab-emergency tab-enter">
+          <!-- Create Emergency Post Form -->
+          <div class="card border-0 shadow-sm mb-4 create-post-card border-start border-4 border-danger">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Report Emergency
+              </h6>
+              <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+                <textarea
+                  class="form-control mb-2"
+                  formControlName="content"
+                  rows="3"
+                  placeholder="Describe the emergency situation..."
+                ></textarea>
+                <div class="d-flex justify-content-between align-items-center">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="postImageInput3.click()">
+                    <i class="bi bi-image me-1"></i>Add Image
+                  </button>
+                  <input #postImageInput3 type="file" class="d-none" accept="image/*" multiple (change)="onPostImageSelect($event)" />
+                  <button type="submit" class="btn btn-sm btn-danger btn-ripple" [disabled]="submittingPost() || postForm.invalid">
+                    @if (submittingPost()) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>Posting...
+                    } @else {
+                      <i class="bi bi-send me-1"></i>Post Emergency Alert
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Emergency Posts -->
+          @if (filteredPosts().length === 0) {
+            <div class="empty-state text-center py-5">
+              <div class="empty-icon emergency-icon mb-3">
+                <i class="bi bi-exclamation-triangle"></i>
+              </div>
+              <h6 class="fw-bold">No emergency posts</h6>
+              <p class="text-muted small">There are no active emergency reports in this community.</p>
+            </div>
+          } @else {
+            @for (post of filteredPosts(); track post.id; let i = $index) {
+              <div class="card border-0 shadow-sm mb-3 post-card border-start border-3 border-danger post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+                <div class="card-body fade-in-up">
+                  <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="post-avatar flex-shrink-0">
+                      @if (post.user?.avatar) {
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                          {{ getUserInitials(post.user) }}
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
+                      <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
+                    </div>
+                    <span class="badge bg-danger rounded-pill">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>Emergency
+                    </span>
+                  </div>
+                  <p class="post-content mb-3">{{ post.content }}</p>
+                  @if (post.images && post.images.length > 0) {
+                    <div class="post-images mb-3">
+                      @for (img of post.images; track $index) {
+                        <img [src]="img" alt="Post image" class="img-fluid rounded me-2 mb-2" style="max-height: 200px;" />
+                      }
+                    </div>
+                  }
+                  <div class="d-flex gap-1 border-top pt-2">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" (click)="toggleLike(post)">
+                      <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn" (click)="toggleComments(post.id)">
+                      <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn btn-ripple" (click)="sharePost(post)">
+                      <i class="bi bi-share me-1"></i>Share
+                    </button>
+                  </div>
+                  @if (isCommentsExpanded(post.id)) {
+                    <div class="comments-section mt-3 pt-3 border-top comments-expand">
+                      @if (isLoadingComments(post.id)) {
+                        <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-muted"></div></div>
+                      } @else {
+                        @for (comment of getComments(post.id); track comment.id; let ci = $index) {
+                          <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (comment.user?.avatar) {
+                                <img [src]="comment.user?.avatar" class="rounded-circle" />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                                  {{ getUserInitials(comment.user) }}
+                                </div>
+                              }
+                            </div>
+                            <div class="comment-body">
+                              <div class="comment-bubble p-2 rounded">
+                                <span class="fw-semibold small">{{ getUserFullName(comment.user) }}</span>
+                                <p class="mb-0 small">{{ comment.content }}</p>
+                              </div>
+                              <small class="text-muted ps-2">{{ getTimeAgo(comment.createdAt) }}</small>
+                            </div>
+                          </div>
+                        }
+                        <div class="d-flex gap-2">
+                          <div class="comment-avatar flex-shrink-0">
+                            <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                              {{ getUserInitials(currentUser()) }}
+                            </div>
+                          </div>
+                          <form class="flex-grow-1 d-flex gap-2" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                            <input type="text" class="form-control form-control-sm" formControlName="content" placeholder="Write a comment..." />
+                            <button type="submit" class="btn btn-sm btn-primary btn-ripple" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                              <i class="bi bi-send"></i>
+                            </button>
+                          </form>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @case ('about') {
+        <div class="tab-about tab-enter">
+          <div class="row g-4">
+            <!-- Community Info -->
+            <div class="col-lg-7" appAnimateOnScroll>
+              <div class="card border-0 shadow-sm fade-in-up">
+                <div class="card-body p-4">
+                  <h5 class="fw-bold mb-4">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>Community Information
+                  </h5>
+
+                  <div class="info-grid">
+                    <div class="info-item d-flex gap-3 mb-4 info-item-animate" style="animation-delay: 0ms;">
+                      <div class="info-icon">
+                        <i class="bi bi-card-text"></i>
+                      </div>
+                      <div>
+                        <label class="text-muted small fw-semibold d-block mb-1">Description</label>
+                        <p class="mb-0">{{ community()!.description || 'No description provided.' }}</p>
+                      </div>
+                    </div>
+
+                    @if (community()!.location) {
+                      <div class="info-item d-flex gap-3 mb-4 info-item-animate" style="animation-delay: 80ms;">
+                        <div class="info-icon">
+                          <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div>
+                          <label class="text-muted small fw-semibold d-block mb-1">Location</label>
+                          <p class="mb-0">{{ community()!.location }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    @if (community()!.location) {
+                      <div class="info-item d-flex gap-3 mb-4 info-item-animate" style="animation-delay: 160ms;">
+                        <div class="info-icon">
+                          <i class="bi bi-mailbox"></i>
+                        </div>
+                        <div>
+                          <label class="text-muted small fw-semibold d-block mb-1">Pincode</label>
+                          <p class="mb-0">{{ community()!.location }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="info-item d-flex gap-3 mb-4 info-item-animate" style="animation-delay: 240ms;">
+                      <div class="info-icon">
+                        <i class="bi bi-calendar3"></i>
+                      </div>
+                      <div>
+                        <label class="text-muted small fw-semibold d-block mb-1">Created</label>
+                        <p class="mb-0">{{ formatDate(community()!.createdAt) }}</p>
+                      </div>
+                    </div>
+
+                    <div class="info-item d-flex gap-3 mb-4 info-item-animate" style="animation-delay: 320ms;">
+                      <div class="info-icon">
+                        <i class="bi bi-people-fill"></i>
+                      </div>
+                      <div>
+                        <label class="text-muted small fw-semibold d-block mb-1">Members</label>
+                        <p class="mb-0">{{ memberCount() }} members</p>
+                      </div>
+                    </div>
+
+                    <div class="info-item d-flex gap-3 info-item-animate" style="animation-delay: 400ms;">
+                      <div class="info-icon">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                      </div>
+                      <div>
+                        <label class="text-muted small fw-semibold d-block mb-1">Posts</label>
+                        <p class="mb-0">{{ postCount() }} posts</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Members List -->
+            <div class="col-lg-5" appAnimateOnScroll>
+              <div class="card border-0 shadow-sm fade-in-up stagger-2">
+                <div class="card-header bg-white border-0 py-3">
+                  <h6 class="fw-bold mb-0">
+                    <i class="bi bi-people-fill text-primary me-2"></i>Members
+                    <span class="badge bg-primary bg-opacity-10 text-primary ms-2">{{ members().length }}</span>
+                  </h6>
+                </div>
+                <div class="card-body p-0">
+                  <div class="member-list">
+                    @if (members().length === 0) {
+                      <div class="text-center py-4">
+                        <p class="text-muted small mb-0">No members yet.</p>
+                      </div>
+                    } @else {
+                      @for (member of members(); track member.id; let mi = $index) {
+                        <div class="member-item d-flex align-items-center gap-3 p-3 border-bottom member-fade-in" [style.animation-delay]="(mi * 50) + 'ms'">
+                          <div class="member-avatar">
+                            @if (member.user?.avatar) {
+                              <img [src]="member.user?.avatar" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" />
+                            } @else {
+                              <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                                {{ getUserInitials(member.user) }}
+                              </div>
+                            }
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-0 small fw-semibold">{{ getUserFullName(member.user) }}</h6>
+                            <small class="text-muted">Joined {{ getTimeAgo(member.joinedAt) }}</small>
+                          </div>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+}

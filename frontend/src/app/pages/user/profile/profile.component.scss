@@ -1,0 +1,112 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// User Profile Styles
+// ===========================
+
+// Avatar
+.avatar-wrapper {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid $indigo-50;
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+    color: $white;
+    font-size: 1.5rem;
+  }
+}
+
+.avatar-upload-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: $indigo-600;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid $white;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: $indigo-700;
+  }
+}
+
+// Tabs
+.nav-pills {
+  .nav-link {
+    border-radius: 10px;
+    color: $slate-500;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: $slate-100;
+      color: $slate-800;
+    }
+
+    &.active {
+      background-color: $indigo-600;
+      color: $white;
+    }
+  }
+}
+
+// Card
+.card {
+  border-radius: 14px;
+
+  .card-header {
+    border-radius: 14px 14px 0 0 !important;
+  }
+}
+
+// Progress bar
+.progress {
+  border-radius: 10px;
+  background-color: $slate-100;
+}
+
+// Interest badges
+.badge {
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+// Form readonly styling
+.form-control[readonly] {
+  background-color: $slate-50;
+  border-color: $slate-200;
+}
+
+// Responsive
+@include media-sm-max {
+  .avatar-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+
+  .nav-pills .nav-link {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
+}

@@ -1,0 +1,460 @@
+@use '../../../assets/styles/index' as *;
+
+// ===========================
+// Admin Layout — Discord-inspired Sidebar & Header
+// ===========================
+
+// ---- Layout Dimensions ----
+$sidebar-collapsed-width: 70px;
+$header-height: 64px;
+$transition-speed: 0.3s;
+
+// ---- Sidebar Palette ----
+$sidebar-bg: $white;
+$sidebar-text: $muted;
+$sidebar-active-text: $primary;
+$sidebar-active-bg: rgba($primary, 0.08);
+$sidebar-hover-bg: rgba($primary, 0.04);
+$sidebar-border: $border;
+
+// ============================================================
+// SIDEBAR OVERLAY (mobile)
+// ============================================================
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1040;
+  animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: $sidebar-width;
+  height: 100vh;
+  background: $sidebar-bg;
+  border-right: 1px solid $sidebar-border;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  transition: width $transition-speed ease, transform $transition-speed ease;
+  overflow: hidden;
+
+  &.collapsed {
+    width: $sidebar-collapsed-width;
+
+    .nav-item {
+      justify-content: center;
+      padding: 0.625rem;
+
+      .bi {
+        margin-right: 0;
+        font-size: 1.25rem;
+      }
+    }
+
+    .sidebar-header {
+      justify-content: center;
+      padding: 0 0.5rem;
+    }
+  }
+
+  @include media-lg-max {
+    transform: translateX(-100%);
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// ---- Sidebar Header ----
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  height: $header-height;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid $sidebar-border;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  background: linear-gradient(135deg, $primary, $accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sidebar-brand-icon {
+  font-size: 1.5rem;
+  color: $primary;
+}
+
+// ---- Sidebar Nav ----
+.sidebar-nav {
+  flex: 1;
+  padding: 0.75rem 0.625rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 2px;
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  color: $sidebar-text;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+  position: relative;
+
+  .bi {
+    font-size: 1.125rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+  }
+
+  .nav-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover {
+    background: $sidebar-hover-bg;
+    color: $text;
+  }
+
+  &.active {
+    background: $sidebar-active-bg;
+    color: $sidebar-active-text;
+    font-weight: 700;
+
+    .bi {
+      color: $primary;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 55%;
+      background: linear-gradient(180deg, $primary, $accent);
+      border-radius: 0 3px 3px 0;
+    }
+  }
+}
+
+// ============================================================
+// MAIN WRAPPER
+// ============================================================
+.main-wrapper {
+  margin-left: $sidebar-width;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left $transition-speed ease;
+
+  &.sidebar-collapsed {
+    margin-left: $sidebar-collapsed-width;
+  }
+
+  &.sidebar-hidden {
+    margin-left: 0;
+  }
+}
+
+// ============================================================
+// TOP HEADER — Frosted Glass
+// ============================================================
+.top-header {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  height: $header-height;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid $sidebar-border;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  font-size: 1.375rem;
+  color: $text;
+  cursor: pointer;
+  padding: 0.375rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: rgba($primary, 0.06);
+    color: $primary;
+  }
+}
+
+.header-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: $dark;
+  letter-spacing: -0.2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// ---- Header Icon Button (Bell) ----
+.header-icon-btn {
+  position: relative;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: $muted;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: rgba($primary, 0.06);
+    color: $primary;
+  }
+
+  .bi {
+    font-size: 1.25rem;
+  }
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: $danger;
+  color: $white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+// ============================================================
+// USER DROPDOWN
+// ============================================================
+.user-dropdown-wrapper {
+  position: relative;
+}
+
+.user-avatar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid $border;
+}
+
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary, $accent);
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+  z-index: 1060;
+  animation: fadeInDown 0.15s ease;
+  overflow: hidden;
+}
+
+.dropdown-user-info {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: $dark;
+  }
+
+  small {
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: $border;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text;
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba($primary, 0.04);
+    color: $primary;
+  }
+
+  &.text-danger {
+    color: $danger;
+
+    &:hover {
+      background: $error-bg;
+      color: $danger;
+    }
+  }
+
+  .bi {
+    font-size: 1rem;
+  }
+}
+
+// ============================================================
+// MAIN CONTENT
+// ============================================================
+.main-content {
+  margin-left: 0px !important;
+  flex: 1;
+  padding: 1.5rem;
+  background: $bg;
+  min-height: calc(100vh - #{$header-height});
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+.d-none {
+  display: none !important;
+}
+
+@media (min-width: 576px) {
+  .d-sm-inline {
+    display: inline !important;
+  }
+}
+
+// ============================================================
+// ANIMATIONS
+// ============================================================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================================
+// REDUCED MOTION
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .main-wrapper,
+  .nav-item,
+  .sidebar-toggle,
+  .header-icon-btn,
+  .dropdown-item {
+    transition: none;
+  }
+
+  .sidebar-overlay,
+  .user-dropdown-menu {
+    animation: none;
+  }
+}

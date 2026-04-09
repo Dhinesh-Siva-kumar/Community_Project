@@ -1,0 +1,158 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// Admin Events Styles
+// ===========================
+
+// Stat Cards
+.stat-card {
+  border-radius: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.4rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: $slate-800;
+  }
+}
+
+// Event Card
+.event-card {
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+
+    h6 {
+      color: $amber-700 !important;
+    }
+  }
+
+  .event-img-wrapper {
+    overflow: hidden;
+    background-color: $slate-100;
+
+    .event-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      min-height: 140px;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover .event-img {
+      transform: scale(1.05);
+    }
+
+    .event-img-placeholder {
+      background: linear-gradient(135deg, $amber-500 0%, $amber-700 100%);
+      min-height: 140px;
+
+      i {
+        font-size: 2.5rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: $amber-50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+
+    i {
+      font-size: 2rem;
+      color: $amber-700;
+    }
+  }
+}
+
+// Preview
+.preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+// Pagination
+.pagination {
+  .page-link {
+    border-radius: 8px !important;
+    margin: 0 2px;
+    border: none;
+    color: $slate-500;
+    padding: 0.4rem 0.75rem;
+
+    &:hover {
+      background-color: $amber-50;
+      color: $amber-700;
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: $amber-700;
+    color: #fff;
+  }
+
+  .page-item.disabled .page-link {
+    opacity: 0.5;
+  }
+}
+
+.card {
+  border-radius: 14px;
+}
+
+.modal-content {
+  border-radius: 14px;
+}
+
+@include media-sm-max {
+  .stat-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .event-card .event-img-wrapper {
+    .event-img,
+    .event-img-placeholder {
+      min-height: 120px;
+    }
+  }
+}

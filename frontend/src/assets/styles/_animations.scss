@@ -1,0 +1,427 @@
+// ============================================================
+// ANIMATION & TRANSITION SYSTEM
+// ============================================================
+// Consistent animations and transitions across the application
+
+// ============================================================
+// ANIMATION TIMING & EASING
+// ============================================================
+
+// Easing functions (Material Design standard)
+$easing-standard:           cubic-bezier(0.4, 0, 0.2, 1);
+$easing-decelerate:         cubic-bezier(0, 0, 0.2, 1);
+$easing-accelerate:         cubic-bezier(0.4, 0, 1, 1);
+$easing-sharp:              cubic-bezier(0.4, 0, 0.6, 1);
+$easing-ease-in-out:        ease-in-out;
+$easing-ease-in:            ease-in;
+$easing-ease-out:           ease-out;
+$easing-linear:             linear;
+
+// Duration variables
+$duration-quick:            150ms;
+$duration-short:            200ms;
+$duration-base:             250ms;
+$duration-long:             350ms;
+$duration-longer:           500ms;
+
+// Legacy transition aliases
+$transition-fast:           $duration-quick ease;
+$transition-base:           $duration-short ease;
+$transition-slow:           0.28s $easing-standard;
+
+// ============================================================
+// TRANSITION MIXINS
+// ============================================================
+
+// Quick transition (for interactive elements like buttons)
+@mixin transition-quick($properties: all) {
+  transition: $properties $duration-quick $easing-standard;
+}
+
+// Short transition (standard hover/focus effects)
+@mixin transition-short($properties: all) {
+  transition: $properties $duration-short $easing-standard;
+}
+
+// Base transition (default, most common)
+@mixin transition-base($properties: all) {
+  transition: $properties $duration-base $easing-standard;
+}
+
+// Long transition (slower, for modals, page transitions)
+@mixin transition-long($properties: all) {
+  transition: $properties $duration-long $easing-standard;
+}
+
+// Longer transition (slowest, for complex animations)
+@mixin transition-longer($properties: all) {
+  transition: $properties $duration-longer $easing-standard;
+}
+
+// Custom transition
+@mixin transition($properties: all, $duration: $duration-base, $easing: $easing-standard) {
+  transition: $properties $duration $easing;
+}
+
+// ============================================================
+// CSS CUSTOM PROPERTIES (Animation timing)
+// ============================================================
+
+:root {
+  --animation-delay: 0ms;
+  --animation-duration: 600ms;
+  --animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+// ============================================================
+// COMMON KEYFRAME ANIMATIONS
+// ============================================================
+
+// --- Fade ---
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// --- Slide ---
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideTab {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// --- Scale ---
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.08); }
+  70%  { transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+// --- Attention / Looping ---
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25%      { transform: scale(1.2); }
+  50%      { transform: scale(1); }
+  75%      { transform: scale(1.15); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.3); }
+  50%      { box-shadow: 0 0 0 8px rgba(88, 101, 242, 0); }
+}
+
+// --- Skeleton / Loading ---
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes strokeDraw {
+  from { stroke-dashoffset: 1000; }
+  to   { stroke-dashoffset: 0; }
+}
+
+// Shimmer Animation Gradient (for skeleton loaders)
+$shimmer-gradient: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+
+// ============================================================
+// ANIMATION UTILITY CLASSES
+// ============================================================
+
+// Fade animations
+.animate-fade-in          { animation: fadeIn $duration-base $easing-standard; }
+.animate-fade-out         { animation: fadeOut $duration-base $easing-standard; }
+
+// Slide animations
+.animate-slide-in-down    { animation: slideInDown $duration-base $easing-standard; }
+.animate-slide-in-up      { animation: slideInUp $duration-base $easing-standard; }
+.animate-slide-in-left    { animation: slideInLeft $duration-base $easing-standard; }
+.animate-slide-in-right   { animation: slideInRight $duration-base $easing-standard; }
+
+// Scale animations
+.animate-scale-in         { animation: scaleIn $duration-base $easing-standard; }
+.animate-scale-out        { animation: scaleOut $duration-base $easing-standard; }
+
+// Attention animations
+.animate-bounce           { animation: bounce $duration-base $easing-standard infinite; }
+.animate-pulse            { animation: pulse 2s $easing-ease-in-out infinite; }
+.animate-spin             { animation: spin 1s $easing-linear infinite; }
+
+// ============================================================
+// TRANSITION UTILITY CLASSES
+// ============================================================
+
+.transition-quick   { @include transition-quick(); }
+.transition-short   { @include transition-short(); }
+.transition-base    { @include transition-base(); }
+.transition-long    { @include transition-long(); }
+.transition-longer  { @include transition-longer(); }
+
+// Specific property transitions
+.transition-colors {
+  transition: color $duration-short $easing-standard,
+              background-color $duration-short $easing-standard,
+              border-color $duration-short $easing-standard;
+}
+
+.transition-opacity   { @include transition-short(opacity); }
+.transition-transform { @include transition-short(transform); }
+.transition-shadow    { @include transition-short(box-shadow); }
+.transition-all       { @include transition-short(all); }
+
+// ============================================================
+// SCROLL-TRIGGERED ANIMATION SYSTEM
+// ============================================================
+
+// Base class for scroll-triggered animations
+.animate-on-scroll {
+  opacity: 0;
+
+  &.visible {
+    animation-fill-mode: forwards;
+    animation-timing-function: var(--animation-easing);
+  }
+}
+
+// Animation type classes (activated with .visible)
+.fade-in-up.visible {
+  animation: fadeInUp var(--animation-duration) var(--animation-easing) var(--animation-delay) forwards;
+}
+
+.fade-in-left.visible {
+  animation: fadeInLeft var(--animation-duration) var(--animation-easing) var(--animation-delay) forwards;
+}
+
+.fade-in-right.visible {
+  animation: fadeInRight var(--animation-duration) var(--animation-easing) var(--animation-delay) forwards;
+}
+
+.slide-in-up.visible {
+  animation: slideInUp var(--animation-duration) var(--animation-easing) var(--animation-delay) forwards;
+}
+
+.scale-in.visible {
+  animation: scaleIn var(--animation-duration) var(--animation-easing) var(--animation-delay) forwards;
+}
+
+.bounce-in.visible {
+  animation: bounceIn 700ms var(--animation-easing) var(--animation-delay) forwards;
+}
+
+// Stagger delay utilities (100ms increments)
+.stagger-1 { --animation-delay: 100ms; }
+.stagger-2 { --animation-delay: 200ms; }
+.stagger-3 { --animation-delay: 300ms; }
+.stagger-4 { --animation-delay: 400ms; }
+.stagger-5 { --animation-delay: 500ms; }
+.stagger-6 { --animation-delay: 600ms; }
+
+// ============================================================
+// DECORATIVE BACKGROUND UTILITIES
+// ============================================================
+
+.bg-dots-pattern {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, rgba(88, 101, 242, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+.bg-connection-lines {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(45deg, rgba(88, 101, 242, 0.03) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(88, 101, 242, 0.03) 25%, transparent 25%),
+      linear-gradient(135deg, rgba(88, 101, 242, 0.03) 25%, transparent 25%),
+      linear-gradient(-135deg, rgba(88, 101, 242, 0.03) 25%, transparent 25%);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+// ============================================================
+// INTERACTIVE ANIMATION UTILITIES
+// ============================================================
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(88, 101, 242, 0.1) 25%,
+    rgba(88, 101, 242, 0.2) 50%,
+    rgba(88, 101, 242, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    width: 100px;
+    height: 100px;
+    margin-top: -50px;
+    margin-left: -50px;
+    top: 50%;
+    left: 50%;
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  &:active::after {
+    animation: ripple 0.6s ease-out;
+  }
+}
+
+.heartbeat-on-hover:hover {
+  animation: heartbeat 0.6s ease-in-out;
+}
+
+.icon-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.tilt-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.counter-animate {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+// ============================================================
+// ACCESSIBILITY: REDUCED MOTION
+// ============================================================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-on-scroll {
+    opacity: 1;
+  }
+}

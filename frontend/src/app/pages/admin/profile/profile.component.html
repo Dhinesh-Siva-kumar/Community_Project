@@ -1,0 +1,281 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted">Loading profile...</p>
+    </div>
+  </div>
+} @else {
+  @if (user(); as u) {
+    <!-- Profile Header -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap align-items-center gap-4">
+          <!-- Avatar -->
+          <div class="position-relative">
+            <div class="avatar-wrapper">
+              @if (getAvatarUrl()) {
+                <img [src]="getAvatarUrl()" alt="Avatar" class="avatar-img" />
+              } @else {
+                <div class="avatar-placeholder d-flex align-items-center justify-content-center">
+                  <span class="fw-bold">{{ (u.displayName ?? u.userName)?.charAt(0)?.toUpperCase() }}</span>
+                </div>
+              }
+            </div>
+            @if (editMode()) {
+              <label class="avatar-upload-btn" role="button">
+                <i class="bi bi-camera-fill"></i>
+                <input type="file" class="d-none" accept="image/*" (change)="onAvatarSelected($event)" />
+              </label>
+            }
+          </div>
+          <!-- Info -->
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <h4 class="fw-bold mb-0">{{ fullName() }}</h4>
+              <span class="badge bg-danger">
+                <i class="bi bi-shield-fill-check me-1"></i>ADMIN
+              </span>
+            </div>
+            <p class="text-muted mb-2">{{ u.email }}</p>
+            <div class="d-flex align-items-center gap-2" style="max-width: 300px;">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div
+                  class="progress-bar"
+                  [ngClass]="getProgressBarClass()"
+                  [style.width.%]="profileCompletion()"
+                ></div>
+              </div>
+              <small class="text-muted fw-semibold">{{ profileCompletion() }}%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab() === 'personal'"
+          (click)="setTab('personal')"
+        >
+          <i class="bi bi-person me-1"></i> Personal Info
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab() === 'admin-info'"
+          (click)="setTab('admin-info')"
+        >
+          <i class="bi bi-shield me-1"></i> Admin Info
+        </button>
+      </li>
+    </ul>
+
+    <!-- ==================== PERSONAL INFO TAB ==================== -->
+    @if (activeTab() === 'personal') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+          <h6 class="fw-bold mb-0">Personal Information</h6>
+          <button class="btn btn-sm" [ngClass]="editMode() ? 'btn-outline-secondary' : 'btn-outline-primary'" (click)="toggleEdit()">
+            @if (editMode()) {
+              <i class="bi bi-x-lg me-1"></i> Cancel
+            } @else {
+              <i class="bi bi-pencil me-1"></i> Edit
+            }
+          </button>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Display Name</label>
+                <input type="text" class="form-control" formControlName="displayName" [readonly]="!editMode()" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Email</label>
+                <input type="email" class="form-control" formControlName="email" readonly />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Phone</label>
+                <input type="text" class="form-control" formControlName="phoneNo" [readonly]="!editMode()" placeholder="Phone number" />
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Bio</label>
+                <textarea class="form-control" formControlName="bio" rows="3" [readonly]="!editMode()" placeholder="Tell us about yourself"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Country</label>
+                <input type="text" class="form-control" formControlName="country" [readonly]="!editMode()" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Location</label>
+                <input type="text" class="form-control" formControlName="location" [readonly]="!editMode()" placeholder="City or area" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold">Pincode</label>
+                <input type="text" class="form-control" formControlName="pincode" [readonly]="!editMode()" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Professional Category</label>
+                @if (editMode()) {
+                  <select class="form-select" formControlName="professionalCategory">
+                    <option value="">Select category</option>
+                    @for (cat of professionalCategories; track cat) {
+                      <option [value]="cat">{{ cat }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input type="text" class="form-control" [value]="u.professionalCategory || 'Not set'" readonly />
+                }
+              </div>
+
+              <!-- Interests -->
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Interests</label>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  @for (interest of u.interests; track $index) {
+                    <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 py-2 px-3">
+                      {{ interest }}
+                      @if (editMode()) {
+                        <button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 0.5rem;" (click)="removeInterest($index)"></button>
+                      }
+                    </span>
+                  }
+                  @if (u.interests.length === 0) {
+                    <span class="text-muted small">No interests added yet</span>
+                  }
+                </div>
+                @if (editMode()) {
+                  <div class="input-group input-group-sm" style="max-width: 300px;">
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Add interest"
+                      [value]="newInterest()"
+                      (input)="onInterestInput($event)"
+                      (keydown)="onInterestKeydown($event)"
+                    />
+                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            @if (editMode()) {
+              <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || saving()">
+                  @if (saving()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  }
+                  Save Changes
+                </button>
+              </div>
+            }
+          </form>
+
+          <!-- Change Password -->
+          <hr class="my-4" />
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0">Change Password</h6>
+            <button class="btn btn-outline-secondary btn-sm" (click)="togglePasswordSection()">
+              @if (showPasswordSection()) {
+                Cancel
+              } @else {
+                <i class="bi bi-key me-1"></i> Change
+              }
+            </button>
+          </div>
+
+          @if (showPasswordSection()) {
+            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="mt-3">
+              <div class="row g-3" style="max-width: 400px;">
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">Current Password</label>
+                  <input type="password" class="form-control" formControlName="currentPassword" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">New Password</label>
+                  <input type="password" class="form-control" formControlName="newPassword" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">Confirm Password</label>
+                  <input type="password" class="form-control" formControlName="confirmPassword" />
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="passwordForm.invalid || changingPassword()">
+                    @if (changingPassword()) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    Update Password
+                  </button>
+                </div>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ==================== ADMIN INFO TAB ==================== -->
+    @if (activeTab() === 'admin-info') {
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h6 class="fw-bold mb-0">Admin Information</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">Role</small>
+                <span class="badge bg-danger">{{ u.role }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">Account Status</small>
+                <span class="badge" [ngClass]="u.isActive ? 'bg-success' : 'bg-secondary'">
+                  {{ u.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">Trust Status</small>
+                <span class="badge" [ngClass]="u.isTrusted ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ u.isTrusted ? 'Trusted' : 'Untrusted' }}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">Member Since</small>
+                <span>{{ u.createdAt | date:'longDate' }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">User ID</small>
+                <code class="small">{{ u.id }}</code>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item p-3 border rounded-3">
+                <small class="text-muted d-block mb-1">Last Updated</small>
+                <span>{{ u.updatedAt | date:'medium' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+}

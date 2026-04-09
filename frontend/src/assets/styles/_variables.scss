@@ -1,0 +1,76 @@
+// ============================================================
+// DESIGN TOKENS & VARIABLES
+// ============================================================
+// Spacing, border-radius, z-index, and component-specific tokens
+// Colors → _colors.scss | Typography → _typography.scss
+// Shadows → _shadows.scss | Animations → _animations.scss
+
+// ============================================================
+// SPACING SCALE
+// ============================================================
+$spacing-xs:    4px;
+$spacing-sm:    8px;
+$spacing-md:    16px;
+$spacing-lg:    24px;
+$spacing-xl:    32px;
+$spacing-2xl:   40px;
+$spacing-3xl:   56px;
+
+// ============================================================
+// BORDER RADIUS
+// ============================================================
+$radius-sm:     8px;
+$radius-md:     12px;
+$radius-lg:     16px;
+$radius-xl:     20px;
+$radius-full:   50%;
+
+// ============================================================
+// Z-INDEX SCALE
+// ============================================================
+$z-dropdown:       1000;
+$z-sticky:         1000;
+$z-fixed:          1020;
+$z-modal-backdrop: 1040;
+$z-modal:          1050;
+$z-popover:        1060;
+$z-tooltip:        1070;
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+$sidebar-width: 260px;
+
+// ============================================================
+// COMPONENT-SPECIFIC TOKENS
+// ============================================================
+
+// Navbar
+$navbar-height: 64px;
+$navbar-bg: rgba(255, 255, 255, 0.98);
+$navbar-border: 1.5px solid #e8eaff;
+$navbar-shadow: 0 4px 24px rgba(88, 101, 242, 0.06);
+
+// Avatar Sizes
+$avatar-size-sm:    36px;
+$avatar-size-md:    40px;
+$avatar-size-lg:    52px;
+$avatar-size-xl:    96px;
+
+// Badge Sizes
+$badge-size-sm:     18px;
+$badge-size-md:     26px;
+
+// Button Heights
+$btn-height-sm:     38px;
+$btn-height-md:     40px;
+$btn-height-lg:     48px;
+
+// ============================================================
+// SCROLLBAR STYLING
+// ============================================================
+$scrollbar-width:          6px;
+$scrollbar-track-bg:       transparent;
+$scrollbar-thumb-bg:       #d0d0d0;
+$scrollbar-thumb-bg-hover: #bbb;
+$scrollbar-thumb-radius:   3px;

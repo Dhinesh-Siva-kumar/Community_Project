@@ -1,0 +1,1175 @@
+@use '../../../../assets/styles/index' as *;
+
+// ============================================================
+// Admin Community Page Styles
+// ============================================================
+
+// ── Loading State ────────────────────────────────────────────
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.page-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-loading-spinner .spinner-border {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-width: 3px;
+  color: $indigo-600;
+}
+
+.page-loading-text {
+  font-size: 14px;
+  color: $slate-500;
+  margin: 0;
+}
+
+// ── Page Header ───────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 1.75rem;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+}
+
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: $slate-800;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: $slate-500;
+  margin: 0;
+}
+
+// ── CTA Button (shared by header + empty state) ───────────────
+.page-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba($indigo-600, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba($indigo-600, 0.45);
+    color: #fff;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+// ── Toolbar (search + count badge) ───────────────────────────
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 340px;
+  min-width: 200px;
+}
+
+.page-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: $muted;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.page-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 38px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 14px;
+  color: $dark;
+  background: $white;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: $muted;
+  }
+
+  &:focus {
+    border-color: $indigo-600;
+    box-shadow: 0 0 0 3px rgba($indigo-600, 0.1);
+  }
+}
+
+.page-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: $indigo-50;
+  color: $indigo-600;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: auto;
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.page-empty-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: $indigo-50;
+  box-shadow: 0 0 0 12px rgba($indigo-600, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+
+  i {
+    font-size: 2.4rem;
+    color: $indigo-600;
+  }
+}
+
+.page-empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $slate-800;
+  margin: 0 0 8px;
+}
+
+.page-empty-text {
+  font-size: 14px;
+  color: $slate-500;
+  max-width: 340px;
+  margin: 0 0 1.5rem;
+  line-height: 1.6;
+}
+
+// ── Pagination ─────────────────────────────────────────────────
+.page-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.75rem;
+
+  .pagination {
+    .page-link {
+      border-radius: 8px !important;
+      margin: 0 2px;
+      border: none;
+      color: $slate-500;
+      padding: 0.4rem 0.75rem;
+      font-size: 13px;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background-color: $indigo-50;
+        color: $indigo-600;
+      }
+    }
+
+    .page-item.active .page-link {
+      background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+    }
+
+    .page-item.disabled .page-link {
+      opacity: 0.4;
+    }
+  }
+}
+
+// ── Community Card ────────────────────────────────────────────
+.community-card {
+  background: $white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: $shadow-card-default;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: $shadow-xl;
+
+    .cc-cover-img {
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Cover
+.cc-cover {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: $slate-100;
+  flex-shrink: 0;
+}
+
+.cc-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.cc-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 3.2rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+// Badges overlay
+.cc-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(6px);
+
+  i {
+    font-size: 10px;
+  }
+}
+
+.cc-badge-global {
+  background: rgba($indigo-600, 0.88);
+  color: #fff;
+}
+
+.cc-badge-inactive {
+  background: rgba(255, 255, 255, 0.82);
+  color: $slate-500;
+  border: 1px solid rgba($slate-200, 0.7);
+}
+
+.cc-badge-default {
+  background: rgba(245, 158, 11, 0.88);
+  color: #fff;
+}
+
+// Body
+.cc-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.1rem 1.2rem 1.1rem;
+}
+
+.cc-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: $slate-800;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  transition: color 0.18s;
+
+  &:hover {
+    color: $indigo-600;
+  }
+}
+
+.cc-desc {
+  font-size: 13px;
+  color: $slate-500;
+  line-height: 1.55;
+  margin-bottom: 14px;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Stats row
+.cc-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cc-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cc-stat-icon {
+  font-size: 12px;
+}
+
+.cc-stat-members {
+  color: $indigo-600;
+}
+
+.cc-stat-posts {
+  color: $emerald-600;
+}
+
+.cc-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: $slate-800;
+}
+
+.cc-stat-label {
+  font-size: 12px;
+  color: $slate-500;
+}
+
+.cc-stat-divider {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: $slate-300;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+// Meta row
+.cc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cc-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: $slate-500;
+
+  i {
+    font-size: 11px;
+    color: $muted;
+  }
+}
+
+// Actions row
+.cc-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid $gray-200;
+}
+
+.cc-btn-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: $indigo-50;
+  color: $indigo-600;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+
+  &:hover {
+    background: $indigo-100;
+    color: $indigo-700;
+  }
+
+  i {
+    font-size: 12px;
+  }
+}
+
+.cc-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: $slate-100;
+  color: $slate-500;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s, color 0.18s;
+
+  &:hover {
+    background: $slate-200;
+    color: $slate-800;
+  }
+
+  &.cc-btn-danger {
+    &:hover {
+      background: rgba($danger, 0.1);
+      color: $danger;
+    }
+  }
+
+  &.cc-btn-confirm {
+    background: rgba($emerald-600, 0.1);
+    color: $emerald-600;
+
+    &:hover {
+      background: rgba($emerald-600, 0.18);
+    }
+  }
+}
+
+// ── Responsive ─────────────────────────────────────────────────
+@include media-sm-max {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .page-count-badge {
+    margin-left: 0;
+  }
+
+  .cc-cover {
+    height: 150px;
+  }
+}
+
+// ── Modal z-index ──────────────────────────────────────────────
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+// ── Legacy field form styles (used by modal form) ──────────────
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @include media-sm-max {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-body;
+}
+
+.field-select {
+  height: 48px;
+  background-color: #fafafa;
+  padding-right: 36px;
+}
+
+.custom-mobile-row {
+  grid-template-columns: 140px 1fr;
+}
+
+.field-input-wrap select {
+  width: 100%;
+}
+
+.field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .field-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 16px;
+    color: $muted;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .field-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 44px 0 42px;
+    border: 1.5px solid $border;
+    border-radius: 10px;
+    font-size: 14px;
+    color: $dark;
+    background: $bg-neutral;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    &::placeholder {
+      color: $gray-400;
+    }
+
+    &:focus {
+      border-color: $primary;
+      background: $white;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+
+    &.is-invalid {
+      border-color: $danger;
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba($danger, 0.1);
+      }
+    }
+  }
+
+  .field-select {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+
+  .toggle-pw-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    color: $muted;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $primary;
+    }
+
+    i {
+      font-size: 16px;
+      line-height: 1;
+    }
+  }
+}
+
+.field-error {
+  font-size: 12px;
+  color: $danger;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+// ===========================
+// Redesigned Create/Edit Modal
+// ===========================
+
+// Modal container overrides
+.modal-content {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+// ── Header ──────────────────────────────────────────────
+.cm-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 1.25rem;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  color: #fff;
+  border-radius: 0; // inherits from .modal-content
+}
+
+.cm-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cm-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+}
+
+.cm-modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: #fff;
+}
+
+.cm-modal-subtitle {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.cm-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+// ── Form wrapper ─────────────────────────────────────────
+.cm-form {
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Section blocks ───────────────────────────────────────
+.cm-section {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid $gray-200;
+
+  &.cm-section-last {
+    border-bottom: none;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.cm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.cm-section-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: $indigo-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 0.75rem;
+    color: $indigo-600;
+  }
+}
+
+.cm-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $slate-500;
+}
+
+// ── Field layout ─────────────────────────────────────────
+.cm-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @include media-sm-max {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cm-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.cm-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-body;
+}
+
+.cm-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cm-required {
+  color: $danger;
+  margin-left: 2px;
+}
+
+.cm-char-count {
+  font-size: 11px;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Input wrap ───────────────────────────────────────────
+.cm-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cm-input-icon {
+  position: absolute;
+  left: 13px;
+  font-size: 15px;
+  color: $muted;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 1;
+}
+
+.cm-textarea-wrap {
+  align-items: flex-start;
+}
+
+.cm-textarea-icon {
+  top: 13px;
+  position: absolute;
+}
+
+.cm-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 40px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 14px;
+  color: $dark;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &::placeholder {
+    color: $gray-400;
+  }
+
+  &:focus {
+    border-color: $indigo-600;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba($indigo-600, 0.1);
+  }
+
+  &.cm-input-error {
+    border-color: $danger;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1);
+    }
+  }
+}
+
+.cm-textarea {
+  height: auto;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  resize: none;
+}
+
+.cm-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-color: #fafafa;
+}
+
+.cm-error-msg {
+  font-size: 12px;
+  color: $danger;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+
+  i {
+    font-size: 12px;
+  }
+}
+
+// ── Toggle pills ─────────────────────────────────────────
+.cm-toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.cm-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid $border;
+  font-size: 13px;
+  font-weight: 500;
+  color: $slate-500;
+  background: #fafafa;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: $indigo-600;
+    color: $indigo-600;
+    background: $indigo-50;
+  }
+
+  &.cm-toggle-active {
+    border-color: $indigo-600;
+    background: $indigo-600;
+    color: #fff;
+
+    i {
+      color: #fff;
+    }
+  }
+
+  i {
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+// ── Upload zone ──────────────────────────────────────────
+.cm-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 130px;
+  border: 2px dashed $gray-300;
+  border-radius: 14px;
+  background: #fafbff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  padding: 1.5rem;
+
+  &:hover {
+    border-color: $indigo-600;
+    background: $indigo-50;
+
+    .cm-upload-icon i {
+      color: $indigo-600;
+      transform: translateY(-3px);
+    }
+  }
+}
+
+.cm-upload-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba($indigo-600, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.4rem;
+    color: $indigo-600;
+    transition: transform 0.2s ease;
+  }
+}
+
+.cm-upload-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-body;
+  margin: 0;
+}
+
+.cm-upload-hint {
+  font-size: 12px;
+  color: $muted;
+  margin: 0;
+}
+
+// ── Image preview ─────────────────────────────────────────
+.cm-image-preview {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  height: 180px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.cm-image-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.2s;
+  z-index: 2;
+
+  &:hover {
+    background: rgba($danger, 0.85);
+  }
+}
+
+.cm-image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+  padding: 1rem 0.75rem 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cm-image-preview:hover .cm-image-overlay {
+  opacity: 1;
+}
+
+.cm-image-change-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+// ── Footer ───────────────────────────────────────────────
+.cm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid $gray-200;
+}
+
+.cm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1.5px solid $border;
+  background: #fff;
+  color: $slate-500;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: $gray-400;
+    background: $gray-100;
+    color: $dark;
+  }
+}
+
+.cm-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 3px 10px rgba($indigo-600, 0.35);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba($indigo-600, 0.45);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}

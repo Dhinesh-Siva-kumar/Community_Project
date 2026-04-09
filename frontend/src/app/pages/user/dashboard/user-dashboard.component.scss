@@ -1,0 +1,1522 @@
+@use '../../../../assets/styles/index' as *;
+
+// ============================================================
+// User Dashboard — Redesigned: Activity Hub with Tabs
+// ============================================================
+
+$radius:        $radius-lg;
+$transition:    $duration-short ease;
+
+// ============================================================
+// SHIMMER SKELETON LOADER
+// ============================================================
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.dashboard-skeleton {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sk-main-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+
+  @include media-lg { grid-template-columns: 1fr 280px; gap: 16px; }
+  @include media-md { grid-template-columns: 1fr; }
+}
+
+.sk-feed, .sk-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sk-card {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 20px;
+}
+
+.sk-banner {
+  height: 88px;
+  border-radius: $radius;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.sk-stat-row {
+  display: flex;
+  gap: 12px;
+
+  @include media-md { flex-wrap: wrap; }
+}
+
+.sk-stat {
+  flex: 1;
+  height: 72px;
+  border-radius: $radius;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.sk-tab-bar {
+  height: 44px;
+  border-radius: $radius;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.sk-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sk-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  flex-shrink: 0;
+}
+
+.sk-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.sk-line {
+  height: 12px;
+  border-radius: 6px;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  width: 100%;
+
+  &.sk-short  { width: 35%; }
+  &.sk-medium { width: 60%; }
+  &.sk-title  { height: 16px; width: 50%; }
+  &.sk-tiny   { width: 50px; height: 10px; }
+}
+
+.sk-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  margin: 0 auto 12px;
+}
+
+.sk-actions-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+// ============================================================
+// DASHBOARD CONTAINER
+// ============================================================
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// ============================================================
+// DASHBOARD GRID — 2-column: main content + sidebar
+// ============================================================
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+
+  @include media-lg {
+    grid-template-columns: 1fr 280px;
+    gap: 16px;
+  }
+  @include media-md {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ============================================================
+// DASHBOARD MAIN — Left content column
+// ============================================================
+.dashboard-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeInUp 0.5s $easing-standard 0.2s both;
+}
+
+// ============================================================
+// WELCOME BANNER
+// ============================================================
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, $primary 0%, $accent 100%);
+  border-radius: $radius;
+  padding: 22px 28px;
+  color: $white;
+  gap: 16px;
+  animation: fadeInUp 0.5s $easing-standard;
+
+  .welcome-text {
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    p {
+      font-size: 13px;
+      margin: 0;
+      opacity: 0.85;
+    }
+    .welcome-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 6px;
+      i { font-size: 11px; }
+    }
+  }
+
+  .explore-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    color: $white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: background $transition;
+    flex-shrink: 0;
+
+    i { font-size: 14px; }
+    &:hover { background: rgba(255, 255, 255, 0.28); }
+  }
+
+  @include media-xs {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 18px;
+    .welcome-text h2 { font-size: 1rem; }
+    .explore-link { width: 100%; justify-content: center; }
+  }
+}
+
+// ============================================================
+// STATS ROW
+// ============================================================
+.stats-row {
+  display: flex;
+  gap: 12px;
+  animation: fadeInUp 0.5s $easing-standard 0.1s both;
+
+  @include media-md { flex-wrap: wrap; }
+  @include media-xs { gap: 8px; }
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 0;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: box-shadow $transition, transform $transition;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+    transform: translateY(-2px);
+  }
+
+  .stat-icon-wrap {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    i { font-size: 16px; }
+  }
+
+  .stat-info { min-width: 0; }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: $dark;
+    margin: 0;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: $muted;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @include media-md {
+    flex: 0 0 calc(50% - 6px);
+  }
+  @include media-xs {
+    flex: 0 0 calc(50% - 4px);
+    padding: 10px 12px;
+    gap: 8px;
+
+    .stat-icon-wrap {
+      width: 32px; height: 32px; min-width: 32px;
+      border-radius: 8px;
+      i { font-size: 13px; }
+    }
+    .stat-value { font-size: 18px; }
+    .stat-label { font-size: 10px; }
+  }
+}
+
+// ============================================================
+// FEED COLUMN
+// ============================================================
+.feed-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  min-width: 0;
+
+  @include media-md { position: static; }
+}
+
+// ============================================================
+// TAB BAR
+// ============================================================
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 5px;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: none;
+  background: transparent;
+  border-radius: $radius-md;
+  font-size: 13px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all $transition;
+
+  i { font-size: 13px; }
+
+  &:hover {
+    background: $hover-bg-light;
+    color: $dark;
+  }
+
+  &.active {
+    background: $primary;
+    color: $white;
+    box-shadow: $shadow-primary-sm;
+  }
+
+  @include media-xs {
+    padding: 7px 12px;
+    font-size: 12px;
+    gap: 4px;
+    i { font-size: 12px; }
+  }
+}
+
+// ============================================================
+// POST FEED — Individual Post Cards
+// ============================================================
+.post-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.posts-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .post-skeleton {
+    min-height: 160px;
+  }
+}
+
+.post-card {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+  transition: box-shadow $transition, transform $transition;
+  animation: fadeInUp 0.4s $easing-standard both;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+    transform: translateY(-2px);
+  }
+}
+
+// Post Card Header
+.post-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px 0;
+}
+
+.post-user-avatar {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary 0%, $accent 100%);
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.post-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-user-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: $dark;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.post-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  color: $white;
+
+  i { font-size: 10px; }
+
+  &.badge-emergency { background: $danger; }
+  &.badge-help { background: $warning; }
+  &.badge-general { background: $primary; }
+}
+
+.post-community-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $primary;
+
+  i { font-size: 11px; }
+}
+
+.post-time {
+  font-size: 11px;
+  color: $muted;
+  white-space: nowrap;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+// Post Card Content
+.post-card-content {
+  padding: 12px 18px 8px;
+
+  p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: $text;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.post-images {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: $radius-sm;
+}
+
+.post-image-thumb {
+  width: 100px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: $radius-sm;
+  border: 1px solid $border;
+}
+
+.post-image-more {
+  width: 72px;
+  height: 72px;
+  border-radius: $radius-sm;
+  background: $hover-bg-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: $muted;
+}
+
+// Post Card Actions
+.post-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px 12px;
+  border-top: 1px solid $hover-bg-light;
+  margin-top: 4px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: $radius-sm;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: $muted;
+  cursor: pointer;
+  transition: all $transition;
+
+  i { font-size: 15px; }
+
+  &:hover {
+    background: $hover-bg-light;
+    color: $dark;
+  }
+}
+
+.like-btn {
+  &:hover {
+    color: $accent;
+    background: rgba($accent, 0.08);
+  }
+}
+
+.comment-btn {
+  &:hover {
+    color: $primary;
+    background: rgba($primary, 0.08);
+  }
+}
+
+.save-btn {
+  margin-left: auto;
+
+  &:hover {
+    color: $warning;
+    background: rgba($warning, 0.08);
+  }
+
+  &.saved {
+    color: $warning;
+
+    i {
+      animation: scaleIn 0.3s $easing-standard;
+    }
+  }
+}
+
+// ============================================================
+// EMPTY STATES — Unified Premium Design
+// ============================================================
+@keyframes emptyFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes emptyIconPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+// --- Color theme maps ---
+$_empty-indigo-bg:    linear-gradient(135deg, #eef2ff, #e0e7ff);
+$_empty-indigo-ring:  linear-gradient(135deg, #6366f1, #818cf8);
+
+$_empty-amber-bg:     linear-gradient(135deg, #fffbeb, #fef3c7);
+$_empty-amber-ring:   linear-gradient(135deg, #f59e0b, #fbbf24);
+
+$_empty-cyan-bg:      linear-gradient(135deg, #ecfeff, #cffafe);
+$_empty-cyan-ring:    linear-gradient(135deg, #06b6d4, #22d3ee);
+
+$_empty-rose-bg:      linear-gradient(135deg, #fff1f2, #ffe4e6);
+$_empty-rose-ring:    linear-gradient(135deg, #f43f5e, #fb7185);
+
+$_empty-emerald-bg:   linear-gradient(135deg, #ecfdf5, #d1fae5);
+$_empty-emerald-ring: linear-gradient(135deg, #10b981, #34d399);
+
+$_empty-violet-bg:    linear-gradient(135deg, #f5f3ff, #ede9fe);
+$_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 28px;
+  border-radius: 0px 0px $radius $radius;
+  border: 1px solid $border;
+  animation: emptyFadeIn 0.5s $easing-standard both;
+
+  // --- Icon ring ---
+  &__icon-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    color: $white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    animation: emptyIconPulse 3s ease-in-out infinite;
+
+    i { font-size: 28px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15)); }
+
+    // Profile complete variant (smaller, inline)
+    &--success {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #10b981, #34d399);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      margin-bottom: 10px;
+      i { font-size: 18px; }
+    }
+  }
+
+  // --- Title ---
+  &__title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: $dark;
+    margin: 0 0 6px;
+    line-height: 1.3;
+  }
+
+  // --- Description ---
+  &__desc {
+    font-size: 13.5px;
+    color: $muted;
+    margin: 0;
+    line-height: 1.55;
+    max-width: 320px;
+  }
+
+  // --- CTA Button ---
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 20px;
+    padding: 10px 22px;
+    border-radius: 24px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $white;
+    background: linear-gradient(135deg, $primary, $accent);
+    box-shadow: 0 4px 16px rgba($primary, 0.3);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    i { font-size: 14px; }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba($primary, 0.4);
+    }
+    &:active { transform: translateY(0); }
+  }
+
+  // --- Compact variant (sidebar + bottom grid) ---
+  &--compact {
+    padding: 32px 20px;
+
+    .empty-state__icon-ring {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      i { font-size: 22px; }
+    }
+
+    .empty-state__title { font-size: 14px; }
+    .empty-state__desc  { font-size: 12.5px; max-width: 260px; }
+  }
+
+  // ── Color Themes ──────────────────────────────────────────
+
+  &--indigo {
+    background: $_empty-indigo-bg;
+    border-radius: $radius !important;
+    border-color: #c7d2fe;
+    .empty-state__icon-ring { background: $_empty-indigo-ring; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25); }
+  }
+
+  &--amber {
+    background: $_empty-amber-bg;
+    border-radius: $radius !important;
+    border-color: #fde68a;
+    .empty-state__icon-ring { background: $_empty-amber-ring; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25); }
+  }
+
+  &--cyan {
+    background: $_empty-cyan-bg;
+    border-radius: $radius !important;
+    border-color: #a5f3fc;
+    .empty-state__icon-ring { background: $_empty-cyan-ring; box-shadow: 0 8px 24px rgba(6, 182, 212, 0.25); }
+  }
+
+  &--rose {
+    background: $_empty-rose-bg;
+    border-radius: $radius !important;
+    border-color: #fecdd3;
+    .empty-state__icon-ring { background: $_empty-rose-ring; box-shadow: 0 8px 24px rgba(244, 63, 94, 0.25); }
+  }
+
+  &--emerald {
+    background: $_empty-emerald-bg;
+    border-color: #a7f3d0;
+    .empty-state__icon-ring { background: $_empty-emerald-ring; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25); }
+  }
+
+  &--violet {
+    background: $_empty-violet-bg;
+    border-color: #ddd6fe;
+    .empty-state__icon-ring { background: $_empty-violet-ring; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.25); }
+  }
+}
+
+// ============================================================
+// SIDEBAR CARD — shared base
+// ============================================================
+.sidebar-card {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+  transition: box-shadow $transition, transform $transition;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+    transform: translateY(-1px);
+  }
+}
+
+.sidebar-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: $dark;
+  border-bottom: 1px solid $hover-bg-light;
+
+  i.header-ico { font-size: 16px; color: $primary; }
+}
+
+// ============================================================
+// SIDEBAR — Profile Completion
+// ============================================================
+.profile-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progress-ring-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: $border;
+  stroke-width: 6;
+}
+
+.progress-ring-fill {
+  fill: none;
+  stroke: $primary;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 264;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-ring-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  line-height: 1;
+
+  .pct-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: $dark;
+  }
+  .pct-symbol {
+    font-size: 11px;
+    font-weight: 600;
+    color: $muted;
+  }
+}
+
+.profile-strength {
+  font-size: 12px;
+  font-weight: 600;
+  color: $primary;
+  margin-bottom: 12px;
+}
+
+.profile-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid $hover-bg-light;
+    font-size: 12px;
+    color: $text;
+
+    &:last-child { border-bottom: none; }
+
+    i.bi-circle { font-size: 6px; color: $muted; }
+    i.bi-check-circle-fill { font-size: 12px; color: $success; }
+
+    span { flex: 1; }
+
+    a {
+      color: $primary;
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      transition: opacity $transition;
+      &:hover { opacity: 0.7; }
+    }
+  }
+}
+
+.profile-complete-msg {
+  text-align: center;
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  p { font-size: 12.5px; color: $success; font-weight: 600; margin: 0; }
+}
+
+// ============================================================
+// SIDEBAR — Notifications Panel
+// ============================================================
+.notif-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid $hover-bg-light;
+
+  i.header-ico { font-size: 16px; color: $primary; flex-shrink: 0; }
+
+  .header-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $dark;
+    margin: 0;
+  }
+
+  .unread-badge {
+    font-size: 11px;
+    font-weight: 700;
+    background: $accent;
+    color: $white;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .btn-mark-read {
+    margin-left: auto;
+    background: none;
+    border: 1px solid $border;
+    color: $muted;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background $transition, color $transition;
+    white-space: nowrap;
+
+    &:hover { background: $bg; color: $dark; }
+  }
+}
+
+.notification-list {
+  max-height: 260px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $scrollbar-thumb-bg; border-radius: 3px; }
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid $hover-bg-light;
+  cursor: pointer;
+  transition: background $duration-quick;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $bg; }
+  &.unread { background: $bg-muted; }
+
+  .notif-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $primary-light;
+    flex-shrink: 0;
+
+    i { font-size: 13px; }
+  }
+
+  .notif-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notif-message {
+    font-size: 12px;
+    color: $dark;
+    margin: 0 0 2px;
+    line-height: 1.4;
+  }
+
+  .notif-time {
+    font-size: 11px;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    i { font-size: 10px; }
+  }
+
+  .unread-dot {
+    width: 7px;
+    height: 7px;
+    min-width: 7px;
+    border-radius: 50%;
+    background: $accent;
+    margin-top: 4px;
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+// Notification empty state now uses unified .empty-state--compact
+
+.see-all-link {
+  display: block;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: none;
+  border-top: 1px solid $hover-bg-light;
+
+  &:hover { text-decoration: underline; }
+}
+
+// ============================================================
+// SIDEBAR — Quick Actions
+// ============================================================
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: $border;
+}
+
+.qa-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: $white;
+  text-decoration: none;
+  color: $text;
+  transition: background $duration-quick;
+
+  &:hover { background: $bg; }
+
+  .qa-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i { font-size: 15px; }
+  }
+
+  .qa-info {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: $dark;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    span {
+      display: block;
+      font-size: 11px;
+      color: $muted;
+    }
+  }
+}
+
+// ============================================================
+// SECTION BLOCK — Shared base for communities, events, jobs
+// ============================================================
+.section-block {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+  transition: box-shadow $transition;
+
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid $hover-bg-light;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  i.section-ico {
+    font-size: 16px;
+    color: $primary;
+  }
+
+  h5 {
+    font-size: 14px;
+    font-weight: 700;
+    color: $dark;
+    margin: 0;
+  }
+}
+
+.section-view-all {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity $transition;
+
+  &:hover { opacity: 0.7; }
+  i { font-size: 12px; }
+}
+
+// Section empty + CTA now uses unified .empty-state system
+
+// ============================================================
+// MY COMMUNITIES — Horizontal Scroll
+// ============================================================
+.communities-scroll {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $scrollbar-thumb-bg; border-radius: 3px; }
+}
+
+.community-card {
+  flex: 0 0 160px;
+  text-decoration: none;
+  color: $text;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  transition: all $transition;
+  scroll-snap-align: start;
+
+  &:hover {
+    border-color: $primary;
+    box-shadow: $shadow-card-hover;
+    transform: translateY(-2px);
+  }
+}
+
+.community-card-img {
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  background: linear-gradient(135deg, $primary-light 0%, rgba($accent, 0.12) 100%);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.community-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 28px;
+    color: $primary;
+    opacity: 0.4;
+  }
+}
+
+.community-card-body {
+  padding: 10px 12px;
+}
+
+.community-card-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $dark;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-card-stats {
+  display: flex;
+  gap: 10px;
+
+  span {
+    font-size: 11px;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    i { font-size: 11px; }
+  }
+}
+
+// Skeleton community cards
+.sk-community {
+  border: 1px solid $border;
+}
+
+.sk-community-img {
+  width: 100%;
+  height: 80px;
+  background: $shimmer-gradient;
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+// ============================================================
+// BOTTOM GRID — Events & Jobs side by side
+// ============================================================
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  animation: fadeInUp 0.5s $easing-standard 0.3s both;
+
+  @include media-md {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ============================================================
+// UPCOMING EVENTS — Timeline Style
+// ============================================================
+.events-list {
+  padding: 8px 0;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid $hover-bg-light;
+  transition: background $duration-quick;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $bg; }
+}
+
+.event-date-badge {
+  width: 48px;
+  min-width: 48px;
+  height: 52px;
+  border-radius: $radius-sm;
+  background: linear-gradient(135deg, $primary 0%, rgba($accent, 0.85) 100%);
+  color: $white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.event-month {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.event-day {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  span {
+    font-size: 11.5px;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    i { font-size: 11px; color: $primary; }
+  }
+}
+
+// Skeleton event items
+.sk-event {
+  .sk-event-date {
+    width: 48px;
+    min-width: 48px;
+    height: 52px;
+    border-radius: $radius-sm;
+    background: $shimmer-gradient;
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+// ============================================================
+// RECENT JOBS — Card List
+// ============================================================
+.jobs-list {
+  padding: 4px 0;
+}
+
+.job-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid $hover-bg-light;
+  text-decoration: none;
+  color: $text;
+  transition: background $duration-quick;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $bg; }
+}
+
+.job-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-details {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.job-salary {
+  font-size: 12px;
+  font-weight: 600;
+  color: $success;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  i { font-size: 11px; }
+}
+
+.job-type {
+  font-size: 11.5px;
+  color: $muted;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  i { font-size: 11px; }
+}
+
+.job-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+
+  span {
+    font-size: 11px;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+
+    i { font-size: 10px; }
+  }
+}
+
+// Skeleton job items
+.sk-job {
+  padding: 12px 18px;
+}
+
+// ============================================================
+// RESPONSIVE OVERRIDES
+// ============================================================
+@include media-md {
+  .stats-row { gap: 8px; }
+  .post-time { display: none; }
+  .bottom-grid { gap: 16px; }
+}
+
+@include media-xs {
+  .notification-list { max-height: 200px; }
+  .community-card { flex: 0 0 140px; }
+  .community-card-img { height: 64px; }
+  .event-date-badge {
+    width: 42px; min-width: 42px; height: 46px;
+    .event-day { font-size: 17px; }
+    .event-month { font-size: 9px; }
+  }
+}
+
+// ============================================================
+// REDUCED MOTION
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-skeleton *,
+  .sk-banner, .sk-stat, .sk-avatar, .sk-line, .sk-ring,
+  .sk-tab-bar, .sk-community-img, .sk-event-date {
+    animation: none !important;
+    background: #f0f0f0 !important;
+  }
+
+  .stat-card, .post-card, .sidebar-card,
+  .notification-item, .qa-item, .community-card,
+  .event-item, .job-item, .section-block {
+    transition: none !important;
+  }
+
+  .unread-dot {
+    animation: none !important;
+  }
+
+  .progress-ring-fill {
+    transition: none !important;
+  }
+
+  .welcome-banner, .stats-row, .dashboard, .dashboard-main,
+  .bottom-grid, .post-card, .empty-state, .empty-state__icon-ring {
+    animation: none !important;
+  }
+}

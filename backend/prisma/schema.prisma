@@ -1,0 +1,299 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum PostType {
+  GENERAL
+  HELP
+  EMERGENCY
+}
+
+enum PostStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  POST_APPROVED
+  POST_REJECTED
+  NEW_COMMENT
+  NEW_LIKE
+  COMMUNITY_POST
+  USER_BLOCKED
+  USER_UNBLOCKED
+  TRUST_GRANTED
+  EVENT_CREATED
+  JOB_POSTED
+}
+
+// ==================== USER ====================
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String?   @unique
+  password             String
+  userName             String    @unique
+  displayName          String
+  phoneNo              String?
+  avatar               String?
+  role                 UserRole  @default(USER)
+  roleLevel            Int       @default(1)
+  countryId            Int?
+  country              String    @default("United Kingdom")
+  location             String?
+  pincode              String?
+  interests            String[]  @default([])
+  professionalCategory String?
+  bio                  String?
+  isTrusted            Boolean   @default(false)
+  isBlocked            Boolean   @default(false)
+  isActive             Boolean   @default(true)
+  profileCompletion    Int       @default(0)
+  refreshToken         String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations
+  communities         CommunityMember[]
+  posts               Post[]
+  comments            Comment[]
+  likes               Like[]
+  businesses          Business[]
+  events              Event[]
+  jobs                Job[]
+  notifications       Notification[]
+  createdCommunities  Community[]      @relation("CommunityCreator")
+
+  @@map("users")
+}
+
+// ==================== COMMUNITY ====================
+
+model Community {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  image       String?
+  location    String?
+  pincode     String?
+  isActive    Boolean   @default(true)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  createdBy   User              @relation("CommunityCreator", fields: [createdById], references: [id])
+  members     CommunityMember[]
+  posts       Post[]
+
+  @@map("communities")
+}
+
+model CommunityMember {
+  id          String   @id @default(uuid())
+  userId      String
+  communityId String
+  joinedAt    DateTime @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, communityId])
+  @@map("community_members")
+}
+
+// ==================== POST ====================
+
+model Post {
+  id          String     @id @default(uuid())
+  content     String
+  images      String[]   @default([])
+  type        PostType   @default(GENERAL)
+  status      PostStatus @default(PENDING)
+  communityId String
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+// ==================== BUSINESS ====================
+
+model BusinessCategory {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  icon       String?
+  createdAt  DateTime   @default(now())
+
+  // Relations
+  businesses Business[]
+
+  @@map("business_categories")
+}
+
+model Business {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  images      String[] @default([])
+  address     String?
+  pincode     String?
+  country     String   @default("United Kingdom")
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  phone       String?
+  email       String?
+  website     String?
+  openingHours String?
+  categoryId  String
+  userId      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  category    BusinessCategory @relation(fields: [categoryId], references: [id])
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("businesses")
+}
+
+// ==================== EVENTS ====================
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  images      String[] @default([])
+  eventDate   DateTime
+  eventTime   String?
+  address     String?
+  pincode     String?
+  location    String?
+  country     String   @default("United Kingdom")
+  userId      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("events")
+}
+
+// ==================== JOBS ====================
+
+model Job {
+  id            String   @id @default(uuid())
+  title         String
+  specification String?
+  description   String?
+  images        String[] @default([])
+  location      String?
+  pincode       String?
+  country       String   @default("United Kingdom")
+  contactInfo   String?
+  salary        String?
+  jobType       String?
+  timing        String?
+  userId        String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("jobs")
+}
+
+// ==================== MASTER DATA ====================
+
+model CountryMaster {
+  countryId   Int     @id @default(autoincrement()) @map("country_id")
+  countryName String  @unique @map("country_name")
+  countryCode String? @map("country_code")
+  countryFlag String? @map("country_flag")
+  isActive    Boolean @default(true) @map("is_active")
+
+  @@map("country_master")
+}
+
+model InterestMaster {
+  interestId   Int     @id @default(autoincrement()) @map("interest_id")
+  interestName String  @unique @map("interest_name")
+  isActive     Boolean @default(true) @map("is_active")
+
+  @@map("interest_master")
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id              String           @id @default(uuid())
+  type            NotificationType
+  message         String
+  isRead          Boolean          @default(false)
+  relatedEntityId String?
+  userId          String
+  createdAt       DateTime         @default(now())
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}

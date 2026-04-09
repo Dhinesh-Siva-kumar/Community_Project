@@ -1,0 +1,722 @@
+<!-- ═══════════════════════════════════════════════════════════
+     COMMUNITY HUB — Dark & Premium Landing Page
+     12 Sections | Cursor Spotlight | Animated Borders | Card Glow
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ═══ 1. NAVBAR ═══ -->
+<nav class="lp-nav" [class.scrolled]="navScrolled">
+  <a class="lp-logo" routerLink="/landing">
+    <img src="logo.svg" alt="Community HUB" class="lp-logo-img" />
+    <span class="lp-logo-text">{{ applicationName }}</span>
+  </a>
+
+  <ul class="lp-nav-links">
+    <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">Home</a></li>
+    <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">Features</a></li>
+    <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">Communities</a></li>
+    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">How It Works</a></li>
+    <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">Reviews</a></li>
+    <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">About</a></li>
+    <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">Contact</a></li>
+  </ul>
+
+  <div class="lp-nav-right">
+    <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+      <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+    </button>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">Log In</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">Get Started</a>
+  </div>
+
+  <button class="lp-burger" [class.open]="mobileOpen" (click)="toggleMobile()" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="lp-mobile" [class.open]="mobileOpen">
+  <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> Home</a>
+  <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> Features</a>
+  <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> Communities</a>
+  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> How It Works</a>
+  <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> Reviews</a>
+  <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> About</a>
+  <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> Contact</a>
+  <div class="lp-mobile-actions">
+    <button class="lp-theme-btn lp-theme-btn-wide" (click)="toggleTheme()">
+      <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+      <span>{{ currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode' }}</span>
+    </button>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-full" (click)="closeMobile()">Log In</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-full" (click)="closeMobile()">Get Started</a>
+  </div>
+</div>
+
+
+<!-- ═══ 2. HERO ═══ -->
+<section class="lp-hero" id="home">
+  <!-- Background -->
+  <div class="lp-hero-bg"></div>
+
+  <div class="lp-hero-inner">
+    <div class="lp-hero-content">
+      <div class="lp-hero-badge rv">
+        <i class="bi bi-lightning-charge-fill" [style.animation]="'pulseDot 2s ease-in-out infinite'"></i>
+        10K+ Members Worldwide
+      </div>
+
+      <h1 class="lp-hero-h1 rv d1">
+        Connect, Share &<br/><span class="neon-text">Grow</span> with Communities
+      </h1>
+
+      <p class="lp-hero-sub rv d2">
+        The all-in-one platform where communities thrive. Discover events, find jobs,
+        explore businesses, and connect with people who share your passions.
+      </p>
+
+      <div class="lp-hero-actions rv d3">
+        <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-btn-shimmer">
+          <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+        </a>
+        <a href="landing#features" class="lp-btn lp-btn-glass lp-btn-lg" (click)="setActive('features')">
+          <i class="bi bi-play-circle-fill"></i> See How It Works
+        </a>
+      </div>
+
+      <div class="lp-hero-trust rv d4">
+        <span><i class="bi bi-shield-check"></i> Secure & Private</span>
+        <span><i class="bi bi-heart-fill"></i> Free Forever</span>
+        <span><i class="bi bi-globe2"></i> Available Worldwide</span>
+      </div>
+    </div>
+
+    <!-- Orbital Logo + Features -->
+    <div class="lp-hero-mock rv d2">
+      <div class="lp-orbit">
+        <!-- Orbit rings -->
+        <div class="lp-orbit-ring lp-orbit-ring-1"></div>
+        <div class="lp-orbit-ring lp-orbit-ring-2"></div>
+
+        <!-- Centre logo -->
+        <div class="lp-orbit-logo">
+          <i class="bi bi-globe2"></i>
+        </div>
+
+        <!-- Orbital feature items — placed on the outer ring -->
+        <div class="lp-orbit-item lp-orbit-item-1" data-color="primary">
+          <div class="lp-orbit-icon"><i class="bi bi-people-fill"></i></div>
+          <span class="lp-orbit-label">Communities</span>
+        </div>
+        <div class="lp-orbit-item lp-orbit-item-2" data-color="pink">
+          <div class="lp-orbit-icon"><i class="bi bi-calendar-event-fill"></i></div>
+          <span class="lp-orbit-label">Events</span>
+        </div>
+        <div class="lp-orbit-item lp-orbit-item-3" data-color="green">
+          <div class="lp-orbit-icon"><i class="bi bi-briefcase-fill"></i></div>
+          <span class="lp-orbit-label">Jobs</span>
+        </div>
+        <div class="lp-orbit-item lp-orbit-item-4" data-color="violet">
+          <div class="lp-orbit-icon"><i class="bi bi-shop"></i></div>
+          <span class="lp-orbit-label">Business</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ 3. MARQUEE TICKER ═══ -->
+<div class="lp-marquee">
+  <div class="lp-marquee-track">
+    @for (item of marqueeItems; track $index) {
+      <div class="lp-marquee-item">
+        <i class="bi" [ngClass]="item.icon"></i>
+        <span>{{ item.text }}</span>
+      </div>
+    }
+    <!-- Duplicate for seamless infinite scroll -->
+    @for (item of marqueeItems; track $index) {
+      <div class="lp-marquee-item">
+        <i class="bi" [ngClass]="item.icon"></i>
+        <span>{{ item.text }}</span>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="lp-section-divider"></div>
+
+<!-- ═══ 4. FEATURES — BENTO GRID ═══ -->
+<section class="lp-section lp-section-mesh" id="features">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> Platform Features</span>
+      <h2 class="lp-sec-title">Everything You Need,<br/><span class="neon-text">Nothing You Don't</span></h2>
+      <p class="lp-sec-sub">Six powerful tools designed to help communities connect, engage, and grow together.</p>
+    </div>
+
+    <div class="lp-bento">
+      @for (f of features; track f.title; let i = $index) {
+        <div class="lp-bento-card glass-card rv"
+             [class.lp-bento-featured]="f.featured"
+             [attr.data-color]="f.color"
+             [style.transition-delay]="(i * 0.07) + 's'">
+
+          @if (f.featured) {
+            <div class="lp-anim-border"></div>
+          }
+
+          <div class="lp-bento-icon" [attr.data-color]="f.color">
+            <i class="bi" [ngClass]="f.icon"></i>
+          </div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
+
+          @if (f.featured) {
+            <div class="lp-featured-mock">
+              <div class="lp-fm-card">
+                <div class="lp-fm-avatar"></div>
+                <div class="lp-fm-lines">
+                  <div class="lp-mock-line w80"></div>
+                  <div class="lp-mock-line w55"></div>
+                </div>
+              </div>
+              <div class="lp-fm-card">
+                <div class="lp-fm-avatar v"></div>
+                <div class="lp-fm-lines">
+                  <div class="lp-mock-line w65"></div>
+                  <div class="lp-mock-line w45"></div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="lp-bento-tags">
+            @for (tag of f.tags; track tag) {
+              <span class="lp-mini-tag">{{ tag }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-violet"></div>
+
+<!-- ═══ 5. COMMUNITIES SHOWCASE — Horizontal Scroll ═══ -->
+<section class="lp-section lp-communities-section" id="communities">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-collection-fill"></i> Explore</span>
+      <h2 class="lp-sec-title">Popular <span class="neon-violet">Communities</span></h2>
+      <p class="lp-sec-sub">Discover communities that match your interests and connect with people who think like you.</p>
+    </div>
+  </div>
+
+  <div class="lp-comm-scroll-wrap">
+    <button class="lp-comm-arrow lp-comm-arrow-left" (click)="scrollCommunities('left')" aria-label="Scroll left">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="lp-comm-scroll rv" #commScroll>
+      <div class="lp-comm-track">
+        @for (c of communities; track c.name; let i = $index) {
+          <div class="lp-comm-card glass-card"
+               [attr.data-color]="c.color">
+            <div class="lp-comm-accent" [attr.data-color]="c.color"></div>
+            <div class="lp-comm-icon" [attr.data-color]="c.color">
+              <i class="bi" [ngClass]="c.icon"></i>
+            </div>
+            <h4>{{ c.name }}</h4>
+            <span class="lp-comm-cat">{{ c.category }}</span>
+            <div class="lp-comm-bottom">
+              <span class="lp-comm-members"><i class="bi bi-people-fill"></i> {{ c.members | number }}</span>
+              <button class="lp-btn lp-btn-neon lp-btn-xs">Join</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <button class="lp-comm-arrow lp-comm-arrow-right" (click)="scrollCommunities('right')" aria-label="Scroll right">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="lp-comm-browse">
+    <a routerLink="/communities" class="lp-btn lp-btn-neon lp-btn-shimmer">
+      <i class="bi bi-grid-3x3-gap-fill"></i> Browse All Communities
+    </a>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-green"></div>
+
+<!-- ═══ 6. HOW IT WORKS — Vertical Alternating Timeline ═══ -->
+<section class="lp-section lp-timeline-section lp-section-mesh" id="how-it-works">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> How It Works</span>
+      <h2 class="lp-sec-title">Your Journey in<br/><span class="neon-green">Four Simple Steps</span></h2>
+      <p class="lp-sec-sub">From sign-up to community leader -- here is how it works.</p>
+    </div>
+
+    <div class="lp-timeline">
+      <div class="lp-timeline-line"></div>
+      @for (s of steps; track s.num; let i = $index) {
+        <div class="lp-tl-item rv" [class.lp-tl-right]="i % 2 !== 0" [style.transition-delay]="(i * 0.1) + 's'">
+          <div class="lp-tl-dot" [attr.data-color]="s.color">
+            <span>{{ s.num }}</span>
+          </div>
+          <div class="lp-tl-card glass-card"
+               [attr.data-color]="s.color">
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.desc }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-pink"></div>
+
+<!-- ═══ 7. TESTIMONIALS ═══ -->
+<section class="lp-section lp-testi-section lp-section-mesh" id="testimonials">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> Testimonials</span>
+      <h2 class="lp-sec-title">Loved by<br/><span class="neon-pink">Real People</span></h2>
+      <p class="lp-sec-sub">Hear from members who found their community and transformed their experience.</p>
+    </div>
+
+    <div class="lp-testi-scroll rv">
+      <div class="lp-testi-track">
+        @for (t of testimonials; track t.name; let i = $index) {
+          <div class="lp-testi-card glass-card">
+            <div class="lp-testi-top">
+              <span class="lp-testi-stars">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <i class="bi bi-star-fill"></i>
+                }
+              </span>
+              <i class="bi bi-quote lp-testi-quote-icon"></i>
+            </div>
+            <blockquote>"{{ t.quote }}"</blockquote>
+            <div class="lp-testi-author">
+              <div class="lp-testi-avatar" [attr.data-color]="t.color">
+                <span>{{ t.initial }}</span>
+              </div>
+              <div>
+                <div class="lp-testi-name">{{ t.name }}</div>
+                <div class="lp-testi-role">{{ t.role }}</div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-violet"></div>
+
+<!-- ═══ 8. ABOUT US — Merged (Mission + Why Choose Us + Stats) ═══ -->
+<section class="lp-section lp-about-section" id="about">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-info-circle-fill"></i> About Us</span>
+      <h2 class="lp-sec-title">Our Mission is<br/><span class="neon-text">Your Community</span></h2>
+      <p class="lp-sec-sub">The features and values that set Community HUB apart from everything else.</p>
+    </div>
+
+    <div class="lp-about-split">
+      <!-- Left: Mission + Stats + CTA -->
+      <div class="lp-about-left rvl">
+        <div class="lp-about-mission glass-card">
+          <h3>Why We Built This</h3>
+          <p>
+            Community HUB was born from a simple belief: the best connections happen locally. We built a platform that
+            brings neighbours, professionals, and enthusiasts together in one unified space -- enabling real-world
+            impact through digital community building.
+          </p>
+          <div class="lp-about-chips">
+            @for (chip of aboutChips; track chip) {
+              <span class="lp-mini-tag">{{ chip }}</span>
+            }
+          </div>
+          <div class="lp-about-contact">
+            <div><i class="bi bi-envelope-fill"></i> hello&#64;communityhub.app</div>
+            <div><i class="bi bi-geo-alt-fill"></i> Available Worldwide</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Why Choose Us cards -->
+      <div class="lp-about-right rvr">
+         <div class="lp-about-stats">
+          @for (stat of aboutStats; track stat.label; let i = $index) {
+            <div class="lp-about-stat-card glass-card"
+                 [style.transition-delay]="(i * 0.1) + 's'">
+              <span class="lp-stat-val">{{ getCounterValue(stat) }}</span>
+              <span class="lp-stat-label">{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+        <div class="lp-about-cta-row">
+          <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-shimmer lp-btn-lg">
+            <i class="bi bi-rocket-takeoff-fill"></i> Join Now
+          </a>
+          <a routerLink="/auth/login" class="lp-btn lp-btn-glass lp-btn-lg">
+            <i class="bi bi-box-arrow-in-right"></i> Log In
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="lp-why-grid">
+          @for (w of whyCards; track w.title; let i = $index) {
+            <div class="lp-why-card glass-card rv"
+                 [attr.data-color]="w.color"
+                 [style.transition-delay]="(i * 0.08) + 's'">
+              <div class="lp-why-stat">
+                <span class="lp-why-stat-val" [attr.data-color]="w.color">{{ w.stat }}</span>
+                <span class="lp-why-stat-label">{{ w.statLabel }}</span>
+              </div>
+              <div class="lp-why-body">
+                <div class="lp-why-icon" [attr.data-color]="w.color"><i class="bi" [ngClass]="w.icon"></i></div>
+                <h3>{{ w.title }}</h3>
+                <p>{{ w.desc }}</p>
+              </div>
+            </div>
+          }
+        </div>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-green"></div>
+
+<!-- ═══ 10. BLOG / UPDATES ═══ -->
+<section class="lp-section lp-blog-section" id="blog">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-journal-richtext"></i> Blog & Updates</span>
+      <h2 class="lp-sec-title">Latest from<br/><span class="neon-violet">Our Blog</span></h2>
+      <p class="lp-sec-sub">Tips, updates, and guides to help you get the most out of Community HUB.</p>
+    </div>
+
+    <div class="lp-blog-grid">
+      @for (post of blogPosts; track post.title; let i = $index) {
+        <div class="lp-blog-card glass-card rv"
+             [style.transition-delay]="(i * 0.1) + 's'">
+          <div class="lp-blog-top">
+            <span class="lp-blog-cat" [attr.data-color]="post.color">{{ post.category }}</span>
+            <span class="lp-blog-time"><i class="bi bi-clock"></i> {{ post.readTime }}</span>
+          </div>
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.excerpt }}</p>
+          <div class="lp-blog-footer">
+            <span class="lp-blog-date">{{ post.date }}</span>
+            <a href="#" class="lp-blog-link">Read More <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-pink"></div>
+
+<!-- ═══ 11. CONTACT US ═══ -->
+<section class="lp-section lp-contact-section" id="contact">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-envelope-fill"></i> Get In Touch</span>
+      <h2 class="lp-sec-title">We'd Love to<br/><span class="neon-text">Hear From You</span></h2>
+      <p class="lp-sec-sub">Have a question, suggestion, or just want to say hello? Drop us a message and we'll get back to you shortly.</p>
+    </div>
+
+    <div class="lp-contact-grid">
+
+      <!-- Contact Info Cards -->
+      <div class="lp-contact-info rv">
+
+        <div class="lp-contact-card glass-card">
+          <div class="lp-contact-icon-wrap contact-purple">
+            <i class="bi bi-envelope-fill"></i>
+          </div>
+          <div>
+            <h6 class="lp-contact-card-title">Email Us</h6>
+            <p class="lp-contact-card-text">hello&#64;community.app</p>
+            <p class="lp-contact-card-sub">We reply within 24 hours</p>
+          </div>
+        </div>
+
+        <div class="lp-contact-card glass-card">
+          <div class="lp-contact-icon-wrap contact-pink">
+            <i class="bi bi-chat-dots-fill"></i>
+          </div>
+          <div>
+            <h6 class="lp-contact-card-title">Live Chat</h6>
+            <p class="lp-contact-card-text">Available in the app</p>
+            <p class="lp-contact-card-sub">Mon - Fri, 9am - 6pm</p>
+          </div>
+        </div>
+
+        <div class="lp-contact-card glass-card">
+          <div class="lp-contact-icon-wrap contact-green">
+            <i class="bi bi-discord"></i>
+          </div>
+          <div>
+            <h6 class="lp-contact-card-title">Join Our Discord</h6>
+            <p class="lp-contact-card-text">discord.gg/community</p>
+            <p class="lp-contact-card-sub">Active community support</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Contact Form -->
+      <div class="lp-contact-form-card glass-card rv">
+
+        @if (contactSubmitted) {
+          <div class="lp-contact-success">
+            <div class="lp-success-icon">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h4>Message Sent!</h4>
+            <p>Thanks for reaching out. We'll get back to you within 24 hours.</p>
+            <button class="lp-btn lp-btn-ghost" (click)="resetContactForm()">
+              Send Another Message
+            </button>
+          </div>
+        } @else {
+          <form (ngSubmit)="submitContact()" #contactForm="ngForm" novalidate>
+            <div class="lp-form-row">
+              <div class="lp-form-group">
+                <label class="lp-form-label">First Name</label>
+                <input
+                  type="text"
+                  class="lp-form-control"
+                  placeholder="John"
+                  [(ngModel)]="contact.firstName"
+                  name="firstName"
+                  required
+                  #firstName="ngModel"
+                  [class.is-invalid]="firstName.invalid && firstName.touched">
+                @if (firstName.invalid && firstName.touched) {
+                  <div class="lp-form-error">First name is required.</div>
+                }
+              </div>
+              <div class="lp-form-group">
+                <label class="lp-form-label">Last Name</label>
+                <input
+                  type="text"
+                  class="lp-form-control"
+                  placeholder="Doe"
+                  [(ngModel)]="contact.lastName"
+                  name="lastName"
+                  required
+                  #lastName="ngModel"
+                  [class.is-invalid]="lastName.invalid && lastName.touched">
+                @if (lastName.invalid && lastName.touched) {
+                  <div class="lp-form-error">Last name is required.</div>
+                }
+              </div>
+            </div>
+
+            <div class="lp-form-group">
+              <label class="lp-form-label">Email Address</label>
+              <input
+                type="email"
+                class="lp-form-control"
+                placeholder="john&#64;example.com"
+                [(ngModel)]="contact.email"
+                name="email"
+                required
+                email
+                #contactEmail="ngModel"
+                [class.is-invalid]="contactEmail.invalid && contactEmail.touched">
+              @if (contactEmail.invalid && contactEmail.touched) {
+                <div class="lp-form-error">A valid email address is required.</div>
+              }
+            </div>
+
+            <div class="lp-form-group">
+              <label class="lp-form-label">Subject</label>
+              <select
+                class="lp-form-control"
+                [(ngModel)]="contact.subject"
+                name="subject"
+                required
+                #subject="ngModel"
+                [class.is-invalid]="subject.invalid && subject.touched">
+                <option value="" disabled>Select a topic...</option>
+                <option value="general">General Inquiry</option>
+                <option value="support">Technical Support</option>
+                <option value="feedback">Feedback &amp; Suggestions</option>
+                <option value="partnership">Partnership</option>
+                <option value="other">Other</option>
+              </select>
+              @if (subject.invalid && subject.touched) {
+                <div class="lp-form-error">Please select a subject.</div>
+              }
+            </div>
+
+            <div class="lp-form-group">
+              <label class="lp-form-label">Message</label>
+              <textarea
+                class="lp-form-control"
+                rows="5"
+                placeholder="Tell us how we can help..."
+                [(ngModel)]="contact.message"
+                name="message"
+                required
+                minlength="10"
+                #message="ngModel"
+                [class.is-invalid]="message.invalid && message.touched">
+              </textarea>
+              @if (message.invalid && message.touched) {
+                <div class="lp-form-error">Message must be at least 10 characters.</div>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="lp-btn lp-btn-neon lp-btn-lg lp-btn-full lp-btn-submit"
+              [disabled]="contactForm.invalid">
+              <i class="bi bi-send-fill"></i> Send Message
+            </button>
+          </form>
+        }
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider"></div>
+
+<!-- ═══ 12. CTA BANNER ═══ -->
+<section class="lp-section  lp-contact-section">
+  <div class="lp-wrap">
+    <div class="lp-cta-gloss rv">
+      <div class="lp-cta-gloss-shine"></div>
+      <div class="lp-cta-gloss-inner">
+        <div class="lp-cta-badge">
+          <i class="bi bi-stars"></i> Free Forever. No Credit Card.
+        </div>
+        <h2 class="lp-cta-title">Start Your Community<br/>Journey <span class="lp-cta-highlight">Today</span></h2>
+        <p class="lp-cta-desc">
+          Join 10,000+ members already connecting, sharing, and growing on {{ applicationName }}.
+          Your people are waiting.
+        </p>
+        <div class="lp-cta-actions">
+          <a routerLink="/auth/register" class="lp-btn lp-btn-cta-primary lp-btn-lg">
+            <i class="bi bi-rocket-takeoff-fill"></i> Sign Up Now - It's Free
+          </a>
+          <a routerLink="/auth/login" class="lp-btn lp-btn-cta-secondary lp-btn-lg">
+            Already a member? Log in
+          </a>
+        </div>
+        <div class="lp-cta-trust">
+          <span><i class="bi bi-shield-check-fill"></i> Secure &amp; Private</span>
+          <span class="lp-cta-trust-sep"></span>
+          <span><i class="bi bi-globe2"></i> 150+ Countries</span>
+          <span class="lp-cta-trust-sep"></span>
+          <span><i class="bi bi-star-fill"></i> 4.9/5 Rating</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ═══ 12. FOOTER ═══ -->
+<footer class="lp-footer">
+  <!-- <div class="lp-footer-glow-line"></div> -->
+  <div class="lp-wrap">
+    <div class="lp-footer-grid">
+      <!-- Brand -->
+      <div class="lp-footer-brand">
+        <a routerLink="/landing" class="lp-logo">
+          <img src="logo.svg" alt="Community HUB" class="lp-logo-img" />
+          <span class="lp-logo-text">{{ applicationName }}</span>
+        </a>
+        <p class="lp-footer-desc">
+          The platform where communities thrive. Events, jobs, businesses, and meaningful connections -- all in one place.
+        </p>
+        <div class="lp-social">
+          <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+
+      <!-- Platform -->
+      <div class="lp-fcol">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="landing#features">Features</a></li>
+          <li><a href="landing#communities">Communities</a></li>
+          <li><a href="landing#how-it-works">How It Works</a></li>
+          <li><a routerLink="/auth/login">Events</a></li>
+          <li><a routerLink="/auth/login">Jobs</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div class="lp-fcol">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="landing#about">About Us</a></li>
+          <li><a href="landing#blog">Blog</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+
+      <!-- Get Started -->
+      <div class="lp-fcol">
+        <h4>Get Started</h4>
+        <ul>
+          <li><a routerLink="/auth/register">Create Account</a></li>
+          <li><a routerLink="/auth/login">Log In</a></li>
+          <li><a href="landing#communities">Browse Communities</a></li>
+          <li><a href="landing#features">Explore Features</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lp-footer-bottom">
+      <p>&copy; 2026 {{ applicationName }}. All rights reserved.</p>
+      <div class="lp-footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ FLOATING SOCIAL BUTTONS — LEFT SIDE ═══ -->
+<!-- <div class="lp-float-left">
+  <a href="https://instagram.com/" target="_blank" rel="noopener" class="lp-float-btn lp-float-instagram" aria-label="Instagram">
+    <i class="bi bi-instagram"></i>
+  </a>
+  <a href="https://youtube.com/" target="_blank" rel="noopener" class="lp-float-btn lp-float-youtube" aria-label="YouTube">
+    <i class="bi bi-youtube"></i>
+  </a>
+</div> -->
+
+<!-- ═══ FLOATING SOCIAL BUTTONS — RIGHT SIDE ═══ -->
+<!-- <div class="lp-float-right">
+  <a href="https://wa.me/" target="_blank" rel="noopener" class="lp-float-btn lp-float-whatsapp" aria-label="WhatsApp">
+    <i class="bi bi-whatsapp"></i>
+  </a>
+  <a href="https://t.me/" target="_blank" rel="noopener" class="lp-float-btn lp-float-telegram" aria-label="Telegram">
+    <i class="bi bi-telegram"></i>
+  </a>
+</div> -->

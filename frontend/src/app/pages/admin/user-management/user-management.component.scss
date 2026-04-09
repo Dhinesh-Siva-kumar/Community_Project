@@ -1,0 +1,165 @@
+@use '../../../../assets/styles/index' as *;
+
+// ===========================
+// User Management Styles
+// ===========================
+
+// Stat Cards
+.stat-card {
+  border-radius: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.4rem;
+    color: $slate-800;
+  }
+}
+
+// Search
+.search-group {
+  .input-group-text {
+    border-radius: 10px 0 0 10px;
+    border-color: $gray-300;
+  }
+
+  .form-control {
+    border-radius: 0 10px 10px 0;
+    border-color: $gray-300;
+
+    &:focus {
+      border-color: $indigo-600;
+      box-shadow: none;
+    }
+  }
+}
+
+// Table
+.table {
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $slate-500;
+    font-weight: 600;
+    padding: 0.75rem;
+  }
+
+  td {
+    padding: 0.75rem;
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: $slate-50;
+    }
+  }
+}
+
+// User avatar placeholder
+.user-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  color: #fff;
+  font-size: 0.7rem;
+}
+
+// Empty State
+.empty-state {
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: $indigo-50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+
+    i {
+      font-size: 2rem;
+      color: $indigo-600;
+    }
+  }
+}
+
+// Pagination
+.pagination {
+  .page-link {
+    border-radius: 8px !important;
+    margin: 0 2px;
+    border: none;
+    color: $slate-500;
+    padding: 0.4rem 0.75rem;
+
+    &:hover {
+      background-color: $indigo-50;
+      color: $indigo-600;
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: $indigo-600;
+    color: #fff;
+  }
+
+  .page-item.disabled .page-link {
+    opacity: 0.5;
+  }
+}
+
+// Card
+.card {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+// Badge
+.badge {
+  font-weight: 500;
+  border-radius: 20px;
+}
+
+// Responsive
+@include media-sm-max {
+  .stat-card {
+    .card-body {
+      padding: 0.75rem !important;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+    }
+
+    .stat-icon-wrapper {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .table {
+    font-size: 0.8rem;
+  }
+}
