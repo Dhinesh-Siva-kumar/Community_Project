@@ -41,9 +41,9 @@ export declare class BusinessController {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         latitude: number | null;
         longitude: number | null;
@@ -75,9 +75,9 @@ export declare class BusinessController {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
+            images: string[];
             userId: string;
             description: string | null;
-            images: string[];
             address: string | null;
             latitude: number | null;
             longitude: number | null;
@@ -115,9 +115,9 @@ export declare class BusinessController {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         latitude: number | null;
         longitude: number | null;
@@ -148,9 +148,9 @@ export declare class BusinessController {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         latitude: number | null;
         longitude: number | null;

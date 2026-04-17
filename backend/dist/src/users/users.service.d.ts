@@ -6,23 +6,25 @@ export declare class UsersService {
     getProfile(userId: string): Promise<{
         communities: ({
             community: {
+                isActive: boolean;
+                name: string;
                 id: string;
                 location: string | null;
                 pincode: string | null;
-                isActive: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
                 description: string | null;
                 image: string | null;
                 createdById: string;
             };
         } & {
             id: string;
-            userId: string;
             communityId: string;
+            userId: string;
             joinedAt: Date;
         })[];
+        countryId: number | null;
+        isActive: boolean;
         id: string;
         email: string | null;
         userName: string;
@@ -31,7 +33,6 @@ export declare class UsersService {
         avatar: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         roleLevel: number;
-        countryId: number | null;
         country: string;
         location: string | null;
         pincode: string | null;
@@ -40,12 +41,13 @@ export declare class UsersService {
         bio: string | null;
         isTrusted: boolean;
         isBlocked: boolean;
-        isActive: boolean;
         profileCompletion: number;
         createdAt: Date;
         updatedAt: Date;
     }>;
     updateProfile(userId: string, data: UpdateUserDto): Promise<{
+        countryId: number | null;
+        isActive: boolean;
         id: string;
         email: string | null;
         userName: string;
@@ -54,7 +56,6 @@ export declare class UsersService {
         avatar: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         roleLevel: number;
-        countryId: number | null;
         country: string;
         location: string | null;
         pincode: string | null;
@@ -63,7 +64,6 @@ export declare class UsersService {
         bio: string | null;
         isTrusted: boolean;
         isBlocked: boolean;
-        isActive: boolean;
         profileCompletion: number;
         createdAt: Date;
         updatedAt: Date;
@@ -71,6 +71,8 @@ export declare class UsersService {
     private calculateProfileCompletion;
     getUsers(page: number, limit: number, search?: string): Promise<{
         data: {
+            countryId: number | null;
+            isActive: boolean;
             id: string;
             email: string | null;
             userName: string;
@@ -79,7 +81,6 @@ export declare class UsersService {
             avatar: string | null;
             role: import("@prisma/client").$Enums.UserRole;
             roleLevel: number;
-            countryId: number | null;
             country: string;
             location: string | null;
             pincode: string | null;
@@ -88,7 +89,6 @@ export declare class UsersService {
             bio: string | null;
             isTrusted: boolean;
             isBlocked: boolean;
-            isActive: boolean;
             profileCompletion: number;
             createdAt: Date;
             updatedAt: Date;

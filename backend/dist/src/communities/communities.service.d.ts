@@ -116,8 +116,8 @@ export declare class CommunitiesService {
             };
         } & {
             id: string;
-            userId: string;
             communityId: string;
+            userId: string;
             joinedAt: Date;
         })[];
         total: number;

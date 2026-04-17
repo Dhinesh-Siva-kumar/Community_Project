@@ -18,9 +18,9 @@ export declare class JobsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         title: string;
         specification: string | null;
         contactInfo: string | null;
@@ -49,9 +49,9 @@ export declare class JobsService {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
+            images: string[];
             userId: string;
             description: string | null;
-            images: string[];
             title: string;
             specification: string | null;
             contactInfo: string | null;
@@ -80,9 +80,9 @@ export declare class JobsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         title: string;
         specification: string | null;
         contactInfo: string | null;
@@ -105,9 +105,9 @@ export declare class JobsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         title: string;
         specification: string | null;
         contactInfo: string | null;

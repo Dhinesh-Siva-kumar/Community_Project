@@ -18,9 +18,9 @@ export declare class EventsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         title: string;
         eventDate: Date;
@@ -47,9 +47,9 @@ export declare class EventsService {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
+            images: string[];
             userId: string;
             description: string | null;
-            images: string[];
             address: string | null;
             title: string;
             eventDate: Date;
@@ -76,9 +76,9 @@ export declare class EventsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         title: string;
         eventDate: Date;
@@ -99,9 +99,9 @@ export declare class EventsService {
         pincode: string | null;
         createdAt: Date;
         updatedAt: Date;
+        images: string[];
         userId: string;
         description: string | null;
-        images: string[];
         address: string | null;
         title: string;
         eventDate: Date;

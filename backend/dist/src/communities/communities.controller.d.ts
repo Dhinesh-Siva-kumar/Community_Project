@@ -111,8 +111,8 @@ export declare class CommunitiesController {
             };
         } & {
             id: string;
-            userId: string;
             communityId: string;
+            userId: string;
             joinedAt: Date;
         })[];
         total: number;

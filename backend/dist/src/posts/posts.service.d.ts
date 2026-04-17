@@ -23,11 +23,11 @@ export declare class PostsService {
         createdAt: Date;
         updatedAt: Date;
         status: import("@prisma/client").$Enums.PostStatus;
-        userId: string;
-        communityId: string;
         content: string;
-        type: import("@prisma/client").$Enums.PostType;
         images: string[];
+        type: import("@prisma/client").$Enums.PostType;
+        communityId: string;
+        userId: string;
     }>;
     findAll(params: {
         communityId?: string;
@@ -56,11 +56,11 @@ export declare class PostsService {
             createdAt: Date;
             updatedAt: Date;
             status: import("@prisma/client").$Enums.PostStatus;
-            userId: string;
-            communityId: string;
             content: string;
-            type: import("@prisma/client").$Enums.PostType;
             images: string[];
+            type: import("@prisma/client").$Enums.PostType;
+            communityId: string;
+            userId: string;
         })[];
         total: number;
         page: number;
@@ -88,11 +88,11 @@ export declare class PostsService {
             createdAt: Date;
             updatedAt: Date;
             status: import("@prisma/client").$Enums.PostStatus;
-            userId: string;
-            communityId: string;
             content: string;
-            type: import("@prisma/client").$Enums.PostType;
             images: string[];
+            type: import("@prisma/client").$Enums.PostType;
+            communityId: string;
+            userId: string;
         })[];
         total: number;
         page: number;
@@ -110,11 +110,11 @@ export declare class PostsService {
         createdAt: Date;
         updatedAt: Date;
         status: import("@prisma/client").$Enums.PostStatus;
-        userId: string;
-        communityId: string;
         content: string;
-        type: import("@prisma/client").$Enums.PostType;
         images: string[];
+        type: import("@prisma/client").$Enums.PostType;
+        communityId: string;
+        userId: string;
     }>;
     reject(postId: string): Promise<{
         user: {
@@ -127,11 +127,11 @@ export declare class PostsService {
         createdAt: Date;
         updatedAt: Date;
         status: import("@prisma/client").$Enums.PostStatus;
-        userId: string;
-        communityId: string;
         content: string;
-        type: import("@prisma/client").$Enums.PostType;
         images: string[];
+        type: import("@prisma/client").$Enums.PostType;
+        communityId: string;
+        userId: string;
     }>;
     delete(postId: string, userId: string): Promise<{
         message: string;
@@ -156,8 +156,8 @@ export declare class PostsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             content: string;
+            userId: string;
             postId: string;
         })[];
         total: number;
@@ -176,8 +176,8 @@ export declare class PostsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         content: string;
+        userId: string;
         postId: string;
     }>;
     deleteComment(commentId: string, userId: string): Promise<{

@@ -7,8 +7,8 @@ export declare class NotificationsController {
             id: string;
             createdAt: Date;
             message: string;
-            userId: string;
             type: import("@prisma/client").$Enums.NotificationType;
+            userId: string;
             isRead: boolean;
             relatedEntityId: string | null;
         }[];
@@ -21,8 +21,8 @@ export declare class NotificationsController {
         id: string;
         createdAt: Date;
         message: string;
-        userId: string;
         type: import("@prisma/client").$Enums.NotificationType;
+        userId: string;
         isRead: boolean;
         relatedEntityId: string | null;
     }>;
