@@ -1,5 +1,22 @@
-node_modules
-# Keep environment variables out of version control
-# .env
+node_modules/
+dist/
+.env
 
-/generated/prisma
+# Upload files (keep .gitkeep placeholders)
+uploads/profiles/*
+uploads/resumes/*
+uploads/certificates/*
+uploads/videos/*
+!uploads/profiles/.gitkeep
+!uploads/resumes/.gitkeep
+!uploads/certificates/.gitkeep
+!uploads/videos/.gitkeep
+
+# Legacy NestJS artefacts
+prisma/
+nest-cli.json
+.prettierrc
+eslint.config.mjs
+tsconfig.build.json
+prisma.config.ts
+test/
