@@ -253,13 +253,11 @@
                 <!-- Category -->
                 <div class="cm-field-group">
                   <label class="cm-label">Category <span class="cm-required">*</span></label>
-                  <div class="cm-input-wrap">
-                    <i class="bi bi-bookmark-star cm-input-icon"></i>
-                    <select formControlName="interests" class="cm-input cm-select">
-                      <option value="" disabled selected>Select a category</option>
-                      <option *ngFor="let i of interests" [value]="i.interest_id">{{ i.interest_name }}</option>
-                    </select>
-                  </div>
+                  <app-searchable-select
+                    formControlName="interests"
+                    [options]="interestOptions"
+                    placeholder="Select a category"
+                  ></app-searchable-select>
                   @if (f['interests'].touched && f['interests'].invalid) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
@@ -306,13 +304,11 @@
                 <!-- Country -->
                 <div class="cm-field-group">
                   <label class="cm-label">Country</label>
-                  <div class="cm-input-wrap">
-                    <i class="bi bi-globe cm-input-icon"></i>
-                    <select formControlName="countryId" class="cm-input cm-select">
-                      <option value="">Select country</option>
-                      <option *ngFor="let c of countries" [value]="c.country_id">{{ c.country_name }}</option>
-                    </select>
-                  </div>
+                  <app-searchable-select
+                    formControlName="countryId"
+                    [options]="countryOptions"
+                    placeholder="Select country"
+                  ></app-searchable-select>
                 </div>
 
                 <!-- Visibility Toggles -->

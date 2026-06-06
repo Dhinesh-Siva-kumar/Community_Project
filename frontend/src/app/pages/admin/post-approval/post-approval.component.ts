@@ -1,13 +1,15 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PostService } from '../../../core/services/post.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Post, PaginatedResponse } from '../../../core/models';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-post-approval',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent],
   templateUrl: './post-approval.component.html',
   styleUrls: ['./post-approval.component.scss'],
 })
@@ -31,6 +33,13 @@ export class PostApprovalComponent implements OnInit {
   // Filters
   filterCommunity = signal('');
   filterType = signal('');
+
+  readonly postTypeOptions: SelectOption[] = [
+    { value: '', label: 'All Types' },
+    { value: 'GENERAL', label: 'General' },
+    { value: 'HELP', label: 'Help' },
+    { value: 'EMERGENCY', label: 'Emergency' },
+  ];
 
   // Computed
   pendingCount = computed(() => this.pendingPosts().length);

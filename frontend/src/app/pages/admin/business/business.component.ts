@@ -5,13 +5,14 @@ import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business, BusinessCategory, PaginatedResponse } from '../../../core/models';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -29,6 +30,11 @@ export class AdminBusinessComponent implements OnInit {
   businesses = signal<Business[]>([]);
   selectedCategory = signal<BusinessCategory | null>(null);
   selectedBusiness = signal<Business | null>(null);
+
+  // Computed options for the category dropdown
+  categoryOptions = computed<SelectOption[]>(() =>
+    this.categories().map(c => ({ value: c.id, label: c.name }))
+  );
 
   // Loading
   loading = signal(true);

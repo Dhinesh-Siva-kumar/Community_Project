@@ -7,11 +7,12 @@ import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
@@ -24,6 +25,8 @@ export class AdminCommunityComponent implements OnInit {
   private toastService = inject(ToastService);
   countries: Country[] = [];
   interests: interests[] = [];
+  interestOptions: SelectOption[] = [];
+  countryOptions: SelectOption[] = [];
 
   // Signals
   communities = signal<Community[]>([]);
@@ -85,12 +88,15 @@ loadCountries() {
   this.authService.getCountries().subscribe({
     next: (res) => {
       this.countries = res.data;
-      const defaultCountry = this.countries.find(c => c.country_name === 'India');
+      this.countryOptions = this.countries.map(c => {
+        const flag = c.flag_emoji || [...c.iso2.toUpperCase()].map(ch => String.fromCodePoint(127397 + ch.charCodeAt(0))).join('');
+        return { value: c.id, label: `${flag} ${c.name}` };
+      });
+      const defaultCountry = this.countries.find(c => c.name === 'India');
       if (defaultCountry) {
         this.communityForm.patchValue({
-          countryID: defaultCountry.country_id
+          countryId: defaultCountry.id
         });
-        this.communityForm.get('mobile')?.updateValueAndValidity();
       }
     },
     error: () => {
@@ -103,6 +109,7 @@ loadInterests() {
   this.authService.getInterests().subscribe({
     next: (res) => {
       this.interests = res.data;
+      this.interestOptions = this.interests.map(i => ({ value: i.interest_id, label: i.interest_name }));
     },
     error: () => {
       this.toastService.error('Failed to load countries');
@@ -147,7 +154,7 @@ loadInterests() {
     this.communityForm.reset();
     if (defaultInterest) {
         this.communityForm.patchValue({
-         interests : [defaultInterest.interest_id]
+         interests: defaultInterest.interest_id
         });
       }
     this.selectedImage.set(null);

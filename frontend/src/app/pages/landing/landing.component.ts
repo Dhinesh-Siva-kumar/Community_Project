@@ -5,11 +5,12 @@ import {
 import { RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, SearchableSelectComponent],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
@@ -188,6 +189,14 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   // ── Contact Form ──
   contact = { firstName: '', lastName: '', email: '', subject: '', message: '' };
   contactSubmitted = false;
+
+  readonly contactSubjectOptions: SelectOption[] = [
+    { value: 'general',     label: 'General Inquiry' },
+    { value: 'support',     label: 'Technical Support' },
+    { value: 'feedback',    label: 'Feedback & Suggestions' },
+    { value: 'partnership', label: 'Partnership' },
+    { value: 'other',       label: 'Other' },
+  ];
 
   submitContact(): void {
     this.contactSubmitted = true;

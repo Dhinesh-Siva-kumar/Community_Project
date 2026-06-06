@@ -340,12 +340,11 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label small fw-semibold">Category *</label>
-                <select class="form-select" formControlName="categoryId">
-                  <option value="">Select category</option>
-                  @for (cat of categories(); track cat.id) {
-                    <option [value]="cat.id">{{ cat.name }}</option>
-                  }
-                </select>
+                <app-searchable-select
+                  formControlName="categoryId"
+                  [options]="categoryOptions()"
+                  placeholder="Select category"
+                ></app-searchable-select>
               </div>
               <div class="col-12">
                 <label class="form-label small fw-semibold">Description</label>

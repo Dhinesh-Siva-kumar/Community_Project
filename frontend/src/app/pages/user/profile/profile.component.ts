@@ -7,13 +7,14 @@ import { BusinessService } from '../../../core/services/business.service';
 import { JobService } from '../../../core/services/job.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { User, Business, Job } from '../../../core/models';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 type ProfileTab = 'personal' | 'businesses' | 'jobs';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, SearchableSelectComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -66,6 +67,8 @@ export class UserProfileComponent implements OnInit {
     'Marketing', 'Design', 'Engineering', 'Sales', 'Construction',
     'Hospitality', 'Retail', 'Real Estate', 'Other',
   ];
+
+  profCatOptions: SelectOption[] = this.professionalCategories.map(c => ({ value: c, label: c }));
 
   ngOnInit(): void {
     this.initForms();

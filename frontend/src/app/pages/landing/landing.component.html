@@ -545,20 +545,14 @@
 
             <div class="lp-form-group">
               <label class="lp-form-label">Subject</label>
-              <select
-                class="lp-form-control"
+              <app-searchable-select
                 [(ngModel)]="contact.subject"
                 name="subject"
                 required
                 #subject="ngModel"
-                [class.is-invalid]="subject.invalid && subject.touched">
-                <option value="" disabled>Select a topic...</option>
-                <option value="general">General Inquiry</option>
-                <option value="support">Technical Support</option>
-                <option value="feedback">Feedback &amp; Suggestions</option>
-                <option value="partnership">Partnership</option>
-                <option value="other">Other</option>
-              </select>
+                [options]="contactSubjectOptions"
+                placeholder="Select a topic..."
+              ></app-searchable-select>
               @if (subject.invalid && subject.touched) {
                 <div class="lp-form-error">Please select a subject.</div>
               }

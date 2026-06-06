@@ -190,11 +190,11 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label small fw-semibold">Job Type</label>
-                <select class="form-select" formControlName="jobType">
-                  @for (type of jobTypes; track type) {
-                    <option [value]="type">{{ type }}</option>
-                  }
-                </select>
+                <app-searchable-select
+                  formControlName="jobType"
+                  [options]="jobTypeOptions"
+                  placeholder="Select job type"
+                ></app-searchable-select>
               </div>
               <div class="col-12">
                 <label class="form-label small fw-semibold">Specification</label>

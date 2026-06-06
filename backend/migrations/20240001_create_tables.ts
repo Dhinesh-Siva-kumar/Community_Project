@@ -4,7 +4,7 @@ import { Knex } from 'knex';
  * Full schema migration — reproduces the Prisma schema exactly as Knex DDL.
  * Tables: users, communities, community_members, posts, comments, likes,
  *         business_categories, businesses, events, jobs,
- *         country_master, interest_master, notifications,
+ *         master_countries, interest_master, notifications,
  *         otp_tokens, audit_logs
  */
 export async function up(knex: Knex): Promise<void> {
@@ -228,15 +228,15 @@ export async function up(knex: Knex): Promise<void> {
   }
 
   // ------------------------------------------------------------------
-  // country_master
+  // master_countries (includes dial code for phone picker)
   // ------------------------------------------------------------------
-  if (!(await knex.schema.hasTable('country_master'))) {
-    await knex.schema.createTable('country_master', (t) => {
-      t.increments('country_id').primary();
-      t.string('country_name').unique().notNullable();
-      t.string('country_code').nullable();
-      t.string('country_flag').nullable();
-      t.boolean('is_active').notNullable().defaultTo(true);
+  if (!(await knex.schema.hasTable('master_countries'))) {
+    await knex.schema.createTable('master_countries', (t) => {
+      t.increments('id').primary();
+      t.string('name', 100).notNullable();
+      t.string('iso2', 2).notNullable().unique();
+      t.string('dial_code', 10).notNullable();
+      t.string('flag_emoji', 10).nullable();
     });
   }
 
@@ -303,7 +303,7 @@ export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists('otp_tokens');
   await knex.schema.dropTableIfExists('notifications');
   await knex.schema.dropTableIfExists('interest_master');
-  await knex.schema.dropTableIfExists('country_master');
+  await knex.schema.dropTableIfExists('master_countries');
   await knex.schema.dropTableIfExists('jobs');
   await knex.schema.dropTableIfExists('events');
   await knex.schema.dropTableIfExists('businesses');

@@ -1,20 +1,32 @@
 import db from '../../config/db';
 
+/**
+ * Derive a flag emoji from a 2-letter ISO 3166-1 alpha-2 code.
+ * Regional Indicator Symbol Letter A = U+1F1E6 = 127462.
+ * Each subsequent letter is +1, so charCode('A') = 65 → offset = 127462 - 65 = 127397.
+ */
+function isoToFlagEmoji(iso2: string): string {
+  return [...iso2.toUpperCase()]
+    .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+    .join('');
+}
+
 export async function getCountries() {
   try {
-    const rows = await db('country_master')
-      .where({ is_active: true })
-      .orderBy('country_name', 'asc')
-      .select('country_id', 'country_name', 'country_code', 'country_flag');
+    const rows = await db('master_countries')
+      .orderBy('name', 'asc')
+      .select('id', 'name', 'iso2', 'dial_code', 'flag_emoji');
 
     return {
       success: true,
       count: rows.length,
       data: (rows as Array<Record<string, unknown>>).map((r) => ({
-        country_id: r['country_id'],
-        country_name: r['country_name'],
-        country_code: r['country_code'],
-        country_flag: r['country_flag'],
+        id: r['id'],
+        name: r['name'],
+        iso2: r['iso2'],
+        dial_code: r['dial_code'],
+        // Fallback: if flag_emoji is NULL in the DB, derive it from the iso2 code.
+        flag_emoji: (r['flag_emoji'] as string | null) ?? isoToFlagEmoji(r['iso2'] as string),
       })),
     };
   } catch (err) {

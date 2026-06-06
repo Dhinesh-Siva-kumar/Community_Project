@@ -492,3 +492,456 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+//  Reusable Dropdown Design Tokens
+//  Indigo/violet palette, theme-aware via CSS custom properties
+// ══════════════════════════════════════════════════════════════
+
+// ── Light-mode tokens (default) ───────────────────────────────
+:root {
+  --th-primary:           #5046e5;
+  --th-primary-hover:     #4338ca;
+  --th-primary-light:     #ede9fe;
+  --th-primary-on:        #ffffff;
+  --th-dropdown-bg:       #ffffff;
+  --th-dropdown-border:   #e2e8f0;
+  --th-dropdown-shadow:   0 8px 24px rgba(0, 0, 0, 0.10);
+  --th-dropdown-radius:   10px;
+  --th-option-hover:      #f8fafc;
+  --th-chip-bg:           #ede9fe;
+  --th-chip-color:        #4338ca;
+  --th-chip-border:       #c4b5fd;
+  --th-placeholder-color: #94a3b8;
+  --th-search-icon-color: #94a3b8;
+  --th-caret-color:       #64748b;
+}
+
+// ── Dark-mode tokens ──────────────────────────────────────────
+[data-theme='dark'] {
+  --th-primary:           #6366f1;
+  --th-primary-hover:     #818cf8;
+  --th-primary-light:     #312e81;
+  --th-primary-on:        #ffffff;
+  --th-dropdown-bg:       #1e293b;
+  --th-dropdown-border:   #334155;
+  --th-dropdown-shadow:   0 8px 24px rgba(0, 0, 0, 0.35);
+  --th-dropdown-radius:   10px;
+  --th-option-hover:      #0f172a;
+  --th-chip-bg:           #312e81;
+  --th-chip-color:        #a5b4fc;
+  --th-chip-border:       #4f46e5;
+  --th-placeholder-color: #64748b;
+  --th-search-icon-color: #64748b;
+  --th-caret-color:       #94a3b8;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SearchableSelectComponent  (.ss-*)
+// ══════════════════════════════════════════════════════════════
+
+.ss-host {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+// Trigger button reuses Bootstrap's .form-control sizing/radius
+.ss-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  background: var(--th-dropdown-bg);
+  border: 1px solid var(--th-dropdown-border);
+  cursor: pointer;
+  user-select: none;
+  padding-right: 0.875rem; // align caret
+
+  &.ss-placeholder .ss-trigger-text {
+    color: var(--th-placeholder-color);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.ss-trigger-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-caret {
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  color: var(--th-caret-color);
+  transition: transform 0.2s ease;
+
+  &.ss-caret-open {
+    transform: rotate(180deg);
+  }
+}
+
+.ss-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--th-dropdown-bg);
+  border: 1px solid var(--th-dropdown-border);
+  border-radius: var(--th-dropdown-radius);
+  box-shadow: var(--th-dropdown-shadow);
+  overflow: hidden;
+}
+
+.ss-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--th-dropdown-border);
+}
+
+.ss-search-icon {
+  flex-shrink: 0;
+  color: var(--th-search-icon-color);
+  font-size: 0.8rem;
+  margin-right: 8px;
+}
+
+.ss-search {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: inherit;
+
+  &::placeholder {
+    color: var(--th-placeholder-color);
+  }
+}
+
+.ss-clear-search {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--th-placeholder-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  line-height: 1;
+
+  &:hover {
+    color: var(--th-caret-color);
+  }
+}
+
+.ss-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ss-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--th-option-hover);
+  }
+
+  &.ss-option-selected {
+    background: var(--th-primary-light);
+    color: var(--th-chip-color);
+    font-weight: 500;
+  }
+}
+
+.ss-option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-check {
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: var(--th-primary);
+  font-size: 0.875rem;
+}
+
+.ss-no-results {
+  padding: 16px 14px;
+  font-size: 0.875rem;
+  color: var(--th-placeholder-color);
+  text-align: center;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ChipMultiSelectComponent  (.cms-*)
+// ══════════════════════════════════════════════════════════════
+
+.cms-host {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.cms-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: calc(2.25rem + 2px); // match .form-control height
+  padding: 5px 10px;
+  background: var(--th-dropdown-bg);
+  border: 1px solid var(--th-dropdown-border);
+  border-radius: 6px;
+  cursor: text;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &.cms-focus {
+    border-color: var(--th-primary);
+    box-shadow: 0 0 0 3px rgba(80, 70, 229, 0.15);
+    outline: none;
+  }
+
+  &.cms-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.cms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--th-chip-bg);
+  color: var(--th-chip-color);
+  border: 1px solid var(--th-chip-border);
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.cms-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cms-chip-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--th-chip-color);
+  line-height: 1;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  opacity: 0.65;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.cms-search {
+  flex: 1;
+  min-width: 80px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: inherit;
+
+  &::placeholder {
+    color: var(--th-placeholder-color);
+  }
+
+  // Collapsed stub — just keeps the field tabbable
+  &.cms-search-stub {
+    min-width: 4px;
+    width: 4px;
+  }
+}
+
+.cms-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--th-dropdown-bg);
+  border: 1px solid var(--th-dropdown-border);
+  border-radius: var(--th-dropdown-radius);
+  box-shadow: var(--th-dropdown-shadow);
+  overflow: hidden;
+}
+
+.cms-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.cms-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--th-option-hover);
+  }
+
+  &.cms-option-checked {
+    background: var(--th-primary-light);
+  }
+}
+
+.cms-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--th-dropdown-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+
+  i {
+    font-size: 0.65rem;
+    color: var(--th-primary-on);
+    display: none;
+  }
+
+  &.cms-checkbox-checked {
+    background: var(--th-primary);
+    border-color: var(--th-primary);
+
+    i {
+      display: block;
+    }
+  }
+}
+
+.cms-option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .cms-option-checked & {
+    color: var(--th-chip-color);
+    font-weight: 500;
+  }
+}
+
+.cms-no-results {
+  padding: 16px 14px;
+  font-size: 0.875rem;
+  color: var(--th-placeholder-color);
+  text-align: center;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Auth-form context — SearchableSelect trigger visual match
+//  Aligns .ss-trigger with .field-input: 48 px · auth border ·
+//  auth bg/color · $primary focus ring.
+//  Specificity (0,2,0) beats Bootstrap .form-control (0,1,0).
+//  :focus override (0,3,0) beats .form-control:focus (0,2,0).
+// ══════════════════════════════════════════════════════════════
+
+.auth-form {
+  .ss-trigger {
+    height: 48px;
+    border: 1.5px solid var(--auth-border);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--auth-text);
+    background: var(--auth-input-bg);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    // Open state or keyboard/click focus — mirrors .field-input:focus
+    &[aria-expanded="true"],
+    &:focus,
+    &:focus-visible {
+      border-color: $primary;
+      background: var(--auth-input-focus-bg);
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+      outline: none;
+    }
+
+    // Placeholder text colour
+    &.ss-placeholder .ss-trigger-text {
+      color: var(--auth-placeholder);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Landing contact-form context — SearchableSelect trigger match
+//  Aligns .ss-trigger with .lp-form-control: same padding/border/
+//  bg/color and --lp-primary focus ring.
+//  .lp-form-group is lp-prefixed → landing-page-only, no collision.
+// ══════════════════════════════════════════════════════════════
+
+.lp-form-group {
+  .ss-trigger {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: var(--lp-text);
+    background: var(--lp-surface);
+    border: 1.5px solid var(--lp-border);
+    border-radius: $radius-sm;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+
+    // Open state or focus — mirrors .lp-form-control:focus
+    &[aria-expanded="true"],
+    &:focus,
+    &:focus-visible {
+      border-color: var(--lp-primary);
+      box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), 0.12);
+      outline: none;
+    }
+
+    // Placeholder colour + opacity (matches .lp-form-control::placeholder)
+    &.ss-placeholder .ss-trigger-text {
+      color: var(--lp-muted);
+      opacity: 0.6;
+    }
+  }
+}

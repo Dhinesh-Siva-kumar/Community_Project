@@ -205,22 +205,11 @@
                 <!-- Country -->
                 <div class="field-group">
                   <label class="field-label">Country</label>
-                  <div class="field-input-wrap">
-                    <i class="bi bi-globe2 field-icon"></i>
-                    <select
-                      formControlName="countryID"
-                      class="field-input field-select"
-                      (change)="onCountryChange()"
-                    >
-                      <option
-                        *ngFor="let country of countries"
-                        [value]="country.country_id"
-                      >
-                        {{ getFlagEmoji(country.country_flag) }}
-                        {{ country.country_code }}
-                      </option>
-                    </select>
-                  </div>
+                  <app-searchable-select
+                    formControlName="countryID"
+                    [options]="countryOptions"
+                    placeholder="Select country"
+                  ></app-searchable-select>
                 </div>
 
                 <!-- Mobile -->

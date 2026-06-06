@@ -16,10 +16,11 @@ export interface UserRegister {
 }
 
 export interface Country {
-  country_id: number;
-  country_name: string;
-  country_code: string;
-  country_flag: string;
+  id: number;
+  name: string;
+  iso2: string;
+  dial_code: string;
+  flag_emoji: string;
 }
 
 export interface interests {

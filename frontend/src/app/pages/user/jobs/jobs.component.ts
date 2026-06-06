@@ -5,11 +5,12 @@ import { JobService } from '../../../core/services/job.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Job, PaginatedResponse } from '../../../core/models';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-user-jobs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, SearchableSelectComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
 })
@@ -47,6 +48,7 @@ export class UserJobsComponent implements OnInit {
 
   // Job types
   jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'];
+  jobTypeOptions: SelectOption[] = this.jobTypes.map(t => ({ value: t, label: t }));
 
   ngOnInit(): void {
     this.initForm();

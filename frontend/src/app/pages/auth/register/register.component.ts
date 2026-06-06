@@ -16,6 +16,7 @@ import { Country, UserRegister } from '../../../core/models';
 import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js';
 import { AsyncValidatorFn } from '@angular/forms';
 import { debounceTime, switchMap, map, catchError, of, distinctUntilChanged, Subject } from 'rxjs';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-register',
@@ -24,6 +25,7 @@ import { debounceTime, switchMap, map, catchError, of, distinctUntilChanged, Sub
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
+    SearchableSelectComponent,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -36,6 +38,7 @@ export class RegisterComponent {
   showPassword = signal(false);
 
   countries: Country[] = [];
+  countryOptions: SelectOption[] = [];
   step = signal<'form' | 'otp'>('form');
 
   private destroy$ = new Subject<void>();
@@ -74,6 +77,8 @@ ngOnInit(){
   this.loadTheme();
   this.initializeForm();
   this.loadCountries();
+  // Re-run mobile validation whenever the country selection changes
+  this.registerForm.get('countryID')?.valueChanges.subscribe(() => this.onCountryChange());
   this.registerForm.get('userName')?.valueChanges.pipe(
   debounceTime(500),
 
@@ -159,7 +164,7 @@ mobileValidator(): ValidatorFn {
     if (!this.countries.length) return null; // ✅ important
 
     const country = this.countries.find(
-      c => c.country_id == countryId
+      c => c.id == countryId
     );
 
     if (!country) return { mobile: true };
@@ -167,7 +172,7 @@ mobileValidator(): ValidatorFn {
     try {
       const phone = parsePhoneNumberFromString(
         control.value,
-        country.country_flag.toUpperCase() as CountryCode
+        country.iso2.toUpperCase() as CountryCode
       );
 
       return phone && phone.isValid() ? null : { mobile: true };
@@ -190,10 +195,14 @@ loadCountries() {
   this.authService.getCountries().subscribe({
     next: (res) => {
       this.countries = res.data;
-      const defaultCountry = this.countries.find(c => c.country_name === 'India');
+      this.countryOptions = this.countries.map(c => ({
+        value: c.id,
+        label: `${c.flag_emoji || this.getFlagEmoji(c.iso2)} ${c.dial_code}`,
+      }));
+      const defaultCountry = this.countries.find(c => c.name === 'India');
       if (defaultCountry) {
         this.registerForm.patchValue({
-          countryID: defaultCountry.country_id
+          countryID: defaultCountry.id
         });
         this.registerForm.get('mobile')?.updateValueAndValidity();
       }
@@ -247,12 +256,12 @@ loadCountries() {
 }
 getFullPhoneNumber(): string {
   const country = this.countries.find(
-    c => c.country_id == this.registerForm.value.countryID
+    c => c.id == this.registerForm.value.countryID
   );
 
   if (!country) return '';
 
-  return `${country.country_code}${this.registerForm.value.mobile}`;
+  return `${country.dial_code}${this.registerForm.value.mobile}`;
 }
 
 verifyOtp(): void {

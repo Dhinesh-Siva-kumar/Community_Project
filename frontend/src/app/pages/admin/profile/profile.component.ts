@@ -5,13 +5,14 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { User } from '../../../core/models';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 type ProfileTab = 'personal' | 'admin-info';
 
 @Component({
   selector: 'app-admin-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -54,6 +55,8 @@ export class AdminProfileComponent implements OnInit {
     'Marketing', 'Design', 'Engineering', 'Sales', 'Construction',
     'Hospitality', 'Retail', 'Real Estate', 'Other',
   ];
+
+  profCatOptions: SelectOption[] = this.professionalCategories.map(c => ({ value: c, label: c }));
 
   ngOnInit(): void {
     this.initForms();
