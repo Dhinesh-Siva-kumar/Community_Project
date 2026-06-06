@@ -6,71 +6,182 @@
 // Shadows → _shadows.scss | Animations → _animations.scss
 
 // ============================================================
-// SPACING SCALE
+// SPACING SCALE (8-point grid)
 // ============================================================
 $spacing-xs:    4px;
 $spacing-sm:    8px;
 $spacing-md:    16px;
 $spacing-lg:    24px;
 $spacing-xl:    32px;
-$spacing-2xl:   40px;
-$spacing-3xl:   56px;
+$spacing-2xl:   48px;
+$spacing-3xl:   64px;
+$spacing-4xl:   80px;
 
 // ============================================================
 // BORDER RADIUS
 // ============================================================
+$radius-xs:     4px;
 $radius-sm:     8px;
 $radius-md:     12px;
 $radius-lg:     16px;
 $radius-xl:     20px;
-$radius-full:   50%;
+$radius-2xl:    24px;
+$radius-3xl:    32px;
+$radius-full:   9999px;
 
 // ============================================================
 // Z-INDEX SCALE
 // ============================================================
-$z-dropdown:       1000;
-$z-sticky:         1000;
-$z-fixed:          1020;
-$z-modal-backdrop: 1040;
-$z-modal:          1050;
-$z-popover:        1060;
-$z-tooltip:        1070;
+$z-base:            0;
+$z-raised:          10;
+$z-dropdown:        1000;
+$z-sticky:          1000;
+$z-fixed:           1020;
+$z-sidebar:         1030;
+$z-modal-backdrop:  1040;
+$z-modal:           1050;
+$z-popover:         1060;
+$z-tooltip:         1070;
+$z-toast:           1080;
 
 // ============================================================
-// SIDEBAR
+// LAYOUT DIMENSIONS
 // ============================================================
-$sidebar-width: 260px;
+$sidebar-width:          260px;
+$sidebar-collapsed-width: 70px;
+$header-height:          64px;
+$content-max-width:      1280px;
+$content-max-width-narrow: 960px;
 
 // ============================================================
-// COMPONENT-SPECIFIC TOKENS
+// TRANSITION SPEEDS
 // ============================================================
+$transition-fast:        150ms;
+$transition-base:        200ms;
+$transition-slow:        300ms;
+$transition-slower:      400ms;
+$transition-easing:      cubic-bezier(0.4, 0, 0.2, 1);
+$transition-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
 
-// Navbar
-$navbar-height: 64px;
-$navbar-bg: rgba(255, 255, 255, 0.98);
-$navbar-border: 1.5px solid #e8eaff;
-$navbar-shadow: 0 4px 24px rgba(88, 101, 242, 0.06);
+// ============================================================
+// COMPONENT TOKENS — NAVBAR
+// ============================================================
+$navbar-height:          $header-height;
+$navbar-bg:              rgba(255, 255, 255, 0.95);
+$navbar-backdrop:        blur(12px);
+$navbar-border:          1px solid rgba(231, 229, 228, 0.9);
+$navbar-shadow:          0 1px 0 rgba(231, 229, 228, 1), 0 4px 16px rgba(28, 25, 23, 0.04);
+$navbar-brand-color:     #1C1917;
+$navbar-icon-color:      #78716C;
 
-// Avatar Sizes
+// ============================================================
+// COMPONENT TOKENS — SIDEBAR (Dark warm)
+// ============================================================
+$sidebar-bg-token:             #1C1917;
+$sidebar-surface-token:        #292524;
+$sidebar-border-token:         rgba(255, 255, 255, 0.06);
+$sidebar-brand-text:           #FAFAF9;
+$sidebar-nav-text:             #A8A29E;
+$sidebar-nav-hover-bg:         rgba(245, 158, 11, 0.08);
+$sidebar-nav-hover-text:       #FAFAF9;
+$sidebar-nav-active-bg:        rgba(245, 158, 11, 0.14);
+$sidebar-nav-active-text:      #F59E0B;
+$sidebar-nav-active-border:    #F59E0B;
+$sidebar-icon-muted:           #57534E;
+$sidebar-section-label:        #57534E;
+
+// ============================================================
+// COMPONENT TOKENS — AVATAR
+// ============================================================
+$avatar-size-xs:    28px;
 $avatar-size-sm:    36px;
 $avatar-size-md:    40px;
 $avatar-size-lg:    52px;
-$avatar-size-xl:    96px;
+$avatar-size-xl:    72px;
+$avatar-size-2xl:   96px;
+$avatar-ring-primary:   2px solid #F59E0B;
+$avatar-ring-offset:    2px;
 
-// Badge Sizes
+// ============================================================
+// COMPONENT TOKENS — BADGE
+// ============================================================
 $badge-size-sm:     18px;
-$badge-size-md:     26px;
+$badge-size-md:     24px;
+$badge-padding-sm:  2px 7px;
+$badge-padding-md:  4px 10px;
+$badge-radius:      9999px;
+$badge-font-size:   11px;
+$badge-font-weight: 600;
 
-// Button Heights
-$btn-height-sm:     38px;
+// ============================================================
+// COMPONENT TOKENS — BUTTONS
+// ============================================================
+$btn-height-xs:     30px;
+$btn-height-sm:     36px;
 $btn-height-md:     40px;
 $btn-height-lg:     48px;
+$btn-height-xl:     54px;
+
+$btn-padding-sm:    0 14px;
+$btn-padding-md:    0 18px;
+$btn-padding-lg:    0 24px;
+
+$btn-radius:        $radius-md;
+$btn-radius-pill:   $radius-full;
+
+$btn-primary-bg:         #F59E0B;
+$btn-primary-hover-bg:   #D97706;
+$btn-primary-active-bg:  #B45309;
+$btn-primary-text:       #1C1917;
+$btn-primary-shadow:     0 1px 2px rgba(245, 158, 11, 0.3);
+$btn-primary-shadow-hover: 0 4px 14px rgba(245, 158, 11, 0.4);
+
+// ============================================================
+// COMPONENT TOKENS — CARDS
+// ============================================================
+$card-bg:           #FFFFFF;
+$card-radius:       $radius-lg;
+$card-border:       1px solid #E7E5E4;
+$card-padding:      20px;
+$card-padding-sm:   14px;
+$card-padding-lg:   28px;
+
+// ============================================================
+// COMPONENT TOKENS — INPUTS / FORM
+// ============================================================
+$input-height:          42px;
+$input-height-sm:       36px;
+$input-height-lg:       48px;
+$input-border:          1.5px solid #E7E5E4;
+$input-border-focus:    1.5px solid #F59E0B;
+$input-radius:          $radius-md;
+$input-bg:              #FFFFFF;
+$input-focus-shadow:    0 0 0 3px rgba(245, 158, 11, 0.15);
+
+// ============================================================
+// COMPONENT TOKENS — TABS
+// ============================================================
+$tab-height:            40px;
+$tab-radius:            $radius-md;
+$tab-active-bg:         #1C1917;
+$tab-active-text:       #FFFFFF;
+$tab-inactive-text:     #78716C;
+$tab-hover-bg:          #F5F5F4;
 
 // ============================================================
 // SCROLLBAR STYLING
 // ============================================================
-$scrollbar-width:          6px;
+$scrollbar-width:          5px;
 $scrollbar-track-bg:       transparent;
-$scrollbar-thumb-bg:       #d0d0d0;
-$scrollbar-thumb-bg-hover: #bbb;
-$scrollbar-thumb-radius:   3px;
+$scrollbar-thumb-bg:       #D6D3D1;
+$scrollbar-thumb-bg-hover: #A8A29E;
+$scrollbar-thumb-radius:   4px;
+
+// ============================================================
+// COMMUNITY PAGE SPECIFIC
+// ============================================================
+$community-hero-min-height:   200px;
+$community-card-cover-height: 175px;
+$community-featured-card-w:   280px;
+$community-panel-width:       100%;
+$community-grid-gap:          20px;

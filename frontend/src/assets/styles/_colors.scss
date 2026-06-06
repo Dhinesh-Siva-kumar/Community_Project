@@ -1,48 +1,82 @@
 // ============================================================
 // COLOR PALETTE & SEMANTIC COLORS
 // ============================================================
-// Centralized color system with WCAG AA contrast verification
-// All colors for the entire application defined here
+// Yellow-centered design system — Amber primary with warm neutrals
+// Visual references: Linear, Notion, Stripe, Airbnb, Slack
+// WCAG AA compliant contrast ratios throughout
 
 // ============================================================
-// PRIMARY COLOR PALETTE
+// PRIMARY — AMBER / YELLOW BRAND PALETTE
 // ============================================================
 
-// Primary Blue - Main brand color
-$color-primary:             #5865F2;
-$color-primary-rgb:         88, 101, 242;
-$color-primary-light:       #ede9fe;
-$color-primary-dark:        #4752c4;
+$color-primary:             #F59E0B;   // Amber 500 — brand yellow
+$color-primary-rgb:         245, 158, 11;
+$color-primary-dark:        #D97706;   // Amber 600 — hover / pressed
+$color-primary-darker:      #B45309;   // Amber 700 — active / focus ring
+$color-primary-light:       #FEF3C7;   // Amber 50  — tinted backgrounds
+$color-primary-medium:      #FDE68A;   // Amber 200 — subtle fills
+$color-primary-muted:       #FCD34D;   // Amber 300 — mid-tone accent
 
-// Secondary & Accent Colors
-$color-accent:              #eb459e;
-$color-secondary:           #7289da;
-$color-accent-green:        #57f287;
-$color-accent-yellow:       #fee75c;
-
-// Violet
-$color-violet:              #7c3aed;
+// On-primary text (passes WCAG AA on amber backgrounds)
+$color-on-primary:          #1C1917;   // Warm stone-900
 
 // ============================================================
-// INDIGO PALETTE
+// AMBER FULL SCALE (for design system showcase)
 // ============================================================
 
+$color-amber-50:            #FFFBEB;
+$color-amber-100:           #FEF3C7;
+$color-amber-200:           #FDE68A;
+$color-amber-300:           #FCD34D;
+$color-amber-400:           #FBBF24;
+$color-amber-500:           #F59E0B;
+$color-amber-600:           #D97706;
+$color-amber-700:           #B45309;
+$color-amber-800:           #92400E;
+$color-amber-900:           #78350F;
+
+// ============================================================
+// WARM STONE NEUTRALS (replaces cold slate/gray)
+// ============================================================
+
+$color-stone-50:            #FAFAF9;   // Page background
+$color-stone-100:           #F5F5F4;   // Subtle section alt
+$color-stone-200:           #E7E5E4;   // Border / divider
+$color-stone-300:           #D6D3D1;   // Disabled border
+$color-stone-400:           #A8A29E;   // Placeholder text
+$color-stone-500:           #78716C;   // Muted text
+$color-stone-600:           #57534E;   // Secondary text
+$color-stone-700:           #44403C;   // Body text
+$color-stone-800:           #292524;   // Heading text
+$color-stone-900:           #1C1917;   // Primary text / sidebar bg
+
+// ============================================================
+// SIDEBAR & DARK SURFACE PALETTE
+// ============================================================
+
+$color-sidebar-bg:          #1C1917;   // Warm dark base (stone-900)
+$color-sidebar-surface:     #292524;   // Elevated surface (stone-800)
+$color-sidebar-hover:       rgba(245, 158, 11, 0.08);
+$color-sidebar-active-bg:   rgba(245, 158, 11, 0.14);
+$color-sidebar-active-text: #F59E0B;
+$color-sidebar-text:        #A8A29E;   // Stone-400 on dark
+$color-sidebar-text-muted:  #57534E;   // Stone-600 on dark
+
+// ============================================================
+// LEGACY INDIGO/SLATE (kept for backward compat on other pages)
+// ============================================================
+
+// Keep existing indigo tokens — used on admin/auth pages
 $color-indigo-50:           #eef2ff;
 $color-indigo-100:          #e0e7ff;
 $color-indigo-600:          #4f46e5;
 $color-indigo-700:          #4338ca;
 
-// ============================================================
-// PURPLE / GRADIENT COLORS
-// ============================================================
-
+// Keep existing purple gradient
 $color-purple-gradient-start: #667eea;
 $color-purple-gradient-end:   #764ba2;
 
-// ============================================================
-// NEUTRAL COLORS - SLATE PALETTE
-// ============================================================
-
+// Keep existing cold slate (admin pages still use these)
 $color-slate-50:            #f8fafc;
 $color-slate-100:           #f1f5f9;
 $color-slate-200:           #e2e8f0;
@@ -50,10 +84,7 @@ $color-slate-300:           #cbd5e1;
 $color-slate-500:           #64748b;
 $color-slate-800:           #1e293b;
 
-// ============================================================
-// NEUTRAL COLORS - GRAY PALETTE
-// ============================================================
-
+// Keep existing gray palette (Bootstrap components)
 $color-gray-50:             #f9fafb;
 $color-gray-100:            #f8f9fa;
 $color-gray-200:            #f0f1f5;
@@ -64,16 +95,16 @@ $color-gray-600:            #495057;
 $color-gray-700:            #c7cdd9;
 
 // ============================================================
-// DARK / NEUTRAL BASE COLORS
+// DARK / BASE COLORS
 // ============================================================
 
-$color-dark:                #0f0f1a;
-$color-dark-secondary:      #1a1a2e;
-$color-dark-deep:           #07071a;
+$color-dark:                #1C1917;   // Updated to warm stone
+$color-dark-secondary:      #292524;
+$color-dark-deep:           #0C0A09;   // Warm near-black
 $color-white:               #ffffff;
 
 // ============================================================
-// ADMIN DARK THEME COLORS
+// ADMIN DARK THEME (unchanged — admin pages keep their look)
 // ============================================================
 
 $color-admin-dark-bg:       #16213e;
@@ -83,102 +114,101 @@ $color-admin-dark-accent:   #0f3460;
 // STATUS COLORS
 // ============================================================
 
-// Success (Green)
-$color-success:             #22c55e;
-
-// Danger / Error
-$color-danger:              #ef4444;
-$color-error:               #dc2626;
-$color-error-dark:          #b91c1c;
-$color-error-bg:            #fef2f2;
-
-// Warning
-$color-warning:             #f97316;
-
-// Info
-$color-info:                #3b82f6;
+$color-success:             #16A34A;   // Green 600
+$color-success-light:       #DCFCE7;   // Green 100
+$color-emerald-600:         #059669;   // Emerald (kept for landing page)
+$color-danger:              #DC2626;   // Red 600
+$color-error:               #DC2626;
+$color-error-dark:          #B91C1C;
+$color-error-bg:            #FEF2F2;
+$color-warning:             #D97706;   // Amber 600 (aligned with brand)
+$color-warning-light:       #FEF3C7;
+$color-info:                #0EA5E9;   // Sky 500 (complementary to amber)
+$color-info-light:          #E0F2FE;
 
 // ============================================================
-// EMERALD, TEAL & AMBER PALETTES
+// TOAST COLORS (Bootstrap-compatible)
 // ============================================================
 
-// Emerald
-$color-emerald-50:          #ecfdf5;
-$color-emerald-600:         #059669;
-
-// Teal
-$color-teal-600:            #0d9488;
-
-// Amber
-$color-amber-50:            #fffbeb;
-$color-amber-500:           #f59e0b;
-$color-amber-700:           #d97706;
-
-// ============================================================
-// BOOTSTRAP-COMPATIBLE TOAST COLORS
-// ============================================================
-
-$color-toast-success:       #198754;
-$color-toast-danger:        #dc3545;
-$color-toast-warning:       #fd7e14;
-$color-toast-info:          #0d6efd;
+$color-toast-success:       #15803d;
+$color-toast-danger:        #dc2626;
+$color-toast-warning:       #d97706;
+$color-toast-info:          #0284c7;
 
 // ============================================================
 // SEMANTIC TEXT COLORS
 // ============================================================
 
-$color-text-primary:        #374151;
-$color-text-muted:          #8b8fa8;
-$color-text-muted-alt:      #5a5a7a;
-$color-text-muted-dark:     #4a4a6a;
-$color-text-secondary:      #9ca3af;
+$color-text-primary:        #1C1917;   // Warm stone-900
+$color-text-body:           #44403C;   // Stone-700
+$color-text-muted:          #78716C;   // Stone-500
+$color-text-muted-alt:      #57534E;   // Stone-600
+$color-text-muted-dark:     #44403C;   // Stone-700
+$color-text-secondary:      #A8A29E;   // Stone-400
 $color-text-inverse:        $color-white;
+$color-text-on-amber:       #1C1917;   // Dark text on amber bg
 
 // ============================================================
 // SEMANTIC BACKGROUND COLORS
 // ============================================================
 
-$color-bg-page:             #f4f5ff;
-$color-bg-light:            #f8f9ff;
-$color-bg-muted:            #fafaff;
-$color-bg-neutral:          #fafafa;
-$color-bg-card:             $color-white;
-$color-bg-hover:            #f5f5f8;
-$color-bg-hover-light:      #f3f4f6;
+$color-bg-page:             #FAFAF9;   // Warm off-white
+$color-bg-light:            #F5F5F4;   // Stone-100
+$color-bg-muted:            #FAFAF9;
+$color-bg-neutral:          #FAFAF9;
+$color-bg-card:             #FFFFFF;
+$color-bg-hover:            #F5F5F4;   // Stone-100
+$color-bg-hover-light:      #FAFAF9;
 
 // ============================================================
 // SEMANTIC BORDER COLORS
 // ============================================================
 
-$color-border:              #e5e7eb;
+$color-border:              #E7E5E4;   // Stone-200
+$color-border-strong:       #D6D3D1;   // Stone-300
 
 // ============================================================
 // GRADIENT DEFINITIONS
 // ============================================================
 
-$gradient-primary: linear-gradient(135deg, $color-purple-gradient-start, $color-purple-gradient-end);
+$gradient-primary:          linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+$gradient-primary-reverse:  linear-gradient(135deg, #D97706 0%, #B45309 100%);
+$gradient-hero:             linear-gradient(135deg, #1C1917 0%, #292524 60%, #3D2400 100%);
+$gradient-card-amber:       linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+$gradient-shimmer:          linear-gradient(90deg, #F5F5F4 25%, #FFFBEB 50%, #F5F5F4 75%);
+
+// Legacy purple gradient (kept for landing page)
+$gradient-legacy:           linear-gradient(135deg, $color-purple-gradient-start, $color-purple-gradient-end);
 
 // ============================================================
 // BACKDROP & OVERLAY
 // ============================================================
 
-$color-backdrop-dark:       rgba(0, 0, 0, 0.5);
-$color-backdrop-light:      rgba(0, 0, 0, 0.3);
+$color-backdrop-dark:       rgba(28, 25, 23, 0.6);
+$color-backdrop-light:      rgba(28, 25, 23, 0.3);
 
 // ============================================================
-// LEGACY ALIASES (Backward compatibility)
+// LEGACY ALIASES — Full backward compatibility
+// All existing component SCSS files continue working unchanged
 // ============================================================
-// These map old variable names to the new color- prefixed names
-// so existing component SCSS files continue to work unchanged
 
 $primary:                   $color-primary;
 $primary-light:             $color-primary-light;
 $primary-dark:              $color-primary-dark;
-$accent:                    $color-accent;
-$secondary:                 $color-secondary;
-$accent-green:              $color-accent-green;
-$accent-yellow:             $color-accent-yellow;
-$violet:                    $color-violet;
+$accent:                    #eb459e;               // kept as-is
+$secondary:                 #7289da;               // kept as-is
+$accent-green:              #57f287;               // kept as-is
+$accent-yellow:             $color-amber-300;
+$violet:                    #7c3aed;               // kept as-is
+
+// ============================================================
+// ADDITIONAL ACCENT COLORS (kept for landing page / admin)
+// ============================================================
+$color-violet:              #7c3aed;
+$color-accent:              #eb459e;   // pink accent (landing page)
+$color-secondary-blue:      #7289da;   // secondary blue
+$color-accent-green:        #57f287;   // green accent
+$color-accent-yellow:       #FCD34D;   // yellow accent (uses amber-300)
 
 $indigo-50:                 $color-indigo-50;
 $indigo-100:                $color-indigo-100;
@@ -220,9 +250,9 @@ $error-bg:                  $color-error-bg;
 $warning:                   $color-warning;
 $info:                      $color-info;
 
-$emerald-50:                $color-emerald-50;
-$emerald-600:               $color-emerald-600;
-$teal-600:                  $color-teal-600;
+$emerald-50:                $color-success-light;
+$emerald-600:               $color-success;
+$teal-600:                  #0d9488;
 $amber-50:                  $color-amber-50;
 $amber-500:                 $color-amber-500;
 $amber-700:                 $color-amber-700;
@@ -234,7 +264,7 @@ $toast-info:                $color-toast-info;
 
 $text:                      $color-text-primary;
 $text-dark:                 $color-dark;
-$text-body:                 $color-text-primary;
+$text-body:                 $color-text-body;
 $text-muted:                $color-text-muted;
 $text-muted-custom:         $color-text-muted;
 $text-muted-alt:            $color-text-muted-alt;

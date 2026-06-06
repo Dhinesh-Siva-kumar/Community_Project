@@ -1,179 +1,629 @@
-<!-- Loading State -->
+<!-- ═══════════════════════════════════════════════════════════
+     Community Page — Premium Design System Showcase
+     Yellow/Amber brand | Linear × Notion × Airbnb inspiration
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ── Loading State ──────────────────────────────────────────── -->
 @if (loading()) {
-  <div class="page-loading">
+  <div class="page-loading" aria-live="polite" aria-label="Loading communities">
     <div class="page-loading-inner">
-      <div class="page-loading-spinner">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+      <div class="loading-ring">
+        <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="16" stroke="#E7E5E4" stroke-width="3"/>
+          <circle cx="20" cy="20" r="16" stroke="#F59E0B" stroke-width="3"
+                  stroke-linecap="round" stroke-dasharray="60 40"
+                  class="loading-arc"/>
+        </svg>
       </div>
-      <p class="page-loading-text">Loading communities...</p>
+      <p class="loading-text">Loading communities…</p>
     </div>
   </div>
+
 } @else {
 
-  <!-- ── Page Header ──────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="page-header-content">
-      <div class="page-header-icon">
-        <i class="bi bi-people-fill"></i>
-      </div>
-      <div>
-        <h4 class="page-title">Communities</h4>
-        <p class="page-subtitle">Discover and join communities near you</p>
-      </div>
-    </div>
+<!-- ── HERO BANNER ──────────────────────────────────────────────
+     Greeting + three quick-stat tiles
+     ─────────────────────────────────────────────────────────── -->
+<section class="comm-hero" aria-label="Community overview">
+  <div class="comm-hero-bg" aria-hidden="true">
+    <div class="hero-noise"></div>
+    <div class="hero-glow"></div>
   </div>
 
-  <!-- ── Toolbar ───────────────────────────────────────────── -->
-  <div class="page-toolbar">
-    <div class="page-search-wrap">
-      <i class="bi bi-search page-search-icon"></i>
-      <input
-        type="text"
-        class="page-search-input"
-        placeholder="Search communities..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
-    </div>
-    <span class="page-count-badge">
-      <i class="bi bi-grid-3x3-gap-fill me-1"></i>
-      {{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }}
-    </span>
-  </div>
-
-  <!-- ── Empty State ───────────────────────────────────────── -->
-  @if (filteredCommunities().length === 0) {
-    <div class="page-empty">
-      <div class="page-empty-icon">
-        <i class="bi bi-people"></i>
+  <div class="comm-hero-content">
+    <!-- Left: greeting -->
+    <div class="hero-greeting">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        <span>Your Community Hub</span>
       </div>
-      <h5 class="page-empty-title">
-        {{ searchTerm() ? 'No results found' : 'No communities yet' }}
-      </h5>
-      <p class="page-empty-text">
-        @if (searchTerm()) {
-          No communities match "<strong>{{ searchTerm() }}</strong>". Try a different term.
-        } @else {
-          There are no communities available at the moment. Check back later!
-        }
+      <h1 class="hero-title">
+        Welcome back,
+        <span class="hero-name">{{ getUserDisplayName() }}</span>
+      </h1>
+      <p class="hero-subtitle">
+        Discover groups, join conversations and connect with people who share your interests.
       </p>
     </div>
 
-  } @else {
+    <!-- Right: three stat tiles -->
+    <div class="hero-stats" aria-label="Your community statistics">
+      <div class="hero-stat-tile">
+        <div class="stat-tile-icon" aria-hidden="true">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-tile-body">
+          <span class="stat-tile-value">{{ totalItems() }}</span>
+          <span class="stat-tile-label">Communities</span>
+        </div>
+      </div>
 
-    <!-- ── Cards Grid ───────────────────────────────────────── -->
-    <div class="row g-4 mb-2">
-      @for (community of filteredCommunities(); track community.id) {
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="community-card h-100" (click)="navigateToCommunity(community.id)" role="button">
+      <div class="hero-stat-tile hero-stat-tile--accent">
+        <div class="stat-tile-icon" aria-hidden="true">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <div class="stat-tile-body">
+          <span class="stat-tile-value">{{ joinedCommunities().length }}</span>
+          <span class="stat-tile-label">Joined</span>
+        </div>
+      </div>
 
-            <!-- Cover Image -->
+      <div class="hero-stat-tile">
+        <div class="stat-tile-icon" aria-hidden="true">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-tile-body">
+          <span class="stat-tile-value">{{ totalMembersCount() }}</span>
+          <span class="stat-tile-label">Total Members</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURED COMMUNITIES STRIP ─────────────────────────────
+     Horizontal scroll of top communities by member count
+     ─────────────────────────────────────────────────────────── -->
+@if (featuredCommunities().length > 0) {
+  <section class="featured-section" aria-labelledby="featured-heading">
+    <div class="section-header">
+      <div class="section-title-group">
+        <div class="section-badge">
+          <i class="bi bi-star-fill" aria-hidden="true"></i>
+          Featured
+        </div>
+        <h2 class="section-title" id="featured-heading">Top Communities</h2>
+      </div>
+      <button
+        class="section-see-all"
+        (click)="setTab('trending')"
+        type="button"
+      >
+        See all
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="featured-scroll" role="list" aria-label="Featured communities">
+      @for (community of featuredCommunities(); track community.id) {
+        <article
+          class="featured-card"
+          role="listitem"
+          (click)="navigateToCommunity(community.id)"
+          (keydown.enter)="navigateToCommunity(community.id)"
+          tabindex="0"
+          [attr.aria-label]="community.name + ' - ' + (community._count?.members ?? 0) + ' members'"
+        >
+          <!-- Cover -->
+          <div class="featured-cover">
+            @if (community.image) {
+              <img
+                [src]="community.image"
+                [alt]="community.name"
+                class="featured-cover-img"
+                loading="lazy"
+              />
+            } @else {
+              <div
+                class="featured-cover-placeholder"
+                [style.background]="getCoverGradient(community.name)"
+                aria-hidden="true"
+              >
+                <i class="bi bi-people-fill"></i>
+              </div>
+            }
+            <!-- Joined pill -->
+            @if (community.is_joined || isJoined(community.id)) {
+              <span class="featured-joined-pill" aria-label="You have joined this community">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                Joined
+              </span>
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="featured-info">
+            <span class="featured-name">{{ community.name }}</span>
+            <div class="featured-meta">
+              <i class="bi bi-people" aria-hidden="true"></i>
+              <span>{{ community._count?.members ?? 0 }} members</span>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+}
+
+<!-- ── MAIN CONTENT AREA ───────────────────────────────────────
+     Two-column layout: community grid (left) + panels (right)
+     ─────────────────────────────────────────────────────────── -->
+<div class="comm-main-layout">
+
+  <!-- ── LEFT / MAIN COLUMN ─────────────────────────────────── -->
+  <div class="comm-main-col">
+
+    <!-- ── Tab Navigation ─────────────────────────── -->
+    <div class="tab-bar" role="tablist" aria-label="Community filter tabs">
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab() === 'all'"
+        (click)="setTab('all')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'all'"
+        type="button"
+      >
+        <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+        All
+        <span class="tab-count">{{ totalItems() }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab() === 'joined'"
+        (click)="setTab('joined')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'joined'"
+        type="button"
+      >
+        <i class="bi bi-person-check" aria-hidden="true"></i>
+        Joined
+        <span class="tab-count">{{ joinedCommunities().length }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activeTab() === 'trending'"
+        (click)="setTab('trending')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'trending'"
+        type="button"
+      >
+        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+        Trending
+      </button>
+    </div>
+
+    <!-- ── Search Toolbar ─────────────────────────── -->
+    <div class="search-toolbar">
+      <div class="search-input-wrap">
+        <i class="bi bi-search search-icon" aria-hidden="true"></i>
+        <input
+          type="search"
+          class="search-input"
+          [placeholder]="'Search ' + (activeTab() === 'joined' ? 'your' : '') + ' communities…'"
+          [value]="searchTerm()"
+          (input)="onSearch($event)"
+          aria-label="Search communities"
+          autocomplete="off"
+        />
+        @if (searchTerm()) {
+          <button
+            class="search-clear"
+            (click)="clearSearch()"
+            type="button"
+            aria-label="Clear search"
+          >
+            <i class="bi bi-x" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
+
+      <div class="search-meta" aria-live="polite">
+        @if (searchTerm()) {
+          <span class="results-label">
+            {{ filteredCommunities().length }}
+            {{ filteredCommunities().length === 1 ? 'result' : 'results' }}
+            for &ldquo;{{ searchTerm() }}&rdquo;
+          </span>
+        } @else {
+          <span class="results-label">
+            {{ filteredCommunities().length }}
+            {{ filteredCommunities().length === 1 ? 'community' : 'communities' }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- ── Empty state ────────────────────────────── -->
+    @if (filteredCommunities().length === 0) {
+      <div class="comm-empty" role="status">
+        <div class="comm-empty-icon" aria-hidden="true">
+          @if (activeTab() === 'joined') {
+            <i class="bi bi-person-plus"></i>
+          } @else {
+            <i class="bi bi-search"></i>
+          }
+        </div>
+        <h3 class="comm-empty-title">
+          @if (searchTerm()) {
+            No results for &ldquo;{{ searchTerm() }}&rdquo;
+          } @else if (activeTab() === 'joined') {
+            You haven't joined any communities yet
+          } @else {
+            No communities found
+          }
+        </h3>
+        <p class="comm-empty-text">
+          @if (searchTerm()) {
+            Try different keywords or
+            <button class="comm-empty-link" (click)="clearSearch()" type="button">clear your search</button>.
+          } @else if (activeTab() === 'joined') {
+            Explore the <button class="comm-empty-link" (click)="setTab('all')" type="button">All tab</button>
+            and join communities that interest you.
+          } @else {
+            Communities will appear here once they are created.
+          }
+        </p>
+      </div>
+
+    } @else {
+
+      <!-- ── Community Cards Grid ───────────────── -->
+      <div class="comm-grid" role="list" aria-label="Communities">
+        @for (community of filteredCommunities(); track community.id) {
+          <article
+            class="comm-card"
+            role="listitem"
+            (click)="navigateToCommunity(community.id)"
+            (keydown.enter)="navigateToCommunity(community.id)"
+            tabindex="0"
+            [attr.aria-label]="community.name"
+          >
+
+            <!-- Cover image / placeholder -->
             <div class="cc-cover">
               @if (community.image) {
-                <img [src]="community.image" [alt]="community.name" class="cc-cover-img" />
+                <img
+                  [src]="community.image"
+                  [alt]="community.name + ' cover image'"
+                  class="cc-cover-img"
+                  loading="lazy"
+                />
               } @else {
-                <div class="cc-cover-placeholder">
+                <div
+                  class="cc-cover-placeholder"
+                  [style.background]="getCoverGradient(community.name)"
+                  aria-hidden="true"
+                >
                   <i class="bi bi-people-fill"></i>
                 </div>
               }
-              <!-- Badges overlay -->
-              <div class="cc-badges">
+
+              <!-- Badge overlay -->
+              <div class="cc-overlay-badges" aria-hidden="true">
                 @if (community.is_joined || isJoined(community.id)) {
-                  <span class="cc-badge cc-badge-joined">
-                    <i class="bi bi-check-circle-fill me-1"></i>Joined
+                  <span class="cc-badge cc-badge--joined">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Joined
+                  </span>
+                }
+                @if ((community._count?.members ?? 0) > 50) {
+                  <span class="cc-badge cc-badge--popular">
+                    <i class="bi bi-fire"></i>
+                    Popular
                   </span>
                 }
               </div>
             </div>
 
-            <!-- Body -->
+            <!-- Card body -->
             <div class="cc-body">
-              <span class="cc-name">
-                {{ community.name }}
-              </span>
-              <p class="cc-desc">{{ truncate(community.description, 110) }}</p>
 
-              <!-- Stats -->
+              <!-- Name -->
+              <h3 class="cc-name">{{ community.name }}</h3>
+
+              <!-- Description -->
+              <p class="cc-desc">{{ truncate(community.description, 105) }}</p>
+
+              <!-- Stats row -->
               <div class="cc-stats">
                 <span class="cc-stat">
-                  <i class="bi bi-people-fill cc-stat-icon cc-stat-members"></i>
-                  <span class="cc-stat-value">{{ community?._count?.members ?? 0 }}</span>
+                  <i class="bi bi-people-fill cc-stat-icon" aria-hidden="true"></i>
+                  <span class="cc-stat-value">{{ community._count?.members ?? 0 }}</span>
                   <span class="cc-stat-label">members</span>
                 </span>
+                @if (community._count?.posts) {
+                  <span class="cc-stat-divider" aria-hidden="true"></span>
+                  <span class="cc-stat">
+                    <i class="bi bi-chat-dots cc-stat-icon cc-stat-icon--posts" aria-hidden="true"></i>
+                    <span class="cc-stat-value">{{ community._count?.posts ?? 0 }}</span>
+                    <span class="cc-stat-label">posts</span>
+                  </span>
+                }
               </div>
 
-              <!-- Meta -->
+              <!-- Meta row -->
               <div class="cc-meta">
                 @if (community.location) {
                   <span class="cc-meta-item">
-                    <i class="bi bi-geo-alt-fill"></i>{{ community.location }}
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                    {{ community.location }}
                   </span>
                 }
                 @if (community.createdAt) {
                   <span class="cc-meta-item">
-                    <i class="bi bi-calendar3"></i>{{ formatDate(community.createdAt) }}
+                    <i class="bi bi-calendar3" aria-hidden="true"></i>
+                    {{ formatDate(community.createdAt) }}
                   </span>
                 }
               </div>
 
-              <!-- Join / Leave Action -->
+              <!-- Action row -->
               <div class="cc-actions">
                 @if (community.is_joined || isJoined(community.id)) {
                   <button
-                    class="cc-btn-leave"
+                    class="cc-btn cc-btn--leave"
                     (click)="leaveCommunity($event, community.id)"
+                    type="button"
+                    [attr.aria-label]="'Leave ' + community.name"
+                    [disabled]="leavingId() === community.id"
                   >
                     @if (leavingId() === community.id) {
-                      <span class="spinner-border spinner-border-sm me-1"></span>Leaving...
+                      <span class="btn-spinner" aria-hidden="true"></span>
+                      Leaving…
                     } @else {
-                      <i class="bi bi-box-arrow-right me-1"></i>Leave
+                      <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                      Leave
                     }
                   </button>
                 } @else {
                   <button
-                    class="cc-btn-join"
-                    [disabled]="joiningId() === community.id"
+                    class="cc-btn cc-btn--join"
                     (click)="joinCommunity($event, community.id)"
+                    type="button"
+                    [attr.aria-label]="'Join ' + community.name"
+                    [disabled]="joiningId() === community.id"
                   >
                     @if (joiningId() === community.id) {
-                      <span class="spinner-border spinner-border-sm me-1"></span>Joining...
+                      <span class="btn-spinner" aria-hidden="true"></span>
+                      Joining…
                     } @else {
-                      <i class="bi bi-plus-circle me-1"></i>Join Community
+                      <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                      Join Community
                     }
                   </button>
                 }
-              </div>
-            </div>
 
+                <button
+                  class="cc-btn cc-btn--ghost"
+                  (click)="navigateToCommunity(community.id)"
+                  type="button"
+                  [attr.aria-label]="'View ' + community.name"
+                >
+                  View
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- ── Pagination ─────────────────────────── -->
+      @if (totalPages() > 1) {
+        <nav class="comm-pagination" aria-label="Pagination">
+          <button
+            class="pag-btn pag-btn--nav"
+            (click)="goToPage(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            type="button"
+            aria-label="Previous page"
+          >
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          </button>
+
+          @for (page of getPages(); track page) {
+            <button
+              class="pag-btn"
+              [class.pag-btn--active]="page === currentPage()"
+              (click)="goToPage(page)"
+              type="button"
+              [attr.aria-current]="page === currentPage() ? 'page' : null"
+              [attr.aria-label]="'Page ' + page"
+            >
+              {{ page }}
+            </button>
+          }
+
+          <button
+            class="pag-btn pag-btn--nav"
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            type="button"
+            aria-label="Next page"
+          >
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </nav>
+      }
+
+    } <!-- / filteredCommunities -->
+
+  </div><!-- /comm-main-col -->
+
+  <!-- ── RIGHT PANEL ────────────────────────────────────────── -->
+  <aside class="comm-side-panel" aria-label="Community sidebar">
+
+    <!-- ── Trending Topics ──────────────────────── -->
+    @if (trendingTopics().length > 0) {
+      <div class="panel-card" aria-labelledby="trending-panel-heading">
+        <div class="panel-header">
+          <div class="panel-header-icon panel-header-icon--amber" aria-hidden="true">
+            <i class="bi bi-hash"></i>
+          </div>
+          <h3 class="panel-title" id="trending-panel-heading">Trending Topics</h3>
+        </div>
+
+        <div class="panel-body">
+          <div class="topics-grid" role="list">
+            @for (topic of trendingTopics(); track topic) {
+              <button
+                class="topic-chip"
+                role="listitem"
+                (click)="searchTerm.set(topic)"
+                type="button"
+                [attr.aria-label]="'Filter by ' + topic"
+              >
+                <span class="topic-hash" aria-hidden="true">#</span>
+                {{ topic }}
+              </button>
+            }
           </div>
         </div>
-      }
-    </div>
-
-    <!-- ── Pagination ────────────────────────────────────────── -->
-    @if (totalPages() > 1) {
-      <nav class="page-pagination">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage() === 1">
-            <button class="page-link" (click)="goToPage(currentPage() - 1)">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          @for (page of getPages(); track page) {
-            <li class="page-item" [class.active]="page === currentPage()">
-              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
-            </li>
-          }
-          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-            <button class="page-link" (click)="goToPage(currentPage() + 1)">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
+      </div>
     }
 
-  }
-}
+    <!-- ── Upcoming Events ──────────────────────── -->
+    @if (eventsLoading()) {
+      <!-- Events loading skeleton -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-header-icon panel-header-icon--sky" aria-hidden="true">
+            <i class="bi bi-calendar-event"></i>
+          </div>
+          <h3 class="panel-title">Upcoming Events</h3>
+        </div>
+        <div class="panel-body">
+          @for (_ of [1,2,3]; track $index) {
+            <div class="event-skeleton">
+              <div class="skeleton" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                <div class="skeleton" style="height:13px;width:80%;border-radius:4px;"></div>
+                <div class="skeleton" style="height:11px;width:55%;border-radius:4px;"></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (nextEvents().length > 0) {
+      <div class="panel-card" aria-labelledby="events-panel-heading">
+        <div class="panel-header">
+          <div class="panel-header-icon panel-header-icon--sky" aria-hidden="true">
+            <i class="bi bi-calendar-event"></i>
+          </div>
+          <h3 class="panel-title" id="events-panel-heading">Upcoming Events</h3>
+        </div>
+
+        <div class="panel-body">
+          <ul class="events-list" role="list">
+            @for (event of nextEvents(); track event.id) {
+              <li class="event-item" role="listitem">
+                <!-- Date badge -->
+                <div
+                  class="event-date-badge"
+                  [class.event-date-badge--soon]="isEventSoon(event.eventDate)"
+                  aria-label="Event date"
+                >
+                  <span class="event-day">{{ formatEventDate(event.eventDate).day }}</span>
+                  <span class="event-month">{{ formatEventDate(event.eventDate).month }}</span>
+                </div>
+
+                <!-- Event info -->
+                <div class="event-info">
+                  <span class="event-title">{{ truncate(event.title, 45) }}</span>
+                  <div class="event-meta">
+                    @if (isEventSoon(event.eventDate)) {
+                      <span class="event-soon-chip" aria-label="Event is coming soon">Soon</span>
+                    }
+                    @if (event.location) {
+                      <span class="event-location">
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                        {{ truncate(event.location, 22) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          <button
+            class="panel-action-btn"
+            (click)="navigateToEvents()"
+            type="button"
+          >
+            View all events
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── Quick Links / Resources ──────────────── -->
+    <div class="panel-card panel-card--resources" aria-labelledby="resources-panel-heading">
+      <div class="panel-header">
+        <div class="panel-header-icon panel-header-icon--green" aria-hidden="true">
+          <i class="bi bi-lightning-fill"></i>
+        </div>
+        <h3 class="panel-title" id="resources-panel-heading">Quick Actions</h3>
+      </div>
+
+      <div class="panel-body">
+        <ul class="quick-links" role="list">
+          <li role="listitem">
+            <a routerLink="/user/events" class="quick-link-item">
+              <div class="quick-link-icon quick-link-icon--sky" aria-hidden="true">
+                <i class="bi bi-calendar2-week"></i>
+              </div>
+              <div class="quick-link-text">
+                <span class="quick-link-title">Browse Events</span>
+                <span class="quick-link-sub">Local community events</span>
+              </div>
+              <i class="bi bi-chevron-right quick-link-arrow" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li role="listitem">
+            <a routerLink="/user/business" class="quick-link-item">
+              <div class="quick-link-icon quick-link-icon--amber" aria-hidden="true">
+                <i class="bi bi-shop"></i>
+              </div>
+              <div class="quick-link-text">
+                <span class="quick-link-title">Business Directory</span>
+                <span class="quick-link-sub">Discover local businesses</span>
+              </div>
+              <i class="bi bi-chevron-right quick-link-arrow" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li role="listitem">
+            <a routerLink="/user/jobs" class="quick-link-item">
+              <div class="quick-link-icon quick-link-icon--green" aria-hidden="true">
+                <i class="bi bi-briefcase"></i>
+              </div>
+              <div class="quick-link-text">
+                <span class="quick-link-title">Job Board</span>
+                <span class="quick-link-sub">Opportunities near you</span>
+              </div>
+              <i class="bi bi-chevron-right quick-link-arrow" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </aside><!-- /comm-side-panel -->
+
+</div><!-- /comm-main-layout -->
+
+} <!-- /loading -->

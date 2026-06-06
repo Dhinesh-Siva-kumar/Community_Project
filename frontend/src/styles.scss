@@ -1,40 +1,47 @@
 @use 'sass:color';
 @use 'assets/styles/index' as *;
 
-/* ========================================
-   Community Platform - Global Styles
-   ======================================== */
+/* ============================================================
+   Community Platform — Global Styles
+   Yellow-centered design system | Amber x Warm Neutrals
+   ============================================================ */
 
-// Bootstrap overrides (before importing bootstrap)
+// ── Bootstrap variable overrides (before Bootstrap import) ───
 $font-family-sans-serif: $font-family-body;
-$border-radius: 0.5rem;
-$border-radius-lg: 0.75rem;
-$border-radius-sm: 0.375rem;
+$border-radius:    $radius-sm;
+$border-radius-lg: $radius-md;
+$border-radius-sm: $radius-xs;
 
-// Global Reset  
-html, body {
-  // Smooth scrolling for supported browsers
+// ── Base Reset ───────────────────────────────────────────────
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
   margin: 0;
-  // font-family: $font-family-sans-serif;
   font-family: $font-family-body;
   font-size: $font-size-md;
   font-weight: $font-weight-normal;
   line-height: 1.5;
-  background-color: $bg;
-  color: $dark;
+  background-color: $color-bg-page;
+  color: $color-text-primary;
 }
 
-// Scrollbar Styles
+// ── Scrollbar ─────────────────────────────────────────────────
 ::-webkit-scrollbar {
   width: $scrollbar-width;
+  height: $scrollbar-width;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -46,18 +53,19 @@ html, body {
   background: $scrollbar-thumb-bg-hover;
 }
 
-// ========= Layout Utilities =========
+// ── Focus styles (accessibility) ──────────────────────────────
+:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
 
-$sidebar-collapsed-width: 70px;
-$header-height: $navbar-height;
-
+// ── Layout Utilities ──────────────────────────────────────────
 .app-container {
   display: flex;
   min-height: 100vh;
 }
 
 .main-content {
-  margin-left: 0px !important;
   flex: 1;
   margin-left: $sidebar-width;
   padding-top: $header-height;
@@ -70,267 +78,9 @@ $header-height: $navbar-height;
 
 .page-container {
   padding: $spacing-lg;
-  max-width: 1400px;
+  max-width: $content-max-width;
   margin: 0 auto;
 }
-
-// ========= Card Styles =========
-
-.card {
-  border: none;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-sm;
-  transition: box-shadow $transition-base;
-
-  &:hover {
-    box-shadow: $shadow-md;
-  }
-}
-
-.card-header {
-  background-color: transparent;
-  border-bottom: 1px solid $border;
-  padding: $spacing-md 20px;
-  font-weight: $font-weight-semibold;
-}
-
-.card-body {
-  padding: 20px;
-}
-
-// ========= Button Styles =========
-
-.btn-primary {
-  background-color: $primary;
-  border-color: $primary;
-
-  &:hover {
-    background-color: color.adjust($primary, $lightness: -8%);
-    border-color: color.adjust($primary, $lightness: -8%);
-  }
-}
-
-.btn-outline-primary {
-  color: $primary;
-  border-color: $primary;
-
-  &:hover {
-    background-color: $primary;
-    border-color: $primary;
-  }
-}
-
-// ========= Form Styles =========
-
-.form-control, .form-select {
-  border-radius: $border-radius;
-  border: 1px solid $gray-300;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.9rem;
-  transition: border-color $transition-base, box-shadow $transition-base;
-
-  &:focus {
-    border-color: $primary;
-    box-shadow: 0 0 0 3px rgba($primary, 0.15);
-  }
-}
-
-.form-label {
-  font-weight: $font-weight-medium;
-  font-size: 0.875rem;
-  margin-bottom: 0.375rem;
-  color: $gray-600;
-}
-
-// ========= Badge Styles =========
-
-.badge-pending {
-  background-color: $warning;
-  color: $dark;
-}
-
-.badge-approved {
-  background-color: $success;
-  color: $white;
-}
-
-.badge-rejected {
-  background-color: $danger;
-  color: $white;
-}
-
-// ========= Avatar Styles =========
-
-.avatar {
-  width: $avatar-size-md;
-  height: $avatar-size-md;
-  border-radius: $radius-full;
-  object-fit: cover;
-
-  &.avatar-sm {
-    width: 32px;
-    height: 32px;
-  }
-
-  &.avatar-lg {
-    width: 56px;
-    height: 56px;
-  }
-
-  &.avatar-xl {
-    width: 80px;
-    height: 80px;
-  }
-}
-
-.avatar-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: $primary;
-  color: $white;
-  font-weight: $font-weight-semibold;
-  font-size: 1rem;
-  border-radius: $radius-full;
-  width: $avatar-size-md;
-  height: $avatar-size-md;
-}
-
-// ========= Table Styles =========
-
-.table {
-  th {
-    font-weight: $font-weight-semibold;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: $gray-500;
-    border-bottom: 2px solid $gray-300;
-  }
-}
-
-// ========= Stat Card =========
-
-.stat-card {
-  border-radius: $border-radius-lg;
-  padding: 20px;
-  background: $white;
-  box-shadow: $shadow-sm;
-
-  .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: $radius-md;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-  }
-
-  .stat-value {
-    font-size: 1.75rem;
-    font-weight: $font-weight-bold;
-    color: $dark;
-  }
-
-  .stat-label {
-    font-size: 0.8rem;
-    color: $gray-500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-}
-
-// ========= Post Styles =========
-
-.post-card {
-  background: $white;
-  border-radius: $border-radius-lg;
-  padding: 20px;
-  margin-bottom: $spacing-md;
-  box-shadow: $shadow-sm;
-
-  .post-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .post-content {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 12px;
-  }
-
-  .post-actions {
-    display: flex;
-    gap: $spacing-md;
-    padding-top: 12px;
-    border-top: 1px solid $border;
-
-    .action-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      color: $gray-500;
-      font-size: 0.875rem;
-      transition: color $transition-base;
-
-      &:hover {
-        color: $primary;
-      }
-
-      &.liked {
-        color: $danger;
-      }
-    }
-  }
-}
-
-// ========= Empty State =========
-
-.empty-state {
-  text-align: center;
-  padding: 48px $spacing-lg;
-  color: $gray-500;
-
-  i {
-    font-size: 3rem;
-    // margin-bottom: $spacing-md;
-    opacity: 0.5;
-  }
-
-  h5 {
-    font-weight: $font-weight-semibold;
-    margin-bottom: $spacing-sm;
-  }
-
-  p {
-    font-size: 0.9rem;
-  }
-}
-
-// ========= Loading Spinner =========
-
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 48px;
-}
-
-// ========= Toast / Notification =========
-
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-}
-
-// ========= Responsive =========
 
 @media (max-width: 991.98px) {
   .main-content {
@@ -346,12 +96,399 @@ $header-height: $navbar-height;
   .page-container {
     padding: 12px;
   }
+}
 
-  .stat-card {
-    padding: $spacing-md;
+// ── Bootstrap Card Override ───────────────────────────────────
+.card {
+  border: $card-border;
+  border-radius: $card-radius;
+  box-shadow: $shadow-card-default;
+  background: $color-bg-card;
+  transition: box-shadow $transition-base $transition-easing,
+              transform $transition-base $transition-easing;
 
-    .stat-value {
-      font-size: 1.5rem;
+  &:hover {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid $color-border;
+  padding: $spacing-md 20px;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+}
+
+.card-body {
+  padding: $card-padding;
+}
+
+// ── Button Overrides ──────────────────────────────────────────
+.btn-primary {
+  background-color: $color-primary;
+  border-color: $color-primary;
+  color: $color-on-primary;
+  font-weight: $font-weight-semibold;
+  box-shadow: $btn-primary-shadow;
+  transition: background-color $transition-base $transition-easing,
+              box-shadow $transition-base $transition-easing,
+              transform $transition-fast $transition-easing;
+
+  &:hover {
+    background-color: $color-primary-dark;
+    border-color: $color-primary-dark;
+    color: $color-on-primary;
+    box-shadow: $btn-primary-shadow-hover;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    background-color: $color-primary-darker;
+    border-color: $color-primary-darker;
+    transform: translateY(0);
+    box-shadow: $btn-primary-shadow;
+  }
+
+  &:focus-visible {
+    box-shadow: $shadow-focus-ring;
+  }
+}
+
+.btn-outline-primary {
+  color: $color-primary-darker;
+  border-color: $color-primary;
+  font-weight: $font-weight-semibold;
+
+  &:hover {
+    background-color: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+  }
+}
+
+// ── Form Controls ─────────────────────────────────────────────
+.form-control,
+.form-select {
+  border-radius: $input-radius;
+  border: $input-border;
+  padding: 0.5rem 0.875rem;
+  font-size: $font-size-sm;
+  background-color: $input-bg;
+  color: $color-text-primary;
+  transition: border-color $transition-base $transition-easing,
+              box-shadow $transition-base $transition-easing;
+
+  &::placeholder {
+    color: $color-text-secondary;
+  }
+
+  &:focus {
+    border: $input-border-focus;
+    box-shadow: $input-focus-shadow;
+    outline: none;
+  }
+}
+
+.form-label {
+  font-weight: $font-weight-medium;
+  font-size: $font-size-sm;
+  margin-bottom: 6px;
+  color: $color-text-body;
+}
+
+// ── Status Badges ─────────────────────────────────────────────
+.badge-pending {
+  background-color: $color-amber-100;
+  color: $color-amber-800;
+  border: 1px solid $color-amber-200;
+}
+
+.badge-approved {
+  background-color: $color-success-light;
+  color: $color-success;
+  border: 1px solid rgba($color-success, 0.2);
+}
+
+.badge-rejected {
+  background-color: $color-error-bg;
+  color: $color-danger;
+  border: 1px solid rgba($color-danger, 0.2);
+}
+
+// ── Avatar ────────────────────────────────────────────────────
+.avatar {
+  width: $avatar-size-md;
+  height: $avatar-size-md;
+  border-radius: $radius-full;
+  object-fit: cover;
+  display: block;
+
+  &.avatar-xs  { width: $avatar-size-xs;  height: $avatar-size-xs; }
+  &.avatar-sm  { width: $avatar-size-sm;  height: $avatar-size-sm; }
+  &.avatar-lg  { width: $avatar-size-lg;  height: $avatar-size-lg; }
+  &.avatar-xl  { width: $avatar-size-xl;  height: $avatar-size-xl; }
+  &.avatar-2xl { width: $avatar-size-2xl; height: $avatar-size-2xl; }
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $gradient-primary;
+  color: $color-on-primary;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-header;
+  border-radius: $radius-full;
+  width: $avatar-size-md;
+  height: $avatar-size-md;
+  font-size: $font-size-sm;
+  flex-shrink: 0;
+}
+
+// ── Table ─────────────────────────────────────────────────────
+.table {
+  th {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-text-muted;
+    border-bottom: 1px solid $color-border;
+    padding: 10px 12px;
+  }
+
+  td {
+    padding: 12px;
+    font-size: $font-size-sm;
+    color: $color-text-body;
+    border-bottom: 1px solid $color-bg-light;
+    vertical-align: middle;
+  }
+}
+
+// ── Stat Card ─────────────────────────────────────────────────
+.stat-card {
+  border-radius: $card-radius;
+  padding: $card-padding;
+  background: $color-bg-card;
+  border: $card-border;
+  box-shadow: $shadow-card-default;
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    background: $color-primary-light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: $color-primary-dark;
+    flex-shrink: 0;
+  }
+
+  .stat-value {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    font-family: $font-family-header;
+    color: $color-text-primary;
+    line-height: 1.2;
+  }
+
+  .stat-label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// ── Post Card ────────────────────────────────────────────────
+.post-card {
+  background: $color-bg-card;
+  border-radius: $card-radius;
+  padding: $card-padding;
+  margin-bottom: $spacing-md;
+  border: $card-border;
+  box-shadow: $shadow-card-default;
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .post-content {
+    font-size: $font-size-sm;
+    line-height: 1.65;
+    color: $color-text-body;
+    margin-bottom: 12px;
+  }
+
+  .post-actions {
+    display: flex;
+    gap: $spacing-md;
+    padding-top: 12px;
+    border-top: 1px solid $color-border;
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: $color-text-muted;
+      font-size: $font-size-sm;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color $transition-base;
+
+      &:hover {
+        color: $color-primary-dark;
+      }
+
+      &.liked {
+        color: $color-danger;
+      }
     }
+  }
+}
+
+// ── Empty State ──────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 56px $spacing-lg;
+  color: $color-text-muted;
+
+  i {
+    font-size: 2.75rem;
+    margin-bottom: $spacing-md;
+    display: block;
+    opacity: 0.45;
+  }
+
+  h5 {
+    font-weight: $font-weight-semibold;
+    font-family: $font-family-header;
+    color: $color-text-body;
+    margin-bottom: $spacing-sm;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    line-height: 1.65;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+}
+
+// ── Loading Spinner ───────────────────────────────────────────
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 56px;
+
+  .spinner-border {
+    color: $color-primary;
+  }
+}
+
+// ── Toast Container ───────────────────────────────────────────
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: $z-toast;
+}
+
+// ── Design System — Color Utility Classes ─────────────────────
+.bg-amber       { background-color: $color-primary !important; }
+.bg-amber-light { background-color: $color-primary-light !important; }
+.text-amber     { color: $color-primary !important; }
+.text-amber-dark { color: $color-primary-dark !important; }
+.border-amber   { border-color: $color-primary !important; }
+
+// ── Design System — Spacing Utilities ────────────────────────
+.gap-xs  { gap: $spacing-xs; }
+.gap-sm  { gap: $spacing-sm; }
+.gap-md  { gap: $spacing-md; }
+.gap-lg  { gap: $spacing-lg; }
+.gap-xl  { gap: $spacing-xl; }
+
+// ── Design System — Radius Utilities ──────────────────────────
+.rounded-xs   { border-radius: $radius-xs !important; }
+.rounded-sm   { border-radius: $radius-sm !important; }
+.rounded-md   { border-radius: $radius-md !important; }
+.rounded-lg   { border-radius: $radius-lg !important; }
+.rounded-xl   { border-radius: $radius-xl !important; }
+.rounded-2xl  { border-radius: $radius-2xl !important; }
+.rounded-full { border-radius: $radius-full !important; }
+
+// ── Divider ───────────────────────────────────────────────────
+.divider {
+  height: 1px;
+  background: $color-border;
+  margin: $spacing-md 0;
+}
+
+// ── Chip / Tag ────────────────────────────────────────────────
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  background: $color-bg-light;
+  color: $color-text-body;
+  border: 1px solid $color-border;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast,
+              border-color $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background: $color-primary-light;
+    color: $color-primary-darker;
+    border-color: $color-amber-200;
+  }
+
+  &.chip-active {
+    background: $color-primary;
+    color: $color-on-primary;
+    border-color: $color-primary;
+  }
+}
+
+// ── Skeleton Loading ──────────────────────────────────────────
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg,
+    $color-stone-100 25%,
+    $color-stone-50  50%,
+    $color-stone-100 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: $radius-sm;
+}
+
+// ── Reduced Motion ────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
