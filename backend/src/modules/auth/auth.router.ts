@@ -29,6 +29,9 @@ router.get('/me', authenticate, authController.me);
 // GET  /api/auth/check-username/:username
 router.get('/check-username/:username', authController.checkUsername);
 
+// GET  /api/auth/lookup-user?q=
+router.get('/lookup-user', authController.lookupUser);
+
 // POST /api/auth/forgot-password/send-otp
 router.post('/forgot-password/send-otp', authController.forgotPasswordSendOtp);
 

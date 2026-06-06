@@ -62,8 +62,14 @@ export class AuthService {
     );
   }
 
-  forgotPasswordSendOTP(data: { usernameOrEmail: string; phoneNumber: string }): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/forgot-password/send-otp`, data);
+  lookupUser(q: string): Observable<{ found: boolean; dialCode?: string; countryName?: string }> {
+    return this.http.get<{ found: boolean; dialCode?: string; countryName?: string }>(
+      `${this.baseUrl}/auth/lookup-user`, { params: { q } }
+    );
+  }
+
+  forgotPasswordSendOTP(data: { usernameOrEmail: string; phoneNumber: string }): Observable<{ message: string; devOtp?: string }> {
+    return this.http.post<{ message: string; devOtp?: string }>(`${this.baseUrl}/auth/forgot-password/send-otp`, data);
   }
 
   verifyResetOtp(data: { usernameOrEmail: string; phoneNumber: string; otp: string; newPassword: string }): Observable<{ message: string }> {

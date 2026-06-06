@@ -48,6 +48,20 @@ export async function checkUsername(req: Request, res: Response, next: NextFunct
   }
 }
 
+export async function lookupUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const q = ((req.query['q'] as string) ?? '').trim();
+    if (!q) {
+      res.json({ found: false });
+      return;
+    }
+    const result = await authService.lookupUser(q);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function forgotPasswordSendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = ForgotPasswordDto.parse(req.body);

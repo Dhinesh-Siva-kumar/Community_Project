@@ -87,7 +87,7 @@
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>OTP is valid for 10 minutes only</span>
+              <span>OTP is valid for 5 minutes only</span>
             </li>
             <li>
               <span class="feature-icon"
@@ -123,6 +123,12 @@
 
         <div class="step-form-enter">
           @if (step() === "form") {
+            @if (tooManyAttemptsAlert()) {
+              <div class="reg-alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Too many incorrect attempts. Please register again to request a new code.
+              </div>
+            }
             <form
               [formGroup]="registerForm"
               (ngSubmit)="onSubmit()"
@@ -140,7 +146,7 @@
                     <input
                       id="reg-userName"
                       type="text"
-                      maxlength="15"
+                      maxlength="20"
                       formControlName="userName"
                       placeholder="username"
                       autocomplete="given-name"
@@ -151,18 +157,22 @@
                       "
                     />
                   </div>
-                  @if (f1["userName"].touched && f1["userName"].invalid) {
+                  @if (usernameChecking()) {
+                    <div class="field-hint">
+                      <span class="spinner-border spinner-border-sm" role="status"></span> Checking...
+                    </div>
+                  } @else if (f1["userName"].touched && f1["userName"].invalid) {
                     <div class="field-error">
                       @if (f1["userName"].errors?.["required"]) {
-                        User name is required.
+                        Username is required.
                       } @else if (f1["userName"].errors?.["minlength"]) {
                         Minimum 3 characters.
                       } @else if (f1["userName"].errors?.["maxlength"]) {
-                        Maximum 15 characters allowed.
+                        Maximum 20 characters allowed.
                       } @else if (f1["userName"].errors?.["pattern"]) {
-                        Only letters allowed (no spaces or numbers).
+                        Only letters, numbers, and underscores.
                       } @else if (f1["userName"].errors?.["usernameTaken"]) {
-                        Username already exists.
+                        Username already taken.
                       }
                     </div>
                   }
@@ -177,11 +187,12 @@
                     <input
                       id="reg-displayName"
                       type="text"
-                      maxlength="30"
+                      maxlength="50"
                       formControlName="displayName"
-                      placeholder="displayname"
+                      placeholder="Your display name"
                       autocomplete="family-name"
                       class="field-input"
+                      (blur)="trimDisplayName()"
                       [class.is-invalid]="
                         f1['displayName'].touched && f1['displayName'].invalid
                       "
@@ -191,10 +202,12 @@
                     <div class="field-error">
                       @if (f1["displayName"].errors?.["required"]) {
                         Display name is required.
+                      } @else if (f1["displayName"].errors?.["minlength"]) {
+                        Minimum 3 characters.
                       } @else if (f1["displayName"].errors?.["maxlength"]) {
-                        Maximum 30 characters allowed.
+                        Maximum 50 characters allowed.
                       } @else if (f1["displayName"].errors?.["pattern"]) {
-                        Only letters and spaces allowed.
+                        Must start with a letter; letters, spaces, hyphens, apostrophes only.
                       }
                     </div>
                   }
@@ -217,7 +230,7 @@
                   <label class="field-label">Mobile Number</label>
                   <div class="field-input-wrap">
                     <i class="bi bi-phone field-icon"></i>
-                    <input
+                     <input
                       type="tel"
                       maxlength="15"
                       inputmode="numeric"
@@ -226,17 +239,23 @@
                       placeholder="Enter mobile number"
                       class="field-input"
                       [class.is-invalid]="
-                        f1['mobile'].touched && f1['mobile'].invalid
+                        (f1['mobile'].touched && f1['mobile'].invalid) || mobileAlreadyExists()
                       "
                     />
                   </div>
 
-                  @if (f1["mobile"].touched && f1["mobile"].invalid) {
+                  @if (mobileAlreadyExists()) {
+                    <div class="field-error">
+                      <i class="bi bi-exclamation-circle-fill"></i>
+                      This mobile number is already registered with another account.
+                    </div>
+                  } @else if (f1["mobile"].touched && f1["mobile"].invalid) {
                     <div class="field-error">
                       @if (f1["mobile"].errors?.["required"]) {
                         Mobile number is required.
-                      } @else if (f1["mobile"].errors?.["mobile"]) {
-                        Please enter a valid Mobile number.
+                      } @else if (f1["mobile"].errors?.["phoneInvalid"]) {
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        {{ f1["mobile"].errors?.["phoneInvalid"] }}
                       }
                     </div>
                   }
@@ -250,10 +269,10 @@
                   <i class="bi bi-lock field-icon"></i>
                   <input
                     id="reg-password"
-                    maxlength="20"
+                    maxlength="64"
                     [type]="showPassword() ? 'text' : 'password'"
                     formControlName="password"
-                    placeholder="At least 6 characters"
+                    placeholder="At least 8 characters"
                     autocomplete="new-password"
                     class="field-input"
                     [class.is-invalid]="
@@ -274,14 +293,35 @@
                     ></i>
                   </button>
                 </div>
-                @if (f1["password"].touched && f1["password"].invalid) {
-                  <div class="field-error">
-                    @if (f1["password"].errors?.["required"]) {
-                      Password is required.
-                    } @else if (f1["password"].errors?.["minlength"]) {
-                      Password must be at least 6 characters.
-                    }
+                @if (f1["password"].touched && f1["password"].errors?.["required"]) {
+                  <div class="field-error">Password is required.</div>
+                }
+                @if (f1["password"].value) {
+                  <div class="pw-strength-bar">
+                    <div class="pw-strength-fill" [attr.data-score]="passwordStrength().score"></div>
                   </div>
+                  <ul class="pw-criteria">
+                    <li [class.met]="passwordStrength().minLength">
+                      <i class="bi" [class.bi-check-circle-fill]="passwordStrength().minLength" [class.bi-circle]="!passwordStrength().minLength"></i>
+                      At least 8 characters
+                    </li>
+                    <li [class.met]="passwordStrength().uppercase">
+                      <i class="bi" [class.bi-check-circle-fill]="passwordStrength().uppercase" [class.bi-circle]="!passwordStrength().uppercase"></i>
+                      Uppercase letter
+                    </li>
+                    <li [class.met]="passwordStrength().lowercase">
+                      <i class="bi" [class.bi-check-circle-fill]="passwordStrength().lowercase" [class.bi-circle]="!passwordStrength().lowercase"></i>
+                      Lowercase letter
+                    </li>
+                    <li [class.met]="passwordStrength().number">
+                      <i class="bi" [class.bi-check-circle-fill]="passwordStrength().number" [class.bi-circle]="!passwordStrength().number"></i>
+                      Number (0–9)
+                    </li>
+                    <li [class.met]="passwordStrength().special">
+                      <i class="bi" [class.bi-check-circle-fill]="passwordStrength().special" [class.bi-circle]="!passwordStrength().special"></i>
+                      Special character
+                    </li>
+                  </ul>
                 }
               </div>
 
@@ -294,7 +334,7 @@
                   <i class="bi bi-lock field-icon"></i>
                   <input
                     id="reg-confirmPassword"
-                    maxlength="20"
+                    maxlength="64"
                     [type]="showPassword() ? 'text' : 'password'"
                     formControlName="confirmPassword"
                     placeholder="Re-enter your password"
@@ -302,22 +342,16 @@
                     class="field-input"
                     [class.is-invalid]="
                       f1['confirmPassword'].touched &&
-                      f1['confirmPassword'].invalid
+                      (f1['confirmPassword'].invalid || registerForm.errors?.['passwordMismatch'])
                     "
                   />
                 </div>
-                @if (
-                  f1["confirmPassword"].touched && f1["confirmPassword"].invalid
-                ) {
-                  <div class="field-error">
-                    @if (f1["confirmPassword"].errors?.["required"]) {
-                      Please confirm your password.
-                    } @else if (
-                      f1["confirmPassword"].errors?.["passwordMismatch"]
-                    ) {
-                      Passwords do not match.
-                    }
-                  </div>
+                @if (f1["confirmPassword"].touched) {
+                  @if (f1["confirmPassword"].errors?.["required"]) {
+                    <div class="field-error">Please confirm your password.</div>
+                  } @else if (registerForm.errors?.['passwordMismatch']) {
+                    <div class="field-error">Passwords do not match.</div>
+                  }
                 }
               </div>
               <div class="btn-row">
@@ -359,21 +393,46 @@
                       />
                     }
                   </div>
-                  @if (otpError()) {
-                    <div class="otp-error-msg">
-                      <i class="bi bi-x-circle-fill"></i>
-                      OTP is incorrect. Please try again.
-                    </div>
-                  } @else {
-                    <p class="otp-expire-note"><i class="bi bi-clock"></i> Code expires in 10 minutes</p>
-                  }
+                  <p class="otp-expire-note">
+                    <i class="bi bi-clock"></i> Code expires in {{ otpCountdown() }}
+                  </p>
                 </div>
+              </div>
+              @if (devOtp()) {
+                <div class="dev-otp-card">
+                  <span class="dev-otp-label"><i class="bi bi-terminal"></i> Dev OTP</span>
+                  <span class="dev-otp-value">{{ devOtp() }}</span>
+                </div>
+              }
+              @if (otpError()) {
+                <div class="otp-error-msg">
+                  <i class="bi bi-x-circle-fill"></i>
+                  OTP is incorrect. Please try again.
+                </div>
+              }
+              <div class="resend-row">
+                <button
+                  type="button"
+                  class="resend-btn"
+                  [disabled]="resendCooldown() > 0"
+                  (click)="onResendOtp()"
+                >
+                  @if (resendCooldown() > 0) {
+                    Resend OTP in {{ resendCooldown() }}s
+                  } @else {
+                    <i class="bi bi-arrow-clockwise"></i> Resend OTP
+                  }
+                </button>
               </div>
               <div class="btn-row">
                 <button type="submit" class="submit-btn" [disabled]="loading()">
                   @if (loading()) {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Verifying OTP...
+                    @if (registeringStage() === 'registering') {
+                      Creating account...
+                    } @else {
+                      Verifying OTP...
+                    }
                   } @else {
                     <i class="bi bi-check2-circle"></i>
                     Verify OTP
@@ -394,4 +453,36 @@
       </div>
     </div>
   </div>
+
+  <!-- ── Loading overlay (verifying OTP → creating account) ── -->
+  @if (loading()) {
+    <div class="reg-loading-overlay">
+      <div class="reg-loading-card">
+        <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
+        <p class="reg-loading-text">
+          @if (registeringStage() === 'registering') {
+            Creating your account...
+          } @else {
+            Verifying OTP...
+          }
+        </p>
+      </div>
+    </div>
+  }
+
+  <!-- ── Success modal ── -->
+  @if (showSuccessModal()) {
+    <div class="reg-success-overlay">
+      <div class="reg-success-card">
+        <div class="reg-success-icon">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3 class="reg-success-title">You're Successfully Registered!</h3>
+        <p class="reg-success-sub">Welcome to Community. Taking you to your dashboard&hellip;</p>
+        <div class="reg-success-progress">
+          <div class="reg-success-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+  }
 </div>

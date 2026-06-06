@@ -23,6 +23,29 @@ export function sendOtp(phone: string, userId?: string): string {
   return generateOtp(phone, userId);
 }
 
+/**
+ * Delivers the OTP to the recipient via SMS (Twilio) or logs it in development.
+ * This is the single swap point for the SMS provider.
+ */
+export async function deliverOtp(mobile: string, otp: string): Promise<void> {
+  if (
+    env.NODE_ENV === 'production' &&
+    env.TWILIO_ACCOUNT_SID &&
+    env.TWILIO_AUTH_TOKEN &&
+    env.TWILIO_WHATSAPP_FROM
+  ) {
+    // TODO: swap Twilio client in here
+    // const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+    // await client.messages.create({
+    //   body: `Your OTP is ${otp}. Valid for ${env.OTP_EXPIRES_MINUTES} minutes.`,
+    //   from: env.TWILIO_WHATSAPP_FROM,
+    //   to: mobile,
+    // });
+  } else {
+    console.log(`[OTP] ${mobile} → ${otp}`);
+  }
+}
+
 export function getUserIdByPhone(phone: string): string | null {
   return store.get(phone)?.userId ?? null;
 }
@@ -37,7 +60,7 @@ export function verifyOtp(key: string, otp: string): { success: boolean; message
   }
 
   entry.attempts += 1;
-  if (entry.attempts > env.OTP_MAX_ATTEMPTS) {
+  if (entry.attempts >= env.OTP_MAX_ATTEMPTS) {
     store.delete(key);
     return { success: false, message: 'Too many failed attempts' };
   }
@@ -55,3 +78,4 @@ export function clearOtp(key: string): void {
 export function invalidateOtps(key: string): void {
   store.delete(key);
 }
+

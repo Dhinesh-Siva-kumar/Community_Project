@@ -2,7 +2,8 @@ import bcrypt from 'bcryptjs';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
-import { sendOtp, verifyOtp, getUserIdByPhone, clearOtp } from '../../services/otp.service';
+import { sendOtp, deliverOtp, verifyOtp, getUserIdByPhone } from '../../services/otp.service';
+import { env } from '../../config/env';
 import type { RegisterDtoType, LoginDtoType, ForgotPasswordDtoType, ResetPasswordDtoType } from './auth.dto';
 
 // ---------------------------------------------------------------------------
@@ -50,6 +51,14 @@ function stripSensitive(user: UserRow) {
 }
 
 // ---------------------------------------------------------------------------
+// checkPhoneExists
+// ---------------------------------------------------------------------------
+export async function checkPhoneExists(phone: string): Promise<boolean> {
+  const user = await db('users').where({ phone_no: phone }).first();
+  return !!user;
+}
+
+// ---------------------------------------------------------------------------
 // register
 // ---------------------------------------------------------------------------
 export async function register(dto: RegisterDtoType) {
@@ -61,6 +70,12 @@ export async function register(dto: RegisterDtoType) {
   if (dto.email) {
     const existingEmail = await db('users').where({ email: dto.email }).first();
     if (existingEmail) throw new AppError(409, 'Email already registered');
+  }
+
+  // Check phone uniqueness (safety net — primary check is in send-otp)
+  if (dto.phone_no) {
+    const existingPhone = await db('users').where({ phone_no: dto.phone_no }).first();
+    if (existingPhone) throw new AppError(409, 'Mobile number already registered with another account');
   }
 
   const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -158,9 +173,30 @@ export async function checkUsername(username: string): Promise<{ exists: boolean
 }
 
 // ---------------------------------------------------------------------------
+// lookupUser
+// ---------------------------------------------------------------------------
+export async function lookupUser(query: string): Promise<{ found: boolean; dialCode?: string; countryName?: string }> {
+  const row = await db('users')
+    .leftJoin('master_countries', 'users.country_id', 'master_countries.id')
+    .where(function () {
+      this.where({ 'users.user_name': query }).orWhere({ 'users.email': query });
+    })
+    .select('users.id', 'master_countries.dial_code', 'master_countries.name as country_name')
+    .first() as { id: string; dial_code: string | null; country_name: string | null } | undefined;
+
+  if (!row) return { found: false };
+
+  return {
+    found: true,
+    dialCode: row.dial_code ?? undefined,
+    countryName: row.country_name ?? undefined,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // forgotPasswordSendOtp
 // ---------------------------------------------------------------------------
-export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise<{ success: boolean; message: string }> {
+export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise<{ success: boolean; message: string; devOtp?: string }> {
   const user = await db('users')
     .where(function () {
       this.where({ user_name: dto.usernameOrEmail }).orWhere({ email: dto.usernameOrEmail });
@@ -168,30 +204,41 @@ export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise
     .andWhere({ phone_no: dto.phoneNumber })
     .first() as UserRow | undefined;
 
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found. Please check your details and try again.');
 
-  sendOtp(dto.phoneNumber, user.id);
+  const otp = sendOtp(dto.phoneNumber, user.id);
+  await deliverOtp(dto.phoneNumber, otp);
 
-  return { success: true, message: 'OTP sent successfully' };
+  const result: { success: boolean; message: string; devOtp?: string } = {
+    success: true,
+    message: 'OTP sent successfully',
+  };
+
+  if (env.NODE_ENV !== 'production') {
+    result.devOtp = otp;
+  }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------
 // resetPasswordVerify
 // ---------------------------------------------------------------------------
 export async function resetPasswordVerify(dto: ResetPasswordDtoType): Promise<{ success: boolean; message: string }> {
-  const otpResult = verifyOtp(dto.phoneNumber, dto.otp);
+  // Retrieve userId before verifyOtp — verifyOtp deletes the store entry on
+  // success, so getUserIdByPhone would return null if called afterwards.
+  const userId = getUserIdByPhone(dto.phoneNumber);
+  if (!userId) throw new AppError(400, 'OTP session expired. Please request a new OTP.');
 
+  const otpResult = verifyOtp(dto.phoneNumber, dto.otp);
   if (!otpResult.success) {
     throw new AppError(400, otpResult.message);
   }
 
-  const userId = getUserIdByPhone(dto.phoneNumber);
-  if (!userId) throw new AppError(400, 'OTP session expired');
-
   const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
   await db('users').where({ id: userId }).update({ password: hashedPassword });
 
-  clearOtp(dto.phoneNumber);
+  // verifyOtp already cleared the store entry on success; no need to clearOtp here.
 
   return { success: true, message: 'Password updated successfully' };
 }
