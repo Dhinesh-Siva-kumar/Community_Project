@@ -8,14 +8,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
-import { CommunityActivityComponent } from '../../../shared/components/svg-illustrations/community-activity.component';
 
-type TabType = 'posts' | 'help' | 'emergency' | 'about';
+type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, CommunityActivityComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -51,42 +50,47 @@ export class CommunityDetailComponent implements OnInit {
   submittingComment = signal<string | null>(null);
   likingPost = signal<string | null>(null);
 
+  // Admin actions — delete modal
+  deleteModalOpen    = signal(false);
+  deletingCommunity  = signal(false);
+
   // Pagination
   currentPage = signal(1);
-  totalPages = signal(1);
+  totalPages  = signal(1);
   loadingMore = signal(false);
 
   // Forms
   postForm!: FormGroup;
   commentForms: Map<string, FormGroup> = new Map();
 
-  // Computed
-  currentUser = computed(() => this.authService.currentUser());
-  currentUserId = computed(() => this.currentUser()?.id ?? '');
+  // ── Computed ──────────────────────────────────────────────
+  currentUser    = computed(() => this.authService.currentUser());
+  currentUserId  = computed(() => this.currentUser()?.id ?? '');
 
-  isAdmin = computed(() => {
-    return this.router.url.startsWith('/admin');
-  });
+  isAdmin = computed(() => this.router.url.startsWith('/admin'));
 
-  backRoute = computed(() => {
-    return this.isAdmin() ? '/admin/community' : '/user/community';
-  });
+  backRoute = computed(() => this.isAdmin() ? '/admin/community' : '/user/community');
 
   filteredPosts = computed(() => {
     const tab = this.activeTab();
     const allPosts = this.posts();
     switch (tab) {
-      case 'help':
-        return allPosts.filter((p) => p.type === 'HELP');
-      case 'emergency':
-        return allPosts.filter((p) => p.type === 'EMERGENCY');
-      default:
-        return allPosts;
+      case 'help':      return allPosts.filter((p) => p.type === 'HELP');
+      case 'emergency': return allPosts.filter((p) => p.type === 'EMERGENCY');
+      default:          return allPosts;
     }
   });
 
-  memberCount = computed(() => this.community()?._count?.members ?? 0);
-  postCount = computed(() => this.community()?._count?.posts ?? 0);
+  memberCount    = computed(() => this.community()?._count?.members ?? 0);
+  postCount      = computed(() => this.community()?._count?.posts ?? 0);
+  helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP').length);
+  emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY').length);
+
+  daysActive = computed(() => {
+    const c = this.community();
+    if (!c) return 0;
+    return Math.floor((Date.now() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  });
 
   ngOnInit(): void {
     this.initForms();
@@ -119,36 +123,20 @@ export class CommunityDetailComponent implements OnInit {
     return this.commentForms.get(postId)!;
   }
 
-  // ========================
-  // Data Loading
-  // ========================
+  // ── Data Loading ──────────────────────────────────────────
 
   loadCommunity(): void {
     this.loading.set(true);
     this.communityService.getCommunity(this.communityId()).subscribe({
-      next: (community) => {
-        this.community.set(community);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to load community');
-        this.loading.set(false);
-      },
+      next: (community) => { this.community.set(community); this.loading.set(false); },
+      error: () => { this.toast.error('Failed to load community'); this.loading.set(false); },
     });
   }
 
   loadPosts(append = false): void {
-    if (!append) {
-      this.loadingPosts.set(true);
-    } else {
-      this.loadingMore.set(true);
-    }
+    if (!append) { this.loadingPosts.set(true); } else { this.loadingMore.set(true); }
 
-    const params: Record<string, any> = {
-      page: this.currentPage(),
-      limit: 10,
-      status: 'APPROVED',
-    };
+    const params: Record<string, any> = { page: this.currentPage(), limit: 10, status: 'APPROVED' };
 
     this.postService.getPosts(this.communityId(), params).subscribe({
       next: (response) => {
@@ -171,9 +159,7 @@ export class CommunityDetailComponent implements OnInit {
 
   loadMembers(): void {
     this.communityService.getMembers(this.communityId()).subscribe({
-      next: (members) => {
-        this.members.set(members);
-      },
+      next: (members) => { this.members.set(members); },
       error: () => {},
     });
   }
@@ -185,45 +171,31 @@ export class CommunityDetailComponent implements OnInit {
     }
   }
 
-  // ========================
-  // Tab Navigation
-  // ========================
+  // ── Tab Navigation ────────────────────────────────────────
 
   setTab(tab: TabType): void {
     if (this.activeTab() === tab) return;
     this.tabTransition.set(true);
     setTimeout(() => {
       this.activeTab.set(tab);
-      // Reset post type for creation based on tab
       switch (tab) {
-        case 'help':
-          this.selectedPostType.set('HELP');
-          break;
-        case 'emergency':
-          this.selectedPostType.set('EMERGENCY');
-          break;
-        default:
-          this.selectedPostType.set('GENERAL');
-          break;
+        case 'help':      this.selectedPostType.set('HELP');      break;
+        case 'emergency': this.selectedPostType.set('EMERGENCY'); break;
+        default:          this.selectedPostType.set('GENERAL');   break;
       }
       this.tabTransition.set(false);
     }, 150);
   }
 
-  // ========================
-  // Post Creation
-  // ========================
+  // ── Post Creation ─────────────────────────────────────────
 
-  setPostType(type: PostType): void {
-    this.selectedPostType.set(type);
-  }
+  setPostType(type: PostType): void { this.selectedPostType.set(type); }
 
   onPostImageSelect(event: Event): void {
     const files = (event.target as HTMLInputElement).files;
     if (files) {
       const newFiles = Array.from(files);
       this.selectedPostImages.update((current) => [...current, ...newFiles]);
-
       newFiles.forEach((file) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -240,85 +212,48 @@ export class CommunityDetailComponent implements OnInit {
   }
 
   submitPost(): void {
-    if (this.postForm.invalid) {
-      this.postForm.markAllAsTouched();
-      return;
-    }
+    if (this.postForm.invalid) { this.postForm.markAllAsTouched(); return; }
 
     this.submittingPost.set(true);
     const content = this.postForm.get('content')!.value;
-    const type = this.selectedPostType();
-    const images = this.selectedPostImages();
+    const type    = this.selectedPostType();
+    const images  = this.selectedPostImages();
 
     this.postService.createPost(this.communityId(), { content, type }, images.length > 0 ? images : undefined).subscribe({
       next: (post) => {
-        this.toast.success('Post submitted successfully! It will appear after approval.');
+        this.toast.success('Post submitted! It will appear after approval.');
         this.postForm.reset();
         this.selectedPostImages.set([]);
         this.postImagePreviews.set([]);
         this.submittingPost.set(false);
-        // If admin, the post might be auto-approved
         if (this.isAdmin() && post.status === 'APPROVED') {
           this.posts.update((current) => [post, ...current]);
         }
       },
-      error: () => {
-        this.toast.error('Failed to create post');
-        this.submittingPost.set(false);
-      },
+      error: () => { this.toast.error('Failed to create post'); this.submittingPost.set(false); },
     });
   }
 
-  // ========================
-  // Post Interactions
-  // ========================
+  // ── Post Interactions ─────────────────────────────────────
 
   toggleLike(post: Post): void {
     this.likingPost.set(post.id);
+    const action$ = post.isLiked ? this.postService.unlikePost(post.id) : this.postService.likePost(post.id);
+    const likeDelta = post.isLiked ? -1 : 1;
 
-    if (post.isLiked) {
-      this.postService.unlikePost(post.id).subscribe({
-        next: () => {
-          this.posts.update((posts) =>
-            posts.map((p) =>
-              p.id === post.id
-                ? {
-                    ...p,
-                    isLiked: false,
-                    _count: { ...p._count!, likes: Math.max(0, (p._count?.likes ?? 0) - 1), comments: p._count?.comments ?? 0 },
-                  }
-                : p
-            )
-          );
-          this.likingPost.set(null);
-        },
-        error: () => {
-          this.toast.error('Failed to unlike post');
-          this.likingPost.set(null);
-        },
-      });
-    } else {
-      this.postService.likePost(post.id).subscribe({
-        next: () => {
-          this.posts.update((posts) =>
-            posts.map((p) =>
-              p.id === post.id
-                ? {
-                    ...p,
-                    isLiked: true,
-                    _count: { ...p._count!, likes: (p._count?.likes ?? 0) + 1, comments: p._count?.comments ?? 0 },
-                  }
-                : p
-            )
-          );
-          this.likingPost.set(null);
-        },
-        error: () => {
-          this.toast.error('Failed to like post');
-          this.likingPost.set(null);
-        },
-      });
-    }
+    action$.subscribe({
+      next: () => {
+        this.posts.update((posts) =>
+          posts.map((p) =>
+            p.id === post.id
+              ? { ...p, isLiked: !post.isLiked, _count: { ...p._count!, likes: Math.max(0, (p._count?.likes ?? 0) + likeDelta), comments: p._count?.comments ?? 0 } }
+              : p
+          )
+        );
+        this.likingPost.set(null);
+      },
+      error: () => { this.toast.error('Failed to update like'); this.likingPost.set(null); },
+    });
   }
 
   toggleComments(postId: string): void {
@@ -328,56 +263,29 @@ export class CommunityDetailComponent implements OnInit {
         newSet.delete(postId);
       } else {
         newSet.add(postId);
-        // Load comments if not already loaded
-        if (!this.postComments().has(postId)) {
-          this.loadComments(postId);
-        }
+        if (!this.postComments().has(postId)) { this.loadComments(postId); }
       }
       return newSet;
     });
   }
 
-  isCommentsExpanded(postId: string): boolean {
-    return this.expandedComments().has(postId);
-  }
+  isCommentsExpanded(postId: string): boolean { return this.expandedComments().has(postId); }
 
   loadComments(postId: string): void {
-    this.loadingComments.update((set) => {
-      const newSet = new Set(set);
-      newSet.add(postId);
-      return newSet;
-    });
-
+    this.loadingComments.update((set) => { const s = new Set(set); s.add(postId); return s; });
     this.postService.getComments(postId).subscribe({
       next: (comments) => {
-        this.postComments.update((map) => {
-          const newMap = new Map(map);
-          newMap.set(postId, comments);
-          return newMap;
-        });
-        this.loadingComments.update((set) => {
-          const newSet = new Set(set);
-          newSet.delete(postId);
-          return newSet;
-        });
+        this.postComments.update((map) => { const m = new Map(map); m.set(postId, comments); return m; });
+        this.loadingComments.update((set) => { const s = new Set(set); s.delete(postId); return s; });
       },
       error: () => {
-        this.loadingComments.update((set) => {
-          const newSet = new Set(set);
-          newSet.delete(postId);
-          return newSet;
-        });
+        this.loadingComments.update((set) => { const s = new Set(set); s.delete(postId); return s; });
       },
     });
   }
 
-  getComments(postId: string): Comment[] {
-    return this.postComments().get(postId) ?? [];
-  }
-
-  isLoadingComments(postId: string): boolean {
-    return this.loadingComments().has(postId);
-  }
+  getComments(postId: string): Comment[] { return this.postComments().get(postId) ?? []; }
+  isLoadingComments(postId: string): boolean { return this.loadingComments().has(postId); }
 
   submitComment(postId: string): void {
     const form = this.getCommentForm(postId);
@@ -389,12 +297,10 @@ export class CommunityDetailComponent implements OnInit {
     this.postService.addComment(postId, content).subscribe({
       next: (comment) => {
         this.postComments.update((map) => {
-          const newMap = new Map(map);
-          const existing = newMap.get(postId) ?? [];
-          newMap.set(postId, [...existing, comment]);
-          return newMap;
+          const m = new Map(map);
+          m.set(postId, [...(m.get(postId) ?? []), comment]);
+          return m;
         });
-        // Update comment count
         this.posts.update((posts) =>
           posts.map((p) =>
             p.id === postId
@@ -405,61 +311,71 @@ export class CommunityDetailComponent implements OnInit {
         form.reset();
         this.submittingComment.set(null);
       },
-      error: () => {
-        this.toast.error('Failed to add comment');
-        this.submittingComment.set(null);
-      },
+      error: () => { this.toast.error('Failed to add comment'); this.submittingComment.set(null); },
     });
   }
 
   sharePost(post: Post): void {
     const url = `${window.location.origin}${this.isAdmin() ? '/admin' : '/user'}/community/${this.communityId()}`;
-    navigator.clipboard.writeText(url).then(() => {
-      this.toast.success('Link copied to clipboard!');
-    }).catch(() => {
-      this.toast.error('Failed to copy link');
+    navigator.clipboard.writeText(url)
+      .then(() => this.toast.success('Link copied to clipboard!'))
+      .catch(() => this.toast.error('Failed to copy link'));
+  }
+
+  // ── Admin Actions ─────────────────────────────────────────
+
+  openDeleteModal():  void { this.deleteModalOpen.set(true); }
+  closeDeleteModal(): void { this.deleteModalOpen.set(false); }
+
+  onDeleteCommunity(): void {
+    this.deletingCommunity.set(true);
+    this.communityService.deleteCommunity(this.communityId()).subscribe({
+      next: () => {
+        this.toast.success('Community deleted successfully');
+        this.router.navigate([this.backRoute()]);
+      },
+      error: () => {
+        this.toast.error('Failed to delete community');
+        this.deletingCommunity.set(false);
+        this.deleteModalOpen.set(false);
+      },
     });
   }
 
-  // ========================
-  // Utility
-  // ========================
+  getCommunityStatus(): { label: string; cls: string } {
+    const c = this.community();
+    if (!c) return { label: 'Unknown', cls: '' };
+    return c.isActive
+      ? { label: 'Active',   cls: 'cd-status-active'   }
+      : { label: 'Inactive', cls: 'cd-status-inactive' };
+  }
+
+  // ── Utility ───────────────────────────────────────────────
 
   getPostTypeBadge(type: PostType): { label: string; class: string; icon: string } {
     switch (type) {
-      case 'EMERGENCY':
-        return { label: 'Emergency', class: 'bg-danger', icon: 'bi-exclamation-triangle-fill' };
-      case 'HELP':
-        return { label: 'Help', class: 'bg-warning text-dark', icon: 'bi-hand-thumbs-up-fill' };
-      default:
-        return { label: 'General', class: 'bg-primary', icon: 'bi-chat-dots-fill' };
+      case 'EMERGENCY': return { label: 'Emergency', class: 'bg-danger',              icon: 'bi-exclamation-triangle-fill' };
+      case 'HELP':      return { label: 'Help',      class: 'bg-warning text-dark',   icon: 'bi-life-preserver'            };
+      default:          return { label: 'General',   class: 'bg-primary',             icon: 'bi-chat-dots-fill'            };
     }
   }
 
   getTimeAgo(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60)     return 'Just now';
+    if (seconds < 3600)   return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400)  return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   getUserInitials(user?: { displayName?: string; userName?: string } | null): string {
     if (!user) return '?';
-    const name = user.displayName || user.userName || '';
-    return name.charAt(0).toUpperCase() || '?';
+    return (user.displayName || user.userName || '').charAt(0).toUpperCase() || '?';
   }
 
   getUserFullName(user?: { displayName?: string; userName?: string } | null): string {

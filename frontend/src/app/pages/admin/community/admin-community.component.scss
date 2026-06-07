@@ -1,7 +1,7 @@
 @use '../../../../assets/styles/index' as *;
 
 // ============================================================
-// Admin Community Page Styles
+// Admin Community Page — Amber Design System
 // ============================================================
 
 // ── Loading State ────────────────────────────────────────────
@@ -23,12 +23,12 @@
   width: 2.2rem;
   height: 2.2rem;
   border-width: 3px;
-  color: $indigo-600;
+  color: $primary;
 }
 
 .page-loading-text {
   font-size: 14px;
-  color: $slate-500;
+  color: $color-stone-500;
   margin: 0;
 }
 
@@ -52,29 +52,30 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
+  background: $gradient-primary;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba($primary, 0.35);
 
   i {
     font-size: 1.2rem;
-    color: #fff;
+    color: $color-on-primary;
   }
 }
 
 .page-title {
   font-size: 1.3rem;
   font-weight: 800;
-  color: $slate-800;
+  color: $color-stone-800;
   margin: 0 0 2px;
   line-height: 1.2;
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: $slate-500;
+  color: $color-stone-500;
   margin: 0;
 }
 
@@ -86,25 +87,25 @@
   padding: 0 20px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
-  color: #fff;
+  background: $gradient-primary;
+  color: $color-on-primary;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba($indigo-600, 0.35);
+  box-shadow: 0 3px 10px rgba($primary, 0.35);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba($indigo-600, 0.45);
-    color: #fff;
+    box-shadow: 0 6px 18px rgba($primary, 0.45);
+    color: $color-on-primary;
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+    box-shadow: 0 2px 8px rgba($primary, 0.3);
   }
 
   i {
@@ -156,8 +157,8 @@
   }
 
   &:focus {
-    border-color: $indigo-600;
-    box-shadow: 0 0 0 3px rgba($indigo-600, 0.1);
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
   }
 }
 
@@ -166,12 +167,13 @@
   align-items: center;
   padding: 6px 12px;
   border-radius: 20px;
-  background: $indigo-50;
-  color: $indigo-600;
+  background: $amber-50;
+  color: $color-primary-darker;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   margin-left: auto;
+  border: 1px solid $color-amber-200;
 
   i {
     font-size: 12px;
@@ -191,8 +193,8 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: $indigo-50;
-  box-shadow: 0 0 0 12px rgba($indigo-600, 0.06);
+  background: $amber-50;
+  box-shadow: 0 0 0 12px rgba($primary, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -200,20 +202,20 @@
 
   i {
     font-size: 2.4rem;
-    color: $indigo-600;
+    color: $primary;
   }
 }
 
 .page-empty-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: $slate-800;
+  color: $color-stone-800;
   margin: 0 0 8px;
 }
 
 .page-empty-text {
   font-size: 14px;
-  color: $slate-500;
+  color: $color-stone-500;
   max-width: 340px;
   margin: 0 0 1.5rem;
   line-height: 1.6;
@@ -230,21 +232,21 @@
       border-radius: 8px !important;
       margin: 0 2px;
       border: none;
-      color: $slate-500;
+      color: $color-stone-500;
       padding: 0.4rem 0.75rem;
       font-size: 13px;
       transition: background 0.15s, color 0.15s;
 
       &:hover {
-        background-color: $indigo-50;
-        color: $indigo-600;
+        background-color: $amber-50;
+        color: $primary;
       }
     }
 
     .page-item.active .page-link {
-      background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba($indigo-600, 0.3);
+      background: $gradient-primary;
+      color: $color-on-primary;
+      box-shadow: 0 2px 8px rgba($primary, 0.3);
     }
 
     .page-item.disabled .page-link {
@@ -262,10 +264,12 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid $color-stone-200;
 
   &:hover {
     transform: translateY(-5px);
     box-shadow: $shadow-xl;
+    border-color: $color-amber-200;
 
     .cc-cover-img {
       transform: scale(1.05);
@@ -278,7 +282,7 @@
   position: relative;
   height: 180px;
   overflow: hidden;
-  background: $slate-100;
+  background: $color-stone-100;
   flex-shrink: 0;
 }
 
@@ -293,14 +297,14 @@
 .cc-cover-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+  background: $gradient-primary-reverse;
   display: flex;
   align-items: center;
   justify-content: center;
 
   i {
     font-size: 3.2rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.35);
   }
 }
 
@@ -330,19 +334,19 @@
 }
 
 .cc-badge-global {
-  background: rgba($indigo-600, 0.88);
+  background: rgba($color-amber-800, 0.82);
   color: #fff;
 }
 
 .cc-badge-inactive {
   background: rgba(255, 255, 255, 0.82);
-  color: $slate-500;
-  border: 1px solid rgba($slate-200, 0.7);
+  color: $color-stone-500;
+  border: 1px solid rgba($color-stone-200, 0.7);
 }
 
 .cc-badge-default {
-  background: rgba(245, 158, 11, 0.88);
-  color: #fff;
+  background: rgba($primary, 0.9);
+  color: $color-on-primary;
 }
 
 // Body
@@ -356,7 +360,7 @@
 .cc-name {
   font-size: 15px;
   font-weight: 700;
-  color: $slate-800;
+  color: $color-stone-800;
   text-decoration: none;
   display: block;
   margin-bottom: 6px;
@@ -364,13 +368,13 @@
   transition: color 0.18s;
 
   &:hover {
-    color: $indigo-600;
+    color: $primary;
   }
 }
 
 .cc-desc {
   font-size: 13px;
-  color: $slate-500;
+  color: $color-stone-500;
   line-height: 1.55;
   margin-bottom: 14px;
   flex-grow: 1;
@@ -399,7 +403,7 @@
 }
 
 .cc-stat-members {
-  color: $indigo-600;
+  color: $primary;
 }
 
 .cc-stat-posts {
@@ -409,19 +413,19 @@
 .cc-stat-value {
   font-size: 13px;
   font-weight: 700;
-  color: $slate-800;
+  color: $color-stone-800;
 }
 
 .cc-stat-label {
   font-size: 12px;
-  color: $slate-500;
+  color: $color-stone-500;
 }
 
 .cc-stat-divider {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: $slate-300;
+  background: $color-stone-300;
   margin: 0 2px;
   flex-shrink: 0;
 }
@@ -439,7 +443,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: $slate-500;
+  color: $color-stone-500;
 
   i {
     font-size: 11px;
@@ -454,7 +458,7 @@
   gap: 6px;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid $gray-200;
+  border-top: 1px solid $color-stone-200;
 }
 
 .cc-btn-view {
@@ -465,8 +469,8 @@
   height: 34px;
   border: none;
   border-radius: 8px;
-  background: $indigo-50;
-  color: $indigo-600;
+  background: $amber-50;
+  color: $color-primary-darker;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -474,8 +478,8 @@
   transition: background 0.18s, color 0.18s;
 
   &:hover {
-    background: $indigo-100;
-    color: $indigo-700;
+    background: $color-amber-100;
+    color: $color-amber-800;
   }
 
   i {
@@ -491,16 +495,16 @@
   height: 34px;
   border: none;
   border-radius: 8px;
-  background: $slate-100;
-  color: $slate-500;
+  background: $color-stone-100;
+  color: $color-stone-500;
   font-size: 13px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.18s, color 0.18s;
 
   &:hover {
-    background: $slate-200;
-    color: $slate-800;
+    background: $color-stone-200;
+    color: $color-stone-800;
   }
 
   &.cc-btn-danger {
@@ -550,160 +554,20 @@
   z-index: 1050;
 }
 
-// ── Legacy field form styles (used by modal form) ──────────────
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-
-  @include media-sm-max {
-    grid-template-columns: 1fr;
-  }
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: $text-body;
-}
-
-.field-select {
-  height: 48px;
-  background-color: #fafafa;
-  padding-right: 36px;
-}
-
-.custom-mobile-row {
-  grid-template-columns: 140px 1fr;
-}
-
-.field-input-wrap select {
-  width: 100%;
-}
-
-.field-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .field-icon {
-    position: absolute;
-    left: 14px;
-    font-size: 16px;
-    color: $muted;
-    pointer-events: none;
-    line-height: 1;
-  }
-
-  .field-input {
-    width: 100%;
-    height: 48px;
-    padding: 0 44px 0 42px;
-    border: 1.5px solid $border;
-    border-radius: 10px;
-    font-size: 14px;
-    color: $dark;
-    background: $bg-neutral;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-
-    &::placeholder {
-      color: $gray-400;
-    }
-
-    &:focus {
-      border-color: $primary;
-      background: $white;
-      box-shadow: 0 0 0 3px rgba($primary, 0.1);
-    }
-
-    &.is-invalid {
-      border-color: $danger;
-
-      &:focus {
-        box-shadow: 0 0 0 3px rgba($danger, 0.1);
-      }
-    }
-  }
-
-  .field-select {
-    appearance: none;
-    cursor: pointer;
-    padding-right: 36px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-  }
-
-  .toggle-pw-btn {
-    position: absolute;
-    right: 12px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    color: $muted;
-    transition: color 0.2s;
-
-    &:hover {
-      color: $primary;
-    }
-
-    i {
-      font-size: 16px;
-      line-height: 1;
-    }
-  }
-}
-
-.field-error {
-  font-size: 12px;
-  color: $danger;
-  font-weight: 500;
-  margin-top: 2px;
-}
-
-// ===========================
-// Redesigned Create/Edit Modal
-// ===========================
-
-// Modal container overrides
+// ── Modal container ────────────────────────────────────────────
 .modal-content {
   border-radius: 20px;
   overflow: hidden;
 }
 
-.modal-backdrop {
-  z-index: 1040;
-}
-
-.modal {
-  z-index: 1050;
-}
-
-// ── Header ──────────────────────────────────────────────
+// ── Modal Header ─────────────────────────────────────────────
 .cm-modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   padding: 1.5rem 1.5rem 1.25rem;
-  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
-  color: #fff;
-  border-radius: 0; // inherits from .modal-content
+  background: $gradient-primary;
+  color: $color-on-primary;
 }
 
 .cm-modal-header-inner {
@@ -716,7 +580,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba($color-on-primary, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -724,7 +588,7 @@
 
   i {
     font-size: 1.2rem;
-    color: #fff;
+    color: $color-on-primary;
   }
 }
 
@@ -732,20 +596,20 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 2px;
-  color: #fff;
+  color: $color-on-primary;
 }
 
 .cm-modal-subtitle {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba($color-on-primary, 0.65);
   margin: 0;
 }
 
 .cm-close-btn {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba($color-on-primary, 0.1);
   border: none;
   border-radius: 8px;
-  color: #fff;
+  color: $color-on-primary;
   width: 32px;
   height: 32px;
   display: flex;
@@ -756,7 +620,7 @@
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba($color-on-primary, 0.22);
   }
 
   i {
@@ -764,16 +628,16 @@
   }
 }
 
-// ── Form wrapper ─────────────────────────────────────────
+// ── Form wrapper ─────────────────────────────────────────────
 .cm-form {
   display: flex;
   flex-direction: column;
 }
 
-// ── Section blocks ───────────────────────────────────────
+// ── Section blocks ───────────────────────────────────────────
 .cm-section {
   padding: 1.25rem 0;
-  border-bottom: 1px solid $gray-200;
+  border-bottom: 1px solid $color-stone-200;
 
   &.cm-section-last {
     border-bottom: none;
@@ -792,15 +656,16 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: $indigo-50;
+  background: $amber-50;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid $color-amber-200;
 
   i {
     font-size: 0.75rem;
-    color: $indigo-600;
+    color: $primary;
   }
 }
 
@@ -809,10 +674,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: $slate-500;
+  color: $color-stone-500;
 }
 
-// ── Field layout ─────────────────────────────────────────
+// ── Field layout ─────────────────────────────────────────────
 .cm-field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -857,7 +722,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-// ── Input wrap ───────────────────────────────────────────
+// ── Input wrap ───────────────────────────────────────────────
 .cm-input-wrap {
   position: relative;
   display: flex;
@@ -891,7 +756,7 @@
   border-radius: 10px;
   font-size: 14px;
   color: $dark;
-  background: #fafafa;
+  background: $bg-neutral;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
@@ -900,9 +765,9 @@
   }
 
   &:focus {
-    border-color: $indigo-600;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba($indigo-600, 0.1);
+    border-color: $primary;
+    background: $white;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
   }
 
   &.cm-input-error {
@@ -921,16 +786,6 @@
   resize: none;
 }
 
-.cm-select {
-  appearance: none;
-  cursor: pointer;
-  padding-right: 36px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 13px center;
-  background-color: #fafafa;
-}
-
 .cm-error-msg {
   font-size: 12px;
   color: $danger;
@@ -943,7 +798,7 @@
   }
 }
 
-// ── Toggle pills ─────────────────────────────────────────
+// ── Toggle pills ─────────────────────────────────────────────
 .cm-toggle-group {
   display: flex;
   flex-wrap: wrap;
@@ -960,25 +815,25 @@
   border: 1.5px solid $border;
   font-size: 13px;
   font-weight: 500;
-  color: $slate-500;
-  background: #fafafa;
+  color: $color-stone-500;
+  background: $bg-neutral;
   cursor: pointer;
   user-select: none;
   transition: all 0.18s ease;
 
   &:hover {
-    border-color: $indigo-600;
-    color: $indigo-600;
-    background: $indigo-50;
+    border-color: $primary;
+    color: $primary-dark;
+    background: $amber-50;
   }
 
   &.cm-toggle-active {
-    border-color: $indigo-600;
-    background: $indigo-600;
-    color: #fff;
+    border-color: $primary-dark;
+    background: $primary;
+    color: $color-on-primary;
 
     i {
-      color: #fff;
+      color: $color-on-primary;
     }
   }
 
@@ -988,7 +843,7 @@
   }
 }
 
-// ── Upload zone ──────────────────────────────────────────
+// ── Upload zone ──────────────────────────────────────────────
 .cm-upload-zone {
   display: flex;
   flex-direction: column;
@@ -996,20 +851,20 @@
   justify-content: center;
   gap: 8px;
   min-height: 130px;
-  border: 2px dashed $gray-300;
+  border: 2px dashed $color-stone-300;
   border-radius: 14px;
-  background: #fafbff;
+  background: $bg-neutral;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
   padding: 1.5rem;
 
   &:hover {
-    border-color: $indigo-600;
-    background: $indigo-50;
+    border-color: $primary;
+    background: $amber-50;
 
     .cm-upload-icon i {
-      color: $indigo-600;
+      color: $primary;
       transform: translateY(-3px);
     }
   }
@@ -1019,14 +874,14 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba($indigo-600, 0.08);
+  background: rgba($primary, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
 
   i {
     font-size: 1.4rem;
-    color: $indigo-600;
+    color: $primary;
     transition: transform 0.2s ease;
   }
 }
@@ -1044,7 +899,7 @@
   margin: 0;
 }
 
-// ── Image preview ─────────────────────────────────────────
+// ── Image preview ─────────────────────────────────────────────
 .cm-image-preview {
   position: relative;
   border-radius: 14px;
@@ -1115,14 +970,14 @@
   }
 }
 
-// ── Footer ───────────────────────────────────────────────
+// ── Modal Footer ─────────────────────────────────────────────
 .cm-modal-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
   padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid $gray-200;
+  border-top: 1px solid $color-stone-200;
 }
 
 .cm-btn-cancel {
@@ -1132,16 +987,16 @@
   padding: 0 18px;
   border-radius: 10px;
   border: 1.5px solid $border;
-  background: #fff;
-  color: $slate-500;
+  background: $white;
+  color: $color-stone-500;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.18s ease;
 
   &:hover {
-    border-color: $gray-400;
-    background: $gray-100;
+    border-color: $color-stone-300;
+    background: $color-stone-100;
     color: $dark;
   }
 }
@@ -1153,23 +1008,246 @@
   padding: 0 22px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, $indigo-600 0%, #6d28d9 100%);
-  color: #fff;
+  background: $gradient-primary;
+  color: $color-on-primary;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
-  box-shadow: 0 3px 10px rgba($indigo-600, 0.35);
+  box-shadow: 0 3px 10px rgba($primary, 0.35);
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba($indigo-600, 0.45);
+    box-shadow: 0 5px 16px rgba($primary, 0.45);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+  }
+}
+
+// ============================================================
+// Searchable Select — scoped overrides via ::ng-deep
+// Targets <app-searchable-select> inside the community modal.
+// Styled to match cm-input appearance + amber accent.
+// ============================================================
+
+.cm-field-group {
+  ::ng-deep app-searchable-select {
+    display: block;
+
+    .ss-host {
+      position: relative;
+      display: block;
+    }
+
+    // ── Trigger button — looks like cm-input ──────────────────
+    .ss-trigger {
+      width: 100%;
+      height: 46px;
+      padding: 0 38px 0 14px;
+      border: 1.5px solid $border !important;
+      border-radius: 10px;
+      font-size: 14px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      box-shadow: none !important;
+
+      &:focus,
+      &:focus-visible {
+        border-color: $primary !important;
+        background: $white;
+        box-shadow: 0 0 0 3px rgba($primary, 0.12) !important;
+        outline: none;
+      }
+
+      &.ss-placeholder .ss-trigger-text {
+        color: $gray-400;
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+    }
+
+    .ss-trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      color: $dark;
+    }
+
+    .ss-caret {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: $muted;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .ss-caret-open {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    // ── Dropdown panel ────────────────────────────────────────
+    .ss-panel {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      background: $white;
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    // ── Search bar ────────────────────────────────────────────
+    .ss-search-wrap {
+      position: relative;
+      padding: 10px 10px;
+      border-bottom: 1px solid $color-stone-200;
+      display: flex;
+      align-items: center;
+    }
+
+    .ss-search-icon {
+      position: absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: $muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ss-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 32px 0 34px;
+      border: 1.5px solid $border;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: $gray-400;
+      }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: $white;
+      }
+    }
+
+    .ss-clear-search {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $muted;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+
+      &:hover {
+        color: $dark;
+      }
+    }
+
+    // ── Options list ──────────────────────────────────────────
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: $color-stone-300;
+        border-radius: 4px;
+      }
+    }
+
+    .ss-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: $dark;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      list-style: none;
+
+      &:hover {
+        background: $amber-50;
+        color: $color-primary-darker;
+      }
+
+      &.ss-option-selected {
+        background: rgba($primary, 0.1);
+        color: $color-primary-darker;
+        font-weight: 600;
+      }
+    }
+
+    .ss-option-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ss-check {
+      color: $primary;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .ss-no-results {
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 13px;
+      color: $muted;
+      list-style: none;
+    }
   }
 }
