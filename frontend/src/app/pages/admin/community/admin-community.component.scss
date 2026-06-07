@@ -113,7 +113,7 @@
   }
 }
 
-// ── Toolbar (search + count badge) ───────────────────────────
+// ── Toolbar (legacy — kept for safety, no longer rendered) ───
 .page-toolbar {
   display: flex;
   align-items: center;
@@ -152,13 +152,429 @@
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 
-  &::placeholder {
-    color: $muted;
-  }
-
+  &::placeholder { color: $muted; }
   &:focus {
     border-color: $primary;
     box-shadow: 0 0 0 3px rgba($primary, 0.12);
+  }
+}
+
+// ── Community Filter Bar ──────────────────────────────────────
+.cf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 1.1rem;
+  padding: 1.2rem 1.5rem;
+  background: $white;
+  border: 1.5px solid $color-stone-200;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+// ── Filter groups ─────────────────────────────────────────────
+.cf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+
+  &--search  { flex: 1 1 220px; }
+  &--select  { flex: 0 1 160px; }
+  &--date    { flex: 0 1 148px; }
+  &--actions { flex: 0 0 auto;  }
+}
+
+.cf-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-stone-400;
+  white-space: nowrap;
+
+  // Invisible spacer so action buttons align with other input bottoms.
+  &--ghost {
+    color: transparent;
+    user-select: none;
+    pointer-events: none;
+  }
+}
+
+// ── Input wrapper (icon + control) ───────────────────────────
+.cf-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cf-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: $muted;
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1;
+}
+
+// ── Shared input base ─────────────────────────────────────────
+.cf-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 36px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: $dark;
+  background: $bg-neutral;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &::placeholder { color: $muted; }
+
+  &:focus {
+    border-color: $primary;
+    background: $white;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
+  }
+}
+
+// ── Filter bar SearchableSelect overrides ─────────────────────
+// Scoped to .cf-group so only the filter-bar dropdowns are targeted.
+.cf-group {
+  ::ng-deep app-searchable-select {
+    display: block;
+
+    .ss-host {
+      display: block;
+      position: relative;
+    }
+
+    // Trigger — matches .cf-input height and font
+    .ss-trigger {
+      width: 100%;
+      height: 42px;
+      padding: 0 34px 0 14px;
+      border: 1.5px solid $border !important;
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      box-shadow: none !important;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+      &:focus,
+      &:focus-visible {
+        border-color: $primary !important;
+        background: $white;
+        box-shadow: 0 0 0 3px rgba($primary, 0.12) !important;
+        outline: none;
+      }
+
+      &.ss-placeholder .ss-trigger-text {
+        color: $muted;
+      }
+    }
+
+    .ss-trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13.5px;
+      color: $dark;
+    }
+
+    .ss-caret {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: $muted;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .ss-caret-open {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    // Dropdown panel
+    .ss-panel {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      background: $white;
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    // Search bar
+    .ss-search-wrap {
+      position: relative;
+      padding: 8px;
+      border-bottom: 1px solid $color-stone-200;
+      display: flex;
+      align-items: center;
+    }
+
+    .ss-search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: $muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ss-search {
+      width: 100%;
+      height: 34px;
+      padding: 0 28px 0 32px;
+      border: 1.5px solid $border;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder { color: $muted; }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: $white;
+      }
+    }
+
+    .ss-clear-search {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $muted;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+
+      &:hover { color: $dark; }
+    }
+
+    // Options list
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
+    }
+
+    .ss-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      list-style: none;
+
+      &:hover {
+        background: $amber-50;
+        color: $color-primary-darker;
+      }
+
+      &.ss-option-selected {
+        background: rgba($primary, 0.1);
+        color: $color-primary-darker;
+        font-weight: 600;
+      }
+    }
+
+    .ss-option-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ss-check {
+      color: $primary;
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .ss-no-results {
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 12px;
+      color: $muted;
+      list-style: none;
+    }
+  }
+}
+
+// ── Date input ────────────────────────────────────────────────
+.cf-date {
+  padding-left: 36px;
+  color-scheme: light;
+
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0.45;
+    cursor: pointer;
+    filter: grayscale(0.8);
+    transition: opacity 0.15s;
+  }
+
+  &:hover::-webkit-calendar-picker-indicator { opacity: 0.75; filter: none; }
+  &:focus::-webkit-calendar-picker-indicator { opacity: 1;    filter: none; }
+}
+
+// ── Action buttons ────────────────────────────────────────────
+.cf-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-btn-search {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: $gradient-primary;
+  color: $color-on-primary;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba($primary, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba($primary, 0.42);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  i { font-size: 12px; }
+}
+
+.cf-btn-clear {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  background: $white;
+  color: $color-stone-500;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: rgba($danger, 0.5);
+    color: $danger;
+    background: rgba($danger, 0.04);
+  }
+
+  i { font-size: 12px; }
+}
+
+// ── Results summary row ───────────────────────────────────────
+.cf-results-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.cf-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: rgba($primary, 0.1);
+  color: $color-primary-darker;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba($primary, 0.22);
+
+  i { font-size: 11px; }
+}
+
+// ── Responsive: tablet + mobile ──────────────────────────────
+@media (max-width: 900px) {
+  .cf-group {
+    &--select { flex: 1 1 calc(50% - 6px); }
+    &--date   { flex: 1 1 calc(50% - 6px); }
+  }
+}
+
+@include media-sm-max {
+  .cf-bar {
+    padding: 1rem;
+    gap: 10px;
+  }
+
+  .cf-group {
+    &--search,
+    &--select,
+    &--date   { flex: 1 1 100%; }
+    &--actions { flex: 1 1 100%; }
+  }
+
+  .cf-actions {
+    width: 100%;
+  }
+
+  .cf-btn-search,
+  .cf-btn-clear {
+    flex: 1;
+    justify-content: center;
   }
 }
 
@@ -346,11 +762,20 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 14px rgba($primary, 0.32);
+  overflow: hidden;
 
   i {
     font-size: 1.35rem;
     color: $color-on-primary;
   }
+}
+
+.cc-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 0; // parent border-radius + overflow:hidden handles clipping
 }
 
 // Body
@@ -453,6 +878,50 @@
   i {
     font-size: 11px;
     color: $muted;
+  }
+
+  // Category tag icon gets a warm amber tint to stand out.
+  &:first-child i {
+    color: $primary;
+  }
+}
+
+// ── Visibility row + badge ────────────────────────────────────
+.cc-visibility-row {
+  margin-bottom: 12px;
+}
+
+.cc-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  i { font-size: 10px; }
+
+  // 🔒 Private — indigo
+  &--private {
+    background: rgba(99, 102, 241, 0.1);
+    color: #3730a3;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+  }
+
+  // 🌍 Global — teal/cyan
+  &--global {
+    background: rgba(6, 182, 212, 0.1);
+    color: #0e7490;
+    border: 1px solid rgba(6, 182, 212, 0.25);
+  }
+
+  // ⭐ Default — amber (matches design system primary)
+  &--default {
+    background: $amber-50;
+    color: $color-primary-darker;
+    border: 1px solid $color-amber-200;
   }
 }
 
@@ -803,6 +1272,16 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 2px;
+  border-radius: 12px;
+  padding: 2px;
+  transition: border 0.2s, background 0.2s;
+
+  // Error state — shown after a failed submit attempt
+  &.cm-toggle-group--error {
+    border: 1.5px solid rgba($danger, 0.55);
+    background: rgba($danger, 0.03);
+    padding: 6px 8px;
+  }
 }
 
 .cm-toggle-pill {
@@ -866,6 +1345,19 @@
       color: $primary;
       transform: translateY(-3px);
     }
+  }
+
+  // Error state — shown after failed submit with no image selected
+  &.cm-upload-zone--error {
+    border-color: rgba($danger, 0.6);
+    background: rgba($danger, 0.03);
+
+    .cm-upload-icon {
+      background: rgba($danger, 0.08);
+      i { color: $danger; }
+    }
+
+    .cm-upload-title { color: $danger; }
   }
 }
 
@@ -1033,6 +1525,19 @@
 // Targets <app-searchable-select> inside the community modal.
 // Styled to match cm-input appearance + amber accent.
 // ============================================================
+
+// Error state: when the parent cm-field-group has --error modifier,
+// the hidden trigger button gets a danger-colour border.
+.cm-field-group--error {
+  ::ng-deep app-searchable-select .ss-trigger {
+    border-color: $danger !important;
+
+    &:focus,
+    &:focus-visible {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1) !important;
+    }
+  }
+}
 
 .cm-field-group {
   ::ng-deep app-searchable-select {

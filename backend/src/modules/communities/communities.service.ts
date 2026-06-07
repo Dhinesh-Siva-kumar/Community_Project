@@ -40,21 +40,39 @@ export async function findAll(params: {
   limit: number;
   search?: string;
   pincode?: string;
+  skipActiveFilter?: boolean;
+  // ── New filter params ──────────────────────────────────────
+  country?: string;
+  category?: string;
+  visibility?: 'global' | 'private' | 'default';
+  from_date?: string;
+  to_date?: string;
 }) {
-  const { page, limit, search, pincode } = params;
+  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, from_date, to_date } = params;
   const offset = (page - 1) * limit;
 
   const query = db('communities as c')
-    .join('users as u', 'c.created_by_id', 'u.id')
-    .where('c.is_active', true)
+    // LEFT JOIN so communities whose creator was deleted are still returned.
+    .leftJoin('users as u', 'c.created_by_id', 'u.id')
+    // LEFT JOIN to resolve interest_id → category name without dropping unset communities.
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
     .select(
       'c.*',
       'u.id as creator_id',
       'u.user_name as creator_user_name',
       'u.display_name as creator_display_name',
+      'im.interest_name as category_name',
     );
 
-  const countQuery = db('communities').where({ is_active: true });
+  // Admin callers set skipActiveFilter=true to see all communities incl. inactive.
+  if (!skipActiveFilter) {
+    query.where('c.is_active', true);
+  }
+
+  const countQuery = db('communities');
+  if (!skipActiveFilter) {
+    countQuery.where({ is_active: true });
+  }
 
   if (search) {
     query.where(function () {
@@ -68,6 +86,48 @@ export async function findAll(params: {
   if (pincode) {
     query.andWhere('c.pincode', pincode);
     countQuery.andWhere({ pincode });
+  }
+
+  // ── Country exact-match filter ─────────────────────────────
+  if (country) {
+    query.where('c.country', country);
+    countQuery.where('country', country);
+  }
+
+  // ── Category filter via interest_master JOIN ───────────────
+  if (category) {
+    query.where('im.interest_name', category);
+    // countQuery has no interest_master JOIN, so use a subquery.
+    countQuery.whereIn(
+      'interest_id',
+      db('interest_master').select('interest_id').where('interest_name', category),
+    );
+  }
+
+  // ── Visibility filter ──────────────────────────────────────
+  if (visibility === 'global') {
+    query.where('c.is_global', true);
+    countQuery.where('is_global', true);
+  } else if (visibility === 'private') {
+    query.where('c.is_private', true);
+    countQuery.where('is_private', true);
+  } else if (visibility === 'default') {
+    query.where('c.is_default', true);
+    countQuery.where('is_default', true);
+  }
+
+  // ── Date-range filter on created_at ───────────────────────
+  if (from_date) {
+    query.where('c.created_at', '>=', from_date);
+    countQuery.where('created_at', '>=', from_date);
+  }
+  if (to_date) {
+    // Increment by one day so the entire to_date day is included.
+    const next = new Date(to_date);
+    next.setDate(next.getDate() + 1);
+    const nextStr = next.toISOString().substring(0, 10);
+    query.where('c.created_at', '<', nextStr);
+    countQuery.where('created_at', '<', nextStr);
   }
 
   const [communities, [{ total }]] = await Promise.all([
@@ -108,7 +168,8 @@ export async function findAll(params: {
 
 export async function findOne(id: string) {
   const community = await db('communities as c')
-    .join('users as u', 'c.created_by_id', 'u.id')
+    .leftJoin('users as u', 'c.created_by_id', 'u.id')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
     .where('c.id', id)
     .select(
       'c.*',
@@ -116,6 +177,7 @@ export async function findOne(id: string) {
       'u.user_name as creator_user_name',
       'u.display_name as creator_display_name',
       'u.email as creator_email',
+      'im.interest_name as category_name',
     )
     .first();
 

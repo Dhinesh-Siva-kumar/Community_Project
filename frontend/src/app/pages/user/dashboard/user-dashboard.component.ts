@@ -20,6 +20,7 @@ import {
   Job,
   PaginatedResponse,
 } from '../../../core/models';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 
 type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY';
 
@@ -51,7 +52,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [CommonModule, RouterLink, DatePipe, ImageUrlPipe],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })

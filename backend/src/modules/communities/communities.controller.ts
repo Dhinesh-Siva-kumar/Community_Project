@@ -4,8 +4,18 @@ import * as communitiesService from './communities.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const body = CreateCommunityDto.parse(req.body);
-    const result = await communitiesService.create(body, req.user!.sub);
+    const parsed = CreateCommunityDto.safeParse(req.body);
+    if (!parsed.success) {
+      // Collect the first message per field path; path [] becomes 'general'.
+      const errors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path.length ? issue.path.join('_') : 'general';
+        if (!errors[key]) errors[key] = issue.message;
+      }
+      res.status(400).json({ success: false, message: 'Validation failed', errors });
+      return;
+    }
+    const result = await communitiesService.create(parsed.data, req.user!.sub);
     res.status(201).json(result);
   } catch (err) { next(err); }
 }
@@ -13,7 +23,9 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListCommunitiesQueryDto.parse(req.query);
-    const result = await communitiesService.findAll(query);
+    // Admins see all communities (active + inactive); regular users see active only.
+    const skipActiveFilter = req.user!.role === 'ADMIN';
+    const result = await communitiesService.findAll({ ...query, skipActiveFilter });
     res.json(result);
   } catch (err) { next(err); }
 }

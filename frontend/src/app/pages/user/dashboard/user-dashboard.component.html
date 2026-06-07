@@ -297,7 +297,7 @@
           <a [routerLink]="['/user/community', community.id]" class="community-card">
             <div class="community-card-img">
               @if (community.image) {
-                <img [src]="community.image" [alt]="community.name" />
+                <img [src]="community.image | imageUrl" [alt]="community.name" />
               } @else {
                 <div class="community-card-placeholder">
                   <i class="bi bi-people-fill"></i>

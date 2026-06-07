@@ -151,10 +151,11 @@ export class AuthService {
   private handleAuthResponse(response: AuthResponse): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, response.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-    localStorage.setItem('auth_user', JSON.stringify(response.user));
-    this.currentUser.set(response.user);
+    const user = this.normalizeUser(response.user);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    this.currentUser.set(user);
     this.isAuthenticated.set(true);
-    this.authState$.next(response.user);
+    this.authState$.next(user);
   }
 
   private loadStoredAuth(): void {
@@ -168,7 +169,8 @@ export class AuthService {
     // Immediately restore from localStorage so UI never sees an empty currentUser on refresh
     if (storedUser) {
       try {
-        const user: User = JSON.parse(storedUser);
+        const raw = JSON.parse(storedUser);
+        const user = this.normalizeUser(raw);
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
         this.authState$.next(user);
@@ -185,5 +187,36 @@ export class AuthService {
     //     return of(null);
     //   })
     // ).subscribe();
+  }
+
+  /**
+   * Normalises a raw user object that may have either the old snake_case keys
+   * (stored in localStorage from a previous session) or the new camelCase keys
+   * returned by the fixed backend.  Always returns a fully-typed User.
+   */
+  private normalizeUser(raw: any): User {
+    return {
+      id:                  raw.id,
+      email:               raw.email ?? null,
+      userName:            raw.userName  || raw.user_name  || '',
+      displayName:         raw.displayName || raw.display_name || '',
+      roleLevel:           raw.roleLevel  ?? raw.role_level  ?? 1,
+      phoneNo:             raw.phoneNo    || raw.phone_no,
+      avatar:              raw.avatar     || undefined,
+      role:                raw.role       || 'USER',
+      countryId:           raw.countryId  ?? raw.country_id,
+      country:             raw.country    || '',
+      location:            raw.location   || undefined,
+      pincode:             raw.pincode    || undefined,
+      interests:           raw.interests  || [],
+      professionalCategory: raw.professionalCategory || raw.professional_category || undefined,
+      bio:                 raw.bio        || undefined,
+      isTrusted:           raw.isTrusted  ?? raw.is_trusted  ?? false,
+      isBlocked:           raw.isBlocked  ?? raw.is_blocked  ?? false,
+      isActive:            raw.isActive   ?? raw.is_active   ?? true,
+      profileCompletion:   raw.profileCompletion ?? raw.profile_completion ?? 0,
+      createdAt:           raw.createdAt  || raw.created_at  || '',
+      updatedAt:           raw.updatedAt  || raw.updated_at  || '',
+    };
   }
 }

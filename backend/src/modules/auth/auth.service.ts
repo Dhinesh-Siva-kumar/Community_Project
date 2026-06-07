@@ -54,10 +54,35 @@ function toJwtPayload(user: UserRow): JwtPayload {
   };
 }
 
-function stripSensitive(user: UserRow) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, refresh_token, google_id, ...safe } = user;
-  return safe;
+/**
+ * Maps a raw DB UserRow (snake_case) to the camelCase shape the frontend
+ * User interface expects.  Pass an explicit `roleLevel` to override the
+ * default (100 for ADMIN, 1 for everyone else).
+ */
+function toClientUser(user: UserRow, roleLevel?: number): object {
+  return {
+    id:                   user.id,
+    email:                user.email,
+    userName:             user.user_name,
+    displayName:          user.display_name,
+    phoneNo:              user.phone_no,
+    avatar:               user.avatar,
+    role:                 user.role,
+    roleLevel:            roleLevel ?? (user.role === 'ADMIN' ? 100 : 1),
+    countryId:            user.country_id,
+    country:              user.country,
+    location:             user.location,
+    pincode:              user.pincode,
+    interests:            user.interests,
+    professionalCategory: user.professional_category,
+    bio:                  user.bio,
+    isTrusted:            user.is_trusted,
+    isBlocked:            user.is_blocked,
+    isActive:             user.is_active,
+    profileCompletion:    user.profile_completion,
+    createdAt:            String(user.created_at),
+    updatedAt:            String(user.updated_at),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -110,10 +135,7 @@ export async function register(dto: RegisterDtoType) {
 
   return {
     ...tokens,
-    user: {
-      ...stripSensitive(user as UserRow),
-      roleLevel: 1,
-    },
+    user: toClientUser(user as UserRow, 1),
   };
 }
 
@@ -145,10 +167,7 @@ export async function login(dto: LoginDtoType) {
 
   return {
     ...tokens,
-    user: {
-      ...stripSensitive(user),
-      roleLevel: user.role === 'ADMIN' ? 100 : 1,
-    },
+    user: toClientUser(user),
   };
 }
 
@@ -178,10 +197,7 @@ export async function adminLogin(dto: LoginDtoType) {
 
   return {
     ...tokens,
-    user: {
-      ...stripSensitive(user),
-      roleLevel: 100,
-    },
+    user: toClientUser(user, 100),
   };
 }
 
@@ -302,10 +318,7 @@ export async function getProfile(userId: string) {
 
   if (!user) throw new AppError(401, 'User not found');
 
-  return {
-    ...stripSensitive(user),
-    roleLevel: user.role === 'ADMIN' ? 100 : 1,
-  };
+  return toClientUser(user);
 }
 
 // ---------------------------------------------------------------------------
@@ -398,7 +411,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
       needsUsername: false as const,
       isNewUser:     false as const,
       ...tokens,
-      user: { ...stripSensitive(existingGoogle), roleLevel: 1 },
+      user: toClientUser(existingGoogle, 1),
     };
   }
 
@@ -447,7 +460,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
     needsUsername: false as const,
     isNewUser:     true as const,
     ...tokens,
-    user: { ...stripSensitive(user as UserRow), roleLevel: 1 },
+    user: toClientUser(user as UserRow, 1),
   };
 }
 
@@ -470,7 +483,7 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
     return {
       isNewUser: false as const,
       ...tokens,
-      user: { ...stripSensitive(existingGoogle), roleLevel: 1 },
+      user: toClientUser(existingGoogle, 1),
     };
   }
 
@@ -505,6 +518,6 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   return {
     isNewUser: true as const,
     ...tokens,
-    user: { ...stripSensitive(user as UserRow), roleLevel: 1 },
+    user: toClientUser(user as UserRow, 1),
   };
 }

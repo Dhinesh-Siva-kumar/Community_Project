@@ -1,18 +1,41 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+
+// ── Module-level custom validators ──────────────────────────────────────────
+
+/** Fails when the trimmed value is empty (catches whitespace-only strings). */
+function noWhitespace(control: AbstractControl): ValidationErrors | null {
+  const val = ((control.value as string) ?? '').trim();
+  return val.length === 0 ? { whitespace: true } : null;
+}
+
+/**
+ * Fails when the trimmed value is shorter than `min`.
+ * Does NOT fail on empty/null (let `required` + `noWhitespace` handle that).
+ */
+function minLengthTrimmed(min: number) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = ((control.value as string) ?? '').trim();
+    return val.length > 0 && val.length < min
+      ? { minlengthTrimmed: { requiredLength: min, actualLength: val.length } }
+      : null;
+  };
+}
 
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
@@ -23,41 +46,64 @@ export class AdminCommunityComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+
   countries: Country[] = [];
   interests: interests[] = [];
   interestOptions: SelectOption[] = [];
   countryOptions: SelectOption[] = [];
 
-  // Signals
-  communities = signal<Community[]>([]);
-  loading = signal(true);
-  searchTerm = signal('');
-  currentPage = signal(1);
-  totalPages = signal(1);
-  totalItems = signal(0);
-  pageSize = signal(9);
-  submitting = signal(false);
-  showModal = signal(false);
-  editingCommunity = signal<Community | null>(null);
-  selectedImage = signal<File | null>(null);
-  imagePreview = signal<string | null>(null);
-  deleteConfirmId = signal<string | null>(null);
+  // ── Filter dropdown options ───────────────────────────────
+  filterCountryOptions:    SelectOption[] = [];
+  filterCategoryOptions:   SelectOption[] = [];
+  filterVisibilityOptions: SelectOption[] = [
+    { value: 'global',  label: 'Global'  },
+    { value: 'private', label: 'Private' },
+    { value: 'default', label: 'Default' },
+  ];
 
-  // Computed
-  filteredCommunities = computed(() => {
-    const term = this.searchTerm().toLowerCase();
-    if (!term) return this.communities();
-    return this.communities().filter(
-      (c) =>
-        c.name.toLowerCase().includes(term) ||
-        (c.description?.toLowerCase().includes(term))
-    );
-  });
+  // ── Signals ──────────────────────────────────────────────────
+  communities        = signal<Community[]>([]);
+  loading            = signal(true);
+  searchTerm         = signal('');
+  currentPage        = signal(1);
+  totalPages         = signal(1);
+  totalItems         = signal(0);
+  pageSize           = signal(9);
+  submitting         = signal(false);
+  showModal          = signal(false);
+  editingCommunity   = signal<Community | null>(null);
+  selectedImage      = signal<File | null>(null);
+  imagePreview       = signal<string | null>(null);
+  deleteConfirmId    = signal<string | null>(null);
+  formSubmitAttempted = signal(false);
 
-  isEditing = computed(() => !!this.editingCommunity());
-  modalTitle = computed(() => this.isEditing() ? 'Edit Community' : 'Create Community');
+  // ── Filter signals ────────────────────────────────────────
+  filterCountry    = signal<string | number | null>(null);
+  filterCategory   = signal<string | number | null>(null);
+  filterVisibility = signal<string | number | null>(null);
+  filterFromDate   = signal('');
+  filterToDate     = signal('');
 
-  // Form
+  // ── Computed ─────────────────────────────────────────────────
+  /** Server-side filtering: component list is whatever the API returned. */
+  filteredCommunities = computed(() => this.communities());
+
+  /** True when any search or filter criterion is active. */
+  hasActiveFilters = computed(() =>
+    !!(
+      this.searchTerm()      ||
+      this.filterCountry()   ||
+      this.filterCategory()  ||
+      this.filterVisibility() ||
+      this.filterFromDate()  ||
+      this.filterToDate()
+    ),
+  );
+
+  isEditing  = computed(() => !!this.editingCommunity());
+  modalTitle = computed(() => (this.isEditing() ? 'Edit Community' : 'Create Community'));
+
+  // ── Form ─────────────────────────────────────────────────────
   communityForm!: FormGroup;
 
   ngOnInit(): void {
@@ -68,66 +114,83 @@ export class AdminCommunityComponent implements OnInit {
   }
 
   initForm(): void {
-  this.communityForm = this.fb.group({
-    communityName: ['',[Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-    interests: [null, Validators.required],
-    description: ['',[Validators.maxLength(500)]],
-    image: [null], // file or URL
-    isPrivate: [false],
-    isGlobal: [false],
-    isDefault: [false],
-    countryId: [null]
-  });
+    this.communityForm = this.fb.group({
+      communityName: [
+        '',
+        [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(150)],
+      ],
+      interests:   [null, Validators.required],
+      description: ['', [Validators.required, noWhitespace, Validators.maxLength(500)]],
+      image:       [null],
+      isPrivate:   [false],
+      isGlobal:    [false],
+      isDefault:   [false],
+      countryId:   [null, Validators.required],
+    });
   }
 
   get f() {
-  return this.communityForm.controls;
+    return this.communityForm.controls;
   }
 
-loadCountries() {
-  this.authService.getCountries().subscribe({
-    next: (res) => {
-      this.countries = res.data;
-      this.countryOptions = this.countries.map(c => {
-        const flag = c.flag_emoji || [...c.iso2.toUpperCase()].map(ch => String.fromCodePoint(127397 + ch.charCodeAt(0))).join('');
-        return { value: c.id, label: `${flag} ${c.name}` };
-      });
-      const defaultCountry = this.countries.find(c => c.name === 'India');
-      if (defaultCountry) {
-        this.communityForm.patchValue({
-          countryId: defaultCountry.id
+  // ── Data loading ─────────────────────────────────────────────
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.countries = res.data;
+        this.countryOptions = this.countries.map((c) => {
+          const flag =
+            c.flag_emoji ||
+            [...c.iso2.toUpperCase()]
+              .map((ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)))
+              .join('');
+          return { value: c.id, label: `${flag} ${c.name}` };
         });
-      }
-    },
-    error: () => {
-      this.toastService.error('Failed to load countries');
-    }
-  });
-}
+        this.filterCountryOptions = this.countries.map((c) => ({
+          value: c.name,
+          label: c.name,
+        }));
+        // Pre-select India as default for new communities.
+        const defaultCountry = this.countries.find((c) => c.name === 'India');
+        if (defaultCountry) {
+          this.communityForm.patchValue({ countryId: defaultCountry.id });
+        }
+      },
+      error: () => this.toastService.error('Failed to load countries'),
+    });
+  }
 
-loadInterests() {
-  this.authService.getInterests().subscribe({
-    next: (res) => {
-      this.interests = res.data;
-      this.interestOptions = this.interests.map(i => ({ value: i.interest_id, label: i.interest_name }));
-    },
-    error: () => {
-      this.toastService.error('Failed to load countries');
-    }
-  });
-}
-
-  
+  loadInterests(): void {
+    this.authService.getInterests().subscribe({
+      next: (res) => {
+        this.interests = res.data;
+        this.interestOptions = this.interests.map((i) => ({
+          value: i.interest_id,
+          label: i.interest_name,
+        }));
+        this.filterCategoryOptions = this.interests.map((i) => ({
+          value: i.interest_name,
+          label: i.interest_name,
+        }));
+      },
+      error: () => this.toastService.error('Failed to load interests'),
+    });
+  }
 
   loadCommunities(): void {
     this.loading.set(true);
-    
     const params: Record<string, any> = {
       user_id: this.authService.currentUser()?.id ?? 39,
       page: this.currentPage(),
       limit: this.pageSize(),
     };
-    console.log('Params:', params);
+    // Only append filter params when they carry a non-empty value.
+    if (this.searchTerm())       params['search']     = this.searchTerm();
+    if (this.filterCountry())    params['country']    = String(this.filterCountry());
+    if (this.filterCategory())   params['category']   = String(this.filterCategory());
+    if (this.filterVisibility()) params['visibility'] = String(this.filterVisibility());
+    if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
+    if (this.filterToDate())     params['to_date']    = this.filterToDate();
 
     this.communityService.getCommunities(params).subscribe({
       next: (response: PaginatedResponse<Community>) => {
@@ -143,20 +206,61 @@ loadInterests() {
     });
   }
 
+  // ── Search / pagination ───────────────────────────────────────
   onSearch(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(value);
+    this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
+  /** Apply all active filters — resets to page 1 and fires the API call. */
+  applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadCommunities();
+  }
+
+  /** Reset every filter signal to empty and reload the unfiltered list. */
+  clearFilters(): void {
+    this.searchTerm.set('');
+    this.filterCountry.set(null);
+    this.filterCategory.set(null);
+    this.filterVisibility.set(null);
+    this.filterFromDate.set('');
+    this.filterToDate.set('');
+    this.currentPage.set(1);
+    this.loadCommunities();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadCommunities();
+  }
+
+  getPages(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let start = Math.max(1, current - Math.floor(maxVisible / 2));
+    let end = Math.min(total, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+
+  // ── Modal open / close ────────────────────────────────────────
   openCreateModal(): void {
     this.editingCommunity.set(null);
-    const defaultInterest = this.interests.find(i => i.interest_name === 'Jobs');
     this.communityForm.reset();
-    if (defaultInterest) {
-        this.communityForm.patchValue({
-         interests: defaultInterest.interest_id
-        });
-      }
+    this.formSubmitAttempted.set(false);
+
+    // Re-apply defaults that reset() clears.
+    const patches: Record<string, unknown> = {};
+    const defaultInterest = this.interests.find((i) => i.interest_name === 'Jobs');
+    if (defaultInterest) patches['interests'] = defaultInterest.interest_id;
+    const defaultCountry = this.countries.find((c) => c.name === 'India');
+    if (defaultCountry) patches['countryId'] = defaultCountry.id;
+    if (Object.keys(patches).length) this.communityForm.patchValue(patches);
+
     this.selectedImage.set(null);
     this.imagePreview.set(null);
     this.showModal.set(true);
@@ -164,10 +268,16 @@ loadInterests() {
 
   openEditModal(community: Community): void {
     this.editingCommunity.set(community);
+    this.formSubmitAttempted.set(false);
+    const c = community as any;
     this.communityForm.patchValue({
       communityName: community.name,
-      description: community.description,
-      image: community.image,
+      description:   community.description ?? '',
+      interests:     c['interest_id'] ?? null,
+      countryId:     c['country_id'] ?? null,
+      isPrivate:     c['is_private'] ?? false,
+      isGlobal:      c['is_global'] ?? false,
+      isDefault:     c['is_default'] ?? false,
     });
     this.imagePreview.set(community.image || null);
     this.selectedImage.set(null);
@@ -178,20 +288,35 @@ loadInterests() {
     this.showModal.set(false);
     this.editingCommunity.set(null);
     this.communityForm.reset();
+    this.formSubmitAttempted.set(false);
     this.selectedImage.set(null);
     this.imagePreview.set(null);
   }
 
+  // ── Image handling ────────────────────────────────────────────
   onImageSelect(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.selectedImage.set(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview.set(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    // Client-side type guard (accept="image/*" can be bypassed).
+    if (!file.type.startsWith('image/')) {
+      this.toast.error('Only image files are supported (PNG, JPG, WEBP).');
+      input.value = '';
+      return;
     }
+
+    // 5 MB cap.
+    if (file.size > 5 * 1024 * 1024) {
+      this.toast.error('Image must be less than 5 MB.');
+      input.value = '';
+      return;
+    }
+
+    this.selectedImage.set(file);
+    const reader = new FileReader();
+    reader.onload = () => this.imagePreview.set(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   removeImage(): void {
@@ -199,50 +324,69 @@ loadInterests() {
     this.imagePreview.set(null);
   }
 
+  // ── Form submission ───────────────────────────────────────────
   submitForm(): void {
-    if (this.communityForm.invalid) {
-      this.communityForm.markAllAsTouched();
+    this.formSubmitAttempted.set(true);
+    this.communityForm.markAllAsTouched();
+
+    const formData = this.communityForm.value;
+
+    // Image required on create.
+    const imageValid = this.isEditing() || !!this.imagePreview();
+    // At least one of Private / Global required on create.
+    const visibilityValid = this.isEditing() || formData.isPrivate || formData.isGlobal;
+
+    if (this.communityForm.invalid || !imageValid || !visibilityValid) {
+      this.scrollToFirstError();
       return;
     }
 
     this.submitting.set(true);
-    const formData = this.communityForm.value;
-    const image = this.selectedImage();
+    const file = this.selectedImage();
 
-    const communityData = { ...this.communityForm.value };
+    // Upload image first (if a new file was chosen), then create/update.
+    const upload$: Observable<{ path: string } | null> = file
+      ? this.apiService.postWithFile<{ path: string }>('/upload', {}, [{ field: 'file', file }])
+      : of(null);
 
-    const payload = this.mapToPayload(communityData);
-
-    if (this.isEditing()) {
-        const editId = this.editingCommunity()?.id!;
-        this.communityService.updateCommunity(editId, payload).subscribe({
-          next: () => {
-            this.toast.success('Community updated successfully');
-            this.closeModal();
-            this.loadCommunities();
-            this.submitting.set(false);
-          },
-          error: () => {
-            this.toast.error('Failed to update community');
-            this.submitting.set(false);
-          },
-        });
-    } else {
-        this.communityService.createCommunity(payload).subscribe({
-          next: () => {
-            this.toast.success('Community created successfully');
-            this.closeModal();
-            this.loadCommunities();
-            this.submitting.set(false);
-          },
-          error: () => {
-            this.toast.error('Failed to create community');
-            this.submitting.set(false);
-          },
-        });
-    }
+    upload$
+      .pipe(
+        switchMap((uploadResult: { path: string } | null) => {
+          const payload = this.mapToPayload(formData, uploadResult?.path ?? null);
+          return this.isEditing()
+            ? this.communityService.updateCommunity(this.editingCommunity()!.id, payload)
+            : this.communityService.createCommunity(payload);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.toast.success(
+            this.isEditing() ? 'Community updated successfully' : 'Community created successfully',
+          );
+          this.closeModal();
+          this.loadCommunities();
+          this.submitting.set(false);
+        },
+        error: () => {
+          this.toast.error(
+            this.isEditing() ? 'Failed to update community' : 'Failed to create community',
+          );
+          this.submitting.set(false);
+        },
+      });
   }
 
+  /** Scrolls the modal body to the first visible error message. */
+  private scrollToFirstError(): void {
+    setTimeout(() => {
+      const firstError = document.querySelector<HTMLElement>('.cm-error-msg');
+      firstError
+        ?.closest<HTMLElement>('.cm-field-group, .cm-section')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  }
+
+  // ── Delete ────────────────────────────────────────────────────
   confirmDelete(id: string): void {
     this.deleteConfirmId.set(id);
   }
@@ -265,34 +409,21 @@ loadInterests() {
     });
   }
 
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadCommunities();
-  }
-
-  getPages(): number[] {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const pages: number[] = [];
-    const maxVisible = 5;
-
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-    start = Math.max(1, end - maxVisible + 1);
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
+  // ── Display helpers ───────────────────────────────────────────
+  formatDate(dateStr: string | undefined): string {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: '2-digit',
       month: 'short',
-      day: 'numeric',
+      year: 'numeric',
     });
+  }
+
+  getVisibility(community: Community): 'Private' | 'Global' | 'Default' | null {
+    if (community.is_private) return 'Private';
+    if (community.is_global)  return 'Global';
+    if (community.is_default) return 'Default';
+    return null;
   }
 
   truncate(text: string | undefined, length: number): string {
@@ -300,10 +431,28 @@ loadInterests() {
     return text.length > length ? text.substring(0, length) + '...' : text;
   }
 
-  private mapToPayload(form: any): CommunityRequest {
+  // ── Payload builder ───────────────────────────────────────────
+  private mapToPayload(form: any, newImageUrl: string | null): CommunityRequest {
+    const selectedCountry = this.countries.find((c) => c.id === form.countryId);
+
+    // Resolution order: fresh upload > existing preview (edit) > undefined.
+    let image: string | undefined;
+    if (newImageUrl) {
+      image = newImageUrl;
+    } else if (!this.selectedImage() && this.imagePreview()) {
+      image = this.imagePreview()!;
+    }
+
     return {
-      name: form.communityName,
-      description: form.description,
+      name:        form.communityName,
+      description: form.description || undefined,
+      image,
+      interest_id: form.interests   || undefined,
+      country:     selectedCountry?.name,
+      country_id:  form.countryId   || undefined,
+      is_private:  form.isPrivate   ?? false,
+      is_global:   form.isGlobal    ?? false,
+      is_default:  form.isDefault   ?? false,
     };
   }
 }

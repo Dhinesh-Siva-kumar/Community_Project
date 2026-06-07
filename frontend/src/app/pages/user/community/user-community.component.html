@@ -118,7 +118,7 @@
           <div class="featured-cover">
             @if (community.image) {
               <img
-                [src]="community.image"
+                [src]="community.image | imageUrl"
                 [alt]="community.name"
                 class="featured-cover-img"
                 loading="lazy"
@@ -295,7 +295,7 @@
             <div class="cc-cover">
               @if (community.image) {
                 <img
-                  [src]="community.image"
+                  [src]="community.image | imageUrl"
                   [alt]="community.name + ' cover image'"
                   class="cc-cover-img"
                   loading="lazy"

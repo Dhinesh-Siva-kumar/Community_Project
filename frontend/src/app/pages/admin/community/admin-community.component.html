@@ -28,41 +28,142 @@
     </button>
   </div>
 
-  <!-- ── Toolbar ───────────────────────────────────────────── -->
-  <div class="page-toolbar">
-    <div class="page-search-wrap">
-      <i class="bi bi-search page-search-icon"></i>
-      <input
-        type="text"
-        class="page-search-input"
-        placeholder="Search communities..."
-        [value]="searchTerm()"
-        (input)="onSearch($event)"
-      />
+  <!-- ── Filter Bar ───────────────────────────────────────────── -->
+  <div class="cf-bar">
+
+    <!-- Search text -->
+    <div class="cf-group cf-group--search">
+      <label class="cf-label">Search</label>
+      <div class="cf-input-wrap">
+        <i class="bi bi-search cf-icon"></i>
+        <input
+          type="text"
+          class="cf-input"
+          placeholder="Name or description…"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          (keyup.enter)="applyFilters()"
+        />
+      </div>
     </div>
+
+    <!-- Country -->
+    <div class="cf-group cf-group--select">
+      <label class="cf-label">Country</label>
+      <app-searchable-select
+        [options]="filterCountryOptions"
+        [ngModel]="filterCountry()"
+        (ngModelChange)="filterCountry.set($event)"
+        placeholder="All Countries"
+      ></app-searchable-select>
+    </div>
+
+    <!-- Category -->
+    <div class="cf-group cf-group--select">
+      <label class="cf-label">Category</label>
+      <app-searchable-select
+        [options]="filterCategoryOptions"
+        [ngModel]="filterCategory()"
+        (ngModelChange)="filterCategory.set($event)"
+        placeholder="All Categories"
+      ></app-searchable-select>
+    </div>
+
+    <!-- Visibility -->
+    <div class="cf-group cf-group--select">
+      <label class="cf-label">Visibility</label>
+      <app-searchable-select
+        [options]="filterVisibilityOptions"
+        [ngModel]="filterVisibility()"
+        (ngModelChange)="filterVisibility.set($event)"
+        placeholder="All Types"
+      ></app-searchable-select>
+    </div>
+
+    <!-- From date -->
+    <div class="cf-group cf-group--date">
+      <label class="cf-label">From</label>
+      <div class="cf-input-wrap">
+        <i class="bi bi-calendar-range cf-icon"></i>
+        <input
+          type="date"
+          class="cf-input cf-date"
+          [ngModel]="filterFromDate()"
+          (ngModelChange)="filterFromDate.set($event)"
+        />
+      </div>
+    </div>
+
+    <!-- To date -->
+    <div class="cf-group cf-group--date">
+      <label class="cf-label">To</label>
+      <div class="cf-input-wrap">
+        <i class="bi bi-calendar-range cf-icon"></i>
+        <input
+          type="date"
+          class="cf-input cf-date"
+          [ngModel]="filterToDate()"
+          (ngModelChange)="filterToDate.set($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="cf-group cf-group--actions">
+      <span class="cf-label cf-label--ghost">&#8203;</span>
+      <div class="cf-actions">
+        <button class="cf-btn-search" [disabled]="loading()" (click)="applyFilters()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Searching…
+          } @else {
+            <i class="bi bi-search me-1"></i>Search
+          }
+        </button>
+        @if (hasActiveFilters()) {
+          <button class="cf-btn-clear" (click)="clearFilters()" title="Clear all filters">
+            <i class="bi bi-x-circle me-1"></i>Clear
+          </button>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Results summary row -->
+  <div class="cf-results-row">
     <span class="page-count-badge">
       <i class="bi bi-grid-3x3-gap-fill me-1"></i>
       {{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }}
     </span>
+    @if (hasActiveFilters()) {
+      <span class="cf-active-badge">
+        <i class="bi bi-funnel-fill me-1"></i>Filters applied
+      </span>
+    }
   </div>
 
   <!-- ── Empty State ───────────────────────────────────────── -->
-  @if (filteredCommunities().length === 0) {
+  @if (communities().length === 0) {
     <div class="page-empty">
       <div class="page-empty-icon">
         <i class="bi bi-people"></i>
       </div>
       <h5 class="page-empty-title">
-        {{ searchTerm() ? 'No results found' : 'No communities yet' }}
+        {{ hasActiveFilters() ? 'No results found' : 'No communities yet' }}
       </h5>
       <p class="page-empty-text">
-        @if (searchTerm()) {
-          No communities match "<strong>{{ searchTerm() }}</strong>". Try a different term.
+        @if (hasActiveFilters()) {
+          No communities match your current filters.
         } @else {
           Get started by creating your first community.
         }
       </p>
-      @if (!searchTerm()) {
+      @if (hasActiveFilters()) {
+        <button class="cf-btn-clear" (click)="clearFilters()">
+          <i class="bi bi-x-circle me-2"></i>Clear Filters
+        </button>
+      } @else {
         <button class="page-cta-btn" (click)="openCreateModal()">
           <i class="bi bi-plus-lg me-2"></i>Create Community
         </button>
@@ -73,21 +174,21 @@
 
     <!-- ── Cards Grid ───────────────────────────────────────── -->
     <div class="row g-4 mb-2">
-      @for (community of filteredCommunities(); track community.id) {
+      @for (community of communities(); track community.id) {
         <div class="col-12 col-md-6 col-xl-4">
           <div class="community-card h-100">
 
             <!-- Head: compact strip — cover image or amber gradient -->
             <div class="cc-head"
                  [class.cc-head--img]="!!community.image"
-                 [style.backgroundImage]="community.image ? 'url(' + community.image + ')' : null">
+                 [style.backgroundImage]="community.image ? 'url(' + (community.image | imageUrl) + ')' : null">
               <span class="cc-status-tag"
-                    [class.cc-status-tag--active]="community.isActive"
-                    [class.cc-status-tag--inactive]="!community.isActive">
+                    [class.cc-status-tag--active]="community.is_active"
+                    [class.cc-status-tag--inactive]="!community.is_active">
                 <i class="bi"
-                   [class.bi-check-circle-fill]="community.isActive"
-                   [class.bi-dash-circle-fill]="!community.isActive"></i>
-                {{ community.isActive ? 'Active' : 'Inactive' }}
+                   [class.bi-check-circle-fill]="community.is_active"
+                   [class.bi-dash-circle-fill]="!community.is_active"></i>
+                {{ community.is_active ? 'Active' : 'Inactive' }}
               </span>
             </div>
 
@@ -96,7 +197,11 @@
               <!-- Avatar — overlaps head/body seam -->
               <div class="cc-avatar-wrap">
                 <div class="cc-avatar">
-                  <i class="bi bi-people-fill"></i>
+                  @if (community.image) {
+                    <img [src]="community.image | imageUrl" [alt]="community.name" class="cc-avatar-img" />
+                  } @else {
+                    <i class="bi bi-people-fill"></i>
+                  }
                 </div>
               </div>
 
@@ -120,17 +225,37 @@
                 </span>
               </div>
 
-              <!-- Meta -->
+              <!-- Meta — category · country · date -->
               <div class="cc-meta">
-                @if (community.location) {
-                  <span class="cc-meta-item">
-                    <i class="bi bi-geo-alt-fill"></i>{{ community.location }}
-                  </span>
-                }
                 <span class="cc-meta-item">
-                  <i class="bi bi-calendar3"></i>{{ formatDate(community.createdAt) }}
+                  <i class="bi bi-tag-fill"></i>
+                  {{ community.category_name || 'Uncategorized' }}
+                </span>
+                <span class="cc-meta-item">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  {{ community.country || 'Not Specified' }}
+                </span>
+                <span class="cc-meta-item">
+                  <i class="bi bi-calendar3"></i>
+                  {{ formatDate(community.created_at) }}
                 </span>
               </div>
+
+              <!-- Visibility badge — only shown when a flag is set -->
+              @if (getVisibility(community); as vis) {
+                <div class="cc-visibility-row">
+                  <span class="cc-visibility-badge"
+                        [class.cc-visibility-badge--private]="community.is_private"
+                        [class.cc-visibility-badge--global]="community.is_global"
+                        [class.cc-visibility-badge--default]="community.is_default">
+                    <i class="bi"
+                       [class.bi-lock-fill]="community.is_private"
+                       [class.bi-globe2]="community.is_global"
+                       [class.bi-star-fill]="community.is_default"></i>
+                    {{ vis }}
+                  </span>
+                </div>
+              }
 
               <!-- Actions -->
               <div class="cc-actions">
@@ -242,15 +367,19 @@
                   @if (f['communityName'].touched && f['communityName'].invalid) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>
-                      @if (f['communityName'].errors?.['required']) { Community Name is required. }
-                      @else if (f['communityName'].errors?.['minlength']) { Minimum 3 characters required. }
-                      @else if (f['communityName'].errors?.['maxlength']) { Maximum 150 characters allowed. }
+                      @if (f['communityName'].errors?.['required'] || f['communityName'].errors?.['whitespace']) {
+                        Community Name is required.
+                      } @else if (f['communityName'].errors?.['minlengthTrimmed']) {
+                        Community Name must contain at least 3 characters.
+                      } @else if (f['communityName'].errors?.['maxlength']) {
+                        Maximum 150 characters allowed.
+                      }
                     </div>
                   }
                 </div>
 
                 <!-- Category -->
-                <div class="cm-field-group">
+                <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
                   <label class="cm-label">Category <span class="cm-required">*</span></label>
                   <app-searchable-select
                     formControlName="interests"
@@ -268,7 +397,7 @@
               <!-- Description -->
               <div class="cm-field-group">
                 <div class="cm-label-row">
-                  <label class="cm-label">Description</label>
+                  <label class="cm-label">Description <span class="cm-required">*</span></label>
                   <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/500</span>
                 </div>
                 <div class="cm-input-wrap cm-textarea-wrap">
@@ -282,9 +411,14 @@
                     [class.cm-input-error]="f['description'].touched && f['description'].invalid"
                   ></textarea>
                 </div>
-                @if (f['description'].touched && f['description'].errors?.['maxlength']) {
+                @if (f['description'].touched && f['description'].invalid) {
                   <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>Maximum 500 characters allowed.
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    @if (f['description'].errors?.['required'] || f['description'].errors?.['whitespace']) {
+                      Description is required.
+                    } @else if (f['description'].errors?.['maxlength']) {
+                      Maximum 500 characters allowed.
+                    }
                   </div>
                 }
               </div>
@@ -301,19 +435,25 @@
 
               <div class="cm-field-row">
                 <!-- Country -->
-                <div class="cm-field-group">
-                  <label class="cm-label">Country</label>
+                <div class="cm-field-group" [class.cm-field-group--error]="f['countryId'].touched && f['countryId'].invalid">
+                  <label class="cm-label">Country <span class="cm-required">*</span></label>
                   <app-searchable-select
                     formControlName="countryId"
                     [options]="countryOptions"
                     placeholder="Select country"
                   ></app-searchable-select>
+                  @if (f['countryId'].touched && f['countryId'].invalid) {
+                    <div class="cm-error-msg">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please select a country.
+                    </div>
+                  }
                 </div>
 
                 <!-- Visibility Toggles -->
                 <div class="cm-field-group">
-                  <label class="cm-label">Visibility Options</label>
-                  <div class="cm-toggle-group">
+                  <label class="cm-label">Visibility Options <span class="cm-required">*</span></label>
+                  <div class="cm-toggle-group"
+                       [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['isPrivate'].value && !f['isGlobal'].value">
                     <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isPrivate'].value">
                       <input type="checkbox" formControlName="isPrivate" id="isPrivate" hidden />
                       <i class="bi bi-lock-fill me-1"></i> Private
@@ -327,6 +467,11 @@
                       <i class="bi bi-star-fill me-1"></i> Default
                     </label>
                   </div>
+                  @if (formSubmitAttempted() && !isEditing() && !f['isPrivate'].value && !f['isGlobal'].value) {
+                    <div class="cm-error-msg">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
+                    </div>
+                  }
                 </div>
               </div>
             </div>
@@ -353,12 +498,20 @@
                   </div>
                 </div>
               } @else {
-                <div class="cm-upload-zone" (click)="imageInput.click()">
+                <div class="cm-upload-zone"
+                     [class.cm-upload-zone--error]="formSubmitAttempted() && !isEditing() && !imagePreview()"
+                     (click)="imageInput.click()">
                   <div class="cm-upload-icon">
                     <i class="bi bi-cloud-arrow-up-fill"></i>
                   </div>
                   <p class="cm-upload-title">Click to upload a cover image</p>
                   <p class="cm-upload-hint">PNG, JPG, WEBP supported &middot; Max 5 MB</p>
+                </div>
+              }
+
+              @if (formSubmitAttempted() && !isEditing() && !imagePreview()) {
+                <div class="cm-error-msg mt-2">
+                  <i class="bi bi-exclamation-circle me-1"></i>Community image is required.
                 </div>
               }
 
@@ -376,7 +529,7 @@
           <button
             type="button"
             class="cm-btn-submit"
-            [disabled]="submitting() || communityForm.invalid"
+            [disabled]="submitting()"
             (click)="submitForm()"
           >
             @if (submitting()) {

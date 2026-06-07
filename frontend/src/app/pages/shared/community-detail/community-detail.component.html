@@ -109,7 +109,7 @@
     <!-- Banner: only shown when community has an image -->
     @if (community()!.image) {
       <div class="cd-hero-banner">
-        <img [src]="community()!.image" [alt]="community()!.name" class="cd-banner-img" />
+        <img [src]="community()!.image | imageUrl" [alt]="community()!.name" class="cd-banner-img" />
         <div class="cd-banner-overlay"></div>
       </div>
     } @else {
@@ -124,7 +124,7 @@
         <!-- Community Avatar -->
         <div class="cd-community-avatar" [class.cd-community-avatar--lg]="!community()!.image">
           @if (community()!.image) {
-            <img [src]="community()!.image" [alt]="community()!.name" />
+            <img [src]="community()!.image | imageUrl" [alt]="community()!.name" />
           } @else {
             <div class="cd-avatar-placeholder">
               <i class="bi bi-people-fill"></i>
@@ -139,6 +139,10 @@
             <span class="cd-status-badge {{ getCommunityStatus().cls }}">
               <span class="cd-status-dot"></span>
               {{ getCommunityStatus().label }}
+            </span>
+            <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
+              <i class="bi {{ getVisibilityInfo().icon }}"></i>
+              {{ getVisibilityInfo().label }}
             </span>
             <!-- Admin compact icon actions -->
             @if (isAdmin()) {
@@ -165,13 +169,19 @@
             <span class="cd-chip cd-chip-posts">
               <i class="bi bi-file-earmark-text-fill"></i>{{ postCount() }} posts
             </span>
+            <span class="cd-chip cd-chip-category">
+              <i class="bi bi-tag-fill"></i>{{ community()!.category_name || 'Uncategorized' }}
+            </span>
+            <span class="cd-chip cd-chip-country">
+              <i class="bi bi-globe2"></i>{{ community()!.country || 'Not Specified' }}
+            </span>
             @if (community()!.location) {
               <span class="cd-chip cd-chip-location">
                 <i class="bi bi-geo-alt-fill"></i>{{ community()!.location }}
               </span>
             }
             <span class="cd-chip cd-chip-date">
-              <i class="bi bi-calendar3"></i>{{ formatDate(community()!.createdAt) }}
+              <i class="bi bi-calendar3"></i>{{ formatDate(community()!.created_at || community()!.createdAt) }}
             </span>
           </div>
         </div>
@@ -927,6 +937,24 @@
                   </div>
                 </div>
 
+                <!-- Category -->
+                <div class="cd-info-row info-item-animate" style="animation-delay:40ms">
+                  <div class="cd-info-icon"><i class="bi bi-tag-fill"></i></div>
+                  <div class="cd-info-content">
+                    <span class="cd-info-label">Category</span>
+                    <p class="cd-info-value">{{ community()!.category_name || 'Uncategorized' }}</p>
+                  </div>
+                </div>
+
+                <!-- Country -->
+                <div class="cd-info-row info-item-animate" style="animation-delay:50ms">
+                  <div class="cd-info-icon"><i class="bi bi-globe2"></i></div>
+                  <div class="cd-info-content">
+                    <span class="cd-info-label">Country</span>
+                    <p class="cd-info-value">{{ community()!.country || 'Not Specified' }}</p>
+                  </div>
+                </div>
+
                 <!-- Status -->
                 <div class="cd-info-row info-item-animate" style="animation-delay:60ms">
                   <div class="cd-info-icon"><i class="bi bi-shield-check-fill"></i></div>
@@ -934,6 +962,18 @@
                     <span class="cd-info-label">Status</span>
                     <span class="cd-inline-status {{ getCommunityStatus().cls }}">
                       <span class="cd-status-dot"></span>{{ getCommunityStatus().label }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Visibility -->
+                <div class="cd-info-row info-item-animate" style="animation-delay:70ms">
+                  <div class="cd-info-icon"><i class="bi {{ getVisibilityInfo().icon }}"></i></div>
+                  <div class="cd-info-content">
+                    <span class="cd-info-label">Visibility</span>
+                    <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
+                      <i class="bi {{ getVisibilityInfo().icon }}"></i>
+                      {{ getVisibilityInfo().label }}
                     </span>
                   </div>
                 </div>
@@ -965,7 +1005,7 @@
                   <div class="cd-info-icon"><i class="bi bi-calendar3"></i></div>
                   <div class="cd-info-content">
                     <span class="cd-info-label">Created</span>
-                    <p class="cd-info-value">{{ formatDate(community()!.createdAt) }}</p>
+                    <p class="cd-info-value">{{ formatDate(community()!.created_at || community()!.createdAt) }}</p>
                   </div>
                 </div>
 
@@ -974,7 +1014,7 @@
                   <div class="cd-info-icon"><i class="bi bi-arrow-clockwise"></i></div>
                   <div class="cd-info-content">
                     <span class="cd-info-label">Last Updated</span>
-                    <p class="cd-info-value">{{ formatDate(community()!.updatedAt) }}</p>
+                    <p class="cd-info-value">{{ formatDate(community()!.updated_at || community()!.updatedAt) }}</p>
                   </div>
                 </div>
 

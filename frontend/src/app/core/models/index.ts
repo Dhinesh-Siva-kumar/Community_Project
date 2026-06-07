@@ -59,6 +59,12 @@ export interface CommunityRequest {
   image?: string;
   location?: string;
   pincode?: string;
+  interest_id?: number;
+  country?: string;
+  country_id?: number;
+  is_private?: boolean;
+  is_global?: boolean;
+  is_default?: boolean;
 }
 
 export interface Community {
@@ -76,6 +82,21 @@ export interface Community {
   _count?: { members: number; posts: number };
   // Computed/joined fields used in UI
   is_joined?: boolean;
+  // Snake_case fields returned as-is from the DB via knex c.* spread.
+  // isActive/createdAt/updatedAt above are camelCase aliases that are never
+  // actually populated by the API; use these snake_case keys for reliable access.
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  // Extended fields added in migration 20240003
+  interest_id?: number;
+  country?: string;
+  country_id?: number;
+  is_private?: boolean;
+  is_global?: boolean;
+  is_default?: boolean;
+  // Joined field from interest_master (resolved via category JOIN in service)
+  category_name?: string;
 }
 
 export interface CommunityMember {

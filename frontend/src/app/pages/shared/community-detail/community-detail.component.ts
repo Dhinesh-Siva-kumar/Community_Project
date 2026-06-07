@@ -8,13 +8,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 
 type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageUrlPipe],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -89,7 +90,8 @@ export class CommunityDetailComponent implements OnInit {
   daysActive = computed(() => {
     const c = this.community();
     if (!c) return 0;
-    return Math.floor((Date.now() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    const dateStr = c.created_at ?? c.createdAt;
+    return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
   });
 
   ngOnInit(): void {
@@ -345,9 +347,18 @@ export class CommunityDetailComponent implements OnInit {
   getCommunityStatus(): { label: string; cls: string } {
     const c = this.community();
     if (!c) return { label: 'Unknown', cls: '' };
-    return c.isActive
+    const active = c.is_active ?? c.isActive;
+    return active
       ? { label: 'Active',   cls: 'cd-status-active'   }
       : { label: 'Inactive', cls: 'cd-status-inactive' };
+  }
+
+  getVisibilityInfo(): { label: string; icon: string; cls: string } {
+    const c = this.community();
+    if (!c) return { label: 'Default', icon: 'bi-eye',        cls: 'cd-vis--default' };
+    if (c.is_private) return { label: 'Private', icon: 'bi-lock-fill', cls: 'cd-vis--private' };
+    if (c.is_global)  return { label: 'Global',  icon: 'bi-globe2',    cls: 'cd-vis--global'  };
+    return { label: 'Default', icon: 'bi-eye', cls: 'cd-vis--default' };
   }
 
   // ── Utility ───────────────────────────────────────────────

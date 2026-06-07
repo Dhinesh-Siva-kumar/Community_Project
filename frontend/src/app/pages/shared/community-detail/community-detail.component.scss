@@ -315,8 +315,43 @@
 
   &.cd-chip-members  { background: $amber-50; color: $color-primary-darker; border: 1px solid $color-amber-200; }
   &.cd-chip-posts    { background: $color-success-light; color: $color-success; border: 1px solid rgba($color-success, 0.2); }
+  &.cd-chip-category { background: rgba($color-primary-darker, 0.07); color: $color-primary-darker; border: 1px solid $color-amber-200; }
+  &.cd-chip-country  { background: $color-stone-100; color: $color-stone-700; border: 1px solid $color-stone-200; }
   &.cd-chip-location { background: $color-stone-100; color: $color-stone-600; border: 1px solid $color-stone-200; }
   &.cd-chip-date     { background: $color-stone-100; color: $color-stone-500; border: 1px solid $color-stone-200; }
+}
+
+// Visibility badge (hero title row + About tab info rows)
+.cd-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+
+  i { font-size: 10px; }
+
+  &.cd-vis--global {
+    background: rgba($color-primary-darker, 0.08);
+    color: $color-primary-darker;
+    border: 1px solid $color-amber-200;
+  }
+
+  &.cd-vis--private {
+    background: rgba($danger, 0.07);
+    color: $danger;
+    border: 1px solid rgba($danger, 0.2);
+  }
+
+  &.cd-vis--default {
+    background: $color-stone-100;
+    color: $color-stone-600;
+    border: 1px solid $color-stone-200;
+  }
 }
 
 // ── Admin Icon Buttons ────────────────────────────────────────

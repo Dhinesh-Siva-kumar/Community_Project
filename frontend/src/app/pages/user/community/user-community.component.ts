@@ -7,13 +7,14 @@ import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, Event as AppEvent, PaginatedResponse } from '../../../core/models';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 
 export type CommunityTab = 'all' | 'joined' | 'trending';
 
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ImageUrlPipe],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
