@@ -62,7 +62,7 @@ $_transition:       200ms #{$transition-easing};
 // ============================================================
 .comm-hero {
   position: relative;
-  background: $gradient-hero;
+  background: linear-gradient(135deg, #FBBF24 0%, #F97316 55%, #D97706 100%);
   border-radius: $radius-xl;
   padding: 2rem 2.25rem;
   margin-bottom: $spacing-lg;
@@ -91,7 +91,7 @@ $_transition:       200ms #{$transition-easing};
   top: -60px;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle at center, rgba($color-primary, 0.20) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.22) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -119,7 +119,7 @@ $_transition:       200ms #{$transition-easing};
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: $color-amber-300;
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 10px;
 }
 
@@ -127,7 +127,7 @@ $_transition:       200ms #{$transition-easing};
   width: 6px;
   height: 6px;
   border-radius: $radius-full;
-  background: $color-primary;
+  background: rgba(255, 255, 255, 0.9);
   flex-shrink: 0;
   animation: pulse-dot 2s ease-in-out infinite;
 }
@@ -167,8 +167,8 @@ $_transition:       200ms #{$transition-easing};
 }
 
 .hero-stat-tile {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: $radius-md;
   padding: 14px 18px;
   display: flex;
@@ -179,20 +179,21 @@ $_transition:       200ms #{$transition-easing};
   transition: background $_transition, border-color $_transition;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.50);
   }
 
   &--accent {
-    background: rgba($color-primary, 0.16);
-    border-color: rgba($color-primary, 0.30);
+    background: rgba(255, 255, 255, 0.32);
+    border-color: rgba(255, 255, 255, 0.55);
 
     .stat-tile-icon {
-      background: rgba($color-primary, 0.20);
-      color: $color-primary;
+      background: rgba(255, 255, 255, 0.28);
+      color: $color-on-primary;
     }
 
     .stat-tile-value {
-      color: $color-primary;
+      color: $color-on-primary;
     }
   }
 }
@@ -201,12 +202,12 @@ $_transition:       200ms #{$transition-easing};
   width: 36px;
   height: 36px;
   border-radius: $radius-sm;
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 0.9375rem;
 }
 
@@ -227,7 +228,7 @@ $_transition:       200ms #{$transition-easing};
 
 .stat-tile-label {
   font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.75);
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
   letter-spacing: 0.06em;

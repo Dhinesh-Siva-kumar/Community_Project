@@ -945,3 +945,33 @@ body {
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// LOGO IMAGE — global sizing across sidebar, auth, header
+// ─────────────────────────────────────────────────────────────
+
+// Sidebar brand mark — 32×32 in the dark sidebar
+.sidebar-logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+}
+
+// Auth left-panel logo — larger on the gradient panel
+.auth-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 9px;
+  display: block;
+}
+
+// Auth mobile-only logo icon override
+.mobile-logo-icon .auth-logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}

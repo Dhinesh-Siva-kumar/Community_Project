@@ -430,6 +430,7 @@
   height: 3px;
   border-radius: 50%;
   background: $color-stone-300;
+  background: $color-stone-300;
   margin: 0 2px;
   flex-shrink: 0;
 }
@@ -759,7 +760,7 @@
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
   &::placeholder {
-    color: $gray-400;
+    color: $color-text-secondary;
   }
 
   &:focus {

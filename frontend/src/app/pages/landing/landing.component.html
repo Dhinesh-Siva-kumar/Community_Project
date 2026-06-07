@@ -6,7 +6,7 @@
 <!-- ═══ 1. NAVBAR ═══ -->
 <nav class="lp-nav" [class.scrolled]="navScrolled">
   <a class="lp-logo" routerLink="/landing">
-    <img src="logo.svg" alt="Community HUB" class="lp-logo-img" />
+    <img src="logo.svg" alt="TamilConnect" class="lp-logo-img" />
     <span class="lp-logo-text">{{ applicationName }}</span>
   </a>
 
@@ -55,73 +55,115 @@
 
 <!-- ═══ 2. HERO ═══ -->
 <section class="lp-hero" id="home">
-  <!-- Background -->
-  <div class="lp-hero-bg"></div>
 
-  <div class="lp-hero-inner">
-    <div class="lp-hero-content">
-      <div class="lp-hero-badge rv">
-        <i class="bi bi-lightning-charge-fill" [style.animation]="'pulseDot 2s ease-in-out infinite'"></i>
-        10K+ Members Worldwide
-      </div>
+  <div class="lp-hero-bg-gradient"></div>
 
-      <h1 class="lp-hero-h1 rv d1">
-        Connect, Share &<br/><span class="neon-text">Grow</span> with Communities
-      </h1>
 
-      <p class="lp-hero-sub rv d2">
-        The all-in-one platform where communities thrive. Discover events, find jobs,
-        explore businesses, and connect with people who share your passions.
-      </p>
+  <!-- World map image background -->
+  <div class="lp-hero-worldmap"></div>
 
-      <div class="lp-hero-actions rv d3">
-        <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-btn-shimmer">
-          <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
-        </a>
-        <a href="landing#features" class="lp-btn lp-btn-glass lp-btn-lg" (click)="setActive('features')">
-          <i class="bi bi-play-circle-fill"></i> See How It Works
-        </a>
-      </div>
+  <!-- ── Zone 1: Above the rings — Badge · H1 · Tagline · Stats ── -->
+  <div class="lp-hero-above rv">
 
-      <div class="lp-hero-trust rv d4">
-        <span><i class="bi bi-shield-check"></i> Secure & Private</span>
-        <span><i class="bi bi-heart-fill"></i> Free Forever</span>
-        <span><i class="bi bi-globe2"></i> Available Worldwide</span>
-      </div>
-    </div>
+    <h1 class="lp-hero-h1">
+      <span class="lp-hero-h1-line1">A platform for <span class="lp-hero-h1-accent">Tamil families</span></span> <br>
+      around the world
+    </h1>
 
-    <!-- Orbital Logo + Features -->
-    <div class="lp-hero-mock rv d2">
-      <div class="lp-orbit">
-        <!-- Orbit rings -->
-        <div class="lp-orbit-ring lp-orbit-ring-1"></div>
-        <div class="lp-orbit-ring lp-orbit-ring-2"></div>
+    <p class="lp-hero-tagline">
+      You are not alone abroad we are here
+    </p>
 
-        <!-- Centre logo -->
-        <div class="lp-orbit-logo">
-          <i class="bi bi-globe2"></i>
-        </div>
+    <p class="lp-hero-desc">
+        Whether you travel to a new country for study, work, or life as a family,
+        you can connect, find fellow families, share &amp; receive support.
+    </p>
 
-        <!-- Orbital feature items — placed on the outer ring -->
-        <div class="lp-orbit-item lp-orbit-item-1" data-color="primary">
-          <div class="lp-orbit-icon"><i class="bi bi-people-fill"></i></div>
-          <span class="lp-orbit-label">Communities</span>
-        </div>
-        <div class="lp-orbit-item lp-orbit-item-2" data-color="pink">
-          <div class="lp-orbit-icon"><i class="bi bi-calendar-event-fill"></i></div>
-          <span class="lp-orbit-label">Events</span>
-        </div>
-        <div class="lp-orbit-item lp-orbit-item-3" data-color="green">
-          <div class="lp-orbit-icon"><i class="bi bi-briefcase-fill"></i></div>
-          <span class="lp-orbit-label">Jobs</span>
-        </div>
-        <div class="lp-orbit-item lp-orbit-item-4" data-color="violet">
-          <div class="lp-orbit-icon"><i class="bi bi-shop"></i></div>
-          <span class="lp-orbit-label">Business</span>
-        </div>
-      </div>
-    </div>
   </div>
+
+  <!-- ── Zone 2: Orbital ring system ── -->
+  <div class="lp-hero-orbit-system">
+
+    <!-- Stadium orbit rings -->
+    <div class="lp-hero-ring lp-hero-ring-outer"></div>
+    <div class="lp-hero-ring lp-hero-ring-inner"></div>
+    <div class="lp-hero-ring lp-hero-ring-core"></div>
+
+    <!-- CTAs — centered inside rings -->
+    <div class="lp-hero-content">
+      <div class="lp-hero-ctas">
+        <a routerLink="/auth/register" class="lp-hbtn lp-hbtn-primary">
+          <i class="bi bi-people-fill"></i> Join Community
+        </a>
+        <a href="landing#how-it-works" class="lp-hbtn lp-hbtn-outline"
+           (click)="setActive('how-it-works')">
+          How it Works <i class="bi bi-play-fill"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Feature pills — absolute on desktop, flex-wrap on mobile -->
+    <div class="lp-pills-wrap">
+
+      <div class="lp-feature-pill lp-fp-jobs">
+        <div class="lp-fp-icon"><i class="bi bi-briefcase-fill"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Jobs</span>
+          <span class="lp-fp-stat">2.5K+ listings</span>
+        </div>
+      </div>
+
+      <div class="lp-feature-pill lp-fp-communities">
+        <div class="lp-fp-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Communities</span>
+          <span class="lp-fp-stat">500+ groups</span>
+        </div>
+      </div>
+
+      <div class="lp-feature-pill lp-fp-events">
+        <div class="lp-fp-icon"><i class="bi bi-calendar-event-fill"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Events</span>
+          <span class="lp-fp-stat">1K+ hosted</span>
+        </div>
+      </div>
+
+      <div class="lp-feature-pill lp-fp-support">
+        <div class="lp-fp-icon"><i class="bi bi-headset"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Support</span>
+          <span class="lp-fp-stat">24/7 active</span>
+        </div>
+      </div>
+
+      <div class="lp-feature-pill lp-fp-help">
+        <div class="lp-fp-icon"><i class="bi bi-heart-fill"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Help</span>
+          <span class="lp-fp-stat">Always here</span>
+        </div>
+      </div>
+
+      <div class="lp-feature-pill lp-fp-business">
+        <div class="lp-fp-icon"><i class="bi bi-shop"></i></div>
+        <div class="lp-fp-text">
+          <span class="lp-fp-label">Business</span>
+          <span class="lp-fp-stat">800+ listed</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── Trust microcopy — end of hero section ── -->
+  <div class="lp-hero-trust-line">
+    <span><i class="bi bi-shield-fill-check"></i> Secure &amp; Private</span>
+    <span><i class="bi bi-globe2"></i> Free for everyone</span>
+    <span><i class="bi bi-heart-fill"></i> Available worldwide</span>
+  </div>
+
 </section>
 
 
@@ -139,8 +181,8 @@
       <div class="lp-marquee-item">
         <i class="bi" [ngClass]="item.icon"></i>
         <span>{{ item.text }}</span>
-      </div>
-    }
+        </div>
+      }
   </div>
 </div>
 
@@ -151,51 +193,34 @@
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
       <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> Platform Features</span>
-      <h2 class="lp-sec-title">Everything You Need,<br/><span class="neon-text">Nothing You Don't</span></h2>
-      <p class="lp-sec-sub">Six powerful tools designed to help communities connect, engage, and grow together.</p>
+      <h2 class="lp-sec-title">Everything You Need Abroad,<br/><span class="neon-text">All in One Place.</span></h2>
+      <p class="lp-sec-sub">Jobs, education, support, events, and a community of friends — everything you need, all in one platform.</p>
     </div>
 
     <div class="lp-bento">
       @for (f of features; track f.title; let i = $index) {
         <div class="lp-bento-card glass-card rv"
-             [class.lp-bento-featured]="f.featured"
              [attr.data-color]="f.color"
-             [style.transition-delay]="(i * 0.07) + 's'">
+             [style.transition-delay]="(i * 0.06) + 's'">
 
-          @if (f.featured) {
-            <div class="lp-anim-border"></div>
-          }
-
-          <div class="lp-bento-icon" [attr.data-color]="f.color">
-            <i class="bi" [ngClass]="f.icon"></i>
-          </div>
-          <h3>{{ f.title }}</h3>
-          <p>{{ f.desc }}</p>
-
-          @if (f.featured) {
-            <div class="lp-featured-mock">
-              <div class="lp-fm-card">
-                <div class="lp-fm-avatar"></div>
-                <div class="lp-fm-lines">
-                  <div class="lp-mock-line w80"></div>
-                  <div class="lp-mock-line w55"></div>
-                </div>
-              </div>
-              <div class="lp-fm-card">
-                <div class="lp-fm-avatar v"></div>
-                <div class="lp-fm-lines">
-                  <div class="lp-mock-line w65"></div>
-                  <div class="lp-mock-line w45"></div>
-                </div>
+          <!-- Card content -->
+          <div class="lp-bento-body">
+            <div class="lp-bento-header">
+              <div class="lp-bento-icon" [attr.data-color]="f.color">
+                <i class="bi" [ngClass]="f.icon"></i>
               </div>
             </div>
-          }
 
-          <div class="lp-bento-tags">
-            @for (tag of f.tags; track tag) {
-              <span class="lp-mini-tag">{{ tag }}</span>
-            }
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.desc }}</p>
+
+            <div class="lp-bento-tags">
+              @for (tag of f.tags; track tag) {
+                <span class="lp-mini-tag">{{ tag }}</span>
+              }
+            </div>
           </div>
+
         </div>
       }
     </div>
@@ -204,14 +229,46 @@
 
 <div class="lp-section-divider lp-divider-violet"></div>
 
-<!-- ═══ 5. COMMUNITIES SHOWCASE — Horizontal Scroll ═══ -->
+<!-- ═══ 5. COMMUNITIES SHOWCASE ═══ -->
 <section class="lp-section lp-communities-section" id="communities">
   <div class="lp-wrap">
+
+    <!-- Section header -->
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-violet"><i class="bi bi-collection-fill"></i> Explore</span>
-      <h2 class="lp-sec-title">Popular <span class="neon-violet">Communities</span></h2>
-      <p class="lp-sec-sub">Discover communities that match your interests and connect with people who think like you.</p>
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> Country Communities</span>
+      <h2 class="lp-sec-title">Tamils Are Everywhere <span class="neon-violet">in the World.</span></h2>
+      <p class="lp-sec-sub">Connect with Tamils living in your country. Whether you are a student, job seeker, newcomer, or business owner, you can receive local guidance, ask questions, and build meaningful connections with people who understand your situation.</p>
     </div>
+
+    <!-- ── Feature highlights: Group Chat · Local Help · Guidance ── -->
+    <div class="lp-comm-features rv">
+
+      <div class="lp-comm-feat-card glass-card">
+        <div class="lp-comm-feat-icon lp-comm-feat-icon--chat">
+          <i class="bi bi-chat-dots-fill"></i>
+        </div>
+        <h4>Group Chat</h4>
+        <p>Members can participate in country-specific discussions, ask questions, and help each other with local information.</p>
+      </div>
+
+      <div class="lp-comm-feat-card glass-card">
+        <div class="lp-comm-feat-icon lp-comm-feat-icon--help">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <h4>Local Help</h4>
+        <p>New members can receive assistance regarding accommodation, transportation, banking, healthcare, job searching, and settling in.</p>
+      </div>
+
+      <div class="lp-comm-feat-card glass-card">
+        <div class="lp-comm-feat-icon lp-comm-feat-icon--guide">
+          <i class="bi bi-lightbulb-fill"></i>
+        </div>
+        <h4>Guidance</h4>
+        <p>Experienced community members provide practical advice about visas, universities, careers, business opportunities, and daily life.</p>
+      </div>
+
+    </div>
+
   </div>
 
   <div class="lp-comm-scroll-wrap">
@@ -222,18 +279,38 @@
     <div class="lp-comm-scroll rv" #commScroll>
       <div class="lp-comm-track">
         @for (c of communities; track c.name; let i = $index) {
-          <div class="lp-comm-card glass-card"
-               [attr.data-color]="c.color">
-            <div class="lp-comm-accent" [attr.data-color]="c.color"></div>
-            <div class="lp-comm-icon" [attr.data-color]="c.color">
-              <i class="bi" [ngClass]="c.icon"></i>
+          <div class="lp-comm-card glass-card" [attr.data-color]="c.color">
+
+          <!-- Flag badge — centered at top -->
+            <div class="lp-comm-flag-wrap">
+              <img
+                class="lp-comm-flag-img"
+                [src]="'https://flagcdn.com/w80/' + c.code + '.png'"
+                [srcset]="'https://flagcdn.com/w160/' + c.code + '.png 2x'"
+                [alt]="c.country + ' flag'"
+                loading="lazy"
+                width="80"
+                height="60"
+              />
             </div>
+
+            <!-- Country name -->
+            <span class="lp-comm-country">{{ c.country }}</span>
+
+            <!-- Community name -->
             <h4>{{ c.name }}</h4>
-            <span class="lp-comm-cat">{{ c.category }}</span>
+
+            <!-- Bottom: status + members -->
             <div class="lp-comm-bottom">
-              <span class="lp-comm-members"><i class="bi bi-people-fill"></i> {{ c.members | number }}</span>
-              <button class="lp-btn lp-btn-neon lp-btn-xs">Join</button>
+              <span class="lp-comm-status">
+                <span class="lp-comm-dot"></span>
+                Active
+              </span>
+              <span class="lp-comm-members">
+                <i class="bi bi-people-fill"></i> {{ c.members | number }}
+              </span>
             </div>
+
           </div>
         }
       </div>
@@ -242,6 +319,63 @@
     <button class="lp-comm-arrow lp-comm-arrow-right" (click)="scrollCommunities('right')" aria-label="Scroll right">
       <i class="bi bi-chevron-right"></i>
     </button>
+  </div>
+
+  <!-- ── Chat Demo Widget ── -->
+  <div class="lp-wrap">
+    <div class="lp-comm-chat-demo glass-card rv">
+
+      <!-- Header -->
+      <div class="lp-chat-header">
+        <img class="lp-chat-flag"
+             src="https://flagcdn.com/w40/gb.png"
+             srcset="https://flagcdn.com/w80/gb.png 2x"
+             alt="UK flag" width="40" height="30" />
+        <div class="lp-chat-header-info">
+          <span class="lp-chat-community-name">UK Tamils Community</span>
+          <span class="lp-chat-online-status">
+            <span class="lp-chat-dot"></span> Active Community
+          </span>
+        </div>
+        <i class="bi bi-chat-dots-fill lp-chat-header-icon"></i>
+      </div>
+
+      <!-- Messages -->
+      <div class="lp-chat-messages">
+
+        <!-- Murugan's question -->
+        <div class="lp-chat-msg lp-chat-msg--sent">
+          <div class="lp-chat-avatar lp-chat-avatar--primary">M</div>
+          <div class="lp-chat-content">
+            <span class="lp-chat-name">Murugan
+              <span class="lp-chat-badge lp-chat-badge--online">🟢 Online</span>
+            </span>
+            <div class="lp-chat-bubble">
+              Hello everyone, I recently moved to the UK. Can anyone suggest good websites to find part-time jobs?
+            </div>
+          </div>
+        </div>
+
+        <!-- Community reply -->
+        <div class="lp-chat-msg lp-chat-msg--received">
+          <div class="lp-chat-avatar lp-chat-avatar--member">C</div>
+          <div class="lp-chat-content lp-chat-content--right">
+            <span class="lp-chat-name lp-chat-name--right">Community Member</span>
+            <div class="lp-chat-bubble lp-chat-bubble--reply">
+              Welcome! You can start with Indeed, Reed, and Gumtree. Let us know which city you are in and we can provide more specific recommendations.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="lp-chat-footer">
+        <i class="bi bi-info-circle"></i>
+        This is an example of how members support each other inside the community.
+      </div>
+
+    </div>
   </div>
 
   <div class="lp-comm-browse">
@@ -259,7 +393,7 @@
     <div class="lp-sec-head rv">
       <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> How It Works</span>
       <h2 class="lp-sec-title">Your Journey in<br/><span class="neon-green">Four Simple Steps</span></h2>
-      <p class="lp-sec-sub">From sign-up to community leader -- here is how it works.</p>
+      <p class="lp-sec-sub">From sign-up to finding your community — here is how it works.</p>
     </div>
 
     <div class="lp-timeline">
@@ -282,42 +416,62 @@
 
 <div class="lp-section-divider lp-divider-pink"></div>
 
-<!-- ═══ 7. TESTIMONIALS ═══ -->
+<!-- ═══ 7. REAL STORIES — TESTIMONIALS ═══ -->
 <section class="lp-section lp-testi-section lp-section-mesh" id="testimonials">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> Testimonials</span>
-      <h2 class="lp-sec-title">Loved by<br/><span class="neon-pink">Real People</span></h2>
-      <p class="lp-sec-sub">Hear from members who found their community and transformed their experience.</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> Real Stories</span>
+      <h2 class="lp-sec-title">Real <span class="neon-pink">Stories</span></h2>
+      <p class="lp-sec-sub">Read how TamilConnect has helped Tamils around the world find housing, jobs, student support, local guidance, and meaningful community connections.</p>
     </div>
+  </div>
 
-    <div class="lp-testi-scroll rv">
+  <div class="lp-testi-scroll-wrap">
+
+    <button class="lp-testi-arrow lp-testi-arrow-left" (click)="scrollTestimonials('left')" aria-label="Scroll left">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="lp-testi-scroll rv" #testiScroll>
       <div class="lp-testi-track">
-        @for (t of testimonials; track t.name; let i = $index) {
-          <div class="lp-testi-card glass-card">
-            <div class="lp-testi-top">
-              <span class="lp-testi-stars">
-                @for (star of [1,2,3,4,5]; track star) {
-                  <i class="bi bi-star-fill"></i>
-                }
-              </span>
-              <i class="bi bi-quote lp-testi-quote-icon"></i>
+      @for (t of testimonials; track t.name) {
+        <div class="lp-testi-card glass-card">
+
+          <!-- Category tag + quote icon -->
+          <div class="lp-testi-top">
+            <span class="lp-testi-category" [attr.data-color]="t.color">
+              {{ t.category }}
+            </span>
+            <i class="bi bi-quote lp-testi-quote-icon"></i>
+          </div>
+
+          <!-- Story quote -->
+          <blockquote>"{{ t.quote }}"</blockquote>
+
+          <!-- Author -->
+          <div class="lp-testi-author">
+            <div class="lp-testi-avatar" [attr.data-color]="t.color">
+              <span>{{ t.initial }}</span>
             </div>
-            <blockquote>"{{ t.quote }}"</blockquote>
-            <div class="lp-testi-author">
-              <div class="lp-testi-avatar" [attr.data-color]="t.color">
-                <span>{{ t.initial }}</span>
-              </div>
-              <div>
-                <div class="lp-testi-name">{{ t.name }}</div>
-                <div class="lp-testi-role">{{ t.role }}</div>
+            <div>
+              <div class="lp-testi-name">{{ t.name }}</div>
+              <div class="lp-testi-location">
+                <i class="bi bi-geo-alt-fill"></i> {{ t.location }}
               </div>
             </div>
           </div>
-        }
-      </div>
+
+        </div>
+      }
     </div>
   </div>
+
+    <button class="lp-testi-arrow lp-testi-arrow-right" (click)="scrollTestimonials('right')" aria-label="Scroll right">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+  </div>
+
 </section>
 
 <div class="lp-section-divider lp-divider-violet"></div>
@@ -375,7 +529,7 @@
       </div>
     </div>
     
-    <div class="lp-why-grid">
+    <!-- <div class="lp-why-grid">
           @for (w of whyCards; track w.title; let i = $index) {
             <div class="lp-why-card glass-card rv"
                  [attr.data-color]="w.color"
@@ -391,7 +545,43 @@
               </div>
             </div>
           }
-        </div>
+        </div> -->
+
+    <!-- ── Trust & Safety ── -->
+    <div class="lp-trust-section rv">
+
+      <div class="lp-trust-head">
+        <span class="lp-trust-badge">
+          <i class="bi bi-shield-fill-check"></i> Trust &amp; Safety
+        </span>
+        <h3 class="lp-trust-title">Your Safety Comes First.</h3>
+        <p class="lp-trust-sub">
+          TamilConnect is built to help members connect, communicate, and support
+          each other in a secure and trusted environment.
+        </p>
+      </div>
+
+      <div class="lp-trust-grid">
+        @for (c of trustCards; track c.title; let i = $index) {
+          <div class="lp-trust-card glass-card rv"
+               [attr.data-color]="c.color"
+               [style.transition-delay]="(i * 0.08) + 's'">
+            <div class="lp-trust-icon" [attr.data-color]="c.color">
+              <i class="bi" [ngClass]="c.icon"></i>
+            </div>
+            <h4>{{ c.title }}</h4>
+            <p>{{ c.desc }}</p>
+          </div>
+        }
+      </div>
+
+      <p class="lp-trust-tagline">
+        <i class="bi bi-shield-fill-check"></i>
+        Connect with confidence. Your safety and privacy are always protected on TamilConnect.
+      </p>
+
+    </div>
+
   </div>
 </section>
 
@@ -432,53 +622,75 @@
 <section class="lp-section lp-contact-section" id="contact">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-envelope-fill"></i> Get In Touch</span>
-      <h2 class="lp-sec-title">We'd Love to<br/><span class="neon-text">Hear From You</span></h2>
-      <p class="lp-sec-sub">Have a question, suggestion, or just want to say hello? Drop us a message and we'll get back to you shortly.</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-headset"></i> Contact Us</span>
+      <h2 class="lp-sec-title">We're Here <span class="neon-pink">For You</span></h2>
+      <p class="lp-sec-sub">Have a question or need help settling in? The TamilConnect team is ready to support you wherever you are.</p>
     </div>
 
     <div class="lp-contact-grid">
 
-      <!-- Contact Info Cards -->
-      <div class="lp-contact-info rv">
+      <!-- ── Left: Dark info panel ── -->
+      <div class="lp-contact-panel rvl">
 
-        <div class="lp-contact-card glass-card">
-          <div class="lp-contact-icon-wrap contact-purple">
-            <i class="bi bi-envelope-fill"></i>
-          </div>
-          <div>
-            <h6 class="lp-contact-card-title">Email Us</h6>
-            <p class="lp-contact-card-text">hello&#64;community.app</p>
-            <p class="lp-contact-card-sub">We reply within 24 hours</p>
-          </div>
+        <div class="lp-cp-head">
+          <span class="lp-cp-badge">
+            <i class="bi bi-shield-fill-check"></i> Always Here for You
+          </span>
+          <h3>We're here to help every Tamil abroad.</h3>
+          <p>Whether you have a question about the platform, need support, or want to provide feedback, our team is always available.</p>
         </div>
 
-        <div class="lp-contact-card glass-card">
-          <div class="lp-contact-icon-wrap contact-pink">
-            <i class="bi bi-chat-dots-fill"></i>
+        <div class="lp-cp-items">
+
+          <div class="lp-cp-item">
+            <div class="lp-cp-icon">
+              <i class="bi bi-envelope-fill"></i>
+            </div>
+            <div class="lp-cp-text">
+              <span class="lp-cp-label">Email Us</span>
+              <span class="lp-cp-value">hello&#64;tamilconnect.app</span>
+              <span class="lp-cp-note">We reply within 24 hours</span>
+            </div>
           </div>
-          <div>
-            <h6 class="lp-contact-card-title">Live Chat</h6>
-            <p class="lp-contact-card-text">Available in the app</p>
-            <p class="lp-contact-card-sub">Mon - Fri, 9am - 6pm</p>
+
+          <div class="lp-cp-item">
+            <div class="lp-cp-icon">
+              <i class="bi bi-whatsapp"></i>
+            </div>
+            <div class="lp-cp-text">
+              <span class="lp-cp-label">WhatsApp Support</span>
+              <span class="lp-cp-value">Community Help Channel</span>
+              <span class="lp-cp-note">Quick responses</span>
+            </div>
           </div>
+
+          <div class="lp-cp-item lp-cp-item--last">
+            <div class="lp-cp-icon">
+              <i class="bi bi-globe2"></i>
+            </div>
+            <div class="lp-cp-text">
+              <span class="lp-cp-label">Available Worldwide</span>
+              <span class="lp-cp-value">40+ Countries</span>
+              <span class="lp-cp-note">Tamils helping Tamils</span>
+            </div>
+          </div>
+
         </div>
 
-        <div class="lp-contact-card glass-card">
-          <div class="lp-contact-icon-wrap contact-green">
-            <i class="bi bi-discord"></i>
-          </div>
-          <div>
-            <h6 class="lp-contact-card-title">Join Our Discord</h6>
-            <p class="lp-contact-card-text">discord.gg/community</p>
-            <p class="lp-contact-card-sub">Active community support</p>
-          </div>
+        <div class="lp-cp-social">
+          <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
         </div>
 
       </div>
 
-      <!-- Contact Form -->
-      <div class="lp-contact-form-card glass-card rv">
+      <!-- ── Right: Contact form ── -->
+      <div class="lp-contact-form-card rvr">
+
+        <h4 class="lp-form-title">Send us a Message</h4>
 
         @if (contactSubmitted) {
           <div class="lp-contact-success">
@@ -499,7 +711,7 @@
                 <input
                   type="text"
                   class="lp-form-control"
-                  placeholder="John"
+                  placeholder="Murugan"
                   [(ngModel)]="contact.firstName"
                   name="firstName"
                   required
@@ -514,7 +726,7 @@
                 <input
                   type="text"
                   class="lp-form-control"
-                  placeholder="Doe"
+                  placeholder="Selvam"
                   [(ngModel)]="contact.lastName"
                   name="lastName"
                   required
@@ -531,7 +743,7 @@
               <input
                 type="email"
                 class="lp-form-control"
-                placeholder="john&#64;example.com"
+                placeholder="murugan&#64;example.com"
                 [(ngModel)]="contact.email"
                 name="email"
                 required
@@ -599,47 +811,87 @@
     <div class="lp-cta-gloss rv">
       <div class="lp-cta-gloss-shine"></div>
       <div class="lp-cta-gloss-inner">
+
         <div class="lp-cta-badge">
-          <i class="bi bi-stars"></i> Free Forever. No Credit Card.
+          <i class="bi bi-globe2"></i> 10 Million+ Tamils Live Abroad
         </div>
-        <h2 class="lp-cta-title">Start Your Community<br/>Journey <span class="lp-cta-highlight">Today</span></h2>
+
+        <h2 class="lp-cta-title">You're Not Alone<br/><span class="lp-cta-highlight">Abroad</span></h2>
+
         <p class="lp-cta-desc">
-          Join 10,000+ members already connecting, sharing, and growing on {{ applicationName }}.
-          Your people are waiting.
+          Millions of Tamils live across the world. Whether you are studying, working,
+          running a business, or starting a new life in another country, TamilConnect
+          helps you connect with people who understand your journey.
         </p>
+
+        <!-- <p class="lp-cta-desc" style="margin-top: -10px;">
+          Find local support, make meaningful connections, discover opportunities, and
+          become part of a trusted global Tamil community.
+        </p>
+
+        <p class="lp-cta-support">
+          More than 10 million Tamils live outside their home country.
+          No matter where you are, there is a community ready to help, guide, and welcome you.
+        </p> -->
+
         <div class="lp-cta-actions">
           <a routerLink="/auth/register" class="lp-btn lp-btn-cta-primary lp-btn-lg">
-            <i class="bi bi-rocket-takeoff-fill"></i> Sign Up Now - It's Free
+            <i class="bi bi-people-fill"></i> Join TamilConnect Free
           </a>
           <a routerLink="/auth/login" class="lp-btn lp-btn-cta-secondary lp-btn-lg">
             Already a member? Log in
           </a>
         </div>
+
+        <p class="lp-cta-network-text">
+          Connect with Tamils across 40+ countries and build your network today.
+        </p>
+
         <div class="lp-cta-trust">
-          <span><i class="bi bi-shield-check-fill"></i> Secure &amp; Private</span>
+          <span><i class="bi bi-globe2"></i> 40+ Countries</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-globe2"></i> 150+ Countries</span>
+          <span><i class="bi bi-people-fill"></i> 10M+ Tamils Worldwide</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-star-fill"></i> 4.9/5 Rating</span>
+          <span><i class="bi bi-heart-fill"></i> Join Free Today</span>
         </div>
+
       </div>
     </div>
   </div>
 </section>
-<!-- ═══ 12. FOOTER ═══ -->
+<!-- ═══ PLATFORM METRICS STRIP ═══ -->
+<div class="lp-footer-metrics">
+  <div class="lp-wrap">
+    <div class="lp-metrics-grid">
+      @for (m of footerMetrics; track m.label) {
+        <div class="lp-metric-item">
+          <div class="lp-metric-icon">
+            <i class="bi" [ngClass]="m.icon"></i>
+          </div>
+          <span class="lp-metric-value">{{ m.value }}</span>
+          <span class="lp-metric-label">{{ m.label }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
 <footer class="lp-footer">
-  <!-- <div class="lp-footer-glow-line"></div> -->
   <div class="lp-wrap">
     <div class="lp-footer-grid">
+
       <!-- Brand -->
       <div class="lp-footer-brand">
         <a routerLink="/landing" class="lp-logo">
-          <img src="logo.svg" alt="Community HUB" class="lp-logo-img" />
+          <img src="logo.svg" alt="TamilConnect" class="lp-logo-img" />
           <span class="lp-logo-text">{{ applicationName }}</span>
         </a>
         <p class="lp-footer-desc">
-          The platform where communities thrive. Events, jobs, businesses, and meaningful connections -- all in one place.
+          Connecting Tamils living abroad through community, support,
+          opportunities, and meaningful relationships.
         </p>
+        <p class="lp-footer-tagline">Your Digital Home for the Global Tamil Community.</p>
         <div class="lp-social">
           <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
           <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -653,39 +905,53 @@
       <div class="lp-fcol">
         <h4>Platform</h4>
         <ul>
-          <li><a href="landing#features">Features</a></li>
-          <li><a href="landing#communities">Communities</a></li>
-          <li><a href="landing#how-it-works">How It Works</a></li>
-          <li><a routerLink="/auth/login">Events</a></li>
-          <li><a routerLink="/auth/login">Jobs</a></li>
+          <li><a href="landing#communities">Country Communities</a></li>
+          <li><a routerLink="/auth/login">Jobs &amp; Career</a></li>
+          <li><a routerLink="/auth/login">Students Section</a></li>
+          <li><a routerLink="/auth/login">Help Center</a></li>
+          <li><a routerLink="/auth/login">Events &amp; Festivals</a></li>
+          <li><a routerLink="/auth/login">Share Items</a></li>
+          <li><a routerLink="/auth/login">Direct Chat</a></li>
+          <li><a routerLink="/auth/login">Tamil Business Directory</a></li>
         </ul>
       </div>
 
-      <!-- Company -->
+      <!-- Community -->
       <div class="lp-fcol">
-        <h4>Company</h4>
+        <h4>Community</h4>
+        <ul>
+          <li><a routerLink="/auth/login">UK Tamils</a></li>
+          <li><a routerLink="/auth/login">Germany Tamils</a></li>
+          <li><a routerLink="/auth/login">Canada Tamils</a></li>
+          <li><a routerLink="/auth/login">Australia Tamils</a></li>
+          <li><a routerLink="/auth/login">Singapore Tamils</a></li>
+          <li><a routerLink="/auth/login">UAE Tamils</a></li>
+          <li><a routerLink="/auth/login">New Zealand Tamils</a></li>
+          <li><a routerLink="/auth/login">Ireland Tamils</a></li>
+          <li><a href="landing#communities">All Countries</a></li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div class="lp-fcol">
+        <h4>Support</h4>
         <ul>
           <li><a href="landing#about">About Us</a></li>
-          <li><a href="landing#blog">Blog</a></li>
+          <li><a href="landing#contact">Contact Us</a></li>
           <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Terms &amp; Conditions</a></li>
+          <li><a href="#">Safety Tips</a></li>
+          <li><a href="#">Report an Issue</a></li>
         </ul>
       </div>
 
-      <!-- Get Started -->
-      <div class="lp-fcol">
-        <h4>Get Started</h4>
-        <ul>
-          <li><a routerLink="/auth/register">Create Account</a></li>
-          <li><a routerLink="/auth/login">Log In</a></li>
-          <li><a href="landing#communities">Browse Communities</a></li>
-          <li><a href="landing#features">Explore Features</a></li>
-        </ul>
-      </div>
     </div>
 
     <div class="lp-footer-bottom">
-      <p>&copy; 2026 {{ applicationName }}. All rights reserved.</p>
+      <p>&copy; 2026 {{ applicationName }}. Built for Tamils Around the World.</p>
+      <p class="lp-footer-made-with">
+        Made with <i class="bi bi-heart-fill"></i> for the Global Tamil Diaspora.
+      </p>
       <div class="lp-footer-links">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
@@ -695,22 +961,3 @@
   </div>
 </footer>
 
-<!-- ═══ FLOATING SOCIAL BUTTONS — LEFT SIDE ═══ -->
-<!-- <div class="lp-float-left">
-  <a href="https://instagram.com/" target="_blank" rel="noopener" class="lp-float-btn lp-float-instagram" aria-label="Instagram">
-    <i class="bi bi-instagram"></i>
-  </a>
-  <a href="https://youtube.com/" target="_blank" rel="noopener" class="lp-float-btn lp-float-youtube" aria-label="YouTube">
-    <i class="bi bi-youtube"></i>
-  </a>
-</div> -->
-
-<!-- ═══ FLOATING SOCIAL BUTTONS — RIGHT SIDE ═══ -->
-<!-- <div class="lp-float-right">
-  <a href="https://wa.me/" target="_blank" rel="noopener" class="lp-float-btn lp-float-whatsapp" aria-label="WhatsApp">
-    <i class="bi bi-whatsapp"></i>
-  </a>
-  <a href="https://t.me/" target="_blank" rel="noopener" class="lp-float-btn lp-float-telegram" aria-label="Telegram">
-    <i class="bi bi-telegram"></i>
-  </a>
-</div> -->

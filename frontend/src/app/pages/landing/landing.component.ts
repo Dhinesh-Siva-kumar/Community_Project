@@ -23,7 +23,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   // ── Theme ──
-  currentTheme: 'dark' | 'light' = 'dark';
+  currentTheme: 'dark' | 'light' = 'light';
 
   @HostBinding('attr.data-theme')
   get theme(): string { return this.currentTheme; }
@@ -58,75 +58,142 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   closeMobile(): void { this.mobileOpen = false; }
   setActive(s: string): void { this.activeSection = s; }
 
-  applicationName = 'Community HUB';
+  applicationName = 'TamilConnect';
 
   // ── Features (Bento Grid) ──
   features = [
     {
-      icon: 'bi-people-fill', title: 'Community Building',
-      desc: 'Create and join thriving communities around any interest. Share posts, spark discussions, and grow together.',
-      tags: ['Create Groups', 'Member Roles', 'Discussions'],
+      icon: 'bi-globe2',
+      title: 'Country Communities',
+      desc: 'UK, Germany, Canada, Australia — A Connected Tamil Community in Every Country. Newcomers can connect with local Tamils and receive guidance, support, and practical help to settle in.',
+      tags: ['Group Chat', 'Local Help', 'Guidance'],
       color: 'primary', featured: false
     },
     {
-      icon: 'bi-calendar-event-fill', title: 'Event Management',
-      desc: 'Organize meetups, workshops, and virtual events with built-in RSVP tracking and reminders.',
-      tags: ['RSVP', 'Reminders', 'Virtual'],
-      color: 'violet', featured: false
-    },
-    {
-      icon: 'bi-briefcase-fill', title: 'Job Board',
-      desc: 'Post and discover job opportunities within your communities. Connect talent with employers.',
-      tags: ['Post Jobs', 'Apply', 'Network'],
+      icon: 'bi-briefcase-fill',
+      title: 'Jobs & Career',
+      desc: 'Share and find job opportunities, sponsored jobs, part-time roles, and internships — directly through fellow Tamils around the world.',
+      tags: ['Full-time', 'Part-time', 'Sponsored'],
       color: 'green', featured: false
     },
     {
-      icon: 'bi-shop', title: 'Business Directory',
-      desc: 'List your business, discover local services, and support community entrepreneurs.',
-      tags: ['List Business', 'Find Services', 'Reviews'],
-      color: 'yellow', featured: false
+      icon: 'bi-mortarboard-fill',
+      title: 'Students Section',
+      desc: 'Get university tips, scholarship information, part-time job opportunities, and project support — all designed for students studying abroad.',
+      tags: ['Scholarships', 'Universities', 'Projects'],
+      color: 'violet', featured: false
     },
     {
-      icon: 'bi-chat-dots-fill', title: 'Real-time Posts',
-      desc: 'Share updates, ask for help, flag emergencies with instant delivery to your community.',
-      tags: ['Posts', 'Help Requests', 'Alerts'],
+      icon: 'bi-shield-fill-check',
+      title: 'Help & Support',
+      desc: 'For legal assistance, emergencies, or medical support, you can connect with trusted members of the Tamil community for guidance and help.',
+      tags: ['Legal Help', 'Emergency', 'Advice'],
       color: 'pink', featured: false
     },
     {
-      icon: 'bi-bell-fill', title: 'Smart Notifications',
-      desc: 'WebSocket-powered real-time notifications. Never miss an update, event, or opportunity.',
-      tags: ['Real-time', 'Push Alerts', 'Custom'],
+      icon: 'bi-calendar-event-fill',
+      title: 'Events & Festivals',
+      desc: 'Discover and join Diwali, Pongal, and Tamil New Year celebrations happening in the country where you live, and connect with your local Tamil community.',
+      tags: ['Festivals', 'Meetups', 'Events'],
+      color: 'yellow', featured: false
+    },
+    {
+      icon: 'bi-gift-fill',
+      title: 'Share Items',
+      desc: 'Furniture, Electronics, Books, Kitchen items — Give away or receive unused items from fellow community members, helping others while reducing waste.',
+      tags: ['Free Items', 'Furniture', 'Books'],
       color: 'accent', featured: false
+    },
+    {
+      icon: 'bi-chat-dots-fill',
+      title: 'Direct Chat',
+      desc: 'Private chats, country group chats, and topic-based groups — such as Jobs, Students, and Business — allow you to connect and communicate directly with the community.',
+      tags: ['Private', 'Groups', 'Topics'],
+      color: 'primary', featured: false
+    },
+    {
+      icon: 'bi-shop',
+      title: 'Tamil Business',
+      desc: 'Tamils running businesses abroad can register and showcase their businesses, enabling direct trade and easier product shipping within the global Tamil community.',
+      tags: ['Directory', 'Trade', 'Services'],
+      color: 'violet', featured: false
+    },
+    {
+      icon: 'bi-person-badge-fill',
+      title: 'Member Profiles',
+      desc: 'Create a profile with your country, city, profession, and education, then search for and connect with fellow Tamils. Find the right people easily, wherever you are.',
+      tags: ['Search', 'Connect', 'Verified'],
+      color: 'green', featured: false
     }
   ];
 
   // ── Communities Showcase ──
   @ViewChild('commScroll') commScrollRef!: ElementRef<HTMLElement>;
+  @ViewChild('testiScroll') testiScrollRef!: ElementRef<HTMLElement>;
 
   communities = [
-    { name: 'Tech Innovators', members: 2340, category: 'Technology', color: 'primary', icon: 'bi-cpu-fill' },
-    { name: 'Local Foodies', members: 1850, category: 'Food & Drink', color: 'pink', icon: 'bi-cup-hot-fill' },
-    { name: 'Fitness Warriors', members: 3100, category: 'Health', color: 'green', icon: 'bi-heart-pulse-fill' },
-    { name: 'Art Collective', members: 960, category: 'Creative', color: 'violet', icon: 'bi-palette-fill' },
-    { name: 'Startup Hub', members: 1520, category: 'Business', color: 'yellow', icon: 'bi-rocket-takeoff-fill' },
-    { name: 'Book Worms', members: 780, category: 'Education', color: 'accent', icon: 'bi-book-fill' },
-    { name: 'Photography', members: 2100, category: 'Creative', color: 'pink', icon: 'bi-camera-fill' },
-    { name: 'Dev Community', members: 4200, category: 'Technology', color: 'primary', icon: 'bi-code-slash' }
+    { code: 'gb', country: 'United Kingdom',  name: 'UK Tamils Community',          members: 3240, color: 'primary' },
+    { code: 'de', country: 'Germany',          name: 'Germany Tamils Community',     members: 2180, color: 'violet' },
+    { code: 'fr', country: 'France',           name: 'France Tamils Community',      members: 1450, color: 'pink'   },
+    { code: 'ca', country: 'Canada',           name: 'Canada Tamils Community',      members: 2890, color: 'green'  },
+    { code: 'au', country: 'Australia',        name: 'Australia Tamils Community',   members: 2640, color: 'yellow' },
+    { code: 'ch', country: 'Switzerland',      name: 'Switzerland Tamils Community', members: 980,  color: 'accent' },
+    { code: 'nl', country: 'Netherlands',      name: 'Netherlands Tamils Community', members: 1230, color: 'primary'},
+    { code: 'no', country: 'Norway',           name: 'Norway Tamils Community',      members: 760,  color: 'violet' },
+    { code: 'se', country: 'Sweden',           name: 'Sweden Tamils Community',      members: 1120, color: 'green'  },
+    { code: 'dk', country: 'Denmark',          name: 'Denmark Tamils Community',     members: 890,  color: 'pink'   },
+    { code: 'it', country: 'Italy',            name: 'Italy Tamils Community',       members: 1680, color: 'yellow' },
+    { code: 'be', country: 'Belgium',          name: 'Belgium Tamils Community',     members: 720,  color: 'accent' },
+    { code: 'at', country: 'Austria',          name: 'Austria Tamils Community',     members: 560,  color: 'primary'},
+    { code: 'sg', country: 'Singapore',        name: 'Singapore Tamils Community',   members: 4120, color: 'violet' },
+    { code: 'us', country: 'United States',    name: 'USA Tamils Community',         members: 5380, color: 'green'  },
+    { code: 'nz', country: 'New Zealand',      name: 'New Zealand Tamils Community', members: 890,  color: 'pink'   },
+    { code: 'ie', country: 'Ireland',          name: 'Ireland Tamils Community',     members: 670,  color: 'accent' },
+    { code: 'es', country: 'Spain',            name: 'Spain Tamils Community',       members: 540,  color: 'yellow' },
+    { code: 'pt', country: 'Portugal',         name: 'Portugal Tamils Community',    members: 420,  color: 'primary'},
+    { code: 'fi', country: 'Finland',          name: 'Finland Tamils Community',     members: 380,  color: 'violet' },
   ];
 
   scrollCommunities(direction: 'left' | 'right'): void {
     const el = this.commScrollRef?.nativeElement;
     if (!el) return;
-    const scrollAmount = 280; // card width + gap
+    const scrollAmount = 280;
+    el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+  }
+
+  scrollTestimonials(direction: 'left' | 'right'): void {
+    const el = this.testiScrollRef?.nativeElement;
+    if (!el) return;
+    const scrollAmount = 400;
     el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
   }
 
   // ── How It Works Timeline ──
   steps = [
-    { num: '01', title: 'Create Your Account', desc: 'Sign up free in seconds. No credit card needed, ever.', color: 'primary' },
-    { num: '02', title: 'Discover Communities', desc: 'Browse and join communities that match your interests and location.', color: 'violet' },
-    { num: '03', title: 'Engage & Connect', desc: 'Share updates, attend events, and build meaningful connections with members.', color: 'green' },
-    { num: '04', title: 'Grow Your Network', desc: 'Find jobs, explore businesses, and make a real impact in your community.', color: 'pink' }
+    {
+      num: '01',
+      title: 'Sign Up',
+      desc: 'Create your profile easily by adding your name, country, city, and profession or field of study. It\'s completely free.',
+      color: 'primary'
+    },
+    {
+      num: '02',
+      title: 'Choose Your Country',
+      desc: 'Join the Tamil community in the country where you live and connect with local members.',
+      color: 'violet'
+    },
+    {
+      num: '03',
+      title: 'Get Help or Offer Support',
+      desc: 'Find the help you need — whether it\'s for jobs, studies, legal assistance, or shared items. Support others in the community by offering your knowledge and resources.',
+      color: 'green'
+    },
+    {
+      num: '04',
+      title: 'Grow Your Network',
+      desc: 'Make new friends, join events, and build meaningful connections with the Tamil community wherever you are.',
+      color: 'pink'
+    }
   ];
 
   // ── Why Choose Us ──
@@ -139,13 +206,44 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     // { icon: 'bi-gear-fill', title: 'Easy to Use', desc: 'Intuitive interface that anyone can navigate. No learning curve required.', stat: '5min', statLabel: 'Setup', color: 'accent' }
   ];
 
-  // ── Testimonials (Multi-card) ──
+  // ── Testimonials (Real Stories) ──
   testimonials = [
-    { name: 'Priya Sharma', role: 'Community Organizer', initial: 'P', quote: 'Community HUB transformed how I organize local events. The RSVP tracking and notifications make everything effortless. Our meetups have doubled in attendance!', color: 'primary', rating: 5 },
-    { name: 'Arjun Mehta', role: 'Small Business Owner', initial: 'A', quote: 'Listing my bakery on the business directory brought in so many new customers from the neighbourhood. The community exposure is incredible.', color: 'violet', rating: 5 },
-    { name: 'Sarah Johnson', role: 'Software Developer', initial: 'S', quote: 'Found my current job through a community post. The community-based approach made the whole process feel personal and trustworthy.', color: 'green', rating: 5 },
-    { name: 'David Chen', role: 'Tech Community Lead', initial: 'D', quote: 'Managing a 5,000-member tech community is seamless. Post moderation, member roles, and real-time notifications keep everything smooth.', color: 'pink', rating: 5 },
-    { name: 'Kavitha Raj', role: 'Event Coordinator', initial: 'K', quote: 'From charity runs to coding workshops, I have organized over 50 events on this platform. The tools are powerful yet intuitive.', color: 'accent', rating: 5 }
+    {
+      name: 'Murugan Selvam',
+      location: 'Manchester, UK',
+      category: 'Housing & Jobs',
+      initial: 'M',
+      quote: 'When I first moved to the UK, I didn\'t know anyone and felt completely alone. Through TamilConnect, I connected with other Tamils living in Manchester. They helped me find accommodation, guided me through local procedures, and even shared job opportunities. What could have taken months became much easier because of the community.',
+      color: 'primary',
+      rating: 5
+    },
+    {
+      name: 'Kavitha Rajan',
+      location: 'Berlin, Germany',
+      category: 'Student Support',
+      initial: 'K',
+      quote: 'While studying in Germany, I struggled to find a part-time job and didn\'t know where to start. Through the Students Section, I connected with a Tamil senior who guided me through the local job market and university resources. Today, I work part-time at a café and have a strong support network around me.',
+      color: 'violet',
+      rating: 5
+    },
+    {
+      name: 'Arjun Kumar',
+      location: 'Toronto, Canada',
+      category: 'Community Networking',
+      initial: 'A',
+      quote: 'Moving to Canada was exciting but challenging. TamilConnect helped me meet other Tamils in Toronto, attend community events, and build friendships. It made settling into a new country much easier.',
+      color: 'green',
+      rating: 5
+    },
+    {
+      name: 'Priya Nandakumar',
+      location: 'Sydney, Australia',
+      category: 'Help & Support',
+      initial: 'P',
+      quote: 'When I needed advice about visa procedures and local services, members of the Australia Tamil community were incredibly helpful. The guidance I received saved me time, reduced stress, and gave me confidence.',
+      color: 'pink',
+      rating: 5
+    }
   ];
 
   // ── About Stats ──
@@ -157,6 +255,42 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   aboutChips = ['Open Source', 'Community Driven', 'Privacy First', 'Real-time', 'Free Forever'];
+
+  // ── Trust & Safety Cards ──
+  trustCards = [
+    {
+      icon: 'bi-patch-check-fill',
+      title: 'Verified Profiles',
+      desc: 'Members can verify their profiles to build trust within the community. Verified users receive a badge, helping others connect with genuine and reliable people.',
+      color: 'primary'
+    },
+    {
+      icon: 'bi-shield-fill-x',
+      title: 'Block & Report',
+      desc: 'Instantly block unwanted users and report inappropriate behavior, harassment, spam, or suspicious activity. Reported accounts are reviewed by administrators.',
+      color: 'pink'
+    },
+    {
+      icon: 'bi-lock-fill',
+      title: 'Privacy First',
+      desc: 'Personal information is protected and only shared according to your privacy settings. You have full control over what others can see.',
+      color: 'violet'
+    },
+    {
+      icon: 'bi-funnel-fill',
+      title: 'Spam Detection',
+      desc: 'Suspicious activities, fake accounts, and spam messages are automatically detected and removed to keep the platform safe and trustworthy.',
+      color: 'green'
+    }
+  ];
+
+  // ── Footer Platform Metrics ──
+  footerMetrics = [
+    { icon: 'bi-briefcase-fill',      value: '1,240+', label: 'Jobs Posted' },
+    { icon: 'bi-mortarboard-fill',    value: '3,800+', label: 'Students Connected' },
+    { icon: 'bi-hand-thumbs-up-fill', value: '9,500+', label: 'Help Requests Resolved' },
+    { icon: 'bi-globe2',              value: '40+',    label: 'Countries Covered' },
+  ];
 
   // ── Blog Preview ──
   blogPosts = [

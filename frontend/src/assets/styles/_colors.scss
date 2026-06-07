@@ -9,13 +9,16 @@
 // PRIMARY — AMBER / YELLOW BRAND PALETTE
 // ============================================================
 
-$color-primary:             #F59E0B;   // Amber 500 — brand yellow
-$color-primary-rgb:         245, 158, 11;
-$color-primary-dark:        #D97706;   // Amber 600 — hover / pressed
-$color-primary-darker:      #B45309;   // Amber 700 — active / focus ring
+$color-primary:             #FBBF24;   // Amber 400 — premium bright gold
+$color-primary-rgb:         251, 191, 36;
+$color-primary-dark:        #F59E0B;   // Amber 500 — hover / pressed
+$color-primary-darker:      #D97706;   // Amber 600 — active / focus ring
 $color-primary-light:       #FEF3C7;   // Amber 50  — tinted backgrounds
 $color-primary-medium:      #FDE68A;   // Amber 200 — subtle fills
 $color-primary-muted:       #FCD34D;   // Amber 300 — mid-tone accent
+
+// Saffron accent — warm Tamil cultural warmth (orange-500)
+$color-saffron:             #F97316;   // Orange 500 — cultural warmth
 
 // On-primary text (passes WCAG AA on amber backgrounds)
 $color-on-primary:          #1C1917;   // Warm stone-900
@@ -28,9 +31,9 @@ $color-amber-50:            #FFFBEB;
 $color-amber-100:           #FEF3C7;
 $color-amber-200:           #FDE68A;
 $color-amber-300:           #FCD34D;
-$color-amber-400:           #FBBF24;
-$color-amber-500:           #F59E0B;
-$color-amber-600:           #D97706;
+$color-amber-400:           #FBBF24;   // = new $color-primary
+$color-amber-500:           #F59E0B;   // = new $color-primary-dark
+$color-amber-600:           #D97706;   // = new $color-primary-darker
 $color-amber-700:           #B45309;
 $color-amber-800:           #92400E;
 $color-amber-900:           #78350F;
@@ -171,8 +174,8 @@ $color-border-strong:       #D6D3D1;   // Stone-300
 // GRADIENT DEFINITIONS
 // ============================================================
 
-$gradient-primary:          linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-$gradient-primary-reverse:  linear-gradient(135deg, #D97706 0%, #B45309 100%);
+$gradient-primary:          linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
+$gradient-primary-reverse:  linear-gradient(135deg, #F97316 0%, #D97706 100%);
 $gradient-hero:             linear-gradient(135deg, #1C1917 0%, #292524 60%, #3D2400 100%);
 $gradient-card-amber:       linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
 $gradient-shimmer:          linear-gradient(90deg, #F5F5F4 25%, #FFFBEB 50%, #F5F5F4 75%);
@@ -195,20 +198,20 @@ $color-backdrop-light:      rgba(28, 25, 23, 0.3);
 $primary:                   $color-primary;
 $primary-light:             $color-primary-light;
 $primary-dark:              $color-primary-dark;
-$accent:                    #eb459e;               // kept as-is
+$accent:                    $color-saffron;            // saffron replaces pink accent
 $secondary:                 #7289da;               // kept as-is
 $accent-green:              #57f287;               // kept as-is
-$accent-yellow:             $color-amber-300;
+$accent-yellow:             $color-amber-400;
 $violet:                    #7c3aed;               // kept as-is
 
 // ============================================================
 // ADDITIONAL ACCENT COLORS (kept for landing page / admin)
 // ============================================================
 $color-violet:              #7c3aed;
-$color-accent:              #eb459e;   // pink accent (landing page)
-$color-secondary-blue:      #7289da;   // secondary blue
-$color-accent-green:        #57f287;   // green accent
-$color-accent-yellow:       #FCD34D;   // yellow accent (uses amber-300)
+$color-accent:              $color-saffron;        // saffron replaces pink
+$color-secondary-blue:      #7289da;               // secondary blue
+$color-accent-green:        #57f287;               // green accent
+$color-accent-yellow:       #FBBF24;               // bright gold (uses amber-400)
 
 $indigo-50:                 $color-indigo-50;
 $indigo-100:                $color-indigo-100;

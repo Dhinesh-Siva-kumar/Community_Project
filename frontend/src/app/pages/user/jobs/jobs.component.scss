@@ -15,7 +15,7 @@
 
   .job-thumb {
     object-fit: cover;
-    border: 2px solid $slate-100;
+    border: 2px solid $color-stone-200;
   }
 }
 
@@ -25,7 +25,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: $error-bg;
+    background-color: $color-primary-light;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -33,7 +33,7 @@
 
     i {
       font-size: 2rem;
-      color: $error;
+      color: $color-primary-dark;
     }
   }
 }
