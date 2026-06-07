@@ -271,82 +271,86 @@
     box-shadow: $shadow-xl;
     border-color: $color-amber-200;
 
-    .cc-cover-img {
-      transform: scale(1.05);
+    .cc-head--img {
+      filter: brightness(1.06);
     }
   }
 }
 
-// Cover
-.cc-cover {
+// Head: 80px compact strip — amber gradient or cover image
+.cc-head {
   position: relative;
-  height: 180px;
+  height: 80px;
   overflow: hidden;
-  background: $color-stone-100;
+  background: $gradient-primary;
+  background-size: cover;
+  background-position: center;
   flex-shrink: 0;
-}
+  transition: filter 0.25s ease;
 
-.cc-cover-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s ease;
-}
-
-.cc-cover-placeholder {
-  width: 100%;
-  height: 100%;
-  background: $gradient-primary-reverse;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  i {
-    font-size: 3.2rem;
-    color: rgba(255, 255, 255, 0.35);
+  &.cc-head--img {
+    background-color: $color-stone-200;
+    background-image: none; // overridden by inline style
   }
 }
 
-// Badges overlay
-.cc-badges {
+// Status tag — top-right of head
+.cc-status-tag {
   position: absolute;
   top: 10px;
-  left: 10px;
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.cc-badge {
+  right: 10px;
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  gap: 4px;
+  padding: 3px 10px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
 
   i {
     font-size: 10px;
   }
+
+  &.cc-status-tag--active {
+    background: rgba(16, 185, 129, 0.18);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+  }
+
+  &.cc-status-tag--inactive {
+    background: rgba(255, 255, 255, 0.75);
+    color: $color-stone-500;
+    border: 1px solid rgba($color-stone-300, 0.6);
+  }
 }
 
-.cc-badge-global {
-  background: rgba($color-amber-800, 0.82);
-  color: #fff;
+// Avatar — overlaps head/body seam via negative top margin.
+// position + z-index needed so it paints above cc-head (which has position: relative).
+.cc-avatar-wrap {
+  margin-top: -28px;
+  padding: 0 1.1rem;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 2;
 }
 
-.cc-badge-inactive {
-  background: rgba(255, 255, 255, 0.82);
-  color: $color-stone-500;
-  border: 1px solid rgba($color-stone-200, 0.7);
-}
+.cc-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  border: 3px solid $white;
+  background: $gradient-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba($primary, 0.32);
 
-.cc-badge-default {
-  background: rgba($primary, 0.9);
-  color: $color-on-primary;
+  i {
+    font-size: 1.35rem;
+    color: $color-on-primary;
+  }
 }
 
 // Body
@@ -354,7 +358,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 1.1rem 1.2rem 1.1rem;
+  padding: 0 1.2rem 1.1rem;
 }
 
 .cc-name {
@@ -461,33 +465,8 @@
   border-top: 1px solid $color-stone-200;
 }
 
-.cc-btn-view {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 34px;
-  border: none;
-  border-radius: 8px;
-  background: $amber-50;
-  color: $color-primary-darker;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
-
-  &:hover {
-    background: $color-amber-100;
-    color: $color-amber-800;
-  }
-
-  i {
-    font-size: 12px;
-  }
-}
-
-.cc-btn-icon {
+// Icon action buttons — View (amber, flex-1) / Edit / Delete / Confirm
+.cc-icon-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -500,21 +479,40 @@
   font-size: 13px;
   cursor: pointer;
   flex-shrink: 0;
+  text-decoration: none;
   transition: background 0.18s, color 0.18s;
+
+  i {
+    font-size: 12px;
+  }
 
   &:hover {
     background: $color-stone-200;
     color: $color-stone-800;
   }
 
-  &.cc-btn-danger {
+  &.cc-icon-action--view {
+    flex: 1;
+    width: auto;
+    gap: 5px;
+    background: $amber-50;
+    color: $color-primary-darker;
+    font-weight: 600;
+
+    &:hover {
+      background: $color-amber-100;
+      color: $color-amber-800;
+    }
+  }
+
+  &.cc-icon-action--delete {
     &:hover {
       background: rgba($danger, 0.1);
       color: $danger;
     }
   }
 
-  &.cc-btn-confirm {
+  &.cc-icon-action--confirm {
     background: rgba($emerald-600, 0.1);
     color: $emerald-600;
 
@@ -540,8 +538,8 @@
     margin-left: 0;
   }
 
-  .cc-cover {
-    height: 150px;
+  .cc-head {
+    height: 64px;
   }
 }
 

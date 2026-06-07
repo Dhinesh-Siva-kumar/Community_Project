@@ -33,6 +33,9 @@
   <!-- Navigation -->
   <nav class="sidebar-nav" aria-label="Admin navigation links">
     @for (item of navItems; track item.route) {
+      @if (item.sectionLabel && (!sidebarCollapsed() || isMobile())) {
+        <span class="nav-section-label" aria-hidden="true">{{ item.sectionLabel }}</span>
+      }
       <a
         class="nav-item"
         [routerLink]="item.route"

@@ -77,30 +77,29 @@
         <div class="col-12 col-md-6 col-xl-4">
           <div class="community-card h-100">
 
-            <!-- Cover Image -->
-            <div class="cc-cover">
-              @if (community.image) {
-                <img [src]="community.image" [alt]="community.name" class="cc-cover-img" />
-              } @else {
-                <div class="cc-cover-placeholder">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-              }
-              <!-- Badges overlay -->
-              <div class="cc-badges">
-                <span class="cc-badge cc-badge-global">
-                  <i class="bi bi-globe2 me-1"></i>Community
-                </span>
-
-                <!-- Status Badge -->
-              <span class="status-badge badge" [class.bg-success]="community.isActive" [class.bg-secondary]="!community.isActive">
+            <!-- Head: compact strip — cover image or amber gradient -->
+            <div class="cc-head"
+                 [class.cc-head--img]="!!community.image"
+                 [style.backgroundImage]="community.image ? 'url(' + community.image + ')' : null">
+              <span class="cc-status-tag"
+                    [class.cc-status-tag--active]="community.isActive"
+                    [class.cc-status-tag--inactive]="!community.isActive">
+                <i class="bi"
+                   [class.bi-check-circle-fill]="community.isActive"
+                   [class.bi-dash-circle-fill]="!community.isActive"></i>
                 {{ community.isActive ? 'Active' : 'Inactive' }}
               </span>
-              </div>
             </div>
 
             <!-- Body -->
             <div class="cc-body">
+              <!-- Avatar — overlaps head/body seam -->
+              <div class="cc-avatar-wrap">
+                <div class="cc-avatar">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+              </div>
+
               <a [routerLink]="['/admin/community', community.id]" class="cc-name">
                 {{ community.name }}
               </a>
@@ -135,21 +134,21 @@
 
               <!-- Actions -->
               <div class="cc-actions">
-                <a [routerLink]="['/admin/community', community.id]" class="cc-btn-view">
+                <a [routerLink]="['/admin/community', community.id]" class="cc-icon-action cc-icon-action--view" title="View community">
                   <i class="bi bi-eye-fill me-1"></i>View
                 </a>
-                <button class="cc-btn-icon" title="Edit community" (click)="openEditModal(community)">
+                <button class="cc-icon-action" title="Edit community" (click)="openEditModal(community)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 @if (deleteConfirmId() === community.id) {
-                  <button class="cc-btn-icon cc-btn-confirm" title="Confirm delete" (click)="deleteCommunity(community.id)">
+                  <button class="cc-icon-action cc-icon-action--confirm" title="Confirm delete" (click)="deleteCommunity(community.id)">
                     <i class="bi bi-check-lg"></i>
                   </button>
-                  <button class="cc-btn-icon" title="Cancel" (click)="cancelDelete()">
+                  <button class="cc-icon-action" title="Cancel" (click)="cancelDelete()">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 } @else {
-                  <button class="cc-btn-icon cc-btn-danger" title="Delete community" (click)="confirmDelete(community.id)">
+                  <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="confirmDelete(community.id)">
                     <i class="bi bi-trash-fill"></i>
                   </button>
                 }

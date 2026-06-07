@@ -52,27 +52,11 @@ $_sb-active-text:    $color-primary-dark;
   &.collapsed {
     width: $_sidebar-collapsed;
 
-// ── Sidebar Section Label ─────────────────────────────────────
-.sidebar-section-label {
-  display: block;
-  font-size: 10px;
-  font-weight: $font-weight-extrabold;
-  color: $color-text-muted;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 14px 0.875rem 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  user-select: none;
-  opacity: 0.7;
-}
-
-.nav-item {
+    .nav-item {
       justify-content: center;
       padding: 0.625rem;
 
-      .bi { margin-right: 0; font-size: 1.25rem; }
+      .bi { margin-right: 0; font-size: 1.25rem; width: auto; }
     }
 
     .sidebar-header { justify-content: center; padding: 0 0.5rem; }
@@ -150,11 +134,11 @@ $_sb-active-text:    $color-primary-dark;
 // ── Sidebar Navigation ────────────────────────────────────────
 .sidebar-nav {
   flex: 1;
-  padding: 0.625rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 
   &::-webkit-scrollbar { width: 3px; }
   &::-webkit-scrollbar-thumb {
@@ -173,18 +157,21 @@ $_sb-active-text:    $color-primary-dark;
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   white-space: nowrap;
-  transition: background $_transition, color $_transition;
+  transition: background $_transition, color $_transition, box-shadow $_transition;
   cursor: pointer;
   position: relative;
   letter-spacing: -0.1px;
 
+  // Fixed-width icon container → labels always start at the same column
   .bi {
     font-size: 1.0625rem;
-    margin-right: 0.75rem;
+    width: 20px;
+    text-align: center;
     flex-shrink: 0;
+    margin-right: 0.75rem;
     color: $color-text-muted;
     opacity: 0.7;
-    transition: color $_transition, opacity $_transition;
+    transition: color $_transition, opacity $_transition, transform 0.18s ease;
   }
 
   .nav-label {
@@ -197,28 +184,55 @@ $_sb-active-text:    $color-primary-dark;
     background: $_sb-hover-bg;
     color: $_sb-hover-text;
 
-    .bi { color: $color-primary; opacity: 1; }
+    .bi {
+      color: $color-primary;
+      opacity: 1;
+      transform: translateX(1px);
+    }
   }
 
   &.active {
-    background: $_sb-active-bg;
+    background: rgba($color-primary, 0.1);
     color: $_sb-active-text;
     font-weight: $font-weight-bold;
+    box-shadow: inset 0 0 0 1px rgba($color-primary, 0.08);
 
-    .bi { color: $color-primary; opacity: 1; }
+    .bi {
+      color: $color-primary;
+      opacity: 1;
+    }
 
+    // Left accent bar — taller and slightly wider than default
     &::before {
       content: '';
       position: absolute;
       left: 0;
       top: 50%;
       transform: translateY(-50%);
-      width: 3px;
-      height: 56%;
+      width: 4px;
+      height: 65%;
       background: $gradient-primary;
       border-radius: 0 $radius-xs $radius-xs 0;
+      box-shadow: 2px 0 8px rgba($color-primary, 0.35);
     }
   }
+}
+
+// ── Nav Section Labels (group headers — hidden in collapsed state) ─
+.nav-section-label {
+  display: block;
+  font-size: 10px;
+  font-weight: $font-weight-extrabold;
+  color: $color-text-muted;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 0.875rem 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+  opacity: 0.5;
+  line-height: 1;
 }
 
 // ============================================================
@@ -645,6 +659,7 @@ $_sb-active-text:    $color-primary-dark;
   .sidebar,
   .main-wrapper,
   .nav-item,
+  .nav-item .bi,
   .sidebar-toggle,
   .header-icon-btn,
   .dropdown-item,
