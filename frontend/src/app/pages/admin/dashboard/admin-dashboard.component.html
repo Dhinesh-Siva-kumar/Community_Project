@@ -1,116 +1,228 @@
-<!-- Loading State -->
+<!-- ============================================================ -->
+<!-- SHIMMER SKELETON                                             -->
+<!-- ============================================================ -->
 @if (loading()) {
-  <div class="d-flex justify-content-center align-items-center py-5">
-    <div class="text-center">
-      <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <div class="dash-skeleton">
+
+    <div class="sk-top-bar">
+      <div class="sk-greeting">
+        <div class="sk-row">
+          <div class="sk-pill"></div>
+          <div class="sk-pill sk-pill--sm" style="margin-left:auto"></div>
+        </div>
+        <div class="sk-line sk-line--xl"></div>
+        <div class="sk-line sk-line--md"></div>
       </div>
-      <p class="text-muted">Loading dashboard...</p>
+      <div class="sk-qa">
+        <div class="sk-row"><div class="sk-pill"></div></div>
+        @for (_ of [1,2,3,4]; track _) {
+          <div class="sk-action-row">
+            <div class="sk-icon"></div>
+            <div class="sk-line sk-line--sm" style="flex:1"></div>
+            <div class="sk-chevron"></div>
+          </div>
+        }
+      </div>
     </div>
+
+    <div class="sk-stat-row">
+      @for (_ of [1,2,3,4,5,6,7]; track _) {
+        <div class="sk-stat"></div>
+      }
+    </div>
+
+    <div class="sk-activity">
+      <div class="sk-panel-hdr">
+        <div class="sk-line sk-line--md" style="width:160px"></div>
+        <div class="sk-pill sk-pill--sm" style="margin-left:auto"></div>
+      </div>
+      @for (_ of [1,2,3,4,5]; track _) {
+        <div class="sk-act-row">
+          <div class="sk-icon"></div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+            <div class="sk-line sk-line--md"></div>
+            <div class="sk-line sk-line--sm" style="width:40%"></div>
+          </div>
+          <div class="sk-pill sk-pill--sm"></div>
+        </div>
+      }
+    </div>
+
   </div>
 } @else {
-  <!-- Page Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="fw-bold mb-1">Admin Dashboard</h4>
-      <p class="text-muted mb-0">Overview of your community platform</p>
+
+<!-- ============================================================ -->
+<!-- DASHBOARD LAYOUT WRAPPER                                     -->
+<!-- ============================================================ -->
+<div class="dash-layout">
+
+  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
+  <div class="top-bar">
+
+    <!-- Greeting Card -->
+    <div class="greeting-card">
+      <div class="greeting-shapes" aria-hidden="true">
+        <div class="shape shape--1"></div>
+        <div class="shape shape--2"></div>
+      </div>
+
+      <div class="greeting-header">
+        <div class="greeting-eyebrow">
+          <i class="bi bi-shield-check-fill" aria-hidden="true"></i>
+          Admin Dashboard
+        </div>
+        <div class="greeting-chips">
+          <span class="datetime-chip">
+            <i class="bi bi-clock" aria-hidden="true"></i>
+            {{ today() | date:'EEE, d MMM · h:mm a' }}
+          </span>
+          <button
+            class="refresh-btn"
+            (click)="loadDashboardStats()"
+            aria-label="Refresh dashboard"
+            type="button"
+          >
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <h1 class="greeting-title">
+        Welcome back, {{ getAdminFirstName() }}
+        <span class="greeting-wave" aria-hidden="true">👋</span>
+      </h1>
+      <p class="greeting-subtitle">
+        Here's what's happening across your community platform today.
+      </p>
+
+      @if (pendingCount() > 0) {
+        <a routerLink="/admin/post-approval" class="greeting-alert text-decoration-none" role="alert">
+          <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+          <span>
+            <strong>{{ pendingCount() }}</strong>
+            post{{ pendingCount() === 1 ? '' : 's' }} awaiting your review
+          </span>
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+      }
     </div>
-    <button class="btn btn-outline-primary btn-sm" (click)="loadDashboardStats()">
-      <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-    </button>
+
+    <!-- Quick Actions Card -->
+    <div class="qa-card">
+      <div class="qa-card-header">
+        <span class="qa-card-label">Quick Actions</span>
+        <span class="qa-card-count" aria-hidden="true">{{ quickActions().length }}</span>
+      </div>
+
+      <div class="qa-card-list">
+        @for (action of quickActions(); track action.title; let i = $index) {
+          <a
+            [routerLink]="action.route"
+            class="qa-btn text-decoration-none"
+            [class.qa-btn--accent]="i === 0"
+            [attr.aria-label]="action.title"
+          >
+            <div class="qa-btn-icon" [style.background-color]="action.color + '18'">
+              <i class="bi {{ action.icon }}" [style.color]="action.color" aria-hidden="true"></i>
+            </div>
+            <span class="qa-btn-label">{{ action.title }}</span>
+            @if (action.route === '/admin/post-approval' && pendingCount() > 0) {
+              <span class="qa-btn-badge" [attr.aria-label]="pendingCount() + ' pending'">
+                {{ pendingCount() }}
+              </span>
+            }
+            <i class="bi bi-chevron-right qa-btn-chevron" aria-hidden="true"></i>
+          </a>
+        }
+      </div>
+    </div>
+
   </div>
 
-  <!-- Stats Row -->
-  <div class="row g-3 mb-4">
+  <!-- ── STAT ROW ────────────────────────────────────────────── -->
+  <div class="stat-row" role="list" aria-label="Platform statistics">
     @for (card of statCards(); track card.label) {
-      <div class="col-6 col-md-4 col-xl-3">
-        <a [routerLink]="card.route" class="text-decoration-none">
-          <div class="stat-card card border-0 shadow-sm h-100">
-            <div class="card-body d-flex align-items-center gap-3 p-3">
-              <div class="stat-icon-wrapper" [style.background-color]="card.bgColor">
-                <i class="bi {{ card.icon }}" [style.color]="card.color"></i>
-              </div>
-              <div>
-                <h3 class="fw-bold mb-0">{{ card.value | number }}</h3>
-                <small class="text-muted">{{ card.label }}</small>
-              </div>
-            </div>
+      <a
+        [routerLink]="card.route"
+        class="stat-card text-decoration-none"
+        role="listitem"
+        [style.--card-color]="card.color"
+        [style.--card-bg]="card.bgColor"
+        [attr.aria-label]="card.label + ': ' + card.value"
+      >
+        <div class="stat-card-top">
+          <div class="stat-icon">
+            <i class="bi {{ card.icon }}" aria-hidden="true"></i>
           </div>
-        </a>
-      </div>
+          <i class="bi bi-arrow-up-right stat-trend-icon" aria-hidden="true"></i>
+        </div>
+        <div class="stat-card-body">
+          <span class="stat-value">{{ card.value | number }}</span>
+          <span class="stat-label">{{ card.label }}</span>
+        </div>
+      </a>
     }
   </div>
 
-  <div class="row g-3">
-    <!-- Recent Activity -->
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
-          <h6 class="fw-bold mb-0">
-            <i class="bi bi-activity me-2 text-primary"></i>Recent Activity
-          </h6>
-          @if (stats()?.recentActivity?.length) {
-            <span class="badge bg-primary bg-opacity-10 text-primary">
-              {{ stats()!.recentActivity!.length }} items
-            </span>
-          }
+  <!-- ── RECENT ACTIVITY ─────────────────────────────────────── -->
+  <div class="panel activity-panel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-icon-dot">
+          <i class="bi bi-activity" aria-hidden="true"></i>
         </div>
-        <div class="card-body p-0">
-          @if (stats()?.recentActivity && stats()!.recentActivity!.length > 0) {
-            <div class="activity-list">
-              @for (activity of stats()!.recentActivity!; track activity.createdAt) {
-                <div class="activity-item d-flex align-items-start gap-3 p-3 border-bottom">
-                  <div class="activity-icon-wrapper flex-shrink-0"
-                       [style.background-color]="getActivityColor(activity.type) + '18'">
-                    <i class="bi {{ getActivityIcon(activity.type) }}"
-                       [style.color]="getActivityColor(activity.type)"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <p class="mb-0 small">{{ activity.message }}</p>
-                    <small class="text-muted">
-                      <i class="bi bi-clock me-1"></i>{{ activity.createdAt | date:'dd MMM yyyy, h:mm a' }}
-                    </small>
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="text-center py-5 text-muted">
-              <i class="bi bi-inbox" style="font-size: 2.5rem; opacity: 0.2;"></i>
-              <p class="mt-2 mb-0 small">No recent activity yet</p>
-            </div>
-          }
-        </div>
+        <h2 class="panel-title">Recent Activity</h2>
+        <span class="live-chip" aria-hidden="true">
+          <span class="live-dot"></span>
+          LIVE
+        </span>
       </div>
+      @if (stats()?.recentActivity?.length) {
+        <span class="panel-badge">{{ stats()!.recentActivity!.length }} events</span>
+      }
     </div>
 
-    <!-- Quick Actions -->
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-header bg-white border-0 py-3">
-          <h6 class="fw-bold mb-0">
-            <i class="bi bi-lightning-fill me-2 text-warning"></i>Quick Actions
-          </h6>
+    <div class="panel-body panel-body--flush">
+      @if (stats()?.recentActivity && stats()!.recentActivity!.length > 0) {
+        <div class="activity-list" role="list">
+          @for (activity of stats()!.recentActivity!; track activity.createdAt) {
+            <div class="activity-item" role="listitem">
+              <div class="activity-icon" [style.background-color]="getActivityColor(activity.type) + '14'">
+                <i
+                  class="bi {{ getActivityIcon(activity.type) }}"
+                  [style.color]="getActivityColor(activity.type)"
+                  aria-hidden="true"
+                ></i>
+              </div>
+              <div class="activity-content">
+                <p class="activity-message">{{ activity.message }}</p>
+                <span class="activity-time">
+                  <i class="bi bi-clock" aria-hidden="true"></i>
+                  {{ getTimeAgo(activity.createdAt) }}
+                </span>
+              </div>
+              <span
+                class="activity-type-badge"
+                [style.background-color]="getActivityColor(activity.type) + '14'"
+                [style.color]="getActivityColor(activity.type)"
+              >
+                {{ getActivityTypeLabel(activity.type) }}
+              </span>
+            </div>
+          }
         </div>
-        <div class="card-body p-3 pt-0">
-          <div class="d-grid gap-2">
-            @for (action of quickActions(); track action.title) {
-              <a [routerLink]="action.route" class="quick-action-card text-decoration-none">
-                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border">
-                  <div class="quick-action-icon" [style.background-color]="action.color + '15'">
-                    <i class="bi {{ action.icon }}" [style.color]="action.color"></i>
-                  </div>
-                  <div>
-                    <h6 class="mb-0 fw-semibold text-dark small">{{ action.title }}</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">{{ action.description }}</small>
-                  </div>
-                  <i class="bi bi-chevron-right ms-auto text-muted"></i>
-                </div>
-              </a>
-            }
+      } @else {
+        <div class="empty-state">
+          <div class="empty-state__icon">
+            <i class="bi bi-inbox-fill" aria-hidden="true"></i>
           </div>
+          <h4 class="empty-state__title">No recent activity</h4>
+          <p class="empty-state__desc">Platform activity will appear here in real time.</p>
         </div>
-      </div>
+      }
     </div>
   </div>
+
+</div><!-- /.dash-layout -->
+
 }

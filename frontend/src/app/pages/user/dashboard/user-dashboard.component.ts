@@ -123,11 +123,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   });
 
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill', iconColor: '#5865f2', bgColor: '#ede9fe', accentColor: '#5865f2' },
-    { label: 'Posts', value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#22c55e', bgColor: '#dcfce7', accentColor: '#22c55e' },
-    { label: 'Businesses', value: 0, displayValue: 0, icon: 'bi-shop', iconColor: '#f97316', bgColor: '#fff7ed', accentColor: '#f97316' },
-    { label: 'Events', value: 0, displayValue: 0, icon: 'bi-calendar-event-fill', iconColor: '#ef4444', bgColor: '#fef2f2', accentColor: '#ef4444' },
-    { label: 'Jobs', value: 0, displayValue: 0, icon: 'bi-briefcase-fill', iconColor: '#eb459e', bgColor: '#fdf2f8', accentColor: '#eb459e' },
+    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',          iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A' },
+    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FFFBEB', accentColor: '#F59E0B' },
+    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                  iconColor: '#D97706', bgColor: '#FEF3C7', accentColor: '#D97706' },
+    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',   iconColor: '#B45309', bgColor: '#FDE68A', accentColor: '#B45309' },
+    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',        iconColor: '#78716C', bgColor: '#F5F5F4', accentColor: '#78716C' },
   ]);
 
   private animationFrameId: number | null = null;
@@ -153,10 +153,10 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   });
 
   quickLinks = signal<QuickLink[]>([
-    { title: 'Communities', description: 'Browse & join', icon: 'bi-people-fill', color: '#5865f2', bgColor: '#ede9fe', route: '/user/community' },
-    { title: 'Businesses', description: 'Discover local', icon: 'bi-shop', color: '#22c55e', bgColor: '#dcfce7', route: '/user/business' },
-    { title: 'Events', description: 'Find nearby', icon: 'bi-calendar-event-fill', color: '#f97316', bgColor: '#fff7ed', route: '/user/events' },
-    { title: 'Jobs', description: 'Opportunities', icon: 'bi-briefcase-fill', color: '#ef4444', bgColor: '#fef2f2', route: '/user/jobs' },
+    { title: 'Communities', description: 'Browse & join',  icon: 'bi-people-fill',         color: '#16A34A', bgColor: '#DCFCE7', route: '/user/community' },
+    { title: 'Businesses',  description: 'Discover local', icon: 'bi-shop',                 color: '#D97706', bgColor: '#FEF3C7', route: '/user/business' },
+    { title: 'Events',      description: 'Find nearby',    icon: 'bi-calendar-event-fill',  color: '#F59E0B', bgColor: '#FFFBEB', route: '/user/events' },
+    { title: 'Jobs',        description: 'Opportunities',  icon: 'bi-briefcase-fill',       color: '#78716C', bgColor: '#F5F5F4', route: '/user/jobs' },
   ]);
 
   tabs: { key: PostTab; label: string; icon: string }[] = [
@@ -395,14 +395,14 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   getNotificationIconColor(type: string): string {
     switch (type) {
-      case 'POST_APPROVED': return '#22c55e';
-      case 'POST_REJECTED': return '#ef4444';
-      case 'NEW_COMMENT': return '#5865f2';
-      case 'NEW_LIKE': return '#eb459e';
-      case 'NEW_MEMBER': return '#3b82f6';
-      case 'COMMUNITY_UPDATE': return '#f97316';
-      case 'EVENT_REMINDER': return '#8b5cf6';
-      default: return '#9ca3af';
+      case 'POST_APPROVED':    return '#16A34A';
+      case 'POST_REJECTED':    return '#EF4444';
+      case 'NEW_COMMENT':      return '#D97706';
+      case 'NEW_LIKE':         return '#F59E0B';
+      case 'NEW_MEMBER':       return '#16A34A';
+      case 'COMMUNITY_UPDATE': return '#B45309';
+      case 'EVENT_REMINDER':   return '#D97706';
+      default:                 return '#9CA3AF';
     }
   }
 

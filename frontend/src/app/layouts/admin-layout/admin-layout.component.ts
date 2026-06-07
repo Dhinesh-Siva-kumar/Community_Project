@@ -8,6 +8,7 @@ interface NavItem {
   label: string;
   icon: string;
   route: string;
+  sectionLabel?: string;
 }
 
 @Component({
@@ -28,14 +29,14 @@ export class AdminLayoutComponent {
   isMobile = signal(false);
 
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'bi-grid', route: '/admin/dashboard' },
-    { label: 'Community', icon: 'bi-people', route: '/admin/community' },
-    { label: 'Post Approval', icon: 'bi-check-circle', route: '/admin/post-approval' },
-    { label: 'User Management', icon: 'bi-person-gear', route: '/admin/user-management' },
-    { label: 'Business', icon: 'bi-shop', route: '/admin/business' },
-    { label: 'Events', icon: 'bi-calendar-event', route: '/admin/events' },
-    { label: 'Jobs', icon: 'bi-briefcase', route: '/admin/jobs' },
-    { label: 'Profile', icon: 'bi-person', route: '/admin/profile' },
+    { label: 'Dashboard',       icon: 'bi-grid',        route: '/admin/dashboard',        sectionLabel: 'OVERVIEW'    },
+    { label: 'Community',       icon: 'bi-people',      route: '/admin/community',        sectionLabel: 'MANAGEMENT'  },
+    { label: 'Post Approval',   icon: 'bi-check-circle',route: '/admin/post-approval'                                  },
+    { label: 'User Management', icon: 'bi-person-gear', route: '/admin/user-management'                                },
+    { label: 'Business',        icon: 'bi-shop',        route: '/admin/business',         sectionLabel: 'CONTENT'     },
+    { label: 'Events',          icon: 'bi-calendar-event', route: '/admin/events'                                      },
+    { label: 'Jobs',            icon: 'bi-briefcase',   route: '/admin/jobs'                                           },
+    { label: 'Profile',         icon: 'bi-person',      route: '/admin/profile',          sectionLabel: 'ACCOUNT'     },
   ];
 
   constructor() {

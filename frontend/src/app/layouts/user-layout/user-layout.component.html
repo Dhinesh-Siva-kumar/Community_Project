@@ -37,6 +37,15 @@
   <!-- Navigation -->
   <nav class="sidebar-nav" aria-label="Application navigation">
     @for (item of navItems; track item.route) {
+      @if (item.route === '/user/dashboard') {
+        <div class="sidebar-section-label">Main</div>
+      }
+      @if (item.route === '/user/community') {
+        <div class="sidebar-section-label">Discover</div>
+      }
+      @if (item.route === '/user/profile') {
+        <div class="sidebar-section-label">Account</div>
+      }
       <a
         class="nav-item"
         [routerLink]="item.route"
@@ -53,6 +62,33 @@
       </a>
     }
   </nav>
+
+  <!-- Sidebar Footer: User Profile -->
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar-wrap">
+        @if (authService.currentUser()?.avatar) {
+          <img
+            [src]="authService.currentUser()!.avatar"
+            alt="Profile picture"
+            class="sidebar-user-avatar"
+          />
+        } @else {
+          <div class="sidebar-user-initials" aria-hidden="true">{{ getUserInitials() }}</div>
+        }
+        <span class="online-dot" aria-label="Online"></span>
+      </div>
+      @if (!sidebarCollapsed() || isMobile()) {
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">{{ getUserFullName() }}</span>
+          <span class="sidebar-user-status">
+            <i class="bi bi-circle-fill" aria-hidden="true"></i>
+            Online
+          </span>
+        </div>
+      }
+    </div>
+  </div>
 
 </aside>
 
@@ -85,6 +121,16 @@
 
     <!-- Right: actions + avatar -->
     <div class="header-right">
+
+      <!-- Search trigger -->
+      <button
+        class="header-icon-btn search-trigger"
+        aria-label="Search"
+        type="button"
+        title="Search"
+      >
+        <i class="bi bi-search" aria-hidden="true"></i>
+      </button>
 
       <!-- Notification bell -->
       <div

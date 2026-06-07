@@ -72,6 +72,26 @@
             <i class="bi bi-calendar3"></i>
             {{ today() | date:'EEEE, d MMMM yyyy' }}
           </div>
+          <div class="welcome-chips">
+            @if (joinedCommunities().length > 0) {
+              <span class="welcome-chip">
+                <i class="bi bi-people-fill"></i>
+                {{ joinedCommunities().length }} {{ joinedCommunities().length === 1 ? 'Community' : 'Communities' }}
+              </span>
+            }
+            @if (notificationService.unreadCount() > 0) {
+              <span class="welcome-chip welcome-chip--alert">
+                <i class="bi bi-bell-fill"></i>
+                {{ notificationService.unreadCount() }} Unread
+              </span>
+            }
+            @if (upcomingEvents().length > 0) {
+              <span class="welcome-chip">
+                <i class="bi bi-calendar-check"></i>
+                {{ upcomingEvents().length }} {{ upcomingEvents().length === 1 ? 'Event' : 'Events' }}
+              </span>
+            }
+          </div>
         </div>
         <a routerLink="/user/community" class="explore-link">
           <i class="bi bi-compass"></i> Explore Communities
@@ -79,7 +99,7 @@
       </div>
 
       <!-- ===== STATS ROW ===== -->
-      <!-- <div class="stats-row">
+      <div class="stats-row">
         @for (stat of animatedStats(); track stat.label) {
           <div class="stat-card">
             <div class="stat-icon-wrap" [style.background]="stat.bgColor">
@@ -91,7 +111,7 @@
             </div>
           </div>
         }
-      </div> -->
+      </div>
 
       <!-- Tab Bar -->
       <div class="tab-bar">
@@ -180,6 +200,11 @@
                     {{ post.user?.displayName ?? post.user?.userName ?? 'User' }}
                   </div>
                   <div class="post-meta-row">
+                    @if (activeTab() === 'POPULAR' && (post._count?.likes ?? 0) > 0) {
+                      <span class="post-trending-badge">
+                        <i class="bi bi-fire"></i> Hot
+                      </span>
+                    }
                     <span class="post-type-badge" [class]="getPostTypeBadge(post.type).class">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>
                       {{ getPostTypeBadge(post.type).label }}
@@ -225,6 +250,9 @@
                 >
                   <i class="bi" [class.bi-bookmark]="!isPostSaved(post.id)" [class.bi-bookmark-fill]="isPostSaved(post.id)"></i>
                   <span>{{ isPostSaved(post.id) ? 'Saved' : 'Save' }}</span>
+                </button>
+                <button class="action-btn share-btn" (click)="$event.stopPropagation()" aria-label="Share post">
+                  <i class="bi bi-share"></i>
                 </button>
               </div>
             </div>
@@ -274,6 +302,9 @@
                 <div class="community-card-placeholder">
                   <i class="bi bi-people-fill"></i>
                 </div>
+              }
+              @if ((community._count?.members ?? 0) > 0) {
+                <div class="community-active-dot" title="Active community"></div>
               }
             </div>
             <div class="community-card-body">
@@ -396,6 +427,7 @@
                   <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
                 }
                 <span><i class="bi bi-clock"></i> {{ getTimeAgo(job.createdAt) }}</span>
+                <span class="job-apply-chip" (click)="$event.stopPropagation()">Apply</span>
               </div>
             </a>
           }

@@ -175,12 +175,42 @@ $transition:    $duration-short ease;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, $primary 0%, $accent 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 55%, #B45309 100%);
   border-radius: $radius;
   padding: 22px 28px;
   color: $white;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
   animation: fadeInUp 0.5s $easing-standard;
+
+  // Decorative background orbs
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  &::before {
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.12);
+    top: -50px;
+    right: -40px;
+  }
+  &::after {
+    width: 90px;
+    height: 90px;
+    background: rgba(255, 255, 255, 0.08);
+    bottom: -30px;
+    left: 32%;
+  }
+
+  // Children sit above orbs
+  .welcome-text, .explore-link {
+    position: relative;
+    z-index: 1;
+  }
 
   .welcome-text {
     h2 {
@@ -231,6 +261,38 @@ $transition:    $duration-short ease;
     padding: 16px 18px;
     .welcome-text h2 { font-size: 1rem; }
     .explore-link { width: 100%; justify-content: center; }
+  }
+}
+
+// ── Welcome Chips ─────────────────────────────────────────────
+.welcome-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+
+  i { font-size: 10px; }
+
+  &--alert {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.42);
   }
 }
 
@@ -330,7 +392,7 @@ $transition:    $duration-short ease;
   flex-direction: column;
   gap: 16px;
   position: sticky;
-  top: 88px;
+  top: calc(#{$header-height} + #{$spacing-lg});
   align-self: start;
   min-width: 0;
 
@@ -416,7 +478,7 @@ $transition:    $duration-short ease;
   animation: fadeInUp 0.4s $easing-standard both;
 
   &:hover {
-    box-shadow: $shadow-card-hover;
+    box-shadow: $shadow-card-hover, inset 3px 0 0 $primary;
     transform: translateY(-2px);
   }
 }
@@ -434,7 +496,7 @@ $transition:    $duration-short ease;
   height: 42px;
   min-width: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, $primary 0%, $accent 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   color: $white;
   display: flex;
   align-items: center;
@@ -457,7 +519,7 @@ $transition:    $duration-short ease;
 }
 
 .post-user-name {
-  font-size: 13.5px;
+  font-size: $font-size-sm;
   font-weight: 700;
   color: $dark;
   line-height: 1.3;
@@ -495,7 +557,7 @@ $transition:    $duration-short ease;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: $font-size-xs;
   font-weight: 600;
   color: $primary;
 
@@ -503,7 +565,7 @@ $transition:    $duration-short ease;
 }
 
 .post-time {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: $muted;
   white-space: nowrap;
   margin-left: auto;
@@ -516,7 +578,7 @@ $transition:    $duration-short ease;
   padding: 12px 18px 8px;
 
   p {
-    font-size: 13.5px;
+    font-size: $font-size-sm;
     line-height: 1.55;
     color: $text;
     margin: 0;
@@ -574,7 +636,7 @@ $transition:    $duration-short ease;
   border: none;
   background: transparent;
   border-radius: $radius-sm;
-  font-size: 12.5px;
+  font-size: $font-size-xs;
   font-weight: 500;
   color: $muted;
   cursor: pointer;
@@ -590,8 +652,8 @@ $transition:    $duration-short ease;
 
 .like-btn {
   &:hover {
-    color: $accent;
-    background: rgba($accent, 0.08);
+    color: $danger;
+    background: rgba($danger, 0.08);
   }
 }
 
@@ -617,6 +679,30 @@ $transition:    $duration-short ease;
       animation: scaleIn 0.3s $easing-standard;
     }
   }
+}
+
+.share-btn {
+  &:hover {
+    color: $primary;
+    background: rgba($primary, 0.08);
+  }
+}
+
+// ── Post Trending Badge ───────────────────────────────────────
+.post-trending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #fff;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+
+  i { font-size: 10px; }
 }
 
 // ============================================================
@@ -699,7 +785,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 
   // --- Description ---
   &__desc {
-    font-size: 13.5px;
+    font-size: $font-size-sm;
     color: $muted;
     margin: 0;
     line-height: 1.55;
@@ -715,10 +801,10 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     padding: 10px 22px;
     border-radius: 24px;
     text-decoration: none;
-    font-size: 13.5px;
+    font-size: $font-size-sm;
     font-weight: 600;
     color: $white;
-    background: linear-gradient(135deg, $primary, $accent);
+    background: linear-gradient(135deg, #F59E0B, #D97706);
     box-shadow: 0 4px 16px rgba($primary, 0.3);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 
@@ -744,7 +830,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     }
 
     .empty-state__title { font-size: 14px; }
-    .empty-state__desc  { font-size: 12.5px; max-width: 260px; }
+    .empty-state__desc  { font-size: $font-size-xs; max-width: 260px; }
   }
 
   // ── Color Themes ──────────────────────────────────────────
@@ -811,7 +897,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   align-items: center;
   gap: 8px;
   padding: 14px 16px 10px;
-  font-size: 13.5px;
+  font-size: $font-size-sm;
   font-weight: 700;
   color: $dark;
   border-bottom: 1px solid $hover-bg-light;
@@ -878,7 +964,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 }
 
 .profile-strength {
-  font-size: 12px;
+  font-size: $font-size-xs;
   font-weight: 600;
   color: $primary;
   margin-bottom: 12px;
@@ -896,7 +982,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     gap: 8px;
     padding: 6px 0;
     border-bottom: 1px solid $hover-bg-light;
-    font-size: 12px;
+    font-size: $font-size-xs;
     color: $text;
 
     &:last-child { border-bottom: none; }
@@ -925,7 +1011,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   flex-direction: column;
   align-items: center;
 
-  p { font-size: 12.5px; color: $success; font-weight: 600; margin: 0; }
+  p { font-size: $font-size-xs; color: $success; font-weight: 600; margin: 0; }
 }
 
 // ============================================================
@@ -941,7 +1027,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   i.header-ico { font-size: 16px; color: $primary; flex-shrink: 0; }
 
   .header-title {
-    font-size: 13.5px;
+    font-size: $font-size-sm;
     font-weight: 700;
     color: $dark;
     margin: 0;
@@ -950,8 +1036,8 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   .unread-badge {
     font-size: 11px;
     font-weight: 700;
-    background: $accent;
-    color: $white;
+    background: $primary;
+    color: $color-on-primary;
     padding: 2px 8px;
     border-radius: 20px;
   }
@@ -961,7 +1047,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     background: none;
     border: 1px solid $border;
     color: $muted;
-    font-size: 11px;
+    font-size: $font-size-xs;
     font-weight: 500;
     padding: 4px 10px;
     border-radius: 8px;
@@ -1015,14 +1101,14 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   }
 
   .notif-message {
-    font-size: 12px;
+    font-size: $font-size-xs;
     color: $dark;
     margin: 0 0 2px;
     line-height: 1.4;
   }
 
   .notif-time {
-    font-size: 11px;
+    font-size: $font-size-xs;
     color: $muted;
     display: flex;
     align-items: center;
@@ -1036,7 +1122,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     height: 7px;
     min-width: 7px;
     border-radius: 50%;
-    background: $accent;
+    background: $primary;
     margin-top: 4px;
     animation: pulseDot 2s ease-in-out infinite;
   }
@@ -1053,13 +1139,17 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   display: block;
   text-align: center;
   padding: 10px 16px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: $primary;
   text-decoration: none;
   border-top: 1px solid $hover-bg-light;
+  transition: opacity $duration-quick, background $duration-quick;
 
-  &:hover { text-decoration: underline; }
+  &:hover {
+    opacity: 0.75;
+    background: $bg;
+  }
 }
 
 // ============================================================
@@ -1068,8 +1158,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 .quick-actions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: $border;
+  gap: 0;
 }
 
 .qa-item {
@@ -1080,7 +1169,15 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   background: $white;
   text-decoration: none;
   color: $text;
+  cursor: pointer;
   transition: background $duration-quick;
+  border-bottom: 1px solid $hover-bg-light;
+  border-right: 1px solid $hover-bg-light;
+
+  // Remove right border from the 2nd column (even items)
+  &:nth-child(2n) { border-right: none; }
+  // Remove bottom border from last two items
+  &:nth-last-child(-n+2) { border-bottom: none; }
 
   &:hover { background: $bg; }
 
@@ -1100,20 +1197,20 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
     flex: 1;
     min-width: 0;
 
-    strong {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: $dark;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    span {
-      display: block;
-      font-size: 11px;
-      color: $muted;
-    }
+  strong {
+    display: block;
+    font-size: $font-size-xs;
+    font-weight: 600;
+    color: $dark;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  span {
+    display: block;
+    font-size: $font-size-xs;
+    color: $muted;
+  }
   }
 }
 
@@ -1159,7 +1256,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 }
 
 .section-view-all {
-  font-size: 12.5px;
+  font-size: $font-size-xs;
   font-weight: 600;
   color: $primary;
   text-decoration: none;
@@ -1210,7 +1307,8 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   width: 100%;
   height: 80px;
   overflow: hidden;
-  background: linear-gradient(135deg, $primary-light 0%, rgba($accent, 0.12) 100%);
+  position: relative;
+  background: linear-gradient(135deg, $primary-light 0%, rgba($primary, 0.12) 100%);
 
   img {
     width: 100%;
@@ -1233,12 +1331,25 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   }
 }
 
+// Active community indicator dot (overlays the card image)
+.community-active-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $success;
+  border: 1.5px solid $white;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
 .community-card-body {
   padding: 10px 12px;
 }
 
 .community-card-name {
-  font-size: 12.5px;
+  font-size: $font-size-xs;
   font-weight: 700;
   color: $dark;
   margin: 0 0 4px;
@@ -1303,6 +1414,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   padding: 12px 18px;
   border-bottom: 1px solid $hover-bg-light;
   transition: background $duration-quick;
+  cursor: pointer;
 
   &:last-child { border-bottom: none; }
   &:hover { background: $bg; }
@@ -1313,7 +1425,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   min-width: 48px;
   height: 52px;
   border-radius: $radius-sm;
-  background: linear-gradient(135deg, $primary 0%, rgba($accent, 0.85) 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   color: $white;
   display: flex;
   flex-direction: column;
@@ -1344,7 +1456,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 }
 
 .event-title {
-  font-size: 13px;
+  font-size: $font-size-sm;
   font-weight: 700;
   color: $dark;
   margin: 0 0 4px;
@@ -1359,7 +1471,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
   gap: 10px;
 
   span {
-    font-size: 11.5px;
+    font-size: $font-size-xs;
     color: $muted;
     display: flex;
     align-items: center;
@@ -1410,7 +1522,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 }
 
 .job-title {
-  font-size: 13px;
+  font-size: $font-size-sm;
   font-weight: 700;
   color: $dark;
   margin: 0 0 4px;
@@ -1437,7 +1549,7 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 }
 
 .job-type {
-  font-size: 11.5px;
+  font-size: $font-size-xs;
   color: $muted;
   display: flex;
   align-items: center;
@@ -1463,6 +1575,26 @@ $_empty-violet-ring:  linear-gradient(135deg, #8b5cf6, #a78bfa);
 
     i { font-size: 10px; }
   }
+}
+
+// ── Job Apply Chip ────────────────────────────────────────────
+.job-apply-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: $primary;
+  color: $white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: opacity $transition;
+
+  &:hover { opacity: 0.85; }
 }
 
 // Skeleton job items
