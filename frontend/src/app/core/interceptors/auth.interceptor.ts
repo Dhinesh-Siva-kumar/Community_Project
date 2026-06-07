@@ -4,7 +4,14 @@ import { Router } from '@angular/router';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
-const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/admin/login'];
+const AUTH_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/admin/login',
+  '/auth/google/initiate',
+  '/auth/google/complete',
+];
 
 let isRefreshing = false;
 const refreshToken$ = new BehaviorSubject<string | null>(null);

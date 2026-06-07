@@ -51,6 +51,9 @@ const envSchema = z.object({
   // OpenAI (optional)
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+
+  // Google OAuth (optional)
+  GOOGLE_CLIENT_ID: z.string().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

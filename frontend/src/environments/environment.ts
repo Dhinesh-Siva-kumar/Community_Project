@@ -3,4 +3,5 @@ export const environment = {
   apiUrl: 'http://localhost:3000/api',
   wsUrl: 'http://localhost:3000',
   googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
+  googleClientId: '1080751279100-l53htubafjsou14mjaqubdqmiuqldotq.apps.googleusercontent.com',
 };

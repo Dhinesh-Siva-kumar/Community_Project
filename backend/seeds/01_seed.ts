@@ -198,20 +198,20 @@ export async function seed(knex: Knex): Promise<void> {
   console.log('Seeding admin user...');
   const adminPassword = await bcrypt.hash('Admin@123', 10);
 
-  const ukRow = await knex('master_countries')
-    .where({ name: 'United Kingdom' })
+  const indiaRow = await knex('master_countries')
+    .where({ name: 'India' })
     .first();
-  const ukId: number | null = ukRow ? (ukRow as { id: number }).id : null;
+  const indiaId: number | null = indiaRow ? (indiaRow as { id: number }).id : null;
 
   await knex('users')
     .insert({
       user_name: 'admin',
       display_name: 'Administrator',
-      email: 'admin@community.local',
+      email: 'admin@tamilconnect.com',
       password: adminPassword,
       role: 'ADMIN',
       role_level: 100,
-      country_id: ukId,
+      country_id: indiaId,
       is_active: true,
     })
     .onConflict('user_name')

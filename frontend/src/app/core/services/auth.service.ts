@@ -76,6 +76,37 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.baseUrl}/auth/reset-password/verify`, data);
   }
 
+  googleInitiate(data: { credential: string; countryId?: number; allowExistingLogin?: boolean }): Observable<any> {
+    const { credential, countryId, allowExistingLogin = true } = data;
+    return this.http.post<any>(`${this.baseUrl}/auth/google/initiate`, {
+      credential,
+      ...(countryId != null ? { country_id: countryId } : {}),
+    }).pipe(
+      tap((response: any) => {
+        if (!response.needsUsername && response.accessToken) {
+          // When allowExistingLogin is false (register page), skip storing tokens
+          // for an account that already exists — the component will show an error
+          // and redirect to /auth/login without authenticating the session.
+          const isExistingAccount = response.isNewUser === false;
+          if (!isExistingAccount || allowExistingLogin) {
+            this.handleAuthResponse(response as AuthResponse);
+          }
+        }
+      })
+    );
+  }
+
+  googleComplete(data: { credential: string; username: string; countryId?: number }): Observable<any> {
+    const { credential, username, countryId } = data;
+    return this.http.post<any>(`${this.baseUrl}/auth/google/complete`, {
+      credential,
+      username,
+      ...(countryId != null ? { country_id: countryId } : {}),
+    }).pipe(
+      tap((response) => this.handleAuthResponse(response))
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);

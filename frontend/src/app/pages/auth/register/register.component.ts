@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   inject,
+  NgZone,
   QueryList,
   signal,
   computed,
@@ -23,6 +24,7 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Country, UserRegister } from '../../../core/models';
+import { environment } from '../../../../environments/environment';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import {
   debounceTime,
@@ -69,6 +71,26 @@ export class RegisterComponent {
   showSuccessModal    = signal(false);
   mobileAlreadyExists = signal(false);
 
+  // ── Google OAuth signals ──────────────────────────────────────────────────
+  googleLoading           = signal(false);
+  googleNeedsUsername     = signal(false);
+  googleSuggestedUsername = signal('');
+  usernameModalValue      = signal('');
+  usernameModalChecking   = signal(false);
+  usernameModalTaken      = signal(false);
+  private googleCredential  = signal('');
+  private googleCountryId   = signal<number | null>(null);
+  private googleBtnInitialized = false;
+
+  /**
+   * True only when a real (non-placeholder) Google Client ID is present.
+   * When false the OR divider and Google button are hidden entirely.
+   */
+  get googleConfigured(): boolean {
+    const id = environment.googleClientId;
+    return !!id && id !== 'YOUR_GOOGLE_CLIENT_ID';
+  }
+
   private countdownInterval?: ReturnType<typeof setInterval>;
   private resendInterval?:    ReturnType<typeof setInterval>;
 
@@ -95,7 +117,9 @@ export class RegisterComponent {
   step = signal<'form' | 'otp'>('form');
 
   private destroy$  = new Subject<void>();
+  private usernameModalCheck$ = new Subject<string>();
   private platformId = inject(PLATFORM_ID) as object;
+  private ngZone     = inject(NgZone);
 
   @ViewChildren('otpBox') otpBoxes!: QueryList<ElementRef<HTMLInputElement>>;
 
@@ -185,6 +209,20 @@ export class RegisterComponent {
         control.setErrors(Object.keys(existing).length ? existing : null);
       }
     });
+
+    // Google username modal — debounced availability check
+    this.usernameModalCheck$.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(username => {
+        if (!username || username.length < 3) return of(null);
+        return this.authService.checkUsername(username).pipe(catchError(() => of(null)));
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe((res: any) => {
+      this.usernameModalChecking.set(false);
+      this.usernameModalTaken.set(!!res?.exists);
+    });
   }
 
   ngOnDestroy() {
@@ -198,6 +236,7 @@ export class RegisterComponent {
     if (this.step() === 'otp') {
       setTimeout(() => this.otpBoxes?.first?.nativeElement.focus());
     }
+    this.initGoogleButton();
   }
 
   // ── Form setup ─────────────────────────────────────────────────────────────
@@ -575,5 +614,142 @@ export class RegisterComponent {
         boxes[0].nativeElement.focus();
       }
     }, 0);
+  }
+
+  // ── Google OAuth ──────────────────────────────────────────────────────────
+
+  initGoogleButton(): void {
+    if (this.googleBtnInitialized) return;
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // Skip silently if not configured — `googleConfigured` hides the button in HTML
+    if (!this.googleConfigured) {
+      console.warn(
+        '[Google OAuth] googleClientId is not set.\n' +
+        '  → Set it in frontend/src/environments/environment.ts\n' +
+        '  → Set GOOGLE_CLIENT_ID in backend/.env\n' +
+        '  → See Google Cloud Console → APIs & Services → Credentials'
+      );
+      return;
+    }
+
+    const tryRender = () => {
+      const win = window as any;
+      if (!win.google?.accounts?.id) {
+        setTimeout(tryRender, 200);
+        return;
+      }
+      const container = document.getElementById('google-btn-container');
+      if (!container) {
+        setTimeout(tryRender, 100);
+        return;
+      }
+      this.googleBtnInitialized = true;
+      win.google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (response: any) => {
+          this.ngZone.run(() => this.handleGoogleCredential(response.credential));
+        },
+        ux_mode: 'popup',
+      });
+      const btnWidth = Math.min(container.offsetWidth || 420, 420);
+      win.google.accounts.id.renderButton(container, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        width: btnWidth,
+      });
+    };
+
+    setTimeout(tryRender, 0);
+  }
+
+  handleGoogleCredential(credential: string): void {
+    const countryId: number | undefined = this.registerForm.get('countryID')?.value ?? undefined;
+    this.googleCountryId.set(countryId ?? null);
+    this.googleLoading.set(true);
+    this.authService.googleInitiate({ credential, countryId, allowExistingLogin: false }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => {
+        this.googleLoading.set(false);
+        if (res.needsUsername) {
+          this.googleCredential.set(credential);
+          this.googleSuggestedUsername.set(res.suggestedUsername ?? '');
+          this.usernameModalValue.set(res.suggestedUsername ?? '');
+          this.usernameModalTaken.set(false);
+          this.googleNeedsUsername.set(true);
+        } else if (!res.isNewUser) {
+          // Account already exists — do NOT log them in from the register page
+          this.toastService.error('This Google account is already registered. Please sign in instead.');
+          setTimeout(() => this.router.navigate(['/auth/login']), 2000);
+        } else {
+          // Tokens already stored by authService tap — go to dashboard
+          this.showSuccessModal.set(true);
+          setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
+        }
+      },
+      error: (err: any) => {
+        this.googleLoading.set(false);
+        // errorInterceptor handles 4xx toasts; show one manually for 5xx / network errors
+        if (!err?.status || err.status >= 500) {
+          this.toastService.error('Google sign-in is currently unavailable. Please try the normal registration instead.');
+        }
+      },
+    });
+  }
+
+  onGoogleUsernameInput(value: string): void {
+    const clean = value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
+    this.usernameModalValue.set(clean);
+    this.usernameModalTaken.set(false);
+    if (clean.length >= 3) {
+      this.usernameModalChecking.set(true);
+      this.usernameModalCheck$.next(clean);
+    } else {
+      this.usernameModalChecking.set(false);
+    }
+  }
+
+  onGoogleComplete(): void {
+    const username = this.usernameModalValue();
+    if (username.length < 3 || this.usernameModalTaken() || this.usernameModalChecking()) return;
+
+    this.googleLoading.set(true);
+    this.authService.googleComplete({ credential: this.googleCredential(), username, countryId: this.googleCountryId() ?? undefined })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res: any) => {
+          this.googleLoading.set(false);
+          this.googleNeedsUsername.set(false);
+          if (!res.isNewUser) {
+            this.toastService.error('This Google account is already registered. Please sign in instead.');
+            setTimeout(() => this.router.navigate(['/auth/login']), 2000);
+          } else {
+            this.showSuccessModal.set(true);
+            setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
+          }
+        },
+        error: (err: any) => {
+          this.googleLoading.set(false);
+          const msg: string = err?.error?.message ?? '';
+          if (msg.toLowerCase().includes('username')) {
+            this.usernameModalTaken.set(true);
+          }
+          // errorInterceptor handles 4xx toasts; handle 5xx manually
+          if (!err?.status || err.status >= 500) {
+            this.toastService.error('Something went wrong. Please close this dialog and try again.');
+          }
+        },
+      });
+  }
+
+  closeGoogleModal(): void {
+    this.googleNeedsUsername.set(false);
+    this.googleCredential.set('');
+    this.googleCountryId.set(null);
+    this.usernameModalValue.set('');
+    this.usernameModalChecking.set(false);
+    this.usernameModalTaken.set(false);
   }
 }

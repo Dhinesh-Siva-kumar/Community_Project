@@ -38,4 +38,10 @@ router.post('/forgot-password/send-otp', authController.forgotPasswordSendOtp);
 // POST /api/auth/reset-password/verify
 router.post('/reset-password/verify', authController.resetPasswordVerify);
 
+// POST /api/auth/google/initiate
+router.post('/google/initiate', authController.googleInitiate);
+
+// POST /api/auth/google/complete
+router.post('/google/complete', authController.googleComplete);
+
 export default router;

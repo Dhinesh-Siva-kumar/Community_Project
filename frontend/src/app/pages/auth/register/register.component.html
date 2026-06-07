@@ -364,6 +364,14 @@
                 </button>
               </div>
             </form>
+
+            <!-- OR divider + Google Sign-In (only shown when Client ID is configured) -->
+            @if (googleConfigured) {
+              <div class="google-divider"><span>or</span></div>
+              <div class="google-btn-container">
+                <div id="google-btn-container"></div>
+              </div>
+            }
           }
           @if (step() === "otp") {
             <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()">
@@ -454,13 +462,15 @@
     </div>
   </div>
 
-  <!-- ── Loading overlay (verifying OTP → creating account) ── -->
-  @if (loading()) {
+  <!-- ── Loading overlay (verifying OTP → creating account; Google sign-in) ── -->
+  @if (loading() || googleLoading()) {
     <div class="reg-loading-overlay">
       <div class="reg-loading-card">
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
         <p class="reg-loading-text">
-          @if (registeringStage() === 'registering') {
+          @if (googleLoading()) {
+            Signing in with Google...
+          } @else if (registeringStage() === 'registering') {
             Creating your account...
           } @else {
             Verifying OTP...
@@ -482,6 +492,70 @@
         <div class="reg-success-progress">
           <div class="reg-success-progress-fill"></div>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Google username selection modal ── -->
+  @if (googleNeedsUsername()) {
+    <div class="google-username-overlay">
+      <div class="google-username-card">
+        <button type="button" class="google-username-close" (click)="closeGoogleModal()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="google-username-icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <h3 class="google-username-title">Choose a Username</h3>
+        <p class="google-username-desc">
+          Your suggested username is already taken. Pick a unique username to complete your registration.
+        </p>
+
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <div class="field-input-wrap">
+            <i class="bi bi-person field-icon"></i>
+            <input
+              type="text"
+              maxlength="20"
+              class="field-input"
+              [value]="usernameModalValue()"
+              (input)="onGoogleUsernameInput($any($event.target).value)"
+              placeholder="username"
+              [class.is-invalid]="usernameModalTaken()"
+              autocomplete="off"
+            />
+          </div>
+          @if (usernameModalChecking()) {
+            <div class="field-hint">
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              Checking availability...
+            </div>
+          } @else if (usernameModalTaken()) {
+            <div class="field-error">Username already taken. Please choose another.</div>
+          } @else if (usernameModalValue().length >= 3) {
+            <div class="field-success">
+              <i class="bi bi-check-circle-fill"></i>
+              Username is available
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="submit-btn"
+          style="margin-top: 20px;"
+          [disabled]="googleLoading() || usernameModalTaken() || usernameModalChecking() || usernameModalValue().length < 3"
+          (click)="onGoogleComplete()"
+        >
+          @if (googleLoading()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Creating account...
+          } @else {
+            <i class="bi bi-check2-circle"></i>
+            Confirm Username
+          }
+        </button>
       </div>
     </div>
   }

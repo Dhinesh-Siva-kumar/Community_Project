@@ -1,10 +1,18 @@
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
 import { sendOtp, deliverOtp, verifyOtp, getUserIdByPhone } from '../../services/otp.service';
 import { env } from '../../config/env';
-import type { RegisterDtoType, LoginDtoType, ForgotPasswordDtoType, ResetPasswordDtoType } from './auth.dto';
+import type {
+  RegisterDtoType,
+  LoginDtoType,
+  ForgotPasswordDtoType,
+  ResetPasswordDtoType,
+  GoogleInitiateDtoType,
+  GoogleCompleteDtoType,
+} from './auth.dto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,7 +38,9 @@ interface UserRow {
   is_active: boolean;
   profile_completion: number;
   refresh_token: string | null;
-  password: string;
+  password: string | null;      // nullable — Google users have no password
+  is_google: boolean;
+  google_id: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -46,7 +56,7 @@ function toJwtPayload(user: UserRow): JwtPayload {
 
 function stripSensitive(user: UserRow) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, refresh_token, ...safe } = user;
+  const { password, refresh_token, google_id, ...safe } = user;
   return safe;
 }
 
@@ -79,16 +89,18 @@ export async function register(dto: RegisterDtoType) {
   }
 
   const hashedPassword = await bcrypt.hash(dto.password, 10);
+  const countryName = await lookupCountryName(dto.country_id);
 
   const [user] = await db('users')
     .insert({
-      user_name: dto.user_name,
+      user_name:    dto.user_name,
       display_name: dto.display_name,
-      phone_no: dto.phone_no,
-      password: hashedPassword,
-      country_id: dto.country_id,
-      email: dto.email ?? null,
-      role_level: 1,
+      phone_no:     dto.phone_no,
+      password:     hashedPassword,
+      country_id:   dto.country_id,
+      country:      countryName,
+      email:        dto.email ?? null,
+      role_level:   1,
     })
     .returning('*');
 
@@ -118,6 +130,11 @@ export async function login(dto: LoginDtoType) {
 
   if (!user) throw new AppError(401, 'Invalid credentials');
 
+  // Guard: Google-only accounts have no password
+  if (!user.password) {
+    throw new AppError(401, 'This account uses Google sign-in. Please use the "Continue with Google" button to sign in.');
+  }
+
   const isPasswordValid = await bcrypt.compare(dto.password, user.password);
   if (!isPasswordValid) throw new AppError(401, 'Invalid credentials');
 
@@ -146,6 +163,10 @@ export async function adminLogin(dto: LoginDtoType) {
     .first() as UserRow | undefined;
 
   if (!user) throw new AppError(401, 'Invalid credentials');
+
+  if (!user.password) {
+    throw new AppError(401, 'This account uses Google sign-in and cannot access the admin panel.');
+  }
 
   const isPasswordValid = await bcrypt.compare(dto.password, user.password);
   if (!isPasswordValid) throw new AppError(401, 'Invalid credentials');
@@ -284,5 +305,206 @@ export async function getProfile(userId: string) {
   return {
     ...stripSensitive(user),
     roleLevel: user.role === 'ADMIN' ? 100 : 1,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Google OAuth helpers
+// ---------------------------------------------------------------------------
+
+let googleClient: OAuth2Client | null = null;
+
+function getGoogleClient(): OAuth2Client {
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new AppError(500, 'Google authentication is not configured on this server.');
+  }
+  if (!googleClient) {
+    googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+  }
+  return googleClient;
+}
+
+async function verifyGoogleToken(credential: string) {
+  const client = getGoogleClient();
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload) throw new AppError(400, 'Invalid Google credential. Please try again.');
+    return payload;
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    // Log the raw error so it's visible in server logs for debugging
+    console.error('[Google OAuth] Token verification failed:', (err as Error).message);
+    throw new AppError(401, 'Google sign-in failed. Please try again.');
+  }
+}
+
+function deriveUsername(email: string, name?: string): string {
+  const source = email ? email.split('@')[0] : (name ?? 'user');
+  const clean = source.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20).toLowerCase();
+  return clean || 'user';
+}
+
+async function findAvailableUsername(base: string): Promise<string | null> {
+  const truncated = base.slice(0, 20);
+  const existing = await db('users').where({ user_name: truncated }).first();
+  if (!existing) return truncated;
+
+  for (let i = 1; i <= 99; i++) {
+    const suffix = String(i);
+    const candidate = base.slice(0, 20 - suffix.length) + suffix;
+    const row = await db('users').where({ user_name: candidate }).first();
+    if (!row) return candidate;
+  }
+  return null;
+}
+
+/**
+ * Looks up the human-readable country name from master_countries by ID.
+ * Falls back to 'United Kingdom' (the column's DB default) when the ID is
+ * absent or not found, so the `country` string column is always populated.
+ */
+async function lookupCountryName(countryId: number | null | undefined): Promise<string> {
+  if (!countryId) return 'United Kingdom';
+  const row = await db('master_countries').where({ id: countryId }).select('name').first() as { name: string } | undefined;
+  return row?.name ?? 'United Kingdom';
+}
+
+// ---------------------------------------------------------------------------
+// googleInitiate
+// Verifies the GIS credential and either:
+//   a) Logs the user in (existing Google account)
+//   b) Returns 409 if email already registered via normal auth
+//   c) Auto-creates account if derived username is available → returns tokens
+//   d) Returns { needsUsername: true, suggestedUsername } when derived
+//      username has a conflict → frontend prompts user to pick
+// ---------------------------------------------------------------------------
+export async function googleInitiate(dto: GoogleInitiateDtoType) {
+  const payload = await verifyGoogleToken(dto.credential);
+  const googleId = payload.sub;
+  const email = payload.email ?? null;
+  const name = payload.name ?? payload.given_name ?? 'User';
+
+  // (a) Existing Google account → login
+  const existingGoogle = await db('users').where({ google_id: googleId }).first() as UserRow | undefined;
+  if (existingGoogle) {
+    if (existingGoogle.is_blocked) throw new AppError(403, 'Your account has been blocked.');
+    const tokens = generateTokenPair(toJwtPayload(existingGoogle));
+    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken });
+    return {
+      needsUsername: false as const,
+      isNewUser:     false as const,
+      ...tokens,
+      user: { ...stripSensitive(existingGoogle), roleLevel: 1 },
+    };
+  }
+
+  // (b) Email already registered via normal auth → 409
+  if (email) {
+    const existingEmail = await db('users').where({ email }).first() as UserRow | undefined;
+    if (existingEmail && !existingEmail.is_google) {
+      throw new AppError(409, 'An account with this email already exists. Please sign in with your password.');
+    }
+  }
+
+  // (c) / (d) Derive username and check availability
+  const base = deriveUsername(email ?? '', name);
+  const availableUsername = await findAvailableUsername(base);
+
+  if (!availableUsername) {
+    // Extremely rare — let user pick freely
+    return { needsUsername: true as const, suggestedUsername: base };
+  }
+
+  // If the base was taken, availableUsername is a numbered variant → prompt user
+  if (availableUsername !== base) {
+    return { needsUsername: true as const, suggestedUsername: availableUsername };
+  }
+
+  // (c) Base username is free → auto-create silently
+  const countryName = await lookupCountryName(dto.country_id);
+  const [user] = await db('users')
+    .insert({
+      user_name:    availableUsername,
+      display_name: name,
+      email,
+      google_id:    googleId,
+      is_google:    true,
+      password:     null,
+      role_level:   1,
+      country_id:   dto.country_id ?? null,
+      country:      countryName,
+    })
+    .returning('*');
+
+  const tokens = generateTokenPair(toJwtPayload(user as UserRow));
+  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+
+  return {
+    needsUsername: false as const,
+    isNewUser:     true as const,
+    ...tokens,
+    user: { ...stripSensitive(user as UserRow), roleLevel: 1 },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// googleComplete
+// Called when the user has chosen a username after googleInitiate returned
+// needsUsername: true. Re-verifies the credential, validates username, creates.
+// ---------------------------------------------------------------------------
+export async function googleComplete(dto: GoogleCompleteDtoType) {
+  const payload = await verifyGoogleToken(dto.credential);
+  const googleId = payload.sub;
+  const email = payload.email ?? null;
+  const name = payload.name ?? payload.given_name ?? 'User';
+
+  // If the account was created between initiate and complete, just log in
+  const existingGoogle = await db('users').where({ google_id: googleId }).first() as UserRow | undefined;
+  if (existingGoogle) {
+    const tokens = generateTokenPair(toJwtPayload(existingGoogle));
+    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken });
+    return {
+      isNewUser: false as const,
+      ...tokens,
+      user: { ...stripSensitive(existingGoogle), roleLevel: 1 },
+    };
+  }
+
+  // Username uniqueness check
+  const existingUsername = await db('users').where({ user_name: dto.username }).first();
+  if (existingUsername) throw new AppError(409, 'Username already taken. Please choose a different one.');
+
+  // Email conflict (should have been caught in initiate, but double-check)
+  if (email) {
+    const existingEmail = await db('users').where({ email }).first() as UserRow | undefined;
+    if (existingEmail) throw new AppError(409, 'An account with this email already exists.');
+  }
+
+  const countryName = await lookupCountryName(dto.country_id);
+  const [user] = await db('users')
+    .insert({
+      user_name:    dto.username,
+      display_name: name,
+      email,
+      google_id:    googleId,
+      is_google:    true,
+      password:     null,
+      role_level:   1,
+      country_id:   dto.country_id ?? null,
+      country:      countryName,
+    })
+    .returning('*');
+
+  const tokens = generateTokenPair(toJwtPayload(user as UserRow));
+  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+
+  return {
+    isNewUser: true as const,
+    ...tokens,
+    user: { ...stripSensitive(user as UserRow), roleLevel: 1 },
   };
 }

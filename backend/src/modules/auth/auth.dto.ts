@@ -36,8 +36,25 @@ export const RefreshTokenDto = z.object({
   refreshToken: z.string().min(1),
 });
 
+export const GoogleInitiateDto = z.object({
+  credential: z.string().min(1, 'Google credential is required'),
+  country_id: z.number().int().positive().optional(),
+});
+
+export const GoogleCompleteDto = z.object({
+  credential: z.string().min(1, 'Google credential is required'),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must not exceed 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username may only contain letters, numbers, and underscores'),
+  country_id: z.number().int().positive().optional(),
+});
+
 export type RegisterDtoType = z.infer<typeof RegisterDto>;
 export type LoginDtoType = z.infer<typeof LoginDto>;
 export type ForgotPasswordDtoType = z.infer<typeof ForgotPasswordDto>;
 export type ResetPasswordDtoType = z.infer<typeof ResetPasswordDto>;
 export type RefreshTokenDtoType = z.infer<typeof RefreshTokenDto>;
+export type GoogleInitiateDtoType = z.infer<typeof GoogleInitiateDto>;
+export type GoogleCompleteDtoType = z.infer<typeof GoogleCompleteDto>;

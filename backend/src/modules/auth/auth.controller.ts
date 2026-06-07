@@ -5,6 +5,8 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   RefreshTokenDto,
+  GoogleInitiateDto,
+  GoogleCompleteDto,
 } from './auth.dto';
 import * as authService from './auth.service';
 
@@ -107,6 +109,26 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
   try {
     const userId = req.user!.sub;
     const result = await authService.getProfile(userId);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function googleInitiate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const body = GoogleInitiateDto.parse(req.body);
+    const result = await authService.googleInitiate(body);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function googleComplete(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const body = GoogleCompleteDto.parse(req.body);
+    const result = await authService.googleComplete(body);
     res.json(result);
   } catch (err) {
     next(err);

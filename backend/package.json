@@ -19,6 +19,7 @@
     "express": "^5.0.1",
     "express-rate-limit": "^7.5.0",
     "geoip-lite": "^1.4.10",
+    "google-auth-library": "^10.7.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
