@@ -397,6 +397,64 @@
   span { color: var(--lp-text); }
 }
 
+// ── Language Toggle Pill ──────────────────────────────────────
+.lp-lang-toggle {
+  display: inline-flex; align-items: center;
+  height: 34px; border-radius: 100px;
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  padding: 3px;
+  gap: 0;
+  cursor: pointer;
+  transition: border-color .25s ease, box-shadow .25s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: rgba(var(--lp-primary-rgb), .35);
+    box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), .08);
+  }
+
+  // Mobile variant — full width
+  &--mobile {
+    width: 100%;
+    justify-content: center;
+    height: 48px;
+    padding: 4px;
+    border-radius: $radius-md;
+  }
+}
+
+.lp-lang-seg {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 11px;
+  height: 26px; border-radius: 100px;
+  font-size: .75rem; font-weight: $font-weight-bold;
+  letter-spacing: .03em;
+  color: var(--lp-muted);
+  background: transparent;
+  transition: background .22s ease, color .22s ease;
+  white-space: nowrap; line-height: 1;
+
+  // Mobile larger text
+  .lp-lang-toggle--mobile & {
+    height: 38px; font-size: .88rem;
+    padding: 0 22px;
+  }
+
+  &.lp-lang-active {
+    background: var(--lp-primary);
+    color: #1C1917; // always dark text on amber pill
+    box-shadow: 0 1px 4px rgba(var(--lp-primary-rgb), .35);
+  }
+}
+
+.lp-lang-divider {
+  width: 1px; height: 16px;
+  background: var(--lp-border);
+  flex-shrink: 0;
+}
+// ─────────────────────────────────────────────────────────────
+
 .lp-burger {
   display: none; flex-direction: column; gap: 5px;
   background: none; border: none; cursor: pointer; padding: 8px;
@@ -3785,6 +3843,251 @@ textarea.lp-form-control {
   &:hover { gap: 5px; }         // lock gap static
   &:hover i { transform: translateX(4px); }
 }
+
+// ============================================================
+// TAMIL LANGUAGE OVERRIDES  :host[lang="ta"]
+// Activated via @HostBinding('attr.lang') on the component.
+// Compensates for Tamil script being significantly wider than
+// English per glyph — reducing font-sizes, removing negative
+// letter-spacing, and fixing decorative transforms (uppercase)
+// that have no visual meaning in Tamil script.
+// ============================================================
+:host[lang="ta"] {
+
+  // ── 1. Navbar — collapse 100px earlier for longer Tamil links ──
+  @media (max-width: 1280px) {
+    .lp-nav-links { display: none; }
+    .lp-nav-right { display: none; }
+    .lp-burger    { display: flex; }
+  }
+  .lp-nav-links a {
+    font-size: .70rem;
+    padding: 8px 7px;
+    letter-spacing: 0;
+  }
+  .lp-nav-right { gap: 7px; }
+
+  // ── 2. Navbar buttons (Log In / Get Started) ──
+  .lp-btn-sm {
+    font-size: .75rem;
+    padding: 7px 13px;
+    letter-spacing: 0;
+  }
+
+  // ── 3. Hero headline ──
+  // Tamil script reads poorly with negative letter-spacing
+  .lp-hero-h1 {
+    font-size: clamp(1.55rem, 3.8vw, 3.1rem);
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+  .lp-hero-h1-sub {
+    letter-spacing: .2px;
+    line-height: 1.5;
+  }
+
+  // ── 4. Hero CTA buttons (inside orbit ring) ──
+  .lp-hbtn {
+    white-space: normal;
+    text-align: center;
+    padding: 12px 22px;
+    font-size: .84rem;
+    line-height: 1.35;
+    letter-spacing: 0;
+    max-width: 210px;
+  }
+
+  // ── 5. Hero feature pills ──
+  // Remove `white-space: nowrap` so Tamil stat text wraps inside the pill
+  .lp-feature-pill { white-space: normal; }
+  .lp-fp-text      { max-width: 112px; }
+  .lp-fp-label {
+    font-size: .67rem;
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+  .lp-fp-stat {
+    font-size: .56rem;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+
+  // ── 6. Section titles ──
+  .lp-sec-title {
+    font-size: clamp(1.6rem, 3vw, 2.55rem);
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+  .lp-sec-sub {
+    font-size: .93rem;
+    line-height: 1.8;
+    letter-spacing: 0;
+  }
+
+  // ── 7. Section pill badges ──
+  // Remove large letter-spacing (Tamil doesn't benefit from it)
+  .lp-pill {
+    letter-spacing: .2px;
+    font-size: .70rem;
+  }
+
+  // ── 8. Bento grid cards ──
+  .lp-bento-card h3 {
+    font-size: .87rem;
+    letter-spacing: 0;
+    line-height: 1.45;
+  }
+  .lp-bento-card p {
+    font-size: .79rem;
+    line-height: 1.75;
+  }
+  .lp-mini-tag {
+    font-size: .61rem;
+    padding: 3px 7px;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+
+  // ── 9. Communities section ──
+  .lp-comm-feat-card h4 {
+    font-size: .95rem;
+    letter-spacing: 0;
+  }
+  .lp-comm-feat-card p { font-size: .83rem; }
+
+  // ── 10. Timeline / How It Works ──
+  .lp-tl-card h3 {
+    font-size: .89rem;
+    letter-spacing: 0;
+    line-height: 1.45;
+  }
+  .lp-tl-card p {
+    font-size: .81rem;
+    line-height: 1.75;
+  }
+
+  // ── 11. Testimonial category badge ──
+  // Tamil has no uppercase/lowercase — remove text-transform & large tracking
+  .lp-testi-category {
+    text-transform: none;
+    letter-spacing: .2px;
+    font-size: .62rem;
+    padding: 4px 10px;
+  }
+
+  // ── 12. Trust & Safety section ──
+  .lp-trust-badge {
+    text-transform: none;
+    letter-spacing: .2px;
+    font-size: .70rem;
+  }
+  .lp-trust-title {
+    letter-spacing: 0;
+    font-size: clamp(1.25rem, 2.8vw, 1.75rem);
+  }
+  .lp-trust-sub   { font-size: .87rem; line-height: 1.8; }
+  .lp-trust-card h4 {
+    letter-spacing: 0;
+    font-size: .93rem;
+  }
+  .lp-trust-card p  { font-size: .81rem; }
+  .lp-trust-tagline { font-size: .79rem; letter-spacing: 0; }
+
+  // ── 13. Blog cards ──
+  .lp-blog-cat {
+    text-transform: none;   // Tamil has no uppercase
+    letter-spacing: .2px;
+    font-size: .63rem;
+  }
+  .lp-blog-card h3 {
+    font-size: .87rem;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+  .lp-blog-card p  { font-size: .81rem; line-height: 1.75; }
+  .lp-blog-time    { font-size: .68rem; }
+
+  // ── 14. CTA Banner ──
+  .lp-cta-badge {
+    font-size: .79rem;
+    letter-spacing: .2px;
+  }
+  .lp-cta-title { letter-spacing: 0; line-height: 1.2; }
+  .lp-cta-desc  { font-size: .92rem; }
+  // Stack CTA buttons so long Tamil text doesn't force side-by-side overflow
+  .lp-cta-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .lp-btn-cta-primary,
+  .lp-btn-cta-secondary {
+    white-space: normal;
+    text-align: center;
+    height: auto;
+    min-height: 50px;
+    padding: 13px 20px;
+    font-size: .85rem;
+    line-height: 1.35;
+    letter-spacing: 0;
+    flex: 0 1 auto;
+  }
+  .lp-cta-trust span { font-size: .77rem; letter-spacing: 0; }
+  .lp-cta-network-text { font-size: .83rem; }
+
+  // ── 15. General lp-btn — allow all buttons to wrap text ──
+  .lp-btn {
+    white-space: normal;
+    text-align: center;
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+  .lp-btn-lg {
+    padding: 14px 26px;
+    font-size: .93rem;
+    min-height: 50px;
+  }
+
+  // ── 16. About section ──
+  .lp-about-mission h3 { letter-spacing: 0; }
+  .lp-about-mission p  { font-size: .87rem; line-height: 1.8; }
+
+  // ── 17. Contact form ──
+  .lp-form-label { font-size: .81rem; letter-spacing: 0; }
+  .lp-cp-label   { font-size: .69rem; letter-spacing: 0; }
+  .lp-cp-value   { font-size: .83rem; }
+  .lp-cp-note    { font-size: .67rem; }
+
+  // ── 18. Footer columns ──
+  // `text-transform: uppercase` + `letter-spacing: 2px` is meaningless in Tamil
+  .lp-fcol h4 {
+    text-transform: none;
+    letter-spacing: .3px;
+    font-size: .73rem;
+  }
+  .lp-fcol ul li a {
+    font-size: .80rem;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+
+  // ── 19. Footer metrics strip ──
+  .lp-metric-label {
+    font-size: .67rem;
+    letter-spacing: 0;
+    line-height: 1.4;
+  }
+
+  // ── 20. Footer brand & bottom bar ──
+  .lp-footer-desc    { font-size: .81rem; line-height: 1.75; letter-spacing: 0; }
+  .lp-footer-tagline { font-size: .77rem; letter-spacing: 0; }
+  .lp-footer-bottom p { font-size: .75rem; }
+  .lp-footer-links a  { font-size: .73rem; }
+
+  // ── 21. Mobile menu ──
+  .lp-mobile a { letter-spacing: 0; }
+
+} // end :host[lang="ta"]
 
 // ============================================================
 // REDUCED MOTION

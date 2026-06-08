@@ -1,6 +1,6 @@
 <!-- ═══════════════════════════════════════════════════════════
      TAMILCONNECT — Dark & Premium Landing Page
-     12 Sections | Cursor Spotlight | Animated Borders | Card Glow
+     12 Sections | EN / தமிழ் Toggle | Cursor Spotlight | Animated Borders
      ═══════════════════════════════════════════════════════════ -->
 
 <!-- ═══ 1. NAVBAR ═══ -->
@@ -11,21 +11,27 @@
   </a>
 
   <ul class="lp-nav-links">
-    <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">Home</a></li>
-    <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">Features</a></li>
-    <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">Communities</a></li>
-    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">How It Works</a></li>
-    <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">Reviews</a></li>
-    <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">About</a></li>
-    <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">Contact</a></li>
+    <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">{{ t.nav_home }}</a></li>
+    <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">{{ t.nav_features }}</a></li>
+    <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">{{ t.nav_communities }}</a></li>
+    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">{{ t.nav_how_it_works }}</a></li>
+    <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">{{ t.nav_reviews }}</a></li>
+    <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">{{ t.nav_about }}</a></li>
+    <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">{{ t.nav_contact }}</a></li>
   </ul>
 
   <div class="lp-nav-right">
+    <!-- Language toggle pill -->
+    <button class="lp-lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? 'Switch to Tamil' : 'Switch to English'">
+      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'en'">EN</span>
+      <span class="lp-lang-divider"></span>
+      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'ta'">தமிழ்</span>
+    </button>
     <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
     </button>
-    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">Log In</a>
-    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">Get Started</a>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">{{ t.nav_login }}</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">{{ t.nav_get_started }}</a>
   </div>
 
   <button class="lp-burger" [class.open]="mobileOpen" (click)="toggleMobile()" aria-label="Toggle menu">
@@ -35,20 +41,26 @@
 
 <!-- Mobile Menu -->
 <div class="lp-mobile" [class.open]="mobileOpen">
-  <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> Home</a>
-  <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> Features</a>
-  <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> Communities</a>
-  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> How It Works</a>
-  <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> Reviews</a>
-  <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> About</a>
-  <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> Contact</a>
+  <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> {{ t.nav_home }}</a>
+  <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> {{ t.nav_features }}</a>
+  <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> {{ t.nav_communities }}</a>
+  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> {{ t.nav_how_it_works }}</a>
+  <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> {{ t.nav_reviews }}</a>
+  <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> {{ t.nav_about }}</a>
+  <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> {{ t.nav_contact }}</a>
   <div class="lp-mobile-actions">
+    <!-- Language toggle (mobile) -->
+    <button class="lp-lang-toggle lp-lang-toggle--mobile" (click)="toggleLanguage()">
+      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'en'">EN</span>
+      <span class="lp-lang-divider"></span>
+      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'ta'">தமிழ்</span>
+    </button>
     <button class="lp-theme-btn lp-theme-btn-wide" (click)="toggleTheme()">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
-      <span>{{ currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode' }}</span>
+      <span>{{ currentTheme === 'dark' ? t.mobile_light_mode : t.mobile_dark_mode }}</span>
     </button>
-    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-full" (click)="closeMobile()">Log In</a>
-    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-full" (click)="closeMobile()">Get Started</a>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-full" (click)="closeMobile()">{{ t.nav_login }}</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-full" (click)="closeMobile()">{{ t.nav_get_started }}</a>
   </div>
 </div>
 
@@ -58,7 +70,6 @@
 
   <div class="lp-hero-bg-gradient"></div>
 
-
   <!-- World map image background -->
   <div class="lp-hero-worldmap"></div>
 
@@ -67,21 +78,21 @@
 
     <!-- Headline -->
     <h1 class="lp-hero-h1">
-      <span class="lp-hero-h1-line1">A platform for <span class="lp-hero-h1-accent">Tamils</span> around the world</span><br>
-      <span class="lp-hero-h1-sub">students, workers, professionals, business owners, and families.</span>
+      <span class="lp-hero-h1-line1">{{ t.hero_h1_pre }} <span class="lp-hero-h1-accent">{{ t.hero_h1_accent }}</span> {{ t.hero_h1_post }}</span><br>
+      <span class="lp-hero-h1-sub">{{ t.hero_h1_sub }}</span>
     </h1>
 
     <!-- Motto with flanking lines -->
     <div class="lp-hero-motto">
       <span class="lp-hero-motto-line"></span>
-      <span class="lp-hero-motto-text">You are not alone abroad — we are here</span>
+      <span class="lp-hero-motto-text">{{ t.hero_motto }}</span>
       <span class="lp-hero-motto-line"></span>
     </div>
 
     <!-- Description -->
     <p class="lp-hero-desc">
-      Whether you move for study, work, or a new life —<br class="lp-br-desk">
-      your Tamil community is already waiting for you.
+      {{ t.hero_desc1 }}<br class="lp-br-desk">
+      {{ t.hero_desc2 }}
     </p>
 
   </div>
@@ -98,11 +109,11 @@
     <div class="lp-hero-content">
       <div class="lp-hero-ctas">
         <a routerLink="/auth/register" class="lp-hbtn lp-hbtn-primary">
-          <i class="bi bi-people-fill"></i> Join Community
+          <i class="bi bi-people-fill"></i> {{ t.hero_join_community }}
         </a>
         <a href="landing#how-it-works" class="lp-hbtn lp-hbtn-outline"
            (click)="setActive('how-it-works')">
-          How it Works <i class="bi bi-play-fill"></i>
+          {{ t.hero_how_it_works }} <i class="bi bi-play-fill"></i>
         </a>
       </div>
     </div>
@@ -113,48 +124,48 @@
       <div class="lp-feature-pill lp-fp-jobs">
         <div class="lp-fp-icon"><i class="bi bi-briefcase-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Jobs</span>
-          <span class="lp-fp-stat">2.5K+ listings</span>
+          <span class="lp-fp-label">{{ t.pill_jobs_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_jobs_stat }}</span>
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-communities">
         <div class="lp-fp-icon"><i class="bi bi-people-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Communities</span>
-          <span class="lp-fp-stat">500+ groups</span>
+          <span class="lp-fp-label">{{ t.pill_communities_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_communities_stat }}</span>
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-events">
         <div class="lp-fp-icon"><i class="bi bi-calendar-event-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Events</span>
-          <span class="lp-fp-stat">1K+ hosted</span>
+          <span class="lp-fp-label">{{ t.pill_events_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_events_stat }}</span>
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-support">
         <div class="lp-fp-icon"><i class="bi bi-headset"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Support</span>
-          <span class="lp-fp-stat">24/7 active</span>
+          <span class="lp-fp-label">{{ t.pill_support_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_support_stat }}</span>
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-help">
         <div class="lp-fp-icon"><i class="bi bi-heart-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Help</span>
-          <span class="lp-fp-stat">Always here</span>
+          <span class="lp-fp-label">{{ t.pill_help_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_help_stat }}</span>
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-business">
         <div class="lp-fp-icon"><i class="bi bi-shop"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">Business</span>
-          <span class="lp-fp-stat">800+ listed</span>
+          <span class="lp-fp-label">{{ t.pill_business_label }}</span>
+          <span class="lp-fp-stat">{{ t.pill_business_stat }}</span>
         </div>
       </div>
 
@@ -164,9 +175,9 @@
 
   <!-- ── Trust microcopy — end of hero section ── -->
   <div class="lp-hero-trust-line">
-    <span><i class="bi bi-shield-fill-check"></i> Secure &amp; Private</span>
-    <span><i class="bi bi-globe2"></i> Free for everyone</span>
-    <span><i class="bi bi-heart-fill"></i> Available worldwide</span>
+    <span><i class="bi bi-shield-fill-check"></i> {{ t.trust_secure }}</span>
+    <span><i class="bi bi-globe2"></i> {{ t.trust_free }}</span>
+    <span><i class="bi bi-heart-fill"></i> {{ t.trust_worldwide }}</span>
   </div>
 
 </section>
@@ -175,14 +186,14 @@
 <!-- ═══ 3. MARQUEE TICKER ═══ -->
 <div class="lp-marquee">
   <div class="lp-marquee-track">
-    @for (item of marqueeItems; track $index) {
+    @for (item of t.marqueeItems; track $index) {
       <div class="lp-marquee-item">
         <i class="bi" [ngClass]="item.icon"></i>
         <span>{{ item.text }}</span>
       </div>
     }
     <!-- Duplicate for seamless infinite scroll -->
-    @for (item of marqueeItems; track $index) {
+    @for (item of t.marqueeItems; track $index) {
       <div class="lp-marquee-item">
         <i class="bi" [ngClass]="item.icon"></i>
         <span>{{ item.text }}</span>
@@ -197,13 +208,13 @@
 <section class="lp-section lp-section-mesh" id="features">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> Platform Features</span>
-      <h2 class="lp-sec-title">Everything You Need Abroad,<br/><span class="neon-text">All in One Place.</span></h2>
-      <p class="lp-sec-sub">Jobs, education, support, events, and a community of friends — everything you need, all in one platform.</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ t.feat_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.feat_title1 }}<br/><span class="neon-text">{{ t.feat_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.feat_sub }}</p>
     </div>
 
     <div class="lp-bento">
-      @for (f of features; track f.title; let i = $index) {
+      @for (f of t.features; track $index; let i = $index) {
         <div class="lp-bento-card glass-card rv"
              [attr.data-color]="f.color"
              [style.transition-delay]="(i * 0.06) + 's'">
@@ -240,9 +251,9 @@
 
     <!-- Section header -->
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> Country Communities</span>
-      <h2 class="lp-sec-title">Tamils Are Everywhere <span class="neon-violet">in the World.</span></h2>
-      <p class="lp-sec-sub">Connect with Tamils living in your country. Whether you are a student, job seeker, newcomer, or business owner, you can receive local guidance, ask questions, and build meaningful connections with people who understand your situation.</p>
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> {{ t.comm_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.comm_title1 }} <span class="neon-violet">{{ t.comm_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.comm_sub }}</p>
     </div>
 
     <!-- ── Feature highlights: Group Chat · Local Help · Guidance ── -->
@@ -252,24 +263,24 @@
         <div class="lp-comm-feat-icon lp-comm-feat-icon--chat">
           <i class="bi bi-chat-dots-fill"></i>
         </div>
-        <h4>Group Chat</h4>
-        <p>Members can participate in country-specific discussions, ask questions, and help each other with local information.</p>
+        <h4>{{ t.comm_group_chat_title }}</h4>
+        <p>{{ t.comm_group_chat_desc }}</p>
       </div>
 
       <div class="lp-comm-feat-card glass-card">
         <div class="lp-comm-feat-icon lp-comm-feat-icon--help">
           <i class="bi bi-people-fill"></i>
         </div>
-        <h4>Local Help</h4>
-        <p>New members can receive assistance regarding accommodation, transportation, banking, healthcare, job searching, and settling in.</p>
+        <h4>{{ t.comm_local_help_title }}</h4>
+        <p>{{ t.comm_local_help_desc }}</p>
       </div>
 
       <div class="lp-comm-feat-card glass-card">
         <div class="lp-comm-feat-icon lp-comm-feat-icon--guide">
           <i class="bi bi-lightbulb-fill"></i>
         </div>
-        <h4>Guidance</h4>
-        <p>Experienced community members provide practical advice about visas, universities, careers, business opportunities, and daily life.</p>
+        <h4>{{ t.comm_guidance_title }}</h4>
+        <p>{{ t.comm_guidance_desc }}</p>
       </div>
 
     </div>
@@ -309,7 +320,7 @@
             <div class="lp-comm-bottom">
               <span class="lp-comm-status">
                 <span class="lp-comm-dot"></span>
-                Active
+                {{ t.comm_active }}
               </span>
               <span class="lp-comm-members">
                 <i class="bi bi-people-fill"></i> {{ c.members | number }}
@@ -337,9 +348,9 @@
              srcset="https://flagcdn.com/w80/gb.png 2x"
              alt="UK flag" width="40" height="30" />
         <div class="lp-chat-header-info">
-          <span class="lp-chat-community-name">UK Tamils Community</span>
+          <span class="lp-chat-community-name">{{ t.comm_chat_community_name }}</span>
           <span class="lp-chat-online-status">
-            <span class="lp-chat-dot"></span> Active Community
+            <span class="lp-chat-dot"></span> {{ t.comm_chat_active_status }}
           </span>
         </div>
         <i class="bi bi-chat-dots-fill lp-chat-header-icon"></i>
@@ -352,11 +363,11 @@
         <div class="lp-chat-msg lp-chat-msg--sent">
           <div class="lp-chat-avatar lp-chat-avatar--primary">M</div>
           <div class="lp-chat-content">
-            <span class="lp-chat-name">Murugan
-              <span class="lp-chat-badge lp-chat-badge--online">🟢 Online</span>
+            <span class="lp-chat-name">{{ t.comm_chat_sender_name }}
+              <span class="lp-chat-badge lp-chat-badge--online">{{ t.comm_chat_online_badge }}</span>
             </span>
             <div class="lp-chat-bubble">
-              Hello everyone, I recently moved to the UK. Can anyone suggest good websites to find part-time jobs?
+              {{ t.comm_chat_murugan_msg }}
             </div>
           </div>
         </div>
@@ -365,9 +376,9 @@
         <div class="lp-chat-msg lp-chat-msg--received">
           <div class="lp-chat-avatar lp-chat-avatar--member">C</div>
           <div class="lp-chat-content lp-chat-content--right">
-            <span class="lp-chat-name lp-chat-name--right">Community Member</span>
+            <span class="lp-chat-name lp-chat-name--right">{{ t.comm_chat_member_name }}</span>
             <div class="lp-chat-bubble lp-chat-bubble--reply">
-              Welcome! You can start with Indeed, Reed, and Gumtree. Let us know which city you are in and we can provide more specific recommendations.
+              {{ t.comm_chat_reply_msg }}
             </div>
           </div>
         </div>
@@ -379,7 +390,7 @@
 
   <div class="lp-comm-browse">
     <a routerLink="/communities" class="lp-btn lp-btn-neon lp-btn-shimmer">
-      <i class="bi bi-grid-3x3-gap-fill"></i> Browse All Communities
+      <i class="bi bi-grid-3x3-gap-fill"></i> {{ t.comm_browse_all }}
     </a>
   </div>
 </section>
@@ -390,14 +401,14 @@
 <section class="lp-section lp-timeline-section lp-section-mesh" id="how-it-works">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> How It Works</span>
-      <h2 class="lp-sec-title">Your Journey in<br/><span class="neon-green">Four Simple Steps</span></h2>
-      <p class="lp-sec-sub">From sign-up to finding your community — here is how it works.</p>
+      <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> {{ t.timeline_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.timeline_title1 }}<br/><span class="neon-green">{{ t.timeline_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.timeline_sub }}</p>
     </div>
 
     <div class="lp-timeline">
       <div class="lp-timeline-line"></div>
-      @for (s of steps; track s.num; let i = $index) {
+      @for (s of t.steps; track s.num; let i = $index) {
         <div class="lp-tl-item rv" [class.lp-tl-right]="i % 2 !== 0" [style.transition-delay]="(i * 0.1) + 's'">
           <div class="lp-tl-dot" [attr.data-color]="s.color">
             <span>{{ s.num }}</span>
@@ -419,9 +430,9 @@
 <section class="lp-section lp-testi-section lp-section-mesh" id="testimonials">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> Real Stories</span>
-      <h2 class="lp-sec-title">Real <span class="neon-pink">Stories</span></h2>
-      <p class="lp-sec-sub">Read how TamilConnect has helped Tamils around the world find housing, jobs, student support, local guidance, and meaningful community connections.</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> {{ t.testi_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.testi_title_pre }} <span class="neon-pink">{{ t.testi_title_accent }}</span></h2>
+      <p class="lp-sec-sub">{{ t.testi_sub }}</p>
     </div>
   </div>
 
@@ -433,29 +444,29 @@
 
     <div class="lp-testi-scroll rv" #testiScroll>
       <div class="lp-testi-track">
-      @for (t of testimonials; track t.name) {
+      @for (tst of t.testimonials; track $index) {
         <div class="lp-testi-card glass-card">
 
           <!-- Category tag + quote icon -->
           <div class="lp-testi-top">
-            <span class="lp-testi-category" [attr.data-color]="t.color">
-              {{ t.category }}
+            <span class="lp-testi-category" [attr.data-color]="tst.color">
+              {{ tst.category }}
             </span>
             <i class="bi bi-quote lp-testi-quote-icon"></i>
           </div>
 
           <!-- Story quote -->
-          <blockquote>"{{ t.quote }}"</blockquote>
+          <blockquote>"{{ tst.quote }}"</blockquote>
 
           <!-- Author -->
           <div class="lp-testi-author">
-            <div class="lp-testi-avatar" [attr.data-color]="t.color">
-              <span>{{ t.initial }}</span>
+            <div class="lp-testi-avatar" [attr.data-color]="tst.color">
+              <span>{{ tst.initial }}</span>
             </div>
             <div>
-              <div class="lp-testi-name">{{ t.name }}</div>
+              <div class="lp-testi-name">{{ tst.name }}</div>
               <div class="lp-testi-location">
-                <i class="bi bi-geo-alt-fill"></i> {{ t.location }}
+                <i class="bi bi-geo-alt-fill"></i> {{ tst.location }}
               </div>
             </div>
           </div>
@@ -479,38 +490,33 @@
 <section class="lp-section lp-about-section" id="about">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-info-circle-fill"></i> About Us</span>
-      <h2 class="lp-sec-title">Our Mission is<br/><span class="neon-text">Your Community</span></h2>
-      <p class="lp-sec-sub">Connecting, supporting, and empowering Tamils living across the globe.</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-info-circle-fill"></i> {{ t.about_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.about_title1 }}<br/><span class="neon-text">{{ t.about_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.about_sub }}</p>
     </div>
 
     <div class="lp-about-split">
       <!-- Left: Mission + Stats + CTA -->
       <div class="lp-about-left rvl">
         <div class="lp-about-mission glass-card">
-          <h3>Why We Built This</h3>
-          <p>
-            TamilConnect was born from a simple truth — Tamils abroad often feel alone. We built this platform so that
-            wherever you go in the world, your Tamil community is already there waiting for you. Whether you are a
-            student, a worker, a professional, or a business owner, you never have to face a new country alone.
-            TamilConnect exists to connect, support, and empower Tamils living across the globe.
-          </p>
+          <h3>{{ t.about_mission_title }}</h3>
+          <p>{{ t.about_mission_text }}</p>
           <div class="lp-about-chips">
-            @for (chip of aboutChips; track chip) {
+            @for (chip of t.aboutChips; track chip) {
               <span class="lp-mini-tag">{{ chip }}</span>
             }
           </div>
           <div class="lp-about-contact">
             <div><i class="bi bi-envelope-fill"></i> hello&#64;tamilconnect.com</div>
-            <div><i class="bi bi-geo-alt-fill"></i> Available Worldwide</div>
+            <div><i class="bi bi-geo-alt-fill"></i> {{ t.about_location }}</div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Why Choose Us cards -->
+      <!-- Right: Stats + CTA buttons -->
       <div class="lp-about-right rvr">
          <div class="lp-about-stats">
-          @for (stat of aboutStats; track stat.label; let i = $index) {
+          @for (stat of t.aboutStats; track stat.value; let i = $index) {
             <div class="lp-about-stat-card glass-card"
                  [style.transition-delay]="(i * 0.1) + 's'">
               <span class="lp-stat-val">{{ getCounterValue(stat) }}</span>
@@ -520,49 +526,28 @@
         </div>
         <div class="lp-about-cta-row">
           <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-shimmer lp-btn-lg">
-            <i class="bi bi-rocket-takeoff-fill"></i> Join Now
+            <i class="bi bi-rocket-takeoff-fill"></i> {{ t.about_join_now }}
           </a>
           <a routerLink="/auth/login" class="lp-btn lp-btn-glass lp-btn-lg">
-            <i class="bi bi-box-arrow-in-right"></i> Log In
+            <i class="bi bi-box-arrow-in-right"></i> {{ t.about_log_in }}
           </a>
         </div>
       </div>
     </div>
-    
-    <!-- <div class="lp-why-grid">
-          @for (w of whyCards; track w.title; let i = $index) {
-            <div class="lp-why-card glass-card rv"
-                 [attr.data-color]="w.color"
-                 [style.transition-delay]="(i * 0.08) + 's'">
-              <div class="lp-why-stat">
-                <span class="lp-why-stat-val" [attr.data-color]="w.color">{{ w.stat }}</span>
-                <span class="lp-why-stat-label">{{ w.statLabel }}</span>
-              </div>
-              <div class="lp-why-body">
-                <div class="lp-why-icon" [attr.data-color]="w.color"><i class="bi" [ngClass]="w.icon"></i></div>
-                <h3>{{ w.title }}</h3>
-                <p>{{ w.desc }}</p>
-              </div>
-            </div>
-          }
-        </div> -->
 
     <!-- ── Trust & Safety ── -->
     <div class="lp-trust-section rv">
 
       <div class="lp-trust-head">
         <span class="lp-trust-badge">
-          <i class="bi bi-shield-fill-check"></i> Trust &amp; Safety
+          <i class="bi bi-shield-fill-check"></i> {{ t.trust_badge }}
         </span>
-        <h3 class="lp-trust-title">Your Safety Comes First.</h3>
-        <p class="lp-trust-sub">
-          TamilConnect is built to help members connect, communicate, and support
-          each other in a secure and trusted environment.
-        </p>
+        <h3 class="lp-trust-title">{{ t.trust_title }}</h3>
+        <p class="lp-trust-sub">{{ t.trust_sub }}</p>
       </div>
 
       <div class="lp-trust-grid">
-        @for (c of trustCards; track c.title; let i = $index) {
+        @for (c of t.trustCards; track $index; let i = $index) {
           <div class="lp-trust-card glass-card rv"
                [attr.data-color]="c.color"
                [style.transition-delay]="(i * 0.08) + 's'">
@@ -577,7 +562,7 @@
 
       <p class="lp-trust-tagline">
         <i class="bi bi-shield-fill-check"></i>
-        Connect with confidence. Your safety and privacy are always protected on TamilConnect.
+        {{ t.trust_tagline }}
       </p>
 
     </div>
@@ -591,13 +576,13 @@
 <section class="lp-section lp-blog-section" id="blog">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-violet"><i class="bi bi-journal-richtext"></i> Blog & Updates</span>
-      <h2 class="lp-sec-title">Latest from<br/><span class="neon-violet">TamilConnect</span></h2>
-      <p class="lp-sec-sub">Tips, guides, community updates, and opportunities for Tamils living around the world.</p>
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-journal-richtext"></i> {{ t.blog_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.blog_title1 }}<br/><span class="neon-violet">{{ t.blog_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.blog_sub }}</p>
     </div>
 
     <div class="lp-blog-grid">
-      @for (post of blogPosts; track post.title; let i = $index) {
+      @for (post of t.blogPosts; track $index; let i = $index) {
         <div class="lp-blog-card glass-card rv"
              [style.transition-delay]="(i * 0.1) + 's'">
           <div class="lp-blog-top">
@@ -608,7 +593,7 @@
           <p>{{ post.excerpt }}</p>
           <div class="lp-blog-footer">
             <span class="lp-blog-date">{{ post.date }}</span>
-            <a href="#" class="lp-blog-link">Read More <i class="bi bi-arrow-right"></i></a>
+            <a href="#" class="lp-blog-link">{{ t.blog_read_more }} <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
       }
@@ -622,9 +607,9 @@
 <section class="lp-section lp-contact-section" id="contact">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-headset"></i> Contact Us</span>
-      <h2 class="lp-sec-title">We're Here <span class="neon-pink">For You</span></h2>
-      <p class="lp-sec-sub">Have a question or need help settling in? The TamilConnect team is ready to support you wherever you are.</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-headset"></i> {{ t.contact_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.contact_title1 }} <span class="neon-pink">{{ t.contact_title2 }}</span></h2>
+      <p class="lp-sec-sub">{{ t.contact_sub }}</p>
     </div>
 
     <div class="lp-contact-grid">
@@ -634,10 +619,10 @@
 
         <div class="lp-cp-head">
           <span class="lp-cp-badge">
-            <i class="bi bi-shield-fill-check"></i> Always Here for You
+            <i class="bi bi-shield-fill-check"></i> {{ t.contact_badge }}
           </span>
-          <h3>We're here to help every Tamil abroad.</h3>
-          <p>Whether you have a question about the platform, need support, or want to provide feedback, our team is always available.</p>
+          <h3>{{ t.contact_panel_title }}</h3>
+          <p>{{ t.contact_panel_desc }}</p>
         </div>
 
         <div class="lp-cp-items">
@@ -647,9 +632,9 @@
               <i class="bi bi-envelope-fill"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">Email Us</span>
+              <span class="lp-cp-label">{{ t.contact_email_label }}</span>
               <span class="lp-cp-value">hello&#64;tamilconnect.app</span>
-              <span class="lp-cp-note">We reply within 24 hours</span>
+              <span class="lp-cp-note">{{ t.contact_email_note }}</span>
             </div>
           </div>
 
@@ -658,9 +643,9 @@
               <i class="bi bi-whatsapp"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">WhatsApp Support</span>
-              <span class="lp-cp-value">Community Help Channel</span>
-              <span class="lp-cp-note">Quick responses</span>
+              <span class="lp-cp-label">{{ t.contact_whatsapp_label }}</span>
+              <span class="lp-cp-value">{{ t.contact_whatsapp_value }}</span>
+              <span class="lp-cp-note">{{ t.contact_whatsapp_note }}</span>
             </div>
           </div>
 
@@ -669,9 +654,9 @@
               <i class="bi bi-globe2"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">Available Worldwide</span>
-              <span class="lp-cp-value">40+ Countries</span>
-              <span class="lp-cp-note">Tamils helping Tamils</span>
+              <span class="lp-cp-label">{{ t.contact_worldwide_label }}</span>
+              <span class="lp-cp-value">{{ t.contact_worldwide_value }}</span>
+              <span class="lp-cp-note">{{ t.contact_worldwide_note }}</span>
             </div>
           </div>
 
@@ -690,24 +675,24 @@
       <!-- ── Right: Contact form ── -->
       <div class="lp-contact-form-card rvr">
 
-        <h4 class="lp-form-title">Send us a Message</h4>
+        <h4 class="lp-form-title">{{ t.contact_form_title }}</h4>
 
         @if (contactSubmitted) {
           <div class="lp-contact-success">
             <div class="lp-success-icon">
               <i class="bi bi-check-circle-fill"></i>
             </div>
-            <h4>Message Sent!</h4>
-            <p>Thanks for reaching out. We'll get back to you within 24 hours.</p>
+            <h4>{{ t.contact_success_title }}</h4>
+            <p>{{ t.contact_success_desc }}</p>
             <button class="lp-btn lp-btn-ghost" (click)="resetContactForm()">
-              Send Another Message
+              {{ t.contact_send_another }}
             </button>
           </div>
         } @else {
           <form (ngSubmit)="submitContact()" #contactForm="ngForm" novalidate>
             <div class="lp-form-row">
               <div class="lp-form-group">
-                <label class="lp-form-label">First Name</label>
+                <label class="lp-form-label">{{ t.contact_first_name }}</label>
                 <input
                   type="text"
                   class="lp-form-control"
@@ -718,11 +703,11 @@
                   #firstName="ngModel"
                   [class.is-invalid]="firstName.invalid && firstName.touched">
                 @if (firstName.invalid && firstName.touched) {
-                  <div class="lp-form-error">First name is required.</div>
+                  <div class="lp-form-error">{{ t.err_first_name }}</div>
                 }
               </div>
               <div class="lp-form-group">
-                <label class="lp-form-label">Last Name</label>
+                <label class="lp-form-label">{{ t.contact_last_name }}</label>
                 <input
                   type="text"
                   class="lp-form-control"
@@ -733,13 +718,13 @@
                   #lastName="ngModel"
                   [class.is-invalid]="lastName.invalid && lastName.touched">
                 @if (lastName.invalid && lastName.touched) {
-                  <div class="lp-form-error">Last name is required.</div>
+                  <div class="lp-form-error">{{ t.err_last_name }}</div>
                 }
               </div>
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">Email Address</label>
+              <label class="lp-form-label">{{ t.contact_email_address }}</label>
               <input
                 type="email"
                 class="lp-form-control"
@@ -751,31 +736,31 @@
                 #contactEmail="ngModel"
                 [class.is-invalid]="contactEmail.invalid && contactEmail.touched">
               @if (contactEmail.invalid && contactEmail.touched) {
-                <div class="lp-form-error">A valid email address is required.</div>
+                <div class="lp-form-error">{{ t.err_email }}</div>
               }
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">Subject</label>
+              <label class="lp-form-label">{{ t.contact_subject_label }}</label>
               <app-searchable-select
                 [(ngModel)]="contact.subject"
                 name="subject"
                 required
                 #subject="ngModel"
-                [options]="contactSubjectOptions"
-                placeholder="Select a topic..."
+                [options]="t.contactSubjectOptions"
+                [placeholder]="t.contact_select_topic"
               ></app-searchable-select>
               @if (subject.invalid && subject.touched) {
-                <div class="lp-form-error">Please select a subject.</div>
+                <div class="lp-form-error">{{ t.err_subject }}</div>
               }
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">Message</label>
+              <label class="lp-form-label">{{ t.contact_message_label }}</label>
               <textarea
                 class="lp-form-control"
                 rows="5"
-                placeholder="Tell us how we can help..."
+                [placeholder]="t.contact_tell_us"
                 [(ngModel)]="contact.message"
                 name="message"
                 required
@@ -784,7 +769,7 @@
                 [class.is-invalid]="message.invalid && message.touched">
               </textarea>
               @if (message.invalid && message.touched) {
-                <div class="lp-form-error">Message must be at least 10 characters.</div>
+                <div class="lp-form-error">{{ t.err_message }}</div>
               }
             </div>
 
@@ -792,7 +777,7 @@
               type="submit"
               class="lp-btn lp-btn-neon lp-btn-lg lp-btn-full lp-btn-submit"
               [disabled]="contactForm.invalid">
-              <i class="bi bi-send-fill"></i> Send Message
+              <i class="bi bi-send-fill"></i> {{ t.contact_send_message_btn }}
             </button>
           </form>
         }
@@ -813,57 +798,42 @@
       <div class="lp-cta-gloss-inner">
 
         <div class="lp-cta-badge">
-          <i class="bi bi-globe2"></i> 10 Million+ Tamils Live Abroad
+          <i class="bi bi-globe2"></i> {{ t.cta_badge }}
         </div>
 
-        <h2 class="lp-cta-title">You're Not Alone<br/><span class="lp-cta-highlight">Abroad</span></h2>
+        <h2 class="lp-cta-title">{{ t.cta_title1 }}<br/><span class="lp-cta-highlight">{{ t.cta_title2 }}</span></h2>
 
-        <p class="lp-cta-desc">
-          Millions of Tamils live across the world. Whether you are studying, working,
-          running a business, or starting a new life in another country, TamilConnect
-          helps you connect with people who understand your journey.
-        </p>
-
-        <!-- <p class="lp-cta-desc" style="margin-top: -10px;">
-          Find local support, make meaningful connections, discover opportunities, and
-          become part of a trusted global Tamil community.
-        </p>
-
-        <p class="lp-cta-support">
-          More than 10 million Tamils live outside their home country.
-          No matter where you are, there is a community ready to help, guide, and welcome you.
-        </p> -->
+        <p class="lp-cta-desc">{{ t.cta_desc }}</p>
 
         <div class="lp-cta-actions">
           <a routerLink="/auth/register" class="lp-btn lp-btn-cta-primary lp-btn-lg">
-            <i class="bi bi-people-fill"></i> Join TamilConnect Free
+            <i class="bi bi-people-fill"></i> {{ t.cta_join_free }}
           </a>
           <a routerLink="/auth/login" class="lp-btn lp-btn-cta-secondary lp-btn-lg">
-            Already a member? Log in
+            {{ t.cta_already_member }}
           </a>
         </div>
 
-        <p class="lp-cta-network-text">
-          Connect with Tamils across 40+ countries and build your network today.
-        </p>
+        <p class="lp-cta-network-text">{{ t.cta_network_text }}</p>
 
         <div class="lp-cta-trust">
-          <span><i class="bi bi-globe2"></i> 40+ Countries</span>
+          <span><i class="bi bi-globe2"></i> {{ t.cta_trust1 }}</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-people-fill"></i> 10M+ Tamils Worldwide</span>
+          <span><i class="bi bi-people-fill"></i> {{ t.cta_trust2 }}</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-heart-fill"></i> Join Free Today</span>
+          <span><i class="bi bi-heart-fill"></i> {{ t.cta_trust3 }}</span>
         </div>
 
       </div>
     </div>
   </div>
 </section>
+
 <!-- ═══ PLATFORM METRICS STRIP ═══ -->
 <div class="lp-footer-metrics">
   <div class="lp-wrap">
     <div class="lp-metrics-grid">
-      @for (m of footerMetrics; track m.label) {
+      @for (m of t.footerMetrics; track m.label) {
         <div class="lp-metric-item">
           <div class="lp-metric-icon">
             <i class="bi" [ngClass]="m.icon"></i>
@@ -887,11 +857,8 @@
           <img src="logo.svg" alt="TamilConnect" class="lp-logo-img" />
           <span class="lp-logo-text">{{ applicationName }}</span>
         </a>
-        <p class="lp-footer-desc">
-          Connecting Tamils living abroad through community, support,
-          opportunities, and meaningful relationships.
-        </p>
-        <p class="lp-footer-tagline">Your Digital Home for the Global Tamil Community.</p>
+        <p class="lp-footer-desc">{{ t.footer_desc }}</p>
+        <p class="lp-footer-tagline">{{ t.footer_tagline }}</p>
         <div class="lp-social">
           <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
           <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -903,61 +870,60 @@
 
       <!-- Platform -->
       <div class="lp-fcol">
-        <h4>Platform</h4>
+        <h4>{{ t.footer_platform }}</h4>
         <ul>
-          <li><a href="landing#communities">Country Communities</a></li>
-          <li><a routerLink="/auth/login">Jobs &amp; Career</a></li>
-          <li><a routerLink="/auth/login">Students Section</a></li>
-          <li><a routerLink="/auth/login">Help Center</a></li>
-          <li><a routerLink="/auth/login">Events &amp; Festivals</a></li>
-          <li><a routerLink="/auth/login">Share Items</a></li>
-          <li><a routerLink="/auth/login">Direct Chat</a></li>
-          <li><a routerLink="/auth/login">Tamil Business Directory</a></li>
+          <li><a href="landing#communities">{{ t.footer_platform_communities }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_jobs }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_students }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_help }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_events }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_share }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_chat }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_platform_business }}</a></li>
         </ul>
       </div>
 
       <!-- Community -->
       <div class="lp-fcol">
-        <h4>Community</h4>
+        <h4>{{ t.footer_community }}</h4>
         <ul>
-          <li><a routerLink="/auth/login">UK Tamils</a></li>
-          <li><a routerLink="/auth/login">Germany Tamils</a></li>
-          <li><a routerLink="/auth/login">Canada Tamils</a></li>
-          <li><a routerLink="/auth/login">Australia Tamils</a></li>
-          <li><a routerLink="/auth/login">Singapore Tamils</a></li>
-          <li><a routerLink="/auth/login">UAE Tamils</a></li>
-          <li><a routerLink="/auth/login">New Zealand Tamils</a></li>
-          <li><a routerLink="/auth/login">Ireland Tamils</a></li>
-          <li><a href="landing#communities">All Countries</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_uk }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_de }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_ca }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_au }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_sg }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_uae }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_nz }}</a></li>
+          <li><a routerLink="/auth/login">{{ t.footer_comm_ie }}</a></li>
+          <li><a href="landing#communities">{{ t.footer_comm_all }}</a></li>
         </ul>
       </div>
 
       <!-- Support -->
       <div class="lp-fcol">
-        <h4>Support</h4>
+        <h4>{{ t.footer_support }}</h4>
         <ul>
-          <li><a href="landing#about">About Us</a></li>
-          <li><a href="landing#contact">Contact Us</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms &amp; Conditions</a></li>
-          <li><a href="#">Safety Tips</a></li>
-          <li><a href="#">Report an Issue</a></li>
+          <li><a href="landing#about">{{ t.footer_about_us }}</a></li>
+          <li><a href="landing#contact">{{ t.footer_contact_us }}</a></li>
+          <li><a href="#">{{ t.footer_privacy }}</a></li>
+          <li><a href="#">{{ t.footer_terms }}</a></li>
+          <li><a href="#">{{ t.footer_safety }}</a></li>
+          <li><a href="#">{{ t.footer_report }}</a></li>
         </ul>
       </div>
 
     </div>
 
     <div class="lp-footer-bottom">
-      <p>&copy; 2026 {{ applicationName }}. Built for Tamils Around the World.</p>
+      <p>&copy; 2026 {{ applicationName }}. {{ t.footer_copyright }}</p>
       <p class="lp-footer-made-with">
-        Made with <i class="bi bi-heart-fill"></i> for the Global Tamil Diaspora.
+        {{ t.footer_made_with }} <i class="bi bi-heart-fill"></i> {{ t.footer_made_for }}
       </p>
       <div class="lp-footer-links">
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-        <a href="#">Cookies</a>
+        <a href="#">{{ t.footer_privacy_link }}</a>
+        <a href="#">{{ t.footer_terms_link }}</a>
+        <a href="#">{{ t.footer_cookies_link }}</a>
       </div>
     </div>
   </div>
 </footer>
-

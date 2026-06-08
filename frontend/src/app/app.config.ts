@@ -9,16 +9,26 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
-/** Inline English strings — no HTTP request needed. */
-const EN: Record<string, string> = {
-  'dropdown.search':     'Search...',
-  'dropdown.no_results': 'No results found',
-  'dropdown.select':     'Select...',
+/** Inline translation strings for shared UI components (dropdown).
+ *  Only keys used by shared components like searchable-select need to live here.
+ *  All landing-page text is handled directly in LandingComponent's TRANSLATIONS const.
+ */
+const DROPDOWN_TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    'dropdown.search':     'Search...',
+    'dropdown.no_results': 'No results found',
+    'dropdown.select':     'Select...',
+  },
+  ta: {
+    'dropdown.search':     'தேடுங்கள்...',
+    'dropdown.no_results': 'முடிவுகள் இல்லை',
+    'dropdown.select':     'தேர்ந்தெடுங்கள்...',
+  },
 };
 
 class StaticTranslateLoader implements TranslateLoader {
-  getTranslation(_lang: string): Observable<Record<string, string>> {
-    return of(EN);
+  getTranslation(lang: string): Observable<Record<string, string>> {
+    return of(DROPDOWN_TRANSLATIONS[lang] ?? DROPDOWN_TRANSLATIONS['en']);
   }
 }
 
