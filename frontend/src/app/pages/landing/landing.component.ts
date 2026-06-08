@@ -295,27 +295,27 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   // ── Blog Preview ──
   blogPosts = [
     {
-      title: '10 Tips for Building a Thriving Online Community',
-      excerpt: 'Learn the proven strategies that successful community leaders use to foster engagement and growth.',
-      category: 'Community Tips',
-      readTime: '5 min read',
-      date: 'Mar 28, 2026',
+      title: 'How to Find a Part-Time Job Abroad: A Complete Tamil Guide',
+      excerpt: 'Discover where to search for jobs, how to prepare your CV, ace interviews, and find part-time opportunities in your new country — step by step.',
+      category: 'Jobs & Students',
+      readTime: '6 min read',
+      date: 'Jun 01, 2026',
       color: 'primary'
     },
     {
-      title: 'Platform Updates: New Event RSVP Features',
-      excerpt: 'We have shipped calendar integration, automated reminders, and a brand new event discovery page.',
-      category: 'Platform Updates',
-      readTime: '3 min read',
-      date: 'Mar 22, 2026',
+      title: 'What to Do When You First Arrive in a New Country: A Tamil Community Guide',
+      excerpt: 'From finding housing and setting up a bank account to getting a SIM card and connecting with your local Tamil community — everything you need for a smooth start.',
+      category: 'Country Communities',
+      readTime: '7 min read',
+      date: 'May 20, 2026',
       color: 'violet'
     },
     {
-      title: 'Getting Started: Your First Community in 5 Minutes',
-      excerpt: 'A step-by-step walkthrough for creating, customizing, and growing your very first community.',
-      category: 'Getting Started',
+      title: 'Top Tamil Festivals and Events Happening Across Europe This Year',
+      excerpt: 'Pongal celebrations, Tamil New Year gatherings, cultural events, and community networking — here are the unmissable Tamil events across Europe this year.',
+      category: 'Events & Festivals',
       readTime: '4 min read',
-      date: 'Mar 15, 2026',
+      date: 'May 10, 2026',
       color: 'green'
     }
   ];
