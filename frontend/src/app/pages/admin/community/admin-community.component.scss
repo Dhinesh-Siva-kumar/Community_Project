@@ -730,9 +730,10 @@
   }
 
   &.cc-status-tag--active {
-    background: rgba(16, 185, 129, 0.18);
-    color: #065f46;
-    border: 1px solid rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.5);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   }
 
   &.cc-status-tag--inactive {
@@ -886,8 +887,12 @@
   }
 }
 
-// ── Visibility row + badge ────────────────────────────────────
-.cc-visibility-row {
+// ── Badge row (visibility + default) ─────────────────────────
+.cc-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
@@ -922,6 +927,26 @@
     background: $amber-50;
     color: $color-primary-darker;
     border: 1px solid $color-amber-200;
+  }
+}
+
+// Actions row
+.cc-default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: $amber-50;
+  color: $color-primary-darker;
+  border: 1px solid $color-amber-200;
+
+  i {
+    font-size: 10px;
+    color: $primary;
   }
 }
 
@@ -1321,6 +1346,105 @@
   }
 }
 
+// ── Default community row ─────────────────────────────────────
+.cm-default-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid $border;
+  background: $bg-neutral;
+  margin-top: 12px;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: $primary;
+  }
+}
+
+.cm-default-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  i {
+    font-size: 13px;
+    color: $primary;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-stone-700;
+    line-height: 1.3;
+  }
+}
+
+.cm-default-hint {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: $muted !important;
+  width: 100%;
+  margin-top: 1px;
+}
+
+// ── Amber toggle switch ───────────────────────────────────────
+.cm-switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+}
+
+.cm-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $color-stone-300;
+  border-radius: 24px;
+  transition: background 0.25s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: $white;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cm-switch input:checked + .cm-switch-slider {
+  background: $primary;
+}
+
+.cm-switch input:focus + .cm-switch-slider {
+  box-shadow: 0 0 0 3px rgba($primary, 0.25);
+}
+
+.cm-switch input:checked + .cm-switch-slider::before {
+  transform: translateX(18px);
+}
+
 // ── Upload zone ──────────────────────────────────────────────
 .cm-upload-zone {
   display: flex;
@@ -1395,13 +1519,19 @@
   position: relative;
   border-radius: 14px;
   overflow: hidden;
-  height: 180px;
+  background: $bg-neutral;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
 
   img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    max-height: 280px;
+    object-fit: contain;
     display: block;
+    border-radius: 14px;
   }
 }
 

@@ -74,6 +74,7 @@ export class AdminCommunityComponent implements OnInit {
   editingCommunity   = signal<Community | null>(null);
   selectedImage      = signal<File | null>(null);
   imagePreview       = signal<string | null>(null);
+  imageError         = signal<string | null>(null);
   deleteConfirmId    = signal<string | null>(null);
   formSubmitAttempted = signal(false);
 
@@ -122,8 +123,7 @@ export class AdminCommunityComponent implements OnInit {
       interests:   [null, Validators.required],
       description: ['', [Validators.required, noWhitespace, Validators.maxLength(500)]],
       image:       [null],
-      isPrivate:   [false],
-      isGlobal:    [false],
+      visibility:  [''],
       isDefault:   [false],
       countryId:   [null, Validators.required],
     });
@@ -275,8 +275,7 @@ export class AdminCommunityComponent implements OnInit {
       description:   community.description ?? '',
       interests:     c['interest_id'] ?? null,
       countryId:     c['country_id'] ?? null,
-      isPrivate:     c['is_private'] ?? false,
-      isGlobal:      c['is_global'] ?? false,
+      visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
     });
     this.imagePreview.set(community.image || null);
@@ -308,11 +307,13 @@ export class AdminCommunityComponent implements OnInit {
 
     // 5 MB cap.
     if (file.size > 5 * 1024 * 1024) {
+      this.imageError.set('Image size must not exceed 5 MB. Please choose a smaller file.');
       this.toast.error('Image must be less than 5 MB.');
       input.value = '';
       return;
     }
 
+    this.imageError.set(null);
     this.selectedImage.set(file);
     const reader = new FileReader();
     reader.onload = () => this.imagePreview.set(reader.result as string);
@@ -322,6 +323,7 @@ export class AdminCommunityComponent implements OnInit {
   removeImage(): void {
     this.selectedImage.set(null);
     this.imagePreview.set(null);
+    this.imageError.set(null);
   }
 
   // ── Form submission ───────────────────────────────────────────
@@ -334,7 +336,7 @@ export class AdminCommunityComponent implements OnInit {
     // Image required on create.
     const imageValid = this.isEditing() || !!this.imagePreview();
     // At least one of Private / Global required on create.
-    const visibilityValid = this.isEditing() || formData.isPrivate || formData.isGlobal;
+    const visibilityValid = this.isEditing() || !!formData.visibility;
 
     if (this.communityForm.invalid || !imageValid || !visibilityValid) {
       this.scrollToFirstError();
@@ -450,8 +452,8 @@ export class AdminCommunityComponent implements OnInit {
       interest_id: form.interests   || undefined,
       country:     selectedCountry?.name,
       country_id:  form.countryId   || undefined,
-      is_private:  form.isPrivate   ?? false,
-      is_global:   form.isGlobal    ?? false,
+      is_private:  form.visibility === 'private',
+      is_global:   form.visibility === 'global',
       is_default:  form.isDefault   ?? false,
     };
   }

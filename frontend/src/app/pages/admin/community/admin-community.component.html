@@ -241,19 +241,26 @@
                 </span>
               </div>
 
-              <!-- Visibility badge — only shown when a flag is set -->
-              @if (getVisibility(community); as vis) {
-                <div class="cc-visibility-row">
-                  <span class="cc-visibility-badge"
-                        [class.cc-visibility-badge--private]="community.is_private"
-                        [class.cc-visibility-badge--global]="community.is_global"
-                        [class.cc-visibility-badge--default]="community.is_default">
-                    <i class="bi"
-                       [class.bi-lock-fill]="community.is_private"
-                       [class.bi-globe2]="community.is_global"
-                       [class.bi-star-fill]="community.is_default"></i>
-                    {{ vis }}
-                  </span>
+              <!-- Badge row: Visibility + Default shown independently -->
+              @if (community.is_private || community.is_global || community.is_default) {
+                <div class="cc-badge-row">
+
+                  @if (community.is_private) {
+                    <span class="cc-visibility-badge cc-visibility-badge--private">
+                      <i class="bi bi-lock-fill"></i> Private
+                    </span>
+                  } @else if (community.is_global) {
+                    <span class="cc-visibility-badge cc-visibility-badge--global">
+                      <i class="bi bi-globe2"></i> Global
+                    </span>
+                  }
+
+                  @if (community.is_default) {
+                    <span class="cc-default-badge">
+                      <i class="bi bi-star-fill"></i> Default
+                    </span>
+                  }
+
                 </div>
               }
 
@@ -451,28 +458,37 @@
 
                 <!-- Visibility Toggles -->
                 <div class="cm-field-group">
-                  <label class="cm-label">Visibility Options <span class="cm-required">*</span></label>
+                  <label class="cm-label">Visibility <span class="cm-required">*</span></label>
                   <div class="cm-toggle-group"
-                       [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['isPrivate'].value && !f['isGlobal'].value">
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isPrivate'].value">
-                      <input type="checkbox" formControlName="isPrivate" id="isPrivate" hidden />
+                       [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['visibility'].value">
+                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'private'">
+                      <input type="radio" formControlName="visibility" value="private" hidden />
                       <i class="bi bi-lock-fill me-1"></i> Private
                     </label>
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isGlobal'].value">
-                      <input type="checkbox" formControlName="isGlobal" id="isGlobal" hidden />
+                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'global'">
+                      <input type="radio" formControlName="visibility" value="global" hidden />
                       <i class="bi bi-globe2 me-1"></i> Global
                     </label>
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['isDefault'].value">
-                      <input type="checkbox" formControlName="isDefault" id="isDefault" hidden />
-                      <i class="bi bi-star-fill me-1"></i> Default
-                    </label>
                   </div>
-                  @if (formSubmitAttempted() && !isEditing() && !f['isPrivate'].value && !f['isGlobal'].value) {
+                  @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
                     </div>
                   }
                 </div>
+              </div>
+
+              <!-- Default Community toggle — independent of visibility -->
+              <div class="cm-default-row">
+                <div class="cm-default-label">
+                  <i class="bi bi-star-fill"></i>
+                  <span>Default Community</span>
+                  <span class="cm-default-hint">Mark this as the default community for new users</span>
+                </div>
+                <label class="cm-switch">
+                  <input type="checkbox" formControlName="isDefault" />
+                  <span class="cm-switch-slider"></span>
+                </label>
               </div>
             </div>
 
@@ -487,7 +503,7 @@
 
               @if (imagePreview()) {
                 <div class="cm-image-preview">
-                  <img [src]="imagePreview()" alt="Preview" />
+                  <img [src]="imagePreview() | imageUrl" alt="Preview" />
                   <button type="button" class="cm-image-remove" (click)="removeImage()">
                     <i class="bi bi-x-lg"></i>
                   </button>
@@ -512,6 +528,12 @@
               @if (formSubmitAttempted() && !isEditing() && !imagePreview()) {
                 <div class="cm-error-msg mt-2">
                   <i class="bi bi-exclamation-circle me-1"></i>Community image is required.
+                </div>
+              }
+
+              @if (imageError()) {
+                <div class="cm-error-msg mt-2">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ imageError() }}
                 </div>
               }
 
