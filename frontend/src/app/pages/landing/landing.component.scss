@@ -481,16 +481,18 @@
 
 // ── Section shell ──────────────────────────────────────────────
 .lp-hero {
-  min-height: 100svh;
-  padding-top: 72px;
-  padding-bottom: 32px;
+  height: 100svh;
+  min-height: 600px;
+  padding-top: 100px;
+  padding-bottom: 48px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0;
   position: relative;
-  overflow-x: clip;         // prevents horizontal scroll from pills without clipping them in Y
+  overflow: hidden;
 }
 
 // ── World map image background ──
@@ -555,6 +557,42 @@
   gap: 0;
 }
 
+// ── Eyebrow pill ──
+.lp-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: #92400e;
+  background: rgba(245,158,11,.10);
+  border: 1px solid rgba(245,158,11,.32);
+  padding: 6px 16px;
+  border-radius: 50px;
+  margin-bottom: 18px;
+}
+
+:host[data-theme="dark"] .lp-hero-eyebrow {
+  color: rgba(254,243,199,.88);
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.22);
+}
+
+.lp-hero-eyebrow-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+  animation: eyebrowPulse 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes eyebrowPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+  50%       { box-shadow: 0 0 0 6px rgba(16,185,129,.08); }
+}
+
 // ── Badge with mini avatar stack ──
 .lp-hero-badge {
   display: inline-flex; align-items: center; gap: 10px;
@@ -599,12 +637,12 @@
 // ── Headline ──
 .lp-hero-h1 {
   font-family: $font-family-header;
-  font-size: clamp(2.4rem, 4.2vw, 3.8rem);
+  font-size: clamp(1.9rem, 4.2vw, 3.8rem);
   font-weight: 900;
-  line-height: 1.12;
+  line-height: 1.14;
   letter-spacing: -.6px;
   color: #111827;
-  margin: 14px 0 16px;
+  margin: clamp(6px, 1svh, 12px) 0 10px;
   text-wrap: balance;
 }
 
@@ -634,10 +672,45 @@
   font-size: clamp(1.05rem, 1.8vw, 1.55rem);
   font-weight: 100;
   letter-spacing: .8px;
-  opacity: .65;
+  opacity: .78;
+  margin-top: 6px;
+  display: inline-block;
 }
 
-// ── Tagline — last element of Zone 1; ring starts right below ──
+// ── Motto — flanked by decorative lines ──
+.lp-hero-motto {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 540px;
+  margin: 18px 0 14px;
+}
+
+.lp-hero-motto-line {
+  flex: 1;
+  height: 1.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(217,119,6,.55) 50%, transparent 100%);
+}
+
+:host[data-theme="dark"] .lp-hero-motto-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(251,191,36,.65) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(251,191,36,.22);
+}
+
+.lp-hero-motto-text {
+  font-family: $font-family-header;
+  font-size: clamp(.88rem, 1.55vw, 1.05rem);
+  font-weight: 700;
+  color: #d97706;
+  white-space: nowrap;
+  letter-spacing: .2px;
+}
+
+:host[data-theme="dark"] .lp-hero-motto-text { color: #fbbf24; }
+
+// ── Tagline — kept for any legacy usage ──
 .lp-hero-tagline {
   font-family: $font-family-header;
   font-size: clamp(.95rem, 1.7vw, 1.15rem);
@@ -650,17 +723,22 @@
 
 :host[data-theme="dark"] .lp-hero-tagline { color: #fbbf24; }
 
-// ── Hero description — secondary copy below tagline ──
+// ── Hero description ──
 .lp-hero-desc {
   font-family: $font-family-body;
-  font-size: clamp(.9rem, 1.55vw, 1.05rem);
+  font-size: clamp(.92rem, 1.55vw, 1.06rem);
   color: #44403C;
-  line-height: 1.78;
-  max-width: 560px;
+  line-height: 1.80;
+  max-width: 520px;
   text-align: center;
   margin: 0 auto;
   font-weight: $font-weight-normal;
 }
+
+:host[data-theme="dark"] .lp-hero-desc { color: rgba(255,255,255,.62); }
+
+.lp-br-desk { display: inline; }
+@media (max-width: 600px) { .lp-br-desk { display: none; } }
 
 :host[data-theme="dark"] .lp-hero-desc { color: rgba(255,255,255,.68); }
 
@@ -781,16 +859,19 @@
 
 // ── Dark theme overrides ──
 :host[data-theme="dark"] .lp-hbtn-primary {
-  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
-  color: #1c1917;
-  border-color: #FBBF24;
-  box-shadow: 0 4px 20px rgba(251,191,36,.50), 0 1px 0 rgba(255,255,255,.20) inset;
-  i { color: #1c1917; }
+  background: #ffffff;
+  color: #111827;
+  border-color: #ffffff;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,.40),
+    0 1px 0 rgba(255,255,255,.12) inset;
+  i { color: #f59e0b; }
   &:hover {
-    background: linear-gradient(135deg, #FCD34D 0%, #FBBF24 100%);
-    border-color: #FCD34D;
-    box-shadow: 0 8px 28px rgba(251,191,36,.60);
+    background: #f1f5f9;
+    border-color: #f1f5f9;
+    color: #111827;
     transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.50);
   }
 }
 
@@ -833,7 +914,7 @@
 .lp-hero-trust-line {
   position: relative;
   z-index: 5;
-  margin-top: 22px;
+  margin-top: clamp(10px, 1.5svh, 22px);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -945,15 +1026,15 @@
   position: absolute;
   display: inline-flex;
   align-items: center;
-  gap: 13px;
+  gap: 9px;
 
   // ── Glassmorphism shell ──
   background: rgba(255,255,255,.82);
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
   border: 1px solid rgba(255,255,255,.75);
-  border-radius: 20px;
-  padding: 12px 20px 12px 12px;
+  border-radius: 14px;
+  padding: 8px 14px 8px 8px;
 
   // ── Layered shadow system: depth + soft lift ──
   box-shadow:
@@ -983,10 +1064,10 @@
 
 // ── Icon container — gradient fill, white icon ──
 .lp-fp-icon {
-  width: 46px; height: 46px;
-  border-radius: 14px;
+  width: 34px; height: 34px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.15rem;
+  font-size: .90rem;
   flex-shrink: 0;
   color: #ffffff;
   // gradient set per-pill
@@ -1001,7 +1082,7 @@
 
 .lp-fp-label {
   font-family: $font-family-header;
-  font-size: .90rem;
+  font-size: .78rem;
   font-weight: 800;
   color: #1c1917;
   letter-spacing: -.2px;
@@ -1010,7 +1091,7 @@
 
 .lp-fp-stat {
   font-family: $font-family-body;
-  font-size: .68rem;
+  font-size: .62rem;
   font-weight: $font-weight-semibold;
   letter-spacing: .2px;
   line-height: 1;
@@ -1162,6 +1243,9 @@
   .lp-hero-above        { width: calc(100% - 40px); }
   .lp-hero-h1           { font-size: clamp(1.9rem, 5vw, 2.8rem); margin-bottom: 12px; }
   .lp-hero-h1-sub       { font-size: clamp(.88rem, 2vw, 1.1rem); }
+  .lp-hero-eyebrow      { font-size: .72rem; margin-bottom: 14px; }
+  .lp-hero-motto        { max-width: 420px; margin: 14px 0 10px; }
+  .lp-hero-motto-text   { font-size: .9rem; }
   .lp-hero-badge        { margin-bottom: 14px; }
   .lp-hero-orbit-system { width: calc(100% - 24px); height: 214px; margin-top: 18px; }
   .lp-hero-content      { width: min(290px, 90%); }
@@ -1188,6 +1272,10 @@
   .lp-hero-above        { width: calc(100% - 32px); }
   .lp-hero-h1-line1     { white-space: normal; }
   .lp-hero-h1-sub       { font-size: clamp(.82rem, 2.4vw, .98rem); }
+  .lp-hero-eyebrow      { font-size: .70rem; padding: 5px 13px; margin-bottom: 12px; }
+  .lp-hero-motto        { max-width: 100%; gap: 10px; margin: 12px 0 10px; }
+  .lp-hero-motto-text   { font-size: .84rem; white-space: normal; text-align: center; }
+  .lp-hero-motto-line   { display: none; }
   .lp-hero-orbit-system { margin-top: 24px; height: auto;
                           width: calc(100% - 24px); overflow: hidden; }
   .lp-hero-content {
@@ -1229,8 +1317,8 @@
   .lp-hero-h1           { font-size: clamp(1.75rem, 6vw, 2.2rem); margin-bottom: 10px; }
   .lp-hero-h1-line1     { white-space: normal; }
   .lp-hero-h1-sub       { font-size: clamp(.78rem, 2.8vw, .92rem); letter-spacing: .4px; }
+  .lp-hero-eyebrow      { display: none; }
   .lp-hero-badge        { margin-bottom: 12px; padding: 8px 16px; }
-  .lp-hero-tagline      { font-size: .92rem; margin-bottom: 10px; }
   .lp-hero-orbit-system { margin-top: 16px; }
   .lp-hero-content      { width: calc(100% - 24px); }
   .lp-hbtn              { padding: 11px 20px; font-size: .85rem; max-width: 260px; }
