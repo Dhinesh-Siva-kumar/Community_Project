@@ -333,13 +333,13 @@ const TRANSLATIONS = {
     ],
 
     aboutStats: [
-      { value: '10K+',  label: 'Active Members' },
-      { value: '500+',  label: 'Communities' },
-      { value: '1K+',   label: 'Events Hosted' },
-      { value: '99.9%', label: 'Uptime' }
+      { value: '100%',  label: 'Growing Community' },
+      { value: '40+',  label: 'Countries' },
+      { value: '100%',   label: 'Free Forever' },
+      { value: '100%', label: 'Safe and Secure' }
     ],
 
-    aboutChips: ['Open Source', 'Community Driven', 'Privacy First', 'Real-time', 'Free Forever'],
+    aboutChips: ['Community Driven', 'Privacy First', 'Real-time', 'Free Forever'],
 
     trustCards: [
       {
@@ -419,10 +419,10 @@ const TRANSLATIONS = {
 
     contactSubjectOptions: [
       { value: 'general',     label: 'General Inquiry' },
-      { value: 'support',     label: 'Technical Support' },
+      { value: 'question',     label: 'Questions About the Platform' },
       { value: 'feedback',    label: 'Feedback & Suggestions' },
-      { value: 'partnership', label: 'Partnership' },
-      { value: 'other',       label: 'Other' },
+      { value: 'partnership', label: 'Partnership / Collaboration' },
+      { value: 'other',       label: 'Others' },
     ] as SelectOption[],
   },
 
@@ -445,10 +445,10 @@ const TRANSLATIONS = {
 
     // ── Hero ──
     hero_h1_pre: 'உலகெங்கிலும் வாழும்',
-    hero_h1_accent: 'தமிழர்களுக்கான',
-    hero_h1_post: 'ஒரு தளம்',
-    hero_h1_sub: 'மாணவர்கள், தொழிலாளர்கள், நிபுணர்கள், வணிகர்கள் மற்றும் குடும்பங்கள்.',
-    hero_motto: 'வெளிநாட்டில் நீங்கள் தனியில்லை — நாங்கள் இங்கே இருக்கிறோம்',
+    hero_h1_accent: 'தமிழர்களின்',
+    hero_h1_post: 'சொந்த தளம்',
+    hero_h1_sub: 'மாணவர்களுக்கும், தொழிலாளர்களுக்கும், வணிகர்களுக்கும் — அனைத்து தமிழர்களுக்கும்.',
+    hero_motto: 'தெரியாத நாட்டில் தனியாக போராடுகிறீர்களா? உங்களுக்காகவே இந்த தளம் உருவாக்கப்பட்டது.',
     hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
     hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
     hero_join_community: 'சமூகத்தில் சேருங்கள்',
@@ -477,7 +477,7 @@ const TRANSLATIONS = {
 
     // ── Communities Section ──
     comm_pill: 'நாட்டு சமூகங்கள்',
-    comm_title1: 'தமிழர்கள் எங்கும் இருக்கிறார்கள்',
+    comm_title1: 'உலகில் எங்கும் தமிழர்கள் இருக்கிறார்கள்.',
     comm_title2: 'உலகில்.',
     comm_sub: 'உங்கள் நாட்டில் வாழும் தமிழர்களுடன் இணைந்துகொள்ளுங்கள். நீங்கள் மாணவராயினும், வேலை தேடுபவராயினும், புதியவராயினும், வணிகராயினும் — உங்கள் சூழ்நிலையை புரிந்துகொள்ளும் மக்களுடன் உள்ளூர் வழிகாட்டுதல் பெறலாம், கேள்விகள் கேட்கலாம், அர்த்தமுள்ள தொடர்புகளை உருவாக்கலாம்.',
     comm_group_chat_title: 'குழு அரட்டை',
@@ -528,7 +528,7 @@ const TRANSLATIONS = {
     // ── Blog ──
     blog_pill: 'வலைப்பதிவு & புதுப்பிப்புகள்',
     blog_title1: 'சமீபத்திய',
-    blog_title2: 'TamilConnect',
+    blog_title2: 'கட்டுரைகள்',
     blog_sub: 'உலகெங்கிலும் வாழும் தமிழர்களுக்கான குறிப்புகள், வழிகாட்டிகள், சமூக புதுப்பிப்புகள் மற்றும் வாய்ப்புகள்.',
     blog_read_more: 'மேலும் படிக்கவும்',
 
@@ -567,9 +567,9 @@ const TRANSLATIONS = {
     err_message: 'செய்தி குறைந்தது 10 எழுத்துக்கள் இருக்க வேண்டும்.',
 
     // ── CTA Banner ──
-    cta_badge: '10 மில்லியனுக்கும் மேற்பட்ட தமிழர்கள் வெளிநாட்டில் வாழ்கிறார்கள்',
-    cta_title1: 'நீங்கள் தனியில்லை',
-    cta_title2: 'வெளிநாட்டில்',
+    cta_badge: 'உலகின் எந்த மூலையிலும் — உங்கள் தமிழ் சமூகம் உங்களுடன்',
+    cta_title1: 'வெளிநாட்டில்',
+    cta_title2: 'நீங்கள் தனியாக இல்லை',
     cta_desc: 'உலகெங்கிலும் மில்லியன் கணக்கான தமிழர்கள் வாழ்கிறார்கள். நீங்கள் படிக்கிறீர்களோ, வேலை செய்கிறீர்களோ, வணிகம் நடத்துகிறீர்களோ, அல்லது வேறொரு நாட்டில் புதிய வாழ்க்கை தொடங்குகிறீர்களோ — TamilConnect உங்கள் பயணத்தை புரிந்துகொள்ளும் மக்களுடன் இணைய உதவுகிறது.',
     cta_join_free: 'இலவசமாக TamilConnect-ல் சேருங்கள்',
     cta_already_member: 'ஏற்கனவே உறுப்பினரா? உள்நுழையுங்கள்',
@@ -748,13 +748,13 @@ const TRANSLATIONS = {
     ],
 
     aboutStats: [
-      { value: '10K+',  label: 'செயலில் உள்ள உறுப்பினர்கள்' },
-      { value: '500+',  label: 'சமூகங்கள்' },
-      { value: '1K+',   label: 'நடத்தப்பட்ட நிகழ்வுகள்' },
-      { value: '99.9%', label: 'இயக்க நேரம்' }
+      { value: '100%',  label: 'வளர்ந்து வரும் சமூகம்' },
+      { value: '40+',  label: 'நாடுகள்' },
+      { value: '100%',   label: 'இலவசம் எப்போதும்' },
+      { value: '100%', label: 'பாதுகாப்பானது' }
     ],
 
-    aboutChips: ['திறந்த மூலம்', 'சமூக இயக்கம்', 'தனியுரிமை முதலிடம்', 'நேரடி நேரம்', 'என்றும் இலவசம்'],
+    aboutChips: ['தமிழர்களால் தமிழர்களுக்காக', 'நம்பகமான தளம்', 'அனைவரும் வரவேற்கப்படுகிறார்கள்', 'உலகளாவிய சமூகம்'],
 
     trustCards: [
       {
@@ -834,9 +834,9 @@ const TRANSLATIONS = {
 
     contactSubjectOptions: [
       { value: 'general',     label: 'பொது விசாரணை' },
-      { value: 'support',     label: 'தொழில்நுட்ப ஆதரவு' },
-      { value: 'feedback',    label: 'கருத்துக்கள் & பரிந்துரைகள்' },
-      { value: 'partnership', label: 'கூட்டாண்மை' },
+      { value: 'question',    label: 'தளத்தைப் பற்றிய கேள்விகள்' },
+      { value: 'feedback',    label: 'கருத்துக்கள் மற்றும்  பரிந்துரைகள்' },
+      { value: 'partnership', label: 'இணைவு அல்லது ஒத்துழைப்பு' },
       { value: 'other',       label: 'மற்றவை' },
     ] as SelectOption[],
   }
@@ -1064,10 +1064,10 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private animateCounters(): void {
     const items = [
-      { key: '10K+', target: 10, suffix: 'K+' },
-      { key: '500+', target: 500, suffix: '+' },
-      { key: '1K+', target: 1, suffix: 'K+' },
-      { key: '99.9%', target: 99.9, suffix: '%' }
+      { key: '100%', target: 100, suffix: '%' },
+      { key: '40+', target: 40, suffix: '+' },
+      { key: '100%', target: 100, suffix: '%' },
+      { key: '100%', target: 100, suffix: '%' }
     ];
     items.forEach(item => {
       const duration = 2000;
@@ -1079,9 +1079,11 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
         const eased = 1 - Math.pow(1 - progress, 4);
         const current = eased * item.target;
         if (item.suffix === '%') {
-          this.counterValues[item.key] = current.toFixed(1) + item.suffix;
+          this.counterValues[item.key] =
+            `${Math.round(current)}${item.suffix}`;
         } else {
-          this.counterValues[item.key] = Math.floor(current) + item.suffix;
+          this.counterValues[item.key] =
+            `${Math.floor(current)}${item.suffix}`;
         }
         if (progress < 1) {
           requestAnimationFrame(animate);

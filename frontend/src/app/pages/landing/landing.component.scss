@@ -740,8 +740,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 100%;
-  max-width: 540px;
+  // width: 100%;
+  // max-width: 540px;
   margin: 18px 0 14px;
 }
 
@@ -787,7 +787,7 @@
   font-size: clamp(.92rem, 1.55vw, 1.06rem);
   color: #44403C;
   line-height: 1.80;
-  max-width: 520px;
+  // max-width: 520px;
   text-align: center;
   margin: 0 auto;
   font-weight: $font-weight-normal;
