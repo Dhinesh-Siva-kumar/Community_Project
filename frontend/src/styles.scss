@@ -915,34 +915,86 @@ body {
 //  Landing contact-form context — SearchableSelect trigger match
 //  Aligns .ss-trigger with .lp-form-control: same padding/border/
 //  bg/color and --lp-primary focus ring.
+//  Also themes the dropdown panel to match the amber dark palette.
 //  .lp-form-group is lp-prefixed → landing-page-only, no collision.
 // ══════════════════════════════════════════════════════════════
 
 .lp-form-group {
+
+  // ── Trigger (closed state) — matches .lp-form-control exactly ──
   .ss-trigger {
     padding: 12px 16px;
     font-size: 0.9rem;
-    color: var(--lp-text);
-    background: var(--lp-surface);
-    border: 1.5px solid var(--lp-border);
+    color: var(--lp-input-text);
+    background: var(--lp-input-bg);
+    border: 1.5px solid var(--lp-input-border);
     border-radius: $radius-sm;
     outline: none;
-    transition: border-color 0.25s, box-shadow 0.25s;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+
+    // Hover (when closed) — mirrors .lp-form-control:hover
+    &:not([aria-expanded="true"]):hover {
+      border-color: var(--lp-input-border-hover);
+    }
 
     // Open state or focus — mirrors .lp-form-control:focus
     &[aria-expanded="true"],
     &:focus,
     &:focus-visible {
       border-color: var(--lp-primary);
-      box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), 0.12);
+      box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), 0.15);
       outline: none;
     }
 
-    // Placeholder colour + opacity (matches .lp-form-control::placeholder)
+    // Placeholder colour — matches .lp-form-control::placeholder
     &.ss-placeholder .ss-trigger-text {
-      color: var(--lp-muted);
-      opacity: 0.6;
+      color: var(--lp-input-placeholder);
+      opacity: 1;
     }
+  }
+
+  // ── Dropdown panel — themed to match the contact form card ──
+  .ss-panel {
+    background: var(--lp-input-bg);
+    border-color: var(--lp-input-border);
+  }
+
+  .ss-search-wrap {
+    border-bottom-color: var(--lp-input-border);
+  }
+
+  .ss-search {
+    color: var(--lp-input-text);
+
+    &::placeholder {
+      color: var(--lp-input-placeholder);
+    }
+  }
+
+  .ss-search-icon,
+  .ss-clear-search {
+    color: var(--lp-input-placeholder);
+  }
+
+  .ss-caret {
+    color: var(--lp-input-placeholder);
+  }
+
+  .ss-option {
+    color: var(--lp-input-text);
+
+    &:hover {
+      background: var(--lp-input-bg-hover);
+    }
+
+    &.ss-option-selected {
+      color: var(--lp-primary);
+      background: rgba(var(--lp-primary-rgb), .10);
+    }
+  }
+
+  .ss-no-results {
+    color: var(--lp-input-placeholder);
   }
 }
 

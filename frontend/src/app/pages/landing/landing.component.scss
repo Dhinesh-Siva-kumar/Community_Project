@@ -42,6 +42,16 @@
   --lp-footer-bg:      #050200;
   --lp-footer-text:    #{$color-text-muted};
   --lp-shadow:         0 8px 32px rgba(0,0,0,0.50);
+
+  // ── Form-specific tokens — dedicated for input fields (avoids ultra-transparent --lp-surface) ──
+  --lp-input-bg:            #292524;                  // stone-800 warm — input fill
+  --lp-input-bg-hover:      #3C3432;                  // stone-700 — subtle hover tint
+  --lp-input-border:        rgba(255,255,255,.16);     // visible but calm border
+  --lp-input-border-hover:  rgba(255,255,255,.30);     // hover — more contrast
+  --lp-input-text:          #F5F5F4;                  // stone-100 — WCAG AA+ contrast
+  --lp-input-placeholder:   #A8A29E;                  // stone-400 — readable placeholder
+  --lp-form-card-bg:        #1C1917;                  // stone-900 warm dark card
+  --lp-form-title-border:   rgba(255,255,255,.10);     // subtle section divider
 }
 
 // ── LIGHT THEME (default) ──
@@ -74,6 +84,16 @@
   --lp-footer-bg:      #1C1917;
   --lp-footer-text:    #78716C;
   --lp-shadow:         0 8px 32px rgba(251, 191, 36, 0.14);
+
+  // ── Form-specific tokens ──
+  --lp-input-bg:            #FFFFFF;
+  --lp-input-bg-hover:      #FAFAF9;                  // stone-50 warm white
+  --lp-input-border:        rgba(251,191,36,.28);      // subtle amber border
+  --lp-input-border-hover:  rgba(251,191,36,.55);      // hover — stronger amber
+  --lp-input-text:          #1C1917;                  // stone-900
+  --lp-input-placeholder:   #9CA3AF;                  // gray-400
+  --lp-form-card-bg:        #FFFFFF;
+  --lp-form-title-border:   #E7E5E4;                  // stone-200
 }
 
 
@@ -2797,11 +2817,12 @@
   }
 }
 
-// ── Right: white form card ──
+// ── Right: form card — theme-aware ──
 .lp-contact-form-card {
   padding: 44px 40px;
-  background: #FFFFFF;
+  background: var(--lp-form-card-bg);
   border-radius: 0;
+  transition: background .4s ease;
 }
 
 // Form panel title
@@ -2809,11 +2830,11 @@
   font-family: $font-family-header;
   font-size: 1.25rem;
   font-weight: 900;
-  color: #1C1917;
+  color: var(--lp-text);
   margin: 0 0 28px;
   letter-spacing: -.3px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #E7E5E4;
+  border-bottom: 1px solid var(--lp-form-title-border);
 }
 
 .lp-form-row {
@@ -2839,25 +2860,35 @@
   padding: 12px 16px;
   font-family: inherit;
   font-size: .9rem;
-  color: var(--lp-text);
-  background: var(--lp-surface);
-  border: 1.5px solid var(--lp-border);
+  color: var(--lp-input-text);
+  background: var(--lp-input-bg);
+  border: 1.5px solid var(--lp-input-border);
   border-radius: $radius-sm;
   outline: none;
-  transition: border-color .25s $easing-standard, box-shadow .25s $easing-standard;
+  transition: border-color .25s $easing-standard,
+              box-shadow .25s $easing-standard,
+              background .25s $easing-standard;
   -webkit-appearance: none;
   appearance: none;
 
-  &::placeholder { color: var(--lp-muted); opacity: .6; }
+  &::placeholder {
+    color: var(--lp-input-placeholder);
+    opacity: 1;
+  }
+
+  &:hover:not(:focus) {
+    border-color: var(--lp-input-border-hover);
+  }
 
   &:focus {
     border-color: var(--lp-primary);
-    box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), .12);
+    box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), .15);
+    outline: none;
   }
 
   &.is-invalid {
     border-color: var(--lp-pink);
-    box-shadow: 0 0 0 3px rgba(var(--lp-pink-rgb), .10);
+    box-shadow: 0 0 0 3px rgba(var(--lp-pink-rgb), .12);
   }
 }
 
