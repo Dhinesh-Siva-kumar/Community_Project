@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
+import { uploadProfile } from '../../config/multer';
 import * as usersController from './users.controller';
 
 const router = Router();
@@ -12,7 +13,7 @@ router.use(authenticate);
 router.get('/profile', usersController.getProfile);
 
 // PUT  /api/users/profile
-router.put('/profile', usersController.updateProfile);
+router.put('/profile', uploadProfile.single('avatar'), usersController.updateProfile);
 
 // GET  /api/users/dashboard
 router.get('/dashboard', usersController.getDashboard);

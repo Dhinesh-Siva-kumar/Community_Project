@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
+import { uploadImages } from '../../config/multer';
 import * as ctrl from './posts.controller';
 
 const router = Router();
 router.use(authenticate);
 
-router.post('/', ctrl.create);
+router.post('/', uploadImages.array('images', 10), ctrl.create);
 router.get('/', ctrl.findAll);
 router.get('/pending', authorize('ADMIN'), ctrl.findPending);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);

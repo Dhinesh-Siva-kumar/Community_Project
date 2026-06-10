@@ -5,11 +5,12 @@ import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse } from '../../../core/models';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, FileUploadComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
@@ -34,7 +35,6 @@ export class UserEventsComponent implements OnInit {
 
   // Image upload
   selectedImage = signal<File | null>(null);
-  imagePreview = signal<string | null>(null);
 
   // Form
   eventForm!: FormGroup;
@@ -78,7 +78,6 @@ export class UserEventsComponent implements OnInit {
   openAddModal(): void {
     this.eventForm.reset({ pincode: this.userPincode() });
     this.selectedImage.set(null);
-    this.imagePreview.set(null);
     this.showAddModal.set(true);
   }
 
@@ -86,21 +85,8 @@ export class UserEventsComponent implements OnInit {
     this.showAddModal.set(false);
   }
 
-  onImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || !input.files[0]) return;
-
-    const file = input.files[0];
-    this.selectedImage.set(file);
-
-    const reader = new FileReader();
-    reader.onload = () => this.imagePreview.set(reader.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  removeImage(): void {
-    this.selectedImage.set(null);
-    this.imagePreview.set(null);
+  onEventImageChange(files: File[]): void {
+    this.selectedImage.set(files[0] ?? null);
   }
 
   submitEvent(): void {

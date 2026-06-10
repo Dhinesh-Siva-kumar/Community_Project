@@ -15,7 +15,9 @@ export async function getProfile(req: Request, res: Response, next: NextFunction
 export async function updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.user!.sub;
-    const body = UpdateUserDto.parse(req.body);
+    const rawBody = { ...req.body };
+    if (req.file) rawBody['avatar'] = `/uploads/profiles/${req.file.filename}`;
+    const body = UpdateUserDto.parse(rawBody);
     const result = await usersService.updateProfile(userId, body);
     res.json(result);
   } catch (err) {

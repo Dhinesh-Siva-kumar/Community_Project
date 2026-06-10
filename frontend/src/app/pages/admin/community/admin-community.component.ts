@@ -10,6 +10,7 @@ import { Community, CommunityRequest, Country, interests, PaginatedResponse } fr
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 // ── Module-level custom validators ──────────────────────────────────────────
 
@@ -35,7 +36,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
@@ -73,8 +74,6 @@ export class AdminCommunityComponent implements OnInit {
   showModal          = signal(false);
   editingCommunity   = signal<Community | null>(null);
   selectedImage      = signal<File | null>(null);
-  imagePreview       = signal<string | null>(null);
-  imageError         = signal<string | null>(null);
   deleteConfirmId    = signal<string | null>(null);
   formSubmitAttempted = signal(false);
 
@@ -262,7 +261,6 @@ export class AdminCommunityComponent implements OnInit {
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
-    this.imagePreview.set(null);
     this.showModal.set(true);
   }
 
@@ -278,7 +276,6 @@ export class AdminCommunityComponent implements OnInit {
       visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
     });
-    this.imagePreview.set(community.image || null);
     this.selectedImage.set(null);
     this.showModal.set(true);
   }
@@ -289,41 +286,11 @@ export class AdminCommunityComponent implements OnInit {
     this.communityForm.reset();
     this.formSubmitAttempted.set(false);
     this.selectedImage.set(null);
-    this.imagePreview.set(null);
   }
 
   // ── Image handling ────────────────────────────────────────────
-  onImageSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    // Client-side type guard (accept="image/*" can be bypassed).
-    if (!file.type.startsWith('image/')) {
-      this.toast.error('Only image files are supported (PNG, JPG, WEBP).');
-      input.value = '';
-      return;
-    }
-
-    // 5 MB cap.
-    if (file.size > 5 * 1024 * 1024) {
-      this.imageError.set('Image size must not exceed 5 MB. Please choose a smaller file.');
-      this.toast.error('Image must be less than 5 MB.');
-      input.value = '';
-      return;
-    }
-
-    this.imageError.set(null);
-    this.selectedImage.set(file);
-    const reader = new FileReader();
-    reader.onload = () => this.imagePreview.set(reader.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  removeImage(): void {
-    this.selectedImage.set(null);
-    this.imagePreview.set(null);
-    this.imageError.set(null);
+  onCommunityImageChange(files: File[]): void {
+    this.selectedImage.set(files[0] ?? null);
   }
 
   // ── Form submission ───────────────────────────────────────────
@@ -334,7 +301,7 @@ export class AdminCommunityComponent implements OnInit {
     const formData = this.communityForm.value;
 
     // Image required on create.
-    const imageValid = this.isEditing() || !!this.imagePreview();
+    const imageValid = this.isEditing() || !!this.selectedImage();
     // At least one of Private / Global required on create.
     const visibilityValid = this.isEditing() || !!formData.visibility;
 
@@ -437,12 +404,12 @@ export class AdminCommunityComponent implements OnInit {
   private mapToPayload(form: any, newImageUrl: string | null): CommunityRequest {
     const selectedCountry = this.countries.find((c) => c.id === form.countryId);
 
-    // Resolution order: fresh upload > existing preview (edit) > undefined.
+    // Resolution order: fresh upload > existing image (edit) > undefined.
     let image: string | undefined;
     if (newImageUrl) {
       image = newImageUrl;
-    } else if (!this.selectedImage() && this.imagePreview()) {
-      image = this.imagePreview()!;
+    } else if (this.isEditing() && !this.selectedImage()) {
+      image = this.editingCommunity()?.image ?? undefined;
     }
 
     return {

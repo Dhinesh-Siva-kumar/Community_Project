@@ -9,13 +9,14 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageUrlPipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageUrlPipe, FileUploadComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -41,7 +42,7 @@ export class CommunityDetailComponent implements OnInit {
   // Post creation
   submittingPost = signal(false);
   selectedPostImages = signal<File[]>([]);
-  postImagePreviews = signal<string[]>([]);
+  postImageResetCounter = signal(0);
   selectedPostType = signal<PostType>('GENERAL');
 
   // Post interactions
@@ -193,24 +194,8 @@ export class CommunityDetailComponent implements OnInit {
 
   setPostType(type: PostType): void { this.selectedPostType.set(type); }
 
-  onPostImageSelect(event: Event): void {
-    const files = (event.target as HTMLInputElement).files;
-    if (files) {
-      const newFiles = Array.from(files);
-      this.selectedPostImages.update((current) => [...current, ...newFiles]);
-      newFiles.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.postImagePreviews.update((current) => [...current, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  }
-
-  removePostImage(index: number): void {
-    this.selectedPostImages.update((current) => current.filter((_, i) => i !== index));
-    this.postImagePreviews.update((current) => current.filter((_, i) => i !== index));
+  onPostImagesChange(files: File[]): void {
+    this.selectedPostImages.set(files);
   }
 
   submitPost(): void {
@@ -226,7 +211,7 @@ export class CommunityDetailComponent implements OnInit {
         this.toast.success('Post submitted! It will appear after approval.');
         this.postForm.reset();
         this.selectedPostImages.set([]);
-        this.postImagePreviews.set([]);
+        this.postImageResetCounter.update((n) => n + 1);
         this.submittingPost.set(false);
         if (this.isAdmin() && post.status === 'APPROVED') {
           this.posts.update((current) => [post, ...current]);

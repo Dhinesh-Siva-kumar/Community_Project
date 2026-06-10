@@ -6,13 +6,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business, BusinessCategory, PaginatedResponse } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -54,7 +55,6 @@ export class UserBusinessComponent implements OnInit {
 
   // Image upload
   selectedImages = signal<File[]>([]);
-  imagePreviews = signal<string[]>([]);
 
   // Forms
   businessForm!: FormGroup;
@@ -178,7 +178,6 @@ export class UserBusinessComponent implements OnInit {
   openAddBusiness(): void {
     this.businessForm.reset({ pincode: this.userPincode(), categoryId: this.selectedCategory()?.id ?? '' });
     this.selectedImages.set([]);
-    this.imagePreviews.set([]);
     this.showAddBusinessModal.set(true);
   }
 
@@ -186,29 +185,8 @@ export class UserBusinessComponent implements OnInit {
     this.showAddBusinessModal.set(false);
   }
 
-  onImagesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-
-    const files = Array.from(input.files);
+  onBusinessImagesChange(files: File[]): void {
     this.selectedImages.set(files);
-
-    const previews: string[] = [];
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        previews.push(reader.result as string);
-        if (previews.length === files.length) {
-          this.imagePreviews.set([...previews]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  removeImage(index: number): void {
-    this.selectedImages.update((imgs) => imgs.filter((_, i) => i !== index));
-    this.imagePreviews.update((prev) => prev.filter((_, i) => i !== index));
   }
 
   submitBusiness(): void {

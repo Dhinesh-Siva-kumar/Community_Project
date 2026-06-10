@@ -4,7 +4,11 @@ import * as postsService from './posts.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const body = CreatePostDto.parse(req.body);
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const imagePaths = files.map((f) => `/uploads/${f.filename}`);
+    const rawBody = { ...req.body };
+    if (imagePaths.length) rawBody['images'] = imagePaths;
+    const body = CreatePostDto.parse(rawBody);
     const result = await postsService.create(body, req.user!.sub);
     res.status(201).json(result);
   } catch (err) { next(err); }

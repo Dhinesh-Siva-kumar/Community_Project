@@ -5,11 +5,12 @@ import { JobService } from '../../../core/services/job.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Job, PaginatedResponse } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 @Component({
   selector: 'app-admin-jobs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, SearchableSelectComponent, FileUploadComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
 })
@@ -37,7 +38,6 @@ export class AdminJobsComponent implements OnInit {
 
   // Image upload
   selectedImages = signal<File[]>([]);
-  imagePreviews = signal<string[]>([]);
 
   // Form
   jobForm!: FormGroup;
@@ -87,7 +87,6 @@ export class AdminJobsComponent implements OnInit {
   openAddModal(): void {
     this.jobForm.reset({ jobType: 'Full-time' });
     this.selectedImages.set([]);
-    this.imagePreviews.set([]);
     this.showAddModal.set(true);
   }
 
@@ -95,29 +94,8 @@ export class AdminJobsComponent implements OnInit {
     this.showAddModal.set(false);
   }
 
-  onImagesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-
-    const files = Array.from(input.files);
+  onJobImagesChange(files: File[]): void {
     this.selectedImages.set(files);
-
-    const previews: string[] = [];
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        previews.push(reader.result as string);
-        if (previews.length === files.length) {
-          this.imagePreviews.set([...previews]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  removeImage(index: number): void {
-    this.selectedImages.update((imgs) => imgs.filter((_, i) => i !== index));
-    this.imagePreviews.update((prev) => prev.filter((_, i) => i !== index));
   }
 
   submitJob(): void {

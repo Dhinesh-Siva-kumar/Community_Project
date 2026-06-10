@@ -1,0 +1,248 @@
+:host {
+  display: block;
+}
+
+.fu-hidden-input {
+  display: none;
+}
+
+// ── Drop zone ──────────────────────────────────────────────────────
+
+.fu-zone {
+  border: 2px dashed #dee2e6;
+  border-radius: 0.5rem;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  overflow: hidden;
+  position: relative;
+
+  &:hover {
+    border-color: #6ea8fe;
+    background-color: #f8f9ff;
+  }
+
+  &.fu-zone--drag {
+    border-color: #0d6efd;
+    background-color: #e8f0fe;
+  }
+
+  &.fu-zone--error {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+  }
+}
+
+// ── Empty state ────────────────────────────────────────────────────
+
+.fu-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fu-empty-icon {
+  font-size: 2rem;
+  color: #adb5bd;
+  margin-bottom: 0.25rem;
+}
+
+.fu-empty-label {
+  font-size: 0.875rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+.fu-empty-hint {
+  font-size: 0.75rem;
+  color: #adb5bd;
+}
+
+// ── Single preview ─────────────────────────────────────────────────
+
+.fu-single-preview {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.fu-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  display: block;
+}
+
+.fu-single-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.fu-icon-btn {
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.78);
+  }
+}
+
+.fu-remove-btn { color: #ff8c8c; }
+.fu-change-btn { color: #a8d1ff; }
+
+// ── Multi grid ─────────────────────────────────────────────────────
+
+.fu-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.fu-thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+  flex-shrink: 0;
+}
+
+.fu-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fu-thumb-del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+
+  &:hover {
+    background: rgba(220, 53, 69, 0.85);
+  }
+}
+
+.fu-thumb--add {
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #adb5bd;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: #6ea8fe;
+    color: #0d6efd;
+  }
+}
+
+// ── Avatar variant ─────────────────────────────────────────────────
+
+.fu-avatar-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fu-avatar-ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid #dee2e6;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s;
+
+  &:hover,
+  &:focus {
+    border-color: #0d6efd;
+    outline: none;
+  }
+}
+
+.fu-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fu-avatar-fallback {
+  font-size: 2.5rem;
+  color: #adb5bd;
+}
+
+.fu-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .fu-avatar-ring:hover &,
+  .fu-avatar-ring:focus & {
+    opacity: 1;
+  }
+}
+
+// ── Error ──────────────────────────────────────────────────────────
+
+.fu-error {
+  // Extend Bootstrap text-danger + small from the HTML class bindings
+}

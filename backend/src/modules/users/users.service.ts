@@ -1,5 +1,8 @@
 import db from '../../config/db';
+import path from 'path';
+import fs from 'fs';
 import { AppError } from '../../middleware/errorHandler';
+import { env } from '../../config/env';
 import type { UpdateUserDtoType } from './users.dto';
 
 interface UserRow {
@@ -88,6 +91,16 @@ export async function getProfile(userId: string) {
 }
 
 export async function updateProfile(userId: string, data: UpdateUserDtoType) {
+  // Delete old local avatar if a new one is being set
+  if (data.avatar) {
+    const currentUser = await db('users').where({ id: userId }).first() as UserRow | undefined;
+    const oldAvatar = currentUser?.avatar;
+    if (oldAvatar && oldAvatar.startsWith('/uploads/profiles/')) {
+      const filePath = path.join(path.resolve(env.UPLOADS_PATH), 'profiles', path.basename(oldAvatar));
+      try { fs.unlinkSync(filePath); } catch { /* file already gone, ignore */ }
+    }
+  }
+
   // Map camelCase DTO keys to snake_case DB columns
   const updateData: Record<string, unknown> = {};
   if (data.userName !== undefined) updateData['user_name'] = data.userName;

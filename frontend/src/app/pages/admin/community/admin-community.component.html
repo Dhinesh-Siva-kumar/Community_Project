@@ -501,43 +501,16 @@
                 <span class="cm-section-title">Community Image</span>
               </div>
 
-              @if (imagePreview()) {
-                <div class="cm-image-preview">
-                  <img [src]="imagePreview() | imageUrl" alt="Preview" />
-                  <button type="button" class="cm-image-remove" (click)="removeImage()">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                  <div class="cm-image-overlay">
-                    <button type="button" class="cm-image-change-btn" (click)="imageInput.click()">
-                      <i class="bi bi-arrow-repeat me-1"></i>Change Image
-                    </button>
-                  </div>
-                </div>
-              } @else {
-                <div class="cm-upload-zone"
-                     [class.cm-upload-zone--error]="formSubmitAttempted() && !isEditing() && !imagePreview()"
-                     (click)="imageInput.click()">
-                  <div class="cm-upload-icon">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
-                  </div>
-                  <p class="cm-upload-title">Click to upload a cover image</p>
-                  <p class="cm-upload-hint">PNG, JPG, WEBP supported &middot; Max 5 MB</p>
-                </div>
-              }
-
-              @if (formSubmitAttempted() && !isEditing() && !imagePreview()) {
-                <div class="cm-error-msg mt-2">
-                  <i class="bi bi-exclamation-circle me-1"></i>Community image is required.
-                </div>
-              }
-
-              @if (imageError()) {
-                <div class="cm-error-msg mt-2">
-                  <i class="bi bi-exclamation-circle me-1"></i>{{ imageError() }}
-                </div>
-              }
-
-              <input #imageInput type="file" hidden accept="image/*" (change)="onImageSelect($event)" />
+              <app-file-upload
+                mode="single"
+                accept="image/*"
+                [maxSizeMb]="5"
+                label="Community Image"
+                [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
+                [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
+                errorMessage="Community image is required."
+                (filesChange)="onCommunityImageChange($event)"
+              ></app-file-upload>
             </div>
 
           </form>

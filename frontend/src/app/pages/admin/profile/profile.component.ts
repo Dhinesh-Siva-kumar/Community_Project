@@ -6,13 +6,15 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { User } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type ProfileTab = 'personal' | 'admin-info';
 
 @Component({
   selector: 'app-admin-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -31,7 +33,6 @@ export class AdminProfileComponent implements OnInit {
 
   // Avatar
   avatarFile = signal<File | null>(null);
-  avatarPreview = signal<string | null>(null);
 
   // Interests
   newInterest = signal('');
@@ -126,16 +127,8 @@ export class AdminProfileComponent implements OnInit {
     }
   }
 
-  onAvatarSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || !input.files[0]) return;
-
-    const file = input.files[0];
-    this.avatarFile.set(file);
-
-    const reader = new FileReader();
-    reader.onload = () => this.avatarPreview.set(reader.result as string);
-    reader.readAsDataURL(file);
+  onAvatarChange(files: File[]): void {
+    this.avatarFile.set(files[0] ?? null);
   }
 
   addInterest(): void {
@@ -184,7 +177,6 @@ export class AdminProfileComponent implements OnInit {
         this.authService.currentUser.set(user);
         this.editMode.set(false);
         this.avatarFile.set(null);
-        this.avatarPreview.set(null);
         this.toast.success('Profile updated successfully');
         this.saving.set(false);
       },
@@ -230,10 +222,5 @@ export class AdminProfileComponent implements OnInit {
     if (pct >= 50) return 'bg-info';
     if (pct >= 30) return 'bg-warning';
     return 'bg-danger';
-  }
-
-  getAvatarUrl(): string {
-    if (this.avatarPreview()) return this.avatarPreview()!;
-    return this.user()?.avatar || '';
   }
 }

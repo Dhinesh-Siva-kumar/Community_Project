@@ -273,20 +273,6 @@
 
             <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
-              <!-- Image Previews ABOVE textarea -->
-              @if (postImagePreviews().length > 0) {
-                <div class="cd-image-previews">
-                  @for (preview of postImagePreviews(); track $index) {
-                    <div class="cd-preview-thumb position-relative">
-                      <img [src]="preview" alt="Image preview" />
-                      <button type="button" class="cd-preview-remove" (click)="removePostImage($index)" aria-label="Remove image">
-                        <i class="bi bi-x"></i>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-
               <!-- Textarea -->
               <div class="cd-compose-body">
                 <textarea
@@ -300,6 +286,16 @@
                   <div class="text-danger small mt-1">Post content is required.</div>
                 }
               </div>
+
+              <!-- Image upload -->
+              <app-file-upload
+                mode="multi"
+                accept="image/*"
+                [maxSizeMb]="5"
+                label="Click or drag to add photos"
+                [resetCounter]="postImageResetCounter()"
+                (filesChange)="onPostImagesChange($event)"
+              ></app-file-upload>
 
               <!-- Compose footer -->
               <div class="cd-compose-footer">
@@ -326,13 +322,8 @@
                   </button>
                 </div>
 
-                <!-- Upload + submit -->
+                <!-- Submit -->
                 <div class="cd-compose-actions">
-                  <button type="button" class="cd-upload-btn" (click)="postImageInput.click()">
-                    <i class="bi bi-camera-fill"></i>
-                    <span>Add Photos</span>
-                  </button>
-                  <input #postImageInput type="file" class="d-none" accept="image/*" multiple (change)="onPostImageSelect($event)" />
                   <button type="submit" class="cd-post-submit-btn" [disabled]="submittingPost() || postForm.invalid">
                     @if (submittingPost()) {
                       <span class="spinner-border spinner-border-sm me-1"></span>Posting...
@@ -509,20 +500,6 @@
             </div>
             <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
-              <!-- Image Previews ABOVE textarea -->
-              @if (postImagePreviews().length > 0) {
-                <div class="cd-image-previews">
-                  @for (preview of postImagePreviews(); track $index) {
-                    <div class="cd-preview-thumb position-relative">
-                      <img [src]="preview" alt="Image preview" />
-                      <button type="button" class="cd-preview-remove" (click)="removePostImage($index)" aria-label="Remove image">
-                        <i class="bi bi-x"></i>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-
               <div class="cd-compose-body">
                 <textarea
                   class="cd-compose-textarea cd-compose-textarea--help"
@@ -532,12 +509,17 @@
                 ></textarea>
               </div>
 
+              <!-- Image upload -->
+              <app-file-upload
+                mode="multi"
+                accept="image/*"
+                [maxSizeMb]="5"
+                label="Click or drag to add photos"
+                [resetCounter]="postImageResetCounter()"
+                (filesChange)="onPostImagesChange($event)"
+              ></app-file-upload>
+
               <div class="cd-compose-footer cd-compose-footer--single">
-                <button type="button" class="cd-upload-btn" (click)="helpImageInput.click()">
-                  <i class="bi bi-camera-fill"></i>
-                  <span>Add Photos</span>
-                </button>
-                <input #helpImageInput type="file" class="d-none" accept="image/*" multiple (change)="onPostImageSelect($event)" />
                 <button type="submit" class="cd-submit-btn cd-submit-btn--help" [disabled]="submittingPost() || postForm.invalid">
                   @if (submittingPost()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>Posting...
@@ -666,20 +648,6 @@
             </div>
             <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
-              <!-- Image Previews ABOVE textarea -->
-              @if (postImagePreviews().length > 0) {
-                <div class="cd-image-previews">
-                  @for (preview of postImagePreviews(); track $index) {
-                    <div class="cd-preview-thumb position-relative">
-                      <img [src]="preview" alt="Image preview" />
-                      <button type="button" class="cd-preview-remove" (click)="removePostImage($index)" aria-label="Remove image">
-                        <i class="bi bi-x"></i>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-
               <div class="cd-compose-body">
                 <textarea
                   class="cd-compose-textarea cd-compose-textarea--emergency"
@@ -689,12 +657,17 @@
                 ></textarea>
               </div>
 
+              <!-- Image upload -->
+              <app-file-upload
+                mode="multi"
+                accept="image/*"
+                [maxSizeMb]="5"
+                label="Click or drag to add photos"
+                [resetCounter]="postImageResetCounter()"
+                (filesChange)="onPostImagesChange($event)"
+              ></app-file-upload>
+
               <div class="cd-compose-footer cd-compose-footer--single">
-                <button type="button" class="cd-upload-btn" (click)="emergencyImageInput.click()">
-                  <i class="bi bi-camera-fill"></i>
-                  <span>Add Photos</span>
-                </button>
-                <input #emergencyImageInput type="file" class="d-none" accept="image/*" multiple (change)="onPostImageSelect($event)" />
                 <button type="submit" class="cd-submit-btn cd-submit-btn--emergency" [disabled]="submittingPost() || postForm.invalid">
                   @if (submittingPost()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>Posting...

@@ -16,20 +16,24 @@
         <div class="d-flex flex-wrap align-items-center gap-4">
           <!-- Avatar -->
           <div class="position-relative">
-            <div class="avatar-wrapper">
-              @if (getAvatarUrl()) {
-                <img [src]="getAvatarUrl()" alt="Avatar" class="avatar-img" />
-              } @else {
-                <div class="avatar-placeholder d-flex align-items-center justify-content-center">
-                  <span class="fw-bold">{{ (u.displayName ?? u.userName)?.charAt(0)?.toUpperCase() }}</span>
-                </div>
-              }
-            </div>
             @if (editMode()) {
-              <label class="avatar-upload-btn" role="button">
-                <i class="bi bi-camera-fill"></i>
-                <input type="file" class="d-none" accept="image/*" (change)="onAvatarSelected($event)" />
-              </label>
+              <app-file-upload
+                variant="avatar"
+                accept="image/*"
+                [maxSizeMb]="5"
+                [existingPreview]="u.avatar | imageUrl"
+                (filesChange)="onAvatarChange($event)"
+              ></app-file-upload>
+            } @else {
+              <div class="avatar-wrapper">
+                @if (u.avatar) {
+                  <img [src]="u.avatar | imageUrl" alt="Avatar" class="avatar-img" />
+                } @else {
+                  <div class="avatar-placeholder d-flex align-items-center justify-content-center">
+                    <span class="fw-bold">{{ (u.displayName ?? u.userName)?.charAt(0)?.toUpperCase() }}</span>
+                  </div>
+                }
+              </div>
             }
           </div>
           <!-- Info -->

@@ -1,0 +1,127 @@
+<!-- ── Avatar variant ─────────────────────────────────────────────── -->
+@if (variant === 'avatar') {
+  <div class="fu-avatar-wrap">
+    <div
+      class="fu-avatar-ring"
+      role="button"
+      tabindex="0"
+      (click)="triggerInput()"
+      (keydown.enter)="triggerInput()"
+      (keydown.space)="$event.preventDefault(); triggerInput()"
+    >
+      @if (displayPreview()) {
+        <img [src]="displayPreview()!" alt="Avatar" class="fu-avatar-img">
+      } @else {
+        <i class="bi bi-person-fill fu-avatar-fallback"></i>
+      }
+      <div class="fu-avatar-overlay">
+        <i class="bi bi-camera-fill"></i>
+      </div>
+    </div>
+
+    @if (error()) {
+      <p class="fu-error text-danger small mt-1 mb-0">{{ error() }}</p>
+    }
+  </div>
+}
+
+<!-- ── Default variant ────────────────────────────────────────────── -->
+@if (variant === 'default') {
+  <div
+    class="fu-zone"
+    [class.fu-zone--drag]="isDragging()"
+    [class.fu-zone--error]="showError"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="onZoneClick()"
+  >
+
+    <!-- ── Single mode ── -->
+    @if (mode === 'single') {
+      @if (displayPreview()) {
+        <div class="fu-single-preview" (click)="$event.stopPropagation()">
+          <img [src]="displayPreview()!" alt="Preview" class="fu-preview-img">
+          <div class="fu-single-actions">
+            @if (files().length > 0) {
+              <button
+                type="button"
+                class="fu-icon-btn fu-remove-btn"
+                title="Remove image"
+                (click)="removeFile(0)"
+              >
+                <i class="bi bi-trash3"></i>
+              </button>
+            }
+            <button
+              type="button"
+              class="fu-icon-btn fu-change-btn"
+              title="Replace image"
+              (click)="triggerInput()"
+            >
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="fu-empty">
+          <i class="bi bi-cloud-upload fu-empty-icon"></i>
+          <span class="fu-empty-label">{{ label }}</span>
+          <span class="fu-empty-hint">Max {{ maxSizeMb }} MB</span>
+        </div>
+      }
+    }
+
+    <!-- ── Multi mode ── -->
+    @if (mode === 'multi') {
+      @if (files().length > 0) {
+        <div class="fu-grid" (click)="$event.stopPropagation()">
+          @for (preview of previews(); track $index) {
+            <div class="fu-thumb">
+              <img [src]="preview" [alt]="'Image ' + ($index + 1)" class="fu-thumb-img">
+              <button
+                type="button"
+                class="fu-thumb-del"
+                title="Remove"
+                (click)="removeFile($index)"
+              >
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          }
+          @if (files().length < maxFiles) {
+            <div class="fu-thumb fu-thumb--add" (click)="triggerInput()">
+              <i class="bi bi-plus-lg"></i>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="fu-empty">
+          <i class="bi bi-images fu-empty-icon"></i>
+          <span class="fu-empty-label">{{ label }}</span>
+          <span class="fu-empty-hint">Up to {{ maxFiles }} images · Max {{ maxSizeMb }} MB each</span>
+        </div>
+      }
+    }
+
+  </div>
+
+  @if (error()) {
+    <p class="fu-error text-danger small mt-1 mb-0">{{ error() }}</p>
+  }
+  @if (showError && !error()) {
+    <p class="fu-error text-danger small mt-1 mb-0">
+      <i class="bi bi-exclamation-circle me-1"></i>{{ errorMessage }}
+    </p>
+  }
+}
+
+<!-- Hidden file input (shared by both variants) -->
+<input
+  #fileInput
+  type="file"
+  [accept]="accept"
+  [attr.multiple]="mode === 'multi' ? '' : null"
+  class="fu-hidden-input"
+  (change)="onInputChange($event)"
+>

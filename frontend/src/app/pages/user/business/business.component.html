@@ -384,19 +384,14 @@
               </div>
               <div class="col-12">
                 <label class="form-label small fw-semibold">Images</label>
-                <input type="file" class="form-control" multiple accept="image/*" (change)="onImagesSelected($event)" />
-                @if (imagePreviews().length > 0) {
-                  <div class="d-flex flex-wrap gap-2 mt-2">
-                    @for (preview of imagePreviews(); track $index) {
-                      <div class="position-relative preview-thumb">
-                        <img [src]="preview" class="rounded" width="80" height="80" style="object-fit: cover;" />
-                        <button type="button" class="btn btn-sm btn-danger preview-remove" (click)="removeImage($index)">
-                          <i class="bi bi-x"></i>
-                        </button>
-                      </div>
-                    }
-                  </div>
-                }
+                <app-file-upload
+                  mode="multi"
+                  accept="image/*"
+                  [maxSizeMb]="5"
+                  [maxFiles]="10"
+                  label="Click or drag to add images"
+                  (filesChange)="onBusinessImagesChange($event)"
+                ></app-file-upload>
               </div>
             </div>
 
