@@ -33,9 +33,9 @@ const TRANSLATIONS = {
     hero_h1_accent: 'Tamils',
     hero_h1_post: 'around the world',
     hero_h1_sub: 'students, workers, professionals, business owners, and families.',
-    hero_motto: 'You are not alone abroad — we are here',
-    hero_desc1: 'Whether you move for study, work, or a new life —',
-    hero_desc2: 'your Tamil community is already waiting for you.',
+    hero_motto: 'You are not alone abroad — your Tamil community is already waiting for you.',
+    // hero_desc1: 'Whether you move for study, work, or a new life —',
+    // hero_desc2: 'your Tamil community is already waiting for you.',
     hero_join_community: 'Join Community',
     hero_how_it_works: 'How it Works',
     pill_jobs_label: 'Jobs',
@@ -152,7 +152,7 @@ const TRANSLATIONS = {
     err_message: 'Message must be at least 10 characters.',
 
     // ── CTA Banner ──
-    cta_badge: '10 Million+ Tamils Live Abroad',
+    cta_badge: 'Wherever you are in the world, your Tamil community is with you.',
     cta_title1: "You're Not Alone",
     cta_title2: 'Abroad',
     cta_desc: 'Millions of Tamils live across the world. Whether you are studying, working, running a business, or starting a new life in another country, TamilConnect helps you connect with people who understand your journey.',
@@ -317,7 +317,7 @@ const TRANSLATIONS = {
         location: 'Toronto, Canada',
         category: 'Community Networking',
         initial: 'A',
-        quote: 'Moving to Canada was exciting but challenging. TamilConnect helped me meet other Tamils in Toronto, attend community events, and build friendships. It made settling into a new country much easier.',
+        quote: 'Moving to Canada was exciting but overwhelming. I didn\'t know where to start. Through TamilConnect, I connected with Tamils in Toronto, attended community events, and built real friendships within weeks. Settling into a new country became so much easier.',
         color: 'green',
         rating: 5
       },
@@ -339,7 +339,7 @@ const TRANSLATIONS = {
       { value: '100%', label: 'Safe and Secure' }
     ],
 
-    aboutChips: ['Community Driven', 'Privacy First', 'Real-time', 'Free Forever'],
+    aboutChips: ['By Tamils, for Tamils','A trusted platform','Everyone is welcome','A global community'],
 
     trustCards: [
       {
@@ -449,8 +449,8 @@ const TRANSLATIONS = {
     hero_h1_post: 'சொந்த தளம்',
     hero_h1_sub: 'மாணவர்களுக்கும், தொழிலாளர்களுக்கும், வணிகர்களுக்கும் — அனைத்து தமிழர்களுக்கும்.',
     hero_motto: 'தெரியாத நாட்டில் தனியாக போராடுகிறீர்களா? உங்களுக்காகவே இந்த தளம் உருவாக்கப்பட்டது.',
-    hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
-    hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
+    // hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
+    // hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
     hero_join_community: 'சமூகத்தில் சேருங்கள்',
     hero_how_it_works: 'எப்படி செயல்படுகிறது',
     pill_jobs_label: 'வேலைகள்',
@@ -477,8 +477,8 @@ const TRANSLATIONS = {
 
     // ── Communities Section ──
     comm_pill: 'நாட்டு சமூகங்கள்',
-    comm_title1: 'உலகில் எங்கும் தமிழர்கள் இருக்கிறார்கள்.',
-    comm_title2: 'உலகில்.',
+    comm_title1: 'உலகில் எங்கும்',
+    comm_title2: 'தமிழர்கள் இருக்கிறார்கள்',
     comm_sub: 'உங்கள் நாட்டில் வாழும் தமிழர்களுடன் இணைந்துகொள்ளுங்கள். நீங்கள் மாணவராயினும், வேலை தேடுபவராயினும், புதியவராயினும், வணிகராயினும் — உங்கள் சூழ்நிலையை புரிந்துகொள்ளும் மக்களுடன் உள்ளூர் வழிகாட்டுதல் பெறலாம், கேள்விகள் கேட்கலாம், அர்த்தமுள்ள தொடர்புகளை உருவாக்கலாம்.',
     comm_group_chat_title: 'குழு அரட்டை',
     comm_group_chat_desc: 'உறுப்பினர்கள் நாட்டு சார்ந்த கலந்துரையாடல்களில் பங்கேற்று, கேள்விகள் கேட்டு, உள்ளூர் தகவல்களில் ஒருவருக்கொருவர் உதவிக்கொள்ளலாம்.',
@@ -732,7 +732,7 @@ const TRANSLATIONS = {
         location: 'டொரொண்டோ, கனடா',
         category: 'சமூக வலைப்பின்னல்',
         initial: 'A',
-        quote: 'கனடாவுக்கு குடிபெயர்வது உற்சாகமாக இருந்தாலும் சவாலாக இருந்தது. TamilConnect டொரொண்டோவில் மற்ற தமிழர்களை சந்திக்கவும், சமூக நிகழ்வுகளில் கலந்துகொள்ளவும், நட்புகளை வளர்க்கவும் உதவியது. புதிய நாட்டில் குடியேறுவதை மிகவும் எளிதாக்கியது.',
+        quote: 'கனடாவுக்கு குடிபெயர்ந்தது எனக்கு மிகுந்த உற்சாகமாக இருந்தாலும், அதே நேரத்தில் சற்று சவாலாகவும் இருந்தது. எங்கு தொடங்குவது என்று எனக்குத் தெரியவில்லை. TamilConnect மூலம் டொரோண்டோவில் வசிக்கும் தமிழர்களுடன் தொடர்பு கொண்டு, சமூக நிகழ்வுகளில் கலந்து கொண்டு, சில வாரங்களிலேயே உண்மையான நட்புகளை உருவாக்க முடிந்தது. இதனால் புதிய நாட்டில் என் வாழ்க்கையை அமைத்துக்கொள்வது மிகவும் எளிதானதாக மாறியது.',
         color: 'green',
         rating: 5
       },
