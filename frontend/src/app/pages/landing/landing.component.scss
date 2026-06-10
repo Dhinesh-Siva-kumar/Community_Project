@@ -1572,6 +1572,13 @@
 .lp-bento-card[data-color="pink"]    .lp-mini-tag { background: rgba(244,63,94,.08);  color: #BE123C; border: 1px solid rgba(244,63,94,.22); }
 .lp-bento-card[data-color="accent"]  .lp-mini-tag { background: rgba(249,115,22,.10); color: #C2410C; border: 1px solid rgba(249,115,22,.22); }
 
+// About Us — "Why We Built" card chips (light mode)
+.lp-about-chips .lp-mini-tag {
+  background: rgba(251,191,36,.12);
+  color: #B45309;
+  border: 1px solid rgba(251,191,36,.28);
+}
+
 // Dark mode tag text adjustments
 :host[data-theme="dark"] {
   .lp-bento-card[data-color="primary"] .lp-mini-tag { color: #FBBF24; background: rgba(251,191,36,.12); }
@@ -1580,6 +1587,13 @@
   .lp-bento-card[data-color="yellow"]  .lp-mini-tag { color: #FCD34D; background: rgba(245,158,11,.12); }
   .lp-bento-card[data-color="pink"]    .lp-mini-tag { color: #FB7185; background: rgba(244,63,94,.12); }
   .lp-bento-card[data-color="accent"]  .lp-mini-tag { color: #FB923C; background: rgba(249,115,22,.12); }
+
+  // About Us — "Why We Built" card chips (dark mode)
+  .lp-about-chips .lp-mini-tag {
+    color: #FBBF24;
+    background: rgba(251,191,36,.14);
+    border-color: rgba(251,191,36,.30);
+  }
 }
 
 // Light mode: icon bg overrides (stronger fills on white cards)

@@ -293,7 +293,7 @@ export async function getMembers(communityId: string, page: number, limit: numbe
       .where('cm.community_id', communityId)
       .select(
         'cm.id', 'cm.community_id', 'cm.joined_at',
-        'u.id as user_id', 'u.user_name', 'u.display_name', 'u.email', 'u.avatar', 'u.professional_category',
+        'u.id as user_id', 'u.user_name', 'u.display_name', 'u.email', 'u.avatar', 'u.professional_category', 'u.country',
       )
       .orderBy('cm.joined_at', 'desc')
       .limit(limit)
@@ -312,6 +312,7 @@ export async function getMembers(communityId: string, page: number, limit: numbe
       email: m['email'],
       avatar: m['avatar'],
       professionalCategory: m['professional_category'],
+      country: m['country'],
     },
   }));
 

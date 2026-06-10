@@ -25,7 +25,7 @@
   overflow: hidden;
 }
 
-.skel-banner       { height: 200px; width: 100%; border-radius: 0; }
+.skel-banner       { height: 90px; width: 100%; border-radius: 0; }
 .skel-line         { display: block; }
 .skel-post         { padding: 1.2rem; }
 
@@ -119,7 +119,7 @@
 
 // Banner (image present)
 .cd-hero-banner {
-  height: 200px;
+  height: 90px;
   position: relative;
   overflow: hidden;
 }
@@ -299,6 +299,71 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+// Hero footer — chips row + join/leave action aligned side-by-side
+.cd-hero-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+// Join Community button
+.cd-btn-join {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: $gradient-primary;
+  color: $color-on-primary;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba($primary, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  i { font-size: 13px; }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary, 0.4);
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+// Leave Community button
+.cd-btn-leave {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  border: 1.5px solid $color-stone-300;
+  border-radius: 10px;
+  background: $white;
+  color: $color-stone-600;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  i { font-size: 13px; }
+
+  &:hover:not(:disabled) {
+    border-color: $danger;
+    color: $danger;
+    background: rgba($danger, 0.04);
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
 
 .cd-chip {
@@ -584,6 +649,17 @@
   flex-wrap: wrap;
 }
 
+// ── Sticky Tabs Wrapper ───────────────────────────────────────
+
+.cd-tabs-wrap {
+  position: sticky;
+  top: $header-height;
+  z-index: 100;
+  background: $color-stone-50;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+}
+
 .cd-tab-btn {
   display: inline-flex;
   align-items: center;
@@ -697,6 +773,22 @@
 @keyframes tabFadeSlideIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Posts Two-Column Layout ───────────────────────────────────
+
+.cd-posts-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+}
+
+.cd-feed-col,
+.cd-sidebar-col { min-width: 0; }
+
+.cd-sidebar-sticky {
+  position: sticky;
+  top: calc(#{$header-height} + 92px);
 }
 
 // ── Compose Card — Posts Tab ──────────────────────────────────
@@ -1226,66 +1318,102 @@
 .cd-empty-title { font-size: 1rem; font-weight: 700; color: $color-stone-800; margin: 0 0 6px; }
 .cd-empty-text  { font-size: 13.5px; color: $color-stone-500; margin: 0; max-width: 300px; line-height: 1.6; }
 
-// ── Members Tab — Grid Layout ─────────────────────────────────
+// ── Members Tab — List Layout ─────────────────────────────────
 
 .cd-members-card-full {
   border-radius: 18px;
 }
 
-.cd-members-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
-  padding: 1.25rem;
-}
-
-.cd-member-card {
+// Horizontal list container
+.cd-member-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 1.1rem 0.75rem;
-  border-radius: 14px;
-  border: 1.5px solid $color-stone-100;
-  background: $color-stone-50;
-  transition: all 0.2s ease;
-  cursor: default;
+}
 
-  &:hover {
-    border-color: $color-amber-200;
-    background: $amber-50;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba($primary, 0.1);
-  }
+// Each member row
+.cd-member-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid $color-stone-100;
+  transition: background 0.15s ease;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $amber-50; }
 
   .member-avatar {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     flex-shrink: 0;
-    margin-bottom: 0.5rem;
 
-    img { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
+    img            { width: 44px; height: 44px; object-fit: cover; border-radius: 50%; }
+    .avatar-initials { width: 44px; height: 44px; font-size: 0.95rem; }
   }
+}
 
-  .avatar-initials {
-    width: 48px;
-    height: 48px;
-    font-size: 1rem;
-  }
+// Info column inside a row
+.cd-member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .cd-member-name {
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
   color: $color-stone-700;
-  margin: 0 0 3px;
-  width: 100%;
+  margin: 0;
+  display: block;
+}
+
+.cd-member-category {
+  font-size: 12px;
+  font-weight: 500;
+  color: $color-primary-darker;
+  display: block;
 }
 
 .cd-member-joined {
-  font-size: 11px;
+  font-size: 11.5px;
   color: $color-stone-400;
-  font-weight: 500;
+  font-weight: 400;
+}
+
+// Load More wrapper
+.cd-load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid $color-stone-100;
+}
+
+// Skeleton rows
+.cd-member-row-skeleton {
+  pointer-events: none;
+
+  .cd-member-avatar-skel {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cd-member-skel-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .cd-skel-line {
+    height: 10px;
+    border-radius: 5px;
+
+    &--name { width: 40%; }
+    &--sub  { width: 25%; }
+  }
 }
 
 // ── About Tab — Stat Cards ────────────────────────────────────
@@ -1565,7 +1693,7 @@
 // ── Responsive ────────────────────────────────────────────────
 
 @include media-md-max {
-  .cd-hero-banner { height: 160px; }
+  .cd-hero-banner { height: 70px; }
   .cd-community-avatar { width: 68px; height: 68px; }
   .cd-community-avatar--lg { width: 76px; height: 76px; }
   .cd-hero-identity { margin-top: -34px; }
@@ -1575,13 +1703,14 @@
   .cd-tab-label { display: none; }
   .cd-tab-btn .bi + .cd-tab-label { display: none; }
 
+  .cd-posts-layout { grid-template-columns: 1fr; }
+
   .post-images .image-grid { grid-template-columns: 1fr; img { height: 160px; } }
   .cd-stat-card { padding: 1rem; }
-  .cd-members-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
 }
 
 @include media-sm-max {
-  .cd-hero-banner { height: 130px; }
+  .cd-hero-banner { height: 55px; }
   .cd-community-avatar { width: 60px; height: 60px; border-radius: 14px; }
   .cd-community-avatar--lg { width: 68px; height: 68px; border-radius: 16px; }
   .cd-hero-identity { margin-top: -30px; }
@@ -1594,6 +1723,9 @@
     align-items: stretch;
     gap: 10px;
   }
+
+  .cd-hero-footer { flex-direction: column; align-items: flex-start; }
+  .cd-btn-join, .cd-btn-leave { width: 100%; justify-content: center; }
 
   .cd-type-selector { overflow-x: auto; }
 
@@ -1608,7 +1740,10 @@
   .cd-modal { border-radius: 16px 16px 0 0; align-self: flex-end; max-width: 100%; }
   .cd-modal-backdrop { align-items: flex-end; padding: 0; }
 
-  .cd-members-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .cd-member-row { padding: 0.6rem 1rem; gap: 10px; }
+
+  .cd-posts-layout { grid-template-columns: 1fr; }
+  .cd-sidebar-col  { order: -1; }
 
   .cd-tabs {
     overflow-x: auto;

@@ -52,14 +52,25 @@ export class CommunityDetailComponent implements OnInit {
   submittingComment = signal<string | null>(null);
   likingPost = signal<string | null>(null);
 
+  // Join / Leave
+  joiningCommunity = signal(false);
+  leavingCommunity = signal(false);
+
   // Admin actions — delete modal
   deleteModalOpen    = signal(false);
   deletingCommunity  = signal(false);
 
-  // Pagination
+  // Pagination — posts
   currentPage = signal(1);
   totalPages  = signal(1);
   loadingMore = signal(false);
+
+  // Pagination — members
+  loadingMembers     = signal(false);
+  membersError       = signal(false);
+  membersPage        = signal(1);
+  membersTotalPages  = signal(1);
+  loadingMoreMembers = signal(false);
 
   // Forms
   postForm!: FormGroup;
@@ -70,6 +81,12 @@ export class CommunityDetailComponent implements OnInit {
   currentUserId  = computed(() => this.currentUser()?.id ?? '');
 
   isAdmin = computed(() => this.router.url.startsWith('/admin'));
+
+  isMember = computed(() => {
+    const uid = this.currentUserId();
+    if (!uid) return false;
+    return this.members().some((m) => m.user?.id === uid);
+  });
 
   backRoute = computed(() => this.isAdmin() ? '/admin/community' : '/user/community');
 
@@ -103,6 +120,7 @@ export class CommunityDetailComponent implements OnInit {
         this.communityId.set(id);
         this.loadCommunity();
         this.loadPosts();
+        this.membersPage.set(1);
         this.loadMembers();
       }
     });
@@ -160,11 +178,37 @@ export class CommunityDetailComponent implements OnInit {
     });
   }
 
-  loadMembers(): void {
-    this.communityService.getMembers(this.communityId()).subscribe({
-      next: (members) => { this.members.set(members); },
-      error: () => {},
+  loadMembers(append = false): void {
+    if (!append) {
+      this.loadingMembers.set(true);
+      this.membersError.set(false);
+    } else {
+      this.loadingMoreMembers.set(true);
+    }
+
+    this.communityService.getMembers(this.communityId(), this.membersPage(), 20).subscribe({
+      next: (response) => {
+        if (append) {
+          this.members.update((current) => [...current, ...response.data]);
+        } else {
+          this.members.set(response.data);
+        }
+        this.membersTotalPages.set(response.totalPages);
+        this.loadingMembers.set(false);
+        this.loadingMoreMembers.set(false);
+      },
+      error: () => {
+        this.membersError.set(true);
+        this.loadingMembers.set(false);
+        this.loadingMoreMembers.set(false);
+      },
     });
+  }
+
+  loadMoreMembers(): void {
+    if (this.membersPage() >= this.membersTotalPages() || this.loadingMoreMembers()) return;
+    this.membersPage.update((p) => p + 1);
+    this.loadMembers(true);
   }
 
   loadMore(): void {
@@ -313,6 +357,44 @@ export class CommunityDetailComponent implements OnInit {
 
   openDeleteModal():  void { this.deleteModalOpen.set(true); }
   closeDeleteModal(): void { this.deleteModalOpen.set(false); }
+
+  onJoinCommunity(): void {
+    this.joiningCommunity.set(true);
+    this.communityService.joinCommunity(this.communityId()).subscribe({
+      next: () => {
+        this.toast.success('You have joined the community!');
+        this.membersPage.set(1);
+        this.loadMembers();
+        this.community.update((c) =>
+          c ? { ...c, _count: { ...c._count!, members: (c._count?.members ?? 0) + 1 } } : c
+        );
+        this.joiningCommunity.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message || 'Failed to join community');
+        this.joiningCommunity.set(false);
+      },
+    });
+  }
+
+  onLeaveCommunity(): void {
+    this.leavingCommunity.set(true);
+    this.communityService.leaveCommunity(this.communityId()).subscribe({
+      next: () => {
+        this.toast.success('You have left the community');
+        this.membersPage.set(1);
+        this.loadMembers();
+        this.community.update((c) =>
+          c ? { ...c, _count: { ...c._count!, members: Math.max(0, (c._count?.members ?? 0) - 1) } } : c
+        );
+        this.leavingCommunity.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message || 'Failed to leave community');
+        this.leavingCommunity.set(false);
+      },
+    });
+  }
 
   onDeleteCommunity(): void {
     this.deletingCommunity.set(true);

@@ -35,7 +35,7 @@ export class CommunityService {
     return this.api.post<void>(`/communities/${id}/leave`);
   }
 
-  getMembers(communityId: string): Observable<CommunityMember[]> {
-    return this.api.get<CommunityMember[]>(`/communities/${communityId}/members`);
+  getMembers(communityId: string, page = 1, limit = 20): Observable<PaginatedResponse<CommunityMember>> {
+    return this.api.get<PaginatedResponse<CommunityMember>>(`/communities/${communityId}/members`, { page, limit });
   }
 }

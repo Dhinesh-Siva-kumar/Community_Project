@@ -161,28 +161,51 @@
             <p class="cd-community-desc">{{ community()!.description }}</p>
           }
 
-          <!-- Meta Chips -->
-          <div class="cd-hero-chips">
-            <span class="cd-chip cd-chip-members">
-              <i class="bi bi-people-fill"></i>{{ memberCount() }} members
-            </span>
-            <span class="cd-chip cd-chip-posts">
-              <i class="bi bi-file-earmark-text-fill"></i>{{ postCount() }} posts
-            </span>
-            <span class="cd-chip cd-chip-category">
-              <i class="bi bi-tag-fill"></i>{{ community()!.category_name || 'Uncategorized' }}
-            </span>
-            <span class="cd-chip cd-chip-country">
-              <i class="bi bi-globe2"></i>{{ community()!.country || 'Not Specified' }}
-            </span>
-            @if (community()!.location) {
-              <span class="cd-chip cd-chip-location">
-                <i class="bi bi-geo-alt-fill"></i>{{ community()!.location }}
+          <!-- Hero Footer: meta chips + join/leave action -->
+          <div class="cd-hero-footer">
+            <div class="cd-hero-chips">
+              <span class="cd-chip cd-chip-members">
+                <i class="bi bi-people-fill"></i>{{ memberCount() }} members
               </span>
+              <span class="cd-chip cd-chip-posts">
+                <i class="bi bi-file-earmark-text-fill"></i>{{ postCount() }} posts
+              </span>
+              <span class="cd-chip cd-chip-category">
+                <i class="bi bi-tag-fill"></i>{{ community()!.category_name || 'Uncategorized' }}
+              </span>
+              <span class="cd-chip cd-chip-country">
+                <i class="bi bi-globe2"></i>{{ community()!.country || 'Not Specified' }}
+              </span>
+              @if (community()!.location) {
+                <span class="cd-chip cd-chip-location">
+                  <i class="bi bi-geo-alt-fill"></i>{{ community()!.location }}
+                </span>
+              }
+              <span class="cd-chip cd-chip-date">
+                <i class="bi bi-calendar3"></i>{{ formatDate(community()!.created_at || community()!.createdAt) }}
+              </span>
+            </div>
+
+            <!-- Join / Leave button — user view only -->
+            @if (!isAdmin()) {
+              @if (isMember()) {
+                <button type="button" class="cd-btn-leave" (click)="onLeaveCommunity()" [disabled]="leavingCommunity()">
+                  @if (leavingCommunity()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>Leaving...
+                  } @else {
+                    <i class="bi bi-box-arrow-right me-1"></i>Leave
+                  }
+                </button>
+              } @else {
+                <button type="button" class="cd-btn-join" (click)="onJoinCommunity()" [disabled]="joiningCommunity()">
+                  @if (joiningCommunity()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>Joining...
+                  } @else {
+                    <i class="bi bi-plus-circle-fill me-1"></i>Join Community
+                  }
+                </button>
+              }
             }
-            <span class="cd-chip cd-chip-date">
-              <i class="bi bi-calendar3"></i>{{ formatDate(community()!.created_at || community()!.createdAt) }}
-            </span>
           </div>
         </div>
 
@@ -193,7 +216,8 @@
   <!-- ═══════════════════════════════════════════════════════════
        TAB NAVIGATION — Modern pill tabs with counts
   ══════════════════════════════════════════════════════════════ -->
-  <div class="cd-tabs mb-4" role="tablist">
+  <div class="cd-tabs-wrap">
+  <div class="cd-tabs" role="tablist">
 
     <button class="cd-tab-btn" role="tab" [class.cd-tab-btn--active]="activeTab() === 'posts'"
       (click)="setTab('posts')" [attr.aria-selected]="activeTab() === 'posts'">
@@ -238,6 +262,7 @@
     </button>
 
   </div>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════════
        TAB CONTENT
@@ -250,94 +275,12 @@
       ══════════════════════════════════════════════════════════ -->
       @case ('posts') {
         <div class="tab-enter">
+          <div class="cd-posts-layout">
 
-          <!-- ── Compose Card ─────────────────────────────── -->
-          <div class="cd-compose-card mb-4">
+            <!-- ── Feed Column ─────────────────────────────────── -->
+            <div class="cd-feed-col">
 
-            <!-- Composer header: user identity -->
-            <div class="cd-compose-header">
-              <div class="post-avatar flex-shrink-0">
-                @if (currentUser()?.avatar) {
-                  <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" />
-                } @else {
-                  <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
-                    {{ getUserInitials(currentUser()) }}
-                  </div>
-                }
-              </div>
-              <div class="cd-compose-user-meta">
-                <span class="cd-compose-username">{{ getUserFullName(currentUser()) }}</span>
-                <span class="cd-compose-hint">Share something with the community</span>
-              </div>
-            </div>
-
-            <form [formGroup]="postForm" (ngSubmit)="submitPost()">
-
-              <!-- Textarea -->
-              <div class="cd-compose-body">
-                <textarea
-                  class="cd-compose-textarea"
-                  formControlName="content"
-                  rows="3"
-                  placeholder="What's on your mind?"
-                  [class.is-invalid]="postForm.get('content')?.touched && postForm.get('content')?.invalid"
-                ></textarea>
-                @if (postForm.get('content')?.touched && postForm.get('content')?.errors?.['required']) {
-                  <div class="text-danger small mt-1">Post content is required.</div>
-                }
-              </div>
-
-              <!-- Image upload -->
-              <app-file-upload
-                mode="multi"
-                accept="image/*"
-                [maxSizeMb]="5"
-                label="Click or drag to add photos"
-                [resetCounter]="postImageResetCounter()"
-                (filesChange)="onPostImagesChange($event)"
-              ></app-file-upload>
-
-              <!-- Compose footer -->
-              <div class="cd-compose-footer">
-
-                <!-- Type selector -->
-                <div class="cd-type-selector">
-                  <button type="button" class="cd-type-btn"
-                    [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
-                    (click)="setPostType('GENERAL')">
-                    <i class="bi bi-chat-dots-fill"></i>
-                    <span>General</span>
-                  </button>
-                  <button type="button" class="cd-type-btn cd-type-btn--help"
-                    [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
-                    (click)="setPostType('HELP')">
-                    <i class="bi bi-life-preserver"></i>
-                    <span>Help</span>
-                  </button>
-                  <button type="button" class="cd-type-btn cd-type-btn--emergency"
-                    [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
-                    (click)="setPostType('EMERGENCY')">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Emergency</span>
-                  </button>
-                </div>
-
-                <!-- Submit -->
-                <div class="cd-compose-actions">
-                  <button type="submit" class="cd-post-submit-btn" [disabled]="submittingPost() || postForm.invalid">
-                    @if (submittingPost()) {
-                      <span class="spinner-border spinner-border-sm me-1"></span>Posting...
-                    } @else {
-                      <i class="bi bi-send-fill me-1"></i>Post
-                    }
-                  </button>
-                </div>
-
-              </div>
-            </form>
-          </div>
-
-          <!-- ── Posts List ──────────────────────────────── -->
+              <!-- ── Posts List ──────────────────────────────── -->
           @if (loadingPosts()) {
             <div class="cd-posts-loading">
               <div class="spinner-border spinner-border-sm cd-spinner-amber me-2"></div>
@@ -483,6 +426,102 @@
             }
           }
 
+            </div>
+
+            <!-- ── Sidebar Column ──────────────────────────────── -->
+            <div class="cd-sidebar-col">
+              <div class="cd-sidebar-sticky">
+
+                <!-- ── Compose Card ─────────────────────────────── -->
+                <div class="cd-compose-card">
+
+                  <!-- Composer header: user identity -->
+                  <div class="cd-compose-header">
+                    <div class="post-avatar flex-shrink-0">
+                      @if (currentUser()?.avatar) {
+                        <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                          {{ getUserInitials(currentUser()) }}
+                        </div>
+                      }
+                    </div>
+                    <div class="cd-compose-user-meta">
+                      <span class="cd-compose-username">{{ getUserFullName(currentUser()) }}</span>
+                      <span class="cd-compose-hint">Share something with the community</span>
+                    </div>
+                  </div>
+
+                  <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+
+                    <!-- Textarea -->
+                    <div class="cd-compose-body">
+                      <textarea
+                        class="cd-compose-textarea"
+                        formControlName="content"
+                        rows="3"
+                        placeholder="What's on your mind?"
+                        [class.is-invalid]="postForm.get('content')?.touched && postForm.get('content')?.invalid"
+                      ></textarea>
+                      @if (postForm.get('content')?.touched && postForm.get('content')?.errors?.['required']) {
+                        <div class="text-danger small mt-1">Post content is required.</div>
+                      }
+                    </div>
+
+                    <!-- Image upload -->
+                    <app-file-upload
+                      mode="multi"
+                      accept="image/*"
+                      [maxSizeMb]="5"
+                      label="Click or drag to add photos"
+                      [resetCounter]="postImageResetCounter()"
+                      (filesChange)="onPostImagesChange($event)"
+                    ></app-file-upload>
+
+                    <!-- Compose footer -->
+                    <div class="cd-compose-footer">
+
+                      <!-- Type selector -->
+                      <div class="cd-type-selector">
+                        <button type="button" class="cd-type-btn"
+                          [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
+                          (click)="setPostType('GENERAL')">
+                          <i class="bi bi-chat-dots-fill"></i>
+                          <span>General</span>
+                        </button>
+                        <button type="button" class="cd-type-btn cd-type-btn--help"
+                          [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
+                          (click)="setPostType('HELP')">
+                          <i class="bi bi-life-preserver"></i>
+                          <span>Help</span>
+                        </button>
+                        <button type="button" class="cd-type-btn cd-type-btn--emergency"
+                          [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
+                          (click)="setPostType('EMERGENCY')">
+                          <i class="bi bi-exclamation-triangle-fill"></i>
+                          <span>Emergency</span>
+                        </button>
+                      </div>
+
+                      <!-- Submit -->
+                      <div class="cd-compose-actions">
+                        <button type="submit" class="cd-post-submit-btn" [disabled]="submittingPost() || postForm.invalid">
+                          @if (submittingPost()) {
+                            <span class="spinner-border spinner-border-sm me-1"></span>Posting...
+                          } @else {
+                            <i class="bi bi-send-fill me-1"></i>Post
+                          }
+                        </button>
+                      </div>
+
+                    </div>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
         </div>
       }
 
@@ -491,47 +530,12 @@
       ══════════════════════════════════════════════════════════ -->
       @case ('help') {
         <div class="tab-enter">
+          <div class="cd-posts-layout">
 
-          <!-- Help Compose Card -->
-          <div class="cd-compose-card cd-compose-card--help mb-4">
-            <div class="cd-compose-card-label cd-compose-card-label--help">
-              <i class="bi bi-life-preserver"></i>
-              <span>Ask for Help</span>
-            </div>
-            <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+            <!-- ── Feed Column ─────────────────────────────────── -->
+            <div class="cd-feed-col">
 
-              <div class="cd-compose-body">
-                <textarea
-                  class="cd-compose-textarea cd-compose-textarea--help"
-                  formControlName="content"
-                  rows="3"
-                  placeholder="Describe what you need help with..."
-                ></textarea>
-              </div>
-
-              <!-- Image upload -->
-              <app-file-upload
-                mode="multi"
-                accept="image/*"
-                [maxSizeMb]="5"
-                label="Click or drag to add photos"
-                [resetCounter]="postImageResetCounter()"
-                (filesChange)="onPostImagesChange($event)"
-              ></app-file-upload>
-
-              <div class="cd-compose-footer cd-compose-footer--single">
-                <button type="submit" class="cd-submit-btn cd-submit-btn--help" [disabled]="submittingPost() || postForm.invalid">
-                  @if (submittingPost()) {
-                    <span class="spinner-border spinner-border-sm me-2"></span>Posting...
-                  } @else {
-                    <i class="bi bi-send-fill me-2"></i>Post Help Request
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Help posts list -->
+              <!-- Help posts list -->
           @if (filteredPosts().length === 0) {
             <div class="cd-empty-state">
               <div class="cd-empty-icon cd-empty-icon--help">
@@ -631,6 +635,52 @@
             }
           }
 
+            </div>
+
+            <!-- ── Sidebar Column ──────────────────────────────── -->
+            <div class="cd-sidebar-col">
+              <div class="cd-sidebar-sticky">
+                <div class="cd-compose-card cd-compose-card--help">
+                  <div class="cd-compose-card-label cd-compose-card-label--help">
+                    <i class="bi bi-life-preserver"></i>
+                    <span>Ask for Help</span>
+                  </div>
+                  <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+
+                    <div class="cd-compose-body">
+                      <textarea
+                        class="cd-compose-textarea cd-compose-textarea--help"
+                        formControlName="content"
+                        rows="3"
+                        placeholder="Describe what you need help with..."
+                      ></textarea>
+                    </div>
+
+                    <!-- Image upload -->
+                    <app-file-upload
+                      mode="multi"
+                      accept="image/*"
+                      [maxSizeMb]="5"
+                      label="Click or drag to add photos"
+                      [resetCounter]="postImageResetCounter()"
+                      (filesChange)="onPostImagesChange($event)"
+                    ></app-file-upload>
+
+                    <div class="cd-compose-footer cd-compose-footer--single">
+                      <button type="submit" class="cd-submit-btn cd-submit-btn--help" [disabled]="submittingPost() || postForm.invalid">
+                        @if (submittingPost()) {
+                          <span class="spinner-border spinner-border-sm me-2"></span>Posting...
+                        } @else {
+                          <i class="bi bi-send-fill me-2"></i>Post Help Request
+                        }
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       }
 
@@ -639,47 +689,12 @@
       ══════════════════════════════════════════════════════════ -->
       @case ('emergency') {
         <div class="tab-enter">
+          <div class="cd-posts-layout">
 
-          <!-- Emergency Compose Card -->
-          <div class="cd-compose-card cd-compose-card--emergency mb-4">
-            <div class="cd-compose-card-label cd-compose-card-label--emergency">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              <span>Report Emergency</span>
-            </div>
-            <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+            <!-- ── Feed Column ─────────────────────────────────── -->
+            <div class="cd-feed-col">
 
-              <div class="cd-compose-body">
-                <textarea
-                  class="cd-compose-textarea cd-compose-textarea--emergency"
-                  formControlName="content"
-                  rows="3"
-                  placeholder="Describe the emergency situation clearly..."
-                ></textarea>
-              </div>
-
-              <!-- Image upload -->
-              <app-file-upload
-                mode="multi"
-                accept="image/*"
-                [maxSizeMb]="5"
-                label="Click or drag to add photos"
-                [resetCounter]="postImageResetCounter()"
-                (filesChange)="onPostImagesChange($event)"
-              ></app-file-upload>
-
-              <div class="cd-compose-footer cd-compose-footer--single">
-                <button type="submit" class="cd-submit-btn cd-submit-btn--emergency" [disabled]="submittingPost() || postForm.invalid">
-                  @if (submittingPost()) {
-                    <span class="spinner-border spinner-border-sm me-2"></span>Posting...
-                  } @else {
-                    <i class="bi bi-send-fill me-2"></i>Post Emergency Alert
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Emergency posts list -->
+              <!-- Emergency posts list -->
           @if (filteredPosts().length === 0) {
             <div class="cd-empty-state">
               <div class="cd-empty-icon cd-empty-icon--emergency">
@@ -779,6 +794,52 @@
             }
           }
 
+            </div>
+
+            <!-- ── Sidebar Column ──────────────────────────────── -->
+            <div class="cd-sidebar-col">
+              <div class="cd-sidebar-sticky">
+                <div class="cd-compose-card cd-compose-card--emergency">
+                  <div class="cd-compose-card-label cd-compose-card-label--emergency">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Report Emergency</span>
+                  </div>
+                  <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+
+                    <div class="cd-compose-body">
+                      <textarea
+                        class="cd-compose-textarea cd-compose-textarea--emergency"
+                        formControlName="content"
+                        rows="3"
+                        placeholder="Describe the emergency situation clearly..."
+                      ></textarea>
+                    </div>
+
+                    <!-- Image upload -->
+                    <app-file-upload
+                      mode="multi"
+                      accept="image/*"
+                      [maxSizeMb]="5"
+                      label="Click or drag to add photos"
+                      [resetCounter]="postImageResetCounter()"
+                      (filesChange)="onPostImagesChange($event)"
+                    ></app-file-upload>
+
+                    <div class="cd-compose-footer cd-compose-footer--single">
+                      <button type="submit" class="cd-submit-btn cd-submit-btn--emergency" [disabled]="submittingPost() || postForm.invalid">
+                        @if (submittingPost()) {
+                          <span class="spinner-border spinner-border-sm me-2"></span>Posting...
+                        } @else {
+                          <i class="bi bi-send-fill me-2"></i>Post Emergency Alert
+                        }
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       }
 
@@ -798,11 +859,36 @@
                 </div>
                 <span class="cd-section-title">Community Members</span>
               </div>
-              <span class="cd-members-count-pill">{{ members().length }}</span>
+              <span class="cd-members-count-pill">{{ memberCount() }}</span>
             </div>
 
-            <!-- Members grid/list -->
-            @if (members().length === 0) {
+            <!-- Loading skeleton -->
+            @if (loadingMembers()) {
+              <div class="cd-member-list">
+                @for (sk of [1,2,3,4,5]; track sk) {
+                  <div class="cd-member-row cd-member-row-skeleton">
+                    <div class="cd-member-avatar-skel skel-shimmer"></div>
+                    <div class="cd-member-skel-lines">
+                      <div class="cd-skel-line cd-skel-line--name skel-shimmer"></div>
+                      <div class="cd-skel-line cd-skel-line--sub skel-shimmer"></div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+            <!-- Error state -->
+            } @else if (membersError()) {
+              <div class="cd-empty-state">
+                <div class="cd-empty-icon cd-empty-icon--sm">
+                  <i class="bi bi-exclamation-circle"></i>
+                </div>
+                <h6 class="cd-empty-title">Failed to load members</h6>
+                <p class="cd-empty-text">Something went wrong. Please try again.</p>
+                <button class="btn cd-load-more-btn mt-3" (click)="loadMembers()">Retry</button>
+              </div>
+
+            <!-- Empty state -->
+            } @else if (members().length === 0) {
               <div class="cd-empty-state">
                 <div class="cd-empty-icon cd-empty-icon--sm">
                   <i class="bi bi-people"></i>
@@ -810,11 +896,14 @@
                 <h6 class="cd-empty-title">No members yet</h6>
                 <p class="cd-empty-text">Be the first to join this community!</p>
               </div>
+
+            <!-- Member list -->
             } @else {
-              <div class="cd-members-grid">
+              <div class="cd-member-list">
                 @for (member of members(); track member.id; let mi = $index) {
-                  <div class="cd-member-card member-fade-in" [style.animation-delay]="(mi * 40) + 'ms'">
-                    <div class="member-avatar mx-auto mb-2">
+                  <div class="cd-member-row member-fade-in" [style.animation-delay]="(mi * 30) + 'ms'">
+                    <!-- Avatar -->
+                    <div class="member-avatar flex-shrink-0">
                       @if (member.user?.avatar) {
                         <img [src]="member.user?.avatar" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" />
                       } @else {
@@ -823,11 +912,30 @@
                         </div>
                       }
                     </div>
-                    <h6 class="cd-member-name text-truncate">{{ getUserFullName(member.user) }}</h6>
-                    <small class="cd-member-joined">Joined {{ getTimeAgo(member.joinedAt) }}</small>
+                    <!-- Info -->
+                    <div class="cd-member-info">
+                      <span class="cd-member-name text-truncate">{{ getUserFullName(member.user) }}</span>
+                      @if (member.user?.professionalCategory) {
+                        <span class="cd-member-category text-truncate">{{ member.user!.professionalCategory }}</span>
+                      }
+                      <span class="cd-member-joined">Joined {{ getTimeAgo(member.joinedAt) }}</span>
+                    </div>
                   </div>
                 }
               </div>
+
+              <!-- Load More -->
+              @if (membersPage() < membersTotalPages()) {
+                <div class="cd-load-more-wrap">
+                  <button class="btn cd-load-more-btn" (click)="loadMoreMembers()" [disabled]="loadingMoreMembers()">
+                    @if (loadingMoreMembers()) {
+                      <span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading…
+                    } @else {
+                      Load More Members
+                    }
+                  </button>
+                </div>
+              }
             }
 
           </div>
