@@ -1,5 +1,9 @@
 @use '../../../assets/styles/index' as *;
 
+// Custom elements default to display:inline; block is required
+// so that .main-wrapper width is calculated against this host.
+:host { display: block; }
+
 // ============================================================
 // Admin Layout — Premium Sidebar + Frosted Glass Header
 // Amber / Warm-Stone design system | References: Linear, Notion

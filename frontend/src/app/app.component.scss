@@ -1,0 +1,3 @@
+// Custom elements default to display:inline; block ensures
+// app-root fills the full viewport as a block container.
+:host { display: block; }
