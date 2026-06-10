@@ -133,6 +133,9 @@ export async function register(dto: RegisterDtoType) {
 
   await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
 
+  // Enrol the new user in any active default communities they qualify for
+  await autoJoinDefaultCommunities((user as UserRow).id, countryName);
+
   return {
     ...tokens,
     user: toClientUser(user as UserRow, 1),
@@ -387,6 +390,26 @@ async function lookupCountryName(countryId: number | null | undefined): Promise<
 }
 
 // ---------------------------------------------------------------------------
+// Private helper — enrol a newly-created user in every active default
+// community they are eligible for (global communities, or private communities
+// whose country matches the user's country).
+// Uses a batch insert with ON CONFLICT ignore so it is always idempotent.
+// ---------------------------------------------------------------------------
+async function autoJoinDefaultCommunities(userId: string, userCountry: string): Promise<void> {
+  const defaults = await db('communities')
+    .where({ is_default: true, is_active: true })
+    .select('id', 'is_global', 'is_private', 'country');
+
+  const rows = (defaults as Array<{ id: string; is_global: boolean; is_private: boolean; country: string | null }>)
+    .filter((c) => c.is_global || (c.is_private && c.country === userCountry))
+    .map((c) => ({ user_id: userId, community_id: c.id }));
+
+  if (rows.length === 0) return;
+
+  await db('community_members').insert(rows).onConflict(['user_id', 'community_id']).ignore();
+}
+
+// ---------------------------------------------------------------------------
 // googleInitiate
 // Verifies the GIS credential and either:
 //   a) Logs the user in (existing Google account)
@@ -456,6 +479,9 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
   await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
 
+  // Enrol the new user in any active default communities they qualify for
+  await autoJoinDefaultCommunities((user as UserRow).id, countryName);
+
   return {
     needsUsername: false as const,
     isNewUser:     true as const,
@@ -514,6 +540,9 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
 
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
   await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+
+  // Enrol the new user in any active default communities they qualify for
+  await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
   return {
     isNewUser: true as const,

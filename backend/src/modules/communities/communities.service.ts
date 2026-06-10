@@ -2,6 +2,37 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
+// ---------------------------------------------------------------------------
+// Private helper — bulk-enroll existing active users into a newly-created
+// default community.  Uses a single INSERT … SELECT so it scales to any
+// number of users with zero intermediate result sets.
+// ---------------------------------------------------------------------------
+async function autoJoinExistingUsers(community: Record<string, unknown>): Promise<void> {
+  const communityId = community['id'] as string;
+  const isGlobal    = community['is_global']  as boolean;
+  const isPrivate   = community['is_private'] as boolean;
+  const country     = community['country']    as string | null;
+
+  if (isGlobal) {
+    // Enroll all active users regardless of country
+    await db.raw(
+      `INSERT INTO community_members (user_id, community_id)
+       SELECT id, ? FROM users WHERE is_active = true
+       ON CONFLICT (user_id, community_id) DO NOTHING`,
+      [communityId],
+    );
+  } else if (isPrivate && country) {
+    // Enroll active users whose country matches the community's country
+    await db.raw(
+      `INSERT INTO community_members (user_id, community_id)
+       SELECT id, ? FROM users WHERE is_active = true AND country = ?
+       ON CONFLICT (user_id, community_id) DO NOTHING`,
+      [communityId, country],
+    );
+  }
+  // is_default + not global + not private, or private with null country → no backfill
+}
+
 export async function create(data: CreateCommunityDtoType, adminId: string) {
   const existing = await db('communities').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Community with this name already exists');
@@ -9,6 +40,11 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   const [community] = await db('communities')
     .insert({ ...data, created_by_id: adminId })
     .returning('*');
+
+  // Auto-enroll existing active users when the new community is a default one
+  if ((community as Record<string, unknown>)['is_default']) {
+    await autoJoinExistingUsers(community as Record<string, unknown>);
+  }
 
   const creator = await db('users')
     .where({ id: adminId })
@@ -202,10 +238,19 @@ export async function findOne(id: string) {
 }
 
 export async function update(id: string, data: UpdateCommunityDtoType) {
-  const community = await db('communities').where({ id }).first();
-  if (!community) throw new AppError(404, 'Community not found');
+  const before = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!before) throw new AppError(404, 'Community not found');
 
   await db('communities').where({ id }).update(data);
+
+  // If this edit turns is_default ON for the first time, backfill existing users.
+  // Merge before + data so the effective is_global / is_private / country are correct
+  // even when those fields are also changed in the same request.
+  if (data.is_default && !before['is_default']) {
+    const effective: Record<string, unknown> = { ...before, ...data, id };
+    await autoJoinExistingUsers(effective);
+  }
+
   return findOne(id);
 }
 
