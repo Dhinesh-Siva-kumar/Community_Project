@@ -32,7 +32,7 @@ const TRANSLATIONS = {
     hero_h1_pre: 'A platform for',
     hero_h1_accent: 'Tamils',
     hero_h1_post: 'around the world',
-    hero_h1_sub: 'students, workers, professionals, business owners, and families.',
+    hero_h1_sub: 'Students, workers, professionals, business owners, and families.',
     hero_motto: 'You are not alone abroad — your Tamil community is already waiting for you.',
     // hero_desc1: 'Whether you move for study, work, or a new life —',
     // hero_desc2: 'your Tamil community is already waiting for you.',
@@ -62,8 +62,8 @@ const TRANSLATIONS = {
 
     // ── Communities Section ──
     comm_pill: 'Country Communities',
-    comm_title1: 'Tamils Are Everywhere',
-    comm_title2: 'in the World.',
+    comm_title1: 'No Matter Where You Are — ',
+    comm_title2: 'Your Tamil Community Is There.',
     comm_sub: 'Connect with Tamils living in your country. Whether you are a student, job seeker, newcomer, or business owner, you can receive local guidance, ask questions, and build meaningful connections with people who understand your situation.',
     comm_group_chat_title: 'Group Chat',
     comm_group_chat_desc: 'Members can participate in country-specific discussions, ask questions, and help each other with local information.',
@@ -91,7 +91,7 @@ const TRANSLATIONS = {
     testi_pill: 'Real Stories',
     testi_title_pre: 'Real',
     testi_title_accent: 'Stories',
-    testi_sub: 'Read how TamilConnect has helped Tamils around the world find housing, jobs, student support, local guidance, and meaningful community connections.',
+    testi_sub: 'Hear from Tamils who found community, jobs, and support through TamilConnect.',
 
     // ── About ──
     about_pill: 'About Us',
@@ -122,7 +122,7 @@ const TRANSLATIONS = {
     contact_title1: "We're Here",
     contact_title2: 'For You',
     contact_sub: 'Have a question or need help settling in? The TamilConnect team is ready to support you wherever you are.',
-    contact_badge: 'Always Here for You',
+    contact_badge: 'Every question answered. Every Tamil supported.',
     contact_panel_title: "We're here to help every Tamil abroad.",
     contact_panel_desc: 'Whether you have a question about the platform, need support, or want to provide feedback, our team is always available.',
     contact_email_label: 'Email Us',
@@ -282,7 +282,7 @@ const TRANSLATIONS = {
       {
         num: '03',
         title: 'Get Help or Offer Support',
-        desc: "Find the help you need — whether it's for jobs, studies, legal assistance, or shared items. Support others in the community by offering your knowledge and resources.",
+        desc: "Find jobs, get legal help, share items, or support others — everything your community needs, all in one place.",
         color: 'green'
       },
       {
@@ -339,7 +339,7 @@ const TRANSLATIONS = {
       { value: '100%', label: 'Safe and Secure' }
     ],
 
-    aboutChips: ['By Tamils, for Tamils','A trusted platform','Everyone is welcome','A global community'],
+    aboutChips: ['By Tamils, For Tamils','A trusted platform','Everyone is welcome','A global community'],
 
     trustCards: [
       {
@@ -506,7 +506,7 @@ const TRANSLATIONS = {
     testi_pill: 'உண்மையான கதைகள்',
     testi_title_pre: 'உண்மையான',
     testi_title_accent: 'கதைகள்',
-    testi_sub: 'TamilConnect உலகெங்கிலும் உள்ள தமிழர்களுக்கு வீட்டு வசதி, வேலைகள், மாணவர் ஆதரவு, உள்ளூர் வழிகாட்டுதல் மற்றும் அர்த்தமுள்ள சமூக தொடர்புகளை கண்டுபிடிக்க எவ்வாறு உதவியது என்று படியுங்கள்.',
+    testi_sub: 'உலகெங்கிலும் உள்ள தமிழர்களின் அனுபவங்களை படியுங்கள்.',
 
     // ── About ──
     about_pill: 'எங்களைப் பற்றி',
