@@ -815,6 +815,21 @@
 
 :host[data-theme="dark"] .lp-hero-desc { color: rgba(255,255,255,.62); }
 
+// ── Hero supporting line (Change 1) ──
+.lp-hero-support {
+  font-family: $font-family-body;
+  font-size: clamp(.84rem, 1.4vw, .98rem);
+  color: #78716C;
+  line-height: 1.7;
+  text-align: center;
+  max-width: 580px;
+  margin: 10px auto 0;
+  font-weight: $font-weight-normal;
+  padding: 0 16px;
+}
+
+:host[data-theme="dark"] .lp-hero-support { color: rgba(255,255,255,.48); }
+
 .lp-br-desk { display: inline; }
 @media (max-width: 600px) { .lp-br-desk { display: none; } }
 
@@ -2541,6 +2556,16 @@
     line-height: 1.8; font-weight: $font-weight-normal; margin-bottom: 20px;
   }
 }
+
+// ── About: digital family closing line (Change 5) ──
+.lp-about-closing {
+  font-size: .95rem !important;
+  font-weight: 700 !important;
+  color: var(--lp-primary) !important;
+  font-style: italic;
+  margin-bottom: 20px !important;
+  margin-top: -8px !important;
+}
 .lp-about-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin-bottom: 22px;
@@ -4137,6 +4162,347 @@ textarea.lp-form-control {
 // ============================================================
 // REDUCED MOTION
 // ============================================================
+// ============================================================
+// CHANGE 3 — FIRST 30 DAYS SECTION
+// ============================================================
+.lp-first30-section {
+  .lp-sec-title { text-align: center; }
+  .lp-sec-sub   { text-align: center; }
+}
+
+.lp-first30-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lp-first30-card {
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  &:hover::before { opacity: 1; }
+
+  p {
+    font-size: .93rem;
+    color: var(--lp-text2);
+    line-height: 1.75;
+    font-weight: $font-weight-normal;
+    margin: 0;
+  }
+}
+
+.lp-first30-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: $font-family-header;
+  font-size: .88rem;
+  font-weight: 700;
+  width: fit-content;
+
+  &[data-color="primary"] { background: rgba(var(--lp-primary-rgb), .15); color: var(--lp-primary); }
+  &[data-color="violet"]  { background: rgba(var(--lp-violet-rgb),  .15); color: var(--lp-violet);  }
+  &[data-color="green"]   { background: rgba(var(--lp-green-rgb),   .15); color: var(--lp-green);   }
+  &[data-color="pink"]    { background: rgba(var(--lp-pink-rgb),    .15); color: var(--lp-pink);    }
+
+  i { font-size: .85rem; }
+}
+
+// ── yellow neon pill variant ──
+.neon-pill-yellow {
+  background: rgba(var(--lp-yellow-rgb), .12);
+  color: var(--lp-yellow);
+  border: 1px solid rgba(var(--lp-yellow-rgb), .22);
+}
+
+// ============================================================
+// CHANGE 4 — EMERGENCY HELP HIGHLIGHT BOX
+// ============================================================
+.lp-emergency-box {
+  margin: 48px 0 32px;
+  border-radius: 20px;
+  background: linear-gradient(135deg,
+    rgba(var(--lp-pink-rgb), .12) 0%,
+    rgba(var(--lp-primary-rgb), .10) 100%);
+  border: 1.5px solid rgba(var(--lp-pink-rgb), .30);
+  padding: 0;
+  overflow: hidden;
+}
+
+.lp-emergency-inner {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 32px 36px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 20px;
+    gap: 18px;
+  }
+}
+
+.lp-emergency-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(var(--lp-pink-rgb), .18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.8rem;
+    color: var(--lp-pink);
+  }
+
+  @media (max-width: 768px) {
+    width: 52px; height: 52px;
+    i { font-size: 1.5rem; }
+  }
+}
+
+.lp-emergency-content {
+  flex: 1;
+
+  h3 {
+    font-family: $font-family-header;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--lp-text);
+    margin: 0 0 10px;
+    line-height: 1.3;
+  }
+  p {
+    font-size: .93rem;
+    color: var(--lp-text2);
+    line-height: 1.75;
+    margin: 0;
+  }
+}
+
+.lp-emergency-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+// ============================================================
+// CHANGE 7 — WAITLIST / EARLY MEMBERS SECTION
+// ============================================================
+.lp-waitlist-section {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.lp-waitlist-card {
+  padding: 52px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg,
+    rgba(var(--lp-primary-rgb), .06) 0%,
+    rgba(var(--lp-violet-rgb),  .06) 100%);
+  border: 1px solid rgba(var(--lp-primary-rgb), .18);
+
+  @media (max-width: 768px) {
+    padding: 36px 24px;
+  }
+}
+
+.lp-waitlist-title {
+  font-family: $font-family-header;
+  font-size: clamp(1.35rem, 2.8vw, 2rem);
+  font-weight: 900;
+  color: var(--lp-text);
+  line-height: 1.25;
+  margin: 0;
+  max-width: 640px;
+}
+
+.lp-waitlist-text {
+  font-size: clamp(.9rem, 1.5vw, 1rem);
+  color: var(--lp-text2);
+  line-height: 1.75;
+  max-width: 540px;
+  margin: 0;
+}
+
+.lp-waitlist-form {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 4px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.lp-waitlist-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-waitlist-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: rgba(var(--lp-green-rgb), .12);
+  border: 1px solid rgba(var(--lp-green-rgb), .25);
+  color: var(--lp-green);
+  font-weight: 700;
+  font-size: .95rem;
+
+  i { font-size: 1.2rem; }
+}
+
+// ============================================================
+// CHANGE 8 — MOBILE APP BANNER
+// ============================================================
+.lp-appbanner {
+  background: linear-gradient(135deg,
+    rgba(var(--lp-primary-rgb), .10) 0%,
+    rgba(var(--lp-violet-rgb),  .08) 50%,
+    rgba(var(--lp-green-rgb),   .06) 100%);
+  border-top:    1px solid var(--lp-border);
+  border-bottom: 1px solid var(--lp-border);
+  padding: 36px 0;
+}
+
+.lp-appbanner-inner {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+}
+
+.lp-appbanner-icon {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--lp-grad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(var(--lp-primary-rgb), .25);
+
+  i { font-size: 2rem; color: #fff; }
+
+  @media (max-width: 768px) {
+    width: 60px; height: 60px;
+    border-radius: 18px;
+    i { font-size: 1.6rem; }
+  }
+}
+
+.lp-appbanner-content {
+  flex: 1;
+}
+
+.lp-appbanner-pill {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  background: rgba(var(--lp-primary-rgb), .14);
+  color: var(--lp-primary);
+  border: 1px solid rgba(var(--lp-primary-rgb), .20);
+  margin-bottom: 8px;
+}
+
+.lp-appbanner-title {
+  font-family: $font-family-header;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--lp-text);
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+
+.lp-appbanner-text {
+  font-size: .92rem;
+  color: var(--lp-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.lp-appbanner-badges {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+.lp-appbanner-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: var(--lp-surface);
+  border: 1.5px solid var(--lp-border);
+  color: var(--lp-text2);
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: not-allowed;
+  opacity: .65;
+  transition: opacity .2s ease;
+
+  i { font-size: 1.1rem; }
+
+  @media (max-width: 600px) {
+    justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rv, .rvl, .rvr, .rvs { opacity: 1; transform: none; transition: none; }
   .lp-pulse-dot { animation: none; }

@@ -34,6 +34,7 @@ const TRANSLATIONS = {
     hero_h1_post: 'around the world',
     hero_h1_sub: 'Students, workers, professionals, business owners, and families.',
     hero_motto: 'You are not alone abroad — your Tamil community is already waiting for you.',
+    hero_support_line: 'Jobs, friends, housing, guidance, and emergency support — everything you need abroad, all in one place.',
     // hero_desc1: 'Whether you move for study, work, or a new life —',
     // hero_desc2: 'your Tamil community is already waiting for you.',
     hero_join_community: 'Join Community',
@@ -85,7 +86,7 @@ const TRANSLATIONS = {
     timeline_pill: 'How It Works',
     timeline_title1: 'Your Journey in',
     timeline_title2: 'Four Simple Steps',
-    timeline_sub: 'From sign-up to finding your community — here is how it works.',
+    timeline_sub: 'Takes only a few minutes to join — support available for a lifetime.',
 
     // ── Testimonials ──
     testi_pill: 'Real Stories',
@@ -100,6 +101,7 @@ const TRANSLATIONS = {
     about_sub: 'Connecting, supporting, and empowering Tamils living across the globe.',
     about_mission_title: 'Why We Built This',
     about_mission_text: 'TamilConnect was born from a simple truth — Tamils abroad often feel alone. We built this platform so that wherever you go in the world, your Tamil community is already there waiting for you. Whether you are a student, a worker, a professional, or a business owner, you never have to face a new country alone. TamilConnect exists to connect, support, and empower Tamils living across the globe.',
+    about_mission_closing: 'For every Tamil living abroad — TamilConnect is your digital family.',
     about_location: 'Available Worldwide',
     about_join_now: 'Join Now',
     about_log_in: 'Log In',
@@ -109,6 +111,31 @@ const TRANSLATIONS = {
     trust_title: 'Your Safety Comes First.',
     trust_sub: 'TamilConnect is built to help members connect, communicate, and support each other in a secure and trusted environment.',
     trust_tagline: 'Connect with confidence. Your safety and privacy are always protected on TamilConnect.',
+
+    // ── Emergency Help Box ──
+    emergency_title: 'Need Emergency Help Abroad?',
+    emergency_text: 'Facing a legal problem, medical emergency, or been cheated in a foreign country? Connect instantly with verified Tamil community members who can guide and support you — in any country, at any time.',
+    emergency_btn: 'Get Help Now',
+
+    // ── First 30 Days ──
+    first30_pill: 'Quick Start Guide',
+    first30_title: 'Your First 30 Days in Any New Country',
+    first30_sub: 'No matter which country you move to — here is how TamilConnect helps from day one.',
+
+    // ── Waitlist ──
+    waitlist_pill: 'Early Access',
+    waitlist_title: 'Join Before We Launch — Be an Early Member',
+    waitlist_text: 'Sign up now and be among the first Tamil community members on TamilConnect. Early members will receive special recognition and benefits.',
+    waitlist_email_placeholder: 'Enter your email address',
+    waitlist_btn: 'Join Waitlist',
+    waitlist_success: 'You are on the list! We will reach out soon.',
+
+    // ── Mobile App Banner ──
+    appbanner_pill: 'Coming Soon',
+    appbanner_title: 'Mobile App — Coming Soon',
+    appbanner_text: 'TamilConnect on iOS & Android — your community always in your hands.',
+    appbanner_ios: 'App Store',
+    appbanner_android: 'Google Play',
 
     // ── Blog ──
     blog_pill: 'Blog & Updates',
@@ -204,7 +231,7 @@ const TRANSLATIONS = {
       {
         icon: 'bi-globe2',
         title: 'Country Communities',
-        desc: 'UK, Germany, Canada, Australia — A Connected Tamil Community in Every Country. Newcomers can connect with local Tamils and receive guidance, support, and practical help to settle in.',
+        desc: 'From the very first day in any new country — find housing, work, and community support through Tamils who have already been through the same journey.',
         tags: ['Group Chat', 'Local Help', 'Guidance'],
         color: 'primary', featured: false
       },
@@ -218,14 +245,14 @@ const TRANSLATIONS = {
       {
         icon: 'bi-mortarboard-fill',
         title: 'Students Section',
-        desc: 'Get university tips, scholarship information, part-time job opportunities, and project support — all designed for students studying abroad.',
+        desc: 'Wherever you study abroad — find part-time jobs, scholarships, room share help, and project support. Everything a student needs, from day one.',
         tags: ['Scholarships', 'Universities', 'Projects'],
         color: 'violet', featured: false
       },
       {
         icon: 'bi-shield-fill-check',
         title: 'Help & Support',
-        desc: 'For legal assistance, emergencies, or medical support, you can connect with trusted members of the Tamil community for guidance and help.',
+        desc: 'Facing a legal issue, emergency, or been cheated abroad? Trusted Tamil community members are always here to guide and support you — in any country.',
         tags: ['Legal Help', 'Emergency', 'Advice'],
         color: 'pink', featured: false
       },
@@ -424,6 +451,13 @@ const TRANSLATIONS = {
       { value: 'partnership', label: 'Partnership / Collaboration' },
       { value: 'other',       label: 'Others' },
     ] as SelectOption[],
+
+    first30Cards: [
+      { dayRange: 'Day 1–3',   text: 'Join your country Tamil community — get instant local guidance from members already living there.',                                    color: 'primary' },
+      { dayRange: 'Day 4–7',   text: 'Find housing, open a bank account, get a SIM card — community members will guide you through everything.',                          color: 'violet'  },
+      { dayRange: 'Day 8–15',  text: 'Search for part-time or full-time jobs shared directly by Tamil members in your country.',                                          color: 'green'   },
+      { dayRange: 'Day 16–30', text: 'Attend local Tamil events, make friends, and build your network — never feel alone again.',                                         color: 'pink'    },
+    ],
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -449,6 +483,7 @@ const TRANSLATIONS = {
     hero_h1_post: 'சொந்த தளம்',
     hero_h1_sub: 'மாணவர்களுக்கும், தொழிலாளர்களுக்கும், வணிகர்களுக்கும் — அனைத்து தமிழர்களுக்கும்.',
     hero_motto: 'தெரியாத நாட்டில் தனியாக போராடுகிறீர்களா? உங்களுக்காகவே இந்த தளம் உருவாக்கப்பட்டது.',
+    hero_support_line: 'வேலை, நண்பர்கள், வீடு, வழிகாட்டுதல், அவசர உதவி — வெளிநாட்டில் உங்களுக்கு தேவையான அனைத்தும் ஒரே இடத்தில்.',
     // hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
     // hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
     hero_join_community: 'சமூகத்தில் சேருங்கள்',
@@ -500,7 +535,7 @@ const TRANSLATIONS = {
     timeline_pill: 'எப்படி செயல்படுகிறது',
     timeline_title1: 'உங்கள் பயணம்',
     timeline_title2: 'நான்கு எளிய படிகளில்',
-    timeline_sub: 'பதிவு செய்வதிலிருந்து உங்கள் சமூகத்தை கண்டுபிடிக்கும் வரை — இப்படித்தான் செயல்படுகிறது.',
+    timeline_sub: 'சேர்வதற்கு சில நிமிடங்கள் மட்டுமே — வாழ்நாள் முழுவதும் உதவி கிடைக்கும்.',
 
     // ── Testimonials ──
     testi_pill: 'உண்மையான கதைகள்',
@@ -515,6 +550,7 @@ const TRANSLATIONS = {
     about_sub: 'உலகெங்கிலும் வாழும் தமிழர்களை இணைத்து, ஆதரித்து, வலுப்படுத்துகிறோம்.',
     about_mission_title: 'நாம் ஏன் இதை உருவாக்கினோம்',
     about_mission_text: 'TamilConnect ஒரு எளிய உண்மையிலிருந்து பிறந்தது — வெளிநாட்டில் தமிழர்கள் அடிக்கடி தனிமையாக உணர்கிறார்கள். நீங்கள் உலகின் எங்கு சென்றாலும், உங்கள் தமிழ் சமூகம் ஏற்கனவே அங்கே காத்திருக்கும் என்பதற்காக இந்த தளத்தை உருவாக்கினோம். நீங்கள் மாணவராயினும், தொழிலாளராயினும், நிபுணராயினும் அல்லது வணிகராயினும், ஒரு புதிய நாட்டை தனியாக எதிர்கொள்ளத் தேவையில்லை. TamilConnect உலகெங்கிலும் வாழும் தமிழர்களை இணைக்கவும், ஆதரிக்கவும், வலுப்படுத்தவும் இருக்கிறது.',
+    about_mission_closing: 'வெளிநாட்டில் இருக்கும் ஒவ்வொரு தமிழருக்கும் ஒரு டிஜிட்டல் குடும்பம் — இதுவே TamilConnect.',
     about_location: 'உலகெங்கும் கிடைக்கும்',
     about_join_now: 'இப்போது சேருங்கள்',
     about_log_in: 'உள்நுழைவு',
@@ -524,6 +560,31 @@ const TRANSLATIONS = {
     trust_title: 'உங்கள் பாதுகாப்பு முதலிடம் பெறுகிறது.',
     trust_sub: 'TamilConnect உறுப்பினர்கள் பாதுகாப்பான மற்றும் நம்பகமான சூழலில் இணைந்து, தொடர்புகொண்டு, ஒருவருக்கொருவர் ஆதரிக்க உதவுவதற்காக உருவாக்கப்பட்டுள்ளது.',
     trust_tagline: 'நம்பிக்கையுடன் இணையுங்கள். உங்கள் பாதுகாப்பும் தனியுரிமையும் TamilConnect இல் எப்போதும் பாதுகாக்கப்படுகின்றன.',
+
+    // ── Emergency Help Box ──
+    emergency_title: 'வெளிநாட்டில் அவசர உதவி தேவையா?',
+    emergency_text: 'சட்ட சிக்கல், மருத்துவ அவசரநிலை அல்லது ஏமாற்றப்பட்டீர்களா? எந்த நாட்டில் இருந்தாலும், எந்த நேரத்திலும் — verified தமிழ் சமூக உறுப்பினர்கள் உடனே உதவுவார்கள்.',
+    emergency_btn: 'உதவி பெறுங்கள்',
+
+    // ── First 30 Days ──
+    first30_pill: 'விரைவு தொடக்க வழிகாட்டி',
+    first30_title: 'எந்த புதிய நாட்டிலும் முதல் 30 நாட்கள் — என்ன செய்வது?',
+    first30_sub: 'எந்த நாட்டிற்கு சென்றாலும் — முதல் நாளிலிருந்தே TamilConnect உங்களுக்கு உதவும்.',
+
+    // ── Waitlist ──
+    waitlist_pill: 'முன்கூட்டிய அணுகல்',
+    waitlist_title: 'Launch-க்கு முன்பே இணையுங்கள் — Early Member ஆகுங்கள்',
+    waitlist_text: 'இப்போதே பதிவு செய்து TamilConnect-ன் முதல் சமூக உறுப்பினர்களில் ஒருவராகுங்கள். Early members-க்கு சிறப்பு அங்கீகாரம் மற்றும் நன்மைகள் கிடைக்கும்.',
+    waitlist_email_placeholder: 'உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடுங்கள்',
+    waitlist_btn: 'Waitlist-ல் சேருங்கள்',
+    waitlist_success: 'நீங்கள் பட்டியலில் இருக்கிறீர்கள்! விரைவில் தொடர்பு கொள்கிறோம்.',
+
+    // ── Mobile App Banner ──
+    appbanner_pill: 'விரைவில் வருகிறது',
+    appbanner_title: 'Mobile App — விரைவில் வருகிறது',
+    appbanner_text: 'TamilConnect iOS & Android-ல் — உங்கள் சமூகம் எப்போதும் உங்கள் கையில்.',
+    appbanner_ios: 'App Store',
+    appbanner_android: 'Google Play',
 
     // ── Blog ──
     blog_pill: 'வலைப்பதிவு & புதுப்பிப்புகள்',
@@ -619,7 +680,7 @@ const TRANSLATIONS = {
       {
         icon: 'bi-globe2',
         title: 'நாட்டு சமூகங்கள்',
-        desc: 'யுகே, ஜெர்மனி, கனடா, ஆஸ்திரேலியா — ஒவ்வொரு நாட்டிலும் ஒரு தொடர்புடைய தமிழ் சமூகம். புதியவர்கள் உள்ளூர் தமிழர்களுடன் இணைந்து வழிகாட்டுதல், ஆதரவு மற்றும் நடைமுறை உதவிகளைப் பெறலாம்.',
+        desc: 'எந்த புதிய நாட்டிற்கு சென்றாலும் — வீடு, வேலை, வாழ்க்கை எளிதாகும். உங்களுக்கு முன்பே அந்த பயணம் செய்த தமிழர்கள் உங்களுக்காக காத்திருக்கிறார்கள்.',
         tags: ['குழு அரட்டை', 'உள்ளூர் உதவி', 'வழிகாட்டுதல்'],
         color: 'primary', featured: false
       },
@@ -633,14 +694,14 @@ const TRANSLATIONS = {
       {
         icon: 'bi-mortarboard-fill',
         title: 'மாணவர் பகுதி',
-        desc: 'வெளிநாட்டில் படிக்கும் மாணவர்களுக்கென்றே வடிவமைக்கப்பட்டது — பல்கலைக்கழக குறிப்புகள், உதவித்தொகை தகவல்கள், பகுதி நேர வேலை வாய்ப்புகள் மற்றும் திட்ட ஆதரவு.',
+        desc: 'எந்த நாட்டில் படித்தாலும் — பகுதி நேர வேலை, உதவித்தொகை, அறை வசதி உதவி, திட்ட ஆதரவு — மாணவர்களுக்கு தேவையான அனைத்தும் இங்கே கிடைக்கும்.',
         tags: ['உதவித்தொகைகள்', 'பல்கலைக்கழகங்கள்', 'திட்டங்கள்'],
         color: 'violet', featured: false
       },
       {
         icon: 'bi-shield-fill-check',
         title: 'உதவி & ஆதரவு',
-        desc: 'சட்ட உதவி, அவசரநிலை அல்லது மருத்துவ ஆதரவுக்கு, நம்பகமான தமிழ் சமூக உறுப்பினர்களுடன் இணைந்து வழிகாட்டுதலும் உதவியும் பெறலாம்.',
+        desc: 'சட்ட சிக்கல், அவசர நிலை, ஏமாற்றப்பட்டீர்களா? எந்த நாட்டில் இருந்தாலும் — நம்பகமான தமிழர் எப்போதும் உதவுவார்.',
         tags: ['சட்ட உதவி', 'அவசரநிலை', 'ஆலோசனை'],
         color: 'pink', featured: false
       },
@@ -839,6 +900,13 @@ const TRANSLATIONS = {
       { value: 'partnership', label: 'இணைவு அல்லது ஒத்துழைப்பு' },
       { value: 'other',       label: 'மற்றவை' },
     ] as SelectOption[],
+
+    first30Cards: [
+      { dayRange: 'நாள் 1–3',   text: 'உங்கள் நாட்டு தமிழ் சமூகத்தில் சேருங்கள் — அங்கு வாழும் தமிழர்களிடம் உடனே வழிகாட்டுதல் பெறுங்கள்.',       color: 'primary' },
+      { dayRange: 'நாள் 4–7',   text: 'வீடு, வங்கி கணக்கு, சிம் கார்டு — சமூக உறுப்பினர்கள் எல்லாவற்றிலும் உதவுவார்கள்.',                         color: 'violet'  },
+      { dayRange: 'நாள் 8–15',  text: 'உங்கள் நாட்டில் உள்ள தமிழ் உறுப்பினர்கள் பகிரும் வேலை வாய்ப்புகளை தேடுங்கள்.',                              color: 'green'   },
+      { dayRange: 'நாள் 16–30', text: 'உள்ளூர் தமிழ் நிகழ்வுகளில் கலந்துகொள்ளுங்கள், நண்பர்களை உருவாக்குங்கள் — தனிமை உணர்வு இல்லாமல் போகும்.', color: 'pink'    },
+    ],
   }
 };
 
@@ -980,6 +1048,16 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   resetContactForm(): void {
     this.contact = { firstName: '', lastName: '', email: '', subject: '', message: '' };
     this.contactSubmitted = false;
+  }
+
+  // ── Waitlist Form ──
+  waitlistEmail = '';
+  waitlistSubmitted = false;
+
+  submitWaitlist(): void {
+    if (this.waitlistEmail && this.waitlistEmail.includes('@')) {
+      this.waitlistSubmitted = true;
+    }
   }
 
   // ── Counter animation ──

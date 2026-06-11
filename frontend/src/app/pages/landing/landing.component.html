@@ -89,6 +89,9 @@
       <span class="lp-hero-motto-line"></span>
     </div>
 
+    <!-- Supporting description line -->
+    <p class="lp-hero-support">{{ t.hero_support_line }}</p>
+
     <!-- Description -->
     <!-- <p class="lp-hero-desc">
       {{ t.hero_desc1 }}<br class="lp-br-desk">
@@ -395,6 +398,33 @@
   </div>
 </section>
 
+<div class="lp-section-divider lp-divider-yellow"></div>
+
+<!-- ═══ FIRST 30 DAYS ═══ -->
+<section class="lp-section lp-first30-section lp-section-mesh">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-yellow"><i class="bi bi-calendar-check-fill"></i> {{ t.first30_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.first30_title }}</h2>
+      <p class="lp-sec-sub">{{ t.first30_sub }}</p>
+    </div>
+
+    <div class="lp-first30-grid">
+      @for (card of t.first30Cards; track $index; let i = $index) {
+        <div class="lp-first30-card glass-card rv"
+             [attr.data-color]="card.color"
+             [style.transition-delay]="(i * 0.1) + 's'">
+          <div class="lp-first30-day" [attr.data-color]="card.color">
+            <i class="bi bi-calendar-fill"></i>
+            <span>{{ card.dayRange }}</span>
+          </div>
+          <p>{{ card.text }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
 <div class="lp-section-divider lp-divider-green"></div>
 
 <!-- ═══ 6. HOW IT WORKS — Vertical Alternating Timeline ═══ -->
@@ -501,6 +531,7 @@
         <div class="lp-about-mission glass-card">
           <h3>{{ t.about_mission_title }}</h3>
           <p>{{ t.about_mission_text }}</p>
+          <p class="lp-about-closing">{{ t.about_mission_closing }}</p>
           <div class="lp-about-chips">
             @for (chip of t.aboutChips; track chip) {
               <span class="lp-mini-tag">{{ chip }}</span>
@@ -532,6 +563,22 @@
             <i class="bi bi-box-arrow-in-right"></i> {{ t.about_log_in }}
           </a>
         </div>
+      </div>
+    </div>
+
+    <!-- ── Emergency Help Highlight Box ── -->
+    <div class="lp-emergency-box rv">
+      <div class="lp-emergency-inner">
+        <div class="lp-emergency-icon">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="lp-emergency-content">
+          <h3>{{ t.emergency_title }}</h3>
+          <p>{{ t.emergency_text }}</p>
+        </div>
+        <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-emergency-btn">
+          <i class="bi bi-shield-fill-check"></i> {{ t.emergency_btn }}
+        </a>
       </div>
     </div>
 
@@ -790,6 +837,40 @@
 
 <div class="lp-section-divider"></div>
 
+<!-- ═══ WAITLIST / EARLY MEMBERS ═══ -->
+<section class="lp-section lp-waitlist-section lp-section-mesh">
+  <div class="lp-wrap">
+    <div class="lp-waitlist-card glass-card rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-star-fill"></i> {{ t.waitlist_pill }}</span>
+      <h2 class="lp-waitlist-title">{{ t.waitlist_title }}</h2>
+      <p class="lp-waitlist-text">{{ t.waitlist_text }}</p>
+
+      @if (waitlistSubmitted) {
+        <div class="lp-waitlist-success">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>{{ t.waitlist_success }}</span>
+        </div>
+      } @else {
+        <form class="lp-waitlist-form" (ngSubmit)="submitWaitlist()" #waitlistForm="ngForm" novalidate>
+          <input
+            type="email"
+            class="lp-form-control lp-waitlist-input"
+            [placeholder]="t.waitlist_email_placeholder"
+            [(ngModel)]="waitlistEmail"
+            name="waitlistEmail"
+            required
+            email>
+          <button type="submit" class="lp-btn lp-btn-neon lp-btn-lg">
+            <i class="bi bi-envelope-fill"></i> {{ t.waitlist_btn }}
+          </button>
+        </form>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="lp-section-divider"></div>
+
 <!-- ═══ 12. CTA BANNER ═══ -->
 <section class="lp-section  lp-contact-section">
   <div class="lp-wrap">
@@ -842,6 +923,32 @@
           <span class="lp-metric-label">{{ m.label }}</span>
         </div>
       }
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOBILE APP BANNER ═══ -->
+<div class="lp-appbanner">
+  <div class="lp-wrap">
+    <div class="lp-appbanner-inner">
+      <div class="lp-appbanner-icon">
+        <i class="bi bi-phone-fill"></i>
+      </div>
+      <div class="lp-appbanner-content">
+        <span class="lp-appbanner-pill">{{ t.appbanner_pill }}</span>
+        <h3 class="lp-appbanner-title">{{ t.appbanner_title }}</h3>
+        <p class="lp-appbanner-text">{{ t.appbanner_text }}</p>
+      </div>
+      <div class="lp-appbanner-badges">
+        <button class="lp-appbanner-badge" disabled>
+          <i class="bi bi-apple"></i>
+          <span>{{ t.appbanner_ios }}</span>
+        </button>
+        <button class="lp-appbanner-badge" disabled>
+          <i class="bi bi-google-play"></i>
+          <span>{{ t.appbanner_android }}</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
