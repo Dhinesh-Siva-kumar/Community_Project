@@ -93,6 +93,158 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════════
+       EDIT POST MODAL
+  ══════════════════════════════════════════════════════════════ -->
+  @if (editModalOpen()) {
+    <div class="cd-modal-backdrop" (click)="closeEditModal()" role="dialog" aria-modal="true" aria-labelledby="cdEditPostModalTitle">
+      <div class="cd-modal cd-modal--edit" (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="cd-modal-header">
+          <div class="cd-modal-icon-wrap cd-modal-icon-wrap--edit">
+            <i class="bi bi-pencil-fill"></i>
+          </div>
+          <div class="cd-modal-header-text">
+            <h5 class="cd-modal-title" id="cdEditPostModalTitle">Edit Post</h5>
+            <p class="cd-modal-subtitle">Update post content or type</p>
+          </div>
+          <button type="button" class="cd-modal-close" (click)="closeEditModal()" [disabled]="savingEdit()" aria-label="Close dialog">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="cd-modal-body">
+          <form [formGroup]="editPostForm" (ngSubmit)="saveEditPost()">
+
+            <!-- Content textarea -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Content</label>
+              <textarea
+                class="form-control cd-edit-textarea"
+                formControlName="content"
+                rows="5"
+                placeholder="What's on your mind?"
+                [class.is-invalid]="editPostForm.get('content')?.touched && editPostForm.get('content')?.invalid"
+              ></textarea>
+              @if (editPostForm.get('content')?.touched && editPostForm.get('content')?.errors?.['required']) {
+                <div class="text-danger small mt-1">Post content is required.</div>
+              }
+            </div>
+
+            <!-- Post type selector -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Post Type</label>
+              <div class="cd-type-selector">
+                <button type="button" class="cd-type-btn"
+                  [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
+                  (click)="setEditPostType('GENERAL')">
+                  <i class="bi bi-chat-dots-fill"></i>
+                  <span>General</span>
+                </button>
+                <button type="button" class="cd-type-btn cd-type-btn--help"
+                  [class.cd-type-btn--active]="selectedEditType() === 'HELP'"
+                  (click)="setEditPostType('HELP')">
+                  <i class="bi bi-life-preserver"></i>
+                  <span>Help</span>
+                </button>
+                <button type="button" class="cd-type-btn cd-type-btn--emergency"
+                  [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
+                  (click)="setEditPostType('EMERGENCY')">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span>Emergency</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Replace images (optional) -->
+            <div class="mb-1">
+              <label class="form-label fw-semibold small">Replace Images <span class="text-muted fw-normal">(optional)</span></label>
+              <app-file-upload
+                mode="multi"
+                accept="image/*"
+                [maxSizeMb]="5"
+                label="Click or drag to replace photos"
+                [resetCounter]="editImageResetCounter()"
+                (filesChange)="onEditImagesChange($event)"
+              ></app-file-upload>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="cd-modal-footer">
+          <button type="button" class="cd-modal-btn cd-modal-btn--cancel" (click)="closeEditModal()" [disabled]="savingEdit()">
+            Cancel
+          </button>
+          <button type="button" class="cd-modal-btn cd-modal-btn--save" (click)="saveEditPost()" [disabled]="savingEdit() || editPostForm.invalid">
+            @if (savingEdit()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Saving...
+            } @else {
+              <i class="bi bi-check2 me-2"></i>Save Changes
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════
+       DELETE POST CONFIRMATION MODAL
+  ══════════════════════════════════════════════════════════════ -->
+  @if (deletePostModalOpen()) {
+    <div class="cd-modal-backdrop" (click)="closeDeletePostModal()" role="dialog" aria-modal="true" aria-labelledby="cdDeletePostModalTitle">
+      <div class="cd-modal" (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="cd-modal-header">
+          <div class="cd-modal-icon-wrap">
+            <i class="bi bi-trash3-fill"></i>
+          </div>
+          <div class="cd-modal-header-text">
+            <h5 class="cd-modal-title" id="cdDeletePostModalTitle">Delete Post</h5>
+            <p class="cd-modal-subtitle">This action cannot be undone</p>
+          </div>
+          <button type="button" class="cd-modal-close" (click)="closeDeletePostModal()" [disabled]="deletingPost()" aria-label="Close dialog">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="cd-modal-body">
+          <p class="cd-modal-message">Are you sure you want to permanently delete this post?</p>
+          @if (deletePostTarget()?.content) {
+            <div class="cd-modal-post-preview">
+              <p class="mb-0 small">{{ deletePostTarget()!.content | slice:0:120 }}{{ (deletePostTarget()!.content.length > 120) ? '…' : '' }}</p>
+            </div>
+          }
+          <div class="cd-modal-warning-box">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>All comments and likes on this post will also be removed.</span>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="cd-modal-footer">
+          <button type="button" class="cd-modal-btn cd-modal-btn--cancel" (click)="closeDeletePostModal()" [disabled]="deletingPost()">
+            Cancel
+          </button>
+          <button type="button" class="cd-modal-btn cd-modal-btn--delete" (click)="confirmDeletePost()" [disabled]="deletingPost()">
+            @if (deletingPost()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+            } @else {
+              <i class="bi bi-trash3-fill me-2"></i>Delete Post
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════
        BACK BUTTON
   ══════════════════════════════════════════════════════════════ -->
   <div class="mb-3">
@@ -298,7 +450,7 @@
             @for (post of filteredPosts(); track post.id; let i = $index) {
               <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
                 <div class="card-body">
-                  <!-- Post header -->
+                   <!-- Post header -->
                   <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
@@ -316,6 +468,25 @@
                     <span class="badge {{ getPostTypeBadge(post.type).class }} rounded-pill">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }} me-1"></i>{{ getPostTypeBadge(post.type).label }}
                     </span>
+                    @if (canManagePost(post)) {
+                      <div class="cd-post-options-wrap">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        @if (postMenuOpenId() === post.id) {
+                          <div class="cd-post-menu" role="menu">
+                            @if (isAdmin()) {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                <i class="bi bi-pencil-fill"></i>Edit
+                              </button>
+                            }
+                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                              <i class="bi bi-trash3-fill"></i>Delete
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
 
                   <p class="post-content mb-3">{{ post.content }}</p>
@@ -563,6 +734,25 @@
                     <span class="badge bg-warning text-dark rounded-pill">
                       <i class="bi bi-life-preserver me-1"></i>Help
                     </span>
+                    @if (canManagePost(post)) {
+                      <div class="cd-post-options-wrap">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        @if (postMenuOpenId() === post.id) {
+                          <div class="cd-post-menu" role="menu">
+                            @if (isAdmin()) {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                <i class="bi bi-pencil-fill"></i>Edit
+                              </button>
+                            }
+                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                              <i class="bi bi-trash3-fill"></i>Delete
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                   <p class="post-content mb-3">{{ post.content }}</p>
                   @if (post.images && post.images.length > 0) {
@@ -722,6 +912,25 @@
                     <span class="badge bg-danger rounded-pill">
                       <i class="bi bi-exclamation-triangle-fill me-1"></i>Emergency
                     </span>
+                    @if (canManagePost(post)) {
+                      <div class="cd-post-options-wrap">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        @if (postMenuOpenId() === post.id) {
+                          <div class="cd-post-menu" role="menu">
+                            @if (isAdmin()) {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                <i class="bi bi-pencil-fill"></i>Edit
+                              </button>
+                            }
+                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                              <i class="bi bi-trash3-fill"></i>Delete
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                   <p class="post-content mb-3">{{ post.content }}</p>
                   @if (post.images && post.images.length > 0) {

@@ -1,6 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import type { CreatePostDtoType, ListPostsQueryDtoType } from './posts.dto';
+import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
 const POST_USER_SELECT = [
   'u.id as user_id', 'u.user_name', 'u.display_name', 'u.avatar',
@@ -33,7 +33,7 @@ export async function create(data: CreatePostDtoType, userId: string) {
   const community = await db('communities').where({ id: data.communityId }).first();
   if (!community) throw new AppError(404, 'Community not found');
 
-  const status = user['is_trusted'] ? 'APPROVED' : 'PENDING';
+  const status = (user['is_trusted'] || user['role'] === 'ADMIN') ? 'APPROVED' : 'PENDING';
 
   const [post] = await db('posts')
     .insert({
@@ -155,6 +155,37 @@ export async function deletePost(postId: string, userId: string) {
 
   await db('posts').where({ id: postId }).delete();
   return { message: 'Post deleted successfully' };
+}
+
+export async function updatePost(postId: string, userId: string, data: UpdatePostBodyDtoType) {
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
+  if (!post) throw new AppError(404, 'Post not found');
+
+  if (post['user_id'] !== userId) {
+    const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only edit your own posts');
+  }
+
+  const updateFields: Record<string, unknown> = {};
+  if (data.content  !== undefined) updateFields['content'] = data.content;
+  if (data.type     !== undefined) updateFields['type']    = data.type;
+  if (data.images   !== undefined) updateFields['images']  = data.images;
+
+  if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update');
+
+  await db('posts').where({ id: postId }).update(updateFields);
+
+  const row = await db('posts as p')
+    .join('users as u', 'p.user_id', 'u.id')
+    .join('communities as c', 'p.community_id', 'c.id')
+    .where('p.id', postId)
+    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .first() as Record<string, unknown>;
+
+  const [{ total: commentCount }] = await db('comments').where({ post_id: postId }).count({ total: '*' });
+  const [{ total: likeCount }]    = await db('likes').where({ post_id: postId }).count({ total: '*' });
+
+  return formatPost(row, Number(commentCount), Number(likeCount));
 }
 
 export async function like(postId: string, userId: string) {

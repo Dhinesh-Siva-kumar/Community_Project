@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreatePostDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
+import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
 import * as postsService from './posts.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -48,6 +48,18 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
 export async function deletePost(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await postsService.deletePost(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function updatePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const imagePaths = files.map((f) => `/uploads/${f.filename}`);
+    const rawBody = { ...req.body };
+    if (imagePaths.length) rawBody['images'] = imagePaths;
+    const body = UpdatePostBodyDto.parse(rawBody);
+    const result = await postsService.updatePost(req.params['id'] as string, req.user!.sub, body);
     res.json(result);
   } catch (err) { next(err); }
 }

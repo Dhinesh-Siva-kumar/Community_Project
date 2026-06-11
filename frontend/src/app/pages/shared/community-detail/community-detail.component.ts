@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -59,6 +59,23 @@ export class CommunityDetailComponent implements OnInit {
   // Admin actions — delete modal
   deleteModalOpen    = signal(false);
   deletingCommunity  = signal(false);
+
+  // Post options menu (three-dot)
+  postMenuOpenId = signal<string | null>(null);
+
+  // Edit post modal
+  editingPost          = signal<Post | null>(null);
+  editModalOpen        = signal(false);
+  savingEdit           = signal(false);
+  selectedEditType     = signal<PostType>('GENERAL');
+  editImages           = signal<File[]>([]);
+  editImageResetCounter = signal(0);
+  editPostForm!: FormGroup;
+
+  // Delete post modal
+  deletePostTarget    = signal<Post | null>(null);
+  deletePostModalOpen = signal(false);
+  deletingPost        = signal(false);
 
   // Pagination — posts
   currentPage = signal(1);
@@ -128,6 +145,9 @@ export class CommunityDetailComponent implements OnInit {
 
   initForms(): void {
     this.postForm = this.fb.group({
+      content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+    });
+    this.editPostForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
     });
   }
@@ -252,12 +272,13 @@ export class CommunityDetailComponent implements OnInit {
 
     this.postService.createPost(this.communityId(), { content, type }, images.length > 0 ? images : undefined).subscribe({
       next: (post) => {
-        this.toast.success('Post submitted! It will appear after approval.');
+        const successMsg = this.isAdmin() ? 'Post published successfully!' : 'Post submitted! It will appear after approval.';
+        this.toast.success(successMsg);
         this.postForm.reset();
         this.selectedPostImages.set([]);
         this.postImageResetCounter.update((n) => n + 1);
         this.submittingPost.set(false);
-        if (this.isAdmin() && post.status === 'APPROVED') {
+        if (post.status === 'APPROVED') {
           this.posts.update((current) => [post, ...current]);
         }
       },
@@ -351,6 +372,94 @@ export class CommunityDetailComponent implements OnInit {
     navigator.clipboard.writeText(url)
       .then(() => this.toast.success('Link copied to clipboard!'))
       .catch(() => this.toast.error('Failed to copy link'));
+  }
+
+  // ── Post Options Menu ─────────────────────────────────────
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.postMenuOpenId.set(null);
+  }
+
+  togglePostMenu(postId: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.postMenuOpenId.update((id) => (id === postId ? null : postId));
+  }
+
+  canManagePost(post: Post): boolean {
+    return this.isAdmin() || post.userId === this.currentUserId();
+  }
+
+  // ── Edit Post ─────────────────────────────────────────────
+
+  openEditPostModal(post: Post): void {
+    this.postMenuOpenId.set(null);
+    this.editingPost.set(post);
+    this.selectedEditType.set(post.type);
+    this.editPostForm.setValue({ content: post.content });
+    this.editImages.set([]);
+    this.editImageResetCounter.update((n) => n + 1);
+    this.editModalOpen.set(true);
+  }
+
+  closeEditModal(): void {
+    this.editModalOpen.set(false);
+    this.editingPost.set(null);
+    this.editPostForm.reset();
+  }
+
+  setEditPostType(type: PostType): void { this.selectedEditType.set(type); }
+
+  onEditImagesChange(files: File[]): void { this.editImages.set(files); }
+
+  saveEditPost(): void {
+    if (this.editPostForm.invalid) { this.editPostForm.markAllAsTouched(); return; }
+    const post = this.editingPost();
+    if (!post) return;
+
+    this.savingEdit.set(true);
+    const content = this.editPostForm.get('content')!.value as string;
+    const type    = this.selectedEditType();
+    const images  = this.editImages();
+
+    this.postService.updatePost(post.id, { content, type }, images.length > 0 ? images : undefined).subscribe({
+      next: (updated) => {
+        this.posts.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+        this.toast.success('Post updated successfully!');
+        this.savingEdit.set(false);
+        this.closeEditModal();
+      },
+      error: () => { this.toast.error('Failed to update post'); this.savingEdit.set(false); },
+    });
+  }
+
+  // ── Delete Post ───────────────────────────────────────────
+
+  openDeletePostModal(post: Post): void {
+    this.postMenuOpenId.set(null);
+    this.deletePostTarget.set(post);
+    this.deletePostModalOpen.set(true);
+  }
+
+  closeDeletePostModal(): void {
+    this.deletePostModalOpen.set(false);
+    this.deletePostTarget.set(null);
+  }
+
+  confirmDeletePost(): void {
+    const post = this.deletePostTarget();
+    if (!post) return;
+
+    this.deletingPost.set(true);
+    this.postService.deletePost(post.id).subscribe({
+      next: () => {
+        this.posts.update((current) => current.filter((p) => p.id !== post.id));
+        this.toast.success('Post deleted successfully.');
+        this.deletingPost.set(false);
+        this.closeDeletePostModal();
+      },
+      error: () => { this.toast.error('Failed to delete post'); this.deletingPost.set(false); },
+    });
   }
 
   // ── Admin Actions ─────────────────────────────────────────

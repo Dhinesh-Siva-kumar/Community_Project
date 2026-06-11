@@ -9,6 +9,8 @@ export const CreatePostDto = z.object({
 
 export const UpdatePostDto = CreatePostDto.partial();
 
+export const UpdatePostBodyDto = CreatePostDto.omit({ communityId: true }).partial();
+
 export const ListPostsQueryDto = z.object({
   communityId: z.string().uuid().optional(),
   type: z.enum(['GENERAL', 'HELP', 'EMERGENCY']).optional(),
@@ -26,4 +28,5 @@ export const PaginationQueryDto = z.object({
 });
 
 export type CreatePostDtoType = z.infer<typeof CreatePostDto>;
+export type UpdatePostBodyDtoType = z.infer<typeof UpdatePostBodyDto>;
 export type ListPostsQueryDtoType = z.infer<typeof ListPostsQueryDto>;

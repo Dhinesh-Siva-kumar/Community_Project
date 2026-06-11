@@ -12,6 +12,7 @@ router.get('/', ctrl.findAll);
 router.get('/pending', authorize('ADMIN'), ctrl.findPending);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);
 router.put('/:id/reject', authorize('ADMIN'), ctrl.reject);
+router.put('/:id', uploadImages.array('images', 10), ctrl.updatePost);
 router.delete('/:id', ctrl.deletePost);
 router.post('/:id/like', ctrl.like);
 router.delete('/:id/like', ctrl.unlike);

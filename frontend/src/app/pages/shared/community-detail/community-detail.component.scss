@@ -1665,6 +1665,152 @@
   .card-header { border-radius: 16px 16px 0 0 !important; }
 }
 
+// ── Post Options Menu (Three-dot) ────────────────────────────
+
+.cd-post-options-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.cd-post-options-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: $color-stone-400;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: $color-stone-100;
+    color: $color-stone-700;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 1px;
+  }
+}
+
+.cd-post-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 200;
+  min-width: 140px;
+  background: $white;
+  border: 1px solid $color-stone-200;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  animation: postMenuIn 0.12s ease;
+
+  @keyframes postMenuIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1);     }
+  }
+}
+
+.cd-post-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: $color-stone-700;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.13s ease, color 0.13s ease;
+
+  .bi { font-size: 13px; }
+
+  &:hover {
+    background: $color-stone-100;
+    color: $color-stone-900;
+  }
+
+  &--danger {
+    color: #dc3545;
+
+    &:hover {
+      background: #fff5f5;
+      color: #b02a37;
+    }
+  }
+}
+
+// ── Edit Post Modal Specifics ─────────────────────────────────
+
+.cd-modal--edit {
+  max-width: 560px;
+}
+
+.cd-modal-icon-wrap--edit {
+  background: rgba($primary, 0.1);
+  color: $primary;
+}
+
+.cd-edit-textarea {
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 100px;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
+  }
+}
+
+.cd-modal-btn--save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 10px;
+  background: $primary;
+  color: $white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-darker;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// ── Delete Post Modal — Post Preview ────────────────────────
+
+.cd-modal-post-preview {
+  background: $color-stone-50;
+  border: 1px solid $color-stone-200;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  color: $color-stone-600;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 // ── Utility ───────────────────────────────────────────────────
 
 .fade-in-up {
