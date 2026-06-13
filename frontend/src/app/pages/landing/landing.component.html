@@ -185,6 +185,7 @@
 
 </section>
 
+<div class="lp-section-divider"></div>
 
 <!-- ═══ 3. MARQUEE TICKER ═══ -->
 <div class="lp-marquee">
@@ -204,6 +205,31 @@
       }
   </div>
 </div>
+
+<!-- ═══ OPPORTUNITIES AVAILABLE TODAY ═══ -->
+<section class="lp-section lp-opportunities-section">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-green"><i class="bi bi-briefcase-fill"></i> {{ t.opportunities_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.opportunities_heading }}</h2>
+      <p class="lp-sec-sub">{{ t.opportunities_sub }}</p>
+    </div>
+    <div class="lp-opps-grid rv">
+      @for (opp of t.opportunities; track $index; let i = $index) {
+        <a routerLink="/auth/register" class="lp-opp-card glass-card"
+           [attr.data-color]="opp.color"
+           [style.transition-delay]="(i * 0.07) + 's'">
+          <div class="lp-opp-icon" [attr.data-color]="opp.color">
+            <i class="bi" [ngClass]="opp.icon"></i>
+          </div>
+          <span class="lp-opp-label">{{ opp.label }}</span>
+          <span class="lp-opp-sublabel">{{ opp.sublabel }}</span>
+          <span class="lp-opp-arrow"><i class="bi bi-arrow-right-circle-fill"></i></span>
+        </a>
+      }
+    </div>
+  </div>
+</section>
 
 <div class="lp-section-divider"></div>
 
@@ -395,6 +421,39 @@
     <a routerLink="/communities" class="lp-btn lp-btn-neon lp-btn-shimmer">
       <i class="bi bi-grid-3x3-gap-fill"></i> {{ t.comm_browse_all }}
     </a>
+  </div>
+</section>
+
+<div class="lp-section-divider lp-divider-yellow"></div>
+
+<!-- ═══ ASK THE COMMUNITY ═══ -->
+<section class="lp-section lp-ask-section lp-section-mesh">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill-green"><i class="bi bi-chat-dots-fill"></i> {{ t.ask_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.ask_heading }}</h2>
+      <p class="lp-sec-sub">{{ t.ask_subtitle }}</p>
+    </div>
+
+    <div class="lp-ask-grid rv">
+      @for (q of t.ask_questions; track $index; let i = $index) {
+        <div class="lp-ask-card glass-card" [attr.data-color]="q.color" [style.transition-delay]="(i * 0.1) + 's'">
+          <div class="lp-ask-icon" [attr.data-color]="q.color">
+            <i class="bi" [ngClass]="q.icon"></i>
+          </div>
+          <p class="lp-ask-question">{{ q.question }}</p>
+          <div class="lp-ask-badge">
+            <i class="bi bi-people-fill"></i> {{ t.ask_answer_badge }}
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="lp-ask-cta rv">
+      <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-btn-shimmer">
+        <i class="bi bi-pencil-fill"></i> {{ t.ask_btn }}
+      </a>
+    </div>
   </div>
 </section>
 
@@ -628,7 +687,7 @@
       <p class="lp-sec-sub">{{ t.blog_sub }}</p>
     </div>
 
-    <div class="lp-blog-grid">
+    <div class="lp-blog-grid lp-blog-grid--equal">
       @for (post of t.blogPosts; track $index; let i = $index) {
         <div class="lp-blog-card glass-card rv"
              [style.transition-delay]="(i * 0.1) + 's'">
@@ -835,15 +894,83 @@
   </div>
 </section>
 
+<div class="lp-section-divider lp-divider-pink"></div>
+
+<!-- ═══ BUSINESS DIRECTORY CATEGORIES ═══ -->
+<section class="lp-section lp-bizdir-section lp-section-mesh">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-shop"></i> {{ t.bizdir_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.bizdir_heading }}</h2>
+    </div>
+    <div class="lp-bizdir-grid">
+      @for (cat of t.businessCategories; track $index; let i = $index) {
+        <a routerLink="/auth/register" class="lp-bizdir-card glass-card rv"
+           [attr.data-color]="cat.color"
+           [style.transition-delay]="(i * 0.06) + 's'">
+          <div class="lp-bizdir-icon" [attr.data-color]="cat.color">
+            <i class="bi" [ngClass]="cat.icon"></i>
+          </div>
+          <span class="lp-bizdir-label">{{ cat.label }}</span>
+          <!-- <span class="lp-bizdir-sublabel">{{ cat.sublabel }}</span> -->
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
 <div class="lp-section-divider"></div>
 
+<div class="lp-section-divider"></div>
+
+<!-- ═══ WHY JOIN TODAY ═══ -->
+<section class="lp-section lp-why-join-section lp-section-mesh">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ t.why_join_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.why_join_heading }}</h2>
+    </div>
+    <div class="lp-wj-grid">
+      @for (item of t.whyJoinItems; track $index; let i = $index) {
+        <div class="lp-wj-card glass-card rv"
+             [attr.data-color]="item.color"
+             [style.transition-delay]="(i * 0.08) + 's'">
+          <div class="lp-wj-icon" [attr.data-color]="item.color">
+            <i class="bi" [ngClass]="item.icon"></i>
+          </div>
+          <h4 class="lp-wj-label">{{ item.label }}</h4>
+          <p class="lp-wj-desc">{{ item.desc }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
 <!-- ═══ WAITLIST / EARLY MEMBERS ═══ -->
-<section class="lp-section lp-waitlist-section lp-section-mesh">
+<section class="lp-section lp-waitlist-section lp-section-mesh" id="waitlist">
   <div class="lp-wrap">
     <div class="lp-waitlist-card glass-card rv">
       <span class="lp-pill neon-pill"><i class="bi bi-star-fill"></i> {{ t.waitlist_pill }}</span>
       <h2 class="lp-waitlist-title">{{ t.waitlist_title }}</h2>
       <p class="lp-waitlist-text">{{ t.waitlist_text }}</p>
+
+      <!-- Benefits heading + checklist -->
+      <div class="lp-waitlist-benefits">
+        <h3 class="lp-wb-heading">{{ t.waitlist_benefits_heading }}</h3>
+        <div class="lp-wb-grid">
+          @for (b of t.waitlistBenefits; track $index; let i = $index) {
+            <div class="lp-wb-item" [attr.data-color]="b.color" [style.transition-delay]="(i * 0.07) + 's'">
+              <div class="lp-wb-icon" [attr.data-color]="b.color">
+                <i class="bi" [ngClass]="b.icon"></i>
+              </div>
+              <div class="lp-wb-text">
+                <span class="lp-wb-label">{{ b.label }}</span>
+                <span class="lp-wb-desc">{{ b.desc }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
 
       @if (waitlistSubmitted) {
         <div class="lp-waitlist-success">
@@ -931,8 +1058,19 @@
 <div class="lp-appbanner">
   <div class="lp-wrap">
     <div class="lp-appbanner-inner">
+      <!-- Premium app icon illustration -->
       <div class="lp-appbanner-icon">
-        <i class="bi bi-phone-fill"></i>
+        <div class="lp-app-mockup">
+          <div class="lp-app-screen">
+            <div class="lp-app-notch"></div>
+            <div class="lp-app-logo-wrap">
+              <img src="logo.svg" alt="TamilConnect" class="lp-app-logo-img" />
+            </div>
+            <div class="lp-app-dot-row">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="lp-appbanner-content">
         <span class="lp-appbanner-pill">{{ t.appbanner_pill }}</span>
@@ -948,6 +1086,10 @@
           <i class="bi bi-google-play"></i>
           <span>{{ t.appbanner_android }}</span>
         </button>
+        <a href="#waitlist" class="lp-appbanner-waitlist-cta">
+          <i class="bi bi-bell-fill"></i>
+          {{ t.appbanner_waitlist_cta }}
+        </a>
       </div>
     </div>
   </div>

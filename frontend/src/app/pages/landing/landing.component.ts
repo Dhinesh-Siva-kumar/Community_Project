@@ -122,13 +122,70 @@ const TRANSLATIONS = {
     first30_title: 'Your First 30 Days in Any New Country',
     first30_sub: 'No matter which country you move to — here is how TamilConnect helps from day one.',
 
+    // ── Opportunities Section ──
+    opportunities_pill: 'Jobs Available Now',
+    opportunities_heading: 'Opportunities Available Today',
+    opportunities_sub: 'Browse job types shared directly by Tamils — find the right opportunity for you.',
+    opportunities: [
+      { icon: 'bi-clock-history',      label: 'Part-Time Jobs',   sublabel: 'Flexible hours · any city',    color: 'green'   },
+      { icon: 'bi-briefcase-fill',     label: 'Full-Time Jobs',   sublabel: 'Permanent roles · career growth', color: 'primary' },
+      { icon: 'bi-star-fill',          label: 'Sponsored Jobs',   sublabel: 'Visa sponsorship included',    color: 'violet'  },
+      { icon: 'bi-mortarboard-fill',   label: 'Internships',      sublabel: 'Students & graduates welcome', color: 'pink'    },
+      { icon: 'bi-people-fill',        label: 'Referral Jobs',    sublabel: 'Shared by Tamil members',      color: 'yellow'  },
+    ],
+
     // ── Waitlist ──
     waitlist_pill: 'Early Access',
     waitlist_title: 'Join Before We Launch — Be an Early Member',
-    waitlist_text: 'Sign up now and be among the first Tamil community members on TamilConnect. Early members will receive special recognition and benefits.',
+    waitlist_text: 'Sign up now and be among the first Tamil community members on TamilConnect.',
+    waitlist_benefits_heading: 'What you get by joining before launch:',
+    waitlistBenefits: [
+      { icon: 'bi-patch-check-fill',   label: 'Early Member Badge',              desc: 'Displayed on your profile forever',           color: 'primary' },
+      { icon: 'bi-lightning-fill',     label: 'Priority Access',                 desc: 'Be first to use the platform',                color: 'yellow'  },
+      { icon: 'bi-award-fill',         label: 'Founding Member Recognition',     desc: 'Permanent honour in our community',           color: 'violet'  },
+      { icon: 'bi-gift-fill',          label: 'Special Community Benefits',      desc: 'Exclusive perks for early members',           color: 'green'   },
+      { icon: 'bi-phone-fill',         label: 'Mobile App — First to Download',  desc: 'First to download when we launch',            color: 'pink'    },
+    ],
     waitlist_email_placeholder: 'Enter your email address',
     waitlist_btn: 'Join Waitlist',
     waitlist_success: 'You are on the list! We will reach out soon.',
+
+    // ── Why Join Today ──
+    why_join_pill: 'Join Today',
+    why_join_heading: 'What You Get When You Join Today',
+    whyJoinItems: [
+      { icon: 'bi-people-fill',          label: 'Instant Tamil Connection',        desc: 'Instant connection with Tamils in your country',              color: 'primary' },
+      { icon: 'bi-briefcase-fill',       label: 'Daily Job Opportunities',         desc: 'Daily job opportunities shared by Tamil members',             color: 'green'   },
+      { icon: 'bi-book-fill',            label: 'Student Support Network',         desc: 'Student support network — always available',                  color: 'violet'  },
+      { icon: 'bi-shield-fill-check',    label: 'Emergency Help Network 24/7',     desc: 'Emergency help network — available 24/7',                     color: 'pink'    },
+      { icon: 'bi-calendar-event-fill',  label: 'Tamil Events & Meetups',          desc: 'Tamil Events & Meetups in your city',                         color: 'yellow'  },
+      { icon: 'bi-globe2',               label: 'Global Tamil Business Network',   desc: 'Connect with Tamil businesses across the globe',              color: 'accent'  },
+    ],
+
+    // ── Ask the Community ──
+    ask_pill: 'Community Q&A',
+    ask_heading: 'Ask the Community',
+    ask_subtitle: 'Get answers from Tamils who have been through the same journey — no question is too small',
+    ask_answer_badge: 'Community Answer',
+    ask_questions: [
+      { icon: 'bi-house-fill',       question: 'How do I find accommodation in a new country?',    color: 'primary' },
+      { icon: 'bi-briefcase-fill',   question: 'How can I find a sponsored job abroad?',           color: 'green'   },
+      { icon: 'bi-bank',             question: 'How do I open a bank account when I first arrive?', color: 'violet'  },
+    ],
+    ask_btn: 'Post Your Question',
+
+    // ── Business Directory Categories ──
+    bizdir_pill: 'Tamil Business Directory',
+    bizdir_heading: 'Find Tamil Services Near You',
+    businessCategories: [
+      { icon: 'bi-person-badge-fill',    label: 'Tamil Solicitor',               color: 'primary' },
+      { icon: 'bi-calculator-fill',      label: 'Tamil Accountant',              color: 'green'   },
+      { icon: 'bi-car-front-fill',       label: 'Tamil Driving Instructor',      color: 'violet'  },
+      { icon: 'bi-cup-hot-fill',         label: 'Tamil Restaurant',              color: 'yellow'  },
+      { icon: 'bi-bag-fill',             label: 'Tamil Grocery',                 color: 'pink'    },
+      { icon: 'bi-heart-pulse-fill',     label: 'Tamil Doctor',                  color: 'accent'  },
+      { icon: 'bi-house-door-fill',      label: 'Tamil Estate Agent',            color: 'primary' },
+    ],
 
     // ── Mobile App Banner ──
     appbanner_pill: 'Coming Soon',
@@ -136,6 +193,7 @@ const TRANSLATIONS = {
     appbanner_text: 'TamilConnect on iOS & Android — your community always in your hands.',
     appbanner_ios: 'App Store',
     appbanner_android: 'Google Play',
+    appbanner_waitlist_cta: 'Be the first to use the app when we launch — Join the Waitlist above',
 
     // ── Blog ──
     blog_pill: 'Blog & Updates',
@@ -290,6 +348,13 @@ const TRANSLATIONS = {
         desc: 'Create a profile with your country, city, profession, and education, then search for and connect with fellow Tamils. Find the right people easily, wherever you are.',
         tags: ['Search', 'Connect', 'Verified'],
         color: 'green', featured: false
+      },
+      {
+        icon: 'bi-person-video3',
+        title: 'Mentor Connect',
+        desc: 'Experienced Tamils abroad will guide newcomers directly. Whether it is studies, career, or settling in — your mentor is always there for you.',
+        tags: ['Career Mentor', 'Student Mentor', 'PR Mentor'],
+        color: 'green', featured: false
       }
     ],
 
@@ -360,10 +425,10 @@ const TRANSLATIONS = {
     ],
 
     aboutStats: [
-      { value: '100%',  label: 'Growing Community' },
-      { value: '40+',  label: 'Countries' },
-      { value: '100%',   label: 'Free Forever' },
-      { value: '100%', label: 'Safe and Secure' }
+      { value: 'growing', displayValue: 'Growing',  label: 'Growing Community',  suffix: '' },
+      { value: '40',      displayValue: '40+',      label: 'Countries',          suffix: '+' },
+      { value: '100free', displayValue: '100%',     label: 'Always Free',        suffix: '%' },
+      { value: '100safe', displayValue: '100%',     label: 'Safe Platform',      suffix: '%' }
     ],
 
     aboutChips: ['By Tamils, For Tamils','A trusted platform','Everyone is welcome','A global community'],
@@ -571,13 +636,70 @@ const TRANSLATIONS = {
     first30_title: 'எந்த புதிய நாட்டிலும் முதல் 30 நாட்கள் — என்ன செய்வது?',
     first30_sub: 'எந்த நாட்டிற்கு சென்றாலும் — முதல் நாளிலிருந்தே TamilConnect உங்களுக்கு உதவும்.',
 
+    // ── Opportunities Section ──
+    opportunities_pill: 'இப்போது வேலை கிடைக்கும்',
+    opportunities_heading: 'இன்று கிடைக்கும் வாய்ப்புகள்',
+    opportunities_sub: 'தமிழர்களால் நேரடியாக பகிரப்படும் வேலை வகைகள் — உங்களுக்கு ஏற்ற வாய்ப்பை தேர்ந்தெடுங்கள்.',
+    opportunities: [
+      { icon: 'bi-clock-history',      label: 'பகுதி நேர வேலைகள்',  sublabel: 'நெகிழ்வான நேரம் · எந்த நகரிலும்',   color: 'green'   },
+      { icon: 'bi-briefcase-fill',     label: 'முழு நேர வேலைகள்',   sublabel: 'நிரந்தர பதவி · தொழில் வளர்ச்சி',   color: 'primary' },
+      { icon: 'bi-star-fill',          label: 'ஸ்பான்சர் வேலைகள்', sublabel: 'விசா ஸ்பான்சர் உள்ளது',            color: 'violet'  },
+      { icon: 'bi-mortarboard-fill',   label: 'இன்டர்ன்ஷிப்',       sublabel: 'மாணவர்கள் & பட்டதாரிகளுக்கு',     color: 'pink'    },
+      { icon: 'bi-people-fill',        label: 'பரிந்துரை வேலைகள்',  sublabel: 'தமிழ் உறுப்பினர்கள் பகிர்கின்றனர்', color: 'yellow'  },
+    ],
+
     // ── Waitlist ──
     waitlist_pill: 'முன்கூட்டிய அணுகல்',
     waitlist_title: 'Launch-க்கு முன்பே இணையுங்கள் — Early Member ஆகுங்கள்',
-    waitlist_text: 'இப்போதே பதிவு செய்து TamilConnect-ன் முதல் சமூக உறுப்பினர்களில் ஒருவராகுங்கள். Early members-க்கு சிறப்பு அங்கீகாரம் மற்றும் நன்மைகள் கிடைக்கும்.',
+    waitlist_text: 'இப்போதே பதிவு செய்து TamilConnect-ன் முதல் சமூக உறுப்பினர்களில் ஒருவராகுங்கள்.',
+    waitlist_benefits_heading: 'Launch-க்கு முன் பதிவு செய்பவர்களுக்கு கிடைப்பது:',
+    waitlistBenefits: [
+      { icon: 'bi-patch-check-fill',   label: 'Early Member Badge',           desc: 'உங்கள் profile-ல் எப்போதும் காட்டப்படும்',    color: 'primary' },
+      { icon: 'bi-lightning-fill',     label: 'Priority Access',              desc: 'முதலில் platform பயன்படுத்தும் வாய்ப்பு',      color: 'yellow'  },
+      { icon: 'bi-award-fill',         label: 'Founding Member Recognition',  desc: 'நிரந்தர அங்கீகாரம்',                           color: 'violet'  },
+      { icon: 'bi-gift-fill',          label: 'Special Community Benefits',   desc: 'Early members-க்கு மட்டுமே சிறப்பு சலுகைகள்', color: 'green'   },
+      { icon: 'bi-phone-fill',         label: 'Mobile App',                   desc: 'முதலில் download செய்யும் வாய்ப்பு',           color: 'pink'    },
+    ],
     waitlist_email_placeholder: 'உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடுங்கள்',
     waitlist_btn: 'Waitlist-ல் சேருங்கள்',
     waitlist_success: 'நீங்கள் பட்டியலில் இருக்கிறீர்கள்! விரைவில் தொடர்பு கொள்கிறோம்.',
+
+    // ── Why Join Today ──
+    why_join_pill: 'இன்றே சேருங்கள்',
+    why_join_heading: 'இன்று Join செய்தால் உங்களுக்கு கிடைப்பது',
+    whyJoinItems: [
+      { icon: 'bi-people-fill',          label: 'உடனே தமிழர் இணைவு',           desc: 'உங்கள் நாட்டு தமிழர்களுடன் உடனே இணைவு',           color: 'primary' },
+      { icon: 'bi-briefcase-fill',       label: 'தினமும் வேலை வாய்ப்புகள்',    desc: 'தினமும் புதிய வேலை வாய்ப்பு தகவல்கள்',            color: 'green'   },
+      { icon: 'bi-book-fill',            label: 'மாணவர் ஆதரவு நெட்வொர்க்',   desc: 'மாணவர் ஆதரவு நெட்வொர்க் — எப்போதும் கிடைக்கும்', color: 'violet'  },
+      { icon: 'bi-shield-fill-check',    label: 'அவசர உதவி வலைப்பின்னல்',     desc: 'அவசர உதவி வலைப்பின்னல் — 24/7',                   color: 'pink'    },
+      { icon: 'bi-calendar-event-fill',  label: 'Tamil Events & Meetups',       desc: 'உங்கள் நகரில் Tamil Events & Meetups',             color: 'yellow'  },
+      { icon: 'bi-globe2',               label: 'Global Tamil Business Network', desc: 'உலக தமிழ் வணிக வலைப்பின்னல்',                    color: 'accent'  },
+    ],
+
+    // ── Ask the Community ──
+    ask_pill: 'சமூக கேள்வி & பதில்',
+    ask_heading: 'உங்கள் கேள்வியை கேளுங்கள்',
+    ask_subtitle: 'தமிழ் சமூகம் பதில் தரும் — எந்த கேள்வியும் சிறியதில்லை',
+    ask_answer_badge: 'சமூக பதில்',
+    ask_questions: [
+      { icon: 'bi-house-fill',       question: 'புதிய நாட்டில் வீடு எப்படி தேடுவது?',            color: 'primary' },
+      { icon: 'bi-briefcase-fill',   question: 'வெளிநாட்டில் ஸ்பான்சர்ஷிப் உடன் வேலைவாய்ப்பை எப்படிக் கண்டுபிடிப்பது?',           color: 'green'   },
+      { icon: 'bi-bank',             question: 'வெளிநாட்டில் வங்கி கணக்கு எப்படி திறப்பது?',      color: 'violet'  },
+    ],
+    ask_btn: 'உங்கள் கேள்வியை பதிவிடுங்கள்',
+
+    // ── Business Directory Categories ──
+    bizdir_pill: 'தமிழ் வணிக அட்டவணை',
+    bizdir_heading: 'தமிழ் சேவைகளை தேடுங்கள்',
+    businessCategories: [
+      { icon: 'bi-person-badge-fill',            label: 'சட்ட ஆலோசகர்',         color: 'primary' },
+      { icon: 'bi-calculator-fill',              label: 'கணக்காளர்',             color: 'green'   },
+      { icon: 'bi-car-front-fill',               label: 'வாகன பயிற்சியாளர்',    color: 'violet'  },
+      { icon: 'bi-cup-hot-fill',                 label: 'தமிழ் உணவகம்',         color: 'yellow'  },
+      { icon: 'bi-bag-fill',                     label: 'மளிகை கடை',            color: 'pink'    },
+      { icon: 'bi-heart-pulse-fill',             label: 'மருத்துவர்',            color: 'accent'  },
+      { icon: 'bi-house-door-fill',              label: 'வீட்டு தரகர்',         color: 'primary' },
+    ],
 
     // ── Mobile App Banner ──
     appbanner_pill: 'விரைவில் வருகிறது',
@@ -585,6 +707,7 @@ const TRANSLATIONS = {
     appbanner_text: 'TamilConnect iOS & Android-ல் — உங்கள் சமூகம் எப்போதும் உங்கள் கையில்.',
     appbanner_ios: 'App Store',
     appbanner_android: 'Google Play',
+    appbanner_waitlist_cta: 'App launch ஆன உடன் முதலில் பயன்படுத்த — மேலே உள்ள Waitlist-ல் சேருங்கள்',
 
     // ── Blog ──
     blog_pill: 'வலைப்பதிவு & புதுப்பிப்புகள்',
@@ -739,6 +862,13 @@ const TRANSLATIONS = {
         desc: 'நாடு, நகரம், தொழில் மற்றும் கல்வி உள்ளிட்ட விவரங்களுடன் சுயவிவரம் உருவாக்கி, தமிழர்களை தேடி இணைந்துகொள்ளுங்கள். எங்கிருந்தாலும் சரியான மக்களை எளிதாக கண்டுபிடியுங்கள்.',
         tags: ['தேடல்', 'இணைவு', 'சரிபார்க்கப்பட்டது'],
         color: 'green', featured: false
+      },
+      {
+        icon: 'bi-person-video3',
+        title: 'வழிகாட்டி இணைப்பு',
+        desc: 'வெளிநாட்டில் அனுபவமுள்ள தமிழர்கள் புதியவர்களுக்கு நேரடியாக வழிகாட்டுவார்கள். படிப்பு, வேலை, வாழ்க்கை — எல்லாவற்றிலும் உங்களுக்கு ஒரு வழிகாட்டி இருப்பார்.',
+        tags: ['தொழில் வழிகாட்டி', 'மாணவர் வழிகாட்டி', 'பொது தொடர்பு வழிகாட்டி'],
+        color: 'green', featured: false
       }
     ],
 
@@ -809,10 +939,10 @@ const TRANSLATIONS = {
     ],
 
     aboutStats: [
-      { value: '100%',  label: 'வளர்ந்து வரும் சமூகம்' },
-      { value: '40+',  label: 'நாடுகள்' },
-      { value: '100%',   label: 'இலவசம் எப்போதும்' },
-      { value: '100%', label: 'பாதுகாப்பானது' }
+      { value: 'growing', displayValue: 'வளர்கிறது', label: 'வளர்ந்து வரும் சமூகம்', suffix: '' },
+      { value: '40',      displayValue: '40+',        label: 'நாடுகள்',               suffix: '+' },
+      { value: '100free', displayValue: '100%',       label: 'இலவசம் எப்போதும்',      suffix: '%' },
+      { value: '100safe', displayValue: '100%',       label: 'பாதுகாப்பானது',          suffix: '%' }
     ],
 
     aboutChips: ['தமிழர்களால் தமிழர்களுக்காக', 'நம்பகமான தளம்', 'அனைவரும் வரவேற்கப்படுகிறார்கள்', 'உலகளாவிய சமூகம்'],
@@ -1141,28 +1271,23 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private animateCounters(): void {
-    const items = [
-      { key: '100%', target: 100, suffix: '%' },
-      { key: '40+', target: 40, suffix: '+' },
-      { key: '100%', target: 100, suffix: '%' },
-      { key: '100%', target: 100, suffix: '%' }
-    ];
-    items.forEach(item => {
+    const stats = this.t.aboutStats;
+    stats.forEach((stat, index) => {
+      if (stat.value === 'growing') {
+        // Non-numeric stat — just set it immediately
+        this.counterValues[stat.value] = stat.displayValue;
+        return;
+      }
+      const numericTarget = stat.value === '100free' || stat.value === '100safe' ? 100 : parseInt(stat.value, 10);
       const duration = 2000;
       const startTime = performance.now();
       const animate = (currentTime: number) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // easeOutQuart
         const eased = 1 - Math.pow(1 - progress, 4);
-        const current = eased * item.target;
-        if (item.suffix === '%') {
-          this.counterValues[item.key] =
-            `${Math.round(current)}${item.suffix}`;
-        } else {
-          this.counterValues[item.key] =
-            `${Math.floor(current)}${item.suffix}`;
-        }
+        const current = eased * numericTarget;
+        this.counterValues[stat.value] =
+          `${stat.suffix === '+' ? Math.floor(current) : Math.round(current)}${stat.suffix}`;
         if (progress < 1) {
           requestAnimationFrame(animate);
         }
@@ -1171,8 +1296,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  getCounterValue(stat: { value: string; label: string }): string {
-    return this.counterValues[stat.value] || '0';
+  getCounterValue(stat: { value: string; displayValue: string; label: string; suffix: string }): string {
+    return this.counterValues[stat.value] || stat.displayValue;
   }
 
 }

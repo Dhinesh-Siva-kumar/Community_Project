@@ -4427,24 +4427,8 @@ textarea.lp-form-control {
   }
 }
 
-.lp-appbanner-icon {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
-  background: var(--lp-grad-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(var(--lp-primary-rgb), .25);
-
-  i { font-size: 2rem; color: #fff; }
-
-  @media (max-width: 768px) {
-    width: 60px; height: 60px;
-    border-radius: 18px;
-    i { font-size: 1.6rem; }
-  }
+.lp-appbanner-icon-orig-placeholder {
+  // Replaced by new .lp-appbanner-icon rule with premium mockup in new sections block
 }
 
 .lp-appbanner-content {
@@ -4491,16 +4475,11 @@ textarea.lp-form-control {
   border-color: rgba(251, 191, 36, .28);
 }
 
-.lp-appbanner-badges {
-  display: flex;
-  gap: 12px;
-  flex-shrink: 0;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-    width: 100%;
-  }
+.lp-appbanner-badges-orig-placeholder {
+  // Replaced by new .lp-appbanner-badges rule in new sections block above
 }
+
+// (old badge layout removed — new column layout in new sections block)
 
 .lp-appbanner-badge {
   display: flex;
@@ -4530,14 +4509,657 @@ textarea.lp-form-control {
   color: rgba(255, 255, 255, .70);
 }
 
+// ============================================================
+// OPPORTUNITIES AVAILABLE TODAY  (Correction 1)
+// ============================================================
+.lp-opportunities-section {
+  background: var(--lp-bg);
+}
+
+.lp-opps-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 640px)  { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 420px)  { grid-template-columns: 1fr; }
+}
+
+.lp-opp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 16px 22px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: $radius-lg;
+  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard, border-color .25s $easing-standard;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: var(--lp-grad-primary);
+    opacity: 0;
+    transition: opacity .3s $easing-standard;
+    z-index: 0;
+  }
+  &:hover::before { opacity: .06; }
+  &:hover { transform: translateY(-6px); }
+
+  &[data-color="primary"]:hover { box-shadow: 0 12px 32px rgba(251,191,36,.22); border-color: rgba(251,191,36,.35); }
+  &[data-color="green"]:hover   { box-shadow: 0 12px 32px rgba(16,185,129,.18);  border-color: rgba(16,185,129,.35); }
+  &[data-color="violet"]:hover  { box-shadow: 0 12px 32px rgba(139,92,246,.18);  border-color: rgba(139,92,246,.35); }
+  &[data-color="pink"]:hover    { box-shadow: 0 12px 32px rgba(244,63,94,.18);   border-color: rgba(244,63,94,.35); }
+  &[data-color="yellow"]:hover  { box-shadow: 0 12px 32px rgba(251,191,36,.16);  border-color: rgba(251,191,36,.30); }
+
+  & > * { position: relative; z-index: 1; }
+}
+
+.lp-opp-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  transition: transform .3s $easing-standard;
+  margin-bottom: 2px;
+
+  .lp-opp-card:hover & { transform: scale(1.1) rotate(-5deg); }
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 16px rgba(251,191,36,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 16px rgba(5,150,105,.38); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 16px rgba(124,58,237,.38); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 16px rgba(225,29,72,.38); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 4px 16px rgba(245,158,11,.40); color: #1c1917; }
+}
+
+.lp-opp-label {
+  font-family: $font-family-header;
+  font-size: .98rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.3;
+  display: block;
+}
+
+.lp-opp-sublabel {
+  font-size: .75rem;
+  font-weight: $font-weight-semibold;
+  color: var(--lp-muted);
+  letter-spacing: .5px;
+  display: block;
+}
+
+.lp-opp-arrow {
+  font-size: 1.15rem;
+  color: var(--lp-primary);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .25s $easing-standard, transform .25s $easing-standard;
+  display: block;
+
+  .lp-opp-card:hover & { opacity: 1; transform: translateY(0); }
+}
+
+
+// ============================================================
+// WAITLIST BENEFITS  (Correction 2)
+// ============================================================
+.lp-waitlist-benefits {
+  margin: 28px 0 32px;
+  text-align: left;
+}
+
+.lp-wb-heading {
+  font-family: $font-family-header;
+  font-size: 1.05rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  margin: 0 0 18px;
+  text-align: center;
+
+  background: var(--lp-grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lp-wb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.lp-wb-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 14px;
+  border-radius: $radius-md;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  transition: transform .25s $easing-standard, box-shadow .25s $easing-standard;
+
+  &:hover { transform: translateY(-3px); }
+
+  &[data-color="primary"]:hover { box-shadow: 0 6px 20px rgba(251,191,36,.15); border-color: rgba(251,191,36,.30); }
+  &[data-color="yellow"]:hover  { box-shadow: 0 6px 20px rgba(251,191,36,.12); border-color: rgba(251,191,36,.28); }
+  &[data-color="violet"]:hover  { box-shadow: 0 6px 20px rgba(139,92,246,.14); border-color: rgba(139,92,246,.28); }
+  &[data-color="green"]:hover   { box-shadow: 0 6px 20px rgba(16,185,129,.14); border-color: rgba(16,185,129,.28); }
+  &[data-color="pink"]:hover    { box-shadow: 0 6px 20px rgba(244,63,94,.12);  border-color: rgba(244,63,94,.25); }
+}
+
+.lp-wb-icon {
+  width: 38px; height: 38px;
+  border-radius: $radius-sm;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  color: #ffffff;
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #1c1917; }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); }
+}
+
+.lp-wb-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.lp-wb-label {
+  font-family: $font-family-header;
+  font-size: .88rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.3;
+  display: block;
+}
+
+.lp-wb-desc {
+  font-size: .78rem;
+  color: var(--lp-muted);
+  line-height: 1.5;
+  display: block;
+  font-weight: $font-weight-normal;
+}
+
+
+// ============================================================
+// WHY JOIN TODAY  (Correction 3)
+// ============================================================
+.lp-why-join-section {
+  background: var(--lp-bg);
+}
+
+.lp-wj-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; gap: 14px; }
+}
+
+.lp-wj-card {
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 168px;
+  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard;
+
+  &:hover { transform: translateY(-5px); }
+  &[data-color="primary"]:hover { box-shadow: 0 12px 32px rgba(251,191,36,.18); }
+  &[data-color="green"]:hover   { box-shadow: 0 12px 32px rgba(16,185,129,.16); }
+  &[data-color="violet"]:hover  { box-shadow: 0 12px 32px rgba(139,92,246,.16); }
+  &[data-color="pink"]:hover    { box-shadow: 0 12px 32px rgba(244,63,94,.16); }
+  &[data-color="yellow"]:hover  { box-shadow: 0 12px 32px rgba(251,191,36,.14); }
+  &[data-color="accent"]:hover  { box-shadow: 0 12px 32px rgba(249,115,22,.16); }
+}
+
+.lp-wj-icon {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: transform .3s $easing-standard;
+
+  .lp-wj-card:hover & { transform: scale(1.1); }
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(225,29,72,.38); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 4px 14px rgba(245,158,11,.40); color: #1c1917; }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); box-shadow: 0 4px 14px rgba(234,88,12,.38); }
+}
+
+.lp-wj-label {
+  font-family: $font-family-header;
+  font-size: 1rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.lp-wj-desc {
+  font-size: .86rem;
+  color: var(--lp-text2);
+  line-height: 1.7;
+  margin: 0;
+  font-weight: $font-weight-normal;
+  flex: 1;
+}
+
+
+// ============================================================
+// ASK THE COMMUNITY  (Correction 5)
+// ============================================================
+.lp-ask-section {
+  background: var(--lp-bg);
+}
+
+.lp-ask-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; gap: 14px; }
+}
+
+.lp-ask-card {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 160px;
+  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard;
+
+  &:hover { transform: translateY(-4px); }
+  &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.18); }
+  &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); }
+  &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); }
+}
+
+.lp-ask-icon {
+  width: 46px; height: 46px;
+  border-radius: $radius-md;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  transition: transform .3s $easing-standard;
+
+  .lp-ask-card:hover & { transform: scale(1.1) rotate(-4deg); }
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+}
+
+.lp-ask-question {
+  font-family: $font-family-header;
+  font-size: 1rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+.lp-ask-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .72rem;
+  font-weight: $font-weight-extrabold;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  background: rgba(var(--lp-primary-rgb), .10);
+  color: var(--lp-primary);
+  border: 1px solid rgba(var(--lp-primary-rgb), .20);
+  width: fit-content;
+  i { font-size: .72rem; }
+}
+
+.lp-ask-cta {
+  display: flex;
+  justify-content: center;
+}
+
+
+// ============================================================
+// BUSINESS DIRECTORY CATEGORIES  (Correction 6)
+// ============================================================
+.lp-bizdir-section {
+  background: var(--lp-bg);
+}
+
+.lp-bizdir-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 640px)  { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 380px)  { grid-template-columns: 1fr; }
+}
+
+.lp-bizdir-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 14px 20px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: $radius-lg;
+  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard, border-color .25s $easing-standard;
+  cursor: pointer;
+
+  &:hover { transform: translateY(-5px); }
+  &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.20); border-color: rgba(251,191,36,.30); }
+  &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); border-color: rgba(16,185,129,.28); }
+  &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); border-color: rgba(139,92,246,.28); }
+  &[data-color="yellow"]:hover  { box-shadow: 0 10px 28px rgba(251,191,36,.14); border-color: rgba(251,191,36,.25); }
+  &[data-color="pink"]:hover    { box-shadow: 0 10px 28px rgba(244,63,94,.15);  border-color: rgba(244,63,94,.25); }
+  &[data-color="accent"]:hover  { box-shadow: 0 10px 28px rgba(249,115,22,.15); border-color: rgba(249,115,22,.25); }
+}
+
+.lp-bizdir-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  transition: transform .3s $easing-standard;
+
+  .lp-bizdir-card:hover & { transform: scale(1.12) rotate(-5deg); }
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 4px 14px rgba(245,158,11,.40); color: #1c1917; }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(225,29,72,.38); }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); box-shadow: 0 4px 14px rgba(234,88,12,.38); }
+}
+
+.lp-bizdir-label {
+  font-family: $font-family-header;
+  font-size: .92rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.3;
+  display: block;
+}
+
+.lp-bizdir-sublabel {
+  font-size: .74rem;
+  font-weight: $font-weight-semibold;
+  color: var(--lp-muted);
+  letter-spacing: .3px;
+  display: block;
+}
+
+
+// ============================================================
+// MOBILE APP BANNER — PREMIUM ICON  (Correction 7)
+// ============================================================
+.lp-appbanner-icon {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-width: 768px) { width: 64px; height: 64px; }
+}
+
+// Replaces old .lp-appbanner-icon i
+.lp-app-mockup {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--lp-grad-primary);
+  box-shadow:
+    0 8px 28px rgba(var(--lp-primary-rgb), .35),
+    0 2px 6px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(255,255,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  // Specular top shine
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,.22) 0%, transparent 100%);
+    border-radius: 20px 20px 0 0;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    width: 60px; height: 60px; border-radius: 16px;
+    &::before { border-radius: 16px 16px 0 0; }
+  }
+}
+
+.lp-app-screen {
+  width: 44px;
+  height: 58px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 4px 5px;
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid rgba(255,255,255,.22);
+
+  @media (max-width: 768px) {
+    width: 36px; height: 48px; border-radius: 6px; padding: 5px 3px 4px;
+  }
+}
+
+.lp-app-notch {
+  width: 14px; height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,.40);
+  flex-shrink: 0;
+}
+
+.lp-app-logo-wrap {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.lp-app-logo-img {
+  width: 22px; height: 22px;
+  opacity: .90;
+
+  @media (max-width: 768px) { width: 18px; height: 18px; }
+}
+
+.lp-app-dot-row {
+  display: flex; gap: 3px; flex-shrink: 0;
+  span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.50);
+    &:first-child { background: rgba(255,255,255,.90); }
+  }
+}
+
+// Waitlist CTA under app badges
+.lp-appbanner-waitlist-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: $font-weight-semibold;
+  color: var(--lp-primary);
+  text-decoration: none;
+  border: 1px dashed rgba(var(--lp-primary-rgb), .35);
+  border-radius: $radius-sm;
+  padding: 8px 14px;
+  margin-top: 4px;
+  background: rgba(var(--lp-primary-rgb), .06);
+  transition: background .25s $easing-standard, border-color .25s $easing-standard;
+  line-height: 1.4;
+  text-align: left;
+
+  i { font-size: .85rem; flex-shrink: 0; }
+
+  &:hover {
+    background: rgba(var(--lp-primary-rgb), .12);
+    border-color: rgba(var(--lp-primary-rgb), .55);
+    color: var(--lp-primary);
+  }
+
+  @media (max-width: 600px) {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+:host[data-theme="dark"] .lp-appbanner-waitlist-cta {
+  color: #FBBF24;
+  border-color: rgba(251,191,36,.30);
+  background: rgba(251,191,36,.07);
+  &:hover {
+    background: rgba(251,191,36,.13);
+    border-color: rgba(251,191,36,.50);
+    color: #FCD34D;
+  }
+}
+
+// Update badges flex to column to accommodate the CTA link
+.lp-appbanner-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    align-items: center;
+  }
+}
+
+
+// ============================================================
+// BLOG CARDS — EQUAL HEIGHT  (Blog fix)
+// ============================================================
+.lp-blog-grid--equal {
+  align-items: stretch;
+
+  .lp-blog-card {
+    height: 100%;
+    p { flex: 1; }
+  }
+}
+
+
+// ============================================================
+// TAG PILLS — UNIFIED SYSTEM  (Features improvement)
+// Normalise ALL .lp-mini-tag instances to identical geometry
+// ============================================================
+.lp-mini-tag {
+  // Override any inherited inconsistencies
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 24px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: .70rem !important;
+  font-weight: $font-weight-bold !important;
+  letter-spacing: .3px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  vertical-align: middle;
+}
+
+
+// ============================================================
+// LIGHT MODE OVERRIDES for new sections
+// ============================================================
+:host[data-theme="light"] {
+
+  .lp-opportunities-section,
+  .lp-ask-section,
+  .lp-bizdir-section,
+  .lp-why-join-section { background: #FFFFFF; }
+
+  // Waitlist benefits items
+  .lp-wb-item {
+    background: rgba(255,255,255,.95);
+    border-color: #E7E5E4;
+    &[data-color="primary"]:hover { border-color: rgba(251,191,36,.40); }
+    &[data-color="yellow"]:hover  { border-color: rgba(251,191,36,.35); }
+    &[data-color="violet"]:hover  { border-color: rgba(139,92,246,.30); }
+    &[data-color="green"]:hover   { border-color: rgba(16,185,129,.30); }
+    &[data-color="pink"]:hover    { border-color: rgba(244,63,94,.28); }
+  }
+
+  // App banner light bg
+  .lp-appbanner-waitlist-cta {
+    color: #D97706;
+    border-color: rgba(217,119,6,.35);
+    background: rgba(251,191,36,.07);
+    &:hover { background: rgba(251,191,36,.12); border-color: rgba(217,119,6,.55); color: #D97706; }
+  }
+}
+
+// ============================================================
+// RESPONSIVE for new sections — additional mobile fixes
+// ============================================================
+@media (max-width: 768px) {
+  .lp-opps-grid  { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .lp-wj-grid    { grid-template-columns: 1fr; }
+  .lp-ask-grid   { grid-template-columns: 1fr; gap: 14px; }
+  .lp-bizdir-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .lp-wb-grid    { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .lp-opps-grid  { grid-template-columns: 1fr; }
+  .lp-wb-grid    { grid-template-columns: 1fr; }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
-  .rv, .rvl, .rvr, .rvs { opacity: 1; transform: none; transition: none; }
-  .lp-pulse-dot { animation: none; }
-  .lp-marquee-track { animation: none; }
-  .lp-anim-border { animation: none; }
-  .lp-btn-shimmer::before { animation: none; }
-  .lp-btn-pulse::after { animation: none; }
-  .lp-float-whatsapp::after { animation: none; }
   .lp-orbit-item { animation: none; }
   .lp-orbit-logo { animation: none; }
   .lp-cta-gloss-shine::before,
