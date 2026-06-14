@@ -65,6 +65,57 @@ export interface User {
   updatedAt: string;
 }
 
+export interface UserDetail extends User {
+  activity: {
+    posts:       number;
+    comments:    number;
+    communities: number;
+  };
+}
+
+export interface UserListResponse {
+  data:       User[];
+  total:      number;
+  page:       number;
+  limit:      number;
+  totalPages: number;
+  stats: {
+    total:      number;
+    active:     number;
+    blocked:    number;
+    trusted:    number;
+    adminCount: number;
+  };
+}
+
+export interface AuditLog {
+  id:         string;
+  action:     string;
+  resource:   string | null;
+  resourceId: string | null;
+  metadata:   Record<string, unknown> | null;
+  createdAt:  string;
+  actor: {
+    id:          string;
+    displayName: string;
+    userName:    string;
+    avatar:      string | null;
+  } | null;
+}
+
+export interface AuditLogResponse {
+  data:       AuditLog[];
+  total:      number;
+  page:       number;
+  limit:      number;
+  totalPages: number;
+}
+
+export type NotificationType =
+  | 'POST_APPROVED' | 'POST_REJECTED' | 'NEW_COMMENT' | 'NEW_LIKE'
+  | 'COMMUNITY_POST' | 'USER_BLOCKED' | 'USER_UNBLOCKED' | 'TRUST_GRANTED'
+  | 'EVENT_CREATED' | 'JOB_POSTED';
+
 export interface CommunityRequest {
   name: string;
   description?: string;

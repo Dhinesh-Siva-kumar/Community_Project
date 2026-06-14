@@ -67,7 +67,7 @@ export class AdminProfileComponent implements OnInit {
   private initForms(): void {
     this.profileForm = this.fb.group({
       displayName: ['', Validators.required],
-      email: [{ value: '', disabled: true }],
+      email: ['', [Validators.email]],
       phoneNo: [''],
       bio: [''],
       country: [''],
@@ -167,7 +167,9 @@ export class AdminProfileComponent implements OnInit {
       ...this.profileForm.getRawValue(),
       interests: this.user()?.interests ?? [],
     };
-    delete data['email'];
+    if (this.user()?.email || !data['email']) {
+      delete data['email'];
+    }
 
     const avatar = this.avatarFile() ?? undefined;
 

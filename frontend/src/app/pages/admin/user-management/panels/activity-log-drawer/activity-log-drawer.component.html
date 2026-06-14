@@ -1,0 +1,90 @@
+@if (!embedded) {
+  <div class="drawer-backdrop" (click)="close.emit()"></div>
+}
+
+<div [class]="embedded ? 'al-embedded' : 'drawer'" role="dialog">
+
+  @if (!embedded) {
+    <div class="drawer-header">
+      <div class="drawer-header__icon"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <h5 class="drawer-header__title">Activity Log</h5>
+        <p class="drawer-header__sub">{{ total() }} admin action{{ total() === 1 ? '' : 's' }} recorded</p>
+      </div>
+      <button class="drawer-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
+    </div>
+  }
+
+  <!-- Filter bar -->
+  <div class="al-filter-bar">
+    <select class="al-select" [ngModel]="actionFilter()"
+      (ngModelChange)="actionFilter.set($event); onFilterChange()">
+      <option value="">All Actions</option>
+      @for (a of actionOptions.slice(1); track a) {
+        <option [value]="a">{{ formatAction(a) }}</option>
+      }
+    </select>
+    <span class="al-count">{{ total() }} entries</span>
+  </div>
+
+  <div class="drawer-body">
+    @if (loading()) {
+      @for (_ of [1,2,3,4,5]; track _) {
+        <div class="al-skeleton-row">
+          <div class="al-sk-icon"></div>
+          <div class="al-sk-body">
+            <div class="al-sk-line al-sk-line--lg"></div>
+            <div class="al-sk-line al-sk-line--sm"></div>
+          </div>
+        </div>
+      }
+    } @else if (logs().length === 0) {
+      <div class="al-empty">
+        <i class="bi bi-clipboard2-x"></i>
+        <p>No activity logs found</p>
+      </div>
+    } @else {
+      <div class="al-list">
+        @for (log of logs(); track log.id) {
+          <div class="al-item">
+            <div class="al-item__icon" [style.background]="getColor(log.action) + '18'">
+              <i class="bi {{ getIcon(log.action) }}" [style.color]="getColor(log.action)"></i>
+            </div>
+            <div class="al-item__body">
+              <div class="al-item__header">
+                <span class="al-item__action" [style.color]="getColor(log.action)">
+                  {{ formatAction(log.action) }}
+                </span>
+                <span class="al-item__time">{{ log.createdAt | date:'d MMM, h:mm a' }}</span>
+              </div>
+              @if (log.actor) {
+                <div class="al-item__actor">
+                  @if (log.actor.avatar) {
+                    <img [src]="log.actor.avatar" class="al-item__avatar" alt="" />
+                  } @else {
+                    <div class="al-item__avatar al-item__avatar--initials">{{ getInitials(log) }}</div>
+                  }
+                  <span>{{ log.actor.displayName }}</span>
+                </div>
+              }
+              @if (getMetaDesc(log)) {
+                <p class="al-item__meta">{{ getMetaDesc(log) }}</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      @if (totalPages() > 1) {
+        <div class="al-pagination">
+          <button class="al-pg-btn" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="al-pg-info">{{ page() }} / {{ totalPages() }}</span>
+          <button class="al-pg-btn" [disabled]="page() === totalPages()" (click)="goToPage(page() + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

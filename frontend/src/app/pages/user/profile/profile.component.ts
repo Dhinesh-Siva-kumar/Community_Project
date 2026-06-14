@@ -79,7 +79,7 @@ export class UserProfileComponent implements OnInit {
   private initForms(): void {
     this.profileForm = this.fb.group({
       displayName: ['', Validators.required],
-      email: [{ value: '', disabled: true }],
+      email: ['', [Validators.email]],
       phoneNo: [''],
       bio: [''],
       country: [''],
@@ -195,7 +195,12 @@ export class UserProfileComponent implements OnInit {
       ...this.profileForm.getRawValue(),
       interests: this.user()?.interests ?? [],
     };
-    delete data['email'];
+
+    // Only send email when the user doesn't have one yet and has entered a new value.
+    // Existing emails are locked (readonly in the template) and must not be overwritten.
+    if (this.user()?.email || !data['email']) {
+      delete data['email'];
+    }
 
     const avatar = this.avatarFile() ?? undefined;
 
