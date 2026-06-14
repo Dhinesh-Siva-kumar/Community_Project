@@ -19,3 +19,29 @@
 // ============================================================
 
 @import 'variables';                    // Spacing, z-index, component tokens
+
+// ============================================================
+// 3. SHORT ALIASES — redeclared here so they are guaranteed to
+//    be in this module's own namespace when consumed via @use.
+//    (Variables defined only inside @import'd files are not
+//    reliably forwarded through @use in all SASS versions.)
+// ============================================================
+
+// Font size shortcuts
+$font-xs:        $font-size-xs;
+$font-sm:        $font-size-sm;
+$font-md:        $font-size-md;
+$font-base:      $font-size-md;
+$font-lg:        $font-size-lg;
+$font-xl:        $font-size-xl;
+$font-2xl:       $font-size-2xl;
+$font-3xl:       $font-size-3xl;
+$font-4xl:       $font-size-4xl;
+
+// Font weight shortcuts
+$font-light:     $font-weight-light;
+$font-normal:    $font-weight-normal;
+$font-medium:    $font-weight-medium;
+$font-semibold:  $font-weight-semibold;
+$font-bold:      $font-weight-bold;
+$font-extrabold: $font-weight-extrabold;
