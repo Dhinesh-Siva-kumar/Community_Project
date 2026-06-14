@@ -329,7 +329,7 @@
             </div>
 
             <!-- Admin actions -->
-            <div class="jb-admin-actions" (click)="$event.stopPropagation()">
+            <!-- <div class="jb-admin-actions" (click)="$event.stopPropagation()">
               @if (confirmDeleteId() === job.id) {
                 <div class="jb-delete-confirm animate-scale-in">
                   <span class="jb-delete-confirm__text">Delete?</span>
@@ -352,19 +352,17 @@
                   } @else { <i class="bi bi-trash3"></i> }
                 </button>
               }
-            </div>
+            </div> -->
 
-            <!-- Admin quick-actions on card -->
+            <!-- Admin quick-actions on card (icon only) -->
             <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
               <button class="jb-card__qa-btn jb-card__qa-btn--edit"
                 (click)="openEditModal(job, $event)" title="Edit job" type="button">
                 <i class="bi bi-pencil"></i>
-                <span class="jb-card__qa-label">Edit</span>
               </button>
               <button class="jb-card__qa-btn jb-card__qa-btn--delete"
                 (click)="openDeleteConfirm(job, $event)" title="Delete job" type="button">
                 <i class="bi bi-trash3"></i>
-                <span class="jb-card__qa-label">Delete</span>
               </button>
             </div>
 
@@ -599,15 +597,6 @@
                 <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="shareJob(job, $event)">
                   <i class="bi bi-share"></i> Share
                 </button>
-                <!-- Admin: always can edit/delete -->
-                <div class="jbd-actions-bar__owner">
-                  <button class="jb-btn jb-btn--edit jb-btn--sm" (click)="openEditModal(job, $event)">
-                    <i class="bi bi-pencil"></i> Edit
-                  </button>
-                  <button class="jb-btn jb-btn--danger jb-btn--sm" (click)="openDeleteConfirm(job, $event)">
-                    <i class="bi bi-trash3"></i> Delete
-                  </button>
-                </div>
               </div>
 
             </div>

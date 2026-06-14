@@ -399,7 +399,7 @@
               </div>
             </div>
 
-            <!-- Owner / Admin quick-actions visible on the card itself -->
+            <!-- Owner / Admin quick-actions on the card header -->
             @if (canEditJob(job)) {
               <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
                 <button class="jb-card__qa-btn jb-card__qa-btn--edit"
@@ -407,14 +407,12 @@
                   title="Edit job"
                   type="button">
                   <i class="bi bi-pencil"></i>
-                  <span class="jb-card__qa-label">Edit</span>
                 </button>
                 <button class="jb-card__qa-btn jb-card__qa-btn--delete"
                   (click)="openDeleteConfirm(job, $event)"
                   title="Delete job"
                   type="button">
                   <i class="bi bi-trash3"></i>
-                  <span class="jb-card__qa-label">Delete</span>
                 </button>
               </div>
             }
@@ -817,18 +815,6 @@
                 <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="shareJob(job, $event)">
                   <i class="bi bi-share"></i> Share
                 </button>
-
-                <!-- Owner / Admin actions -->
-                @if (canEditJob(job)) {
-                  <div class="jbd-actions-bar__owner">
-                    <button class="jb-btn jb-btn--edit jb-btn--sm" (click)="openEditModal(job, $event)">
-                      <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button class="jb-btn jb-btn--danger jb-btn--sm" (click)="openDeleteConfirm(job, $event)">
-                      <i class="bi bi-trash3"></i> Delete
-                    </button>
-                  </div>
-                }
               </div>
 
             </div>

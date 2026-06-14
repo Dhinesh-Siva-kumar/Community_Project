@@ -1095,52 +1095,40 @@
 }
 
 
-// ── CARD QUICK-ACTIONS (Edit / Delete on the card header) ────────
+// ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
 
 .jb-card__quick-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   flex-shrink: 0;
 }
 
 .jb-card__qa-btn {
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 10px;
+  justify-content: center;
   border-radius: $radius-sm;
   border: 1.5px solid transparent;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
+  font-size: 0.8rem;
   cursor: pointer;
-  white-space: nowrap;
   @include transition-short(all);
-
-  .bi { font-size: 0.8rem; }
-
-  .jb-card__qa-label {
-    @include media-sm-max { display: none; }
-  }
 
   &--edit {
     background: rgba(14, 165, 233, 0.08);
     border-color: rgba(14, 165, 233, 0.28);
     color: #0284C7;
-    &:hover { background: rgba(14, 165, 233, 0.16); border-color: #0284C7; transform: translateY(-1px); }
+    &:hover { background: rgba(14, 165, 233, 0.18); border-color: #0284C7; transform: translateY(-1px); }
   }
 
   &--delete {
     background: rgba(220, 38, 38, 0.07);
     border-color: rgba(220, 38, 38, 0.25);
     color: $color-danger;
-    &:hover { background: rgba(220, 38, 38, 0.14); border-color: $color-danger; transform: translateY(-1px); }
+    &:hover { background: rgba(220, 38, 38, 0.15); border-color: $color-danger; transform: translateY(-1px); }
   }
-}
-
-@include media-sm-max {
-  .jb-card__qa-btn { width: 30px; height: 30px; padding: 0; justify-content: center; }
 }
 
 
