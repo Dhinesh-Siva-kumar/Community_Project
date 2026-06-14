@@ -36,8 +36,8 @@
           <div class="col-6 col-md-4 col-lg-3">
             <div class="card category-card border-0 shadow-sm h-100 text-center" role="button" (click)="loadBusinesses(cat)">
               <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
-                <div class="category-icon-wrapper mb-3">
-                  <i class="bi" [ngClass]="getCategoryIcon(cat.icon)"></i>
+                <div class="category-icon-wrapper mb-3" [style.background-color]="getIconStyle(cat.icon).bgColor">
+                  <i class="bi" [ngClass]="getCategoryIcon(cat.icon)" [style.color]="getIconStyle(cat.icon).iconColor"></i>
                 </div>
                 <h6 class="fw-bold mb-1">{{ cat.name }}</h6>
                 <span class="badge bg-primary bg-opacity-10 text-primary small">
@@ -283,35 +283,85 @@
 @if (showAddCategoryModal()) {
   <div class="modal-backdrop fade show"></div>
   <div class="modal fade show d-block" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0">
-          <h6 class="modal-title fw-bold">Add Category</h6>
-          <button type="button" class="btn-close" (click)="closeAddCategory()"></button>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 bg-gradient-primary">
+          <h6 class="modal-title fw-bold text-white">Add New Category</h6>
+          <button type="button" class="btn-close btn-close-white" (click)="closeAddCategory()"></button>
         </div>
         <div class="modal-body">
           <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
-            <div class="mb-3">
-              <label class="form-label small fw-semibold">Category Name</label>
-              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Restaurants" />
-              @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
-                <small class="text-danger">Name is required (min 2 chars)</small>
-              }
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-semibold">Icon (Bootstrap Icons class)</label>
-              <input type="text" class="form-control" formControlName="icon" placeholder="e.g. bi-shop" />
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-              <button type="button" class="btn btn-light btn-sm" (click)="closeAddCategory()">Cancel</button>
-              <button type="submit" class="btn btn-primary btn-sm" [disabled]="categoryForm.invalid || submitting()">
-                @if (submitting()) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>
+            <!-- Category Name Input -->
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
+                  <i class="bi bi-type"></i> Category Name *
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="name" 
+                  placeholder="e.g. Restaurants, Cafes, Electronics, etc." />
+                @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                  <small class="text-danger d-flex align-items-center gap-1 mt-2">
+                    <i class="bi bi-exclamation-circle"></i> Name is required (min 2 chars)
+                  </small>
                 }
-                Create
-              </button>
+              </div>
+
+              <!-- Icon Selection -->
+              <div class="col-12">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
+                  <i class="bi bi-palette"></i> Choose an Icon *
+                </label>
+                <div class="icon-grid mb-3">
+                  @for (item of categoryIcons; track item.icon) {
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [class.active]="categoryForm.get('icon')?.value === item.icon"
+                      [style.--icon-bg]="item.bgColor"
+                      [style.--icon-color]="item.iconColor"
+                      (click)="categoryForm.patchValue({ icon: item.icon })"
+                      [title]="item.label">
+                      <i class="bi" [ngClass]="item.icon"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Custom Icon Input -->
+              <div class="col-12">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
+                  <i class="bi bi-info-circle"></i> Custom Icon (optional)
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="icon" 
+                  placeholder="e.g. bi-heart, bi-star, bi-trophy (Bootstrap Icons class)" />
+                <small class="text-muted d-block mt-1">Leave empty to use default selected icon above</small>
+              </div>
             </div>
           </form>
+        </div>
+        <div class="modal-footer border-0 pt-3">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary btn-sm" 
+            (click)="closeAddCategory()">
+            Cancel
+          </button>
+          <button 
+            type="button"
+            class="btn btn-primary btn-sm" 
+            (click)="submitCategory()"
+            [disabled]="categoryForm.invalid || submitting()">
+            @if (submitting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            <i class="bi bi-check-circle me-1"></i> Create Category
+          </button>
         </div>
       </div>
     </div>

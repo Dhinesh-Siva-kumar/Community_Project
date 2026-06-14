@@ -30,6 +30,10 @@ export const ListBusinessQueryDto = z.object({
   categoryId: z.string().uuid().optional(),
   pincode: z.string().optional(),
   search: z.string().optional(),
+  country: z.string().optional(),
+  openingHours: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
 });
 
 export type CreateBusinessDtoType = z.infer<typeof CreateBusinessDto>;

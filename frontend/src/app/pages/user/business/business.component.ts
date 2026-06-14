@@ -56,6 +56,20 @@ export class UserBusinessComponent implements OnInit {
   // Image upload
   selectedImages = signal<File[]>([]);
 
+  // Icon configuration for category modal
+  categoryIcons = [
+    { icon: 'bi-shop', bgColor: '#fff4e6', iconColor: '#ff9500', label: 'Retail' },
+    { icon: 'bi-cup', bgColor: '#fff3cd', iconColor: '#ff8c00', label: 'Restaurants' },
+    { icon: 'bi-hospital', bgColor: '#ffe5e5', iconColor: '#e74c3c', label: 'Healthcare' },
+    { icon: 'bi-tools', bgColor: '#e0f7f4', iconColor: '#17a2b8', label: 'Services' },
+    { icon: 'bi-laptop', bgColor: '#f3e5f5', iconColor: '#7b3ff2', label: 'Technology' },
+    { icon: 'bi-palette', bgColor: '#fce4ec', iconColor: '#e91e63', label: 'Design' },
+    { icon: 'bi-book', bgColor: '#e3f2fd', iconColor: '#2196f3', label: 'Education' },
+    { icon: 'bi-briefcase', bgColor: '#e8eaf6', iconColor: '#3f51b5', label: 'Business' },
+    { icon: 'bi-house', bgColor: '#e8f5e9', iconColor: '#4caf50', label: 'Real Estate' },
+    { icon: 'bi-car-front', bgColor: '#ecf0f1', iconColor: '#34495e', label: 'Automotive' },
+  ];
+
   // Forms
   businessForm!: FormGroup;
   categoryForm!: FormGroup;
@@ -110,7 +124,10 @@ export class UserBusinessComponent implements OnInit {
     this.currentView.set('list');
     this.loading.set(true);
 
-    this.businessService.getBusinesses(category.id, this.userPincode()).subscribe({
+    this.businessService.getBusinesses({
+      categoryId: category.id,
+      pincode: this.userPincode(),
+    }).subscribe({
       next: (response: PaginatedResponse<Business>) => {
         this.businesses.set(response.data);
         this.totalPages.set(response.totalPages);
@@ -259,6 +276,12 @@ export class UserBusinessComponent implements OnInit {
 
   getCategoryIcon(icon?: string): string {
     return icon || 'bi-shop';
+  }
+
+  getIconStyle(icon?: string): { bgColor: string; iconColor: string } {
+    const iconName = icon || 'bi-shop';
+    const found = this.categoryIcons.find(item => item.icon === iconName);
+    return found ? { bgColor: found.bgColor, iconColor: found.iconColor } : { bgColor: '#f0f0f0', iconColor: '#333' };
   }
 
   getDirectionsUrl(): string {

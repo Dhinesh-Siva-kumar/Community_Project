@@ -52,7 +52,7 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
 }
 
 export async function findAll(params: ListBusinessQueryDtoType) {
-  const { categoryId, pincode, page, limit, search } = params;
+  const { categoryId, pincode, page, limit, search, country, openingHours, dateFrom, dateTo } = params;
   const offset = (page - 1) * limit;
 
   const query = db('businesses as b')
@@ -68,6 +68,23 @@ export async function findAll(params: ListBusinessQueryDtoType) {
   if (search) {
     query.andWhere(function () { this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`); });
     countQuery.andWhere(function () { this.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`); });
+  }
+  if (country) {
+    query.andWhereILike('b.country', `%${country}%`);
+    countQuery.andWhereILike('country', `%${country}%`);
+  }
+  if (openingHours) {
+    query.andWhereILike('b.opening_hours', `%${openingHours}%`);
+    countQuery.andWhereILike('opening_hours', `%${openingHours}%`);
+  }
+  if (dateFrom) {
+    query.andWhere('b.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('b.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
   }
 
   const [businesses, [{ total }]] = await Promise.all([

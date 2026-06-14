@@ -4,6 +4,376 @@
 // Admin Business Styles
 // ===========================
 
+// ── Filter Bar (cf-bar) ────────────────────────────────────────────
+.cf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 1.1rem;
+  padding: 1.2rem 1.5rem;
+  background: $white;
+  border: 1.5px solid $color-stone-200;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+// ── Filter groups ─────────────────────────────────────────────
+.cf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+
+  &--search  { flex: 1 1 220px; }
+  &--select  { flex: 0 1 160px; }
+  &--date    { flex: 0 1 148px; }
+  &--actions { flex: 0 0 auto;  }
+}
+
+.cf-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-stone-400;
+  white-space: nowrap;
+
+  &--ghost {
+    color: transparent;
+    user-select: none;
+    pointer-events: none;
+  }
+}
+
+// ── Input wrapper (icon + control) ───────────────────────────
+.cf-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cf-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: $muted;
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1;
+}
+
+// ── Shared input base ─────────────────────────────────────────
+.cf-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 36px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: $dark;
+  background: $bg-neutral;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &::placeholder { color: $muted; }
+
+  &:focus {
+    border-color: $primary;
+    background: $white;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
+  }
+}
+
+// ── Filter bar SearchableSelect overrides ─────────────────────
+// Scoped to .cf-group so only the filter-bar dropdowns are targeted.
+.cf-group {
+  ::ng-deep app-searchable-select {
+    display: block;
+
+    .ss-host {
+      display: block;
+      position: relative;
+    }
+
+    // Trigger — matches .cf-input height and font
+    .ss-trigger {
+      width: 100%;
+      height: 42px;
+      padding: 0 34px 0 14px;
+      border: 1.5px solid $border !important;
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      box-shadow: none !important;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+      &:focus,
+      &:focus-visible {
+        border-color: $primary !important;
+        background: $white;
+        box-shadow: 0 0 0 3px rgba($primary, 0.12) !important;
+        outline: none;
+      }
+
+      &.ss-placeholder .ss-trigger-text {
+        color: $muted;
+      }
+    }
+
+    .ss-trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13.5px;
+      color: $dark;
+    }
+
+    .ss-caret {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: $muted;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .ss-caret-open {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    // Dropdown panel
+    .ss-panel {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      background: $white;
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    // Search bar
+    .ss-search-wrap {
+      position: relative;
+      padding: 8px;
+      border-bottom: 1px solid $color-stone-200;
+      display: flex;
+      align-items: center;
+    }
+
+    .ss-search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: $muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ss-search {
+      width: 100%;
+      height: 34px;
+      padding: 0 28px 0 32px;
+      border: 1.5px solid $border;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder { color: $muted; }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: $white;
+      }
+    }
+
+    .ss-clear-search {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $muted;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+
+      &:hover { color: $dark; }
+    }
+
+    // Options list
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
+    }
+
+    .ss-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      list-style: none;
+
+      &:hover {
+        background: $amber-50;
+        color: $color-primary-darker;
+      }
+
+      &.ss-option-selected {
+        background: rgba($primary, 0.1);
+        color: $color-primary-darker;
+        font-weight: 600;
+      }
+    }
+
+    .ss-option-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ss-check {
+      color: $primary;
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .ss-no-results {
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 12px;
+      color: $muted;
+      list-style: none;
+    }
+  }
+}
+
+// ── Action buttons ────────────────────────────────────────────
+.cf-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-btn-search {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: $gradient-primary;
+  color: $color-on-primary;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba($primary, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba($primary, 0.42);
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  i { font-size: 12px; }
+}
+
+.cf-btn-clear {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  background: $white;
+  color: $color-stone-500;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: rgba($danger, 0.5);
+    color: $danger;
+    background: rgba($danger, 0.04);
+  }
+
+  i { font-size: 12px; }
+}
+
+// ── Results summary row ───────────────────────────────────────
+.cf-results-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.cf-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: rgba($primary, 0.1);
+  color: $color-primary-darker;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba($primary, 0.22);
+
+  i { font-size: 11px; }
+}
+
 // Stat Cards
 .stat-card {
   border-radius: 14px;
@@ -53,7 +423,7 @@
     width: 60px;
     height: 60px;
     border-radius: 16px;
-    background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
+    // background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -183,6 +553,58 @@
   height: 200px;
   background-color: $slate-100;
   border: 2px dashed $gray-300;
+}
+
+// ===========================
+// Icon Grid for Category Modal
+// ===========================
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--icon-bg, #f0f0f0);
+  color: var(--icon-color, $dark);
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  &.active {
+    border-color: var(--icon-color, $primary);
+    box-shadow: 0 0 0 3px var(--icon-bg, rgba($primary, 0.2)), 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.form-control-lg {
+  height: calc(1.5em + 1rem + 2px);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+.rounded-2 {
+  border-radius: 12px;
 }
 
 // Preview Thumbnails

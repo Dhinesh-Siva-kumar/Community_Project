@@ -251,7 +251,7 @@ export class UserProfileComponent implements OnInit {
     this.loadingBusinesses.set(true);
     // Load all businesses and filter by userId client-side
     // Alternatively, the API might support a user filter
-    this.businessService.getBusinesses('', '').subscribe({
+    this.businessService.getBusinesses({}).subscribe({
       next: (response) => {
         const userId = this.user()?.id;
         this.myBusinesses.set(response.data.filter((b) => b.userId === userId));

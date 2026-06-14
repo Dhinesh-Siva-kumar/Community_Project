@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Business, BusinessCategory, PaginatedResponse } from '../../../core/models';
+import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
@@ -13,7 +13,7 @@ type ViewState = 'categories' | 'list' | 'detail';
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -22,6 +22,9 @@ export class AdminBusinessComponent implements OnInit {
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+
+  // ── Countries for filter dropdown ──────────────────────────
+  filterCountryOptions: SelectOption[] = [];
 
   // View state
   currentView = signal<ViewState>('categories');
@@ -57,6 +60,29 @@ export class AdminBusinessComponent implements OnInit {
   // Image upload
   selectedImages = signal<File[]>([]);
 
+  // Icon configuration for category modal
+  categoryIcons = [
+    { icon: 'bi-shop', bgColor: '#fff4e6', iconColor: '#ff9500', label: 'Retail' },
+    { icon: 'bi-cup', bgColor: '#fff3cd', iconColor: '#ff8c00', label: 'Restaurants' },
+    { icon: 'bi-hospital', bgColor: '#ffe5e5', iconColor: '#e74c3c', label: 'Healthcare' },
+    { icon: 'bi-tools', bgColor: '#e0f7f4', iconColor: '#17a2b8', label: 'Services' },
+    { icon: 'bi-laptop', bgColor: '#f3e5f5', iconColor: '#7b3ff2', label: 'Technology' },
+    { icon: 'bi-palette', bgColor: '#fce4ec', iconColor: '#e91e63', label: 'Design' },
+    { icon: 'bi-book', bgColor: '#e3f2fd', iconColor: '#2196f3', label: 'Education' },
+    { icon: 'bi-briefcase', bgColor: '#e8eaf6', iconColor: '#3f51b5', label: 'Business' },
+    { icon: 'bi-house', bgColor: '#e8f5e9', iconColor: '#4caf50', label: 'Real Estate' },
+    { icon: 'bi-car-front', bgColor: '#ecf0f1', iconColor: '#34495e', label: 'Automotive' },
+  ];
+
+  // Advanced filters - match admin-community pattern
+  filterSearch = signal('');
+  filterCountry = signal<string | null>(null);
+  filterOpeningHours = signal<string | null>(null);
+
+  hasActiveFilters = computed(() =>
+    !!(this.filterSearch() || this.filterCountry() || this.filterOpeningHours())
+  );
+
   // Forms
   businessForm!: FormGroup;
   categoryForm!: FormGroup;
@@ -71,7 +97,20 @@ export class AdminBusinessComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForms();
+    this.loadCountries();
     this.loadCategories();
+  }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.filterCountryOptions = res.data.map((c: Country) => ({
+          value: c.name,
+          label: c.name,
+        }));
+      },
+      error: () => this.toast.error('Failed to load countries'),
+    });
   }
 
   private initForms(): void {
@@ -79,6 +118,7 @@ export class AdminBusinessComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: [''],
       categoryId: ['', Validators.required],
+      country: [''],
       address: [''],
       pincode: [''],
       phone: [''],
@@ -109,12 +149,21 @@ export class AdminBusinessComponent implements OnInit {
     });
   }
 
-  loadBusinesses(category: BusinessCategory): void {
+  loadBusinesses(category: BusinessCategory, resetPage = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
+    if (resetPage) this.currentPage.set(1);
     this.loading.set(true);
 
-    this.businessService.getBusinesses(category.id).subscribe({
+    const params: Record<string, any> = {
+      categoryId: category.id,
+      page: this.currentPage(),
+    };
+    if (this.filterSearch()) params['search'] = this.filterSearch();
+    if (this.filterCountry()) params['country'] = this.filterCountry();
+    if (this.filterOpeningHours()) params['openingHours'] = this.filterOpeningHours();
+
+    this.businessService.getBusinesses(params).subscribe({
       next: (response: PaginatedResponse<Business>) => {
         this.businesses.set(response.data);
         this.totalPages.set(response.totalPages);
@@ -134,12 +183,28 @@ export class AdminBusinessComponent implements OnInit {
     this.currentView.set('detail');
   }
 
+  applyFilters(): void {
+    const cat = this.selectedCategory();
+    if (cat) this.loadBusinesses(cat, true);
+  }
+
+  clearFilters(): void {
+    this.filterSearch.set('');
+    this.filterCountry.set(null);
+    this.filterOpeningHours.set(null);
+    const cat = this.selectedCategory();
+    if (cat) this.loadBusinesses(cat, true);
+  }
+
   // Navigation
   goToCategories(): void {
     this.currentView.set('categories');
     this.selectedCategory.set(null);
     this.businesses.set([]);
     this.currentPage.set(1);
+    this.filterSearch.set('');
+    this.filterCountry.set(null);
+    this.filterOpeningHours.set(null);
   }
 
   goToList(): void {
@@ -257,6 +322,7 @@ export class AdminBusinessComponent implements OnInit {
     if (cat) this.loadBusinesses(cat);
   }
 
+
   getPages(): number[] {
     const total = this.totalPages();
     const current = this.currentPage();
@@ -271,6 +337,12 @@ export class AdminBusinessComponent implements OnInit {
 
   getCategoryIcon(icon?: string): string {
     return icon || 'bi-shop';
+  }
+
+  getIconStyle(icon?: string): { bgColor: string; iconColor: string } {
+    const iconName = icon || 'bi-shop';
+    const found = this.categoryIcons.find(item => item.icon === iconName);
+    return found ? { bgColor: found.bgColor, iconColor: found.iconColor } : { bgColor: '#f0f0f0', iconColor: '#333' };
   }
 
   getDirectionsUrl(): string {
