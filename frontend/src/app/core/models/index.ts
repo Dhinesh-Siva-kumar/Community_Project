@@ -23,6 +23,18 @@ export interface Country {
   flag_emoji: string;
 }
 
+export interface MasterState {
+  id: number;
+  name: string;
+  countryId: number;
+}
+
+export interface MasterCity {
+  id: number;
+  name: string;
+  stateId: number;
+}
+
 export interface interests {
   interest_id: number;
   interest_name: string;
@@ -205,6 +217,7 @@ export interface Event {
 export interface Job {
   id: string;
   title: string;
+  // ── Legacy fields (kept for backward compatibility) ──────────
   specification?: string;
   description?: string;
   images: string[];
@@ -220,6 +233,52 @@ export interface Job {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+
+  // ── Company ──────────────────────────────────────────────────
+  companyName?: string;
+  companyLogo?: string;
+  companyWebsite?: string;
+
+  // ── Location ─────────────────────────────────────────────────
+  city?: string;
+  state?: string;
+  fullAddress?: string;
+  isRemote?: boolean;
+  workMode?: 'Remote' | 'Hybrid' | 'On-site';
+
+  // ── Role details ─────────────────────────────────────────────
+  expMin?: number;
+  expMax?: number;
+  education?: string;
+  openings?: number;
+  shiftType?: string;
+
+  // ── Structured salary ─────────────────────────────────────────
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryType?: string;
+  salaryCurrency?: string;
+  salaryHidden?: boolean;
+
+  // ── Schedule ─────────────────────────────────────────────────
+  workStartTime?: string;
+  workEndTime?: string;
+  workingDays?: string[];
+
+  // ── Structured contact ────────────────────────────────────────
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  applicationUrl?: string;
+
+  // ── Skills & unified content ───────────────────────────────────
+  skills?: string[];
+  // Legacy fields (kept for backward compatibility on old records)
+  responsibilities?: string;
+  qualifications?: string;
+  requirements?: string;
+  benefits?: string;
+  // Note: description is also declared in the legacy block above — unified field
 }
 
 export interface Notification {
