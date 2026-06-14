@@ -1,0 +1,458 @@
+<div class="ud-backdrop" (click)="close.emit()"></div>
+
+<aside class="ud-drawer" role="dialog" aria-label="User details">
+
+  <!-- ══════════ SKELETON ══════════ -->
+  @if (loading()) {
+    <div class="ud-skeleton">
+      <div class="ud-sk__cover"></div>
+      <div class="ud-sk__body">
+        <div class="ud-sk__avatar"></div>
+        <div class="ud-sk__line ud-sk__line--xl"></div>
+        <div class="ud-sk__line ud-sk__line--md"></div>
+        <div class="ud-sk__pills">
+          <div class="ud-sk__pill"></div>
+          <div class="ud-sk__pill"></div>
+        </div>
+      </div>
+      <div class="ud-sk__tabs">
+        @for (_ of [1,2,3]; track _) { <div class="ud-sk__tab"></div> }
+      </div>
+      <div class="ud-sk__content">
+        @for (_ of [1,2,3,4]; track _) {
+          <div class="ud-sk__card"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ══════════ LOADED ══════════ -->
+  @if (!loading() && user(); as u) {
+
+    <!-- Cover + Close -->
+    <div class="ud-cover">
+      <div class="ud-cover__gradient"></div>
+      <button class="ud-close" (click)="close.emit()" aria-label="Close drawer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Profile identity block -->
+    <div class="ud-identity">
+      <div class="ud-identity__avatar-wrap">
+        @if (u.avatar) {
+          <img [src]="u.avatar | imageUrl" class="ud-avatar" alt="{{ u.displayName }}" />
+        } @else {
+          <div class="ud-avatar ud-avatar--initials">{{ getInitials(u) }}</div>
+        }
+        <!-- Online indicator (active users) -->
+        @if (u.isActive && !u.isBlocked) {
+          <span class="ud-online-dot" title="Active account"></span>
+        }
+      </div>
+
+      <div class="ud-identity__meta">
+        <h4 class="ud-identity__name">{{ u.displayName }}</h4>
+        <p class="ud-identity__handle">&#64;{{ u.userName }}</p>
+        <div class="ud-identity__badges">
+          <span class="ud-pill"
+            [class.ud-pill--admin]="u.role === 'ADMIN'"
+            [class.ud-pill--user]="u.role === 'USER'">
+            <i class="bi" [class.bi-shield-fill-check]="u.role === 'ADMIN'" [class.bi-person-fill]="u.role === 'USER'"></i>
+            {{ u.role }}
+          </span>
+          <span class="ud-pill"
+            [class.ud-pill--active]="!u.isBlocked && u.isActive"
+            [class.ud-pill--blocked]="u.isBlocked"
+            [class.ud-pill--inactive]="!u.isBlocked && !u.isActive">
+            <i class="bi"
+              [class.bi-check-circle-fill]="!u.isBlocked && u.isActive"
+              [class.bi-slash-circle-fill]="u.isBlocked"
+              [class.bi-dash-circle-fill]="!u.isBlocked && !u.isActive">
+            </i>
+            {{ getStatusLabel(u) }}
+          </span>
+          @if (u.isTrusted) {
+            <span class="ud-pill ud-pill--trusted">
+              <i class="bi bi-star-fill"></i> Trusted
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile completion bar -->
+    <div class="ud-completion">
+      <div class="ud-completion__header">
+        <span class="ud-completion__label">Profile Completion</span>
+        <span class="ud-completion__pct"
+          [class.ud-completion__pct--low]="u.profileCompletion < 40"
+          [class.ud-completion__pct--mid]="u.profileCompletion >= 40 && u.profileCompletion < 80"
+          [class.ud-completion__pct--high]="u.profileCompletion >= 80">
+          {{ u.profileCompletion }}%
+        </span>
+      </div>
+      <div class="ud-completion__track">
+        <div class="ud-completion__fill"
+          [style.width.%]="u.profileCompletion"
+          [class.ud-completion__fill--low]="u.profileCompletion < 40"
+          [class.ud-completion__fill--mid]="u.profileCompletion >= 40 && u.profileCompletion < 80"
+          [class.ud-completion__fill--high]="u.profileCompletion >= 80">
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="ud-tabs" role="tablist">
+      <button class="ud-tab" role="tab"
+        [class.ud-tab--active]="activeTab() === 'overview'"
+        (click)="activeTab.set('overview')">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Overview</span>
+      </button>
+      <button class="ud-tab" role="tab"
+        [class.ud-tab--active]="activeTab() === 'activity'"
+        (click)="activeTab.set('activity')">
+        <i class="bi bi-graph-up-arrow"></i>
+        <span>Activity</span>
+      </button>
+      <button class="ud-tab" role="tab"
+        [class.ud-tab--active]="activeTab() === 'actions'"
+        (click)="activeTab.set('actions')">
+        <i class="bi bi-sliders"></i>
+        <span>Actions</span>
+      </button>
+    </div>
+
+    <!-- Tab content -->
+    <div class="ud-body">
+
+      <!-- ──────────── OVERVIEW ──────────── -->
+      @if (activeTab() === 'overview') {
+        <div class="ud-section-label">Contact Information</div>
+
+        <div class="ud-info-grid">
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#6366f1;--bg:#eef2ff">
+              <i class="bi bi-envelope-fill"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Email</span>
+              <span class="ud-info-tile__val">{{ u.email || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#0ea5e9;--bg:#e0f2fe">
+              <i class="bi bi-telephone-fill"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Phone</span>
+              <span class="ud-info-tile__val">{{ u.phoneNo || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#f59e0b;--bg:#fffbeb">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Location</span>
+              <span class="ud-info-tile__val">
+                {{ u.location ? (u.location + ', ' + u.country) : (u.country || '—') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#8b5cf6;--bg:#f3e8ff">
+              <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Professional Category</span>
+              <span class="ud-info-tile__val">{{ u.professionalCategory || '—' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ud-section-label" style="margin-top:20px">Account Information</div>
+
+        <div class="ud-info-grid">
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#22c55e;--bg:#dcfce7">
+              <i class="bi bi-calendar-check-fill"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Member Since</span>
+              <span class="ud-info-tile__val">{{ u.createdAt | date:'d MMMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#f97316;--bg:#fff7ed">
+              <i class="bi bi-arrow-repeat"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">Last Updated</span>
+              <span class="ud-info-tile__val">{{ u.updatedAt | date:'d MMM yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="ud-info-tile">
+            <div class="ud-info-tile__icon" style="--c:#64748b;--bg:#f1f5f9">
+              <i class="bi bi-fingerprint"></i>
+            </div>
+            <div class="ud-info-tile__content">
+              <span class="ud-info-tile__key">User ID</span>
+              <span class="ud-info-tile__val ud-info-tile__val--mono">{{ u.id | slice:0:18 }}…</span>
+            </div>
+          </div>
+        </div>
+
+        @if (u.bio) {
+          <div class="ud-bio-card">
+            <i class="bi bi-quote ud-bio-card__icon"></i>
+            <p class="ud-bio-card__text">{{ u.bio }}</p>
+          </div>
+        }
+
+        @if (u.interests && u.interests.length > 0) {
+          <div class="ud-section-label" style="margin-top:20px">Interests</div>
+          <div class="ud-chips">
+            @for (tag of u.interests; track tag) {
+              <span class="ud-chip">{{ tag }}</span>
+            }
+          </div>
+        }
+      }
+
+      <!-- ──────────── ACTIVITY ──────────── -->
+      @if (activeTab() === 'activity') {
+        <div class="ud-stat-row">
+          <div class="ud-stat-card">
+            <div class="ud-stat-card__icon" style="--c:#6366f1;--bg:#eef2ff">
+              <i class="bi bi-file-richtext-fill"></i>
+            </div>
+            <div class="ud-stat-card__val">{{ u.activity.posts }}</div>
+            <div class="ud-stat-card__lbl">Posts Created</div>
+          </div>
+          <div class="ud-stat-card">
+            <div class="ud-stat-card__icon" style="--c:#0ea5e9;--bg:#e0f2fe">
+              <i class="bi bi-chat-dots-fill"></i>
+            </div>
+            <div class="ud-stat-card__val">{{ u.activity.comments }}</div>
+            <div class="ud-stat-card__lbl">Comments</div>
+          </div>
+          <div class="ud-stat-card">
+            <div class="ud-stat-card__icon" style="--c:#22c55e;--bg:#dcfce7">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="ud-stat-card__val">{{ u.activity.communities }}</div>
+            <div class="ud-stat-card__lbl">Communities</div>
+          </div>
+        </div>
+
+        <!-- Engagement summary -->
+        <div class="ud-engagement">
+          <div class="ud-engagement__header">
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>Engagement Summary</span>
+          </div>
+          <div class="ud-engagement__list">
+            <div class="ud-engagement__row">
+              <span class="ud-engagement__key">Total contributions</span>
+              <span class="ud-engagement__val">{{ u.activity.posts + u.activity.comments }}</span>
+            </div>
+            <div class="ud-engagement__row">
+              <span class="ud-engagement__key">Communities joined</span>
+              <span class="ud-engagement__val">{{ u.activity.communities }}</span>
+            </div>
+            <div class="ud-engagement__row">
+              <span class="ud-engagement__key">Account status</span>
+              <span class="ud-engagement__val">
+                <span class="ud-pill ud-pill--sm"
+                  [class.ud-pill--active]="!u.isBlocked && u.isActive"
+                  [class.ud-pill--blocked]="u.isBlocked"
+                  [class.ud-pill--inactive]="!u.isBlocked && !u.isActive">
+                  {{ getStatusLabel(u) }}
+                </span>
+              </span>
+            </div>
+            <div class="ud-engagement__row">
+              <span class="ud-engagement__key">Trust level</span>
+              <span class="ud-engagement__val">
+                @if (u.isTrusted) {
+                  <span class="ud-pill ud-pill--sm ud-pill--trusted">
+                    <i class="bi bi-star-fill"></i> Trusted
+                  </span>
+                } @else {
+                  <span class="ud-pill ud-pill--sm ud-pill--inactive">Standard</span>
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ──────────── ACTIONS ──────────── -->
+      @if (activeTab() === 'actions') {
+
+        <!-- Trust / Untrust -->
+        <div class="ud-action-card"
+          [class.ud-action-card--active]="u.isTrusted">
+          <div class="ud-action-card__left">
+            <div class="ud-action-card__icon" style="--c:#f59e0b;--bg:#fffbeb">
+              <i class="bi bi-star-fill"></i>
+            </div>
+            <div>
+              <p class="ud-action-card__title">Trust Status</p>
+              <p class="ud-action-card__desc">
+                {{ u.isTrusted ? 'User is marked as trusted — highlighted to others' : 'Mark this user as trusted on the platform' }}
+              </p>
+            </div>
+          </div>
+          <button class="ud-btn"
+            [class.ud-btn--warning]="!u.isTrusted"
+            [class.ud-btn--ghost]="u.isTrusted"
+            [disabled]="working() === 'trust'"
+            (click)="toggleTrust()">
+            @if (working() === 'trust') {
+              <span class="spinner-border spinner-border-sm"></span>
+            } @else {
+              <i class="bi" [class.bi-star-fill]="!u.isTrusted" [class.bi-star]="u.isTrusted"></i>
+              {{ u.isTrusted ? 'Remove Trust' : 'Mark Trusted' }}
+            }
+          </button>
+        </div>
+
+        <!-- Block / Unblock -->
+        <div class="ud-action-card"
+          [class.ud-action-card--danger]="u.isBlocked">
+          <div class="ud-action-card__left">
+            <div class="ud-action-card__icon"
+              [style]="u.isBlocked ? '--c:#dc2626;--bg:#fef2f2' : '--c:#64748b;--bg:#f1f5f9'">
+              <i class="bi" [class.bi-lock-fill]="!u.isBlocked" [class.bi-unlock-fill]="u.isBlocked"></i>
+            </div>
+            <div>
+              <p class="ud-action-card__title">
+                {{ u.isBlocked ? 'Account Blocked' : 'Account Active' }}
+              </p>
+              <p class="ud-action-card__desc">
+                {{ u.isBlocked ? 'This user cannot log in or post content' : 'User has full access to the platform' }}
+              </p>
+            </div>
+          </div>
+          <button class="ud-btn"
+            [class.ud-btn--success]="u.isBlocked"
+            [class.ud-btn--danger]="!u.isBlocked"
+            [disabled]="working() === 'block'"
+            (click)="toggleBlock()">
+            @if (working() === 'block') {
+              <span class="spinner-border spinner-border-sm"></span>
+            } @else {
+              <i class="bi" [class.bi-unlock-fill]="u.isBlocked" [class.bi-lock-fill]="!u.isBlocked"></i>
+              {{ u.isBlocked ? 'Unblock User' : 'Block User' }}
+            }
+          </button>
+        </div>
+
+        <!-- Change Role -->
+        <div class="ud-action-card">
+          <div class="ud-action-card__left">
+            <div class="ud-action-card__icon" style="--c:#6366f1;--bg:#eef2ff">
+              <i class="bi bi-person-gear"></i>
+            </div>
+            <div>
+              <p class="ud-action-card__title">Change Role</p>
+              <p class="ud-action-card__desc">
+                Current role: <strong>{{ u.role }}</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ud-action-card__row">
+            <select class="ud-action-select"
+              [(ngModel)]="newRole" [ngModelOptions]="{standalone: true}">
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <button class="ud-btn ud-btn--primary"
+              [disabled]="newRole() === u.role || working() === 'role'"
+              (click)="saveRole()">
+              @if (working() === 'role') {
+                <span class="spinner-border spinner-border-sm"></span>
+              } @else {
+                <i class="bi bi-check-lg"></i> Save
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Reset Password -->
+        <div class="ud-action-card">
+          <div class="ud-action-card__left">
+            <div class="ud-action-card__icon" style="--c:#0ea5e9;--bg:#e0f2fe">
+              <i class="bi bi-key-fill"></i>
+            </div>
+            <div>
+              <p class="ud-action-card__title">Reset Password</p>
+              <p class="ud-action-card__desc">Set a new password for this user</p>
+            </div>
+          </div>
+
+          @if (!showResetPw()) {
+            <button class="ud-btn ud-btn--ghost" (click)="showResetPw.set(true)">
+              <i class="bi bi-key"></i> Reset
+            </button>
+          } @else {
+            <div class="ud-pw-row">
+              <input type="password" class="ud-action-input"
+                placeholder="New password (min 8 chars)"
+                [(ngModel)]="newPassword" [ngModelOptions]="{standalone: true}" />
+              <div class="ud-pw-btns">
+                <button class="ud-btn ud-btn--primary"
+                  [disabled]="newPassword().length < 8 || working() === 'reset'"
+                  (click)="resetPassword()">
+                  @if (working() === 'reset') {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    Set
+                  }
+                </button>
+                <button class="ud-btn ud-btn--ghost" (click)="showResetPw.set(false)">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Delete -->
+        <div class="ud-action-card ud-action-card--delete">
+          <div class="ud-action-card__left">
+            <div class="ud-action-card__icon" style="--c:#dc2626;--bg:#fef2f2">
+              <i class="bi bi-person-x-fill"></i>
+            </div>
+            <div>
+              <p class="ud-action-card__title ud-action-card__title--danger">
+                Deactivate Account
+              </p>
+              <p class="ud-action-card__desc">
+                Disables login and hides all content. Reversible.
+              </p>
+            </div>
+          </div>
+          <button class="ud-btn ud-btn--danger-outline"
+            [disabled]="working() === 'delete'"
+            (click)="deleteUser()">
+            @if (working() === 'delete') {
+              <span class="spinner-border spinner-border-sm"></span>
+            } @else {
+              <i class="bi bi-trash3-fill"></i> Deactivate
+            }
+          </button>
+        </div>
+
+      }
+    </div>
+  }
+</aside>

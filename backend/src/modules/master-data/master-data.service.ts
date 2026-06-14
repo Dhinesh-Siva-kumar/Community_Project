@@ -1,10 +1,5 @@
 import db from '../../config/db';
 
-/**
- * Derive a flag emoji from a 2-letter ISO 3166-1 alpha-2 code.
- * Regional Indicator Symbol Letter A = U+1F1E6 = 127462.
- * Each subsequent letter is +1, so charCode('A') = 65 → offset = 127462 - 65 = 127397.
- */
 function isoToFlagEmoji(iso2: string): string {
   return [...iso2.toUpperCase()]
     .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
@@ -25,13 +20,56 @@ export async function getCountries() {
         name: r['name'],
         iso2: r['iso2'],
         dial_code: r['dial_code'],
-        // Fallback: if flag_emoji is NULL in the DB, derive it from the iso2 code.
         flag_emoji: (r['flag_emoji'] as string | null) ?? isoToFlagEmoji(r['iso2'] as string),
       })),
     };
   } catch (err) {
     console.error('[MasterData] Error fetching countries:', err);
     throw new Error('Error fetching country data');
+  }
+}
+
+export async function getStates(countryId: number) {
+  try {
+    const rows = await db('master_states')
+      .where({ country_id: countryId })
+      .orderBy('name', 'asc')
+      .select('id', 'name', 'country_id');
+
+    return {
+      success: true,
+      count: rows.length,
+      data: (rows as Array<Record<string, unknown>>).map((r) => ({
+        id: r['id'],
+        name: r['name'],
+        countryId: r['country_id'],
+      })),
+    };
+  } catch (err) {
+    console.error('[MasterData] Error fetching states:', err);
+    throw new Error('Error fetching state data');
+  }
+}
+
+export async function getCities(stateId: number) {
+  try {
+    const rows = await db('master_cities')
+      .where({ state_id: stateId })
+      .orderBy('name', 'asc')
+      .select('id', 'name', 'state_id');
+
+    return {
+      success: true,
+      count: rows.length,
+      data: (rows as Array<Record<string, unknown>>).map((r) => ({
+        id: r['id'],
+        name: r['name'],
+        stateId: r['state_id'],
+      })),
+    };
+  } catch (err) {
+    console.error('[MasterData] Error fetching cities:', err);
+    throw new Error('Error fetching city data');
   }
 }
 

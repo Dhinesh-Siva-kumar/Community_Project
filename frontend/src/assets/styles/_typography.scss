@@ -174,8 +174,25 @@ $line-height-4xl:           1.11;
 }
 
 // ============================================================
-// FONT SIZE SHORTCUT MIXINS
+// SHORT ALIASES (for concise use in component SCSS)
 // ============================================================
+
+$font-xs:        $font-size-xs;
+$font-sm:        $font-size-sm;
+$font-md:        $font-size-md;
+$font-base:      $font-size-md;
+$font-lg:        $font-size-lg;
+$font-xl:        $font-size-xl;
+$font-2xl:       $font-size-2xl;
+$font-3xl:       $font-size-3xl;
+$font-4xl:       $font-size-4xl;
+
+$font-light:     $font-weight-light;
+$font-normal:    $font-weight-normal;
+$font-medium:    $font-weight-medium;
+$font-semibold:  $font-weight-semibold;
+$font-bold:      $font-weight-bold;
+$font-extrabold: $font-weight-extrabold;
 
 @mixin font-size-xs   { font-size: $font-size-xs; }
 @mixin font-size-sm   { font-size: $font-size-sm; }

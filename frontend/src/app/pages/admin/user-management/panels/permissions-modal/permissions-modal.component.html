@@ -1,0 +1,63 @@
+@if (!embedded) {
+  <div class="modal-backdrop" (click)="close.emit()"></div>
+}
+
+<div [class]="embedded ? 'pm-embedded' : 'pm-modal'" role="dialog" aria-label="Role Permissions">
+
+  @if (!embedded) {
+    <div class="pm-header">
+      <div class="pm-header__icon"><i class="bi bi-key-fill"></i></div>
+      <div>
+        <h5 class="pm-header__title">Role Permissions</h5>
+        <p class="pm-header__sub">What each role can do on the platform</p>
+      </div>
+      <button class="pm-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
+    </div>
+  }
+
+  <div class="pm-body">
+    <div class="pm-legend">
+      <div class="pm-legend__role pm-legend__role--admin">
+        <i class="bi bi-shield-fill-check"></i> Admin
+      </div>
+      <div class="pm-legend__role pm-legend__role--user">
+        <i class="bi bi-person-fill"></i> User
+      </div>
+    </div>
+
+    <div class="pm-table">
+      <div class="pm-table__head">
+        <span>Permission</span>
+        <span class="pm-col-admin">Admin</span>
+        <span class="pm-col-user">User</span>
+      </div>
+      @for (p of permissions; track p.label) {
+        <div class="pm-table__row">
+          <div class="pm-table__perm">
+            <span class="pm-perm-label">{{ p.label }}</span>
+            <span class="pm-perm-desc">{{ p.desc }}</span>
+          </div>
+          <div class="pm-col-admin">
+            @if (p.admin) {
+              <span class="pm-check pm-check--yes"><i class="bi bi-check-lg"></i></span>
+            } @else {
+              <span class="pm-check pm-check--no"><i class="bi bi-x-lg"></i></span>
+            }
+          </div>
+          <div class="pm-col-user">
+            @if (p.user) {
+              <span class="pm-check pm-check--yes"><i class="bi bi-check-lg"></i></span>
+            } @else {
+              <span class="pm-check pm-check--no"><i class="bi bi-x-lg"></i></span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <p class="pm-note">
+      <i class="bi bi-info-circle me-1"></i>
+      Role permissions are defined by the platform. Contact the developer to modify them.
+    </p>
+  </div>
+</div>

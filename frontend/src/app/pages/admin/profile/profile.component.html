@@ -104,7 +104,17 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label small fw-semibold">Email</label>
-                <input type="email" class="form-control" formControlName="email" readonly />
+                <input
+                  type="email"
+                  class="form-control"
+                  [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.dirty"
+                  formControlName="email"
+                  [readonly]="!editMode() || !!u.email"
+                  [placeholder]="u.email ? '' : 'Add your email address'"
+                />
+                @if (profileForm.get('email')?.hasError('email') && profileForm.get('email')?.dirty) {
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                }
               </div>
               <div class="col-md-6">
                 <label class="form-label small fw-semibold">Phone</label>

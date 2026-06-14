@@ -1,234 +1,536 @@
-<!-- Loading State -->
+<!-- ══════════════════════════════════════════════════════════════
+     SHIMMER SKELETON
+══════════════════════════════════════════════════════════════ -->
 @if (loading()) {
-  <div class="d-flex justify-content-center align-items-center py-5">
-    <div class="text-center">
-      <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="text-muted">Loading users...</p>
+  <div class="um-skeleton">
+    <div class="sk-header">
+      <div class="sk-block sk-block--title"></div>
+      <div class="sk-block sk-block--btn"></div>
+    </div>
+    <div class="sk-stats">
+      @for (_ of [1,2,3,4]; track _) { <div class="sk-stat"></div> }
+    </div>
+    <div class="sk-filters">
+      <div class="sk-block sk-block--search"></div>
+      <div class="sk-block sk-block--select"></div>
+      <div class="sk-block sk-block--select"></div>
+      <div class="sk-block sk-block--btn"></div>
+    </div>
+    <div class="sk-table">
+      <div class="sk-thead"></div>
+      @for (_ of [1,2,3,4,5,6,7]; track _) { <div class="sk-row"></div> }
     </div>
   </div>
 } @else {
-  <!-- Page Header -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <div>
-      <h4 class="fw-bold mb-1">User Management</h4>
-      <p class="text-muted mb-0">Manage all platform users</p>
+
+<!-- ══════════════════════════════════════════════════════════════
+     LIVE PAGE
+══════════════════════════════════════════════════════════════ -->
+<div class="um-layout" (click)="closeDropdowns()">
+
+  <!-- ── Page Header ──────────────────────────────────────────── -->
+  <div class="um-header">
+    <div class="um-header__text">
+      <h4 class="um-header__title">User Management</h4>
+      <p class="um-header__subtitle">{{ subtitle() }}</p>
     </div>
-    <button class="btn btn-outline-primary btn-sm" (click)="loadUsers()">
-      <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+    <div class="um-header__actions">
+      <!-- Export -->
+      <div class="um-export-wrap" (click)="$event.stopPropagation()">
+        <button class="btn btn-outline-secondary btn-sm um-export-btn"
+          (click)="toggleExportMenu($event)" [disabled]="exporting()">
+          @if (exporting()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          } @else {
+            <i class="bi bi-download me-1"></i>
+          }
+          Export
+          <i class="bi bi-chevron-down ms-1 um-chevron" [class.rotate]="exportMenuOpen()"></i>
+        </button>
+        @if (exportMenuOpen()) {
+          <div class="um-export-menu">
+            <button class="um-export-item" (click)="exportCSV()">
+              <i class="bi bi-filetype-csv"></i> Download CSV
+            </button>
+            <button class="um-export-item" (click)="exportJSON()">
+              <i class="bi bi-filetype-json"></i> Download JSON
+            </button>
+          </div>
+        }
+      </div>
+      <!-- Add User -->
+      <button class="btn btn-primary btn-sm um-add-btn" (click)="showAddDrawer.set(true)">
+        <i class="bi bi-person-plus-fill me-1"></i> Add User
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Page Tabs ────────────────────────────────────────── -->
+  <div class="um-page-tabs">
+    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'users'"
+      (click)="activeTab.set('users')">
+      <i class="bi bi-people-fill"></i> Users
+    </button>
+    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'activity'"
+      (click)="activeTab.set('activity')">
+      <i class="bi bi-clock-history"></i> Activity Log
+    </button>
+    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'reports'"
+      (click)="activeTab.set('reports')">
+      <i class="bi bi-flag-fill"></i> Reports
     </button>
   </div>
 
-  <!-- Stats Row -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="card stat-card border-0 shadow-sm">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="stat-icon-wrapper" style="background-color: #eef2ff;">
-            <i class="bi bi-people-fill" style="color: #4f46e5;"></i>
-          </div>
-          <div>
-            <h3 class="fw-bold mb-0">{{ totalUsersCount() }}</h3>
-            <small class="text-muted">Total Users</small>
-          </div>
-        </div>
+  <!-- ── Users Tab ─────────────────────────────────────────── -->
+  @if (activeTab() === 'users') {
+  <div class="um-users-section">
+  <div class="um-stats">
+    <button class="um-stat" [class.um-stat--active]="filterStatus() === ''"
+      (click)="setStatFilter('')">
+      <div class="um-stat__icon" style="--ic:#4f46e5;--bg:#eef2ff">
+        <i class="bi bi-people-fill"></i>
       </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card stat-card border-0 shadow-sm">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="stat-icon-wrapper" style="background-color: #ecfdf5;">
-            <i class="bi bi-check-circle-fill" style="color: #059669;"></i>
-          </div>
-          <div>
-            <h3 class="fw-bold mb-0">{{ activeUsers() }}</h3>
-            <small class="text-muted">Active</small>
-          </div>
-        </div>
+      <div class="um-stat__body">
+        <span class="um-stat__value">{{ stats().total }}</span>
+        <span class="um-stat__label">Total Users</span>
       </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card stat-card border-0 shadow-sm">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="stat-icon-wrapper" style="background-color: #fef2f2;">
-            <i class="bi bi-slash-circle-fill" style="color: #dc2626;"></i>
-          </div>
-          <div>
-            <h3 class="fw-bold mb-0">{{ blockedUsers() }}</h3>
-            <small class="text-muted">Blocked</small>
-          </div>
-        </div>
+    </button>
+
+    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'active'"
+      (click)="setStatFilter('active')">
+      <div class="um-stat__icon" style="--ic:#059669;--bg:#ecfdf5">
+        <i class="bi bi-check-circle-fill"></i>
       </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card stat-card border-0 shadow-sm">
-        <div class="card-body d-flex align-items-center gap-3 p-3">
-          <div class="stat-icon-wrapper" style="background-color: #fffbeb;">
-            <i class="bi bi-shield-fill-check" style="color: #d97706;"></i>
-          </div>
-          <div>
-            <h3 class="fw-bold mb-0">{{ trustedUsers() }}</h3>
-            <small class="text-muted">Trusted</small>
-          </div>
-        </div>
+      <div class="um-stat__body">
+        <span class="um-stat__value">{{ stats().active }}</span>
+        <span class="um-stat__label">Active</span>
       </div>
-    </div>
+      @if (filterStatus() === 'active') {
+        <span class="um-stat__filter-dot"></span>
+      }
+    </button>
+
+    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'blocked'"
+      (click)="setStatFilter('blocked')">
+      <div class="um-stat__icon" style="--ic:#dc2626;--bg:#fef2f2">
+        <i class="bi bi-slash-circle-fill"></i>
+      </div>
+      <div class="um-stat__body">
+        <span class="um-stat__value">{{ stats().blocked }}</span>
+        <span class="um-stat__label">Blocked</span>
+      </div>
+      @if (filterStatus() === 'blocked') {
+        <span class="um-stat__filter-dot"></span>
+      }
+    </button>
+
+    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'trusted'"
+      (click)="setStatFilter('trusted')">
+      <div class="um-stat__icon" style="--ic:#d97706;--bg:#fffbeb">
+        <i class="bi bi-shield-fill-check"></i>
+      </div>
+      <div class="um-stat__body">
+        <span class="um-stat__value">{{ stats().trusted }}</span>
+        <span class="um-stat__label">Trusted</span>
+      </div>
+      @if (filterStatus() === 'trusted') {
+        <span class="um-stat__filter-dot"></span>
+      }
+    </button>
   </div>
 
-  <!-- Search -->
-  <div class="row mb-4">
-    <div class="col-md-6 col-lg-4">
-      <div class="input-group search-group">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="bi bi-search text-muted"></i>
-        </span>
-        <input
-          type="text"
-          class="form-control border-start-0 ps-0"
-          placeholder="Search users by name, email, location..."
-          [value]="searchTerm()"
-          (input)="onSearch($event)"
-        />
-      </div>
+  <!-- ── Filter Bar ──────────────────────────────────────────── -->
+  <div class="um-filter-card">
+    <div class="um-search-wrap">
+      <i class="bi bi-search um-search-icon"></i>
+      <input type="text" class="um-search-input"
+        placeholder="Search by name, email or phone…"
+        [ngModel]="searchInput()"
+        (ngModelChange)="searchInput.set($event)"
+        (keydown)="onSearchKeydown($event)" />
     </div>
+
+    <select class="um-select" [ngModel]="filterRole()"
+      (ngModelChange)="filterRole.set($event); onFilterChange()">
+      <option value="">All Roles</option>
+      <option value="ADMIN">Admin</option>
+      <option value="USER">User</option>
+    </select>
+
+    <select class="um-select" [ngModel]="filterStatus()"
+      (ngModelChange)="filterStatus.set($event); onFilterChange()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="blocked">Blocked</option>
+      <option value="trusted">Trusted</option>
+    </select>
+
+    <select class="um-select" [ngModel]="filterJoined()"
+      (ngModelChange)="filterJoined.set($event); onFilterChange()">
+      <option value="">All Time</option>
+      <option value="today">Today</option>
+      <option value="7d">Last 7 Days</option>
+      <option value="30d">Last 30 Days</option>
+      <option value="90d">Last 3 Months</option>
+    </select>
+
+    <div class="um-filter-divider"></div>
+
+    <button class="btn btn-primary btn-sm um-search-btn" (click)="applyFilters()">
+      <i class="bi bi-search me-1"></i> Search
+    </button>
+
+    @if (activeFilterCount() > 0) {
+      <button class="btn btn-outline-secondary btn-sm um-clear-btn" (click)="clearFilters()">
+        <i class="bi bi-x-circle me-1"></i> Clear
+        <span class="um-clear-badge">{{ activeFilterCount() }}</span>
+      </button>
+    }
   </div>
 
-  <!-- Users Table -->
-  @if (filteredUsers().length === 0) {
-    <div class="empty-state text-center py-5">
-      <div class="empty-icon mb-3">
-        <i class="bi bi-people"></i>
+  <!-- ── Bulk Action Bar ────────────────────────────────────── -->
+  @if (selectedCount() > 0) {
+    <div class="um-bulk-bar">
+      <span class="um-bulk-bar__count">
+        <i class="bi bi-check-square-fill me-2"></i>
+        {{ selectedCount() }} user{{ selectedCount() > 1 ? 's' : '' }} selected
+      </span>
+      <div class="um-bulk-bar__actions">
+        <button class="btn btn-sm btn-outline-warning" (click)="initBulkAction('block')">
+          <i class="bi bi-lock-fill me-1"></i> Block
+        </button>
+        <button class="btn btn-sm btn-outline-success" (click)="initBulkAction('unblock')">
+          <i class="bi bi-unlock-fill me-1"></i> Unblock
+        </button>
+        <div class="um-bulk-role">
+          <select class="um-select um-select--sm" [ngModel]="bulkRoleTarget()"
+            (ngModelChange)="bulkRoleTarget.set($event)">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+          <button class="btn btn-sm btn-outline-primary" (click)="initBulkAction('role')">
+            <i class="bi bi-person-gear me-1"></i> Change Role
+          </button>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" (click)="initBulkAction('delete')">
+          <i class="bi bi-trash-fill me-1"></i> Delete
+        </button>
       </div>
-      <h5 class="fw-bold text-dark">No users found</h5>
-      <p class="text-muted">
-        @if (searchTerm()) {
-          No users match your search criteria.
+      <button class="um-bulk-bar__close" (click)="clearSelection()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  }
+
+  <!-- ── Bulk Confirm Dialog ──────────────────────────────────── -->
+  @if (confirmBulk()) {
+    <div class="um-confirm-backdrop" (click)="cancelBulk()">
+      <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+        <div class="um-confirm-icon"
+          [class.um-confirm-icon--danger]="confirmBulk() === 'delete'"
+          [class.um-confirm-icon--warning]="confirmBulk() === 'block'"
+          [class.um-confirm-icon--success]="confirmBulk() === 'unblock'"
+          [class.um-confirm-icon--primary]="confirmBulk() === 'role'">
+          <i class="bi"
+            [class.bi-trash-fill]="confirmBulk() === 'delete'"
+            [class.bi-lock-fill]="confirmBulk() === 'block'"
+            [class.bi-unlock-fill]="confirmBulk() === 'unblock'"
+            [class.bi-person-gear]="confirmBulk() === 'role'">
+          </i>
+        </div>
+        <h6 class="um-confirm-title">Confirm {{ bulkActionLabel(confirmBulk()) }}</h6>
+        <p class="um-confirm-desc">
+          This will {{ bulkActionLabel(confirmBulk()).toLowerCase() }}
+          <strong>{{ selectedCount() }} user{{ selectedCount() > 1 ? 's' : '' }}</strong>.
+          @if (confirmBulk() === 'delete') { This action deactivates their accounts. }
+          Are you sure?
+        </p>
+        <div class="um-confirm-btns">
+          <button class="btn btn-sm btn-outline-secondary" (click)="cancelBulk()">Cancel</button>
+          <button class="btn btn-sm"
+            [class.btn-danger]="confirmBulk() === 'delete'"
+            [class.btn-warning]="confirmBulk() === 'block'"
+            [class.btn-success]="confirmBulk() === 'unblock'"
+            [class.btn-primary]="confirmBulk() === 'role'"
+            [disabled]="bulkWorking()"
+            (click)="executeBulkAction()">
+            @if (bulkWorking()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            Confirm {{ bulkActionLabel(confirmBulk()) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Users Table ────────────────────────────────────────── -->
+  @if (users().length === 0) {
+    <div class="um-empty">
+      <div class="um-empty__icon">
+        @if (activeFilterCount() > 0 || appliedSearch()) {
+          <i class="bi bi-search"></i>
         } @else {
-          There are no registered users.
+          <i class="bi bi-people"></i>
         }
-      </p>
+      </div>
+      @if (activeFilterCount() > 0 || appliedSearch()) {
+        <h5 class="um-empty__title">No results found</h5>
+        <p class="um-empty__desc">Try adjusting your search or filters.</p>
+        <button class="btn btn-outline-primary btn-sm mt-2" (click)="clearFilters()">
+          <i class="bi bi-x-circle me-1"></i> Clear all filters
+        </button>
+      } @else {
+        <h5 class="um-empty__title">No users yet</h5>
+        <p class="um-empty__desc">Users who join the platform will appear here.</p>
+        <button class="btn btn-primary btn-sm mt-2" (click)="showAddDrawer.set(true)">
+          <i class="bi bi-person-plus-fill me-1"></i> Add First User
+        </button>
+      }
     </div>
   } @else {
-    <div class="card border-0 shadow-sm">
+    <div class="um-table-card">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="um-table">
           <thead>
-            <tr class="bg-light">
-              <th class="border-0 ps-3" style="width: 50px;">Avatar</th>
-              <th class="border-0">Name</th>
-              <th class="border-0">Email</th>
-              <th class="border-0 d-none d-md-table-cell">Location</th>
-              <th class="border-0">Role</th>
-              <th class="border-0">Status</th>
-              <th class="border-0">Trust</th>
-              <th class="border-0 d-none d-lg-table-cell">Joined</th>
-              <th class="border-0 pe-3 text-end">Actions</th>
+            <tr>
+              <th class="um-th um-th--check">
+                <input type="checkbox" class="um-checkbox"
+                  [checked]="allSelected()" (change)="toggleSelectAll()" />
+              </th>
+              <th class="um-th">User</th>
+              <th class="um-th d-none d-md-table-cell">Email</th>
+              <th class="um-th d-none d-lg-table-cell">Phone</th>
+              <th class="um-th">Role</th>
+              <th class="um-th">Status</th>
+              <th class="um-th d-none d-xl-table-cell">Joined</th>
+              <th class="um-th um-th--actions">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (user of filteredUsers(); track user.id) {
-              <tr>
-                <td class="ps-3">
-                  @if (user.avatar) {
-                    <img [src]="user.avatar" class="rounded-circle" width="36" height="36" style="object-fit: cover;" />
-                  } @else {
-                    <div class="user-avatar-placeholder rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="small fw-bold">{{ (user.displayName ?? user.userName)?.charAt(0)?.toUpperCase() }}</span>
+            @for (user of users(); track user.id) {
+              <tr class="um-row" [class.um-row--selected]="isSelected(user.id)">
+
+                <!-- Checkbox -->
+                <td class="um-td um-td--check">
+                  <input type="checkbox" class="um-checkbox"
+                    [checked]="isSelected(user.id)"
+                    (change)="toggleSelect(user.id)"
+                    (click)="$event.stopPropagation()" />
+                </td>
+
+                <!-- User cell -->
+                <td class="um-td">
+                  <div class="um-user-cell" (click)="viewUser(user.id)" role="button">
+                    @if (user.avatar) {
+                      <img [src]="user.avatar" class="um-avatar" alt="" />
+                    } @else {
+                      <div class="um-avatar um-avatar--initials">{{ getInitials(user) }}</div>
+                    }
+                    <div class="um-user-info">
+                      <span class="um-user-name">{{ user.displayName }}</span>
+                      <span class="um-user-handle">&#64;{{ user.userName }}</span>
                     </div>
-                  }
+                  </div>
                 </td>
-                <td>
-                  <span class="fw-semibold small">{{ user.displayName ?? user.userName }}</span>
+
+                <!-- Email -->
+                <td class="um-td d-none d-md-table-cell">
+                  <span class="um-td-text">{{ user.email || '—' }}</span>
                 </td>
-                <td>
-                  <span class="small text-muted">{{ user.email }}</span>
+
+                <!-- Phone -->
+                <td class="um-td d-none d-lg-table-cell">
+                  <span class="um-td-text">{{ user.phoneNo || '—' }}</span>
                 </td>
-                <td class="d-none d-md-table-cell">
-                  <span class="small text-muted">{{ user.location || '-' }}</span>
-                </td>
-                <td>
-                  <span class="badge" [ngClass]="user.role === 'ADMIN' ? 'bg-danger' : 'bg-primary bg-opacity-10 text-primary'">
+
+                <!-- Role -->
+                <td class="um-td">
+                  <span class="um-badge"
+                    [class.um-badge--admin]="user.role === 'ADMIN'"
+                    [class.um-badge--user]="user.role === 'USER'">
                     {{ user.role }}
                   </span>
                 </td>
-                <td>
-                  @if (user.isBlocked) {
-                    <span class="badge bg-danger bg-opacity-10 text-danger">Blocked</span>
-                  } @else {
-                    <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+
+                <!-- Status -->
+                <td class="um-td">
+                  <span class="um-badge"
+                    [class.um-badge--blocked]="user.isBlocked"
+                    [class.um-badge--active]="!user.isBlocked && user.isActive"
+                    [class.um-badge--inactive]="!user.isBlocked && !user.isActive">
+                    {{ getStatusLabel(user) }}
+                  </span>
+                  @if (user.isTrusted && !user.isBlocked) {
+                    <span class="um-badge um-badge--trusted ms-1">Trusted</span>
                   }
                 </td>
-                <td>
-                  @if (user.isTrusted) {
-                    <span class="badge bg-warning bg-opacity-10 text-warning">Trusted</span>
+
+                <!-- Joined -->
+                <td class="um-td d-none d-xl-table-cell">
+                  <span class="um-td-text">{{ user.createdAt | date:'d MMM yyyy' }}</span>
+                </td>
+
+                <!-- Actions -->
+                <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
+                  @if (actionWorkingId() === user.id) {
+                    <div class="um-actions-row">
+                      <span class="spinner-border spinner-border-sm text-primary"></span>
+                    </div>
                   } @else {
-                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Untrusted</span>
+                    <div class="um-actions-row">
+
+                      <button class="um-iab um-iab--view"
+                        data-tip="View Details"
+                        (click)="viewUser(user.id)">
+                        <i class="bi bi-eye-fill"></i>
+                      </button>
+
+                      <button class="um-iab"
+                        [class.um-iab--block]="!user.isBlocked"
+                        [class.um-iab--unblock]="user.isBlocked"
+                        [attr.data-tip]="user.isBlocked ? 'Unblock User' : 'Block User'"
+                        (click)="toggleBlock(user)">
+                        <i class="bi"
+                          [class.bi-lock-fill]="!user.isBlocked"
+                          [class.bi-unlock-fill]="user.isBlocked"></i>
+                      </button>
+
+                      <button class="um-iab um-iab--trust"
+                        [attr.data-tip]="user.isTrusted ? 'Remove Trust' : 'Mark Trusted'"
+                        (click)="toggleTrust(user)">
+                        <i class="bi"
+                          [class.bi-star-fill]="user.isTrusted"
+                          [class.bi-star]="!user.isTrusted"></i>
+                      </button>
+
+                      <button class="um-iab um-iab--delete"
+                        data-tip="Delete User"
+                        (click)="deleteUser(user)">
+                        <i class="bi bi-trash3-fill"></i>
+                      </button>
+
+                    </div>
                   }
                 </td>
-                <td class="d-none d-lg-table-cell">
-                  <small class="text-muted">{{ user.createdAt | date:'mediumDate' }}</small>
-                </td>
-                <td class="pe-3 text-end">
-                  <div class="d-flex gap-1 justify-content-end">
-                    <!-- Block/Unblock -->
-                    <button
-                      class="btn btn-sm"
-                      [ngClass]="user.isBlocked ? 'btn-outline-success' : 'btn-outline-danger'"
-                      [disabled]="blockingId() === user.id"
-                      (click)="toggleBlock(user)"
-                      [title]="user.isBlocked ? 'Unblock' : 'Block'"
-                    >
-                      @if (blockingId() === user.id) {
-                        <span class="spinner-border spinner-border-sm"></span>
-                      } @else {
-                        <i class="bi" [ngClass]="user.isBlocked ? 'bi-unlock' : 'bi-lock'"></i>
-                      }
-                    </button>
-                    <!-- Trust/Untrust -->
-                    <button
-                      class="btn btn-sm"
-                      [ngClass]="user.isTrusted ? 'btn-outline-secondary' : 'btn-outline-warning'"
-                      [disabled]="trustingId() === user.id"
-                      (click)="toggleTrust(user)"
-                      [title]="user.isTrusted ? 'Remove trust' : 'Trust'"
-                    >
-                      @if (trustingId() === user.id) {
-                        <span class="spinner-border spinner-border-sm"></span>
-                      } @else {
-                        <i class="bi" [ngClass]="user.isTrusted ? 'bi-shield-x' : 'bi-shield-check'"></i>
-                      }
-                    </button>
-                  </div>
-                </td>
+
               </tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <nav class="d-flex justify-content-center mt-4">
-        <ul class="pagination pagination-sm">
-          <li class="page-item" [class.disabled]="currentPage() === 1">
-            <button class="page-link" (click)="goToPage(currentPage() - 1)">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          @for (page of getPages(); track page) {
-            <li class="page-item" [class.active]="page === currentPage()">
-              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
-            </li>
+      <!-- Pagination -->
+      <div class="um-pagination">
+
+        <!-- Left: count + rows per page -->
+        <div class="um-pagination__left">
+          <span class="um-pagination__info">
+            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            of <strong>{{ total() }}</strong> users
+          </span>
+          <div class="um-pg-divider"></div>
+          <div class="um-pagination__size">
+            <span>Rows per page</span>
+            <select class="um-pg-select" [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)">
+              <option [value]="10">10</option>
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right: page buttons -->
+        <div class="um-pagination__pages">
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(1)" title="First page">
+            <i class="bi bi-chevron-double-left"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          @for (p of getPages(); track p) {
+            <button class="um-pg-btn um-pg-btn--num"
+              [class.um-pg-btn--active]="p === currentPage()"
+              (click)="goToPage(p)">{{ p }}</button>
           }
-          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-            <button class="page-link" (click)="goToPage(currentPage() + 1)">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    }
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)" title="Next page">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(totalPages())" title="Last page">
+            <i class="bi bi-chevron-double-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
   }
+
+  </div> <!-- /.um-users-section -->
+  } <!-- /.users-tab -->
+
+  <!-- ── Activity Log Tab ──────────────────────────────────── -->
+  @if (activeTab() === 'activity') {
+    <div class="um-tab-content">
+      <app-activity-log-drawer [embedded]="true"></app-activity-log-drawer>
+    </div>
+  }
+
+  <!-- ── Reports Tab ───────────────────────────────────────── -->
+  @if (activeTab() === 'reports') {
+    <div class="um-reports-card">
+      <div class="um-reports-card__header">
+        <div class="um-reports-card__icon"><i class="bi bi-flag-fill"></i></div>
+        <div>
+          <h6 class="um-reports-card__title">Reports &amp; Flagged Users</h6>
+          <p class="um-reports-card__subtitle">Track reported users and take moderation action</p>
+        </div>
+        <span class="um-reports-card__badge">Coming Soon</span>
+      </div>
+      <div class="um-reports-preview">
+        <div class="um-reports-preview__header">
+          <span>User</span><span>Reason</span><span>Date</span><span>Status</span><span>Actions</span>
+        </div>
+        @for (_ of [1,2,3]; track _) {
+          <div class="um-reports-preview__row">
+            <div class="sk-inline sk-inline--avatar"></div>
+            <div class="sk-inline sk-inline--text"></div>
+            <div class="sk-inline sk-inline--short"></div>
+            <div class="sk-inline sk-inline--badge"></div>
+            <div class="sk-inline sk-inline--short"></div>
+          </div>
+        }
+      </div>
+      <p class="um-reports-card__note">
+        <i class="bi bi-info-circle me-1"></i>
+        This feature will be available in a future platform update.
+      </p>
+    </div>
+  }
+
+</div><!-- /.um-layout -->
+
+} <!-- end @if loading -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     PANELS & MODALS
+══════════════════════════════════════════════════════════════ -->
+@if (showAddDrawer()) {
+  <app-add-user-drawer
+    (close)="showAddDrawer.set(false)"
+    (userCreated)="onUserCreated()">
+  </app-add-user-drawer>
+}
+
+@if (showDetailDrawer() && detailUserId()) {
+  <app-user-detail-drawer
+    [userId]="detailUserId()!"
+    (close)="showDetailDrawer.set(false); detailUserId.set(null)"
+    (userUpdated)="onUserUpdated($event)"
+    (userDeleted)="loadUsers()">
+  </app-user-detail-drawer>
 }

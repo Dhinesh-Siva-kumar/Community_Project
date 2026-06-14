@@ -6,31 +6,27 @@ import * as usersController from './users.controller';
 
 const router = Router();
 
-// All users routes require authentication
 router.use(authenticate);
 
-// GET  /api/users/profile
-router.get('/profile', usersController.getProfile);
-
-// PUT  /api/users/profile
-router.put('/profile', uploadProfile.single('avatar'), usersController.updateProfile);
-
-// GET  /api/users/dashboard
+// ── Self-service ─────────────────────────────────────────────────────────────
+router.get('/profile',  usersController.getProfile);
+router.put('/profile',  uploadProfile.single('avatar'), usersController.updateProfile);
 router.get('/dashboard', usersController.getDashboard);
 
-// GET  /api/users  (ADMIN only)
-router.get('/', authorize('ADMIN'), usersController.getUsers);
+// ── Admin — listing & audit ───────────────────────────────────────────────────
+router.get('/',             authorize('ADMIN'), usersController.getUsers);
+router.get('/audit-logs',   authorize('ADMIN'), usersController.getAuditLogs);
+router.post('/broadcast',   authorize('ADMIN'), usersController.broadcastNotification);
 
-// PUT  /api/users/:id/block  (ADMIN only)
-router.put('/:id/block', authorize('ADMIN'), usersController.blockUser);
-
-// PUT  /api/users/:id/unblock  (ADMIN only)
-router.put('/:id/unblock', authorize('ADMIN'), usersController.unblockUser);
-
-// PUT  /api/users/:id/trust  (ADMIN only)
-router.put('/:id/trust', authorize('ADMIN'), usersController.trustUser);
-
-// PUT  /api/users/:id/untrust  (ADMIN only)
-router.put('/:id/untrust', authorize('ADMIN'), usersController.untrustUser);
+// ── Admin — per-user CRUD (must come after named routes) ─────────────────────
+router.get('/:id',                    authorize('ADMIN'), usersController.getUserById);
+router.post('/',                      authorize('ADMIN'), usersController.adminCreateUser);
+router.delete('/:id',                 authorize('ADMIN'), usersController.softDeleteUser);
+router.put('/:id/role',               authorize('ADMIN'), usersController.changeUserRole);
+router.post('/:id/reset-password',    authorize('ADMIN'), usersController.adminResetPassword);
+router.put('/:id/block',              authorize('ADMIN'), usersController.blockUser);
+router.put('/:id/unblock',            authorize('ADMIN'), usersController.unblockUser);
+router.put('/:id/trust',              authorize('ADMIN'), usersController.trustUser);
+router.put('/:id/untrust',            authorize('ADMIN'), usersController.untrustUser);
 
 export default router;

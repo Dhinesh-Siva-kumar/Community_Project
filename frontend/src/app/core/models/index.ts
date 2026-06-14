@@ -23,6 +23,18 @@ export interface Country {
   flag_emoji: string;
 }
 
+export interface MasterState {
+  id: number;
+  name: string;
+  countryId: number;
+}
+
+export interface MasterCity {
+  id: number;
+  name: string;
+  stateId: number;
+}
+
 export interface interests {
   interest_id: number;
   interest_name: string;
@@ -52,6 +64,57 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface UserDetail extends User {
+  activity: {
+    posts:       number;
+    comments:    number;
+    communities: number;
+  };
+}
+
+export interface UserListResponse {
+  data:       User[];
+  total:      number;
+  page:       number;
+  limit:      number;
+  totalPages: number;
+  stats: {
+    total:      number;
+    active:     number;
+    blocked:    number;
+    trusted:    number;
+    adminCount: number;
+  };
+}
+
+export interface AuditLog {
+  id:         string;
+  action:     string;
+  resource:   string | null;
+  resourceId: string | null;
+  metadata:   Record<string, unknown> | null;
+  createdAt:  string;
+  actor: {
+    id:          string;
+    displayName: string;
+    userName:    string;
+    avatar:      string | null;
+  } | null;
+}
+
+export interface AuditLogResponse {
+  data:       AuditLog[];
+  total:      number;
+  page:       number;
+  limit:      number;
+  totalPages: number;
+}
+
+export type NotificationType =
+  | 'POST_APPROVED' | 'POST_REJECTED' | 'NEW_COMMENT' | 'NEW_LIKE'
+  | 'COMMUNITY_POST' | 'USER_BLOCKED' | 'USER_UNBLOCKED' | 'TRUST_GRANTED'
+  | 'EVENT_CREATED' | 'JOB_POSTED';
 
 export interface CommunityRequest {
   name: string;
@@ -205,6 +268,7 @@ export interface Event {
 export interface Job {
   id: string;
   title: string;
+  // ── Legacy fields (kept for backward compatibility) ──────────
   specification?: string;
   description?: string;
   images: string[];
@@ -220,6 +284,52 @@ export interface Job {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+
+  // ── Company ──────────────────────────────────────────────────
+  companyName?: string;
+  companyLogo?: string;
+  companyWebsite?: string;
+
+  // ── Location ─────────────────────────────────────────────────
+  city?: string;
+  state?: string;
+  fullAddress?: string;
+  isRemote?: boolean;
+  workMode?: 'Remote' | 'Hybrid' | 'On-site';
+
+  // ── Role details ─────────────────────────────────────────────
+  expMin?: number;
+  expMax?: number;
+  education?: string;
+  openings?: number;
+  shiftType?: string;
+
+  // ── Structured salary ─────────────────────────────────────────
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryType?: string;
+  salaryCurrency?: string;
+  salaryHidden?: boolean;
+
+  // ── Schedule ─────────────────────────────────────────────────
+  workStartTime?: string;
+  workEndTime?: string;
+  workingDays?: string[];
+
+  // ── Structured contact ────────────────────────────────────────
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  applicationUrl?: string;
+
+  // ── Skills & unified content ───────────────────────────────────
+  skills?: string[];
+  // Legacy fields (kept for backward compatibility on old records)
+  responsibilities?: string;
+  qualifications?: string;
+  requirements?: string;
+  benefits?: string;
+  // Note: description is also declared in the legacy block above — unified field
 }
 
 export interface Notification {

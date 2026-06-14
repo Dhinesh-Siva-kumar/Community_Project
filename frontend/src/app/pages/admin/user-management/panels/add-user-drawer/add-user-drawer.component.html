@@ -1,0 +1,230 @@
+<!-- Backdrop -->
+<div class="au-backdrop" (click)="close.emit()"></div>
+
+<!-- Modal -->
+<div class="au-modal" role="dialog" aria-label="Add new user">
+
+  <!-- Header -->
+  <div class="au-header">
+    <div class="au-header__cover-shapes" aria-hidden="true">
+      <span class="shape shape--1"></span>
+      <span class="shape shape--2"></span>
+    </div>
+    <div class="au-header__icon">
+      <i class="bi bi-person-plus-fill"></i>
+    </div>
+    <div class="au-header__text">
+      <h5 class="au-header__title">Add New User</h5>
+      <p class="au-header__sub">Create a new platform account</p>
+    </div>
+    <button class="au-close" (click)="close.emit()" aria-label="Close">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- Scrollable body — sections WITHOUT dropdowns only -->
+  <div class="au-body">
+    <form [formGroup]="form" (ngSubmit)="submit()" autocomplete="off" class="au-form">
+
+      <!-- Section: Identity -->
+      <div class="au-section">
+        <p class="au-section__label">Identity</p>
+        <div class="au-fields">
+
+          <div class="au-field">
+            <label class="au-label">Display Name <span class="au-req">*</span></label>
+            <div class="au-input-wrap">
+              <i class="bi bi-person au-icon"></i>
+              <input type="text" class="au-input"
+                formControlName="displayName"
+                placeholder="e.g. John Smith"
+                [class.au-input--error]="hasError('displayName','required') || hasError('displayName','minlength')" />
+            </div>
+            @if (hasError('displayName','required') || hasError('displayName','minlength')) {
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Display name is required</span>
+            }
+          </div>
+
+          <div class="au-field">
+            <label class="au-label">Username <span class="au-req">*</span></label>
+            <div class="au-input-wrap">
+              <i class="bi bi-at au-icon"></i>
+              <input type="text" class="au-input au-input--trailing"
+                formControlName="userName"
+                placeholder="e.g. johnsmith"
+                [class.au-input--error]="hasError('userName','pattern') || usernameState() === 'taken'"
+                [class.au-input--success]="usernameState() === 'available'" />
+              <span class="au-trailing">
+                @if (usernameState() === 'checking') {
+                  <span class="spinner-border spinner-border-sm" style="color:#94a3b8;width:14px;height:14px"></span>
+                } @else if (usernameState() === 'available') {
+                  <i class="bi bi-check-circle-fill" style="color:#16a34a"></i>
+                } @else if (usernameState() === 'taken') {
+                  <i class="bi bi-x-circle-fill" style="color:#dc2626"></i>
+                }
+              </span>
+            </div>
+            @if (hasError('userName','pattern')) {
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Only letters, numbers, underscores</span>
+            } @else if (usernameState() === 'taken') {
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Username already taken</span>
+            } @else if (usernameState() === 'available') {
+              <span class="au-success"><i class="bi bi-check-circle-fill"></i> Username available</span>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Contact -->
+      <div class="au-section">
+        <p class="au-section__label">Contact</p>
+        <div class="au-fields">
+
+          <div class="au-field">
+            <label class="au-label">Email</label>
+            <div class="au-input-wrap">
+              <i class="bi bi-envelope au-icon"></i>
+              <input type="email" class="au-input"
+                formControlName="email"
+                placeholder="john@example.com"
+                [class.au-input--error]="hasError('email','email')" />
+            </div>
+            @if (hasError('email','email')) {
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Enter a valid email</span>
+            }
+          </div>
+
+          <div class="au-field">
+            <label class="au-label">Phone</label>
+            <div class="au-input-wrap">
+              <i class="bi bi-phone au-icon"></i>
+              <input type="text" class="au-input"
+                formControlName="phoneNo"
+                placeholder="+91 9500000000" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Security -->
+      <div class="au-section au-section--last">
+        <p class="au-section__label">Security</p>
+        <div class="au-fields">
+
+          <div class="au-field">
+            <label class="au-label">Password <span class="au-req">*</span></label>
+            <div class="au-input-wrap">
+              <i class="bi bi-lock au-icon"></i>
+              <input [type]="showPassword() ? 'text' : 'password'"
+                class="au-input au-input--trailing"
+                formControlName="password"
+                placeholder="Min 8 characters"
+                [class.au-input--error]="hasError('password','required') || hasError('password','minlength')" />
+              <button type="button" class="au-eye" (click)="toggleShowPassword()">
+                <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+              </button>
+            </div>
+            @if (form.get('password')?.value) {
+              <div class="au-strength">
+                @for (i of [1,2,3,4]; track i) {
+                  <div class="au-strength__seg"
+                    [style.background]="i <= passwordStrength().level ? passwordStrength().color : '#e5e7eb'">
+                  </div>
+                }
+                <span class="au-strength__text" [style.color]="passwordStrength().color">
+                  {{ passwordStrength().label }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <div class="au-field">
+            <label class="au-label">Confirm Password <span class="au-req">*</span></label>
+            <div class="au-input-wrap">
+              <i class="bi bi-lock-fill au-icon"></i>
+              <input [type]="showConfirm() ? 'text' : 'password'"
+                class="au-input au-input--trailing"
+                formControlName="confirmPassword"
+                placeholder="Repeat password"
+                [class.au-input--error]="form.touched && form.hasError('mismatch')" />
+              <button type="button" class="au-eye" (click)="toggleShowConfirm()">
+                <i class="bi" [class.bi-eye]="!showConfirm()" [class.bi-eye-slash]="showConfirm()"></i>
+              </button>
+            </div>
+            @if (form.touched && form.hasError('mismatch')) {
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Passwords do not match</span>
+            }
+          </div>
+
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!--
+    Account Setup section is OUTSIDE the scrollable .au-body so that the
+    SearchableSelect dropdown panel (position:absolute) is not clipped by
+    any ancestor with overflow:auto or overflow:hidden.
+  -->
+  <div class="au-account-setup au-form">
+    <div class="au-section au-section--last">
+      <p class="au-section__label">Account Setup</p>
+      <div class="au-fields">
+
+        <!-- Role -->
+        <div class="au-field">
+          <label class="au-label">Role <span class="au-req">*</span></label>
+          <div class="au-role-grid">
+            <label class="au-role" [class.au-role--active]="form.get('role')?.value === 'USER'">
+              <input type="radio" [formControl]="$any(form.get('role'))" value="USER" />
+              <i class="bi bi-person-fill"></i>
+              <div>
+                <span class="au-role__name">User</span>
+                <span class="au-role__desc">Standard access</span>
+              </div>
+            </label>
+            <label class="au-role" [class.au-role--active]="form.get('role')?.value === 'ADMIN'">
+              <input type="radio" [formControl]="$any(form.get('role'))" value="ADMIN" />
+              <i class="bi bi-shield-fill-check"></i>
+              <div>
+                <span class="au-role__name">Admin</span>
+                <span class="au-role__desc">Full control</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Country — SearchableSelect needs to NOT be inside overflow:hidden/auto -->
+        <div class="au-field">
+          <label class="au-label">Country</label>
+          <app-searchable-select
+            [formControl]="$any(form.get('countryId'))"
+            [options]="countryOptions()"
+            placeholder="Select country">
+          </app-searchable-select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="au-footer">
+    <button type="button" class="au-btn au-btn--ghost" (click)="close.emit()">
+      Cancel
+    </button>
+    <button type="button" class="au-btn au-btn--primary"
+      [disabled]="form.invalid || submitting() || usernameState() === 'taken'"
+      (click)="submit()">
+      @if (submitting()) {
+        <span class="spinner-border spinner-border-sm me-1"></span> Creating…
+      } @else {
+        <i class="bi bi-person-check-fill me-1"></i> Create User
+      }
+    </button>
+  </div>
+
+</div>

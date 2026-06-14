@@ -1,0 +1,366 @@
+@use '../../../../../../assets/styles/index' as *;
+
+// ─────────────────────────────────────────────────────────────
+// Backdrop
+// ─────────────────────────────────────────────────────────────
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Modal shell — NO overflow:hidden so ss-panel can escape
+// ─────────────────────────────────────────────────────────────
+.au-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 620px;
+  max-width: calc(100vw - 32px);
+  max-height: 92dvh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28,25,23,0.22), 0 0 0 1px rgba(28,25,23,0.06);
+  // overflow: hidden is intentionally NOT set here so that the
+  // SearchableSelect .ss-panel (position:absolute) can escape.
+}
+
+// ─────────────────────────────────────────────────────────────
+// Header
+// ─────────────────────────────────────────────────────────────
+.au-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;           // clips gradient within header only
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;  // top corners rounded (modal has no overflow:hidden)
+
+  &__cover-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  &__icon {
+    width: 44px; height: 44px;
+    background: rgba(251,191,36,0.2);
+    border: 1.5px solid rgba(251,191,36,0.35);
+    border-radius: $radius-md;
+    display: flex; align-items: center; justify-content: center;
+    color: $color-primary;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    position: relative; z-index: 1;
+  }
+
+  &__text { position: relative; z-index: 1; flex: 1; }
+
+  &__title {
+    font-family: $font-family-header;
+    font-size: $font-lg;
+    font-weight: $font-bold;
+    color: #fff;
+    margin: 0 0 2px;
+  }
+
+  &__sub { font-size: $font-sm; color: rgba(255,255,255,0.6); margin: 0; }
+}
+
+.shape {
+  position: absolute; border-radius: 50%; opacity: 0.08;
+  &--1 { width: 160px; height: 160px; background: $color-primary; top: -60px; right: 40px; }
+  &--2 { width: 80px;  height: 80px;  background: #fff; bottom: -30px; right: 120px; }
+}
+
+.au-close {
+  position: relative; z-index: 1; flex-shrink: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: $radius-sm;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: rgba(255,255,255,0.75); font-size: 0.8rem;
+  transition: all 0.15s ease;
+  &:hover { background: rgba(220,38,38,0.7); border-color: transparent; color: #fff; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Body
+// ─────────────────────────────────────────────────────────────
+.au-body {
+  flex: 1;
+  overflow-y: auto;
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
+}
+
+// Account Setup — sits OUTSIDE .au-body so SearchableSelect panel
+// (position:absolute) is never clipped by overflow:auto ancestors.
+.au-account-setup {
+  flex-shrink: 0;
+  border-top: 1px solid $color-border;
+  position: relative;       // creates containing block for ss-panel
+  z-index: 1;               // keep above body content
+}
+
+// ─────────────────────────────────────────────────────────────
+// Sections
+// ─────────────────────────────────────────────────────────────
+.au-section {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid $color-border;
+  &--last { border-bottom: none; }
+  &__label {
+    font-size: $font-xs; font-weight: $font-bold;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: $color-text-muted; margin: 0 0 14px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 2-column field grid
+// ─────────────────────────────────────────────────────────────
+.au-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.au-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Label
+// ─────────────────────────────────────────────────────────────
+.au-label {
+  font-size: $font-sm;
+  font-weight: $font-semibold;
+  color: $color-text-body;
+}
+.au-req { color: $color-danger; margin-left: 2px; }
+
+// ─────────────────────────────────────────────────────────────
+// Input  —  matches auth page .field-input exactly
+// height 48px | border-radius 10px | left icon | amber focus
+// ─────────────────────────────────────────────────────────────
+.au-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.au-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 1rem;
+  color: $color-text-muted;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.au-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px 0 42px;
+  border: 1.5px solid $color-border;
+  border-radius: 10px;
+  font-size: $font-sm;
+  color: $color-text-body;
+  background: $color-bg-page;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  &::placeholder { color: $color-text-secondary; }
+
+  &:focus {
+    border-color: $color-primary;
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  &--trailing { padding-right: 42px; }
+  &--error    { border-color: $color-danger !important;
+    &:focus   { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); } }
+  &--success  { border-color: $color-success !important; }
+}
+
+// Trailing slot (eye toggle / username status)
+.au-trailing {
+  position: absolute;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.au-eye {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $color-text-muted;
+  font-size: 0.9rem;
+  padding: 2px;
+  line-height: 1;
+  &:hover { color: $color-primary-dark; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// SearchableSelect — override trigger to match auth field style
+// ─────────────────────────────────────────────────────────────
+.au-form {
+  // Make the ss-trigger look identical to .au-input
+  ::ng-deep .ss-trigger {
+    height: 48px !important;
+    border: 1.5px solid $color-border !important;
+    border-radius: 10px !important;
+    font-size: $font-sm !important;
+    color: $color-text-body !important;
+    background: $color-bg-page !important;
+    padding: 0 14px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+
+    &[aria-expanded="true"],
+    &:focus,
+    &:focus-visible {
+      border-color: $color-primary !important;
+      background: $color-bg-card !important;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1) !important;
+      outline: none !important;
+    }
+
+    &.ss-placeholder .ss-trigger-text {
+      color: $color-text-secondary !important;
+    }
+  }
+
+  ::ng-deep .ss-panel {
+    border: 1.5px solid $color-border !important;
+    border-radius: 10px !important;
+    box-shadow: $shadow-4 !important;
+    overflow: hidden;
+  }
+
+  ::ng-deep .ss-option:hover       { background: $color-primary-light !important; }
+  ::ng-deep .ss-option-selected    { background: $color-primary-light !important; color: $color-primary-dark !important; }
+  ::ng-deep .ss-check              { color: $color-primary-dark !important; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Validation messages
+// ─────────────────────────────────────────────────────────────
+.au-error {
+  display: flex; align-items: center; gap: 4px;
+  font-size: $font-xs; color: $color-danger;
+  i { font-size: 0.65rem; }
+}
+.au-success {
+  display: flex; align-items: center; gap: 4px;
+  font-size: $font-xs; color: $color-success;
+  i { font-size: 0.65rem; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Password strength
+// ─────────────────────────────────────────────────────────────
+.au-strength {
+  display: flex; align-items: center; gap: 6px;
+  &__seg  { height: 3px; flex: 1; border-radius: 3px; transition: background 0.2s; }
+  &__text { font-size: $font-xs; font-weight: $font-semibold; white-space: nowrap; }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Role selector
+// ─────────────────────────────────────────────────────────────
+.au-role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.au-role {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid $color-border;
+  border-radius: 10px;
+  background: $color-bg-page;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 48px;
+
+  input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+
+  i { font-size: 1.15rem; color: $color-text-muted; flex-shrink: 0; transition: color 0.15s; }
+
+  &__name  { display: block; font-size: $font-sm; font-weight: $font-semibold; color: $color-text-body; line-height: 1.2; }
+  &__desc  { display: block; font-size: $font-xs; color: $color-text-muted; }
+
+  &:hover  { border-color: $color-primary; background: $color-primary-light; }
+
+  &--active {
+    border-color: $color-primary;
+    background: $color-primary-light;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    i { color: $color-primary-dark; }
+    .au-role__name { color: $color-primary-dark; }
+    .au-role__desc { color: $color-primary-dark; opacity: 0.7; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Footer
+// ─────────────────────────────────────────────────────────────
+.au-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  border-radius: 0 0 $radius-xl $radius-xl;   // bottom corners match modal
+}
+
+.au-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 20px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: $font-sm; font-weight: $font-semibold;
+  cursor: pointer; border: 1.5px solid transparent;
+  transition: all 0.15s ease;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--ghost {
+    background: transparent; border-color: $color-border; color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-primary-light; }
+  }
+
+  &--primary {
+    background: $color-primary; border-color: $color-primary; color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
+}
