@@ -1,10 +1,14 @@
 @use '../../../../assets/styles/index' as *;
 
+:host {
+  display: block;
+  margin-bottom: $section-gap-v;
+}
+
 .profile-tabs {
   display: inline-flex;
   gap: 4px;
   padding: 5px;
-  margin-bottom: $section-gap-v;
   background: $color-bg-light;
   border: 1px solid $profile-card-border;
   border-radius: $radius-full;

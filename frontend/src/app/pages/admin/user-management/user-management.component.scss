@@ -173,48 +173,12 @@ $_t:  0.2s ease;
 }
 
 // ─────────────────────────────────────────────────────────────
-// PAGE TABS
+// PAGE TABS — now handled by shared <app-profile-tabs> component.
+// .um-layout already provides an even 20px flex gap between children,
+// so the tab bar must not add its own bottom margin on top of it.
 // ─────────────────────────────────────────────────────────────
-.um-page-tabs {
-  display: flex;
-  gap: 2px;
-  background: $color-bg-page;
-  border: 1px solid $color-border;
-  border-radius: $_r;
-  padding: 4px;
-  flex-wrap: wrap;
-}
-
-.um-page-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: $radius-md;
-  border: none;
-  background: transparent;
-  font-size: $font-sm;
-  font-weight: $font-medium;
-  color: $color-text-muted;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-
-  i { font-size: 0.85rem; }
-
-  &:hover {
-    background: $color-bg-card;
-    color: $color-text-body;
-  }
-
-  &--active {
-    background: $color-bg-card;
-    color: $color-primary-dark;
-    font-weight: $font-semibold;
-    box-shadow: $shadow-2;
-
-    i { color: $color-primary; }
-  }
+app-profile-tabs {
+  margin-bottom: 0;
 }
 
 // Tab content wrapper
@@ -254,7 +218,6 @@ $_t:  0.2s ease;
   &:hover {
     border-color: $color-primary;
     box-shadow: $shadow-card-hover;
-    transform: translateY(-2px);
   }
 
   &--active {

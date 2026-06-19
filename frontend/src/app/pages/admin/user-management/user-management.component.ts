@@ -10,6 +10,7 @@ import { User, UserListResponse } from '../../../core/models';
 import { AddUserDrawerComponent }      from './panels/add-user-drawer/add-user-drawer.component';
 import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-detail-drawer.component';
 import { ActivityLogDrawerComponent }  from './panels/activity-log-drawer/activity-log-drawer.component';
+import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 
 type BulkAction = 'block' | 'unblock' | 'delete' | 'role';
 type PageTab = 'users' | 'activity' | 'reports';
@@ -21,6 +22,7 @@ type PageTab = 'users' | 'activity' | 'reports';
   imports: [
     CommonModule, DatePipe, FormsModule,
     AddUserDrawerComponent, UserDetailDrawerComponent, ActivityLogDrawerComponent,
+    ProfileTabsComponent,
   ],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
@@ -63,6 +65,16 @@ export class UserManagementComponent implements OnInit {
 
   // ── Page tabs ─────────────────────────────────────────────────────────────
   activeTab = signal<PageTab>('users');
+
+  pageTabs: ProfileTab[] = [
+    { id: 'users',    label: 'Users',        icon: 'bi-people-fill' },
+    { id: 'activity', label: 'Activity Log', icon: 'bi-clock-history' },
+    { id: 'reports',  label: 'Reports',      icon: 'bi-flag-fill' },
+  ];
+
+  setPageTab(id: string): void {
+    this.activeTab.set(id as PageTab);
+  }
 
   // ── Panel visibility (add-user + detail drawers only) ─────────────────────
   showAddDrawer        = signal(false);

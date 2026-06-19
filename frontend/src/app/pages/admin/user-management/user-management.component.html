@@ -66,20 +66,11 @@
   </div>
 
   <!-- ── Page Tabs ────────────────────────────────────────── -->
-  <div class="um-page-tabs">
-    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'users'"
-      (click)="activeTab.set('users')">
-      <i class="bi bi-people-fill"></i> Users
-    </button>
-    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'activity'"
-      (click)="activeTab.set('activity')">
-      <i class="bi bi-clock-history"></i> Activity Log
-    </button>
-    <button class="um-page-tab" [class.um-page-tab--active]="activeTab() === 'reports'"
-      (click)="activeTab.set('reports')">
-      <i class="bi bi-flag-fill"></i> Reports
-    </button>
-  </div>
+  <app-profile-tabs
+    [tabs]="pageTabs"
+    [activeTab]="activeTab()"
+    (tabChange)="setPageTab($event)"
+  ></app-profile-tabs>
 
   <!-- ── Users Tab ─────────────────────────────────────────── -->
   @if (activeTab() === 'users') {
