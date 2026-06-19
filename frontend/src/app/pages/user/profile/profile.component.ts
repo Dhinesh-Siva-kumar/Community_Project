@@ -8,15 +8,18 @@ import { JobService } from '../../../core/services/job.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { User, Business, Job } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
-import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
-
-type ProfileTab = 'personal' | 'businesses' | 'jobs';
+import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
+import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
+import { ProfileInfoCardComponent } from '../../../shared/components/profile-info-card/profile-info-card.component';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent],
+  imports: [
+    CommonModule, ReactiveFormsModule, DatePipe,
+    SearchableSelectComponent,
+    ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent,
+  ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -28,14 +31,12 @@ export class UserProfileComponent implements OnInit {
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
-  // State
   user = signal<User | null>(null);
   loading = signal(true);
   saving = signal(false);
-  activeTab = signal<ProfileTab>('personal');
+  activeTab = signal('personal');
   editMode = signal(false);
 
-  // User data
   myBusinesses = signal<Business[]>([]);
   myJobs = signal<Job[]>([]);
   loadingBusinesses = signal(false);
@@ -43,40 +44,29 @@ export class UserProfileComponent implements OnInit {
   deletingBusinessId = signal<string | null>(null);
   deletingJobId = signal<string | null>(null);
 
-  // Avatar
   avatarFile = signal<File | null>(null);
-
-  // Interests
   newInterest = signal('');
 
-  // Forms
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
   showPasswordSection = signal(false);
   changingPassword = signal(false);
 
-  // Computed
-  fullName = computed(() => {
-    const u = this.user();
-    return u ? (u.displayName || u.userName || '') : '';
-  });
-
   profileCompletion = computed(() => this.user()?.profileCompletion ?? 0);
 
-  professionalCategories = [
+  tabs: ProfileTab[] = [
+    { id: 'personal',    label: 'Personal Info',   icon: 'bi-person' },
+    { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop' },
+    { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase' },
+  ];
+
+  profCatOptions: SelectOption[] = [
     'Technology', 'Healthcare', 'Education', 'Finance', 'Legal',
     'Marketing', 'Design', 'Engineering', 'Sales', 'Construction',
     'Hospitality', 'Retail', 'Real Estate', 'Other',
-  ];
-
-  profCatOptions: SelectOption[] = this.professionalCategories.map(c => ({ value: c, label: c }));
+  ].map(c => ({ value: c, label: c }));
 
   ngOnInit(): void {
-    this.initForms();
-    this.loadProfile();
-  }
-
-  private initForms(): void {
     this.profileForm = this.fb.group({
       displayName: ['', Validators.required],
       email: ['', [Validators.email]],
@@ -93,236 +83,124 @@ export class UserProfileComponent implements OnInit {
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
     });
+
+    this.loadProfile();
   }
 
   loadProfile(): void {
     this.loading.set(true);
     this.userService.getProfile().subscribe({
-      next: (user) => {
-        this.user.set(user);
-        this.patchProfileForm(user);
-        this.loading.set(false);
-      },
+      next: (user) => { this.user.set(user); this.patchForm(user); this.loading.set(false); },
       error: () => {
-        // Fallback to auth service user
-        const currentUser = this.authService.currentUser();
-        if (currentUser) {
-          this.user.set(currentUser);
-          this.patchProfileForm(currentUser);
-        }
+        const u = this.authService.currentUser();
+        if (u) { this.user.set(u); this.patchForm(u); }
         this.loading.set(false);
       },
     });
   }
 
-  private patchProfileForm(user: User): void {
+  private patchForm(u: User): void {
     this.profileForm.patchValue({
-      displayName: user.displayName,
-      email: user.email,
-      phoneNo: user.phoneNo || '',
-      bio: user.bio || '',
-      country: user.country || '',
-      location: user.location || '',
-      pincode: user.pincode || '',
-      professionalCategory: user.professionalCategory || '',
+      displayName: u.displayName,
+      email: u.email,
+      phoneNo: u.phoneNo || '',
+      bio: u.bio || '',
+      country: u.country || '',
+      location: u.location || '',
+      pincode: u.pincode || '',
+      professionalCategory: u.professionalCategory || '',
     });
   }
 
-  // Tab management
-  setTab(tab: ProfileTab): void {
-    this.activeTab.set(tab);
-    if (tab === 'businesses' && this.myBusinesses().length === 0) {
-      this.loadMyBusinesses();
-    }
-    if (tab === 'jobs' && this.myJobs().length === 0) {
-      this.loadMyJobs();
-    }
+  setTab(id: string): void {
+    this.activeTab.set(id);
+    if (id === 'businesses' && !this.myBusinesses().length) this.loadMyBusinesses();
+    if (id === 'jobs'       && !this.myJobs().length)       this.loadMyJobs();
   }
 
-  // Edit mode
   toggleEdit(): void {
-    this.editMode.update((v) => !v);
-    if (!this.editMode()) {
-      // Reset form on cancel
-      const u = this.user();
-      if (u) this.patchProfileForm(u);
-    }
+    this.editMode.update(v => !v);
+    if (!this.editMode()) { const u = this.user(); if (u) this.patchForm(u); }
   }
 
-  // Avatar
-  onAvatarChange(files: File[]): void {
-    this.avatarFile.set(files[0] ?? null);
-  }
+  cancelEdit(): void { this.editMode.set(false); const u = this.user(); if (u) this.patchForm(u); }
 
-  // Interests
+  onAvatarChange(files: File[]): void { this.avatarFile.set(files[0] ?? null); }
+
   addInterest(): void {
-    const interest = this.newInterest().trim();
-    if (!interest) return;
-
-    this.user.update((u) => {
-      if (!u) return u;
-      const interests = [...u.interests, interest];
-      return { ...u, interests };
-    });
+    const val = this.newInterest().trim();
+    if (!val) return;
+    this.user.update(u => u ? { ...u, interests: [...u.interests, val] } : u);
     this.newInterest.set('');
   }
 
-  removeInterest(index: number): void {
-    this.user.update((u) => {
-      if (!u) return u;
-      const interests = u.interests.filter((_, i) => i !== index);
-      return { ...u, interests };
-    });
+  removeInterest(i: number): void {
+    this.user.update(u => u ? { ...u, interests: u.interests.filter((_, idx) => idx !== i) } : u);
   }
 
-  onInterestInput(event: Event): void {
-    this.newInterest.set((event.target as HTMLInputElement).value);
-  }
+  onInterestInput(e: Event): void { this.newInterest.set((e.target as HTMLInputElement).value); }
+  onInterestKeydown(e: KeyboardEvent): void { if (e.key === 'Enter') { e.preventDefault(); this.addInterest(); } }
 
-  onInterestKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      this.addInterest();
-    }
-  }
-
-  // Save profile
   saveProfile(): void {
     if (this.profileForm.invalid) return;
     this.saving.set(true);
+    const data: Record<string, any> = { ...this.profileForm.getRawValue(), interests: this.user()?.interests ?? [] };
+    if (this.user()?.email || !data['email']) delete data['email'];
 
-    const data: Record<string, any> = {
-      ...this.profileForm.getRawValue(),
-      interests: this.user()?.interests ?? [],
-    };
-
-    // Only send email when the user doesn't have one yet and has entered a new value.
-    // Existing emails are locked (readonly in the template) and must not be overwritten.
-    if (this.user()?.email || !data['email']) {
-      delete data['email'];
-    }
-
-    const avatar = this.avatarFile() ?? undefined;
-
-    this.userService.updateProfile(data, avatar).subscribe({
+    this.userService.updateProfile(data, this.avatarFile() ?? undefined).subscribe({
       next: (user) => {
-        this.user.set(user);
-        this.authService.currentUser.set(user);
-        this.editMode.set(false);
-        this.avatarFile.set(null);
-        this.toast.success('Profile updated successfully');
-        this.saving.set(false);
+        this.user.set(user); this.authService.currentUser.set(user);
+        this.editMode.set(false); this.avatarFile.set(null);
+        this.toast.success('Profile updated successfully'); this.saving.set(false);
       },
-      error: () => {
-        this.toast.error('Failed to update profile');
-        this.saving.set(false);
-      },
+      error: () => { this.toast.error('Failed to update profile'); this.saving.set(false); },
     });
   }
 
-  // Password change
-  togglePasswordSection(): void {
-    this.showPasswordSection.update((v) => !v);
-    this.passwordForm.reset();
-  }
+  togglePasswordSection(): void { this.showPasswordSection.update(v => !v); this.passwordForm.reset(); }
 
   changePassword(): void {
     if (this.passwordForm.invalid) return;
-
     const { newPassword, confirmPassword } = this.passwordForm.value;
-    if (newPassword !== confirmPassword) {
-      this.toast.error('Passwords do not match');
-      return;
-    }
-
+    if (newPassword !== confirmPassword) { this.toast.error('Passwords do not match'); return; }
     this.changingPassword.set(true);
-    // Using updateProfile as a placeholder - actual password change endpoint may differ
     this.userService.updateProfile({ password: newPassword }).subscribe({
-      next: () => {
-        this.toast.success('Password changed successfully');
-        this.showPasswordSection.set(false);
-        this.passwordForm.reset();
-        this.changingPassword.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to change password');
-        this.changingPassword.set(false);
-      },
+      next: () => { this.toast.success('Password changed successfully'); this.showPasswordSection.set(false); this.passwordForm.reset(); this.changingPassword.set(false); },
+      error: () => { this.toast.error('Failed to change password'); this.changingPassword.set(false); },
     });
   }
 
-  // My businesses
   loadMyBusinesses(): void {
     this.loadingBusinesses.set(true);
-    // Load all businesses and filter by userId client-side
-    // Alternatively, the API might support a user filter
     this.businessService.getBusinesses({}).subscribe({
-      next: (response) => {
-        const userId = this.user()?.id;
-        this.myBusinesses.set(response.data.filter((b) => b.userId === userId));
-        this.loadingBusinesses.set(false);
-      },
-      error: () => {
-        this.loadingBusinesses.set(false);
-      },
+      next: (r) => { this.myBusinesses.set(r.data.filter(b => b.userId === this.user()?.id)); this.loadingBusinesses.set(false); },
+      error: () => this.loadingBusinesses.set(false),
     });
   }
 
   deleteBusiness(id: string): void {
-    if (!confirm('Are you sure you want to delete this business?')) return;
+    if (!confirm('Delete this business?')) return;
     this.deletingBusinessId.set(id);
-
     this.businessService.deleteBusiness(id).subscribe({
-      next: () => {
-        this.myBusinesses.update((list) => list.filter((b) => b.id !== id));
-        this.toast.success('Business deleted');
-        this.deletingBusinessId.set(null);
-      },
-      error: () => {
-        this.toast.error('Failed to delete business');
-        this.deletingBusinessId.set(null);
-      },
+      next: () => { this.myBusinesses.update(l => l.filter(b => b.id !== id)); this.toast.success('Business deleted'); this.deletingBusinessId.set(null); },
+      error: () => { this.toast.error('Failed to delete business'); this.deletingBusinessId.set(null); },
     });
   }
 
-  // My jobs
   loadMyJobs(): void {
     this.loadingJobs.set(true);
     this.jobService.getJobs().subscribe({
-      next: (response) => {
-        const userId = this.user()?.id;
-        this.myJobs.set(response.data.filter((j) => j.userId === userId));
-        this.loadingJobs.set(false);
-      },
-      error: () => {
-        this.loadingJobs.set(false);
-      },
+      next: (r) => { this.myJobs.set(r.data.filter(j => j.userId === this.user()?.id)); this.loadingJobs.set(false); },
+      error: () => this.loadingJobs.set(false),
     });
   }
 
   deleteJob(id: string): void {
-    if (!confirm('Are you sure you want to delete this job?')) return;
+    if (!confirm('Delete this job?')) return;
     this.deletingJobId.set(id);
-
     this.jobService.deleteJob(id).subscribe({
-      next: () => {
-        this.myJobs.update((list) => list.filter((j) => j.id !== id));
-        this.toast.success('Job deleted');
-        this.deletingJobId.set(null);
-      },
-      error: () => {
-        this.toast.error('Failed to delete job');
-        this.deletingJobId.set(null);
-      },
+      next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('Job deleted'); this.deletingJobId.set(null); },
+      error: () => { this.toast.error('Failed to delete job'); this.deletingJobId.set(null); },
     });
-  }
-
-  // Helpers
-  getProgressBarClass(): string {
-    const pct = this.profileCompletion();
-    if (pct >= 80) return 'bg-success';
-    if (pct >= 50) return 'bg-info';
-    if (pct >= 30) return 'bg-warning';
-    return 'bg-danger';
   }
 }

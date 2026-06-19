@@ -1,0 +1,87 @@
+// ============================================================
+// PROFILE SHARED — Mixins & Utility Classes
+// ============================================================
+// @use this file wherever profile components need shared styles.
+// Requires: index (which forwards all tokens including _profile-tokens)
+// ============================================================
+
+// ── Mixins ────────────────────────────────────────────────
+
+@mixin profile-card {
+  background: $profile-card-bg;
+  border: 1px solid $profile-card-border;
+  border-radius: $profile-card-border-radius;
+  box-shadow: $profile-card-shadow;
+  padding: $profile-card-padding;
+}
+
+@mixin avatar($size) {
+  width: $size;
+  height: $size;
+  border-radius: $avatar-border-radius;
+  border: $avatar-border;
+  background: $avatar-bg-placeholder;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin progress-fill-color($pct) {
+  // Runtime color is applied via [class] binding in the component;
+  // these classes provide the actual colour rules.
+  &.progress-excellent { background: $progress-color-excellent; }
+  &.progress-good      { background: $progress-color-good; }
+  &.progress-fair      { background: $progress-color-fair; }
+  &.progress-poor      { background: $progress-color-poor; }
+}
+
+@mixin profile-tabs-base {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid $profile-card-border;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@mixin profile-tab-item {
+  padding: $tab-padding-y $tab-padding-x;
+  font-size: $tab-font-size;
+  font-weight: $font-weight-semibold;
+  color: $tab-inactive-color;
+  border: none;
+  border-bottom: $tab-indicator-height solid transparent;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s, background 0.15s;
+
+  &:hover {
+    background: $tab-hover-bg;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    color: $tab-active-color;
+    border-bottom-color: $tab-active-border;
+  }
+
+  &:disabled,
+  &[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// ── Utility Classes ───────────────────────────────────────
+
+.profile-card {
+  @include profile-card;
+}
+
+.avatar-lg { @include avatar($avatar-size-lg); }
+.avatar-md { @include avatar($avatar-size-md); }
+.avatar-sm { @include avatar($avatar-size-sm); }

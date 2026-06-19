@@ -1,0 +1,82 @@
+@use '../../../../assets/styles/index' as *;
+
+.info-card {
+  background: $profile-card-bg;
+  border: 1px solid $profile-card-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-2;
+  overflow: hidden;
+  margin-bottom: $section-gap-v;
+  transition: box-shadow 0.25s ease;
+
+  &:hover { box-shadow: $shadow-3; }
+
+  .info-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $profile-card-border;
+    background: linear-gradient(180deg, $color-stone-50, transparent);
+
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      .title-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: $radius-sm;
+        background: rgba($color-primary, 0.16);
+        color: $color-amber-700;
+        font-size: 0.95rem;
+      }
+
+      .card-title {
+        font-family: $font-family-header;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-md;
+        color: $color-text-primary;
+        margin: 0;
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: $spacing-xs;
+    }
+  }
+
+  .info-card-body {
+    padding: $spacing-lg;
+  }
+}
+
+// ── Action buttons ─────────────────────────────────────────
+.btn-edit {
+  border: 1px solid rgba($color-primary-dark, 0.4);
+  background: rgba($color-primary, 0.1);
+  color: $color-amber-700;
+  font-weight: $font-weight-semibold;
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+    color: $color-amber-800;
+  }
+}
+
+.btn-light-soft {
+  border: 1px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+
+  &:hover {
+    background: $color-bg-light;
+    color: $color-text-primary;
+  }
+}

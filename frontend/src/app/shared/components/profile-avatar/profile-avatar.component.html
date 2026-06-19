@@ -1,0 +1,17 @@
+@if (editable) {
+  <app-file-upload
+    variant="avatar"
+    accept="image/*"
+    [maxSizeMb]="maxSizeMb"
+    [existingPreview]="src | imageUrl"
+    (filesChange)="fileSelected.emit($event)"
+  ></app-file-upload>
+} @else {
+  <div class="avatar-wrap" [ngClass]="'avatar-' + size" [attr.aria-label]="displayName + ' avatar'">
+    @if (src) {
+      <img [src]="src | imageUrl" [alt]="displayName + ' avatar'" class="avatar-img" loading="lazy" />
+    } @else {
+      <span class="avatar-initial" aria-hidden="true">{{ initial }}</span>
+    }
+  </div>
+}
