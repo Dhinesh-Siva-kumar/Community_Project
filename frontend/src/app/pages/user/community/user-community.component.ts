@@ -8,13 +8,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, Event as AppEvent, PaginatedResponse } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 
 export type CommunityTab = 'all' | 'joined' | 'trending';
 
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, ImageUrlPipe],
+  imports: [CommonModule, RouterLink, ImageUrlPipe, ProfileTabsComponent],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
@@ -44,6 +45,13 @@ export class UserCommunityComponent implements OnInit {
 
   // ── UI state ───────────────────────────────────────────────
   activeTab = signal<CommunityTab>('all');
+
+  // ── Profile-tabs compatible tab definitions ────────────────
+  pageTabs = computed<ProfileTab[]>(() => [
+    { id: 'all',      label: 'All',      icon: 'bi-grid-3x3-gap', badge: this.totalItems() || undefined },
+    { id: 'joined',   label: 'Joined',   icon: 'bi-person-check', badge: this.joinedCommunities().length || undefined },
+    { id: 'trending', label: 'Trending', icon: 'bi-fire' },
+  ]);
 
   // ── Joined community ID tracker ───────────────────────────
   joinedCommunityIds = signal<Set<string>>(new Set());
@@ -219,12 +227,15 @@ export class UserCommunityComponent implements OnInit {
     this.communityService.joinCommunity(communityId).subscribe({
       next: () => {
         this.toast.success('Joined the community!');
+        // Optimistically patch is_joined on the local object
+        this.communities.update(list =>
+          list.map(c => c.id === communityId ? { ...c, is_joined: true } : c)
+        );
         this.joinedCommunityIds.update((ids) => {
           const n = new Set(ids);
           n.add(communityId);
           return n;
         });
-        this.loadCommunities();
         this.joiningId.set(null);
       },
       error: () => {
@@ -241,6 +252,10 @@ export class UserCommunityComponent implements OnInit {
     this.communityService.leaveCommunity(communityId).subscribe({
       next: () => {
         this.toast.success('Left the community');
+        // Optimistically patch is_joined on the local object so UI updates instantly
+        this.communities.update(list =>
+          list.map(c => c.id === communityId ? { ...c, is_joined: false } : c)
+        );
         this.joinedCommunityIds.update((ids) => {
           const n = new Set(ids);
           n.delete(communityId);

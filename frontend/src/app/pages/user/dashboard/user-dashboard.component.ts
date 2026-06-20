@@ -21,6 +21,7 @@ import {
   PaginatedResponse,
 } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 
 type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY';
 
@@ -52,7 +53,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, ImageUrlPipe],
+  imports: [CommonModule, RouterLink, DatePipe, ImageUrlPipe, ProfileTabsComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -160,11 +161,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     { title: 'Jobs',        description: 'Opportunities',  icon: 'bi-briefcase-fill',       color: '#78716C', bgColor: '#F5F5F4', route: '/user/jobs' },
   ]);
 
-  tabs: { key: PostTab; label: string; icon: string }[] = [
-    { key: 'ALL', label: 'All Posts', icon: 'bi-grid-fill' },
-    { key: 'POPULAR', label: 'Popular', icon: 'bi-fire' },
-    { key: 'HELP', label: 'Help Requests', icon: 'bi-question-circle-fill' },
-    { key: 'EMERGENCY', label: 'Emergency', icon: 'bi-exclamation-triangle-fill' },
+  tabs: ProfileTab[] = [
+    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill' },
+    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire' },
+    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill' },
+    { id: 'EMERGENCY', label: 'Emergency',     icon: 'bi-exclamation-triangle-fill' },
   ];
 
   ngOnInit(): void {
@@ -246,7 +247,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     }
 
     const requests = communities.map((c) =>
-      this.postService.getPosts(c.id, { limit: 10, status: 'APPROVED' }).pipe(
+      this.postService.getPosts(c.id, { limit: 10 }).pipe(
         catchError(() => of({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 } as PaginatedResponse<Post>))
       )
     );

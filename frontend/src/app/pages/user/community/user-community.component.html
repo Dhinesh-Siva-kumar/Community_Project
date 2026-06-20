@@ -46,12 +46,10 @@
       </p>
     </div>
 
-    <!-- Right: three stat tiles -->
+    <!-- Stat tiles -->
     <div class="hero-stats" aria-label="Your community statistics">
       <div class="hero-stat-tile">
-        <div class="stat-tile-icon" aria-hidden="true">
-          <i class="bi bi-people-fill"></i>
-        </div>
+        <div class="stat-tile-icon"><i class="bi bi-people-fill"></i></div>
         <div class="stat-tile-body">
           <span class="stat-tile-value">{{ totalItems() }}</span>
           <span class="stat-tile-label">Communities</span>
@@ -59,9 +57,7 @@
       </div>
 
       <div class="hero-stat-tile hero-stat-tile--accent">
-        <div class="stat-tile-icon" aria-hidden="true">
-          <i class="bi bi-person-check-fill"></i>
-        </div>
+        <div class="stat-tile-icon"><i class="bi bi-person-check-fill"></i></div>
         <div class="stat-tile-body">
           <span class="stat-tile-value">{{ joinedCommunities().length }}</span>
           <span class="stat-tile-label">Joined</span>
@@ -69,11 +65,9 @@
       </div>
 
       <div class="hero-stat-tile">
-        <div class="stat-tile-icon" aria-hidden="true">
-          <i class="bi bi-people"></i>
-        </div>
+        <div class="stat-tile-icon"><i class="bi bi-person-fill"></i></div>
         <div class="stat-tile-body">
-          <span class="stat-tile-value">{{ totalMembersCount() }}</span>
+          <span class="stat-tile-value">{{ totalMembersCount() | number }}</span>
           <span class="stat-tile-label">Total Members</span>
         </div>
       </div>
@@ -81,79 +75,6 @@
   </div>
 </section>
 
-<!-- ── FEATURED COMMUNITIES STRIP ─────────────────────────────
-     Horizontal scroll of top communities by member count
-     ─────────────────────────────────────────────────────────── -->
-@if (featuredCommunities().length > 0) {
-  <section class="featured-section" aria-labelledby="featured-heading">
-    <div class="section-header">
-      <div class="section-title-group">
-        <div class="section-badge">
-          <i class="bi bi-star-fill" aria-hidden="true"></i>
-          Featured
-        </div>
-        <h2 class="section-title" id="featured-heading">Top Communities</h2>
-      </div>
-      <button
-        class="section-see-all"
-        (click)="setTab('trending')"
-        type="button"
-      >
-        See all
-        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-      </button>
-    </div>
-
-    <div class="featured-scroll" role="list" aria-label="Featured communities">
-      @for (community of featuredCommunities(); track community.id) {
-        <article
-          class="featured-card"
-          role="listitem"
-          (click)="navigateToCommunity(community.id)"
-          (keydown.enter)="navigateToCommunity(community.id)"
-          tabindex="0"
-          [attr.aria-label]="community.name + ' - ' + (community._count?.members ?? 0) + ' members'"
-        >
-          <!-- Cover -->
-          <div class="featured-cover">
-            @if (community.image) {
-              <img
-                [src]="community.image | imageUrl"
-                [alt]="community.name"
-                class="featured-cover-img"
-                loading="lazy"
-              />
-            } @else {
-              <div
-                class="featured-cover-placeholder"
-                [style.background]="getCoverGradient(community.name)"
-                aria-hidden="true"
-              >
-                <i class="bi bi-people-fill"></i>
-              </div>
-            }
-            <!-- Joined pill -->
-            @if (community.is_joined || isJoined(community.id)) {
-              <span class="featured-joined-pill" aria-label="You have joined this community">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                Joined
-              </span>
-            }
-          </div>
-
-          <!-- Info -->
-          <div class="featured-info">
-            <span class="featured-name">{{ community.name }}</span>
-            <div class="featured-meta">
-              <i class="bi bi-people" aria-hidden="true"></i>
-              <span>{{ community._count?.members ?? 0 }} members</span>
-            </div>
-          </div>
-        </article>
-      }
-    </div>
-  </section>
-}
 
 <!-- ── MAIN CONTENT AREA ───────────────────────────────────────
      Two-column layout: community grid (left) + panels (right)
@@ -164,45 +85,11 @@
   <div class="comm-main-col">
 
     <!-- ── Tab Navigation ─────────────────────────── -->
-    <div class="tab-bar" role="tablist" aria-label="Community filter tabs">
-      <button
-        class="tab-btn"
-        [class.tab-btn--active]="activeTab() === 'all'"
-        (click)="setTab('all')"
-        role="tab"
-        [attr.aria-selected]="activeTab() === 'all'"
-        type="button"
-      >
-        <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-        All
-        <span class="tab-count">{{ totalItems() }}</span>
-      </button>
-
-      <button
-        class="tab-btn"
-        [class.tab-btn--active]="activeTab() === 'joined'"
-        (click)="setTab('joined')"
-        role="tab"
-        [attr.aria-selected]="activeTab() === 'joined'"
-        type="button"
-      >
-        <i class="bi bi-person-check" aria-hidden="true"></i>
-        Joined
-        <span class="tab-count">{{ joinedCommunities().length }}</span>
-      </button>
-
-      <button
-        class="tab-btn"
-        [class.tab-btn--active]="activeTab() === 'trending'"
-        (click)="setTab('trending')"
-        role="tab"
-        [attr.aria-selected]="activeTab() === 'trending'"
-        type="button"
-      >
-        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
-        Trending
-      </button>
-    </div>
+    <app-profile-tabs
+      [tabs]="pageTabs()"
+      [activeTab]="activeTab()"
+      (tabChange)="setTab($any($event))"
+    ></app-profile-tabs>
 
     <!-- ── Search Toolbar ─────────────────────────── -->
     <div class="search-toolbar">
@@ -371,6 +258,16 @@
 
               <!-- Action row -->
               <div class="cc-actions">
+                <button
+                  class="cc-btn cc-btn--ghost"
+                  (click)="navigateToCommunity(community.id)"
+                  type="button"
+                  [attr.aria-label]="'View ' + community.name"
+                >
+                  View
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </button>
+
                 @if (community.is_joined || isJoined(community.id)) {
                   <button
                     class="cc-btn cc-btn--leave"
@@ -404,16 +301,6 @@
                     }
                   </button>
                 }
-
-                <button
-                  class="cc-btn cc-btn--ghost"
-                  (click)="navigateToCommunity(community.id)"
-                  type="button"
-                  [attr.aria-label]="'View ' + community.name"
-                >
-                  View
-                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                </button>
               </div>
 
             </div>

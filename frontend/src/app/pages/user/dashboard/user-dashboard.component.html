@@ -81,12 +81,11 @@
     <section class="feed-col">
       <div class="feed-top">
         <h2 class="feed-top__title">Community Feed</h2>
-        <div class="feed-tabs">
-          @for (tab of tabs; track tab.key) {
-            <button class="feed-tab" [class.feed-tab--active]="activeTab() === tab.key"
-                    (click)="switchTab(tab.key)" type="button">{{ tab.label }}</button>
-          }
-        </div>
+        <app-profile-tabs
+          [tabs]="tabs"
+          [activeTab]="activeTab()"
+          (tabChange)="switchTab($any($event))"
+        ></app-profile-tabs>
       </div>
 
       @if (loadingPosts()) {

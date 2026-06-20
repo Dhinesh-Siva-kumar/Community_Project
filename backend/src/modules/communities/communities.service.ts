@@ -205,7 +205,18 @@ export async function findAll(params: {
       displayName: c['creator_display_name'],
     },
     _count: countMap.get(c['id']) ?? { members: 0, posts: 0 },
+    is_joined: false, // will be overwritten below if userId provided
   }));
+
+  // Bulk-check which communities the caller has joined
+  if (userId && ids.length) {
+    const memberships = await db('community_members')
+      .whereIn('community_id', ids as string[])
+      .where('user_id', userId)
+      .select('community_id');
+    const joinedSet = new Set(memberships.map((m: Record<string, unknown>) => m['community_id'] as string));
+    data.forEach((c) => { (c as Record<string, unknown>)['is_joined'] = joinedSet.has((c as Record<string, unknown>)['id'] as string); });
+  }
 
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }

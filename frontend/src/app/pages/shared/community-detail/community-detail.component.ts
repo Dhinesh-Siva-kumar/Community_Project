@@ -70,7 +70,6 @@ export class CommunityDetailComponent implements OnInit {
   selectedEditType     = signal<PostType>('GENERAL');
   editImages           = signal<File[]>([]);
   editImageResetCounter = signal(0);
-  editPostForm!: FormGroup;
 
   // Delete post modal
   deletePostTarget    = signal<Post | null>(null);
@@ -90,7 +89,12 @@ export class CommunityDetailComponent implements OnInit {
   loadingMoreMembers = signal(false);
 
   // Forms
-  postForm!: FormGroup;
+  postForm: FormGroup = this.fb.group({
+    content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+  });
+  editPostForm: FormGroup = this.fb.group({
+    content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+  });
   commentForms: Map<string, FormGroup> = new Map();
 
   // ── Computed ──────────────────────────────────────────────
@@ -177,7 +181,7 @@ export class CommunityDetailComponent implements OnInit {
   loadPosts(append = false): void {
     if (!append) { this.loadingPosts.set(true); } else { this.loadingMore.set(true); }
 
-    const params: Record<string, any> = { page: this.currentPage(), limit: 10, status: 'APPROVED' };
+    const params: Record<string, any> = { page: this.currentPage(), limit: 10 };
 
     this.postService.getPosts(this.communityId(), params).subscribe({
       next: (response) => {
