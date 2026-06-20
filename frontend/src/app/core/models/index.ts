@@ -373,3 +373,16 @@ export interface DashboardStats {
   userEvents?: number;
   userJobs?: number;
 }
+
+export interface ChartData {
+  labels:          string[];
+  users:           number[];
+  communities:     number[];
+  posts:           number[];
+  eventsUpcoming:  number;
+  eventsPast30d:   number;
+  businessActive:  number;
+  businessTotal:   number;
+  jobActive:       number;
+  jobTotal:        number;
+}

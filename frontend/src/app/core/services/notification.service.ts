@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -63,10 +63,11 @@ export class NotificationService implements OnDestroy {
   }
 
   getNotifications(): Observable<Notification[]> {
-    return this.api.get<Notification[]>('/notifications').pipe(
-      tap((notifications) => {
-        this.notifications.set(notifications);
-        this.unreadCount.set(notifications.filter((n) => !n.isRead).length);
+    return this.api.get<{ data: any[] }>('/notifications').pipe(
+      map((res) => (res.data ?? []).map((n: any) => ({ ...n, isRead: n.isRead ?? n.is_read ?? false }))),
+      tap((list) => {
+        this.notifications.set(list);
+        this.unreadCount.set(list.filter((n) => !n.isRead).length);
       })
     );
   }

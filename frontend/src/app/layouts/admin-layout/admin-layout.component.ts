@@ -1,6 +1,7 @@
 import { Component, inject, signal, HostListener } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -10,6 +11,17 @@ interface NavItem {
   route: string;
   sectionLabel?: string;
 }
+
+const ROUTE_TITLES: Record<string, string> = {
+  dashboard:         'Dashboard',
+  community:         'Community',
+  business:          'Business',
+  jobs:              'Jobs',
+  events:            'Events',
+  'user-management': 'User Management',
+  'post-approval':   'Post Approval',
+  profile:           'Profile',
+};
 
 @Component({
   selector: 'app-admin-layout',
@@ -27,6 +39,7 @@ export class AdminLayoutComponent {
   mobileSidebarOpen = signal(false);
   userDropdownOpen = signal(false);
   isMobile = signal(false);
+  pageTitle = signal('Dashboard');
 
   navItems: NavItem[] = [
     { label: 'Dashboard',       icon: 'bi-grid',              route: '/admin/dashboard'                                     },
@@ -41,6 +54,10 @@ export class AdminLayoutComponent {
 
   constructor() {
     this.checkScreenSize();
+    this.updatePageTitle(this.router.url);
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => this.updatePageTitle(e.urlAfterRedirects));
   }
 
   @HostListener('window:resize')
@@ -98,9 +115,17 @@ export class AdminLayoutComponent {
     this.router.navigate(['/auth/login']);
   }
 
+  private updatePageTitle(url: string): void {
+    const segments = url.split('/').filter((s) => s && !/^\d+$/.test(s));
+    const segment = segments[segments.length - 1] ?? '';
+    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'Dashboard');
+  }
+
   onNavClick(): void {
-    if (this.isMobile()) {
-      this.closeMobileSidebar();
-    }
+    if (this.isMobile()) this.closeMobileSidebar();
+  }
+
+  get sidebarLeft(): string {
+    return (!this.isMobile() && this.sidebarCollapsed()) ? '70px' : '260px';
   }
 }

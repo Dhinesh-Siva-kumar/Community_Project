@@ -1,228 +1,302 @@
-<!-- ============================================================ -->
-<!-- SHIMMER SKELETON                                             -->
-<!-- ============================================================ -->
+<!-- ── Loading skeleton ───────────────────────────────────────── -->
 @if (loading()) {
-  <div class="dash-skeleton">
-
-    <div class="sk-top-bar">
-      <div class="sk-greeting">
-        <div class="sk-row">
-          <div class="sk-pill"></div>
-          <div class="sk-pill sk-pill--sm" style="margin-left:auto"></div>
-        </div>
-        <div class="sk-line sk-line--xl"></div>
-        <div class="sk-line sk-line--md"></div>
-      </div>
-      <div class="sk-qa">
-        <div class="sk-row"><div class="sk-pill"></div></div>
-        @for (_ of [1,2,3,4]; track _) {
-          <div class="sk-action-row">
-            <div class="sk-icon"></div>
-            <div class="sk-line sk-line--sm" style="flex:1"></div>
-            <div class="sk-chevron"></div>
-          </div>
-        }
-      </div>
+  <div class="db-skeleton">
+    <div class="sk-header"></div>
+    <div class="db-bento">
+      @for (_ of [1,2,3,4,5,6]; track _) { <div class="sk-card"></div> }
     </div>
-
-    <div class="sk-stat-row">
-      @for (_ of [1,2,3,4,5,6,7]; track _) {
-        <div class="sk-stat"></div>
-      }
+    <div class="db-mid-row">
+      <div class="sk-panel"></div>
+      <div class="sk-panel"></div>
     </div>
-
-    <div class="sk-activity">
-      <div class="sk-panel-hdr">
-        <div class="sk-line sk-line--md" style="width:160px"></div>
-        <div class="sk-pill sk-pill--sm" style="margin-left:auto"></div>
-      </div>
-      @for (_ of [1,2,3,4,5]; track _) {
-        <div class="sk-act-row">
-          <div class="sk-icon"></div>
-          <div style="flex:1; display:flex; flex-direction:column; gap:6px">
-            <div class="sk-line sk-line--md"></div>
-            <div class="sk-line sk-line--sm" style="width:40%"></div>
-          </div>
-          <div class="sk-pill sk-pill--sm"></div>
-        </div>
-      }
-    </div>
-
+    <div class="sk-panel"></div>
   </div>
 } @else {
 
-<!-- ============================================================ -->
-<!-- DASHBOARD LAYOUT WRAPPER                                     -->
-<!-- ============================================================ -->
-<div class="dash-layout">
+<!-- ── Page ──────────────────────────────────────────────────── -->
+<div class="db-page">
 
-  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
-  <div class="top-bar">
+  <!-- Welcome header -->
+  <div class="db-welcome">
+    <h1 class="db-welcome__title">Welcome back, {{ getAdminFirstName() }}</h1>
+    <p class="db-welcome__sub">Here is a summary of the community's health and activity today.</p>
+  </div>
 
-    <!-- Greeting Card -->
-    <div class="greeting-card">
-      <div class="greeting-shapes" aria-hidden="true">
-        <div class="shape shape--1"></div>
-        <div class="shape shape--2"></div>
-      </div>
+  <!-- ── Bento metric grid ─────────────────────────────────────── -->
+  <div class="db-bento">
 
-      <div class="greeting-header">
-        <div class="greeting-eyebrow">
-          <i class="bi bi-shield-fill-check" aria-hidden="true"></i>
-          Admin Dashboard
+    <!-- Total Users (wide) -->
+    <div class="bento-card bento-card--wide bento-card--amber">
+      <div class="bento-card__head">
+        <div>
+          <p class="bento-label">TOTAL USERS</p>
+          <h2 class="bento-stat">{{ (stats()?.totalUsers ?? 0) | number }}</h2>
+          <div class="bento-trend bento-trend--up">
+            <i class="bi bi-graph-up-arrow"></i> Active members
+          </div>
         </div>
-        <div class="greeting-chips">
-          <span class="datetime-chip">
-            <i class="bi bi-clock" aria-hidden="true"></i>
-            {{ today() | date:'EEE, d MMM · h:mm a' }}
-          </span>
-          <button
-            class="refresh-btn"
-            (click)="loadDashboardStats()"
-            aria-label="Refresh dashboard"
-            type="button"
-          >
-            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-          </button>
-        </div>
+        <div class="bento-icon bento-icon--amber"><i class="bi bi-person-fill"></i></div>
       </div>
-
-      <h1 class="greeting-title">
-        Welcome back, {{ getAdminFirstName() }}
-        <span class="greeting-wave" aria-hidden="true">👋</span>
-      </h1>
-      <p class="greeting-subtitle">
-        Here's what's happening across your community platform today.
-      </p>
-
-      @if (pendingCount() > 0) {
-        <a routerLink="/admin/post-approval" class="greeting-alert text-decoration-none" role="alert">
-          <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-          <span>
-            <strong>{{ pendingCount() }}</strong>
-            post{{ pendingCount() === 1 ? '' : 's' }} awaiting your review
-          </span>
-          <i class="bi bi-arrow-right" aria-hidden="true"></i>
-        </a>
-      }
-    </div>
-
-    <!-- Quick Actions Card -->
-    <div class="qa-card">
-      <div class="qa-card-header">
-        <span class="qa-card-label">Quick Actions</span>
-        <span class="qa-card-count" aria-hidden="true">{{ quickActions().length }}</span>
-      </div>
-
-      <div class="qa-card-list">
-        @for (action of quickActions(); track action.title; let i = $index) {
-          <a
-            [routerLink]="action.route"
-            class="qa-btn text-decoration-none"
-            [class.qa-btn--accent]="i === 0"
-            [attr.aria-label]="action.title"
-          >
-            <div class="qa-btn-icon" [style.background-color]="action.color + '18'">
-              <i class="bi {{ action.icon }}" [style.color]="action.color" aria-hidden="true"></i>
-            </div>
-            <span class="qa-btn-label">{{ action.title }}</span>
-            @if (action.route === '/admin/post-approval' && pendingCount() > 0) {
-              <span class="qa-btn-badge" [attr.aria-label]="pendingCount() + ' pending'">
-                {{ pendingCount() }}
-              </span>
-            }
-            <i class="bi bi-chevron-right qa-btn-chevron" aria-hidden="true"></i>
-          </a>
+      <div class="bento-bars">
+        @for (h of userBars(); track $index) {
+          <div class="bento-bar-wrap">
+            <div class="bento-bar bento-bar--amber" [class.bento-bar--active]="$last" [style.height.%]="h"
+              [attr.data-tip]="(userValues()[$index] ?? 0) + ' users · ' + chartLabels()[$index]"></div>
+            <span class="bar-label">{{ chartLabels()[$index] }}</span>
+          </div>
         }
       </div>
     </div>
 
-  </div>
-
-  <!-- ── STAT ROW ────────────────────────────────────────────── -->
-  <div class="stat-row" role="list" aria-label="Platform statistics">
-    @for (card of statCards(); track card.label) {
-      <a
-        [routerLink]="card.route"
-        class="stat-card text-decoration-none"
-        role="listitem"
-        [style.--card-color]="card.color"
-        [style.--card-bg]="card.bgColor"
-        [attr.aria-label]="card.label + ': ' + card.value"
-      >
-        <div class="stat-card-top">
-          <div class="stat-icon">
-            <i class="bi {{ card.icon }}" aria-hidden="true"></i>
-          </div>
-          <i class="bi bi-arrow-up-right stat-trend-icon" aria-hidden="true"></i>
+    <!-- Communities -->
+    <div class="bento-card bento-card--green">
+      <div class="bento-card__head">
+        <div>
+          <p class="bento-label">COMMUNITIES</p>
+          <h2 class="bento-stat bento-stat--md">{{ (stats()?.totalCommunities ?? 0) | number }}</h2>
         </div>
-        <div class="stat-card-body">
-          <span class="stat-value">{{ card.value | number }}</span>
-          <span class="stat-label">{{ card.label }}</span>
-        </div>
-      </a>
-    }
-  </div>
-
-  <!-- ── RECENT ACTIVITY ─────────────────────────────────────── -->
-  <div class="panel activity-panel">
-    <div class="panel-header">
-      <div class="panel-header-left">
-        <div class="panel-icon-dot">
-          <i class="bi bi-activity" aria-hidden="true"></i>
-        </div>
-        <h2 class="panel-title">Recent Activity</h2>
-        <span class="live-chip" aria-hidden="true">
-          <span class="live-dot"></span>
-          LIVE
-        </span>
+        <div class="bento-icon bento-icon--green"><i class="bi bi-diagram-3-fill"></i></div>
       </div>
-      @if (stats()?.recentActivity?.length) {
-        <span class="panel-badge">{{ stats()!.recentActivity!.length }} events</span>
-      }
-    </div>
-
-    <div class="panel-body panel-body--flush">
-      @if (stats()?.recentActivity && stats()!.recentActivity!.length > 0) {
-        <div class="activity-list" role="list">
-          @for (activity of stats()!.recentActivity!; track activity.createdAt) {
-            <div class="activity-item" role="listitem">
-              <div class="activity-icon" [style.background-color]="getActivityColor(activity.type) + '14'">
-                <i
-                  class="bi {{ getActivityIcon(activity.type) }}"
-                  [style.color]="getActivityColor(activity.type)"
-                  aria-hidden="true"
-                ></i>
-              </div>
-              <div class="activity-content">
-                <p class="activity-message">{{ activity.message }}</p>
-                <span class="activity-time">
-                  <i class="bi bi-clock" aria-hidden="true"></i>
-                  {{ getTimeAgo(activity.createdAt) }}
-                </span>
-              </div>
-              <span
-                class="activity-type-badge"
-                [style.background-color]="getActivityColor(activity.type) + '14'"
-                [style.color]="getActivityColor(activity.type)"
-              >
-                {{ getActivityTypeLabel(activity.type) }}
-              </span>
-            </div>
-          }
-        </div>
-      } @else {
-        <div class="empty-state">
-          <div class="empty-state__icon">
-            <i class="bi bi-inbox-fill" aria-hidden="true"></i>
+      <div class="bento-pill-bars">
+        @for (h of communityBars(); track $index) {
+          <div class="bento-bar-wrap">
+            <div class="bento-pill bento-pill--green" [class.bento-pill--active]="$last" [style.height.%]="h"
+              [attr.data-tip]="(communityValues()[$index] ?? 0) + ' communities · ' + chartLabels()[$index]"></div>
+            <span class="bar-label">{{ chartLabels()[$index] }}</span>
           </div>
-          <h4 class="empty-state__title">No recent activity</h4>
-          <p class="empty-state__desc">Platform activity will appear here in real time.</p>
-        </div>
-      }
+        }
+      </div>
+      <p class="bento-footnote">Total communities on platform</p>
     </div>
-  </div>
 
-</div><!-- /.dash-layout -->
+    <!-- Posts -->
+    <div class="bento-card bento-card--blue">
+      <div class="bento-card__head">
+        <div>
+          <p class="bento-label">TOTAL POSTS</p>
+          <h2 class="bento-stat bento-stat--md">{{ (stats()?.totalPosts ?? 0) | number }}</h2>
+        </div>
+        <div class="bento-icon bento-icon--blue"><i class="bi bi-file-earmark-text-fill"></i></div>
+      </div>
+      <div class="bento-col-bars">
+        @for (h of postBars(); track $index) {
+          <div class="bento-bar-wrap">
+            <div class="bento-col bento-col--blue" [class.bento-col--active]="$last" [style.height.%]="h"
+              [attr.data-tip]="(postValues()[$index] ?? 0) + ' posts · ' + chartLabels()[$index]"></div>
+            <span class="bar-label">{{ chartLabels()[$index] }}</span>
+          </div>
+        }
+      </div>
+      <p class="bento-footnote">Pending: <strong class="bento-footnote--blue">{{ stats()?.pendingPosts ?? 0 }}</strong></p>
+    </div>
 
+    <!-- Business Listings -->
+    <div class="bento-card bento-card--amber-border">
+      <div class="bento-card__head">
+        <p class="bento-label">BUSINESS LISTINGS</p>
+        <i class="bi bi-patch-check-fill bento-badge-icon"></i>
+      </div>
+      <div class="events-bars">
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>ACTIVE</span><span>{{ chartData()?.businessActive ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--amber"
+              [style.width.%]="eventBarPct(chartData()?.businessActive, chartData()?.businessTotal)"></div>
+          </div>
+        </div>
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>TOTAL</span><span>{{ chartData()?.businessTotal ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--amber-dim" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Events -->
+    <div class="bento-card bento-card--teal-border">
+      <div class="bento-card__head">
+        <p class="bento-label">EVENTS</p>
+        <i class="bi bi-calendar-event bento-badge-icon bento-badge-icon--teal"></i>
+      </div>
+      <div class="events-bars">
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>UPCOMING</span><span>{{ chartData()?.eventsUpcoming ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--teal"
+              [style.width.%]="eventBarPct(chartData()?.eventsUpcoming, chartData()?.eventsPast30d)"></div>
+          </div>
+        </div>
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>PAST (30d)</span><span>{{ chartData()?.eventsPast30d ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--teal-dim"
+              [style.width.%]="eventBarPct(chartData()?.eventsPast30d, chartData()?.eventsUpcoming)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Listings -->
+    <div class="bento-card bento-card--wide bento-card--red-border">
+      <div class="bento-card__head">
+        <p class="bento-label">JOB LISTINGS</p>
+        <div class="bento-icon bento-icon--red"><i class="bi bi-briefcase-fill"></i></div>
+      </div>
+      <div class="events-bars">
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>ACTIVE</span><span>{{ chartData()?.jobActive ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--red"
+              [style.width.%]="eventBarPct(chartData()?.jobActive, chartData()?.jobTotal)"></div>
+          </div>
+        </div>
+        <div class="events-bar-row">
+          <div class="events-bar-meta"><span>TOTAL</span><span>{{ chartData()?.jobTotal ?? 0 }}</span></div>
+          <div class="events-bar-track">
+            <div class="events-bar-fill events-bar-fill--red-dim" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.db-bento -->
+
+  <!-- ── Approvals + Quick Actions ─────────────────────────────── -->
+  <div class="db-mid-row">
+
+    <!-- Pending Approvals -->
+    <div class="panel panel--approvals">
+      <div class="panel__head">
+        <h3 class="panel__title">Pending Approvals</h3>
+        @if (pendingCount() > 0) {
+          <span class="action-badge">{{ pendingCount() }} ACTION ITEMS</span>
+        }
+      </div>
+
+      <div class="approvals-list">
+        @if (pendingPosts().length === 0) {
+          <div class="approvals-empty">
+            <i class="bi bi-check-circle"></i> No pending approvals
+          </div>
+        }
+        @for (post of pendingPosts(); track post.id) {
+          <div class="approval-item">
+            <div class="approval-item__left">
+              <div class="approval-icon" [style.background]="postIconBg(post.type)">
+                <i class="bi" [class]="postTypeIcon(post.type)" [style.color]="postIconColor(post.type)"></i>
+              </div>
+              <div>
+                <p class="approval-name">{{ post.content | slice:0:60 }}{{ post.content.length > 60 ? '…' : '' }}</p>
+                <div class="approval-meta">
+                  <span class="approval-type" [style.color]="postIconColor(post.type)">{{ post.type }}</span>
+                  <span class="approval-time">{{ getTimeAgo(post.createdAt) }}</span>
+                  @if (post.community?.name) {
+                    <span class="approval-time">· {{ post.community!.name }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="approval-actions">
+              <button class="btn-reject"  (click)="rejectPost(post.id)"  type="button">Reject</button>
+              <button class="btn-approve" (click)="approvePost(post.id)" type="button">Approve</button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <a routerLink="/admin/post-approval" class="panel__footer-link">VIEW ALL PENDING REQUESTS</a>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel panel--qa">
+      <h3 class="panel__title">Quick Actions</h3>
+      <div class="qa-list">
+        @for (a of quickActions; track a.label) {
+          <a [routerLink]="a.route" class="qa-item" [style.background]="a.bg" [style.border-color]="a.color + '22'">
+            <div class="qa-item__icon"><i class="bi" [class]="a.icon" [style.color]="a.color"></i></div>
+            <span class="qa-item__label">{{ a.label }}</span>
+            <i class="bi bi-chevron-right qa-item__chevron"></i>
+          </a>
+        }
+      </div>
+      <div class="platform-health">
+        <p class="platform-health__label">PLATFORM HEALTH</p>
+        <div class="platform-health__status">
+          <span class="health-dot"></span>
+          <span>Systems Operational</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.db-mid-row -->
+
+  <!-- ── Recent Activities ──────────────────────────────────────── -->
+  @if ((stats()?.recentActivity?.length ?? 0) > 0) {
+    <div class="panel panel--table">
+      <div class="panel__head">
+        <h3 class="panel__title">Recent Activity</h3>
+      </div>
+      <div class="activity-list">
+        @for (item of stats()!.recentActivity!; track item.createdAt) {
+          <div class="activity-item">
+            <div class="activity-icon" [style.background]="activityColor(item.type) + '18'">
+              <i class="bi" [class]="activityIcon(item.type)" [style.color]="activityColor(item.type)"></i>
+            </div>
+            <div class="activity-content">
+              <p class="activity-message">{{ item.message }}</p>
+              <span class="activity-time">{{ getTimeAgo(item.createdAt) }}</span>
+            </div>
+            <span class="activity-badge" [style.background]="activityColor(item.type) + '18'" [style.color]="activityColor(item.type)">
+              {{ activityLabel(item.type) }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Audit Log Table ────────────────────────────────────────── -->
+  @if (auditLogs().length > 0) {
+    <div class="panel panel--table">
+      <div class="panel__head">
+        <h3 class="panel__title">Recent Admin Actions</h3>
+        <div class="table-actions">
+          <button class="icon-btn" type="button" aria-label="Download"><i class="bi bi-download"></i></button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="act-table">
+          <thead>
+            <tr>
+              <th>OPERATOR</th>
+              <th>ACTION</th>
+              <th>TARGET</th>
+              <th>TIMESTAMP</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of auditLogs(); track log.id) {
+              <tr>
+                <td>
+                  <div class="operator-cell">
+                    <div class="op-avatar">{{ auditInitials(log) }}</div>
+                    <span>{{ log.actor?.displayName || log.actor?.userName || 'System' }}</span>
+                  </div>
+                </td>
+                <td><span class="action-chip" [class.action-chip--danger]="auditActionClass(log.action) === 'danger'">{{ log.action }}</span></td>
+                <td class="target-cell">{{ log.resource }}{{ log.resourceId ? ' #' + log.resourceId.slice(0,8) : '' }}</td>
+                <td class="ts-cell">{{ formatTs(log.createdAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="panel__table-footer">
+        <a routerLink="/admin/user-management" class="footer-link">VIEW COMPLETE LOG HISTORY</a>
+      </div>
+    </div>
+  }
+
+</div><!-- /.db-page -->
 }

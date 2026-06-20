@@ -87,3 +87,7 @@ export async function trustUser(req: Request, res: Response, next: NextFunction)
 export async function untrustUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try { res.json(await usersService.untrustUser(req.params['id'] as string)); } catch (e) { next(e); }
 }
+
+export async function getCharts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try { res.json(await usersService.getChartData()); } catch (e) { next(e); }
+}

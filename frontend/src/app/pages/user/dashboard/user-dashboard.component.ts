@@ -216,22 +216,22 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   loadJoinedCommunities(): void {
     this.loadingCommunities.set(true);
-    this.communityService.getCommunities({ limit: 100 }).subscribe({
-      next: (res) => {
-        const userId = this.authService.currentUser()?.id;
-        if (userId) {
-          // const joined = res.data.filter(
-          //   (c) => c.member_count?.((m) => m.userId === userId) || c.createdById === userId
-          // );
-          // this.joinedCommunities.set(joined);
-          // this.loadPostsFromCommunities(joined);
-        } else {
-          this.joinedCommunities.set(res.data);
-          this.loadPostsFromCommunities(res.data);
-        }
+    const timeout = window.setTimeout(() => {
+      console.warn('[Dashboard] communities timeout fired');
+      this.loadingCommunities.set(false);
+      this.loadingPosts.set(false);
+    }, 8000);
+    this.communityService.getJoinedCommunities().subscribe({
+      next: (communities) => {
+        clearTimeout(timeout);
+        console.log('[Dashboard] communities loaded:', communities.length, communities);
+        this.joinedCommunities.set(communities);
+        this.loadPostsFromCommunities(communities);
         this.loadingCommunities.set(false);
       },
-      error: () => {
+      error: (err) => {
+        clearTimeout(timeout);
+        console.error('[Dashboard] communities error:', err);
         this.loadingCommunities.set(false);
         this.loadingPosts.set(false);
       },

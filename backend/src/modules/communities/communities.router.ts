@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', authorize('ADMIN'), ctrl.create);
+router.get('/my', ctrl.getMyCommunities);
 router.get('/', ctrl.findAll);
 router.get('/:id', ctrl.findOne);
 router.put('/:id', authorize('ADMIN'), ctrl.update);
