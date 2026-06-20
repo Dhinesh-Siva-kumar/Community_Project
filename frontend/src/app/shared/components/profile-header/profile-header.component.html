@@ -1,0 +1,52 @@
+@if (user; as u) {
+  <div class="profile-header-card">
+    <!-- Gradient cover banner -->
+    <div class="header-cover"></div>
+
+    <div class="header-body">
+      <!-- Avatar overlapping the banner -->
+      <div class="avatar-slot">
+        <app-profile-avatar
+          [src]="u.avatar"
+          [displayName]="displayName"
+          size="lg"
+          [editable]="editMode"
+          (fileSelected)="avatarChange.emit($event)"
+        ></app-profile-avatar>
+      </div>
+
+      <!-- Identity + meta -->
+      <div class="header-meta">
+        <div class="name-row">
+          <h4 class="user-name">{{ displayName }}</h4>
+          @if (isAdmin) {
+            <span class="role-badge admin"><i class="bi bi-shield-fill-check"></i> Admin</span>
+          } @else {
+            <span class="role-badge user"><i class="bi bi-person-fill"></i> Member</span>
+          }
+          @if (u.isTrusted) {
+            <span class="role-badge trusted"><i class="bi bi-patch-check-fill"></i> Trusted</span>
+          }
+        </div>
+
+        <div class="meta-line">
+          <span class="meta-item"><i class="bi bi-at"></i>{{ u.userName }}</span>
+          @if (u.email) {
+            <span class="meta-item"><i class="bi bi-envelope"></i>{{ u.email }}</span>
+          }
+          @if (u.location || u.country) {
+            <span class="meta-item"><i class="bi bi-geo-alt"></i>{{ u.location || u.country }}</span>
+          }
+        </div>
+
+        <!-- Completion -->
+        <div class="completion-block">
+          <div class="completion-head">
+            <span class="completion-label">Profile completion</span>
+          </div>
+          <app-profile-progress [percentage]="profileCompletion" [showLabel]="true"></app-profile-progress>
+        </div>
+      </div>
+    </div>
+  </div>
+}

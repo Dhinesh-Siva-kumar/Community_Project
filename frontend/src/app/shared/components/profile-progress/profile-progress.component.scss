@@ -1,0 +1,32 @@
+@use '../../../../assets/styles/index' as *;
+
+.profile-progress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  .progress-track {
+    flex: 1;
+    height: $progress-height;
+    background: $color-stone-200;
+    border-radius: $radius-full;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: $radius-full;
+    transition: width 0.4s ease;
+
+    &.progress-excellent { background: $progress-color-excellent; }
+    &.progress-good      { background: $progress-color-good; }
+    &.progress-fair      { background: $progress-color-fair; }
+    &.progress-poor      { background: $progress-color-poor; }
+  }
+
+  .progress-label {
+    white-space: nowrap;
+    color: $color-text-muted;
+    font-weight: $font-weight-semibold;
+  }
+}

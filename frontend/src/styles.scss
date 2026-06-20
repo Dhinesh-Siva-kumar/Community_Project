@@ -101,14 +101,16 @@ body {
 // ── Bootstrap Card Override ───────────────────────────────────
 .card {
   border: $card-border;
-  border-radius: $card-radius;
+  border-radius: $radius-lg;
   box-shadow: $shadow-card-default;
   background: $color-bg-card;
   transition: box-shadow $transition-base $transition-easing,
-              transform $transition-base $transition-easing;
+              transform $transition-base $transition-easing,
+              border-color $transition-base $transition-easing;
 
   &:hover {
     box-shadow: $shadow-card-hover;
+    border-color: rgba($color-primary, 0.35);
   }
 }
 
@@ -181,6 +183,10 @@ body {
 
   &::placeholder {
     color: $color-text-secondary;
+  }
+
+  &:hover:not(:focus):not([readonly]):not(:disabled) {
+    border-color: $color-amber-200;
   }
 
   &:focus {
@@ -264,6 +270,14 @@ body {
     color: $color-text-body;
     border-bottom: 1px solid $color-bg-light;
     vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background $transition-fast $transition-easing;
+
+    &:hover {
+      background: $color-primary-light;
+    }
   }
 }
 
@@ -498,42 +512,42 @@ body {
 //  Indigo/violet palette, theme-aware via CSS custom properties
 // ══════════════════════════════════════════════════════════════
 
-// ── Light-mode tokens (default) ───────────────────────────────
+// ── Light-mode tokens (default) — Amber brand palette ─────────
 :root {
-  --th-primary:           #5046e5;
-  --th-primary-hover:     #4338ca;
-  --th-primary-light:     #ede9fe;
-  --th-primary-on:        #ffffff;
+  --th-primary:           #F59E0B;
+  --th-primary-hover:     #D97706;
+  --th-primary-light:     #FEF3C7;
+  --th-primary-on:        #1C1917;
   --th-dropdown-bg:       #ffffff;
-  --th-dropdown-border:   #e2e8f0;
-  --th-dropdown-shadow:   0 8px 24px rgba(0, 0, 0, 0.10);
-  --th-dropdown-radius:   10px;
-  --th-option-hover:      #f8fafc;
-  --th-chip-bg:           #ede9fe;
-  --th-chip-color:        #4338ca;
-  --th-chip-border:       #c4b5fd;
-  --th-placeholder-color: #94a3b8;
-  --th-search-icon-color: #94a3b8;
-  --th-caret-color:       #64748b;
+  --th-dropdown-border:   #E7E5E4;
+  --th-dropdown-shadow:   0 10px 30px rgba(28, 25, 23, 0.12);
+  --th-dropdown-radius:   12px;
+  --th-option-hover:      #FFFBEB;
+  --th-chip-bg:           #FEF3C7;
+  --th-chip-color:        #B45309;
+  --th-chip-border:       #FDE68A;
+  --th-placeholder-color: #A8A29E;
+  --th-search-icon-color: #A8A29E;
+  --th-caret-color:       #78716C;
 }
 
-// ── Dark-mode tokens ──────────────────────────────────────────
+// ── Dark-mode tokens — Amber brand palette ────────────────────
 [data-theme='dark'] {
-  --th-primary:           #6366f1;
-  --th-primary-hover:     #818cf8;
-  --th-primary-light:     #312e81;
-  --th-primary-on:        #ffffff;
-  --th-dropdown-bg:       #1e293b;
-  --th-dropdown-border:   #334155;
-  --th-dropdown-shadow:   0 8px 24px rgba(0, 0, 0, 0.35);
-  --th-dropdown-radius:   10px;
-  --th-option-hover:      #0f172a;
-  --th-chip-bg:           #312e81;
-  --th-chip-color:        #a5b4fc;
-  --th-chip-border:       #4f46e5;
-  --th-placeholder-color: #64748b;
-  --th-search-icon-color: #64748b;
-  --th-caret-color:       #94a3b8;
+  --th-primary:           #FBBF24;
+  --th-primary-hover:     #FCD34D;
+  --th-primary-light:     #3D2400;
+  --th-primary-on:        #1C1917;
+  --th-dropdown-bg:       #292524;
+  --th-dropdown-border:   #44403C;
+  --th-dropdown-shadow:   0 10px 30px rgba(0, 0, 0, 0.40);
+  --th-dropdown-radius:   12px;
+  --th-option-hover:      #1C1917;
+  --th-chip-bg:           #3D2400;
+  --th-chip-color:        #FCD34D;
+  --th-chip-border:       #B45309;
+  --th-placeholder-color: #78716C;
+  --th-search-icon-color: #78716C;
+  --th-caret-color:       #A8A29E;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -720,7 +734,7 @@ body {
 
   &.cms-focus {
     border-color: var(--th-primary);
-    box-shadow: 0 0 0 3px rgba(80, 70, 229, 0.15);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
     outline: none;
   }
 
@@ -1026,4 +1040,164 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 8px;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PREMIUM UPLIFT — Global building blocks & component polish
+//  Amber x warm-neutral community feel | cascades to all pages
+//  (landing page is self-contained and unaffected)
+// ══════════════════════════════════════════════════════════════
+
+// ── Bootstrap badge polish ────────────────────────────────────
+.badge {
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.01em;
+  border-radius: $radius-full;
+  padding: 0.36em 0.7em;
+}
+
+// ── Bootstrap dropdown-menu polish ────────────────────────────
+.dropdown-menu {
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-4;
+  padding: 6px;
+
+  .dropdown-item {
+    border-radius: $radius-sm;
+    padding: 0.5rem 0.75rem;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: background $transition-fast $transition-easing,
+                color $transition-fast $transition-easing;
+
+    &:active,
+    &.active {
+      background: $color-primary;
+      color: $color-on-primary;
+    }
+
+    &:hover:not(.active):not(:active) {
+      background: $color-primary-light;
+      color: $color-primary-darker;
+    }
+  }
+}
+
+// ── Premium Page Header ───────────────────────────────────────
+// Usage:
+//   <div class="page-header">
+//     <div class="page-header-text">
+//       <h1 class="page-title">Communities</h1>
+//       <p class="page-subtitle">Find and join groups near you</p>
+//     </div>
+//     <div class="page-header-actions"> ...buttons... </div>
+//   </div>
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  padding-bottom: $spacing-md;
+  margin-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-border;
+  position: relative;
+
+  // thin amber accent under the title
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 56px;
+    height: 3px;
+    border-radius: $radius-full;
+    background: $gradient-primary;
+  }
+
+  .page-header-text { min-width: 0; }
+
+  .page-title {
+    font-family: $font-family-header;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-2xl;
+    color: $color-text-primary;
+    line-height: 1.15;
+    margin: 0 0 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .page-subtitle {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    flex-shrink: 0;
+  }
+}
+
+// ── Section heading with amber accent bar ─────────────────────
+// Usage: <h5 class="section-heading">Recent activity</h5>
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: $font-family-header;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 1.05em;
+    border-radius: $radius-full;
+    background: $gradient-primary;
+    flex-shrink: 0;
+  }
+}
+
+// ── Gradient text (amber → saffron) ───────────────────────────
+.text-gradient {
+  background: $gradient-primary;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+// ── Hover-lift utility (opt-in premium card motion) ───────────
+.hover-lift {
+  transition: transform $transition-base $transition-easing,
+              box-shadow $transition-base $transition-easing,
+              border-color $transition-base $transition-easing;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $shadow-card-hover;
+    border-color: rgba($color-primary, 0.35);
+  }
+}
+
+// ── Gradient stat icon variant ────────────────────────────────
+// Usage: <div class="stat-icon gradient"><i class="bi bi-people"></i></div>
+.stat-icon.gradient {
+  background: $gradient-primary;
+  color: $color-on-primary;
+  box-shadow: $shadow-primary-sm;
+}
+
+// ── Soft amber surface utility ────────────────────────────────
+.surface-amber {
+  background: $color-primary-light;
+  border: 1px solid $color-amber-200;
+  border-radius: $radius-lg;
 }

@@ -1,112 +1,64 @@
 @use '../../../../assets/styles/index' as *;
 
-// ===========================
-// User Profile Styles
-// ===========================
+// ── Form labels ───────────────────────────────────────────
+.form-label.small {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  margin-bottom: 5px;
+}
 
-// Avatar
-.avatar-wrapper {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid $indigo-50;
+// ── Inputs ────────────────────────────────────────────────
+.form-control {
+  border-radius: $radius-sm;
+  border-color: $color-border;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
-  .avatar-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  &:focus {
+    border-color: $color-primary;
+    box-shadow: $shadow-focus-ring;
   }
 
-  .avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, $purple-gradient-start 0%, $purple-gradient-end 100%);
-    color: $white;
-    font-size: 1.5rem;
+  // Read-only fields render as clean, borderless text
+  &[readonly] {
+    background-color: $color-stone-50;
+    border-color: transparent;
+    color: $color-text-body;
+    cursor: default;
+
+    &:focus { box-shadow: none; border-color: transparent; }
   }
 }
 
-.avatar-upload-btn {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: $indigo-600;
-  color: $white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid $white;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: background-color 0.2s;
+textarea.form-control { border-radius: $radius-sm; }
+
+// ── Interest chips ────────────────────────────────────────
+.badge {
+  border-radius: $radius-full;
+  font-weight: $font-weight-medium;
+
+  &.bg-primary.bg-opacity-10 {
+    background: rgba($color-primary, 0.15) !important;
+    color: $color-amber-800 !important;
+    border: 1px solid rgba($color-primary-dark, 0.25);
+  }
+}
+
+// ── Business / job list rows ──────────────────────────────
+.border.rounded-3 {
+  border-color: $color-border !important;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &:hover {
-    background-color: $indigo-700;
+    background: $color-stone-50;
+    border-color: rgba($color-primary-dark, 0.35) !important;
+    box-shadow: $shadow-1;
   }
 }
 
-// Tabs
-.nav-pills {
-  .nav-link {
-    border-radius: 10px;
-    color: $slate-500;
-    font-size: 0.875rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: all 0.2s;
-
-    &:hover {
-      background-color: $slate-100;
-      color: $slate-800;
-    }
-
-    &.active {
-      background-color: $indigo-600;
-      color: $white;
-    }
-  }
-}
-
-// Card
-.card {
-  border-radius: 14px;
-
-  .card-header {
-    border-radius: 14px 14px 0 0 !important;
-  }
-}
-
-// Progress bar
-.progress {
-  border-radius: 10px;
-  background-color: $slate-100;
-}
-
-// Interest badges
-.badge {
-  border-radius: 20px;
-  font-weight: 500;
-}
-
-// Form readonly styling
-.form-control[readonly] {
-  background-color: $slate-50;
-  border-color: $slate-200;
-}
-
-// Responsive
-@include media-sm-max {
-  .avatar-wrapper {
-    width: 70px;
-    height: 70px;
-  }
-
-  .nav-pills .nav-link {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.75rem;
-  }
+// ── Section divider ───────────────────────────────────────
+hr {
+  border-color: $color-border;
+  opacity: 1;
 }

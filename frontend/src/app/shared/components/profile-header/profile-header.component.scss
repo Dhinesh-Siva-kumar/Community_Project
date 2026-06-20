@@ -1,0 +1,143 @@
+@use '../../../../assets/styles/index' as *;
+
+.profile-header-card {
+  position: relative;
+  background: $profile-card-bg;
+  border: 1px solid $profile-card-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-2;
+  overflow: hidden;
+  margin-bottom: $section-gap-v;
+  transition: box-shadow 0.25s ease;
+
+  &:hover { box-shadow: $shadow-4; }
+
+  // Gradient cover banner
+  .header-cover {
+    height: 96px;
+    background: $gradient-primary;
+    position: relative;
+
+    &::after {
+      // subtle decorative sheen
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 85% -20%, rgba(255, 255, 255, 0.35), transparent 45%),
+        radial-gradient(circle at 15% 120%, rgba(28, 25, 23, 0.12), transparent 50%);
+    }
+  }
+
+  .header-body {
+    display: flex;
+    align-items: flex-end;
+    gap: $profile-header-gap;
+    padding: 0 $spacing-lg $spacing-lg;
+    flex-wrap: wrap;
+  }
+
+  // Avatar lifted up to overlap the banner
+  .avatar-slot {
+    margin-top: -48px;
+    flex-shrink: 0;
+
+    ::ng-deep .avatar-wrap {
+      border: 4px solid $color-bg-card;
+      box-shadow: $shadow-3;
+      background: $color-bg-card;
+    }
+  }
+
+  .header-meta {
+    flex: 1;
+    min-width: 0;
+    padding-top: $spacing-sm;
+  }
+
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .user-name {
+    font-family: $font-family-header;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-2xl;
+    color: $color-text-primary;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
+
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: $font-size-sm;
+      color: $color-text-muted;
+
+      i { color: $color-primary-dark; font-size: 0.9em; }
+    }
+  }
+
+  .completion-block {
+    max-width: 360px;
+
+    .completion-head {
+      margin-bottom: 5px;
+
+      .completion-label {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-semibold;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: $color-text-muted;
+      }
+    }
+  }
+
+  // Role / status badges
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: $radius-full;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    line-height: 1.4;
+
+    i { font-size: 0.85em; }
+
+    &.admin   { background: rgba($badge-admin-bg, 0.12); color: $badge-admin-bg; }
+    &.user    { background: rgba($color-primary-dark, 0.14); color: $color-amber-700; }
+    &.trusted { background: rgba($color-success, 0.13); color: $color-success; }
+  }
+}
+
+@include media-sm-max {
+  .profile-header-card {
+    .header-body {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding-bottom: $spacing-md;
+    }
+
+    .avatar-slot { margin-top: -52px; }
+
+    .name-row,
+    .meta-line { justify-content: center; }
+
+    .completion-block { max-width: 100%; width: 100%; }
+  }
+}

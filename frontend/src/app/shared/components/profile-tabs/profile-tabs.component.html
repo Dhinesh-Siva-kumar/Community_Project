@@ -1,0 +1,21 @@
+<nav class="profile-tabs" role="tablist" aria-label="Profile sections">
+  @for (tab of tabs; track tab.id) {
+    <button
+      role="tab"
+      class="profile-tab"
+      [class.active]="tab.id === activeTab"
+      [disabled]="tab.disabled"
+      [attr.aria-selected]="tab.id === activeTab"
+      [attr.aria-disabled]="tab.disabled || null"
+      (click)="select(tab)"
+    >
+      @if (tab.icon) {
+        <i [class]="'bi ' + tab.icon"></i>
+      }
+      {{ tab.label }}
+      @if (tab.badge) {
+        <span class="tab-badge">{{ tab.badge }}</span>
+      }
+    </button>
+  }
+</nav>

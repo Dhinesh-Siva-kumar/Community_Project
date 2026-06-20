@@ -1,0 +1,22 @@
+@use '../../../../assets/styles/index' as *;
+
+.avatar-wrap {
+  @include avatar($avatar-size-md);
+
+  &.avatar-lg { @include avatar($avatar-size-lg); }
+  &.avatar-md { @include avatar($avatar-size-md); }
+  &.avatar-sm { @include avatar($avatar-size-sm); }
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-initial {
+    font-weight: $font-weight-bold;
+    color: $avatar-text-color;
+    font-size: 1.25em;
+    user-select: none;
+  }
+}

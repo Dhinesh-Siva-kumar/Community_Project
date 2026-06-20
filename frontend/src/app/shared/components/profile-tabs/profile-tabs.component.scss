@@ -1,0 +1,70 @@
+@use '../../../../assets/styles/index' as *;
+
+:host {
+  display: block;
+  margin-bottom: $section-gap-v;
+}
+
+.profile-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  background: $color-bg-light;
+  border: 1px solid $profile-card-border;
+  border-radius: $radius-full;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  .profile-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs $spacing-md;
+    border: none;
+    border-radius: $radius-full;
+    background: transparent;
+    color: $color-text-muted;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+
+    i { font-size: 0.95em; }
+
+    &:hover:not(.active):not(:disabled) {
+      color: $color-text-primary;
+      background: rgba($color-primary, 0.1);
+    }
+
+    &.active {
+      background: $color-bg-card;
+      color: $color-amber-700;
+      box-shadow: $shadow-2;
+    }
+
+    &:disabled,
+    &[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: $radius-full;
+      background: $color-primary;
+      color: $color-on-primary;
+      font-size: 0.65rem;
+      font-weight: $font-weight-bold;
+      line-height: 1;
+    }
+  }
+}

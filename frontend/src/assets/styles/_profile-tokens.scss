@@ -1,0 +1,59 @@
+// ============================================================
+// PROFILE PAGE DESIGN TOKENS
+// ============================================================
+// Profile-specific tokens that extend the base design system.
+// Requires: _colors.scss, _variables.scss, _shadows.scss
+// ============================================================
+
+// ── Avatar ────────────────────────────────────────────────
+$avatar-size-lg:              120px;
+$avatar-size-md:              80px;
+$avatar-size-sm:              48px;
+$avatar-border-radius:        50%;
+$avatar-border:               3px solid $color-primary;
+$avatar-bg-placeholder:       $color-primary-light;
+$avatar-text-color:           $color-on-primary;
+
+// ── Profile Header ─────────────────────────────────────────
+$profile-header-padding:      $spacing-lg;
+$profile-header-gap:          $spacing-md;
+
+// ── Profile Completion Progress ────────────────────────────
+$progress-height:             6px;
+$progress-color-excellent:    $color-success;
+$progress-color-good:         $color-info;
+$progress-color-fair:         $color-warning;
+$progress-color-poor:         $color-danger;
+
+// ── Card ──────────────────────────────────────────────────
+$profile-card-padding:        $spacing-md;
+$profile-card-border-radius:  $radius-md;
+$profile-card-shadow:         $shadow-sm;
+$profile-card-border:         $color-border;
+$profile-card-bg:             $color-bg-card;
+
+// ── Section Gaps ──────────────────────────────────────────
+$section-gap-v:               $spacing-lg;
+$section-gap-h:               $spacing-md;
+
+// ── Tab Navigation ─────────────────────────────────────────
+$tab-padding-y:               $spacing-sm;
+$tab-padding-x:               $spacing-md;
+$tab-font-size:               $font-size-sm;
+$tab-active-color:            $color-primary;
+$tab-inactive-color:          $color-text-secondary;
+$tab-active-border:           $color-primary;
+$tab-indicator-height:        2px;
+$tab-hover-bg:                $color-bg-hover;
+
+// ── Badges / Role ──────────────────────────────────────────
+$badge-admin-bg:              $color-danger;
+$badge-admin-color:           #fff;
+$badge-user-bg:               $color-success;
+$badge-user-color:            #fff;
+
+// ── Form (edit mode) ──────────────────────────────────────
+$edit-mode-bg:                $color-stone-50;
+$edit-mode-border:            1px solid $color-border;
+$readonly-bg:                 transparent;
+$readonly-opacity:            0.85;

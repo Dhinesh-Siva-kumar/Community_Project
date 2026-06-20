@@ -15,12 +15,26 @@ export class BusinessService {
     return this.api.post<BusinessCategory>('/business/categories', data);
   }
 
-  getBusinesses(categoryId: string, pincode?: string): Observable<PaginatedResponse<Business>> {
-    const params: Record<string, any> = { categoryId };
-    if (pincode) {
-      params['pincode'] = pincode;
-    }
-    return this.api.get<PaginatedResponse<Business>>('/business', params);
+  getBusinesses(params: {
+    categoryId?: string;
+    page?: number;
+    search?: string;
+    country?: string;
+    openingHours?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    pincode?: string;
+  }): Observable<PaginatedResponse<Business>> {
+    const query: Record<string, any> = {};
+    if (params.categoryId) query['categoryId'] = params.categoryId;
+    if (params.page) query['page'] = params.page;
+    if (params.search) query['search'] = params.search;
+    if (params.country) query['country'] = params.country;
+    if (params.openingHours) query['openingHours'] = params.openingHours;
+    if (params.dateFrom) query['dateFrom'] = params.dateFrom;
+    if (params.dateTo) query['dateTo'] = params.dateTo;
+    if (params.pincode) query['pincode'] = params.pincode;
+    return this.api.get<PaginatedResponse<Business>>('/business', query);
   }
 
   getBusiness(id: string): Observable<Business> {

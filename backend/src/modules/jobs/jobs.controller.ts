@@ -4,9 +4,17 @@ import * as jobsService from './jobs.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const files = (req.files as { [fieldname: string]: Express.Multer.File[] } | undefined) ?? {};
     const rawBody = { ...req.body };
-    if (files.length) rawBody['images'] = files.map((f) => `/uploads/${f.filename}`);
+
+    // Extract company logo (single file under 'logo' field)
+    const logoFiles = files['logo'] ?? [];
+    if (logoFiles.length) rawBody['companyLogo'] = `/uploads/${logoFiles[0].filename}`;
+
+    // Extract job gallery images (multiple files under 'images' field)
+    const imageFiles = files['images'] ?? [];
+    if (imageFiles.length) rawBody['images'] = imageFiles.map((f) => `/uploads/${f.filename}`);
+
     const body = CreateJobDto.parse(rawBody);
     const result = await jobsService.create(body, req.user!.sub);
     res.status(201).json(result);
@@ -30,9 +38,15 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+    const files = (req.files as { [fieldname: string]: Express.Multer.File[] } | undefined) ?? {};
     const rawBody = { ...req.body };
-    if (files.length) rawBody['images'] = files.map((f) => `/uploads/${f.filename}`);
+
+    const logoFiles = files['logo'] ?? [];
+    if (logoFiles.length) rawBody['companyLogo'] = `/uploads/${logoFiles[0].filename}`;
+
+    const imageFiles = files['images'] ?? [];
+    if (imageFiles.length) rawBody['images'] = imageFiles.map((f) => `/uploads/${f.filename}`);
+
     const body = UpdateJobDto.parse(rawBody);
     const result = await jobsService.update(req.params['id'] as string, body, req.user!.sub);
     res.json(result);

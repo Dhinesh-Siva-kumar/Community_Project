@@ -1,0 +1,105 @@
+@if (!embedded) {
+  <div class="modal-backdrop" (click)="close.emit()"></div>
+}
+
+<div [class]="embedded ? 'nm-embedded' : 'nm-modal'" role="dialog">
+
+  @if (!embedded) {
+    <div class="nm-header">
+      <div class="nm-header__icon"><i class="bi bi-bell-fill"></i></div>
+      <div>
+        <h5 class="nm-header__title">Send Notification</h5>
+        <p class="nm-header__sub">Broadcast a message to platform users</p>
+      </div>
+      <button class="nm-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
+    </div>
+  }
+
+  <div class="nm-body">
+    @if (sent()) {
+      <div class="nm-success">
+        <div class="nm-success__icon"><i class="bi bi-check-lg"></i></div>
+        <h6 class="nm-success__title">Notification Sent!</h6>
+        <p class="nm-success__desc">
+          Delivered to <strong>{{ sentCount() }}</strong> user{{ sentCount() === 1 ? '' : 's' }} successfully.
+        </p>
+        <div class="nm-footer">
+          <button class="btn btn-primary btn-sm" (click)="reset()">Send Another</button>
+        </div>
+      </div>
+    } @else {
+
+      <div class="nm-field">
+        <label class="nm-label">Send To</label>
+        <div class="nm-recipient-grid">
+          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'all'">
+            <input type="radio" [value]="'all'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
+            <i class="bi bi-people-fill"></i>
+            <span>All Users</span>
+          </label>
+          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'role'">
+            <input type="radio" [value]="'role'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
+            <i class="bi bi-person-gear"></i>
+            <span>By Role</span>
+          </label>
+          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'user'">
+            <input type="radio" [value]="'user'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
+            <i class="bi bi-person-fill"></i>
+            <span>Specific User</span>
+          </label>
+        </div>
+
+        @if (recipient() === 'role') {
+          <div class="nm-inline-field">
+            <label class="nm-label-sm">Role</label>
+            <select class="nm-select" [ngModel]="roleTarget()" (ngModelChange)="roleTarget.set($event)">
+              <option value="USER">User</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+        }
+
+        @if (recipient() === 'user') {
+          <div class="nm-inline-field">
+            <label class="nm-label-sm">User ID</label>
+            <input type="text" class="nm-input" placeholder="Paste user UUID here"
+              [ngModel]="userId()" (ngModelChange)="userId.set($event)" />
+          </div>
+        }
+      </div>
+
+      <div class="nm-field">
+        <label class="nm-label">Notification Type</label>
+        <select class="nm-select nm-select--full" [ngModel]="notifType()" (ngModelChange)="notifType.set($event)">
+          @for (t of typeOptions; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="nm-field">
+        <div class="nm-label-row">
+          <label class="nm-label">Message</label>
+          <span class="nm-char-count" [class.nm-char-count--warn]="msgLength() > 450">
+            {{ msgLength() }} / 500
+          </span>
+        </div>
+        <textarea class="nm-textarea" rows="5" placeholder="Type your notification message…"
+          [ngModel]="message()" (ngModelChange)="message.set($event)"
+          [class.nm-textarea--warn]="msgLength() > 500">
+        </textarea>
+      </div>
+
+      <div class="nm-footer">
+        <button class="btn btn-primary" [disabled]="!canSend() || sending()" (click)="send()">
+          @if (sending()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          } @else {
+            <i class="bi bi-send-fill me-1"></i>
+          }
+          Send Notification
+        </button>
+      </div>
+    }
+  </div>
+</div>
