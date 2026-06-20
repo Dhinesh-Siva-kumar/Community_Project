@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, ListBusinessQueryDto } from './business.dto';
+import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto } from './business.dto';
 import * as businessService from './business.service';
 
 export async function createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -13,6 +13,21 @@ export async function createCategory(req: Request, res: Response, next: NextFunc
 export async function getCategories(_req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await businessService.getCategories();
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function updateCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const body = UpdateBusinessCategoryDto.parse(req.body);
+    const result = await businessService.updateCategory(req.params['id'] as string, body);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function deleteCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await businessService.deleteCategory(req.params['id'] as string);
     res.json(result);
   } catch (err) { next(err); }
 }

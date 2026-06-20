@@ -232,12 +232,18 @@ export interface Business {
   pincode?: string;
   country: string;
   location?: string;
+  city?: string;
+  state?: string;
   latitude?: number;
   longitude?: number;
   phone?: string;
   email?: string;
   website?: string;
+  whatsapp?: string;
+  mapsLink?: string;
   openingHours?: string;
+  openingDays?: string;
+  logo?: string;
   categoryId: string;
   userId: string;
   category?: BusinessCategory;
@@ -293,6 +299,9 @@ export interface Job {
   // ── Location ─────────────────────────────────────────────────
   city?: string;
   state?: string;
+  whatsapp?: string;
+  mapsLink?: string;
+  openingDays?: string;
   fullAddress?: string;
   isRemote?: boolean;
   workMode?: 'Remote' | 'Hybrid' | 'On-site';

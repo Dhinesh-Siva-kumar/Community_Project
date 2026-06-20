@@ -1,462 +1,295 @@
-<!-- Loading State -->
-@if (loading()) {
-  <div class="d-flex justify-content-center align-items-center py-5">
-    <div class="text-center">
-      <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
+<!-- ==================== CATEGORIES VIEW ==================== -->
+@if (currentView() === 'categories') {
+
+  <div class="biz-header">
+    <div class="biz-header__left">
+      <h2 class="biz-header__title">Business Directory</h2>
+      <p class="biz-header__sub">Browse businesses by category.</p>
+      <div class="biz-header__stats">
+        <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
+        <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
       </div>
-      <p class="text-muted">Loading businesses...</p>
     </div>
   </div>
-} @else {
 
-  <!-- ==================== CATEGORIES VIEW ==================== -->
-  @if (currentView() === 'categories') {
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-      <div>
-        <h4 class="fw-bold mb-1">Business Directory</h4>
-        <p class="text-muted mb-0">Browse businesses by category</p>
-      </div>
-      <button class="btn btn-primary btn-sm" (click)="openAddCategory()">
-        <i class="bi bi-plus-circle me-1"></i> Add Category
-      </button>
+  <div class="biz-toolbar">
+    <div class="biz-search">
+      <i class="bi bi-search biz-search__icon"></i>
+      <input type="search" class="biz-search__input" placeholder="Search categories…"
+        [value]="catSearch()" (input)="catSearch.set($any($event.target).value)"
+        autocomplete="off" aria-label="Search categories" />
+      @if (catSearch()) {
+        <button class="biz-search__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+      }
     </div>
-
-    @if (categories().length === 0) {
-      <div class="empty-state text-center py-5">
-        <div class="empty-icon mb-3">
-          <i class="bi bi-shop"></i>
-        </div>
-        <h5 class="fw-bold text-dark">No categories yet</h5>
-        <p class="text-muted">Business categories will appear here once created.</p>
+    <div class="biz-toolbar__right">
+      <select class="biz-select" [ngModel]="catSortBy()" (ngModelChange)="catSortBy.set($event)" aria-label="Sort">
+        <option value="name">Name A–Z</option>
+        <option value="count">Most Businesses</option>
+        <option value="newest">Newest First</option>
+      </select>
+      <div class="biz-view-toggle" role="group" aria-label="View mode">
+        <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid"><i class="bi bi-grid-3x2-gap"></i></button>
+        <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List"><i class="bi bi-list-ul"></i></button>
       </div>
-    } @else {
-      <div class="row g-3">
-        @for (cat of categories(); track cat.id) {
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="card category-card border-0 shadow-sm h-100 text-center" role="button" (click)="loadBusinesses(cat)">
-              <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
-                <div class="category-icon-wrapper mb-3" [style.background-color]="getIconStyle(cat.icon).bgColor">
-                  <i class="bi" [ngClass]="getCategoryIcon(cat.icon)" [style.color]="getIconStyle(cat.icon).iconColor"></i>
-                </div>
-                <h6 class="fw-bold mb-1">{{ cat.name }}</h6>
-                <span class="badge bg-primary bg-opacity-10 text-primary small">
-                  {{ cat._count?.businesses ?? 0 }} businesses
-                </span>
-              </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="biz-grid">
+      @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
+        <div class="biz-cat-skeleton">
+          <div class="biz-cat-skeleton__icon skel-pulse"></div>
+          <div class="biz-cat-skeleton__line skel-pulse"></div>
+          <div class="biz-cat-skeleton__line biz-cat-skeleton__line--short skel-pulse"></div>
+          <div class="biz-cat-skeleton__badge skel-pulse"></div>
+        </div>
+      }
+    </div>
+  } @else if (filteredCategories().length === 0) {
+    <div class="biz-empty">
+      <div class="biz-empty__icon"><i class="bi bi-tags"></i></div>
+      <h5 class="biz-empty__title">{{ catSearch() ? 'No matching categories' : 'No Business Categories' }}</h5>
+      <p class="biz-empty__sub">{{ catSearch() ? 'Try a different search term.' : 'No categories available yet.' }}</p>
+    </div>
+  } @else {
+    <div [class]="catViewMode() === 'grid' ? 'biz-grid' : 'biz-list-view'">
+      @for (cat of filteredCategories(); track cat.id) {
+        <div class="biz-cat-card biz-cat-card--{{ getCategoryAccent(cat.icon) }}"
+          role="button" tabindex="0"
+          (click)="loadBusinesses(cat)" (keydown.enter)="loadBusinesses(cat)"
+          [attr.aria-label]="'View ' + cat.name + ' businesses'">
+          <div class="biz-cat-card__icon-wrap"><i class="bi {{ getCategoryIcon(cat.icon) }}"></i></div>
+          <h3 class="biz-cat-card__name">{{ cat.name }}</h3>
+          @if ($any(cat).description) { <p class="biz-cat-card__desc">{{ $any(cat).description }}</p> }
+          <div class="biz-cat-card__count">
+            @if ((cat._count?.businesses ?? 0) > 0) {
+              <i class="bi bi-buildings"></i><strong>{{ cat._count!.businesses }}</strong> {{ cat._count!.businesses === 1 ? 'Business' : 'Businesses' }}
+            } @else { <span class="biz-cat-card__count--empty">No businesses yet</span> }
+          </div>
+          <span class="biz-cat-card__status"><i class="bi bi-circle-fill"></i> Active</span>
+        </div>
+      }
+    </div>
+  }
+}
+
+<!-- ==================== BUSINESS LIST VIEW ==================== -->
+@if (currentView() === 'list') {
+
+  <div class="bl-header">
+    <div class="bl-header__left">
+      <nav aria-label="breadcrumb">
+        <ol class="bl-breadcrumb">
+          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
+          <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+          <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ selectedCategory()?.name }}</li>
+        </ol>
+      </nav>
+      <div class="bl-header__title-row">
+        <div class="bl-header__icon biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
+          <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
+        </div>
+        <div>
+          <h2 class="bl-header__title">{{ selectedCategory()?.name }}</h2>
+          <span class="bl-header__count"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bl-toolbar">
+    <div class="biz-search">
+      <i class="bi bi-search biz-search__icon"></i>
+      <input type="search" class="biz-search__input" placeholder="Search businesses…"
+        [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event); applyFilters()"
+        autocomplete="off" aria-label="Search" />
+      @if (filterSearch()) {
+        <button class="biz-search__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
+      }
+    </div>
+    <div class="bl-toolbar__right">
+      @if (hasActiveFilters()) { <button class="bl-clear-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear</button> }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="bl-grid">
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <div class="bl-card-skeleton">
+          <div class="bl-card-skeleton__img skel-pulse"></div>
+          <div class="bl-card-skeleton__body">
+            <div class="bl-card-skeleton__line skel-pulse"></div>
+            <div class="bl-card-skeleton__line bl-card-skeleton__line--short skel-pulse"></div>
+            <div class="bl-card-skeleton__line bl-card-skeleton__line--xs skel-pulse"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (businesses().length === 0) {
+    <div class="biz-empty">
+      <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
+      <h5 class="biz-empty__title">{{ filterSearch() ? 'No matching businesses' : 'No Businesses Yet' }}</h5>
+      <p class="biz-empty__sub">{{ filterSearch() ? 'Try a different search term.' : 'No businesses in this category yet.' }}</p>
+    </div>
+  } @else {
+    <div class="bl-grid">
+      @for (biz of businesses(); track biz.id) {
+        <article class="bl-card" role="button" tabindex="0"
+          (click)="loadBusinessDetail(biz)" (keydown.enter)="loadBusinessDetail(biz)"
+          [attr.aria-label]="biz.name">
+
+          <div class="bl-card__img-wrap">
+            @if (biz.images && biz.images.length > 0) {
+              <img [src]="biz.images[0]" [alt]="biz.name" class="bl-card__img" loading="lazy" />
+            } @else {
+              <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i></div>
+            }
+            <span class="bl-card__cat-badge">{{ selectedCategory()?.name }}</span>
+          </div>
+
+          <div class="bl-card__body">
+            <h3 class="bl-card__name">{{ biz.name }}</h3>
+            @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
+            <div class="bl-card__meta">
+              @if (biz.address || $any(biz).city || $any(biz).state) {
+                <span class="bl-card__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(biz) }}</span>
+              }
+              @if (biz.phone) { <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span> }
+              @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bl-card__meta-item bl-card__meta-item--link" (click)="$event.stopPropagation()"><i class="bi bi-globe2"></i>Website</a> }
             </div>
           </div>
+
+          <div class="bl-card__footer" (click)="$event.stopPropagation()">
+            @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bl-card__action-btn bl-card__action-btn--call" [attr.aria-label]="'Call ' + biz.name"><i class="bi bi-telephone-fill"></i> Call</a> }
+            @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--wa" [attr.aria-label]="'WhatsApp ' + biz.name"><i class="bi bi-whatsapp"></i> WhatsApp</a> }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="bl-pagination" aria-label="Pages">
+        <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+        @for (page of getPages(); track page) {
+          <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+            (click)="goToPage(page)">{{ page }}</button>
         }
-      </div>
+        <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+      </nav>
     }
   }
+}
 
-  <!-- ==================== BUSINESS LIST VIEW ==================== -->
-  @if (currentView() === 'list') {
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <a role="button" (click)="goToCategories()" class="text-decoration-none text-primary">
-            <i class="bi bi-grid me-1"></i>Categories
-          </a>
-        </li>
-        <li class="breadcrumb-item active">{{ selectedCategory()?.name }}</li>
+<!-- ==================== BUSINESS DETAIL VIEW ==================== -->
+@if (currentView() === 'detail') {
+  @if (selectedBusiness(); as biz) {
+
+    <nav aria-label="breadcrumb">
+      <ol class="bl-breadcrumb">
+        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
+        <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ selectedCategory()?.name }}</button></li>
+        <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+        <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ biz.name }}</li>
       </ol>
     </nav>
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-      <div>
-        <h4 class="fw-bold mb-1">{{ selectedCategory()?.name }}</h4>
-        <p class="text-muted mb-0">{{ totalItems() }} businesses found</p>
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary btn-sm" (click)="goToCategories()">
-          <i class="bi bi-arrow-left me-1"></i> Back
-        </button>
-        <button class="btn btn-primary btn-sm" (click)="openAddBusiness()">
-          <i class="bi bi-plus-circle me-1"></i> Add Business
-        </button>
-      </div>
-    </div>
-
-    @if (businesses().length === 0) {
-      <div class="empty-state text-center py-5">
-        <div class="empty-icon mb-3">
-          <i class="bi bi-shop-window"></i>
-        </div>
-        <h5 class="fw-bold text-dark">No businesses found</h5>
-        <p class="text-muted">No businesses in this category for your area yet.</p>
-        <button class="btn btn-primary btn-sm" (click)="openAddBusiness()">
-          <i class="bi bi-plus-circle me-1"></i> Add the first business
-        </button>
-      </div>
-    } @else {
-      <div class="row g-3 mb-4">
-        @for (biz of businesses(); track biz.id) {
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card business-card border-0 shadow-sm h-100" role="button" (click)="loadBusinessDetail(biz)">
-              <div class="card-img-top-wrapper">
-                @if (biz.images && biz.images.length > 0) {
-                  <img [src]="biz.images[0]" [alt]="biz.name" class="card-img-top" />
-                } @else {
-                  <div class="card-img-placeholder d-flex align-items-center justify-content-center">
-                    <i class="bi bi-shop"></i>
-                  </div>
-                }
-              </div>
-              <div class="card-body">
-                <h6 class="fw-bold mb-1">{{ biz.name }}</h6>
-                @if (biz.address) {
-                  <p class="text-muted small mb-1">
-                    <i class="bi bi-geo-alt me-1 text-danger"></i>{{ biz.address }}
-                  </p>
-                }
-                @if (biz.phone) {
-                  <p class="text-muted small mb-0">
-                    <i class="bi bi-telephone me-1 text-success"></i>{{ biz.phone }}
-                  </p>
-                }
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Pagination -->
-      @if (totalPages() > 1) {
-        <nav class="d-flex justify-content-center">
-          <ul class="pagination pagination-sm">
-            <li class="page-item" [class.disabled]="currentPage() === 1">
-              <button class="page-link" (click)="goToPage(currentPage() - 1)">
-                <i class="bi bi-chevron-left"></i>
-              </button>
-            </li>
-            @for (page of getPages(); track page) {
-              <li class="page-item" [class.active]="page === currentPage()">
-                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
-              </li>
-            }
-            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-              <button class="page-link" (click)="goToPage(currentPage() + 1)">
-                <i class="bi bi-chevron-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
-      }
-    }
-  }
-
-  <!-- ==================== BUSINESS DETAIL VIEW ==================== -->
-  @if (currentView() === 'detail') {
-    @if (selectedBusiness(); as biz) {
-      <!-- Breadcrumb -->
-      <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item">
-            <a role="button" (click)="goToCategories()" class="text-decoration-none text-primary">Categories</a>
-          </li>
-          <li class="breadcrumb-item">
-            <a role="button" (click)="goToList()" class="text-decoration-none text-primary">{{ selectedCategory()?.name }}</a>
-          </li>
-          <li class="breadcrumb-item active">{{ biz.name }}</li>
-        </ol>
-      </nav>
-
-      <button class="btn btn-outline-secondary btn-sm mb-3" (click)="goToList()">
-        <i class="bi bi-arrow-left me-1"></i> Back to list
-      </button>
-
-      <div class="card border-0 shadow-sm">
-        <!-- Image Gallery -->
+    <div class="bd-hero">
+      <div class="bd-hero__cover">
         @if (biz.images && biz.images.length > 0) {
-          <div class="detail-gallery position-relative">
-            <img [src]="biz.images[activeImageIndex()]" [alt]="biz.name" class="gallery-main-img" />
-            @if (biz.images.length > 1) {
-              <button class="btn btn-light gallery-nav gallery-prev" (click)="prevImage()">
-                <i class="bi bi-chevron-left"></i>
-              </button>
-              <button class="btn btn-light gallery-nav gallery-next" (click)="nextImage()">
-                <i class="bi bi-chevron-right"></i>
-              </button>
-              <div class="gallery-dots d-flex justify-content-center gap-1 mt-2 p-2">
-                @for (img of biz.images; track $index) {
-                  <button
-                    class="dot-btn"
-                    [class.active]="$index === activeImageIndex()"
-                    (click)="setActiveImage($index)"
-                  ></button>
-                }
-              </div>
-            }
-          </div>
+          <img [src]="biz.images[0]" [alt]="biz.name" class="bd-hero__cover-img" loading="lazy" />
         } @else {
-          <div class="detail-placeholder d-flex align-items-center justify-content-center">
-            <i class="bi bi-shop" style="font-size: 4rem; opacity: 0.2;"></i>
+          <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i></div>
+        }
+      </div>
+      <div class="bd-hero__profile">
+        <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
+          <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
+        </div>
+        <div class="bd-hero__info">
+          <div class="bd-hero__name-row">
+            <h1 class="bd-hero__name">{{ biz.name }}</h1>
+            @if (biz.isActive) { <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span> }
+          </div>
+          <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ selectedCategory()?.name }}</span>
+          @if ($any(biz).city || $any(biz).state || biz.country) {
+            <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getFullLocation(biz) }}</span>
+          }
+        </div>
+        <div class="bd-hero__actions">
+          @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bd-action-btn bd-action-btn--green"><i class="bi bi-telephone-fill"></i> Call</a> }
+          @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--whatsapp"><i class="bi bi-whatsapp"></i> WhatsApp</a> }
+          @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--blue"><i class="bi bi-globe2"></i> Website</a> }
+          @if ($any(biz).mapsLink) { <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--orange"><i class="bi bi-pin-map-fill"></i> Directions</a> }
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-grid">
+      <div class="bd-main">
+        @if (biz.description) {
+          <div class="bd-section">
+            <h3 class="bd-section__title"><i class="bi bi-file-text"></i> About</h3>
+            <p class="bd-section__body">{{ biz.description }}</p>
           </div>
         }
-
-        <div class="card-body p-4">
-          <h4 class="fw-bold mb-3">{{ biz.name }}</h4>
-
-          @if (biz.description) {
-            <p class="text-muted mb-4">{{ biz.description }}</p>
-          }
-
-          <div class="row g-3 mb-4">
-            @if (biz.address) {
-              <div class="col-md-6">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-geo-alt-fill text-danger mt-1"></i>
-                  <div>
-                    <small class="text-muted d-block">Address</small>
-                    <span>{{ biz.address }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-            @if (biz.phone) {
-              <div class="col-md-6">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-telephone-fill text-success mt-1"></i>
-                  <div>
-                    <small class="text-muted d-block">Phone</small>
-                    <a [href]="'tel:' + biz.phone" class="text-decoration-none">{{ biz.phone }}</a>
-                  </div>
-                </div>
-              </div>
-            }
-            @if (biz.email) {
-              <div class="col-md-6">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-envelope-fill text-primary mt-1"></i>
-                  <div>
-                    <small class="text-muted d-block">Email</small>
-                    <a [href]="'mailto:' + biz.email" class="text-decoration-none">{{ biz.email }}</a>
-                  </div>
-                </div>
-              </div>
-            }
-            @if (biz.website) {
-              <div class="col-md-6">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-globe2 text-info mt-1"></i>
-                  <div>
-                    <small class="text-muted d-block">Website</small>
-                    <a [href]="biz.website" target="_blank" class="text-decoration-none">{{ biz.website }}</a>
-                  </div>
-                </div>
-              </div>
-            }
-            @if (biz.openingHours) {
-              <div class="col-md-6">
-                <div class="d-flex align-items-start gap-2">
-                  <i class="bi bi-clock-fill text-warning mt-1"></i>
-                  <div>
-                    <small class="text-muted d-block">Opening Hours</small>
-                    <span>{{ biz.openingHours }}</span>
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Map Placeholder -->
-          <div class="map-placeholder rounded-3 mb-3 d-flex align-items-center justify-content-center">
-            <div class="text-center text-muted">
-              <i class="bi bi-geo-alt" style="font-size: 2rem;"></i>
-              <p class="small mb-0 mt-1">Map view</p>
+        @if (biz.phone || biz.email || biz.website || $any(biz).whatsapp) {
+          <div class="bd-section">
+            <h3 class="bd-section__title"><i class="bi bi-telephone"></i> Contact</h3>
+            <div class="bd-info-list">
+              @if (biz.phone) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--green"><i class="bi bi-telephone-fill"></i></div><div><span class="bd-info-row__label">Phone</span><a [href]="'tel:' + biz.phone" class="bd-info-row__value bd-info-row__value--link">{{ biz.phone }}</a></div></div> }
+              @if ($any(biz).whatsapp) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--whatsapp"><i class="bi bi-whatsapp"></i></div><div><span class="bd-info-row__label">WhatsApp</span><a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ $any(biz).whatsapp }}</a></div></div> }
+              @if (biz.email) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--blue"><i class="bi bi-envelope-fill"></i></div><div><span class="bd-info-row__label">Email</span><a [href]="'mailto:' + biz.email" class="bd-info-row__value bd-info-row__value--link">{{ biz.email }}</a></div></div> }
+              @if (biz.website) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--teal"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">Website</span><a [href]="biz.website" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ biz.website }}</a></div></div> }
             </div>
           </div>
-
-          <a [href]="getDirectionsUrl()" target="_blank" class="btn btn-primary btn-sm">
-            <i class="bi bi-sign-turn-right me-1"></i> Get Directions
-          </a>
-        </div>
+        }
+        @if (biz.images && biz.images.length > 1) {
+          <div class="bd-section">
+            <h3 class="bd-section__title"><i class="bi bi-images"></i> Gallery</h3>
+            <div class="bd-gallery">
+              @for (img of biz.images; track $index) {
+                <img [src]="img" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" (click)="setActiveImage($index)" />
+              }
+            </div>
+          </div>
+        }
       </div>
-    }
+
+      <aside class="bd-sidebar">
+        @if (biz.address || $any(biz).city || biz.country) {
+          <div class="bd-card">
+            <h4 class="bd-card__title"><i class="bi bi-geo-alt-fill"></i> Location</h4>
+            <div class="bd-info-list bd-info-list--compact">
+              @if (biz.address) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-house"></i></div><div><span class="bd-info-row__label">Address</span><span class="bd-info-row__value">{{ biz.address }}</span></div></div> }
+              @if ($any(biz).city) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-buildings"></i></div><div><span class="bd-info-row__label">City</span><span class="bd-info-row__value">{{ $any(biz).city }}</span></div></div> }
+              @if ($any(biz).state) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-map"></i></div><div><span class="bd-info-row__label">State</span><span class="bd-info-row__value">{{ $any(biz).state }}</span></div></div> }
+              @if (biz.country) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">Country</span><span class="bd-info-row__value">{{ biz.country }}</span></div></div> }
+              @if (biz.pincode) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-mailbox2"></i></div><div><span class="bd-info-row__label">Pin Code</span><span class="bd-info-row__value">{{ biz.pincode }}</span></div></div> }
+            </div>
+            @if ($any(biz).mapsLink) {
+              <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-maps-btn"><i class="bi bi-pin-map-fill"></i> View on Google Maps</a>
+            } @else {
+              <a [href]="getDirectionsUrl()" target="_blank" rel="noopener" class="bd-maps-btn bd-maps-btn--secondary"><i class="bi bi-sign-turn-right"></i> Get Directions</a>
+            }
+          </div>
+        }
+        @if ($any(biz).openingDays || biz.openingHours) {
+          <div class="bd-card">
+            <h4 class="bd-card__title"><i class="bi bi-clock-fill"></i> Business Hours</h4>
+            @if ($any(biz).openingDays) {
+              <div class="bd-days">
+                @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
+                  <span class="bd-day" [class.bd-day--active]="$any(biz).openingDays && isDayActive($any(biz).openingDays, d)">{{ d }}</span>
+                }
+              </div>
+            }
+            @if (biz.openingHours) { <p class="bd-hours"><i class="bi bi-clock"></i> {{ biz.openingHours }}</p> }
+          </div>
+        }
+      </aside>
+    </div>
   }
-}
-
-<!-- ==================== ADD CATEGORY MODAL ==================== -->
-@if (showAddCategoryModal()) {
-  <div class="modal-backdrop fade show"></div>
-  <div class="modal fade show d-block" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header border-0 bg-gradient-primary">
-          <h6 class="modal-title fw-bold text-white">Add New Category</h6>
-          <button type="button" class="btn-close btn-close-white" (click)="closeAddCategory()"></button>
-        </div>
-        <div class="modal-body">
-          <form [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
-            <!-- Category Name Input -->
-            <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
-                  <i class="bi bi-type"></i> Category Name *
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  formControlName="name" 
-                  placeholder="e.g. Restaurants, Cafes, Electronics, etc." />
-                @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
-                  <small class="text-danger d-flex align-items-center gap-1 mt-2">
-                    <i class="bi bi-exclamation-circle"></i> Name is required (min 2 chars)
-                  </small>
-                }
-              </div>
-
-              <!-- Icon Selection -->
-              <div class="col-12">
-                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
-                  <i class="bi bi-palette"></i> Choose an Icon *
-                </label>
-                <div class="icon-grid mb-3">
-                  @for (item of categoryIcons; track item.icon) {
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      [class.active]="categoryForm.get('icon')?.value === item.icon"
-                      [style.--icon-bg]="item.bgColor"
-                      [style.--icon-color]="item.iconColor"
-                      (click)="categoryForm.patchValue({ icon: item.icon })"
-                      [title]="item.label">
-                      <i class="bi" [ngClass]="item.icon"></i>
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <!-- Custom Icon Input -->
-              <div class="col-12">
-                <label class="form-label small fw-semibold d-flex align-items-center gap-2">
-                  <i class="bi bi-info-circle"></i> Custom Icon (optional)
-                </label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  formControlName="icon" 
-                  placeholder="e.g. bi-heart, bi-star, bi-trophy (Bootstrap Icons class)" />
-                <small class="text-muted d-block mt-1">Leave empty to use default selected icon above</small>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer border-0 pt-3">
-          <button 
-            type="button" 
-            class="btn btn-outline-secondary btn-sm" 
-            (click)="closeAddCategory()">
-            Cancel
-          </button>
-          <button 
-            type="button"
-            class="btn btn-primary btn-sm" 
-            (click)="submitCategory()"
-            [disabled]="categoryForm.invalid || submitting()">
-            @if (submitting()) {
-              <span class="spinner-border spinner-border-sm me-2"></span>
-            }
-            <i class="bi bi-check-circle me-1"></i> Create Category
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- ==================== ADD BUSINESS MODAL ==================== -->
-@if (showAddBusinessModal()) {
-  <div class="modal-backdrop fade show"></div>
-  <div class="modal fade show d-block" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0">
-          <h6 class="modal-title fw-bold">Add Business</h6>
-          <button type="button" class="btn-close" (click)="closeAddBusiness()"></button>
-        </div>
-        <div class="modal-body">
-          <form [formGroup]="businessForm" (ngSubmit)="submitBusiness()">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label small fw-semibold">Business Name *</label>
-                <input type="text" class="form-control" formControlName="name" placeholder="Business name" />
-                @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
-                  <small class="text-danger">Name is required</small>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small fw-semibold">Category *</label>
-                <app-searchable-select
-                  formControlName="categoryId"
-                  [options]="categoryOptions()"
-                  placeholder="Select category"
-                ></app-searchable-select>
-              </div>
-              <div class="col-12">
-                <label class="form-label small fw-semibold">Description</label>
-                <textarea class="form-control" formControlName="description" rows="3" placeholder="Describe the business"></textarea>
-              </div>
-              <div class="col-md-8">
-                <label class="form-label small fw-semibold">Address</label>
-                <input type="text" class="form-control" formControlName="address" placeholder="Full address" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold">Pincode</label>
-                <input type="text" class="form-control" formControlName="pincode" placeholder="Pincode" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold">Phone</label>
-                <input type="text" class="form-control" formControlName="phone" placeholder="Phone number" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold">Email</label>
-                <input type="email" class="form-control" formControlName="email" placeholder="Email" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold">Website</label>
-                <input type="url" class="form-control" formControlName="website" placeholder="https://..." />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label small fw-semibold">Opening Hours</label>
-                <input type="text" class="form-control" formControlName="openingHours" placeholder="e.g. Mon-Fri 9am-5pm" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold">Latitude</label>
-                <input type="text" class="form-control" formControlName="latitude" placeholder="Optional" />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold">Longitude</label>
-                <input type="text" class="form-control" formControlName="longitude" placeholder="Optional" />
-              </div>
-              <div class="col-12">
-                <label class="form-label small fw-semibold">Images</label>
-                <app-file-upload
-                  mode="multi"
-                  accept="image/*"
-                  [maxSizeMb]="5"
-                  [maxFiles]="10"
-                  label="Click or drag to add images"
-                  (filesChange)="onBusinessImagesChange($event)"
-                ></app-file-upload>
-              </div>
-            </div>
-
-            <div class="d-flex gap-2 justify-content-end mt-4">
-              <button type="button" class="btn btn-light" (click)="closeAddBusiness()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="businessForm.invalid || submitting()">
-                @if (submitting()) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>
-                }
-                Create Business
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
 }

@@ -167,6 +167,44 @@ const interests = [
   { interest_name: 'Youth & Students' },
 ];
 
+const businessCategories = [
+  { name: 'Restaurant',        icon: 'bi-fork-knife',       description: 'Dine-in and takeaway restaurants' },
+  { name: 'Coffee Shop',       icon: 'bi-cup-hot',          description: 'Cafes and coffee houses' },
+  { name: 'Hotel',             icon: 'bi-building',         description: 'Hotels and accommodation' },
+  { name: 'Bakery',            icon: 'bi-cake',             description: 'Bakeries and pastry shops' },
+  { name: 'Supermarket',       icon: 'bi-cart',             description: 'Supermarkets and hypermarkets' },
+  { name: 'Grocery',           icon: 'bi-basket',           description: 'Grocery and convenience stores' },
+  { name: 'Pharmacy',          icon: 'bi-capsule',          description: 'Pharmacies and chemists' },
+  { name: 'Hospital',          icon: 'bi-hospital',         description: 'Hospitals and medical centres' },
+  { name: 'Clinic',            icon: 'bi-stethoscope',      description: 'Clinics and health centres' },
+  { name: 'Gym',               icon: 'bi-activity',         description: 'Gyms and fitness centres' },
+  { name: 'Spa',               icon: 'bi-flower1',          description: 'Spas and wellness centres' },
+  { name: 'Salon',             icon: 'bi-scissors',         description: 'Hair and beauty salons' },
+  { name: 'Shopping Mall',     icon: 'bi-bag',              description: 'Shopping malls and plazas' },
+  { name: 'Electronics Store', icon: 'bi-laptop',           description: 'Electronics and gadget stores' },
+  { name: 'Clothing Store',    icon: 'bi-handbag',          description: 'Fashion and clothing stores' },
+  { name: 'Furniture Store',   icon: 'bi-lamp',             description: 'Furniture and home décor stores' },
+  { name: 'Car Dealer',        icon: 'bi-car-front',        description: 'Car dealerships and showrooms' },
+  { name: 'Petrol Station',    icon: 'bi-fuel-pump',        description: 'Petrol stations and fuel stops' },
+  { name: 'Book Store',        icon: 'bi-book',             description: 'Book shops and libraries' },
+  { name: 'Jewelry Store',     icon: 'bi-gem',              description: 'Jewelry and accessory stores' },
+  { name: 'School',            icon: 'bi-pencil',           description: 'Schools and educational institutions' },
+  { name: 'College',           icon: 'bi-journal',          description: 'Colleges and technical institutes' },
+  { name: 'University',        icon: 'bi-mortarboard',      description: 'Universities and higher education' },
+  { name: 'Real Estate',       icon: 'bi-house-door',       description: 'Real estate and property agencies' },
+  { name: 'Travel Agency',     icon: 'bi-airplane',         description: 'Travel agencies and tour operators' },
+  { name: 'Bank',              icon: 'bi-bank',             description: 'Banks and financial institutions' },
+  { name: 'Insurance',         icon: 'bi-shield-check',     description: 'Insurance companies and brokers' },
+  { name: 'Event Hall',        icon: 'bi-calendar-event',   description: 'Event halls and banquet venues' },
+  { name: 'Cinema',            icon: 'bi-film',             description: 'Cinemas and movie theatres' },
+  { name: 'Bar',               icon: 'bi-beer',             description: 'Bars and nightlife venues' },
+  { name: 'Pub',               icon: 'bi-cup-straw',        description: 'Pubs and taverns' },
+  { name: 'Cafe',              icon: 'bi-cup',              description: 'Casual cafes and bistros' },
+  { name: 'Fast Food',         icon: 'bi-bag-heart',        description: 'Fast food and quick service restaurants' },
+  { name: 'Food Truck',        icon: 'bi-truck',            description: 'Food trucks and mobile eateries' },
+  { name: 'Ice Cream Shop',    icon: 'bi-ice-cream',        description: 'Ice cream parlours and dessert shops' },
+];
+
 export async function seed(knex: Knex): Promise<void> {
   // ------------------------------------------------------------------
   // Countries
@@ -218,6 +256,18 @@ export async function seed(knex: Knex): Promise<void> {
     .ignore();
 
   console.log('Admin user seeded: username=admin, password=Admin@123');
+
+  // ------------------------------------------------------------------
+  // Business Categories
+  // ------------------------------------------------------------------
+  console.log('Seeding business_categories...');
+  for (const cat of businessCategories) {
+    await knex('business_categories')
+      .insert(cat)
+      .onConflict('name')
+      .ignore();
+  }
+  console.log(`Seeded ${businessCategories.length} business categories.`);
 
   // SCAFFOLD: insert your seed data here
 }

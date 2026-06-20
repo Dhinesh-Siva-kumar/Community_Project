@@ -1,6 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
+import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
 export async function createCategory(data: CreateBusinessCategoryDtoType) {
   const existing = await db('business_categories').where({ name: data.name }).first();
@@ -8,6 +8,27 @@ export async function createCategory(data: CreateBusinessCategoryDtoType) {
 
   const [category] = await db('business_categories').insert(data).returning('*');
   return category;
+}
+
+export async function updateCategory(id: string, data: UpdateBusinessCategoryDtoType) {
+  const existing = await db('business_categories').where({ id }).first();
+  if (!existing) throw new AppError(404, 'Category not found');
+  if (data.name) {
+    const dup = await db('business_categories').where({ name: data.name }).whereNot({ id }).first();
+    if (dup) throw new AppError(409, 'Category name already exists');
+  }
+  const [updated] = await db('business_categories').where({ id }).update(data).returning('*');
+  return updated;
+}
+
+export async function deleteCategory(id: string) {
+  const existing = await db('business_categories').where({ id }).first();
+  if (!existing) throw new AppError(404, 'Category not found');
+  const [inUse] = await db('businesses').where({ category_id: id }).count('id as count');
+  if (Number((inUse as any).count) > 0)
+    throw new AppError(409, `Cannot delete: ${(inUse as any).count} business(es) use this category`);
+  await db('business_categories').where({ id }).delete();
+  return { message: 'Category deleted successfully' };
 }
 
 export async function getCategories() {
@@ -43,6 +64,11 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       email: data.email ?? null,
       website: data.website ?? null,
       opening_hours: data.openingHours ?? null,
+      city:          data.city         ?? null,
+      state:         data.state        ?? null,
+      opening_days:  data.openingDays  ?? null,
+      whatsapp:      data.whatsapp     ?? null,
+      maps_link:     data.mapsLink     ?? null,
       user_id: userId,
     })
     .returning('*');
@@ -94,6 +120,12 @@ export async function findAll(params: ListBusinessQueryDtoType) {
 
   const data = (businesses as Array<Record<string, unknown>>).map((b) => ({
     ...b,
+    categoryId:   b['category_id'],
+    openingHours: b['opening_hours'],
+    openingDays:  b['opening_days'],
+    mapsLink:     b['maps_link'],
+    isActive:     b['is_active'],
+    isRemote:     b['is_remote'],
     user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   }));
@@ -115,6 +147,11 @@ export async function findOne(id: string) {
   const b = business as Record<string, unknown>;
   return {
     ...b,
+    categoryId:   b['category_id'],
+    openingHours: b['opening_hours'],
+    openingDays:  b['opening_days'],
+    mapsLink:     b['maps_link'],
+    isActive:     b['is_active'],
     user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'], email: b['user_email'], avatar: b['avatar'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   };
@@ -144,6 +181,11 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
   if (data.email !== undefined) updateData['email'] = data.email;
   if (data.website !== undefined) updateData['website'] = data.website;
   if (data.openingHours !== undefined) updateData['opening_hours'] = data.openingHours;
+  if (data.city !== undefined) updateData['city'] = data.city;
+  if (data.state !== undefined) updateData['state'] = data.state;
+  if (data.openingDays !== undefined) updateData['opening_days'] = data.openingDays;
+  if (data.whatsapp !== undefined) updateData['whatsapp'] = data.whatsapp;
+  if (data.mapsLink !== undefined) updateData['maps_link'] = data.mapsLink;
 
   await db('businesses').where({ id }).update(updateData);
   return findOne(id);
