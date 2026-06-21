@@ -34,6 +34,7 @@ const TRANSLATIONS = {
     hero_h1_post: 'around the world — from Tamil Nadu, Sri Lanka, and beyond.',
     hero_h1_sub: 'Whether you are from Tamil Nadu or Sri Lanka — students, workers, professionals, and families — this platform is for all Tamils.',
     hero_motto: 'You are not alone abroad — your Tamil community is already waiting for you.',
+    hero_power_line: 'Everything you need to begin your journey in a new country — by Tamils, for Tamils.',
     hero_support_line: 'Jobs, friends, housing, guidance, and emergency support — everything you need abroad, all in one place.',
     // hero_desc1: 'Whether you move for study, work, or a new life —',
     // hero_desc2: 'your Tamil community is already waiting for you.',
@@ -54,6 +55,21 @@ const TRANSLATIONS = {
     trust_secure: 'Secure & Private',
     trust_free: 'Free for everyone',
     trust_worldwide: 'Available worldwide',
+
+    // ── Who Is This For ──
+    who_pill: 'For Everyone',
+    who_title: 'Who Is This Platform For?',
+    who_sub: 'No matter your background or profession — if you are Tamil and living abroad, this platform is for you.',
+    whoIsThisFor: [
+      { icon: 'bi-mortarboard-fill',  title: 'Students Abroad',                      desc: 'For students pursuing education in foreign countries',                 color: 'primary' },
+      { icon: 'bi-code-slash',        title: 'IT Professionals',                     desc: 'For software engineers and tech professionals relocating abroad',      color: 'green'   },
+      { icon: 'bi-heart-pulse-fill',  title: 'Nurses & Healthcare Workers',          desc: 'For medical professionals working overseas',                           color: 'pink'    },
+      { icon: 'bi-briefcase-fill',    title: 'Job Seekers',                          desc: 'For those planning to move abroad for career opportunities',           color: 'violet'  },
+      { icon: 'bi-airplane-fill',     title: 'New Migrants',                         desc: 'For people who recently moved to a new country',                       color: 'yellow'  },
+      { icon: 'bi-people-fill',       title: 'Families Abroad',                      desc: 'For Tamil families settled overseas',                                  color: 'accent'  },
+      { icon: 'bi-shop',              title: 'Entrepreneurs',                        desc: 'For Tamil business owners and startup founders globally',              color: 'primary' },
+      { icon: 'bi-globe2',            title: 'Existing Tamil Community Members',     desc: 'For people already part of the diaspora looking to connect',           color: 'green'   },
+    ],
 
     // ── Features Section ──
     feat_pill: 'Platform Features',
@@ -92,7 +108,7 @@ const TRANSLATIONS = {
     testi_pill: 'Real Stories',
     testi_title_pre: 'Real',
     testi_title_accent: 'Stories',
-    testi_sub: 'Hear from Tamils who found community, jobs, and support through TamilConnect.',
+    testi_sub: 'You can expect experiences like these as well(These are examples of the expected member experiences)',
 
     // ── About ──
     about_pill: 'About Us',
@@ -171,6 +187,9 @@ const TRANSLATIONS = {
       { icon: 'bi-house-fill',       question: 'How do I find accommodation in a new country?',    color: 'primary' },
       { icon: 'bi-briefcase-fill',   question: 'How can I find a sponsored job abroad?',           color: 'green'   },
       { icon: 'bi-bank',             question: 'How do I open a bank account when I first arrive?', color: 'violet'  },
+      { icon: 'bi-airplane-fill',    question: 'Should I go to Germany?',                                color: 'pink'    },
+      { icon: 'bi-code-square',      question: 'Are there IT opportunities in Ireland?',                 color: 'yellow'  },
+      { icon: 'bi-mortarboard-fill', question: 'How is student life in Australia?',                 color: 'accent'  },
     ],
     ask_btn: 'Post Your Question',
 
@@ -312,6 +331,20 @@ const TRANSLATIONS = {
         title: 'Help & Support',
         desc: 'Facing a legal issue, emergency, or been cheated abroad? Trusted Tamil community members are always here to guide and support you — in any country.',
         tags: ['Legal Help', 'Emergency', 'Advice'],
+        color: 'pink', featured: false
+      },
+      {
+        icon: 'bi-house-door-fill',
+        title: 'Room & Accommodation Help',
+        desc: 'Find rooms, share flats, and connect with Tamils for accommodation support.',
+        tags: ['Room Available', 'Looking for Room', 'Flat Share'],
+        color: 'accent', featured: false
+      },
+      {
+        icon: 'bi-heart-fill',
+        title: 'Mental Wellbeing & Friendship Support',
+        desc: 'Feeling lonely or stressed abroad? Find friends, emotional support, and a caring Tamil community.',
+        tags: ['Loneliness', 'Emotional Support', 'Friends'],
         color: 'pink', featured: false
       },
       {
@@ -548,6 +581,7 @@ const TRANSLATIONS = {
     hero_h1_post: 'சொந்த தளம்',
     hero_h1_sub: 'தமிழ்நாட்டிலிருந்தோ, இலங்கையிலிருந்தோ — மாணவர்களுக்கும், தொழிலாளர்களுக்கும், வணிகர்களுக்கும் — அனைத்து தமிழர்களுக்கும்.',
     hero_motto: 'தெரியாத நாட்டில் தனியாக போராடுகிறீர்களா? உங்களுக்காகவே இந்த தளம் உருவாக்கப்பட்டது.',
+    hero_power_line: 'புதிய நாட்டில் ஆரம்பிக்கும் உங்கள் பயணத்திற்கு தேவையான அனைத்தும் — தமிழர்களால், தமிழர்களுக்காக.',
     hero_support_line: 'வேலை, நண்பர்கள், வீடு, வழிகாட்டுதல், அவசர உதவி — வெளிநாட்டில் உங்களுக்கு தேவையான அனைத்தும் ஒரே இடத்தில்.',
     // hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
     // hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
@@ -568,6 +602,21 @@ const TRANSLATIONS = {
     trust_secure: 'பாதுகாப்பான & தனிப்பட்ட',
     trust_free: 'அனைவருக்கும் இலவசம்',
     trust_worldwide: 'உலகெங்கும் கிடைக்கும்',
+
+    // ── Who Is This For ──
+    who_pill: 'அனைவருக்கும்',
+    who_title: 'இந்த தளம் யாருக்காக?',
+    who_sub: 'உங்கள் பின்னணி அல்லது தொழில் எதுவாக இருந்தாலும் — நீங்கள் வெளிநாட்டில் வாழும் தமிழர் என்றால், இந்த தளம் உங்களுக்கானது.',
+    whoIsThisFor: [
+      { icon: 'bi-mortarboard-fill',  title: 'வெளிநாட்டு மாணவர்கள்',           desc: 'வெளிநாட்டில் கல்வி பயிலும் மாணவர்களுக்கு',                          color: 'primary' },
+      { icon: 'bi-code-slash',        title: 'IT நிபுணர்கள்',                    desc: 'வெளிநாட்டில் மாற்றலாகும் மென்பொருள் பொறியாளர்கள் மற்றும் தொழில்நுட்ப நிபுணர்களுக்கு',      color: 'green'   },
+      { icon: 'bi-heart-pulse-fill',  title: 'செவிலியர்கள் & சுகாதார பணியாளர்கள்', desc: 'வெளிநாட்டில் பணிபுரியும் மருத்துவ நிபுணர்களுக்கு',               color: 'pink'    },
+      { icon: 'bi-briefcase-fill',    title: 'வேலை தேடுபவர்கள்',                 desc: 'வெளிநாட்டில் தொழில் வாய்ப்புகளுக்காக செல்ல திட்டமிடுபவர்களுக்கு',       color: 'violet'  },
+      { icon: 'bi-airplane-fill',     title: 'புதிய புலம்பெயர்ந்தோர்',          desc: 'சமீபத்தில் புதிய நாட்டிற்கு சென்றவர்களுக்கு',                      color: 'yellow'  },
+      { icon: 'bi-people-fill',       title: 'வெளிநாட்டு குடும்பங்கள்',          desc: 'வெளிநாட்டில் குடியேறிய தமிழ் குடும்பங்களுக்கு',                      color: 'accent'  },
+      { icon: 'bi-shop',              title: 'தொழில் முனைவோர்',                  desc: 'உலகளாவிய தமிழ் வணிக உரிமையாளர்கள் மற்றும் ஸ்டார்ட்அப் நிறுவனர்களுக்கு',  color: 'primary' },
+      { icon: 'bi-globe2',            title: 'இருக்கும் தமிழ் சமூக உறுப்பினர்கள்', desc: 'ஏற்கனவே புலம்பெயர்ந்தவர்களில் இணைய விரும்புபவர்களுக்கு',          color: 'green'   },
+    ],
 
     // ── Features Section ──
     feat_pill: 'தள சேவைகள்',
@@ -606,7 +655,7 @@ const TRANSLATIONS = {
     testi_pill: 'உண்மையான கதைகள்',
     testi_title_pre: 'உண்மையான',
     testi_title_accent: 'கதைகள்',
-    testi_sub: 'உலகெங்கிலும் உள்ள தமிழர்களின் அனுபவங்களை படியுங்கள்.',
+    testi_sub: 'இப்படிப்பட்ட அனுபவங்கள் உங்களுக்கும் கிடைக்கும்(இவை எதிர்பார்க்கப்படும் உறுப்பினர் அனுபவங்களின் எடுத்துக்காட்டுகள்)',
 
     // ── About ──
     about_pill: 'எங்களைப் பற்றி',
@@ -685,6 +734,9 @@ const TRANSLATIONS = {
       { icon: 'bi-house-fill',       question: 'புதிய நாட்டில் வீடு எப்படி தேடுவது?',            color: 'primary' },
       { icon: 'bi-briefcase-fill',   question: 'வெளிநாட்டில் ஸ்பான்சர்ஷிப் உடன் வேலைவாய்ப்பை எப்படிக் கண்டுபிடிப்பது?',           color: 'green'   },
       { icon: 'bi-bank',             question: 'வெளிநாட்டில் வங்கி கணக்கு எப்படி திறப்பது?',      color: 'violet'  },
+      { icon: 'bi-airplane-fill',    question: 'ஜெர்மனி போகலாமா?',                                color: 'pink'    },
+      { icon: 'bi-code-square',      question: 'அயர்லாந்தில் ஐடி வாய்ப்பு இருக்கா?',                 color: 'yellow'  },
+      { icon: 'bi-mortarboard-fill', question: 'ஆஸ்திரேலியாவில் மாணவர் வாழ்க்கை எப்படி?',                 color: 'accent'  },
     ],
     ask_btn: 'உங்கள் கேள்வியை பதிவிடுங்கள்',
 
@@ -826,6 +878,20 @@ const TRANSLATIONS = {
         title: 'உதவி & ஆதரவு',
         desc: 'சட்ட சிக்கல், அவசர நிலை, ஏமாற்றப்பட்டீர்களா? எந்த நாட்டில் இருந்தாலும் — நம்பகமான தமிழர் எப்போதும் உதவுவார்.',
         tags: ['சட்ட உதவி', 'அவசரநிலை', 'ஆலோசனை'],
+        color: 'pink', featured: false
+      },
+      {
+        icon: 'bi-house-door-fill',
+        title: 'அறை & வசிப்பிட உதவி',
+        desc: 'அறை கிடைக்கிறது, அறை தேடுகிறேன், பகிர்வு குடியிருப்பு — தமிழர்களிடமே நேரடியாக தேடுங்கள்.',
+        tags: ['அறை கிடைக்கிறது', 'அறை தேடுகிறேன்', 'பகிர்வு குடியிருப்பு'],
+        color: 'accent', featured: false
+      },
+      {
+        icon: 'bi-heart-fill',
+        title: 'மனநலம் & நண்பர் ஆதரவு',
+        desc: 'தனிமையாக உணர்கிறீர்களா? மன அழுத்தம் இருக்கிறதா? நண்பர்கள் தேவையா? தமிழ் சமூகம் உங்களுடன் இருக்கிறது.',
+        tags: ['தனிமை', 'மன ஆதரவு', 'நண்பர்கள்'],
         color: 'pink', featured: false
       },
       {

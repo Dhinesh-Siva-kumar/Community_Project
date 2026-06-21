@@ -5166,3 +5166,74 @@ textarea.lp-form-control {
   .lp-cta-gloss-shine::after { animation: none; }
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+
+// ============================================================
+// WHO IS THIS PLATFORM FOR SECTION
+// ============================================================
+.lp-who-section {
+  background: var(--lp-bg);
+}
+
+.lp-who-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; gap: 14px; }
+}
+
+.lp-who-card {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  min-height: 180px;
+  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard;
+
+  &:hover { transform: translateY(-4px); }
+  &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.18); }
+  &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); }
+  &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); }
+  &[data-color="pink"]:hover    { box-shadow: 0 10px 28px rgba(236,72,153,.16); }
+  &[data-color="yellow"]:hover  { box-shadow: 0 10px 28px rgba(251,191,36,.16); }
+  &[data-color="accent"]:hover  { box-shadow: 0 10px 28px rgba(251,113,133,.16); }
+}
+
+.lp-who-icon {
+  width: 52px; height: 52px;
+  border-radius: $radius-md;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  transition: transform .3s $easing-standard;
+
+  .lp-who-card:hover & { transform: scale(1.1) rotate(-4deg); }
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #F472B6, #EC4899); box-shadow: 0 4px 14px rgba(236,72,153,.38); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FDE047, #FBBF24); box-shadow: 0 4px 14px rgba(251,191,36,.38); }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(251,113,133,.38); }
+}
+
+.lp-who-title {
+  font-family: $font-family-header;
+  font-size: .95rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.lp-who-desc {
+  font-size: .82rem;
+  color: var(--lp-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}

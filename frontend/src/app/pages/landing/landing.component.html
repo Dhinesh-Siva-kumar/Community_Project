@@ -82,6 +82,9 @@
       <span class="lp-hero-h1-sub">{{ t.hero_h1_sub }}</span>
     </h1>
 
+    <!-- Power Line -->
+    <p class="lp-hero-power-line">{{ t.hero_power_line }}</p>
+
     <!-- Motto with flanking lines -->
     <div class="lp-hero-motto">
       <span class="lp-hero-motto-line"></span>
@@ -205,6 +208,31 @@
       }
   </div>
 </div>
+
+<div class="lp-section-divider"></div>
+
+<!-- ═══ WHO IS THIS PLATFORM FOR? ═══ -->
+<section class="lp-section lp-who-section">
+  <div class="lp-wrap">
+    <div class="lp-sec-head rv">
+      <span class="lp-pill neon-pill"><i class="bi bi-people-fill"></i> {{ t.who_pill }}</span>
+      <h2 class="lp-sec-title">{{ t.who_title }}</h2>
+      <p class="lp-sec-sub">{{ t.who_sub }}</p>
+    </div>
+
+    <div class="lp-who-grid rv">
+      @for (audience of t.whoIsThisFor; track $index; let i = $index) {
+        <div class="lp-who-card glass-card" [attr.data-color]="audience.color" [style.transition-delay]="(i * 0.08) + 's'">
+          <div class="lp-who-icon" [attr.data-color]="audience.color">
+            <i class="bi" [ngClass]="audience.icon"></i>
+          </div>
+          <h3 class="lp-who-title">{{ audience.title }}</h3>
+          <p class="lp-who-desc">{{ audience.desc }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
 
 <!-- ═══ OPPORTUNITIES AVAILABLE TODAY ═══ -->
 <section class="lp-section lp-opportunities-section">
@@ -346,7 +374,7 @@
             <h4>{{ c.name }}</h4>
 
             <!-- Bottom: status + members -->
-            <div class="lp-comm-bottom">
+            <!-- <div class="lp-comm-bottom">
               <span class="lp-comm-status">
                 <span class="lp-comm-dot"></span>
                 {{ t.comm_active }}
@@ -354,7 +382,7 @@
               <span class="lp-comm-members">
                 <i class="bi bi-people-fill"></i> {{ c.members | number }}
               </span>
-            </div>
+            </div> -->
 
           </div>
         }
