@@ -76,7 +76,7 @@ export class UserEventsComponent implements OnInit {
       eventEndTime: [''],
       timezone:     ['Asia/Kolkata', Validators.required],
       eventMode:    ['Offline', Validators.required],
-      address:      [''],
+      address:      ['', Validators.required], // Start with required for Offline default
       locationLink: [''],
       pincode:      [this.userPincode()],
       location:     [''],
@@ -86,12 +86,21 @@ export class UserEventsComponent implements OnInit {
     this.eventForm.get('eventMode')!.valueChanges.subscribe(mode => {
       const addr = this.eventForm.get('address')!;
       const link = this.eventForm.get('locationLink')!;
-      if (mode === 'Offline') { addr.setValidators(Validators.required); link.clearValidators(); }
-      else if (mode === 'Online') { link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]); addr.clearValidators(); }
-      else { addr.setValidators(Validators.required); link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]); }
-      addr.updateValueAndValidity({ emitEvent: false }); link.updateValueAndValidity({ emitEvent: false });
+      
+      if (mode === 'Offline') {
+        addr.setValidators([Validators.required]);
+        link.clearValidators();
+      } else if (mode === 'Online') {
+        addr.clearValidators();
+        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
+      } else if (mode === 'Hybrid') {
+        addr.setValidators([Validators.required]);
+        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
+      }
+      
+      addr.updateValueAndValidity({ emitEvent: false });
+      link.updateValueAndValidity({ emitEvent: false });
     });
-    this.eventForm.get('eventMode')!.setValue('Offline', { emitEvent: true });
   }
 
   loadEvents(): void {
