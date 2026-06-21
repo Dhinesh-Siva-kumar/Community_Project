@@ -258,6 +258,11 @@ export interface Event {
   title: string;
   description?: string;
   images: string[];
+  eventEndTime?: string;
+  eventCategory?: string;
+  timezone?: string;
+  eventMode?: 'Offline' | 'Online' | 'Hybrid';
+  locationLink?: string;
   eventDate: string;
   eventTime?: string;
   address?: string;

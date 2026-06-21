@@ -6,10 +6,15 @@ export const CreateEventDto = z.object({
   description: z.string().optional(),
   images: z.array(z.string()).optional(),
   eventTime: z.string().optional(),
+  eventEndTime: z.string().optional(), // Added
   address: z.string().optional(),
   pincode: z.string().optional(),
   location: z.string().optional(),
   country: z.string().optional(),
+  eventCategory: z.string().min(1, 'Event category is required'), // Added
+  timezone: z.string().min(1, 'Timezone is required').default('Asia/Kolkata'), // Added
+  eventMode: z.enum(['Offline', 'Online', 'Hybrid']).default('Offline'), // Added
+  locationLink: z.string().url().optional(), // Added
 });
 
 export const UpdateEventDto = CreateEventDto.partial();
