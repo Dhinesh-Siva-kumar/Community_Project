@@ -23,9 +23,12 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListCommunitiesQueryDto.parse(req.query);
-    // Admins see all communities (active + inactive); regular users see active only.
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await communitiesService.findAll({ ...query, skipActiveFilter });
+    const result = await communitiesService.findAll({
+      ...query,
+      skipActiveFilter,
+      userId: req.user!.sub,
+    });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -70,6 +73,13 @@ export async function getMembers(req: Request, res: Response, next: NextFunction
   try {
     const { page, limit } = PaginationQueryDto.parse(req.query);
     const result = await communitiesService.getMembers(req.params['id'] as string, page, limit);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getMyCommunities(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await communitiesService.getMyCommunities(req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }

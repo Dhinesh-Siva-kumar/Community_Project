@@ -148,12 +148,15 @@ $_transition:       200ms #{$transition-easing};
 }
 
 .hero-name {
-  color: $color-primary;
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.4);
+  text-underline-offset: 3px;
 }
 
 .hero-subtitle {
   font-size: $font-size-sm;
-  color: rgba($color-stone-400, 0.85);
+  color: rgba(255, 255, 255, 0.88);
   margin: 0;
   line-height: 1.6;
   max-width: 440px;
@@ -167,72 +170,26 @@ $_transition:       200ms #{$transition-easing};
 }
 
 .hero-stat-tile {
-  background: rgba(255, 255, 255, 0.20);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255,255,255,0.95);
+  border: none;
   border-radius: $radius-md;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 130px;
-  backdrop-filter: blur(8px);
-  transition: background $_transition, border-color $_transition;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.28);
-    border-color: rgba(255, 255, 255, 0.50);
-  }
-
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  min-width: 140px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
   &--accent {
-    background: rgba(255, 255, 255, 0.32);
-    border-color: rgba(255, 255, 255, 0.55);
-
-    .stat-tile-icon {
-      background: rgba(255, 255, 255, 0.28);
-      color: $color-on-primary;
-    }
-
-    .stat-tile-value {
-      color: $color-on-primary;
-    }
+    background: #f59e0b;
+    .stat-tile-icon { background: rgba(255,255,255,0.25); color: #fff; }
+    .stat-tile-value { color: #fff; }
+    .stat-tile-label { color: rgba(255,255,255,0.85); }
   }
 }
-
-.stat-tile-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: $radius-sm;
-  background: rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 0.9375rem;
-}
-
-.stat-tile-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.stat-tile-value {
-  font-family: $font-family-header;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  color: $color-white;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.stat-tile-label {
-  font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: $font-weight-semibold;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
+.stat-tile-icon { width:40px; height:40px; border-radius:$radius-sm; background:rgba(133,83,0,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#855300; font-size:1.1rem; }
+.stat-tile-body { display:flex; flex-direction:column; gap:1px; }
+.stat-tile-value { font-family:$font-family-header; font-size:1.375rem; font-weight:800; color:#0b1c30; line-height:1.2; letter-spacing:-0.02em; }
+.stat-tile-label { font-size:$font-size-xs; color:#534434; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
 
 // ============================================================
 // SECTION HEADER (shared)
@@ -981,9 +938,11 @@ $_transition:       200ms #{$transition-easing};
     }
   }
 
-  // Leave — subtle danger
+  // Leave — small compact pill
   &--leave {
-    flex: 1;
+    flex: 0 0 auto;
+    padding: 5px 12px;
+    font-size: 11px;
     background: rgba($color-danger, 0.06);
     color: $color-danger;
     border: 1px solid rgba($color-danger, 0.25);
@@ -994,25 +953,19 @@ $_transition:       200ms #{$transition-easing};
     }
   }
 
-  // Ghost — subtle
+  // Ghost/View — takes full remaining width
   &--ghost {
-    background: $color-bg-light;
-    color: $color-text-body;
-    border: 1px solid $color-border;
-    flex-shrink: 0;
+    flex: 1;
+    background: $color-primary;
+    color: $color-on-primary;
+    border: none;
+    font-weight: $font-weight-bold;
 
-    i {
-      transition: transform 150ms ease;
-    }
+    i { transition: transform 150ms ease; }
 
     &:hover {
-      background: $color-primary-light;
-      color: $color-primary-darker;
-      border-color: $color-amber-200;
-
-      i {
-        transform: translateX(2px);
-      }
+      background: $color-primary-dark;
+      i { transform: translateX(2px); }
     }
   }
 }
@@ -1535,3 +1488,6 @@ $_transition:       200ms #{$transition-easing};
     animation: none !important;
   }
 }
+
+
+

@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Community, CommunityMember, CommunityRequest, PaginatedResponse } from '../models';
 
@@ -9,6 +10,11 @@ export class CommunityService {
 
   getCommunities(params?: Record<string, any>): Observable<PaginatedResponse<Community>> {
     return this.api.get<PaginatedResponse<Community>>('/communities', params);
+  }
+
+  getJoinedCommunities(): Observable<Community[]> {
+    return this.api.get<{ data: Community[] }>('/communities', { joined: true, limit: 100 })
+      .pipe(map(res => res.data));
   }
 
   getCommunity(id: string): Observable<Community> {

@@ -14,6 +14,7 @@ router.put('/profile',  uploadProfile.single('avatar'), usersController.updatePr
 router.get('/dashboard', usersController.getDashboard);
 
 // ── Admin — listing & audit ───────────────────────────────────────────────────
+router.get('/charts',       authorize('ADMIN'), usersController.getCharts);
 router.get('/',             authorize('ADMIN'), usersController.getUsers);
 router.get('/audit-logs',   authorize('ADMIN'), usersController.getAuditLogs);
 router.post('/broadcast',   authorize('ADMIN'), usersController.broadcastNotification);

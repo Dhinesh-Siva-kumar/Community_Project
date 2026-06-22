@@ -75,6 +75,7 @@ export const ListCommunitiesQueryDto = z.object({
   visibility: z.enum(['global', 'private', 'default']).optional(),
   from_date:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'from_date must be YYYY-MM-DD').optional(),
   to_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to_date must be YYYY-MM-DD').optional(),
+  joined:     z.coerce.boolean().optional(),   // true = return only communities the caller has joined
 });
 
 export const PaginationQueryDto = z.object({

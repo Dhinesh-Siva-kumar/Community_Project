@@ -83,8 +83,10 @@ export async function findAll(params: {
   visibility?: 'global' | 'private' | 'default';
   from_date?: string;
   to_date?: string;
+  joined?: boolean;
+  userId?: string;
 }) {
-  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, from_date, to_date } = params;
+  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, from_date, to_date, joined, userId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('communities as c')
@@ -166,6 +168,12 @@ export async function findAll(params: {
     countQuery.where('created_at', '<', nextStr);
   }
 
+  // ── Joined filter — restrict to communities the caller is a member of ─────
+  if (joined && userId) {
+    query.whereIn('c.id', db('community_members').select('community_id').where('user_id', userId));
+    countQuery.whereIn('id', db('community_members').select('community_id').where('user_id', userId));
+  }
+
   const [communities, [{ total }]] = await Promise.all([
     query.orderBy('c.created_at', 'desc').limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
@@ -197,7 +205,18 @@ export async function findAll(params: {
       displayName: c['creator_display_name'],
     },
     _count: countMap.get(c['id']) ?? { members: 0, posts: 0 },
+    is_joined: false, // will be overwritten below if userId provided
   }));
+
+  // Bulk-check which communities the caller has joined
+  if (userId && ids.length) {
+    const memberships = await db('community_members')
+      .whereIn('community_id', ids as string[])
+      .where('user_id', userId)
+      .select('community_id');
+    const joinedSet = new Set(memberships.map((m: Record<string, unknown>) => m['community_id'] as string));
+    data.forEach((c) => { (c as Record<string, unknown>)['is_joined'] = joinedSet.has((c as Record<string, unknown>)['id'] as string); });
+  }
 
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
@@ -317,4 +336,27 @@ export async function getMembers(communityId: string, page: number, limit: numbe
   }));
 
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+// ---------------------------------------------------------------------------
+// Get communities the current user has joined
+// ---------------------------------------------------------------------------
+export async function getMyCommunities(userId: string) {
+  const rows = await db('community_members as cm')
+    .join('communities as c', 'cm.community_id', 'c.id')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
+    .where('cm.user_id', userId)
+    .where('c.is_active', true)
+    .select(
+      'c.*',
+      'im.interest_name as category_name',
+      db.raw('(SELECT COUNT(*) FROM community_members WHERE community_id = c.id) AS member_count'),
+      db.raw('(SELECT COUNT(*) FROM posts WHERE community_id = c.id AND status = \'APPROVED\') AS post_count'),
+    )
+    .orderBy('cm.joined_at', 'desc');
+
+  return rows.map((r: Record<string, unknown>) => ({
+    ...r,
+    _count: { members: Number(r['member_count']), posts: Number(r['post_count']) },
+  }));
 }

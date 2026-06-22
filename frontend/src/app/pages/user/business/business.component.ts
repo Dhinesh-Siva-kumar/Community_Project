@@ -1,298 +1,154 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business, BusinessCategory, PaginatedResponse } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
 export class UserBusinessComponent implements OnInit {
-  private businessService = inject(BusinessService);
-  private authService = inject(AuthService);
+  private svc   = inject(BusinessService);
   private toast = inject(ToastService);
-  private fb = inject(FormBuilder);
 
-  // View state
-  currentView = signal<ViewState>('categories');
-
-  // Data signals
-  categories = signal<BusinessCategory[]>([]);
-  businesses = signal<Business[]>([]);
+  currentView      = signal<ViewState>('categories');
+  categories       = signal<BusinessCategory[]>([]);
+  businesses       = signal<Business[]>([]);
   selectedCategory = signal<BusinessCategory | null>(null);
   selectedBusiness = signal<Business | null>(null);
-
-  // Computed options for the category dropdown
-  categoryOptions = computed<SelectOption[]>(() =>
-    this.categories().map(c => ({ value: c.id, label: c.name }))
-  );
-
-  // Loading
-  loading = signal(true);
-  submitting = signal(false);
-
-  // Pagination
-  currentPage = signal(1);
-  totalPages = signal(1);
-  totalItems = signal(0);
-
-  // Modals
-  showAddBusinessModal = signal(false);
-  showAddCategoryModal = signal(false);
-
-  // Image carousel
+  loading          = signal(true);
+  currentPage      = signal(1);
+  totalPages       = signal(1);
+  totalItems       = signal(0);
   activeImageIndex = signal(0);
 
-  // Image upload
-  selectedImages = signal<File[]>([]);
+  catSearch   = signal('');
+  catSortBy   = signal<'name'|'count'|'newest'>('name');
+  catViewMode = signal<'grid'|'list'>('grid');
 
-  // Icon configuration for category modal
-  categoryIcons = [
-    { icon: 'bi-shop', bgColor: '#fff4e6', iconColor: '#ff9500', label: 'Retail' },
-    { icon: 'bi-cup', bgColor: '#fff3cd', iconColor: '#ff8c00', label: 'Restaurants' },
-    { icon: 'bi-hospital', bgColor: '#ffe5e5', iconColor: '#e74c3c', label: 'Healthcare' },
-    { icon: 'bi-tools', bgColor: '#e0f7f4', iconColor: '#17a2b8', label: 'Services' },
-    { icon: 'bi-laptop', bgColor: '#f3e5f5', iconColor: '#7b3ff2', label: 'Technology' },
-    { icon: 'bi-palette', bgColor: '#fce4ec', iconColor: '#e91e63', label: 'Design' },
-    { icon: 'bi-book', bgColor: '#e3f2fd', iconColor: '#2196f3', label: 'Education' },
-    { icon: 'bi-briefcase', bgColor: '#e8eaf6', iconColor: '#3f51b5', label: 'Business' },
-    { icon: 'bi-house', bgColor: '#e8f5e9', iconColor: '#4caf50', label: 'Real Estate' },
-    { icon: 'bi-car-front', bgColor: '#ecf0f1', iconColor: '#34495e', label: 'Automotive' },
-  ];
+  filteredCategories = computed(() => {
+    const q = this.catSearch().toLowerCase();
+    let list = q ? this.categories().filter(c => c.name.toLowerCase().includes(q)) : this.categories();
+    switch (this.catSortBy()) {
+      case 'count':  list = [...list].sort((a,b) => (b._count?.businesses??0) - (a._count?.businesses??0)); break;
+      case 'newest': list = [...list].sort((a,b) => new Date((b as any).created_at ?? b.createdAt ?? 0).getTime() - new Date((a as any).created_at ?? a.createdAt ?? 0).getTime()); break;
+      default:       list = [...list].sort((a,b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  });
 
-  // Forms
-  businessForm!: FormGroup;
-  categoryForm!: FormGroup;
+  filterSearch        = signal('');
+  filterCountry       = signal<string | null>(null);
+  filterCountryOptions: SelectOption[] = [];
+  hasActiveFilters    = computed(() => !!(this.filterSearch() || this.filterCountry()));
+  totalBusinesses     = computed(() => this.categories().reduce((s,c) => s + (c._count?.businesses ?? 0), 0));
+  totalCategoriesCount= computed(() => this.categories().length);
 
-  // User pincode
-  userPincode = computed(() => this.authService.currentUser()?.pincode ?? '');
+  private readonly ACCENT_MAP: Record<string, string> = {
+    'bi-fork-knife':'orange','bi-cup-hot':'brown','bi-building':'purple',
+    'bi-capsule':'red','bi-stethoscope':'red','bi-hospital':'red','bi-hospital-fill':'red','bi-activity':'red',
+    'bi-cart':'indigo','bi-bag':'indigo','bi-handbag':'indigo',
+    'bi-bank':'blue','bi-credit-card':'blue','bi-coin':'blue','bi-cash-stack':'blue',
+    'bi-mortarboard':'cyan','bi-journal':'cyan','bi-book':'cyan',
+    'bi-scissors':'pink','bi-flower1':'pink','bi-gem':'pink',
+    'bi-house-door':'green','bi-house':'green','bi-house-add':'green',
+    'bi-car-front':'slate','bi-truck':'slate','bi-fuel-pump':'slate','bi-tools':'slate',
+    'bi-film':'violet','bi-ticket':'violet','bi-calendar-event':'violet',
+    'bi-beer':'amber','bi-cup-straw':'amber','bi-cup':'amber','bi-cake':'amber','bi-ice-cream':'amber',
+    'bi-shop':'teal','bi-shop-window':'teal','bi-basket':'teal',
+    'bi-airplane':'navy','bi-globe':'navy','bi-shield-check':'navy','bi-laptop':'purple',
+  };
 
-  ngOnInit(): void {
-    this.initForms();
-    this.loadCategories();
-  }
+  getCategoryAccent(icon?: string): string { return this.ACCENT_MAP[icon ?? ''] ?? 'orange'; }
+  getCategoryIcon(icon?: string): string   { return icon || 'bi-shop'; }
 
-  private initForms(): void {
-    this.businessForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
-      categoryId: ['', Validators.required],
-      address: [''],
-      pincode: [this.userPincode()],
-      phone: [''],
-      email: ['', Validators.email],
-      website: [''],
-      openingHours: [''],
-      latitude: [''],
-      longitude: [''],
-    });
-
-    this.categoryForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      icon: ['bi-shop'],
-    });
-  }
-
-  // ---- Data Loading ----
+  ngOnInit(): void { this.loadCategories(); }
 
   loadCategories(): void {
     this.loading.set(true);
-    this.businessService.getCategories().subscribe({
-      next: (data) => {
-        this.categories.set(data);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to load categories');
-        this.loading.set(false);
-      },
+    this.svc.getCategories().subscribe({
+      next: data => { this.categories.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Failed to load categories'); this.loading.set(false); },
     });
   }
 
-  loadBusinesses(category: BusinessCategory): void {
+  loadBusinesses(category: BusinessCategory, resetPage = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
+    if (resetPage) this.currentPage.set(1);
     this.loading.set(true);
-
-    this.businessService.getBusinesses({
-      categoryId: category.id,
-      pincode: this.userPincode(),
-    }).subscribe({
-      next: (response: PaginatedResponse<Business>) => {
-        this.businesses.set(response.data);
-        this.totalPages.set(response.totalPages);
-        this.totalItems.set(response.total);
+    const params: Record<string, any> = { categoryId: category.id, page: this.currentPage() };
+    if (this.filterSearch()) params['search'] = this.filterSearch();
+    if (this.filterCountry()) params['country'] = this.filterCountry();
+    this.svc.getBusinesses(params).subscribe({
+      next: (res: PaginatedResponse<Business>) => {
+        this.businesses.set(res.data);
+        this.totalPages.set(res.totalPages);
+        this.totalItems.set(res.total);
         this.loading.set(false);
       },
-      error: () => {
-        this.toast.error('Failed to load businesses');
-        this.loading.set(false);
-      },
+      error: () => { this.toast.error('Failed to load businesses'); this.loading.set(false); },
     });
   }
 
-  loadBusinessDetail(business: Business): void {
-    this.selectedBusiness.set(business);
-    this.activeImageIndex.set(0);
-    this.currentView.set('detail');
-  }
+  applyFilters(): void { const cat = this.selectedCategory(); if (cat) this.loadBusinesses(cat, true); }
+  clearFilters(): void { this.filterSearch.set(''); this.filterCountry.set(null); this.applyFilters(); }
 
-  // ---- Navigation ----
+  loadBusinessDetail(biz: Business): void {
+    this.selectedBusiness.set(biz); this.activeImageIndex.set(0); this.currentView.set('detail');
+  }
 
   goToCategories(): void {
-    this.currentView.set('categories');
-    this.selectedCategory.set(null);
-    this.businesses.set([]);
-    this.currentPage.set(1);
+    this.currentView.set('categories'); this.selectedCategory.set(null);
+    this.businesses.set([]); this.currentPage.set(1);
+    this.filterSearch.set(''); this.filterCountry.set(null);
   }
 
-  goToList(): void {
-    this.currentView.set('list');
-    this.selectedBusiness.set(null);
-  }
-
-  // ---- Category CRUD ----
-
-  openAddCategory(): void {
-    this.categoryForm.reset({ icon: 'bi-shop' });
-    this.showAddCategoryModal.set(true);
-  }
-
-  closeAddCategory(): void {
-    this.showAddCategoryModal.set(false);
-  }
-
-  submitCategory(): void {
-    if (this.categoryForm.invalid) return;
-    this.submitting.set(true);
-
-    this.businessService.createCategory(this.categoryForm.value).subscribe({
-      next: (cat) => {
-        this.categories.update((cats) => [...cats, cat]);
-        this.toast.success('Category created successfully');
-        this.closeAddCategory();
-        this.submitting.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to create category');
-        this.submitting.set(false);
-      },
-    });
-  }
-
-  // ---- Business CRUD ----
-
-  openAddBusiness(): void {
-    this.businessForm.reset({ pincode: this.userPincode(), categoryId: this.selectedCategory()?.id ?? '' });
-    this.selectedImages.set([]);
-    this.showAddBusinessModal.set(true);
-  }
-
-  closeAddBusiness(): void {
-    this.showAddBusinessModal.set(false);
-  }
-
-  onBusinessImagesChange(files: File[]): void {
-    this.selectedImages.set(files);
-  }
-
-  submitBusiness(): void {
-    if (this.businessForm.invalid) return;
-    this.submitting.set(true);
-
-    const data = this.businessForm.value;
-    const images = this.selectedImages();
-
-    this.businessService.createBusiness(data, images.length > 0 ? images : undefined).subscribe({
-      next: (business) => {
-        this.businesses.update((list) => [business, ...list]);
-        this.toast.success('Business created successfully');
-        this.closeAddBusiness();
-        this.submitting.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to create business');
-        this.submitting.set(false);
-      },
-    });
-  }
-
-  // ---- Image Carousel ----
-
-  prevImage(): void {
-    const images = this.selectedBusiness()?.images ?? [];
-    if (images.length === 0) return;
-    this.activeImageIndex.update((i) => (i === 0 ? images.length - 1 : i - 1));
-  }
-
-  nextImage(): void {
-    const images = this.selectedBusiness()?.images ?? [];
-    if (images.length === 0) return;
-    this.activeImageIndex.update((i) => (i === images.length - 1 ? 0 : i + 1));
-  }
-
-  setActiveImage(index: number): void {
-    this.activeImageIndex.set(index);
-  }
-
-  // ---- Pagination ----
+  goToList(): void { this.currentView.set('list'); this.selectedBusiness.set(null); }
+  setActiveImage(i: number): void { this.activeImageIndex.set(i); }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    const cat = this.selectedCategory();
-    if (cat) {
-      this.loadBusinesses(cat);
-    }
+    const cat = this.selectedCategory(); if (cat) this.loadBusinesses(cat);
   }
 
   getPages(): number[] {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const pages: number[] = [];
-    const maxVisible = 5;
-
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-    start = Math.max(1, end - maxVisible + 1);
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  // ---- Helpers ----
-
-  getCategoryIcon(icon?: string): string {
-    return icon || 'bi-shop';
-  }
-
-  getIconStyle(icon?: string): { bgColor: string; iconColor: string } {
-    const iconName = icon || 'bi-shop';
-    const found = this.categoryIcons.find(item => item.icon === iconName);
-    return found ? { bgColor: found.bgColor, iconColor: found.iconColor } : { bgColor: '#f0f0f0', iconColor: '#333' };
+    const total = this.totalPages(), cur = this.currentPage(), max = 5;
+    let start = Math.max(1, cur - Math.floor(max/2));
+    const end = Math.min(total, start + max - 1);
+    start = Math.max(1, end - max + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   getDirectionsUrl(): string {
-    const biz = this.selectedBusiness();
-    if (!biz) return '#';
-    if (biz.latitude && biz.longitude) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${biz.latitude},${biz.longitude}`;
-    }
-    if (biz.address) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(biz.address)}`;
-    }
+    const biz = this.selectedBusiness(); if (!biz) return '#';
+    if (biz.latitude && biz.longitude) return `https://www.google.com/maps/dir/?api=1&destination=${biz.latitude},${biz.longitude}`;
+    if (biz.address) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(biz.address)}`;
     return '#';
+  }
+
+  getWhatsappUrl(number: string): string { return 'https://wa.me/' + number.replace(/\D/g, ''); }
+
+  isDayActive(openingDays: string, day: string): boolean {
+    return openingDays.split(',').some(x => x.trim().toLowerCase().startsWith(day.toLowerCase()));
+  }
+
+  getLocationDisplay(biz: Business): string {
+    const b = biz as any;
+    return [b.city, b.state].filter((v: any) => !!v).join(', ') || biz.address || '';
+  }
+
+  getFullLocation(biz: Business): string {
+    const b = biz as any;
+    return [b.city, b.state, biz.country].filter((v: any) => !!v).join(', ');
   }
 }

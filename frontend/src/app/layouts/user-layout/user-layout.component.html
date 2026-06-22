@@ -1,45 +1,33 @@
-<!-- Mobile sidebar backdrop -->
+<!-- Mobile overlay -->
 @if (isMobile() && mobileSidebarOpen()) {
   <div class="sidebar-overlay" (click)="closeMobileSidebar()"></div>
 }
 
-<!-- ─── Sidebar ─────────────────────────────────────────────── -->
+<!-- ─── Sidebar ──────────────────────────────────────────────── -->
 <aside
   class="sidebar"
   [class.collapsed]="!isMobile() && sidebarCollapsed()"
   [class.mobile-open]="isMobile() && mobileSidebarOpen()"
-  aria-label="Main navigation"
+  aria-label="User navigation"
 >
-
-  <!-- Brand / Logo -->
+  <!-- Brand -->
   <div class="sidebar-header">
-    <div class="sidebar-brand-mark">
+    <div class="sidebar-brand-mark" aria-hidden="true">
       <img src="logo.svg" alt="TamilConnect" class="sidebar-logo-img" />
     </div>
-
     @if (!sidebarCollapsed() || isMobile()) {
       <div class="sidebar-brand">
         <span class="sidebar-brand-name">TamilConnect</span>
         <span class="sidebar-brand-sub">Platform</span>
       </div>
-    } @else {
-      <span class="sidebar-brand-icon">
-        <i class="bi bi-people-fill"></i>
-      </span>
     }
   </div>
 
   <!-- Navigation -->
-  <nav class="sidebar-nav" aria-label="Application navigation">
+  <nav class="sidebar-nav" aria-label="User navigation links">
     @for (item of navItems; track item.route) {
-      @if (item.route === '/user/dashboard') {
-        <div class="sidebar-section-label">Main</div>
-      }
-      @if (item.route === '/user/community') {
-        <div class="sidebar-section-label">Discover</div>
-      }
-      @if (item.route === '/user/profile') {
-        <div class="sidebar-section-label">Account</div>
+      @if (item.sectionLabel && (!sidebarCollapsed() || isMobile())) {
+        <span class="nav-section-label" aria-hidden="true">{{ item.sectionLabel }}</span>
       }
       <a
         class="nav-item"
@@ -58,34 +46,49 @@
     }
   </nav>
 
-  <!-- Sidebar Footer: User Profile -->
-  <div class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="sidebar-user-avatar-wrap">
-        @if (authService.currentUser()?.avatar) {
-          <img
-            [src]="authService.currentUser()!.avatar"
-            alt="Profile picture"
-            class="sidebar-user-avatar"
-          />
-        } @else {
-          <div class="sidebar-user-initials" aria-hidden="true">{{ getUserInitials() }}</div>
-        }
-        <span class="online-dot" aria-label="Online"></span>
-      </div>
-      @if (!sidebarCollapsed() || isMobile()) {
+  <!-- Sidebar Footer — user profile -->
+  @if (!sidebarCollapsed() || isMobile()) {
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar-wrap">
+          @if (authService.currentUser()?.avatar) {
+            <img
+              [src]="authService.currentUser()!.avatar"
+              alt=""
+              class="sidebar-user-avatar-img"
+              aria-hidden="true"
+            />
+          } @else {
+            <div class="sidebar-user-initials" aria-hidden="true">{{ getUserInitials() }}</div>
+          }
+          <span class="admin-online-dot" aria-hidden="true"></span>
+        </div>
         <div class="sidebar-user-info">
           <span class="sidebar-user-name">{{ getUserFullName() }}</span>
-          <span class="sidebar-user-status">
-            <i class="bi bi-circle-fill" aria-hidden="true"></i>
-            Online
-          </span>
+          <span class="sidebar-user-role">Member</span>
         </div>
-      }
+      </div>
     </div>
-  </div>
-
+  }
 </aside>
+
+<!-- Sidebar edge toggle — outside <aside> so overflow-x:clip cannot clip it -->
+@if (!isMobile()) {
+  <button
+    class="sidebar-edge-toggle"
+    (click)="toggleSidebar()"
+    type="button"
+    [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [style.left]="sidebarLeft"
+  >
+    <i
+      class="bi"
+      [class.bi-chevron-left]="!sidebarCollapsed()"
+      [class.bi-chevron-right]="sidebarCollapsed()"
+      aria-hidden="true"
+    ></i>
+  </button>
+}
 
 <!-- ─── Main Wrapper ─────────────────────────────────────────── -->
 <div
@@ -93,37 +96,20 @@
   [class.sidebar-collapsed]="!isMobile() && sidebarCollapsed()"
   [class.sidebar-hidden]="isMobile()"
 >
-
-  <!-- Top Header -->
+  <!-- ─── Top Header ──────────────────────────────────────────── -->
   <header class="top-header" role="banner">
-
-    <!-- Left: toggle + breadcrumb -->
     <div class="header-left">
-      <button
-        class="sidebar-toggle"
-        (click)="toggleSidebar()"
-        aria-label="Toggle navigation"
-        type="button"
-      >
-        <i class="bi bi-list" aria-hidden="true"></i>
-      </button>
-
-      <span class="header-breadcrumb d-none d-sm-flex">
-        <span class="breadcrumb-dot" aria-hidden="true"></span>
-        TamilConnect
-      </span>
+      @if (isMobile()) {
+        <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" type="button">
+          <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+      }
+      <span class="header-title">{{ pageTitle() }}</span>
     </div>
 
-    <!-- Right: actions + avatar -->
     <div class="header-right">
-
-      <!-- Search trigger -->
-      <button
-        class="header-icon-btn search-trigger"
-        aria-label="Search"
-        type="button"
-        title="Search"
-      >
+      <!-- Search -->
+      <button class="header-icon-btn" type="button" aria-label="Search" title="Search">
         <i class="bi bi-search" aria-hidden="true"></i>
       </button>
 
@@ -139,7 +125,7 @@
       >
         <i class="bi bi-bell" aria-hidden="true"></i>
         @if (notificationService.unreadCount() > 0) {
-          <span class="notification-badge" [attr.aria-label]="notificationService.unreadCount() + ' unread notifications'">
+          <span class="notification-badge" [attr.aria-label]="notificationService.unreadCount() + ' unread'">
             {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
           </span>
         }
@@ -147,7 +133,7 @@
 
       <div class="header-divider" aria-hidden="true"></div>
 
-      <!-- User avatar dropdown -->
+      <!-- User dropdown -->
       <div class="user-dropdown-wrapper">
         <button
           class="user-avatar-btn"
@@ -158,23 +144,14 @@
           aria-haspopup="menu"
         >
           @if (authService.currentUser()?.avatar) {
-            <img
-              [src]="authService.currentUser()!.avatar"
-              alt="Profile picture"
-              class="avatar-img"
-            />
+            <img [src]="authService.currentUser()!.avatar" alt="Profile picture" class="avatar-img" />
           } @else {
-            <div class="avatar-initials" aria-hidden="true">
-              {{ getUserInitials() }}
-            </div>
+            <div class="avatar-initials" aria-hidden="true">{{ getUserInitials() }}</div>
           }
         </button>
 
-        <!-- Dropdown Menu -->
         @if (userDropdownOpen()) {
           <div class="user-dropdown-menu" role="menu" aria-label="User account options">
-
-            <!-- User info header -->
             <div class="dropdown-user-info" role="none">
               <div class="dropdown-avatar" aria-hidden="true">{{ getUserInitials() }}</div>
               <div class="dropdown-user-text">
@@ -185,48 +162,23 @@
 
             <div class="dropdown-divider" role="separator"></div>
 
-            <a
-              class="dropdown-item"
-              routerLink="/user/profile"
-              (click)="userDropdownOpen.set(false)"
-              role="menuitem"
-            >
-              <i class="bi bi-person" aria-hidden="true"></i>
-              Profile
-            </a>
-
-            <a
-              class="dropdown-item"
-              routerLink="/user/dashboard"
-              (click)="userDropdownOpen.set(false)"
-              role="menuitem"
-            >
-              <i class="bi bi-grid" aria-hidden="true"></i>
-              Dashboard
+            <a class="dropdown-item" routerLink="/user/profile" (click)="userDropdownOpen.set(false)" role="menuitem">
+              <i class="bi bi-person" aria-hidden="true"></i> Profile
             </a>
 
             <div class="dropdown-divider" role="separator"></div>
 
-            <button
-              class="dropdown-item text-danger"
-              (click)="logout()"
-              type="button"
-              role="menuitem"
-            >
-              <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-              Sign out
+            <button class="dropdown-item text-danger" (click)="logout()" type="button" role="menuitem">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
             </button>
-
           </div>
         }
       </div>
-
     </div>
   </header>
 
-  <!-- Page Content -->
+  <!-- Content -->
   <main class="main-content" id="main-content" tabindex="-1">
     <router-outlet />
   </main>
-
 </div>

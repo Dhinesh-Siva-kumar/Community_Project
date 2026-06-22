@@ -519,3 +519,63 @@ export async function getDashboardStats(userId: string, role: string) {
     userBusinesses: Number(userBusinesses), userEvents: Number(userEvents), userJobs: Number(userJobs),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Chart data — 7-day daily counts for users, communities, posts
+// ---------------------------------------------------------------------------
+export async function getChartData() {
+  // Build an array of the last 7 days (today inclusive), each as a YYYY-MM-DD string
+  const days: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const startDate = days[0] + 'T00:00:00.000Z';
+
+  const [userRows, communityRows, postRows, [{ upcoming }], [{ past }], [{ active: bizActive }], [{ total: bizTotal }], [{ active: jobActive }], [{ total: jobTotal }]] = await Promise.all([
+    db('users')
+      .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
+      .where('created_at', '>=', startDate)
+      .groupByRaw('DATE(created_at)')
+      .orderBy('day'),
+    db('communities')
+      .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
+      .where('created_at', '>=', startDate)
+      .groupByRaw('DATE(created_at)')
+      .orderBy('day'),
+    db('posts')
+      .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
+      .where('created_at', '>=', startDate)
+      .groupByRaw('DATE(created_at)')
+      .orderBy('day'),
+    db('events').where('event_date', '>=', db.raw('NOW()')).count({ upcoming: '*' }),
+    db('events').where('event_date', '<',  db.raw('NOW()')).where('event_date', '>=', db.raw("NOW() - INTERVAL '30 days'")).count({ past: '*' }),
+    db('businesses').where({ is_active: true }).count({ active: '*' }),
+    db('businesses').count({ total: '*' }),
+    db('jobs').where({ is_active: true }).count({ active: '*' }),
+    db('jobs').count({ total: '*' }),
+  ]);
+
+  // Build a map keyed by date string for fast lookup, then fill all 7 days
+  const toMap = (rows: { day: string; count: string }[]) =>
+    Object.fromEntries(rows.map(r => [r.day.toString().slice(0, 10), Number(r.count)]));
+
+  const userMap      = toMap(userRows      as any[]);
+  const communityMap = toMap(communityRows as any[]);
+  const postMap      = toMap(postRows      as any[]);
+
+  return {
+    labels:          days,
+    users:           days.map(d => userMap[d]      ?? 0),
+    communities:     days.map(d => communityMap[d] ?? 0),
+    posts:           days.map(d => postMap[d]       ?? 0),
+    eventsUpcoming:  Number(upcoming),
+    eventsPast30d:   Number(past),
+    businessActive:  Number(bizActive),
+    businessTotal:   Number(bizTotal),
+    jobActive:       Number(jobActive),
+    jobTotal:        Number(jobTotal),
+  };
+}

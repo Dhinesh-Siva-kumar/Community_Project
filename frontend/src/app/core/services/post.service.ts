@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Post, Comment, PaginatedResponse, PostType } from '../models';
 
@@ -53,7 +54,9 @@ export class PostService {
   }
 
   getComments(postId: string): Observable<Comment[]> {
-    return this.api.get<Comment[]>(`/posts/${postId}/comments`);
+    return this.api.get<any>(`/posts/${postId}/comments`).pipe(
+      map((res: any) => Array.isArray(res) ? res : (res.data ?? []))
+    );
   }
 
   addComment(postId: string, content: string): Observable<Comment> {

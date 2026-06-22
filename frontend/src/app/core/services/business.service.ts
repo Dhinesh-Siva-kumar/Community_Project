@@ -60,4 +60,12 @@ export class BusinessService {
   deleteBusiness(id: string): Observable<void> {
     return this.api.delete<void>(`/business/${id}`);
   }
+
+  updateCategory(id: string, data: Partial<BusinessCategory>): Observable<BusinessCategory> {
+    return this.api.put<BusinessCategory>(`/business/categories/${id}`, data);
+  }
+
+  deleteCategory(id: string): Observable<{ message: string }> {
+    return this.api.delete<{ message: string }>(`/business/categories/${id}`);
+  }
 }

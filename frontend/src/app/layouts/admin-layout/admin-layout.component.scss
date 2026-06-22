@@ -51,7 +51,7 @@ $_sb-active-text:    $color-primary-dark;
   display: flex;
   flex-direction: column;
   transition: width $_transition, transform $_transition;
-  overflow: hidden;
+  overflow-x: clip; // clips text overflow during collapse without trapping abs-positioned children
 
   &.collapsed {
     width: $_sidebar-collapsed;
@@ -72,6 +72,7 @@ $_sb-active-text:    $color-primary-dark;
     &.mobile-open {
       transform: translateX(0);
       box-shadow: $shadow-2xl;
+      z-index: $z-modal-backdrop + 10; // above the overlay
     }
   }
 }
@@ -103,6 +104,35 @@ $_sb-active-text:    $color-primary-dark;
     height: 18px;
     fill: $color-on-primary;
   }
+}
+
+// ── Floating edge toggle button — fixed, sits on the sidebar's right border ──
+.sidebar-edge-toggle {
+  position: fixed;
+  top: calc($_header-height / 2);
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-full;
+  background: $color-bg-card;
+  border: 1px solid $_sb-border;
+  color: $color-text-muted;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-sidebar + 1;
+  box-shadow: $shadow-1;
+  transition: left $_transition, background $_transition, border-color $_transition, color $_transition;
+
+  &:hover {
+    background: $_sb-hover-bg;
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+
+  .bi { font-size: 0.6875rem; }
 }
 
 .sidebar-brand {

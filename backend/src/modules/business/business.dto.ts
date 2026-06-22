@@ -1,9 +1,13 @@
 import { z } from 'zod';
 
 export const CreateBusinessCategoryDto = z.object({
-  name: z.string().min(1, 'Category name is required'),
+  name: z.string().min(1, 'Category name is required').max(100),
   icon: z.string().optional(),
+  description: z.string().optional(),
 });
+
+export const UpdateBusinessCategoryDto = CreateBusinessCategoryDto.partial();
+export type UpdateBusinessCategoryDtoType = z.infer<typeof UpdateBusinessCategoryDto>;
 
 export const CreateBusinessDto = z.object({
   name: z.string().min(1, 'Business name is required'),
@@ -20,6 +24,13 @@ export const CreateBusinessDto = z.object({
   email: z.string().email().optional(),
   website: z.string().optional(),
   openingHours: z.string().optional(),
+  // New fields
+  city: z.string().optional(),
+  state: z.string().optional(),
+  openingDays: z.string().optional(),
+  whatsapp: z.string().optional(),
+  mapsLink: z.string().optional(),
+  logo: z.string().optional(),
 });
 
 export const UpdateBusinessDto = CreateBusinessDto.partial();

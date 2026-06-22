@@ -33,7 +33,7 @@ export async function create(data: CreatePostDtoType, userId: string) {
   const community = await db('communities').where({ id: data.communityId }).first();
   if (!community) throw new AppError(404, 'Community not found');
 
-  const status = (user['is_trusted'] || user['role'] === 'ADMIN') ? 'APPROVED' : 'PENDING';
+  const status = (user['is_blocked']) ? 'PENDING' : 'APPROVED';
 
   const [post] = await db('posts')
     .insert({

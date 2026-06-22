@@ -15,14 +15,11 @@
     <div class="sidebar-brand-mark" aria-hidden="true">
       <img src="logo.svg" alt="TamilConnect" class="sidebar-logo-img" />
     </div>
-
     @if (!sidebarCollapsed() || isMobile()) {
       <div class="sidebar-brand">
         <span class="sidebar-brand-name">TamilConnect</span>
         <span class="sidebar-brand-sub">Admin</span>
       </div>
-    } @else {
-      <span class="sidebar-brand-icon"><i class="bi bi-grid-fill"></i></span>
     }
   </div>
 
@@ -75,19 +72,39 @@
   }
 </aside>
 
+<!-- Sidebar edge toggle — outside <aside> so overflow-x:clip on sidebar cannot clip it -->
+@if (!isMobile()) {
+  <button
+    class="sidebar-edge-toggle"
+    (click)="toggleSidebar()"
+    type="button"
+    [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [style.left]="sidebarLeft"
+  >
+    <i
+      class="bi"
+      [class.bi-chevron-left]="!sidebarCollapsed()"
+      [class.bi-chevron-right]="sidebarCollapsed()"
+      aria-hidden="true"
+    ></i>
+  </button>
+}
+
 <!-- ─── Main Wrapper ─────────────────────────────────────────── -->
 <div
   class="main-wrapper"
   [class.sidebar-collapsed]="!isMobile() && sidebarCollapsed()"
   [class.sidebar-hidden]="isMobile()"
 >
-  <!-- Header -->
+  <!-- ─── Top Header ──────────────────────────────────────────── -->
   <header class="top-header" role="banner">
     <div class="header-left">
-      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" type="button">
-        <i class="bi bi-list" aria-hidden="true"></i>
-      </button>
-      <span class="header-title d-none d-sm-inline">TamilConnect Admin</span>
+      @if (isMobile()) {
+        <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" type="button">
+          <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+      }
+      <span class="header-title">{{ pageTitle() }}</span>
     </div>
 
     <div class="header-right">
@@ -134,7 +151,6 @@
 
         @if (userDropdownOpen()) {
           <div class="user-dropdown-menu" role="menu" aria-label="User account options">
-            <!-- User info header -->
             <div class="dropdown-user-info" role="none">
               <div class="dropdown-avatar" aria-hidden="true">{{ getUserInitials() }}</div>
               <div class="dropdown-user-text">

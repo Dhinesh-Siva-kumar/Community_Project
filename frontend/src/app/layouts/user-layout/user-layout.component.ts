@@ -1,6 +1,7 @@
-import { Component, inject, signal, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, HostListener } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -8,7 +9,17 @@ interface NavItem {
   label: string;
   icon: string;
   route: string;
+  sectionLabel?: string;
 }
+
+const ROUTE_TITLES: Record<string, string> = {
+  dashboard: 'Dashboard',
+  community: 'Community',
+  business:  'Business',
+  events:    'Events',
+  jobs:      'Jobs',
+  profile:   'Profile',
+};
 
 @Component({
   selector: 'app-user-layout',
@@ -24,26 +35,35 @@ export class UserLayoutComponent {
 
   sidebarCollapsed = signal(false);
   mobileSidebarOpen = signal(false);
-  userDropdownOpen = signal(false);
-  isMobile = signal(false);
+  userDropdownOpen  = signal(false);
+  isMobile          = signal(false);
+  pageTitle         = signal('Dashboard');
 
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'bi-grid', route: '/user/dashboard' },
-    { label: 'Community', icon: 'bi-people', route: '/user/community' },
-    { label: 'Business', icon: 'bi-shop', route: '/user/business' },
-    { label: 'Events', icon: 'bi-calendar-event', route: '/user/events' },
-    { label: 'Jobs', icon: 'bi-briefcase', route: '/user/jobs' },
-    { label: 'Profile', icon: 'bi-person', route: '/user/profile' },
+    { label: 'Dashboard', icon: 'bi-grid',           route: '/user/dashboard',  sectionLabel: 'MAIN'    },
+    { label: 'Community', icon: 'bi-people',         route: '/user/community',  sectionLabel: 'EXPLORE' },
+    { label: 'Business',  icon: 'bi-shop',           route: '/user/business'                            },
+    { label: 'Events',    icon: 'bi-calendar-event', route: '/user/events'                              },
+    { label: 'Jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                },
+    { label: 'Profile',   icon: 'bi-person-circle',  route: '/user/profile',    sectionLabel: 'ACCOUNT' },
   ];
 
   constructor() {
     this.checkScreenSize();
+    this.updatePageTitle(this.router.url);
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => this.updatePageTitle(e.urlAfterRedirects));
+  }
+
+  private updatePageTitle(url: string): void {
+    const segments = url.split('/').filter((s) => s && !/^\d+$/.test(s));
+    const segment = segments[segments.length - 1] ?? '';
+    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'Dashboard');
   }
 
   @HostListener('window:resize')
-  onResize(): void {
-    this.checkScreenSize();
-  }
+  onResize(): void { this.checkScreenSize(); }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
@@ -70,13 +90,8 @@ export class UserLayoutComponent {
     }
   }
 
-  closeMobileSidebar(): void {
-    this.mobileSidebarOpen.set(false);
-  }
-
-  toggleUserDropdown(): void {
-    this.userDropdownOpen.update((v) => !v);
-  }
+  closeMobileSidebar(): void { this.mobileSidebarOpen.set(false); }
+  toggleUserDropdown(): void { this.userDropdownOpen.update((v) => !v); }
 
   getUserInitials(): string {
     const user = this.authService.currentUser();
@@ -96,8 +111,10 @@ export class UserLayoutComponent {
   }
 
   onNavClick(): void {
-    if (this.isMobile()) {
-      this.closeMobileSidebar();
-    }
+    if (this.isMobile()) this.closeMobileSidebar();
+  }
+
+  get sidebarLeft(): string {
+    return (!this.isMobile() && this.sidebarCollapsed()) ? '70px' : '260px';
   }
 }

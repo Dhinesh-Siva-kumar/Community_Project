@@ -2,6 +2,17 @@
      ADMIN JOBS MANAGEMENT — Premium Design
      ═══════════════════════════════════════════════════════════ -->
 
+<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<div class="jb-page-header">
+  <div class="jb-page-header__left">
+    <h2 class="jb-page-header__title">Jobs Management</h2>
+    <p class="jb-page-header__sub">Review, moderate and manage all job listings.</p>
+  </div>
+  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()" aria-label="Post a new job">
+    <i class="bi bi-plus-lg"></i> Post Job
+  </button>
+</div>
+
 <!-- ── STATS BAR ────────────────────────────────────────────── -->
 @if (!loading()) {
   <div class="admin-stats-bar">
@@ -36,88 +47,73 @@
   </div>
 }
 
-<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
-<div class="jb-page-header">
-  <div class="jb-page-header__inner">
-    <div class="jb-eyebrow-pill">
-      <span class="jb-eyebrow-dot"></span> Job Management
-    </div>
-    <h2 class="jb-page-header__title">Jobs Management</h2>
-    <p class="jb-page-header__sub">Review, moderate and manage all job listings across the platform.</p>
-  </div>
-  <div class="jb-page-header__actions">
-    <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
-      <i class="bi bi-plus-lg"></i> Post a Job
-    </button>
-  </div>
-</div>
-
 <!-- ── TOOLBAR ───────────────────────────────────────────────── -->
 <div class="jb-filter-panel">
   <div class="jb-filter-row jb-filter-row--top">
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
       <input type="search" class="jb-search-wrap__input"
-        placeholder="Search by title, company, poster…"
-        [value]="searchQuery()" (input)="onSearchInput($event)" autocomplete="off" />
+        placeholder="Search by title, company, location…"
+        [value]="searchQuery()" (input)="onSearchInput($event)" autocomplete="off"
+        aria-label="Search jobs" />
       @if (searchQuery()) {
-        <button class="jb-search-wrap__clear" (click)="clearSearch()"><i class="bi bi-x"></i></button>
+        <button class="jb-search-wrap__clear" (click)="clearSearch()" aria-label="Clear search"><i class="bi bi-x"></i></button>
       }
     </div>
-    <div class="jb-sort-wrap">
-      <app-searchable-select [options]="sortOptions" [ngModel]="sortBy()"
-        (ngModelChange)="setSortBy($event)" placeholder="Sort: Newest">
-      </app-searchable-select>
-    </div>
-  </div>
-
-  <div class="jb-filter-row">
-    <span class="jb-filter-section-label"><i class="bi bi-briefcase"></i> Type</span>
-    <div class="jb-chip-group" role="group">
-      <button class="jb-chip" [class.jb-chip--active]="filterJobType() === ''" (click)="setJobTypeFilter('')">All</button>
-      @for (type of jobTypes; track type) {
-        <button class="jb-chip" [class.jb-chip--active]="filterJobType() === type" (click)="setJobTypeFilter(type)">{{ type }}</button>
-      }
-    </div>
-  </div>
-
-  <div class="jb-filter-row jb-filter-row--split">
-    <div class="jb-filter-group">
-      <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
-      <div class="jb-chip-group" role="group">
-        <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
-        @for (mode of workModes; track mode) {
-          <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
-        }
+      <!-- Sort -->
+      <div class="jb-sort-wrap">
+        <app-searchable-select [options]="sortOptions" [ngModel]="sortBy()"
+          (ngModelChange)="setSortBy($event)" placeholder="Sort: Newest" aria-label="Sort jobs">
+        </app-searchable-select>
       </div>
+      <!-- Advanced filters -->
+    <div class="jb-filter-row">
+      <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+        <i class="bi bi-sliders2"></i>
+        Advanced Filters
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
+        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+      </button>
+      @if (activeFilterCount() > 0) {
+        <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+      }
     </div>
-    <div class="jb-location-row">
-      <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
-        (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
-      </app-searchable-select>
-      <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
-        (ngModelChange)="onFilterStateChange($event)" [placeholder]="filterStates().length ? 'State / Region' : 'Select country first'">
-      </app-searchable-select>
-      <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
-        (ngModelChange)="onFilterCityChange($event)" [placeholder]="filterCities().length ? 'City' : 'Select state first'">
-      </app-searchable-select>
-    </div>
-  </div>
-
-  <div class="jb-filter-row jb-filter-row--footer">
-    <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
-      <i class="bi bi-sliders2"></i>
-      Advanced Filters
-      @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-      <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-    </button>
-    @if (activeFilterCount() > 0) {
-      <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
-    }
   </div>
 
   @if (showAdvancedFilters()) {
     <div class="jb-advanced-panel animate-slide-in-up">
+      <div class="jb-filter-row">
+      <span class="jb-filter-section-label"><i class="bi bi-briefcase"></i> Type</span>
+      <div class="jb-chip-group" role="group">
+        <button class="jb-chip" [class.jb-chip--active]="filterJobType() === ''" (click)="setJobTypeFilter('')">All</button>
+        @for (type of jobTypes; track type) {
+          <button class="jb-chip" [class.jb-chip--active]="filterJobType() === type" (click)="setJobTypeFilter(type)">{{ type }}</button>
+        }
+      </div>
+      </div>
+
+      <div class="jb-filter-row jb-filter-row--split">
+        <div class="jb-filter-group">
+          <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
+          <div class="jb-chip-group" role="group">
+            <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
+            @for (mode of workModes; track mode) {
+              <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
+            }
+          </div>
+        </div>
+        <div class="jb-location-row">
+          <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
+            (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
+            (ngModelChange)="onFilterStateChange($event)" [placeholder]="filterStates().length ? 'State / Region' : 'Select country first'">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
+            (ngModelChange)="onFilterCityChange($event)" [placeholder]="filterCities().length ? 'City' : 'Select state first'">
+          </app-searchable-select>
+        </div>
+      </div>
       <div class="jb-advanced-grid">
         <div class="jb-adv-field">
           <label class="jb-adv-label"><i class="bi bi-building"></i> Company</label>
@@ -283,9 +279,9 @@
 
             <!-- Text -->
             <div class="jb-card__info">
-              @if (job.companyName) {
+                  @if (job.companyName) {
                 <p class="jb-card__company">
-                  <i class="bi bi-building"></i>{{ job.companyName }}
+                    <i class="bi bi-building"></i>{{ job.companyName }}
                 </p>
               }
               <div class="jb-card__title-row">
@@ -299,7 +295,7 @@
                 @if (job.user) {
                   <span class="jb-card__meta-item">
                     <i class="bi bi-person"></i>{{ job.user.displayName ?? job.user.userName }}
-                  </span>
+                </span>
                 }
                 @if (getLocationDisplay(job)) {
                   <span class="jb-card__meta-item jb-card__meta-item--loc"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(job) }}</span>
@@ -313,18 +309,18 @@
                   <span class="jb-card__meta-item jb-card__meta-item--exp"><i class="bi bi-briefcase"></i>{{ getExperienceLabel(job) }}</span>
                 }
               </div>
+              @if (job.skills && job.skills.length > 0) {
+                  <div class="jb-card__skills-preview">
+                  @for (skill of getFirstSkills(job); track skill) {
+                    <span class="jb-card__skill-chip">{{ skill }}</span>
+                  }
+                  @if (getExtraSkillsCount(job) > 0) {
+                    <span class="jb-card__skill-chip jb-card__skill-chip--more">+{{ getExtraSkillsCount(job) }}</span>
+                  }
+                </div>
+              }
               <div class="jb-card__footer">
                 <span class="jb-card__date"><i class="bi bi-calendar3"></i>{{ job.createdAt | date:'mediumDate' }}</span>
-                @if (job.skills && job.skills.length > 0) {
-                  <div class="jb-card__skills-preview">
-                    @for (skill of getFirstSkills(job); track skill) {
-                      <span class="jb-card__skill-chip">{{ skill }}</span>
-                    }
-                    @if (getExtraSkillsCount(job) > 0) {
-                      <span class="jb-card__skill-chip jb-card__skill-chip--more">+{{ getExtraSkillsCount(job) }}</span>
-                    }
-                  </div>
-                }
               </div>
             </div>
 
@@ -341,7 +337,7 @@
                       <span class="spinner-border spinner-border-sm"></span>
                     } @else { <i class="bi bi-trash3-fill"></i> }
                     Delete
-                  </button>
+                </button>
                 </div>
               } @else {
                 <button class="jb-icon-btn jb-icon-btn--danger"
@@ -350,7 +346,7 @@
                   @if (deletingId() === job.id) {
                     <span class="spinner-border spinner-border-sm"></span>
                   } @else { <i class="bi bi-trash3"></i> }
-                </button>
+                    </button>
               }
             </div> -->
 
@@ -359,12 +355,12 @@
               <button class="jb-card__qa-btn jb-card__qa-btn--edit"
                 (click)="openEditModal(job, $event)" title="Edit job" type="button">
                 <i class="bi bi-pencil"></i>
-              </button>
+                    </button>
               <button class="jb-card__qa-btn jb-card__qa-btn--delete"
                 (click)="openDeleteConfirm(job, $event)" title="Delete job" type="button">
                 <i class="bi bi-trash3"></i>
-              </button>
-            </div>
+                    </button>
+          </div>
 
             <!-- Chevron toggle -->
             <button class="jb-card__toggle" [class.jb-card__toggle--open]="activeJobId() === job.id"
@@ -377,40 +373,6 @@
           <!-- ── ACCORDION BODY — Premium Redesign ────────────── -->
           @if (activeJobId() === job.id) {
             <div class="jbd-body" role="region" [attr.aria-label]="job.title + ' full details'">
-
-              <!-- S1: Company Header -->
-              @if (job.companyName || getCompanyLogoSrc(job) || job.companyWebsite) {
-                <div class="jbd-company-header">
-                  <div class="jbd-company-header__logo-wrap">
-                    @if (getCompanyLogoSrc(job)) {
-                      <img [src]="getCompanyLogoSrc(job)!" [alt]="job.companyName ?? 'Company'" class="jbd-company-header__logo-img" />
-                    } @else {
-                      <div class="jbd-company-header__logo-ph" [style.background-color]="getAvatarColor(job)">{{ getPosterInitials(job) }}</div>
-                    }
-                  </div>
-                  <div class="jbd-company-header__text">
-                    @if (job.companyName) { <h5 class="jbd-company-header__name">{{ job.companyName }}</h5> }
-                    <h6 class="jbd-company-header__job-title">{{ job.title }}</h6>
-                    <div class="jbd-company-header__meta">
-                      <span class="jbd-meta-pill jbd-meta-pill--date"><i class="bi bi-calendar3"></i>Posted {{ job.createdAt | date:'mediumDate' }}</span>
-                      @if (job.updatedAt && job.updatedAt !== job.createdAt) {
-                        <span class="jbd-meta-pill jbd-meta-pill--updated"><i class="bi bi-pencil-square"></i>Updated {{ job.updatedAt | date:'mediumDate' }}</span>
-                      }
-                      @if (job.user) {
-                        <span class="jbd-meta-pill"><i class="bi bi-person"></i>{{ job.user.displayName ?? job.user.userName }}</span>
-                      }
-                      @if (job.isActive) {
-                        <span class="jbd-status-badge jbd-status-badge--active"><i class="bi bi-circle-fill"></i> Active</span>
-                      }
-                      @if (job.companyWebsite) {
-                        <a [href]="job.companyWebsite" target="_blank" rel="noopener" class="jbd-meta-pill jbd-meta-pill--link" (click)="$event.stopPropagation()">
-                          <i class="bi bi-globe2"></i> Website
-                        </a>
-                      }
-                    </div>
-                  </div>
-                </div>
-              }
 
               <!-- S2: Job Overview -->
               @if (job.workMode || job.shiftType || getExperienceLabel(job) || job.education || job.openings || job.jobType) {

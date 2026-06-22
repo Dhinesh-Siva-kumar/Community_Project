@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   User, UserDetail, UserListResponse, AuditLog, AuditLogResponse,
-  NotificationType, PaginatedResponse, DashboardStats,
+  NotificationType, PaginatedResponse, DashboardStats, ChartData,
 } from '../models';
 
 export interface AdminCreateUserPayload {
@@ -51,6 +51,10 @@ export class UserService {
 
   getDashboardStats(): Observable<DashboardStats> {
     return this.api.get<DashboardStats>('/users/dashboard');
+  }
+
+  getChartData(): Observable<ChartData> {
+    return this.api.get<ChartData>('/users/charts');
   }
 
   // ── Admin — list & detail ─────────────────────────────────────────────────
