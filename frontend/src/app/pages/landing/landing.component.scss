@@ -4797,6 +4797,9 @@ textarea.lp-form-control {
   &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.18); }
   &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); }
   &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); }
+  &[data-color="pink"]:hover { box-shadow: 0 10px 28px rgba(236,72,153,.18); }
+  &[data-color="yellow"]:hover { box-shadow: 0 10px 28px rgba(245,158,11,.18); }
+  &[data-color="accent"]:hover { box-shadow: 0 10px 28px rgba(59,130,246,.18); }
 }
 
 .lp-ask-icon {
@@ -4813,6 +4816,9 @@ textarea.lp-form-control {
   &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
   &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
   &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+  &[data-color="pink"] { background: linear-gradient(135deg, #F472B6, #EC4899); box-shadow: 0 4px 14px rgba(236,72,153,.38); }
+  &[data-color="yellow"] { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 4px 14px rgba(245,158,11,.38); }
+  &[data-color="accent"] {background: linear-gradient(135deg, #60A5FA, #2563EB); box-shadow: 0 4px 14px rgba(37,99,235,.38); }
 }
 
 .lp-ask-question {
