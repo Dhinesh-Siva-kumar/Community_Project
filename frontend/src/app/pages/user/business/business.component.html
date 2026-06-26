@@ -96,6 +96,7 @@
         </div>
       </div>
     </div>
+    <button class="biz-add-btn" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
   </div>
 
   <div class="bl-toolbar">
@@ -131,6 +132,11 @@
       <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
       <h5 class="biz-empty__title">{{ filterSearch() ? 'No matching businesses' : 'No Businesses Yet' }}</h5>
       <p class="biz-empty__sub">{{ filterSearch() ? 'Try a different search term.' : 'No businesses in this category yet.' }}</p>
+      @if (!filterSearch()) {
+        <button class="biz-add-btn biz-add-btn--sm" (click)="openAddBusiness()">
+          <i class="bi bi-plus-lg"></i> Add Business
+        </button>
+      }
     </div>
   } @else {
     <div class="bl-grid">
@@ -292,4 +298,239 @@
       </aside>
     </div>
   }
+}
+
+<!-- ==================== ADD BUSINESS MODAL ==================== -->
+@if (showAddBusinessModal()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="userBizModalTitle">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable jb-modal-dialog">
+      <div class="modal-content jb-modal">
+
+        <div class="jb-modal__header">
+          <div class="jb-modal__header-icon">
+            <i class="bi bi-shop-window"></i>
+          </div>
+          <div class="jb-modal__header-text">
+            <h4 class="jb-modal__title" id="userBizModalTitle">Add Business</h4>
+            <p class="jb-modal__subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
+          </div>
+          <button type="button" class="jb-modal__close" (click)="closeAddBusiness()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="jb-modal__body">
+          <form [formGroup]="businessForm" novalidate>
+
+            <!-- S1: Business Info -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-shop"></i></div>
+                <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">Business Information</span></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="jb-label" for="userBizName">Business Name <span class="text-danger">*</span></label>
+                  <input id="userBizName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Sunrise Coffee"
+                    [class.jb-input--error]="businessForm.get('name')?.invalid && businessForm.get('name')?.touched" />
+                  @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Name is required</span>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label">Category <span class="text-danger">*</span></label>
+                  <app-searchable-select formControlName="categoryId" [options]="categoryOptions()" placeholder="Select category"></app-searchable-select>
+                  @if (businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Category is required</span>
+                  }
+                </div>
+                <div class="col-12">
+                  <label class="jb-label" for="userBizDesc">Description <span class="text-danger">*</span></label>
+                  <textarea id="userBizDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
+                    placeholder="Describe the business…"
+                    [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
+                  @if (businessForm.get('description')?.invalid && businessForm.get('description')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Description is required</span>
+                  }
+                </div>
+                <!-- Business Logo -->
+                <div class="col-12">
+                  <label class="jb-label">Business Logo <span class="text-danger">*</span></label>
+                  @if (logoPreview()) {
+                    <div class="jb-logo-preview">
+                      <img [src]="logoPreview()!" alt="Logo preview" class="jb-logo-preview__img" />
+                      <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                  } @else {
+                    <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
+                      [resetCounter]="logoUploadReset()" label="Upload business logo (JPG, PNG, WEBP)"
+                      (filesChange)="onLogoChange($event)"></app-file-upload>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- S2: Contact -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-telephone"></i></div>
+                <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">Contact Details</span></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizPhone">Phone <span class="text-danger">*</span></label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-telephone jb-input-group__icon"></i>
+                    <input id="userBizPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" placeholder="+44 7700 900000"
+                      [class.jb-input--error]="businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched" />
+                  </div>
+                  @if (businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid phone required</span>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizEmail">Email</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-envelope jb-input-group__icon"></i>
+                    <input id="userBizEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" placeholder="info@business.com"
+                      [class.jb-input--error]="businessForm.get('email')?.invalid && businessForm.get('email')?.touched" />
+                  </div>
+                  @if (businessForm.get('email')?.invalid && businessForm.get('email')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid email required</span>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizWa">WhatsApp</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-whatsapp jb-input-group__icon"></i>
+                    <input id="userBizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="+44 7700 900000" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="userBizWeb">Website</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-globe2 jb-input-group__icon"></i>
+                    <input id="userBizWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" placeholder="https://business.com"
+                      [class.jb-input--error]="businessForm.get('website')?.invalid && businessForm.get('website')?.touched" />
+                  </div>
+                  @if (businessForm.get('website')?.errors?.['invalidUrl'] && businessForm.get('website')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="userBizMaps">Google Maps Link</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-pin-map jb-input-group__icon"></i>
+                    <input id="userBizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="https://maps.google.com/..."
+                      [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
+                  </div>
+                  @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- S3: Location -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-geo-alt"></i></div>
+                <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">Location</span></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="jb-label">Country <span class="text-danger">*</span></label>
+                  <app-searchable-select formControlName="countryId" [options]="bizCountryOptions()"
+                    placeholder="Select country" searchPlaceholder="Search countries…"></app-searchable-select>
+                  @if (businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country is required</span>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizState">State / Region</label>
+                  <input id="userBizState" type="text" class="jb-input" formControlName="state" placeholder="Enter state / region" />
+                </div>
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizCity">City</label>
+                  <input id="userBizCity" type="text" class="jb-input" formControlName="city" placeholder="Enter city" />
+                </div>
+                <div class="col-md-8">
+                  <label class="jb-label" for="userBizAddr">Address <span class="text-danger">*</span></label>
+                  <input id="userBizAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…"
+                    [class.jb-input--error]="businessForm.get('address')?.invalid && businessForm.get('address')?.touched" />
+                  @if (businessForm.get('address')?.invalid && businessForm.get('address')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Address is required</span>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="jb-label" for="userBizPin">Pin Code <span class="text-danger">*</span></label>
+                  <input id="userBizPin" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA"
+                    [class.jb-input--error]="businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched" />
+                  @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid pin code required</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- S4: Opening Hours -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-clock"></i></div>
+                <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">Opening Hours</span></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="jb-label">Opening Days <span class="text-danger">*</span></label>
+                  <div class="jb-day-toggles">
+                    @for (day of DAYS; track day) {
+                      <button type="button" class="jb-day-toggle"
+                        [class.jb-day-toggle--on]="selectedDays().includes(day)"
+                        (click)="toggleDay(day)">{{ day.slice(0,3) }}</button>
+                    }
+                  </div>
+                  @if (businessForm.get('openingDays')?.invalid && businessForm.get('openingDays')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Select at least one day</span>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="userBizHours">Opening Hours <span class="text-danger">*</span></label>
+                  <input id="userBizHours" type="text" class="jb-input" formControlName="openingHours"
+                    placeholder="e.g. 9:00 AM – 9:00 PM"
+                    [class.jb-input--error]="businessForm.get('openingHours')?.invalid && businessForm.get('openingHours')?.touched" />
+                  @if (businessForm.get('openingHours')?.invalid && businessForm.get('openingHours')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Opening hours required</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- S5: Gallery -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
+                <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">Gallery Photos <span class="jb-form-section__optional">(optional)</span></span></div>
+              </div>
+              <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
+                label="Drag & drop or click to upload gallery images"
+                [resetCounter]="fileUploadReset()"
+                (filesChange)="onBusinessImagesChange($event)"></app-file-upload>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="jb-modal__footer">
+          <button type="button" class="jb-btn jb-btn--ghost" (click)="closeAddBusiness()">Cancel</button>
+          <button type="button" class="jb-btn jb-btn--neon"
+            [disabled]="businessForm.invalid || submitting()"
+            (click)="submitBusiness()">
+            @if (submitting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            <i class="bi bi-shop-window me-1"></i>
+            Add Business
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 }
