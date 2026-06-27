@@ -1,16 +1,23 @@
 <!-- ==================== CATEGORIES VIEW ==================== -->
 @if (currentView() === 'categories') {
 
-  <div class="biz-header">
-    <div class="biz-header__left">
-      <h2 class="biz-header__title">Business Directory</h2>
-      <p class="biz-header__sub">Browse businesses by category.</p>
-      <div class="biz-header__stats">
-        <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
-        <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
+  <section class="biz-header" aria-label="Business directory overview">
+    <div class="biz-header-bg" aria-hidden="true">
+      <div class="hero-noise"></div>
+      <div class="hero-glow"></div>
+    </div>
+
+    <div class="biz-header-content">
+      <div class="biz-header__left">
+        <h2 class="biz-header__title">Business Directory</h2>
+        <p class="biz-header__sub">Browse businesses by category.</p>
+        <div class="biz-header__stats">
+          <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
+          <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <div class="biz-toolbar">
     <div class="biz-search">

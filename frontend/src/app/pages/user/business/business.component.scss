@@ -1,20 +1,55 @@
 @use '../../../../assets/styles/index' as *;
 
-// ─── Header ───────────────────────────────────────────────────
+// ─── Header (hero style) ──────────────────────────────────────────
 .biz-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: $spacing-md; margin-bottom: $spacing-lg; flex-wrap: wrap;
+  position: relative;
+  background: linear-gradient(135deg, #FBBF24 0%, #F97316 55%, #D97706 100%);
+  border-radius: $radius-xl;
+  padding: 2rem 2.25rem;
+  margin-bottom: $spacing-lg;
+  overflow: hidden;
+  min-height: 130px;
+
+  &-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  &-content {
+    position: relative;
+    z-index: 1;
+  }
+
   &__left { min-width: 0; }
-  &__title { font-family: $font-family-header; font-size: clamp(1.1rem,2.5vw,1.5rem); font-weight: 800; color: $color-stone-900; letter-spacing: -0.02em; margin: 0 0 3px; }
-  &__sub   { font-size: $font-size-sm; color: $color-text-muted; margin: 0 0 $spacing-sm; }
+  &__title { font-family: $font-family-header; font-size: clamp(1.1rem,2.5vw,1.5rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin: 0 0 3px; }
+  &__sub   { font-size: $font-size-sm; color: rgba(255,255,255,0.88); margin: 0 0 $spacing-sm; }
   &__stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 }
 
 .biz-stat-pill {
   display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px;
-  border-radius: $radius-full; background: rgba(251,191,36,0.10);
-  border: 1px solid rgba(251,191,36,0.25); font-size: $font-size-xs; color: $color-primary-darker;
+  border-radius: $radius-full; background: rgba(255,255,255,0.90);
+  border: none; font-size: $font-size-xs; color: $color-primary-darker;
   .bi { font-size: 0.8em; } strong { font-weight: $font-weight-bold; }
+}
+
+.hero-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+.hero-glow {
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.22) 0%, transparent 70%);
+  border-radius: 50%;
 }
 
 // ─── Toolbar ──────────────────────────────────────────────────
@@ -404,7 +439,7 @@ $accents: (
 
 // ─── Responsive ───────────────────────────────────────────────
 @include media-md-max {
-  .biz-header { flex-direction: column; align-items: flex-start; }
+  .biz-header { padding: 1.5rem 1.25rem; }
   .biz-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: $spacing-md; }
   .bl-header { flex-direction: column; align-items: flex-start; }
   .bl-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: $spacing-md; }
@@ -416,6 +451,7 @@ $accents: (
   .jb-form-section { padding: $spacing-md; }
 }
 @include media-sm-max {
+  .biz-header { padding: 1.25rem 1rem; }
   .biz-toolbar, .bl-toolbar { flex-direction: column; align-items: stretch; }
   .biz-grid, .bl-grid { grid-template-columns: 1fr 1fr; gap: $spacing-sm; }
   .bd-hero__avatar { margin-top: -40px; }
