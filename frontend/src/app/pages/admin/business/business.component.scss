@@ -1313,6 +1313,8 @@ $accents: (
 
 .jb-field-error { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-danger; .bi { font-size: 0.8rem; flex-shrink: 0; } }
 
+.jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
+
 .jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .jb-day-toggle {

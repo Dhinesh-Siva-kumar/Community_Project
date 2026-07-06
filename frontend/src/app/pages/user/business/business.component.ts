@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -19,6 +19,16 @@ function urlValidator(c: AbstractControl): ValidationErrors | null {
 
 type ViewState = 'categories' | 'list' | 'detail';
 
+/** Haversine distance in km between two lat/lng points */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+          + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 @Component({
   selector: 'app-user-business',
   standalone: true,
@@ -34,7 +44,12 @@ export class UserBusinessComponent implements OnInit {
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
-  currentView      = signal<ViewState>('categories');
+  // ── View state ──────────────────────────────────────────────
+  currentView      = signal<ViewState>('list');
+  /** 'list' = Business List view, 'categories' = Category browse view */
+  businessView     = signal<'list' | 'categories'>('list');
+
+  // ── Master data ─────────────────────────────────────────────
   categories       = signal<BusinessCategory[]>([]);
   businesses       = signal<Business[]>([]);
   selectedCategory = signal<BusinessCategory | null>(null);
@@ -45,9 +60,36 @@ export class UserBusinessComponent implements OnInit {
   totalItems       = signal(0);
   activeImageIndex = signal(0);
 
+  // ── Geolocation ─────────────────────────────────────────────
+  userLatitude     = signal<number | null>(null);
+  userLongitude    = signal<number | null>(null);
+  geoDenied        = signal(false);
+  geoLoading       = signal(true);
+
+  // ── Filters ─────────────────────────────────────────────────
+  filterSearch        = signal('');
+  filterCountry       = signal<string | null>(null);
+  filterCountryOptions: SelectOption[] = [];
+  /** Distance in meters: null = no filter, 500 = Nearby, 1000 = 1KM, 5000 = 5KM */
+  filterDistance      = signal<number | null>(500);
+  /** Selected category ID for filter dropdown (null/empty = all) */
+  filterCategoryId    = signal<string | null>(null);
+
+  /** Category options for filter dropdown (includes "All Categories") */
+  categorySelectOptions = computed<SelectOption[]>(() => {
+    const cats = this.categories().map(c => ({ value: c.id, label: c.name }));
+    return [{ value: '', label: 'All Categories' }, ...cats];
+  });
+
+  hasActiveFilters = computed(() => !!(this.filterSearch() || this.filterCountry() || this.filterDistance() || this.filterCategoryId()));
+  totalBusinesses  = computed(() => this.categories().reduce((s,c) => s + (c._count?.businesses ?? 0), 0));
+  totalCategoriesCount = computed(() => this.categories().length);
+
+  // ── Category view (legacy) controls ─────────────────────────
   catSearch   = signal('');
   catSortBy   = signal<'name'|'count'|'newest'>('name');
   catViewMode = signal<'grid'|'list'>('grid');
+  bizViewMode = signal<'grid'|'list'>('grid');
 
   filteredCategories = computed(() => {
     const q = this.catSearch().toLowerCase();
@@ -60,14 +102,7 @@ export class UserBusinessComponent implements OnInit {
     return list;
   });
 
-  filterSearch        = signal('');
-  filterCountry       = signal<string | null>(null);
-  filterCountryOptions: SelectOption[] = [];
-  hasActiveFilters    = computed(() => !!(this.filterSearch() || this.filterCountry()));
-  totalBusinesses     = computed(() => this.categories().reduce((s,c) => s + (c._count?.businesses ?? 0), 0));
-  totalCategoriesCount= computed(() => this.categories().length);
-
-  // ── Add Business Modal ────────────────────────────────────────
+  // ── Add Business Modal ──────────────────────────────────────
   showAddBusinessModal = signal(false);
   editingBusiness      = signal<Business | null>(null);
   submitting           = signal(false);
@@ -123,11 +158,51 @@ export class UserBusinessComponent implements OnInit {
   getCategoryAccent(icon?: string): string { return this.ACCENT_MAP[icon ?? ''] ?? 'orange'; }
   getCategoryIcon(icon?: string): string   { return icon || 'bi-shop'; }
 
+  constructor() {
+    // Auto-refresh whenever any filter changes
+    effect(() => {
+      const _search = this.filterSearch();
+      const _country = this.filterCountry();
+      const _dist = this.filterDistance();
+      const _catId = this.filterCategoryId();
+      const _page = this.currentPage();
+      if (this.currentView() === 'list' && !this.geoLoading()) {
+        this.loadNearbyBusinesses();
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.initForm();
     this.loadCategories();
     this.loadMasterCountries();
     this.loadCountries();
+    this.requestGeolocation();
+  }
+
+  private requestGeolocation(): void {
+    this.geoLoading.set(true);
+    if (!navigator.geolocation) {
+      this.geoDenied.set(true);
+      this.geoLoading.set(false);
+      this.loadNearbyBusinesses();
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.userLatitude.set(pos.coords.latitude);
+        this.userLongitude.set(pos.coords.longitude);
+        this.geoDenied.set(false);
+        this.geoLoading.set(false);
+        this.loadNearbyBusinesses();
+      },
+      () => {
+        this.geoDenied.set(true);
+        this.geoLoading.set(false);
+        this.loadNearbyBusinesses();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
   }
 
   private initForm(): void {
@@ -196,45 +271,154 @@ export class UserBusinessComponent implements OnInit {
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false): void {
-    this.selectedCategory.set(category);
+  /** Main method to load businesses with filters applied (client-side distance) */
+  loadNearbyBusinesses(): void {
     this.currentView.set('list');
-    if (resetPage) this.currentPage.set(1);
+    this.businessView.set('list');
     this.loading.set(true);
-    const params: Record<string, any> = { categoryId: category.id, page: this.currentPage() };
-    if (this.filterSearch()) params['search'] = this.filterSearch();
-    if (this.filterCountry()) params['country'] = this.filterCountry();
+
+    // Build API params
+    const params: Record<string, any> = { page: 1, limit: 100 };
+
+    // Category filter (single-select dropdown)
+    const catId = this.filterCategoryId();
+    if (catId) {
+      params['categoryId'] = catId;
+    }
+
+    // Search text
+    if (this.filterSearch()) {
+      params['search'] = this.filterSearch();
+    }
+
+    // Country filter
+    if (this.filterCountry()) {
+      params['country'] = this.filterCountry();
+    }
+
     this.svc.getBusinesses(params).subscribe({
       next: (res: PaginatedResponse<Business>) => {
-        this.businesses.set(res.data);
-        this.totalPages.set(res.totalPages);
-        this.totalItems.set(res.total);
+        let filtered = res.data;
+
+        // Apply client-side distance filter
+        const lat = this.userLatitude();
+        const lng = this.userLongitude();
+        const dist = this.filterDistance(); // in meters
+
+        if (lat !== null && lng !== null && dist !== null) {
+          const distKm = dist / 1000;
+          filtered = filtered
+            .map(b => ({
+              ...b,
+              _distanceKm: (b.latitude != null && b.longitude != null)
+                ? haversineKm(lat, lng, b.latitude, b.longitude)
+                : Infinity,
+            }))
+            .filter(b => (b as any)._distanceKm <= distKm)
+            .sort((a, b) => ((a as any)._distanceKm || Infinity) - ((b as any)._distanceKm || Infinity));
+        } else {
+          // No distance filter — sort by newest first
+          filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        // Simple client-side pagination
+        const limit = 20;
+        const page = this.currentPage();
+        const start = (page - 1) * limit;
+        const paged = filtered.slice(start, start + limit);
+        const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+
+        this.businesses.set(paged);
+        this.totalItems.set(filtered.length);
+        this.totalPages.set(totalPages);
         this.loading.set(false);
       },
-      error: () => { this.toast.error('Failed to load businesses'); this.loading.set(false); },
+      error: () => {
+        this.toast.error('Failed to load businesses');
+        this.loading.set(false);
+      },
     });
   }
 
-  applyFilters(): void { const cat = this.selectedCategory(); if (cat) this.loadBusinesses(cat, true); }
-  clearFilters(): void { this.filterSearch.set(''); this.filterCountry.set(null); this.applyFilters(); }
+  /** Load businesses for a specific category (from category view click) */
+  loadBusinessesByCategory(category: BusinessCategory): void {
+    this.selectedCategory.set(category);
+    this.filterCategoryId.set(category.id);
+    this.currentView.set('list');
+    this.businessView.set('list');
+    this.currentPage.set(1);
+    // The effect() will trigger loadNearbyBusinesses automatically
+  }
+
+  // Legacy method kept for backward compat — delegates to new system
+  loadBusinesses(category: BusinessCategory, resetPage = false): void {
+    this.loadBusinessesByCategory(category);
+  }
+
+  /** Handle category filter dropdown change */
+  onCategoryFilterChange(value: string | number | null): void {
+    this.filterCategoryId.set(value ? String(value) : null);
+    this.currentPage.set(1);
+  }
+
+  /** Set distance filter */
+  setDistance(distance: number | null): void {
+    this.filterDistance.set(distance);
+    this.currentPage.set(1);
+  }
+
+  /** Switch view between Business List and Category View */
+  switchView(view: 'list' | 'categories'): void {
+    this.businessView.set(view);
+    this.currentView.set(view === 'categories' ? 'categories' : 'list');
+    if (view === 'list') {
+      this.currentPage.set(1);
+      this.loadNearbyBusinesses();
+    }
+  }
+
+  applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadNearbyBusinesses();
+  }
+
+  clearFilters(): void {
+    this.filterSearch.set('');
+    this.filterCountry.set(null);
+    this.filterDistance.set(500);
+    this.filterCategoryId.set(null);
+    this.currentPage.set(1);
+  }
 
   loadBusinessDetail(biz: Business): void {
     this.selectedBusiness.set(biz); this.activeImageIndex.set(0); this.currentView.set('detail');
   }
 
   goToCategories(): void {
-    this.currentView.set('categories'); this.selectedCategory.set(null);
-    this.businesses.set([]); this.currentPage.set(1);
-    this.filterSearch.set(''); this.filterCountry.set(null);
+    this.currentView.set('categories');
+    this.businessView.set('categories');
+    this.selectedCategory.set(null);
+    this.businesses.set([]);
+    this.currentPage.set(1);
+    this.filterCategoryId.set(null);
+    this.filterSearch.set('');
+    this.filterCountry.set(null);
+    this.filterDistance.set(500);
   }
 
-  goToList(): void { this.currentView.set('list'); this.selectedBusiness.set(null); }
-  setActiveImage(i: number): void { this.activeImageIndex.set(i); }
+  goToList(): void {
+    this.currentView.set('list');
+    this.businessView.set('list');
+    this.selectedBusiness.set(null);
+  }
+
+  setActiveImage(i: number): void {
+    this.activeImageIndex.set(i);
+  }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    const cat = this.selectedCategory(); if (cat) this.loadBusinesses(cat);
   }
 
   getPages(): number[] {
@@ -277,7 +461,6 @@ export class UserBusinessComponent implements OnInit {
     this.businessForm.get('openingDays')?.setValue('');
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
 
-    // Pre-select the current category if we're in list view
     const cat = this.selectedCategory();
     if (cat) {
       this.businessForm.get('categoryId')?.setValue(cat.id);
@@ -296,17 +479,12 @@ export class UserBusinessComponent implements OnInit {
     this.submitting.set(true);
     const raw: Record<string, any> = { ...this.businessForm.value };
 
-    // Resolve country name from selected countryId
     const foundCountry = this.bizCountries().find((c: any) => String(c.id) === String(raw['countryId']));
     if (foundCountry) raw['country'] = (foundCountry as any).name;
 
-    // Opening days from signal (authoritative source)
     raw['openingDays'] = this.selectedDays().join(',');
-
     delete raw['countryId'];
 
-    // Strip empty optional fields that would fail backend Zod validation
-    // e.g., email: z.string().email().optional() rejects '' (empty string)
     ['email', 'website', 'mapsLink', 'whatsapp', 'latitude', 'longitude', 'logo'].forEach(key => {
       if (raw[key] === '' || raw[key] === null || raw[key] === undefined) {
         delete raw[key];

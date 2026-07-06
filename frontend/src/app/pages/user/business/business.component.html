@@ -1,23 +1,205 @@
-<!-- ==================== CATEGORIES VIEW ==================== -->
-@if (currentView() === 'categories') {
+<!-- ==================== VIEW TOGGLE (always visible) ==================== -->
+<section class="biz-header" aria-label="Business directory overview">
+  <div class="biz-header-bg" aria-hidden="true">
+    <div class="hero-noise"></div>
+    <div class="hero-glow"></div>
+  </div>
 
-  <section class="biz-header" aria-label="Business directory overview">
-    <div class="biz-header-bg" aria-hidden="true">
-      <div class="hero-noise"></div>
-      <div class="hero-glow"></div>
+  <div class="biz-header-content">
+    <div class="biz-header__left">
+      <h2 class="biz-header__title">Business Directory</h2>
+      <p class="biz-header__sub">Discover businesses near you.</p>
+      <div class="biz-header__stats">
+        <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
+        <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
+      </div>
     </div>
+  </div>
+</section>
 
-    <div class="biz-header-content">
-      <div class="biz-header__left">
-        <h2 class="biz-header__title">Business Directory</h2>
-        <p class="biz-header__sub">Browse businesses by category.</p>
-        <div class="biz-header__stats">
-          <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
-          <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
+<!-- View toggle -->
+<div class="biz-view-switcher">
+  <button class="biz-view-switcher__btn" [class.biz-view-switcher__btn--active]="businessView() === 'list'"
+    (click)="switchView('list')">
+    <i class="bi bi-list-ul"></i> Business List
+  </button>
+  <button class="biz-view-switcher__btn" [class.biz-view-switcher__btn--active]="businessView() === 'categories'"
+    (click)="switchView('categories')">
+    <i class="bi bi-grid-3x2-gap"></i> Category View
+  </button>
+</div>
+
+<!-- ==================== BUSINESS LIST VIEW (default) ==================== -->
+@if (currentView() === 'list' && businessView() === 'list') {
+
+  <!-- Filter Toolbar -->
+  <div class="biz-filter-bar">
+    <!-- Search + Country + View Toggle row -->
+    <div class="biz-filter-bar__row">
+      <div class="biz-search">
+        <i class="bi bi-search biz-search__icon"></i>
+        <input type="search" class="biz-search__input" placeholder="Search businesses…"
+          [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)"
+          autocomplete="off" aria-label="Search" />
+        @if (filterSearch()) {
+          <button class="biz-search__clear" (click)="filterSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+        }
+      </div>
+      <div class="biz-filter-bar__right">
+        @if (hasActiveFilters()) {
+          <button class="bl-clear-btn" (click)="clearFilters()">
+            <i class="bi bi-x-circle"></i> Clear
+          </button>
+        }
+        <div class="biz-view-toggle" role="group" aria-label="View mode">
+          <button class="biz-view-btn" [class.biz-view-btn--active]="bizViewMode() === 'grid'"
+            (click)="bizViewMode.set('grid')" aria-label="Grid"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="biz-view-btn" [class.biz-view-btn--active]="bizViewMode() === 'list'"
+            (click)="bizViewMode.set('list')" aria-label="List"><i class="bi bi-list-ul"></i></button>
         </div>
       </div>
     </div>
-  </section>
+
+    <!-- Distance Filter -->
+    <div class="biz-filter-bar__row biz-filter-bar__row--filters">
+      <div class="biz-filter-group">
+        <span class="biz-filter-label"><i class="bi bi-geo-alt"></i> Distance:</span>
+        <div class="biz-filter-pills">
+          <button class="biz-filter-pill"
+            [class.biz-filter-pill--active]="filterDistance() === 500"
+            (click)="setDistance(500)">
+            <i class="bi bi-geo-alt-fill"></i> Nearby (500M)
+          </button>
+          <button class="biz-filter-pill"
+            [class.biz-filter-pill--active]="filterDistance() === 1000"
+            (click)="setDistance(1000)">
+            <i class="bi bi-geo-alt-fill"></i> 1 KM
+          </button>
+          <button class="biz-filter-pill"
+            [class.biz-filter-pill--active]="filterDistance() === 5000"
+            (click)="setDistance(5000)">
+            <i class="bi bi-geo-alt-fill"></i> 5 KM
+          </button>
+          <button class="biz-filter-pill"
+            [class.biz-filter-pill--active]="filterDistance() === null"
+            (click)="setDistance(null)">
+            <i class="bi bi-globe"></i> All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filter (dropdown) -->
+    <div class="biz-filter-bar__row biz-filter-bar__row--filters">
+      <div class="biz-filter-group">
+        <span class="biz-filter-label"><i class="bi bi-tags"></i> Category:</span>
+        <div class="biz-filter-select-wrap">
+          <app-searchable-select
+            [options]="categorySelectOptions()"
+            [ngModel]="filterCategoryId()"
+            (ngModelChange)="onCategoryFilterChange($event)"
+            placeholder="All Categories">
+          </app-searchable-select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Geolocation status -->
+  @if (geoLoading()) {
+    <div class="biz-geo-status">
+      <i class="bi bi-crosshair"></i> Getting your location…
+    </div>
+  }
+  @if (geoDenied() && !geoLoading()) {
+    <div class="biz-geo-status biz-geo-status--muted">
+      <i class="bi bi-info-circle"></i> Location access denied. Showing all businesses (no distance filter).
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div [class]="bizViewMode() === 'grid' ? 'bl-grid' : 'bl-list-view'">
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <div class="bl-card-skeleton">
+          <div class="bl-card-skeleton__img skel-pulse"></div>
+          <div class="bl-card-skeleton__body">
+            <div class="bl-card-skeleton__line skel-pulse"></div>
+            <div class="bl-card-skeleton__line bl-card-skeleton__line--short skel-pulse"></div>
+            <div class="bl-card-skeleton__line bl-card-skeleton__line--xs skel-pulse"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (businesses().length === 0) {
+    <div class="biz-empty">
+      <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
+      <h5 class="biz-empty__title">No businesses found</h5>
+      <p class="biz-empty__sub">
+        @if (filterDistance() || filterCategoryId() || filterSearch()) {
+          Try adjusting your filters or increasing the distance.
+        } @else {
+          No businesses available yet.
+        }
+      </p>
+    </div>
+  } @else {
+    <div [class]="bizViewMode() === 'grid' ? 'bl-grid' : 'bl-list-view'">
+      @for (biz of businesses(); track biz.id) {
+        <article class="bl-card" role="button" tabindex="0"
+          (click)="loadBusinessDetail(biz)" (keydown.enter)="loadBusinessDetail(biz)"
+          [attr.aria-label]="biz.name">
+
+          <div class="bl-card__img-wrap">
+            @if (biz.images && biz.images.length > 0) {
+              <img [src]="biz.images[0]" [alt]="biz.name" class="bl-card__img" loading="lazy" />
+            } @else {
+              <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
+            }
+            <span class="bl-card__cat-badge">{{ biz.category?.name || 'Business' }}</span>
+            @if ($any(biz)._distanceKm != null) {
+              <span class="bl-card__dist-badge">
+                <i class="bi bi-geo-alt-fill"></i> {{ $any(biz)._distanceKm.toFixed(2) }} km
+              </span>
+            }
+          </div>
+
+          <div class="bl-card__body">
+            <h3 class="bl-card__name">{{ biz.name }}</h3>
+            @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
+            <div class="bl-card__meta">
+              @if (biz.address || $any(biz).city || $any(biz).state) {
+                <span class="bl-card__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(biz) }}</span>
+              }
+              @if (biz.phone) { <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span> }
+              @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bl-card__meta-item bl-card__meta-item--link" (click)="$event.stopPropagation()"><i class="bi bi-globe2"></i>Website</a> }
+            </div>
+          </div>
+
+          <div class="bl-card__footer" (click)="$event.stopPropagation()">
+            @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bl-card__action-btn bl-card__action-btn--call" [attr.aria-label]="'Call ' + biz.name"><i class="bi bi-telephone-fill"></i> Call</a> }
+            @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--wa" [attr.aria-label]="'WhatsApp ' + biz.name"><i class="bi bi-whatsapp"></i> WhatsApp</a> }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="bl-pagination" aria-label="Pages">
+        <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+        @for (page of getPages(); track page) {
+          <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+            (click)="goToPage(page)">{{ page }}</button>
+        }
+        <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+      </nav>
+    }
+  }
+}
+
+<!-- ==================== CATEGORIES VIEW ==================== -->
+@if (currentView() === 'categories' && businessView() === 'categories') {
 
   <div class="biz-toolbar">
     <div class="biz-search">
@@ -64,7 +246,7 @@
       @for (cat of filteredCategories(); track cat.id) {
         <div class="biz-cat-card biz-cat-card--{{ getCategoryAccent(cat.icon) }}"
           role="button" tabindex="0"
-          (click)="loadBusinesses(cat)" (keydown.enter)="loadBusinesses(cat)"
+          (click)="loadBusinessesByCategory(cat)" (keydown.enter)="loadBusinessesByCategory(cat)"
           [attr.aria-label]="'View ' + cat.name + ' businesses'">
           <div class="biz-cat-card__icon-wrap"><i class="bi {{ getCategoryIcon(cat.icon) }}"></i></div>
           <h3 class="biz-cat-card__name">{{ cat.name }}</h3>
@@ -81,120 +263,6 @@
   }
 }
 
-<!-- ==================== BUSINESS LIST VIEW ==================== -->
-@if (currentView() === 'list') {
-
-  <div class="bl-header">
-    <div class="bl-header__left">
-      <nav aria-label="breadcrumb">
-        <ol class="bl-breadcrumb">
-          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
-          <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-          <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ selectedCategory()?.name }}</li>
-        </ol>
-      </nav>
-      <div class="bl-header__title-row">
-        <div class="bl-header__icon biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
-          <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
-        </div>
-        <div>
-          <h2 class="bl-header__title">{{ selectedCategory()?.name }}</h2>
-          <span class="bl-header__count"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</span>
-        </div>
-      </div>
-    </div>
-    <button class="biz-add-btn" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
-  </div>
-
-  <div class="bl-toolbar">
-    <div class="biz-search">
-      <i class="bi bi-search biz-search__icon"></i>
-      <input type="search" class="biz-search__input" placeholder="Search businesses…"
-        [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event); applyFilters()"
-        autocomplete="off" aria-label="Search" />
-      @if (filterSearch()) {
-        <button class="biz-search__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
-      }
-    </div>
-    <div class="bl-toolbar__right">
-      @if (hasActiveFilters()) { <button class="bl-clear-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear</button> }
-    </div>
-  </div>
-
-  @if (loading()) {
-    <div class="bl-grid">
-      @for (_ of [1,2,3,4,5,6]; track $index) {
-        <div class="bl-card-skeleton">
-          <div class="bl-card-skeleton__img skel-pulse"></div>
-          <div class="bl-card-skeleton__body">
-            <div class="bl-card-skeleton__line skel-pulse"></div>
-            <div class="bl-card-skeleton__line bl-card-skeleton__line--short skel-pulse"></div>
-            <div class="bl-card-skeleton__line bl-card-skeleton__line--xs skel-pulse"></div>
-          </div>
-        </div>
-      }
-    </div>
-  } @else if (businesses().length === 0) {
-    <div class="biz-empty">
-      <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
-      <h5 class="biz-empty__title">{{ filterSearch() ? 'No matching businesses' : 'No Businesses Yet' }}</h5>
-      <p class="biz-empty__sub">{{ filterSearch() ? 'Try a different search term.' : 'No businesses in this category yet.' }}</p>
-      @if (!filterSearch()) {
-        <button class="biz-add-btn biz-add-btn--sm" (click)="openAddBusiness()">
-          <i class="bi bi-plus-lg"></i> Add Business
-        </button>
-      }
-    </div>
-  } @else {
-    <div class="bl-grid">
-      @for (biz of businesses(); track biz.id) {
-        <article class="bl-card" role="button" tabindex="0"
-          (click)="loadBusinessDetail(biz)" (keydown.enter)="loadBusinessDetail(biz)"
-          [attr.aria-label]="biz.name">
-
-          <div class="bl-card__img-wrap">
-            @if (biz.images && biz.images.length > 0) {
-              <img [src]="biz.images[0]" [alt]="biz.name" class="bl-card__img" loading="lazy" />
-            } @else {
-              <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i></div>
-            }
-            <span class="bl-card__cat-badge">{{ selectedCategory()?.name }}</span>
-          </div>
-
-          <div class="bl-card__body">
-            <h3 class="bl-card__name">{{ biz.name }}</h3>
-            @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
-            <div class="bl-card__meta">
-              @if (biz.address || $any(biz).city || $any(biz).state) {
-                <span class="bl-card__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(biz) }}</span>
-              }
-              @if (biz.phone) { <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span> }
-              @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bl-card__meta-item bl-card__meta-item--link" (click)="$event.stopPropagation()"><i class="bi bi-globe2"></i>Website</a> }
-            </div>
-          </div>
-
-          <div class="bl-card__footer" (click)="$event.stopPropagation()">
-            @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bl-card__action-btn bl-card__action-btn--call" [attr.aria-label]="'Call ' + biz.name"><i class="bi bi-telephone-fill"></i> Call</a> }
-            @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--wa" [attr.aria-label]="'WhatsApp ' + biz.name"><i class="bi bi-whatsapp"></i> WhatsApp</a> }
-          </div>
-        </article>
-      }
-    </div>
-
-    @if (totalPages() > 1) {
-      <nav class="bl-pagination" aria-label="Pages">
-        <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
-        @for (page of getPages(); track page) {
-          <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
-            [attr.aria-current]="page === currentPage() ? 'page' : null"
-            (click)="goToPage(page)">{{ page }}</button>
-        }
-        <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
-      </nav>
-    }
-  }
-}
-
 <!-- ==================== BUSINESS DETAIL VIEW ==================== -->
 @if (currentView() === 'detail') {
   @if (selectedBusiness(); as biz) {
@@ -203,7 +271,7 @@
       <ol class="bl-breadcrumb">
         <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
         <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ selectedCategory()?.name }}</button></li>
+        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ biz.category?.name || 'Businesses' }}</button></li>
         <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
         <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ biz.name }}</li>
       </ol>
@@ -214,19 +282,19 @@
         @if (biz.images && biz.images.length > 0) {
           <img [src]="biz.images[0]" [alt]="biz.name" class="bd-hero__cover-img" loading="lazy" />
         } @else {
-          <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i></div>
+          <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
         }
       </div>
       <div class="bd-hero__profile">
-        <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
-          <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
+        <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}">
+          <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
         </div>
         <div class="bd-hero__info">
           <div class="bd-hero__name-row">
             <h1 class="bd-hero__name">{{ biz.name }}</h1>
             @if (biz.isActive) { <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span> }
           </div>
-          <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ selectedCategory()?.name }}</span>
+          <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
           @if ($any(biz).city || $any(biz).state || biz.country) {
             <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getFullLocation(biz) }}</span>
           }

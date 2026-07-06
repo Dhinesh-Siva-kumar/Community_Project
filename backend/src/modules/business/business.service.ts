@@ -78,7 +78,7 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
 }
 
 export async function findAll(params: ListBusinessQueryDtoType) {
-  const { categoryId, pincode, page, limit, search, country, openingHours, dateFrom, dateTo } = params;
+  const { categoryId, categoryIds, pincode, page, limit, search, country, openingHours, dateFrom, dateTo } = params;
   const offset = (page - 1) * limit;
 
   const query = db('businesses as b')
@@ -90,6 +90,13 @@ export async function findAll(params: ListBusinessQueryDtoType) {
   const countQuery = db('businesses').where({ is_active: true });
 
   if (categoryId) { query.andWhere('b.category_id', categoryId); countQuery.andWhere('category_id', categoryId); }
+  if (categoryIds) {
+    const ids = categoryIds.split(',').map(s => s.trim()).filter(Boolean);
+    if (ids.length > 0) {
+      query.whereIn('b.category_id', ids);
+      countQuery.whereIn('category_id', ids);
+    }
+  }
   if (pincode) { query.andWhere('b.pincode', pincode); countQuery.andWhere({ pincode }); }
   if (search) {
     query.andWhere(function () { this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`); });

@@ -200,6 +200,50 @@ $accents: (
 
 .bl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: $spacing-lg; margin-bottom: $spacing-lg; }
 
+.bl-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .bl-card {
+    display: flex;
+    flex-direction: row;
+    gap: $spacing-lg;
+    align-items: stretch;
+    max-width: 100%;
+
+    &__img-wrap {
+      width: 160px;
+      min-width: 160px;
+      height: auto;
+      flex-shrink: 0;
+    }
+
+    &__body {
+      flex: 1;
+      padding: $spacing-md $spacing-lg $spacing-md 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    &__footer {
+      flex-direction: column;
+      justify-content: center;
+      border-top: none;
+      border-left: 1px solid $color-border;
+      padding: $spacing-md $spacing-lg;
+      margin-top: 0;
+      min-width: 120px;
+    }
+
+    &__action-btn {
+      flex: none;
+    }
+  }
+}
+
 .bl-card {
   display: flex; flex-direction: column; background: #fff; border: 1.5px solid $color-border;
   border-radius: $radius-lg; overflow: hidden; cursor: pointer;
@@ -311,6 +355,222 @@ $accents: (
   @include transition-short(all);
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(251,191,36,0.45); }
   &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+}
+
+// ─── View Switcher ──────────────────────────────────────────────────────
+.biz-view-switcher {
+  display: flex;
+  gap: 2px;
+  margin-bottom: $spacing-lg;
+  background: $color-stone-100;
+  border-radius: $radius-md;
+  padding: 3px;
+  border: 1.5px solid $color-border;
+  width: fit-content;
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border: none;
+    background: transparent;
+    border-radius: $radius-sm;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-stone-600;
+    cursor: pointer;
+    @include transition-quick(all);
+
+    &:hover {
+      color: $color-primary-darker;
+      background: rgba(251,191,36,0.08);
+    }
+
+    &--active {
+      background: #fff;
+      color: $color-stone-900;
+      box-shadow: 0 1px 3px rgba(28,25,23,0.10);
+    }
+
+    .bi { font-size: 1rem; }
+  }
+}
+
+// ─── Filter Bar ─────────────────────────────────────────────────────────
+.biz-filter-bar {
+  background: #fff;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: 0 1px 3px rgba(28,25,23,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+
+    &--filters {
+      padding-top: $spacing-sm;
+      border-top: 1px solid $color-border;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    flex-shrink: 0;
+  }
+}
+
+.biz-filter-group {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.biz-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $color-stone-600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  .bi { font-size: 0.85rem; color: $color-primary-dark; }
+}
+
+.biz-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.biz-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover {
+    border-color: $color-primary;
+    background: rgba(251,191,36,0.08);
+    color: $color-primary-darker;
+  }
+
+  &--active {
+    background: linear-gradient(135deg, $color-primary, $color-saffron);
+    border-color: transparent;
+    color: $color-on-primary;
+    box-shadow: 0 2px 6px rgba(251,191,36,0.28);
+
+    &:hover {
+      background: linear-gradient(135deg, $color-primary, $color-saffron);
+      color: $color-on-primary;
+    }
+  }
+
+  .bi { font-size: 0.8rem; }
+}
+
+.biz-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.biz-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover {
+    border-color: $color-primary;
+    background: rgba(251,191,36,0.08);
+    color: $color-primary-darker;
+  }
+
+  &--active {
+    background: $color-stone-900;
+    border-color: $color-stone-900;
+    color: #fff;
+
+    .bi { color: $color-primary; }
+  }
+
+  .bi { font-size: 0.8rem; color: $color-stone-400; }
+}
+
+// ─── Geolocation Status ────────────────────────────────────────────────
+.biz-geo-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-lg;
+  border-radius: $radius-md;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.22);
+  font-size: $font-size-xs;
+  color: $color-primary-darker;
+  font-weight: $font-weight-medium;
+
+  .bi { font-size: 0.9rem; animation: bizSpin 1.2s linear infinite; }
+
+  &--muted {
+    background: $color-bg-light;
+    border-color: $color-border;
+    color: $color-stone-500;
+    .bi { animation: none; }
+  }
+}
+
+// ─── Distance Badge on Card ────────────────────────────────────────────
+.bl-card__dist-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  padding: 3px 9px;
+  border-radius: $radius-full;
+  background: rgba(28,25,23,0.70);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  .bi { font-size: 0.7rem; color: $color-primary; }
 }
 
 .jb-modal-dialog { max-width: min(960px, 96vw); }
@@ -440,9 +700,51 @@ $accents: (
 // ─── Responsive ───────────────────────────────────────────────
 @include media-md-max {
   .biz-header { padding: 1.5rem 1.25rem; }
+  .biz-view-switcher { width: 100%; &__btn { flex: 1; justify-content: center; } }
+  .biz-filter-bar { padding: $spacing-sm; }
+  .biz-filter-group { flex-direction: column; align-items: flex-start; }
   .biz-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: $spacing-md; }
   .bl-header { flex-direction: column; align-items: flex-start; }
   .bl-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: $spacing-md; }
+.bl-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  .bl-card {
+    display: flex;
+    flex-direction: row;
+    gap: $spacing-lg;
+    align-items: center;
+    max-width: 100%;
+
+    &__img-wrap {
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+    }
+
+    &__content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: $spacing-xs;
+    }
+
+    .bl-card__title {
+      font-size: $font-size-md;
+      margin-bottom: 2px;
+    }
+
+    .bl-card__details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-sm;
+      font-size: $font-size-xs;
+    }
+  }
+}
+
   .bd-grid { grid-template-columns: 1fr; }
   .bd-hero__profile { flex-wrap: wrap; }
   .bd-hero__actions { margin-left: 0; }
