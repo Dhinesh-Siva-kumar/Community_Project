@@ -599,10 +599,10 @@
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="jb-label" for="bizName">Business Name <span class="text-danger">*</span></label>
-                  <input id="bizName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Sunrise Coffee"
+                  <input id="bizName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Sunrise Coffee" maxlength="100"
                     [class.jb-input--error]="businessForm.get('name')?.invalid && businessForm.get('name')?.touched" />
                   @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Name is required</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('name')?.errors?.['required'] ? 'Name is required' : 'Max 100 characters' }}</span>
                   }
                 </div>
                 <div class="col-md-6">
@@ -615,10 +615,10 @@
                 <div class="col-12">
                   <label class="jb-label" for="bizDesc">Description <span class="text-danger">*</span></label>
                   <textarea id="bizDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
-                    placeholder="Describe the business…"
+                    placeholder="Describe the business…" maxlength="1000"
                     [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
                   @if (businessForm.get('description')?.invalid && businessForm.get('description')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Description is required</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('description')?.errors?.['required'] ? 'Description is required' : 'Max 1000 characters' }}</span>
                   }
                 </div>
                 <!-- Business Logo -->
@@ -645,59 +645,82 @@
                 <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">Contact Details</span></div>
               </div>
               <div class="row g-3">
+                <div class="col-md-2">
+                  <label class="jb-label">Phone Country <span class="text-danger">*</span></label>
+                  <app-searchable-select formControlName="phoneCountryId" [options]="phoneCountryOptions()"
+                    placeholder="Select country code"></app-searchable-select>
+                  @if (businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country code is required</span>
+                  }
+                </div>
                 <div class="col-md-4">
                   <label class="jb-label" for="bizPhone">Phone <span class="text-danger">*</span></label>
                   <div class="jb-input-group">
                     <i class="bi bi-telephone jb-input-group__icon"></i>
-                    <input id="bizPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" placeholder="+44 7700 900000"
+                    <input id="bizPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" placeholder="7700 900000" maxlength="15"
                       [class.jb-input--error]="businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched" />
                   </div>
                   @if (businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid phone required</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('phone')?.errors?.['phoneInvalid'] || 'Valid phone required' }}</span>
                   }
                 </div>
                 <div class="col-md-4">
                   <label class="jb-label" for="bizEmail">Email</label>
                   <div class="jb-input-group">
                     <i class="bi bi-envelope jb-input-group__icon"></i>
-                    <input id="bizEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" placeholder="info@business.com"
+                    <input id="bizEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" placeholder="info@business.com" maxlength="255"
                       [class.jb-input--error]="businessForm.get('email')?.invalid && businessForm.get('email')?.touched" />
                   </div>
                   @if (businessForm.get('email')?.invalid && businessForm.get('email')?.touched) {
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid email required</span>
                   }
                 </div>
-                <div class="col-md-4">
-                  <label class="jb-label" for="bizWa">WhatsApp</label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                    <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="+44 7700 900000" />
-                  </div>
-                </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                   <label class="jb-label" for="bizWeb">Website</label>
                   <div class="jb-input-group">
                     <i class="bi bi-globe2 jb-input-group__icon"></i>
-                    <input id="bizWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" placeholder="https://business.com"
+                    <input id="bizWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" placeholder="https://business.com" maxlength="500"
                       [class.jb-input--error]="businessForm.get('website')?.invalid && businessForm.get('website')?.touched" />
                   </div>
                   @if (businessForm.get('website')?.errors?.['invalidUrl'] && businessForm.get('website')?.touched) {
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
                   }
                 </div>
-                <div class="col-md-6">
-                  <label class="jb-label" for="bizMaps">Google Maps Link</label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-pin-map jb-input-group__icon"></i>
-                    <input id="bizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="Auto-generated from address"
-                      [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
+                <div class="col-md-12">
+                  <div class="row g-3">
+                    <div class="col-md-2">
+                      <label class="jb-label">&nbsp;</label>
+                      <label class="jb-checkbox-label" style="display:flex;align-items:center;gap:4px;white-space:nowrap;cursor:pointer;padding-top:10px;">
+                        <input type="checkbox" formControlName="sameAsPhone" />
+                        <span style="font-size:0.8rem;">Same as phone</span>
+                      </label>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="jb-label" for="bizWa">WhatsApp</label>
+                      <div class="jb-input-group">
+                        <i class="bi bi-whatsapp jb-input-group__icon"></i>
+                        <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="+44 7700 900000" maxlength="15"
+                          [disabled]="businessForm.get('sameAsPhone')?.value" />
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="jb-label" for="bizMaps">Google Maps Link</label>
+                      <div class="jb-input-group">
+                        <i class="bi bi-pin-map jb-input-group__icon"></i>
+                        <input id="bizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="Auto-generated from address" maxlength="2000"
+                          [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
+                      </div>
+                      @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
+                        <span class="jb-field-hint"><i class="bi bi-robot"></i> Auto-generated from location fields</span>
+                      }
+                      @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
+                        <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                      }
+                    </div>
+                    <div class="col-md-3">
+                      <label class="jb-label" for="bizMapsPlaceholder">&nbsp;</label>
+                    </div>
                   </div>
-                  @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
-                    <span class="jb-field-hint"><i class="bi bi-robot"></i> Auto-generated from location fields</span>
-                  }
-                  @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
-                  }
                 </div>
               </div>
             </div>
@@ -737,15 +760,15 @@
                 </div>
                 <div class="col-md-8">
                   <label class="jb-label" for="bizAddr">Address <span class="text-danger">*</span></label>
-                  <input id="bizAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…"
+                  <input id="bizAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…" maxlength="500"
                     [class.jb-input--error]="businessForm.get('address')?.invalid && businessForm.get('address')?.touched" />
                   @if (businessForm.get('address')?.invalid && businessForm.get('address')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Address is required</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('address')?.errors?.['required'] ? 'Address is required' : 'Max 500 characters' }}</span>
                   }
                 </div>
                 <div class="col-md-4">
                   <label class="jb-label" for="bizPin">Pin Code <span class="text-danger">*</span></label>
-                  <input id="bizPin" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA"
+                  <input id="bizPin" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA" maxlength="12"
                     [class.jb-input--error]="businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched" />
                   @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid pin code required</span>
@@ -774,12 +797,58 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Select at least one day</span>
                   }
                 </div>
-                <div class="col-md-6">
-                  <label class="jb-label" for="bizHours">Opening Hours <span class="text-danger">*</span></label>
-                  <input id="bizHours" type="text" class="jb-input" formControlName="openingHours"
-                    placeholder="e.g. 9:00 AM – 9:00 PM"
-                    [class.jb-input--error]="businessForm.get('openingHours')?.invalid && businessForm.get('openingHours')?.touched" />
-                  @if (businessForm.get('openingHours')?.invalid && businessForm.get('openingHours')?.touched) {
+<div class="col-12">
+                  <label class="jb-label">Opening Hours <span class="text-danger">*</span></label>
+                  <div class="row g-2 align-items-center">
+                    <div class="col-5">
+                      <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'from'"
+                        [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursFrom')?.value">
+                        <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('from')" (blur)="closeTimeDropdown()">
+                          <i class="bi bi-clock time-dropdown__icon"></i>
+                          <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursFrom')?.value ?? '') }}</span>
+                          <i class="bi bi-chevron-down time-dropdown__chevron"></i>
+                        </button>
+                        @if (timeDropdownOpen() === 'from') {
+                          <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
+                            <div class="time-dropdown__list">
+                              @for (t of TIME_OPTIONS; track t) {
+                                <button type="button" class="time-dropdown__option"
+                                  [class.time-dropdown__option--selected]="businessForm.get('openingHoursFrom')?.value === t"
+                                  (click)="selectTime('from', t)">
+                                  <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <div class="col-auto" style="padding-top: 6px;"><span class="biz-hours-sep">to</span></div>
+                    <div class="col-5">
+                      <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'to'"
+                        [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursTo')?.value">
+                        <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('to')" (blur)="closeTimeDropdown()">
+                          <i class="bi bi-clock time-dropdown__icon"></i>
+                          <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursTo')?.value ?? '') }}</span>
+                          <i class="bi bi-chevron-down time-dropdown__chevron"></i>
+                        </button>
+                        @if (timeDropdownOpen() === 'to') {
+                          <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
+                            <div class="time-dropdown__list">
+                              @for (t of TIME_OPTIONS; track t) {
+                                <button type="button" class="time-dropdown__option"
+                                  [class.time-dropdown__option--selected]="businessForm.get('openingHoursTo')?.value === t"
+                                  (click)="selectTime('to', t)">
+                                  <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  @if (openingHoursTouched() && (!businessForm.get('openingHoursFrom')?.value || !businessForm.get('openingHoursTo')?.value)) {
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Opening hours required</span>
                   }
                 </div>

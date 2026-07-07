@@ -685,7 +685,8 @@ $accents: (
   border: 1.5px solid rgba(251,191,36,0.25); background: rgba(255,255,255,0.7);
   color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
   @include transition-short(all);
-  &:hover { border-color: $color-primary; background: rgba(251,191,36,0.08); color: $color-primary-darker; }
+  // &:hover { border-color: $color-primary; background: rgba(251,191,36,0.08); color: $color-primary-darker; }
+   &:hover { background: linear-gradient(135deg, $color-primary, $color-saffron); border-color: transparent; color: $color-on-primary; box-shadow: 0 2px 6px rgba(251,191,36,0.30); }
   &--on { background: linear-gradient(135deg, $color-primary, $color-saffron); border-color: transparent; color: $color-on-primary; box-shadow: 0 2px 6px rgba(251,191,36,0.30); }
 }
 

@@ -1,6 +1,6 @@
 ﻿import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { BusinessService } from '../../../core/services/business.service';
@@ -10,6 +10,7 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { getPhoneRule } from '../../../shared/utils/phone';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -147,6 +148,93 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   // Opening days
   readonly DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   selectedDays = signal<string[]>([]);
+
+  // Opening hours time pickers
+  openingHoursTouched = signal(false);
+
+  // Custom time dropdown state
+  timeDropdownOpen = signal<'from' | 'to' | null>(null);
+
+  /** Generate time options in 30-min intervals: 00:00, 00:30, 01:00 ... 23:30 */
+  readonly TIME_OPTIONS: string[] = Array.from({ length: 48 }, (_, i) => {
+    const h = Math.floor(i / 2);
+    const m = i % 2 === 0 ? '00' : '30';
+    return `${String(h).padStart(2, '0')}:${m}`;
+  });
+
+  /** Display a time value in a user-friendly 12h format for the trigger button */
+  displayTime(time24: string): string {
+    if (!time24) return 'Select';
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return 'Select';
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  openTimeDropdown(type: 'from' | 'to'): void {
+    this.timeDropdownOpen.set(type);
+  }
+
+  closeTimeDropdown(): void {
+    this.timeDropdownOpen.set(null);
+  }
+
+  selectTime(type: 'from' | 'to', value: string): void {
+    this.businessForm.get(type === 'from' ? 'openingHoursFrom' : 'openingHoursTo')?.setValue(value);
+    this.closeTimeDropdown();
+    this.markOpeningHoursTouched();
+  }
+
+  markOpeningHoursTouched(): void {
+    this.openingHoursTouched.set(true);
+  }
+
+  /** Convert "09:00" (24h) → "9:00 AM" (12h) */
+  private formatTo12h(time24: string): string {
+    if (!time24) return '';
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return '';
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  /** Parse "9:00 AM" (12h) → "09:00" (24h) */
+  private parseTo24h(time12: string): string {
+    if (!time12) return '';
+    const cleaned = time12.trim().toUpperCase();
+    const match = cleaned.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+    if (!match) return '';
+    let h = parseInt(match[1], 10);
+    const m = match[2];
+    const p = match[3];
+    if (p === 'PM' && h !== 12) h += 12;
+    if (p === 'AM' && h === 12) h = 0;
+    return `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  /** Parse existing openingHours string into from/to and set the form */
+  private parseOpeningHoursToForm(hours: string): void {
+    if (!hours) return;
+    // Try "9:00 AM – 5:00 PM" pattern
+    const dashMatch = hours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[–\-]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+    if (dashMatch) {
+      const from = this.parseTo24h(dashMatch[1].trim());
+      const to   = this.parseTo24h(dashMatch[2].trim());
+      if (from) this.businessForm.get('openingHoursFrom')?.setValue(from);
+      if (to)   this.businessForm.get('openingHoursTo')?.setValue(to);
+      return;
+    }
+    // Try "9:00 AM - 5:00 PM" with regular hyphen
+    const hyphenMatch = hours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[-–]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+    if (hyphenMatch) {
+      const from = this.parseTo24h(hyphenMatch[1].trim());
+      const to   = this.parseTo24h(hyphenMatch[2].trim());
+      if (from) this.businessForm.get('openingHoursFrom')?.setValue(from);
+      if (to)   this.businessForm.get('openingHoursTo')?.setValue(to);
+    }
+  }
   toggleDay(day: string): void {
     this.selectedDays.update(d => d.includes(day) ? d.filter(x => x !== day) : [...d, day]);
     const ctrl = this.businessForm.get('openingDays');
@@ -159,6 +247,18 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   editingBusiness       = signal<Business | null>(null);
   showDeleteBusinessConfirm = signal(false);
   businessToDelete      = signal<Business | null>(null);
+
+  // ── Phone country for Contact section (dial‑code dropdown) ──
+  phoneCountries = signal<Country[]>([]);
+  phoneCountryOptions = computed<SelectOption[]>(() =>
+    this.phoneCountries().map(c => ({
+      value: c.id,
+      label: `${c.flag_emoji || ''} ${c.dial_code}`.trim(),
+    }))
+  );
+
+  // ── "Same as phone" checkbox for WhatsApp ──
+  sameAsPhone = signal(false);
 
   // Icon configuration for category modal
   categoryIcons = [
@@ -227,7 +327,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     'bi-laptop':'purple',
   };
 
-  getCategoryAccent(icon?: string): string {
+getCategoryAccent(icon?: string): string {
     return this.ACCENT_MAP[icon ?? ''] ?? 'orange';
   }
 
@@ -237,9 +337,53 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.loadCategories();
     this.loadMasterCountries();
+    this.loadPhoneCountries();
   }
 
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+
+  // ── Phone countries (dial‑code dropdown) ────────────────────
+
+  loadPhoneCountries(): void {
+    this.authService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.phoneCountries.set(res.data);
+        // Default to India (+91) if available
+        const india = res.data.find((c: Country) => c.name === 'India');
+        if (india && !this.businessForm.get('phoneCountryId')?.value) {
+          this.businessForm.patchValue({ phoneCountryId: india.id });
+          this.businessForm.get('phone')?.updateValueAndValidity();
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  // ── Phone validator (country‑aware) ─────────────────────────
+
+  phoneValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const digits = (control.value ?? '').replace(/\D/g, '');
+      if (!digits) return null;
+
+      const parent = control.parent;
+      if (!parent || !this.phoneCountries().length) return null;
+
+      const countryId = parent.get('phoneCountryId')?.value;
+      if (!countryId) return null;
+
+      const country = this.phoneCountries().find(c => c.id == countryId);
+      if (!country) return null;
+
+      const rule  = getPhoneRule(country.dial_code);
+      const valid =
+        digits.length >= rule.minLen &&
+        digits.length <= rule.maxLen &&
+        (rule.pattern ? rule.pattern.test(digits) : true);
+
+      return valid ? null : { phoneInvalid: rule.hint };
+    };
+  }
 
   loadMasterCountries(): void {
     this.masterDataService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
@@ -297,23 +441,27 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initForms(): void {
+private initForms(): void {
     this.businessForm = this.fb.group({
-      name:         ['', [Validators.required, Validators.minLength(2)]],
-      description:  ['', Validators.required],
+      name:         ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      description:  ['', [Validators.required, Validators.maxLength(1000)]],
       categoryId:   ['', Validators.required],
       countryId:    [null, Validators.required],
       stateId:      [null],
       city:         [''],
-      address:      ['', Validators.required],
+      address:      ['', [Validators.required, Validators.maxLength(500)]],
       pincode:      ['', [Validators.required, Validators.pattern(/^\S{3,12}$/)]],
-      phone:        ['', [Validators.required, Validators.pattern(/^\+?\d{7,15}$/)]],
+      phoneCountryId: [null, Validators.required],
+      phone:        ['', [Validators.required, Validators.maxLength(15), this.phoneValidator()]],
       openingDays:  ['', Validators.required],
       openingHours: ['', Validators.required],
-      email:        ['', Validators.email],
-      website:      ['', urlValidator],
-      whatsapp:     ['', Validators.pattern(/^\+?\d{7,15}$/)],
-      mapsLink:     ['', urlValidator],
+      openingHoursFrom: ['09:00'],
+      openingHoursTo: ['17:00'],
+      email:        ['', [Validators.email, Validators.maxLength(255)]],
+      website:      ['', [urlValidator, Validators.maxLength(500)]],
+      sameAsPhone:  [false],
+      whatsapp:     ['', [Validators.pattern(/^\+?\d{7,15}$/), Validators.maxLength(15)]],
+      mapsLink:     ['', [urlValidator, Validators.maxLength(2000)]],
       country:      [''],
       latitude:     [''],
       longitude:    [''],
@@ -326,6 +474,53 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     });
 
     this.setupMapsLinkAutoGeneration();
+    this.setupOpeningHoursSync();
+
+    // Re-run phone validation whenever the phone country changes
+    this.businessForm.get('phoneCountryId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.businessForm.get('phone')?.updateValueAndValidity());
+
+    // ── "Same as phone" checkbox logic ──────────────────────────
+    this.businessForm.get('sameAsPhone')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((checked: boolean) => {
+        this.sameAsPhone.set(checked);
+        const phoneCtrl = this.businessForm.get('phone');
+        const waCtrl    = this.businessForm.get('whatsapp');
+        if (checked) {
+          // Copy phone value to whatsapp and disable the field
+          waCtrl?.setValue(phoneCtrl?.value ?? '');
+          waCtrl?.disable();
+        } else {
+          waCtrl?.enable();
+        }
+      });
+
+    // When phone changes and checkbox is checked, keep whatsapp in sync
+    this.businessForm.get('phone')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((val) => {
+        if (this.sameAsPhone()) {
+          this.businessForm.get('whatsapp')?.setValue(val ?? '');
+        }
+      });
+  }
+
+  private setupOpeningHoursSync(): void {
+    // When either time picker changes, combine them into the openingHours string
+    combineLatest([
+      (this.businessForm.get('openingHoursFrom')?.valueChanges ?? new Subject()),
+      (this.businessForm.get('openingHoursTo')?.valueChanges ?? new Subject()),
+    ]).pipe(takeUntil(this.destroy$)).subscribe(() => {
+      const from = this.formatTo12h(this.businessForm.get('openingHoursFrom')?.value ?? '');
+      const to   = this.formatTo12h(this.businessForm.get('openingHoursTo')?.value ?? '');
+      if (from && to) {
+        this.businessForm.get('openingHours')?.setValue(`${from} – ${to}`);
+      } else {
+        this.businessForm.get('openingHours')?.setValue('');
+      }
+    });
   }
 
   private setupMapsLinkAutoGeneration(): void {
@@ -547,6 +742,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     this.businessForm.get('openingDays')?.setValue('');
     this.bizStates.set([]); this.bizCities.set([]);
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
+    this.openingHoursTouched.set(false);
     this.showAddBusinessModal.set(true);
   }
 
@@ -579,6 +775,9 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
       latitude:     biz.latitude     ?? '',
       longitude:    biz.longitude    ?? '',
     });
+
+    // Parse existing openingHours into the time pickers
+    this.parseOpeningHoursToForm(biz.openingHours ?? (biz as any).opening_hours ?? '');
 
     // Logo
     const logoUrl = biz.logo ?? (biz.images?.length ? biz.images[0] : null);
@@ -654,11 +853,24 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     const foundState = this.bizStates().find(s => String(s.id) === String(raw['stateId']));
     if (foundState) raw['state'] = foundState.name;
 
+    // Combine phone country dial code + local number for the phone field
+    const phoneCountryId = raw['phoneCountryId'];
+    if (phoneCountryId) {
+      const phoneCountry = this.phoneCountries().find(c => c.id == phoneCountryId);
+      if (phoneCountry) {
+        const digits = (raw['phone'] ?? '').replace(/\D/g, '');
+        raw['phone'] = `${phoneCountry.dial_code} ${digits}`;
+      }
+    }
+
     // Opening days from signal (authoritative source)
     raw['openingDays'] = this.selectedDays().join(',');
 
     delete raw['countryId'];
     delete raw['stateId'];
+    delete raw['phoneCountryId'];
+    delete raw['openingHoursFrom'];
+    delete raw['openingHoursTo'];
 
     const images  = this.selectedImages();
     const editing = this.editingBusiness();
