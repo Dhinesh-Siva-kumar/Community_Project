@@ -29,16 +29,16 @@ const TRANSLATIONS = {
     mobile_dark_mode: 'Dark Mode',
 
     // ── Hero ──
-    hero_h1_pre: 'A platform for',
+    hero_h1_pre: 'The Global Community for',
     hero_h1_accent: 'Tamils',
-    hero_h1_post: 'around the world — from Tamil Nadu, Sri Lanka, and beyond.',
+    hero_h1_post: 'Living Abroad',
     hero_h1_sub: 'Whether you are from Tamil Nadu or Sri Lanka — students, workers, professionals, and families — this platform is for all Tamils.',
     hero_motto: 'You are not alone abroad — your Tamil community is already waiting for you.',
     hero_power_line: 'Everything you need to begin your journey in a new country — by Tamils, for Tamils.',
     hero_support_line: 'Jobs, friends, housing, guidance, and emergency support — everything you need abroad, all in one place.',
     // hero_desc1: 'Whether you move for study, work, or a new life —',
     // hero_desc2: 'your Tamil community is already waiting for you.',
-    hero_join_community: 'Join Community',
+    hero_join_community: 'Join Free',
     hero_how_it_works: 'How it Works',
     pill_jobs_label: 'Jobs',
     pill_jobs_stat: '2.5K+ listings',
@@ -108,7 +108,7 @@ const TRANSLATIONS = {
     testi_pill: 'Real Stories',
     testi_title_pre: 'Real',
     testi_title_accent: 'Stories',
-    testi_sub: 'You can expect experiences like these as well(These are examples of the expected member experiences)',
+    testi_sub: 'Hear how Tamil people connect, support each other, and build opportunities through TamilConnect (Illustrative Member Story)',
 
     // ── About ──
     about_pill: 'About Us',
@@ -494,10 +494,10 @@ const TRANSLATIONS = {
     ],
 
     footerMetrics: [
-      { icon: 'bi-briefcase-fill',      value: '1,240+', label: 'Jobs Posted' },
-      { icon: 'bi-mortarboard-fill',    value: '3,800+', label: 'Students Connected' },
-      { icon: 'bi-hand-thumbs-up-fill', value: '9,500+', label: 'Help Requests Resolved' },
-      { icon: 'bi-globe2',              value: '40+',    label: 'Countries Covered' },
+      { icon: 'bi-people-fill', value: 'Growing Daily', label: '' },
+      { icon: 'bi-chat-dots-fill', value: 'Community First', label: '' },
+      { icon: 'bi-rocket-takeoff-fill', value: 'Join & Be First', label: '' },
+      { icon: 'bi-globe2', value: '40+ Countries', label: '' },
     ],
 
     blogPosts: [
@@ -576,16 +576,16 @@ const TRANSLATIONS = {
     mobile_dark_mode: 'இருண்ட முறை',
 
     // ── Hero ──
-    hero_h1_pre: 'தமிழ்நாடு மற்றும் இலங்கை — உலகெங்கிலும் வாழும்',
-    hero_h1_accent: 'தமிழர்களின்',
-    hero_h1_post: 'சொந்த தளம்',
+    hero_h1_pre: 'உலகம் முழுவதும் வாழும்',
+    hero_h1_accent: 'தமிழர்களுக்கான ',
+    hero_h1_post: 'ஒரே சமூக தளம்',
     hero_h1_sub: 'தமிழ்நாட்டிலிருந்தோ, இலங்கையிலிருந்தோ — மாணவர்களுக்கும், தொழிலாளர்களுக்கும், வணிகர்களுக்கும் — அனைத்து தமிழர்களுக்கும்.',
-    hero_motto: 'தெரியாத நாட்டில் தனியாக போராடுகிறீர்களா? உங்களுக்காகவே இந்த தளம் உருவாக்கப்பட்டது.',
+    hero_motto: 'வெளிநாட்டில் நீங்கள் தனியாக இல்லை — உங்கள் தமிழ் சமூகம் உங்களுடன் இருக்கிறது.',
     hero_power_line: 'புதிய நாட்டில் ஆரம்பிக்கும் உங்கள் பயணத்திற்கு தேவையான அனைத்தும் — தமிழர்களால், தமிழர்களுக்காக.',
     hero_support_line: 'வேலை, நண்பர்கள், வீடு, வழிகாட்டுதல், அவசர உதவி — வெளிநாட்டில் உங்களுக்கு தேவையான அனைத்தும் ஒரே இடத்தில்.',
     // hero_desc1: 'படிப்புக்கோ, வேலைக்கோ, புதிய வாழ்க்கைக்கோ நீங்கள் செல்கிறீர்களோ —',
     // hero_desc2: 'உங்கள் தமிழ் சமூகம் ஏற்கனவே உங்களுக்காக காத்திருக்கிறது.',
-    hero_join_community: 'சமூகத்தில் சேருங்கள்',
+    hero_join_community: 'இலவசமாக இணையுங்கள்',
     hero_how_it_works: 'எப்படி செயல்படுகிறது',
     pill_jobs_label: 'வேலைகள்',
     pill_jobs_stat: '2.5K+ பட்டியல்கள்',
@@ -655,7 +655,7 @@ const TRANSLATIONS = {
     testi_pill: 'உண்மையான கதைகள்',
     testi_title_pre: 'உண்மையான',
     testi_title_accent: 'கதைகள்',
-    testi_sub: 'இப்படிப்பட்ட அனுபவங்கள் உங்களுக்கும் கிடைக்கும்(இவை எதிர்பார்க்கப்படும் உறுப்பினர் அனுபவங்களின் எடுத்துக்காட்டுகள்)',
+    testi_sub: 'தமிழர்கள் ஒருவருக்கொருவர் இணைந்து, உதவி செய்து, புதிய வாய்ப்புகளை உருவாக்கிய அனுபவங்களை அறியுங்கள் (இது ஒரு எடுத்துக்காட்டு உறுப்பினர் அனுபவம்)',
 
     // ── About ──
     about_pill: 'எங்களைப் பற்றி',
@@ -1041,10 +1041,10 @@ const TRANSLATIONS = {
     ],
 
     footerMetrics: [
-      { icon: 'bi-briefcase-fill',      value: '1,240+', label: 'வேலைகள் பதிவிடப்பட்டன' },
-      { icon: 'bi-mortarboard-fill',    value: '3,800+', label: 'மாணவர்கள் இணைந்தனர்' },
-      { icon: 'bi-hand-thumbs-up-fill', value: '9,500+', label: 'உதவி கோரிக்கைகள் தீர்க்கப்பட்டன' },
-      { icon: 'bi-globe2',              value: '40+',    label: 'நாடுகள் உள்ளடக்கப்பட்டன' },
+      { icon: 'bi-briefcase-fill',      value: ' நாளுக்கு நாள் வளர்கிறது', label: '' },
+      { icon: 'bi-mortarboard-fill',    value: ' சமூகமே முதன்மை', label: '' },
+      { icon: 'bi-hand-thumbs-up-fill', value: 'முதலில் இணையும் வாய்ப்பு', label: '' },
+      { icon: 'bi-globe2',              value: '40+ நாடுகள்',    label: '' },
     ],
 
     blogPosts: [
