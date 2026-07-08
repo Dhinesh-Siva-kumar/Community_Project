@@ -78,12 +78,12 @@
 
     <!-- Headline -->
     <h1 class="lp-hero-h1">
-      <span class="lp-hero-h1-line1">{{ t.hero_h1_pre }} <span class="lp-hero-h1-accent">{{ t.hero_h1_accent }}</span> {{ t.hero_h1_post }}</span><br>
-      <span class="lp-hero-h1-sub">{{ t.hero_h1_sub }}</span>
+      <span class="lp-hero-h1-line1">{{ t.hero_h1_pre }} <br><span class="lp-hero-h1-accent">{{ t.hero_h1_accent }}</span> {{ t.hero_h1_post }}</span><br>
+      <!-- <span class="lp-hero-h1-sub">{{ t.hero_h1_sub }}</span> -->
     </h1>
 
     <!-- Power Line -->
-    <p class="lp-hero-power-line">{{ t.hero_power_line }}</p>
+    <!-- <p class="lp-hero-power-line">{{ t.hero_power_line }}</p> -->
 
     <!-- Motto with flanking lines -->
     <div class="lp-hero-motto">
@@ -830,7 +830,7 @@
                 <input
                   type="text"
                   class="lp-form-control"
-                  placeholder="Dinesh"
+                  placeholder="John"
                   [(ngModel)]="contact.firstName"
                   name="firstName"
                   required
@@ -845,7 +845,7 @@
                 <input
                   type="text"
                   class="lp-form-control"
-                  placeholder="Moorthy"
+                  placeholder="Smith"
                   [(ngModel)]="contact.lastName"
                   name="lastName"
                   required
@@ -862,7 +862,7 @@
               <input
                 type="email"
                 class="lp-form-control"
-                placeholder="dineshmoorthy&#64;tamilconnect.app"
+                placeholder="johnsmith&#64;tamilconnect.app"
                 [(ngModel)]="contact.email"
                 name="email"
                 required

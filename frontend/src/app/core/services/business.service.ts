@@ -17,6 +17,7 @@ export class BusinessService {
 
   getBusinesses(params: {
     categoryId?: string;
+    categoryIds?: string;
     page?: number;
     search?: string;
     country?: string;
@@ -27,6 +28,7 @@ export class BusinessService {
   }): Observable<PaginatedResponse<Business>> {
     const query: Record<string, any> = {};
     if (params.categoryId) query['categoryId'] = params.categoryId;
+    if (params.categoryIds) query['categoryIds'] = params.categoryIds;
     if (params.page) query['page'] = params.page;
     if (params.search) query['search'] = params.search;
     if (params.country) query['country'] = params.country;

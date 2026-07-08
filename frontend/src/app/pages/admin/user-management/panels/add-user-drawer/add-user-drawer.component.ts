@@ -60,14 +60,14 @@ export class AddUserDrawerComponent implements OnInit {
       }),
     ).subscribe((res: any) => {
       if (res === null) return;
-      this.usernameState.set(res?.available ? 'available' : 'taken');
-      if (res?.available === false) {
+      this.usernameState.set(res?.exist ? 'taken' : 'available');
+      if (res?.exist === true) {
         this.form.get('userName')!.setErrors({ taken: true });
       }
     });
 
     this.authService.getCountries().subscribe({
-      next: (data: any) => this.countries.set(data || []),
+      next: (data: any) => this.countries.set(data?.data || []),
       error: () => {},
     });
   }
