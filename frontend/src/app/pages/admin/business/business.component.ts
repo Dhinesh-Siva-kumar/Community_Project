@@ -278,10 +278,19 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   filterSearch = signal('');
   filterCountry = signal<string | null>(null);
   filterOpeningHours = signal<string | null>(null);
+  showAdvancedFilters = signal(false);
 
   hasActiveFilters = computed(() =>
     !!(this.filterSearch() || this.filterCountry() || this.filterOpeningHours())
   );
+
+  activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.filterSearch()) count++;
+    if (this.filterCountry()) count++;
+    if (this.filterOpeningHours()) count++;
+    return count;
+  });
 
   // Forms
   businessForm!: FormGroup;
@@ -624,12 +633,36 @@ private initForms(): void {
     if (cat) this.loadBusinesses(cat, true);
   }
 
-  clearFilters(): void {
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  removeFilter(filterKey: 'search' | 'country' | 'hours'): void {
+    switch (filterKey) {
+      case 'search':
+        this.filterSearch.set('');
+        break;
+      case 'country':
+        this.filterCountry.set(null);
+        break;
+      case 'hours':
+        this.filterOpeningHours.set(null);
+        break;
+    }
+    this.applyFilters();
+  }
+
+  clearAllFilters(): void {
     this.filterSearch.set('');
     this.filterCountry.set(null);
     this.filterOpeningHours.set(null);
+    this.showAdvancedFilters.set(false);
     const cat = this.selectedCategory();
     if (cat) this.loadBusinesses(cat, true);
+  }
+
+  clearFilters(): void {
+    this.clearAllFilters();
   }
 
   // Navigation

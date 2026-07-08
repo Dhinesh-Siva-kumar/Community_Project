@@ -83,22 +83,46 @@ export class AdminCommunityComponent implements OnInit {
   filterVisibility = signal<string | number | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
+  showAdvancedFilters = signal(false);
+
+  // ── Filter chip interface ─────────────────────────────────
+  readonly FilterChip = class {
+    constructor(readonly key: string, readonly label: string, readonly value: any) {}
+  };
 
   // ── Computed ─────────────────────────────────────────────────
   /** Server-side filtering: component list is whatever the API returned. */
   filteredCommunities = computed(() => this.communities());
 
+  /** Community counts by visibility type. */
+  communityCounts = computed(() => {
+    const data = this.communities();
+    return {
+      total: data.length,
+      global: data.filter(c => c.is_global).length,
+      private: data.filter(c => c.is_private).length,
+      default: data.filter(c => c.is_default).length,
+    };
+  });
+
+  /** Active filter chips for display. */
+  activeFilterChips = computed<any[]>(() => {
+    const chips: any[] = [];
+    const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
+    if (this.searchTerm())       add('search',    `"${this.searchTerm()}"`, this.searchTerm());
+    if (this.filterCountry())    add('country',   String(this.filterCountry()), this.filterCountry());
+    if (this.filterCategory())   add('category',  String(this.filterCategory()), this.filterCategory());
+    if (this.filterVisibility()) add('visibility', String(this.filterVisibility()), this.filterVisibility());
+    if (this.filterFromDate())   add('fromDate',  `From ${this.filterFromDate()}`, this.filterFromDate());
+    if (this.filterToDate())     add('toDate',    `To ${this.filterToDate()}`, this.filterToDate());
+    return chips;
+  });
+
+  /** Count of active filters. */
+  activeFilterCount = computed(() => this.activeFilterChips().length);
+
   /** True when any search or filter criterion is active. */
-  hasActiveFilters = computed(() =>
-    !!(
-      this.searchTerm()      ||
-      this.filterCountry()   ||
-      this.filterCategory()  ||
-      this.filterVisibility() ||
-      this.filterFromDate()  ||
-      this.filterToDate()
-    ),
-  );
+  hasActiveFilters = computed(() => this.activeFilterCount() > 0);
 
   isEditing  = computed(() => !!this.editingCommunity());
   modalTitle = computed(() => (this.isEditing() ? 'Edit Community' : 'Create Community'));
@@ -208,6 +232,32 @@ export class AdminCommunityComponent implements OnInit {
   // ── Search / pagination ───────────────────────────────────────
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterFromDateChange(event: Event): void {
+    this.filterFromDate.set((event.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterToDateChange(event: Event): void {
+    this.filterToDate.set((event.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterCountryChange(value: any): void {
+    this.filterCountry.set(value);
+    this.applyFilters();
+  }
+
+  onFilterCategoryChange(value: any): void {
+    this.filterCategory.set(value);
+    this.applyFilters();
+  }
+
+  onFilterVisibilityChange(value: any): void {
+    this.filterVisibility.set(value);
+    this.applyFilters();
   }
 
   /** Apply all active filters — resets to page 1 and fires the API call. */
@@ -226,6 +276,24 @@ export class AdminCommunityComponent implements OnInit {
     this.filterToDate.set('');
     this.currentPage.set(1);
     this.loadCommunities();
+  }
+
+  /** Toggle advanced filters visibility. */
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  /** Remove a single filter chip. */
+  removeFilter(key: string): void {
+    switch (key) {
+      case 'search':     this.searchTerm.set('');        break;
+      case 'country':    this.filterCountry.set(null);   break;
+      case 'category':   this.filterCategory.set(null);  break;
+      case 'visibility': this.filterVisibility.set(null); break;
+      case 'fromDate':   this.filterFromDate.set('');    break;
+      case 'toDate':     this.filterToDate.set('');      break;
+    }
+    this.applyFilters();
   }
 
   goToPage(page: number): void {

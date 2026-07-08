@@ -13,47 +13,65 @@
   <!-- ==================== CATEGORIES VIEW ==================== -->
   @if (currentView() === 'categories') {
 
-    <!-- Header -->
-    <div class="biz-header">
-      <div class="biz-header__left">
-        <h2 class="biz-header__title">Business Directory</h2>
-        <p class="biz-header__sub">Manage business categories and listings across the platform.</p>
-        <div class="biz-header__stats">
-          <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategories() }}</strong> Categories</span>
-          <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
-        </div>
+    <!-- ── PAGE HEADER ────────────────────────────────────────── -->
+    <div class="jb-page-header">
+      <div class="jb-page-header__left">
+        <h2 class="jb-page-header__title">Business Directory</h2>
+        <p class="jb-page-header__sub">Manage business categories and listings across the platform.</p>
       </div>
-      <button class="biz-add-btn" (click)="openAddCategory()" aria-label="Add category">
+      <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddCategory()" aria-label="Add category">
         <i class="bi bi-plus-lg"></i> Add Category
       </button>
     </div>
 
-    <!-- Toolbar -->
-    <div class="biz-toolbar">
-      <div class="biz-search">
-        <i class="bi bi-search biz-search__icon"></i>
-        <input type="search" class="biz-search__input" placeholder="Search categories…"
-          [value]="catSearch()" (input)="catSearch.set($any($event.target).value)"
-          autocomplete="off" aria-label="Search categories" />
-        @if (catSearch()) {
-          <button class="biz-search__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
-        }
+    <!-- ── STATS BAR ──────────────────────────────────────────── -->
+    @if (!loading()) {
+      <div class="admin-stats-bar">
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-grid"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ totalCategories() }}</span>
+            <span class="admin-stat-card__label">Categories</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-shop"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ totalBusinesses() }}</span>
+            <span class="admin-stat-card__label">Businesses</span>
+          </div>
+        </div>
       </div>
-      <div class="biz-toolbar__right">
-        <select class="biz-select" [ngModel]="catSortBy()" (ngModelChange)="catSortBy.set($event)" aria-label="Sort categories">
-          <option value="name">Name A–Z</option>
-          <option value="count">Most Businesses</option>
-          <option value="newest">Newest First</option>
-        </select>
-        <div class="biz-view-toggle" role="group" aria-label="View mode">
-          <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'"
-            (click)="catViewMode.set('grid')" title="Grid view" aria-label="Grid view">
-            <i class="bi bi-grid-3x2-gap"></i>
-          </button>
-          <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'list'"
-            (click)="catViewMode.set('list')" title="List view" aria-label="List view">
-            <i class="bi bi-list-ul"></i>
-          </button>
+    }
+
+    <!-- ── FILTER PANEL ──────────────────────────────────────── -->
+    <div class="jb-filter-panel">
+      <div class="jb-filter-row jb-filter-row--top">
+        <div class="jb-search-wrap">
+          <i class="bi bi-search jb-search-wrap__icon"></i>
+          <input type="search" class="jb-search-wrap__input" placeholder="Search categories…"
+            [value]="catSearch()" (input)="catSearch.set($any($event.target).value)"
+            autocomplete="off" aria-label="Search categories" />
+          @if (catSearch()) {
+            <button class="jb-search-wrap__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+          }
+        </div>
+        <div class="biz-cat-toolbar-right">
+          <select class="biz-select" [ngModel]="catSortBy()" (ngModelChange)="catSortBy.set($event)" aria-label="Sort categories">
+            <option value="name">Name A–Z</option>
+            <option value="count">Most Businesses</option>
+            <option value="newest">Newest First</option>
+          </select>
+          <div class="biz-view-toggle" role="group" aria-label="View mode">
+            <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'"
+              (click)="catViewMode.set('grid')" title="Grid view" aria-label="Grid view">
+              <i class="bi bi-grid-3x2-gap"></i>
+            </button>
+            <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'list'"
+              (click)="catViewMode.set('list')" title="List view" aria-label="List view">
+              <i class="bi bi-list-ul"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -151,9 +169,9 @@
   <!-- ==================== BUSINESS LIST VIEW ==================== -->
   @if (currentView() === 'list') {
 
-    <!-- Header -->
-    <div class="bl-header">
-      <div class="bl-header__left">
+    <!-- ── PAGE HEADER ────────────────────────────────────────── -->
+    <div class="jb-page-header">
+      <div class="jb-page-header__left">
         <nav aria-label="breadcrumb">
           <ol class="bl-breadcrumb">
             <li class="bl-breadcrumb__item">
@@ -170,38 +188,101 @@
             <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
           </div>
           <div>
-            <h2 class="bl-header__title">{{ selectedCategory()?.name }}</h2>
-            <span class="bl-header__count"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</span>
+            <h2 class="jb-page-header__title">{{ selectedCategory()?.name }}</h2>
+            <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</p>
           </div>
         </div>
       </div>
-      <button class="biz-add-btn" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
+      <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
     </div>
 
-    <!-- Toolbar -->
-    <div class="bl-toolbar">
-      <div class="biz-search">
-        <i class="bi bi-search biz-search__icon"></i>
-        <input type="search" class="biz-search__input" placeholder="Search by name or description…"
-          [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event); applyFilters()"
-          autocomplete="off" aria-label="Search businesses" />
-        @if (filterSearch()) {
-          <button class="biz-search__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
-        }
+    <!-- ── STATS BAR ──────────────────────────────────────────── -->
+    @if (!loading()) {
+      <div class="admin-stats-bar">
+        <div class="admin-stat-card">
+          <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-shop"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ totalItems() }}</span>
+            <span class="admin-stat-card__label">Businesses</span>
+          </div>
+        </div>
       </div>
-      <div class="bl-toolbar__right">
-        <select class="biz-select" [ngModel]="filterCountry()"
-          (ngModelChange)="filterCountry.set($event); applyFilters()" aria-label="Country">
-          <option value="">All Countries</option>
-          @for (opt of filterCountryOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
+    }
+
+    <!-- ── FILTER PANEL ──────────────────────────────────────── -->
+    <div class="jb-filter-panel">
+      <div class="jb-filter-row jb-filter-row--top">
+        <div class="jb-search-wrap">
+          <i class="bi bi-search jb-search-wrap__icon"></i>
+          <input type="search" class="jb-search-wrap__input" placeholder="Search by name or description…"
+            [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event); applyFilters()"
+            autocomplete="off" aria-label="Search businesses" />
+          @if (filterSearch()) {
+            <button class="jb-search-wrap__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
           }
-        </select>
-        @if (hasActiveFilters()) {
-          <button class="bl-clear-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear</button>
+        </div>
+        <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+          <i class="bi bi-sliders2"></i>
+          Filters
+          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
+          <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+        </button>
+        @if (activeFilterCount() > 0) {
+          <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
         }
       </div>
+
+      @if (showAdvancedFilters()) {
+        <div class="jb-advanced-panel animate-slide-in-up">
+          <div class="jb-advanced-grid">
+            <div class="jb-adv-field">
+              <label class="jb-adv-label"><i class="bi bi-globe"></i> Country</label>
+              <select class="biz-select" [ngModel]="filterCountry()"
+                (ngModelChange)="filterCountry.set($event); applyFilters()" aria-label="Country">
+                <option value="">All Countries</option>
+                @for (opt of filterCountryOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="jb-adv-field">
+              <label class="jb-adv-label"><i class="bi bi-clock"></i> Opening Hours</label>
+              <select class="biz-select" [ngModel]="filterOpeningHours()"
+                (ngModelChange)="filterOpeningHours.set($event); applyFilters()" aria-label="Opening hours">
+                <option value="">All Hours</option>
+                <option value="9-5">9 AM - 5 PM</option>
+                <option value="24/7">24/7</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      }
     </div>
+
+    <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
+    @if (hasActiveFilters()) {
+      <div class="jb-active-chips">
+        <span class="jb-active-chips__label">Active filters:</span>
+        @if (filterSearch()) {
+          <span class="jb-active-chip">
+            Search: {{ filterSearch() }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterCountry()) {
+          <span class="jb-active-chip">
+            Country: {{ filterCountry() }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterOpeningHours()) {
+          <span class="jb-active-chip">
+            Hours: {{ filterOpeningHours() }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('hours')" aria-label="Remove hours filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+      </div>
+    }
 
     <!-- Loading skeletons -->
     @if (loading()) {
@@ -865,7 +946,7 @@
                 label="Drag & drop or click to upload gallery images"
                 [resetCounter]="fileUploadReset()"
                 (filesChange)="onBusinessImagesChange($event)"></app-file-upload>
-              @if (editingBusiness() && editingBusiness()!.images?.length) {
+              @if (editingBusiness() && editingBusiness()!.images && editingBusiness()!.images.length) {
                 <div class="biz-gallery-existing">
                   <p class="biz-gallery-existing__label">Existing photos</p>
                   <div class="biz-gallery-existing__grid">

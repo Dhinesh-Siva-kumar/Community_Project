@@ -42,6 +42,9 @@ export class AdminEventsComponent implements OnInit {
   searchQuery = signal('');
   activeFilter = signal<'all' | 'upcoming' | 'hybrid' | 'offline' | 'completed'>('all');
   sortBy = signal<'newest' | 'oldest' | 'date'>('newest');
+  
+  // Premium filter UI state
+  showAdvancedFilters = signal(false);
 
   // Statistics
   upcomingEvents = computed(() => {
@@ -88,6 +91,15 @@ export class AdminEventsComponent implements OnInit {
     }
 
     return result;
+  });
+
+  // Computed property: count of active filters
+  activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.searchQuery()) count++;
+    if (this.activeFilter() !== 'all') count++;
+    if (this.sortBy() !== 'newest') count++;
+    return count;
   });
 
   showAddModal      = signal(false);
@@ -249,6 +261,16 @@ export class AdminEventsComponent implements OnInit {
 
   setSortBy(sort: 'newest' | 'oldest' | 'date'): void {
     this.sortBy.set(sort);
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  clearAllFilters(): void {
+    this.searchQuery.set('');
+    this.activeFilter.set('all');
+    this.sortBy.set('newest');
   }
 
   getEventStatus(evt: AppEvent): { label: string; type: string } {

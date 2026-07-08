@@ -1,84 +1,170 @@
-<!-- ── HEADER ──────────────────────────────────────────────── -->
-<div class="ev-header">
-  <div class="ev-header__content">
-    <h1 class="ev-header__title">Events</h1>
-    <p class="ev-header__subtitle">Manage and organize community events</p>
+<!-- ── PREMIUM PAGE HEADER ─────────────────────────────────── -->
+<div class="jb-page-header">
+  <div class="jb-page-header__left">
+    <h2 class="jb-page-header__title">Events</h2>
+    <p class="jb-page-header__sub">Review, moderate and manage all community events</p>
   </div>
-  <button class="ev-btn-primary" (click)="openAddModal()">
-    <i class="bi bi-plus-lg"></i>
-    <span>New Event</span>
-  </button>
+  <div class="jb-page-header__actions">
+    <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
+      <i class="bi bi-plus-lg"></i>
+      <span>New Event</span>
+    </button>
+  </div>
 </div>
 
-<!-- ── STATISTICS ─────────────────────────────────────────── -->
-<div class="ev-stats">
-  <div class="ev-stat-card">
-    <div class="ev-stat-card__icon ev-stat-card__icon--primary">
+<!-- ── STATISTICS BAR ─────────────────────────────────────── -->
+<div class="admin-stats-bar">
+  <div class="admin-stat-card">
+    <div class="admin-stat-card__icon admin-stat-card__icon--jobs">
       <i class="bi bi-calendar-event"></i>
     </div>
-    <div class="ev-stat-card__content">
-      <div class="ev-stat-card__value">{{ totalItems() }}</div>
-      <div class="ev-stat-card__label">Total Events</div>
+    <div class="admin-stat-card__body">
+      <div class="admin-stat-card__value">{{ totalItems() }}</div>
+      <div class="admin-stat-card__label">Total Events</div>
     </div>
   </div>
-  <div class="ev-stat-card">
-    <div class="ev-stat-card__icon ev-stat-card__icon--success">
+  <div class="admin-stat-card">
+    <div class="admin-stat-card__icon admin-stat-card__icon--fulltime">
       <i class="bi bi-clock-history"></i>
     </div>
-    <div class="ev-stat-card__content">
-      <div class="ev-stat-card__value">{{ upcomingEvents() }}</div>
-      <div class="ev-stat-card__label">Upcoming</div>
+    <div class="admin-stat-card__body">
+      <div class="admin-stat-card__value">{{ upcomingEvents() }}</div>
+      <div class="admin-stat-card__label">Upcoming</div>
     </div>
   </div>
-  <div class="ev-stat-card">
-    <div class="ev-stat-card__icon ev-stat-card__icon--purple">
+  <div class="admin-stat-card">
+    <div class="admin-stat-card__icon admin-stat-card__icon--parttime">
       <i class="bi bi-diagram-2"></i>
     </div>
-    <div class="ev-stat-card__content">
-      <div class="ev-stat-card__value">{{ hybridEvents() }}</div>
-      <div class="ev-stat-card__label">Hybrid</div>
+    <div class="admin-stat-card__body">
+      <div class="admin-stat-card__value">{{ hybridEvents() }}</div>
+      <div class="admin-stat-card__label">Hybrid</div>
     </div>
   </div>
-  <div class="ev-stat-card">
-    <div class="ev-stat-card__icon ev-stat-card__icon--blue">
+  <div class="admin-stat-card">
+    <div class="admin-stat-card__icon admin-stat-card__icon--contract">
       <i class="bi bi-geo-alt"></i>
     </div>
-    <div class="ev-stat-card__content">
-      <div class="ev-stat-card__value">{{ offlineEvents() }}</div>
-      <div class="ev-stat-card__label">Offline</div>
+    <div class="admin-stat-card__body">
+      <div class="admin-stat-card__value">{{ offlineEvents() }}</div>
+      <div class="admin-stat-card__label">Offline</div>
     </div>
   </div>
 </div>
 
-<!-- ── TOOLBAR ────────────────────────────────────────────── -->
-<div class="ev-toolbar">
-  <div class="ev-toolbar__search">
-    <i class="bi bi-search"></i>
-    <input type="search" placeholder="Search events..." [value]="searchQuery()" 
-      (input)="searchQuery.set($any($event.target).value)" autocomplete="off" />
-    @if (searchQuery()) {
-      <button class="ev-toolbar__clear" (click)="searchQuery.set('')" aria-label="Clear">
-        <i class="bi bi-x"></i>
-      </button>
-    }
+<!-- ── FILTER PANEL ────────────────────────────────────────── -->
+<div class="jb-filter-panel">
+  <!-- Top row: Search + Advanced Toggle -->
+  <div class="jb-filter-row jb-filter-row--top">
+    <div class="jb-search-wrap">
+      <i class="bi bi-search jb-search-wrap__icon"></i>
+      <input type="search" class="jb-search-wrap__input" 
+        placeholder="Search events by title, location..." 
+        [value]="searchQuery()" 
+        (input)="searchQuery.set($any($event.target).value)" 
+        autocomplete="off" />
+      @if (searchQuery()) {
+        <button class="jb-search-wrap__clear" (click)="searchQuery.set('')" aria-label="Clear search">
+          <i class="bi bi-x"></i>
+        </button>
+      }
+    </div>
+
+    <button class="jb-advanced-toggle" 
+      [class.jb-advanced-toggle--open]="showAdvancedFilters()"
+      (click)="toggleAdvancedFilters()">
+      <i class="bi bi-sliders2"></i>
+      <span>Filters</span>
+      @if (activeFilterCount() > 0) {
+        <span class="jb-advanced-count">{{ activeFilterCount() }}</span>
+      }
+      <i class="bi bi-chevron-down jb-advanced-chevron"
+        [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+    </button>
   </div>
 
-  <div class="ev-toolbar__filters">
-    <button class="ev-filter-chip" [class.ev-filter-chip--active]="activeFilter() === 'all'" (click)="setFilter('all')">All</button>
-    <button class="ev-filter-chip" [class.ev-filter-chip--active]="activeFilter() === 'upcoming'" (click)="setFilter('upcoming')">Upcoming</button>
-    <button class="ev-filter-chip" [class.ev-filter-chip--active]="activeFilter() === 'hybrid'" (click)="setFilter('hybrid')">Hybrid</button>
-    <button class="ev-filter-chip" [class.ev-filter-chip--active]="activeFilter() === 'offline'" (click)="setFilter('offline')">Offline</button>
-    <button class="ev-filter-chip" [class.ev-filter-chip--active]="activeFilter() === 'completed'" (click)="setFilter('completed')">Completed</button>
-  </div>
+  <!-- Advanced filter panel (hidden by default, shown when toggle clicked) -->
+  @if (showAdvancedFilters()) {
+    <div class="jb-advanced-panel">
+      <div class="jb-advanced-grid">
+        <!-- Status/Type Filter Chips -->
+        <div class="jb-adv-field">
+          <label class="jb-adv-label"><i class="bi bi-tag"></i> Event Status</label>
+          <div class="jb-chip-group">
+            <button class="jb-chip" 
+              [class.jb-chip--active]="activeFilter() === 'all'" 
+              (click)="setFilter('all')">All</button>
+            <button class="jb-chip" 
+              [class.jb-chip--active]="activeFilter() === 'upcoming'" 
+              (click)="setFilter('upcoming')">Upcoming</button>
+            <button class="jb-chip" 
+              [class.jb-chip--active]="activeFilter() === 'completed'" 
+              (click)="setFilter('completed')">Completed</button>
+          </div>
+        </div>
 
-  <div class="ev-toolbar__sort">
-    <label>Sort by:</label>
-    <select class="ev-sort-select" [value]="sortBy()" (change)="setSortBy($any($event.target).value)">
-      <option value="newest">Newest</option>
-      <option value="oldest">Oldest</option>
-      <option value="date">Event Date</option>
-    </select>
-  </div>
+        <!-- Event Mode Filter -->
+        <div class="jb-adv-field">
+          <label class="jb-adv-label"><i class="bi bi-diagram-3"></i> Event Mode</label>
+          <div class="jb-chip-group">
+            <button class="jb-chip" 
+              [class.jb-chip--active]="activeFilter() === 'hybrid'" 
+              (click)="setFilter('hybrid')">Hybrid</button>
+            <button class="jb-chip" 
+              [class.jb-chip--active]="activeFilter() === 'offline'" 
+              (click)="setFilter('offline')">Offline</button>
+          </div>
+        </div>
+
+        <!-- Sort By -->
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="evSortSelect"><i class="bi bi-arrow-down-up"></i> Sort By</label>
+          <select id="evSortSelect" class="jb-adv-input" [value]="sortBy()" (change)="setSortBy($any($event.target).value)">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="date">Event Date</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Active Filters Display & Clear -->
+      @if (activeFilterCount() > 0) {
+        <div class="jb-filter-row jb-filter-row--footer">
+          <div class="jb-active-chips">
+            <span class="jb-active-chips__label">Active:</span>
+            @if (searchQuery()) {
+              <span class="jb-active-chip">
+                "{{ searchQuery() }}"
+                <button class="jb-active-chip__remove" (click)="searchQuery.set('')" aria-label="Remove search">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            }
+            @if (activeFilter() !== 'all') {
+              <span class="jb-active-chip">
+                {{ activeFilter() | titlecase }}
+                <button class="jb-active-chip__remove" (click)="setFilter('all')" aria-label="Clear filter">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            }
+            @if (sortBy() !== 'newest') {
+              <span class="jb-active-chip">
+                Sort: {{ sortBy() | titlecase }}
+                <button class="jb-active-chip__remove" (click)="setSortBy('newest')" aria-label="Reset sort">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            }
+          </div>
+          <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearAllFilters()">
+            <i class="bi bi-x-circle"></i>
+            Clear All
+          </button>
+        </div>
+      }
+    </div>
+  }
 </div>
 
 <!-- ── LOADING ────────────────────────────────────────────── -->

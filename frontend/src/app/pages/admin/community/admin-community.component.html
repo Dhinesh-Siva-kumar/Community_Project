@@ -1,178 +1,181 @@
-<!-- Loading State -->
-@if (loading()) {
-  <div class="page-loading">
-    <div class="page-loading-inner">
-      <div class="page-loading-spinner">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<div class="jb-page-header">
+  <div class="jb-page-header__left">
+    <h2 class="jb-page-header__title">Communities Management</h2>
+    <p class="jb-page-header__sub">Review, moderate and manage all communities.</p>
+  </div>
+  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openCreateModal()" aria-label="Create a new community">
+    <i class="bi bi-plus-lg"></i> Create Community
+  </button>
+</div>
+
+<!-- ── STATS BAR ────────────────────────────────────────────── -->
+@if (!loading()) {
+  <div class="admin-stats-bar">
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-people-fill"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ communityCounts().total }}</span>
+        <span class="admin-stat-card__label">Total Communities</span>
       </div>
-      <p class="page-loading-text">Loading communities...</p>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-globe2"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ communityCounts().global }}</span>
+        <span class="admin-stat-card__label">Global</span>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-lock-fill"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ communityCounts().private }}</span>
+        <span class="admin-stat-card__label">Private</span>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-star-fill"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ communityCounts().default }}</span>
+        <span class="admin-stat-card__label">Default</span>
+      </div>
     </div>
   </div>
-} @else {
+}
 
-  <!-- ── Page Header ──────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="page-header-content">
-      <div class="page-header-icon">
-        <i class="bi bi-people-fill"></i>
-      </div>
-      <div>
-        <h4 class="page-title">Communities</h4>
-        <p class="page-subtitle">Manage all communities on the platform</p>
-      </div>
+<!-- ── TOOLBAR ───────────────────────────────────────────────── -->
+<div class="jb-filter-panel">
+  <div class="jb-filter-row jb-filter-row--top">
+    <div class="jb-search-wrap">
+      <i class="bi bi-search jb-search-wrap__icon"></i>
+       <input type="search" class="jb-search-wrap__input"
+         placeholder="Search by name, description…"
+         [value]="searchTerm()" (input)="onSearch($event)" autocomplete="off"
+         aria-label="Search communities" />
+      @if (searchTerm()) {
+        <button class="jb-search-wrap__clear" (click)="searchTerm.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
+      }
     </div>
-    <button class="page-cta-btn" (click)="openCreateModal()">
-      <i class="bi bi-plus-lg me-2"></i>Create Community
-    </button>
+    <!-- Advanced filters -->
+    <div class="jb-filter-row">
+      <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+        <i class="bi bi-sliders2"></i>
+        Advanced Filters
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
+        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+      </button>
+      @if (activeFilterCount() > 0) {
+        <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+      }
+    </div>
   </div>
 
-  <!-- ── Filter Bar ───────────────────────────────────────────── -->
-  <div class="cf-bar">
-
-    <!-- Search text -->
-    <div class="cf-group cf-group--search">
-      <label class="cf-label">Search</label>
-      <div class="cf-input-wrap">
-        <i class="bi bi-search cf-icon"></i>
-        <input
-          type="text"
-          class="cf-input"
-          placeholder="Name or description…"
-          [ngModel]="searchTerm()"
-          (ngModelChange)="searchTerm.set($event)"
-          (keyup.enter)="applyFilters()"
-        />
+  @if (showAdvancedFilters()) {
+    <div class="jb-advanced-panel animate-slide-in-up">
+       <div class="jb-filter-row jb-filter-row--split">
+         <div class="jb-location-row">
+           <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+             (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+           </app-searchable-select>
+           <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
+             (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
+           </app-searchable-select>
+           <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
+             (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
+           </app-searchable-select>
+         </div>
+       </div>
+      <div class="jb-advanced-grid">
+         <div class="jb-adv-field">
+           <label class="jb-adv-label"><i class="bi bi-calendar3"></i> From Date</label>
+           <div class="jb-adv-input-wrap">
+             <input type="date" class="jb-adv-input" [value]="filterFromDate()"
+               (change)="onFilterFromDateChange($event)"
+               placeholder="From date" />
+           </div>
+         </div>
+         <div class="jb-adv-field">
+           <label class="jb-adv-label"><i class="bi bi-calendar3"></i> To Date</label>
+           <div class="jb-adv-input-wrap">
+             <input type="date" class="jb-adv-input" [value]="filterToDate()"
+               (change)="onFilterToDateChange($event)"
+               placeholder="To date" />
+           </div>
+         </div>
       </div>
     </div>
+  }
+</div>
 
-    <!-- Country -->
-    <div class="cf-group cf-group--select">
-      <label class="cf-label">Country</label>
-      <app-searchable-select
-        [options]="filterCountryOptions"
-        [ngModel]="filterCountry()"
-        (ngModelChange)="filterCountry.set($event)"
-        placeholder="All Countries"
-      ></app-searchable-select>
-    </div>
-
-    <!-- Category -->
-    <div class="cf-group cf-group--select">
-      <label class="cf-label">Category</label>
-      <app-searchable-select
-        [options]="filterCategoryOptions"
-        [ngModel]="filterCategory()"
-        (ngModelChange)="filterCategory.set($event)"
-        placeholder="All Categories"
-      ></app-searchable-select>
-    </div>
-
-    <!-- Visibility -->
-    <div class="cf-group cf-group--select">
-      <label class="cf-label">Visibility</label>
-      <app-searchable-select
-        [options]="filterVisibilityOptions"
-        [ngModel]="filterVisibility()"
-        (ngModelChange)="filterVisibility.set($event)"
-        placeholder="All Types"
-      ></app-searchable-select>
-    </div>
-
-    <!-- From date -->
-    <div class="cf-group cf-group--date">
-      <label class="cf-label">From</label>
-      <div class="cf-input-wrap">
-        <i class="bi bi-calendar-range cf-icon"></i>
-        <input
-          type="date"
-          class="cf-input cf-date"
-          [ngModel]="filterFromDate()"
-          (ngModelChange)="filterFromDate.set($event)"
-        />
-      </div>
-    </div>
-
-    <!-- To date -->
-    <div class="cf-group cf-group--date">
-      <label class="cf-label">To</label>
-      <div class="cf-input-wrap">
-        <i class="bi bi-calendar-range cf-icon"></i>
-        <input
-          type="date"
-          class="cf-input cf-date"
-          [ngModel]="filterToDate()"
-          (ngModelChange)="filterToDate.set($event)"
-        />
-      </div>
-    </div>
-
-    <!-- Action buttons -->
-    <div class="cf-group cf-group--actions">
-      <span class="cf-label cf-label--ghost">&#8203;</span>
-      <div class="cf-actions">
-        <button class="cf-btn-search" [disabled]="loading()" (click)="applyFilters()">
-          @if (loading()) {
-            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-            Searching…
-          } @else {
-            <i class="bi bi-search me-1"></i>Search
-          }
-        </button>
-        @if (hasActiveFilters()) {
-          <button class="cf-btn-clear" (click)="clearFilters()" title="Clear all filters">
-            <i class="bi bi-x-circle me-1"></i>Clear
-          </button>
-        }
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Results summary row -->
-  <div class="cf-results-row">
-    <span class="page-count-badge">
-      <i class="bi bi-grid-3x3-gap-fill me-1"></i>
-      {{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }}
-    </span>
-    @if (hasActiveFilters()) {
-      <span class="cf-active-badge">
-        <i class="bi bi-funnel-fill me-1"></i>Filters applied
+<!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
+@if (activeFilterChips().length > 0) {
+  <div class="jb-active-chips" role="group" aria-label="Active filters">
+    <span class="jb-active-chips__label">Active:</span>
+    @for (chip of activeFilterChips(); track chip.key) {
+      <span class="jb-active-chip">
+        {{ chip.label }}
+        <button class="jb-active-chip__remove" (click)="removeFilter(chip.key)"><i class="bi bi-x"></i></button>
       </span>
     }
+    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearFilters()">Clear All</button>
   </div>
+}
 
-  <!-- ── Empty State ───────────────────────────────────────── -->
-  @if (communities().length === 0) {
-    <div class="page-empty">
-      <div class="page-empty-icon">
-        <i class="bi bi-people"></i>
+<!-- ── RESULTS META ──────────────────────────────────────────── -->
+@if (!loading()) {
+  <div class="jb-meta">
+    <span class="jb-meta__count">
+      <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'community' : 'communities' }}
+      @if (activeFilterCount() > 0) {
+        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
+      }
+    </span>
+  </div>
+}
+
+<!-- ── LOADING STATE ────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="jb-list" aria-busy="true">
+    <div class="jb-skeleton">
+      <div class="jb-skeleton__avatar skeleton-pulse"></div>
+      <div class="jb-skeleton__body">
+        <div class="jb-skeleton__line jb-skeleton__line--company skeleton-pulse"></div>
+        <div class="jb-skeleton__line jb-skeleton__line--title skeleton-pulse"></div>
+        <div class="jb-skeleton__line jb-skeleton__line--meta skeleton-pulse"></div>
       </div>
-      <h5 class="page-empty-title">
-        {{ hasActiveFilters() ? 'No results found' : 'No communities yet' }}
-      </h5>
-      <p class="page-empty-text">
-        @if (hasActiveFilters()) {
-          No communities match your current filters.
-        } @else {
-          Get started by creating your first community.
-        }
-      </p>
-      @if (hasActiveFilters()) {
-        <button class="cf-btn-clear" (click)="clearFilters()">
-          <i class="bi bi-x-circle me-2"></i>Clear Filters
+    </div>
+  </div>
+}
+
+<!-- ── Empty state (icon-based) ──────────────────────────────────────── -->
+@if (!loading()) {
+  @if (communities().length === 0) {
+    <div class="jb-empty">
+      <div class="jb-empty__illustration" aria-hidden="true">
+        <svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+          <rect width="96" height="96" rx="48" fill="#FEF3C7"/>
+          <circle cx="48" cy="35" r="12" fill="#FDE68A"/>
+          <path d="M30 55C30 50.58 33.58 47 38 47H58C62.42 47 66 50.58 66 55V70H30V55Z" fill="#FDE68A"/>
+          <circle cx="38" cy="38" r="3" fill="#F59E0B"/>
+          <circle cx="58" cy="38" r="3" fill="#F59E0B"/>
+        </svg>
+      </div>
+      @if (activeFilterCount() > 0) {
+        <h5 class="jb-empty__title">No matching communities</h5>
+        <p class="jb-empty__text">No communities match your current search or filters.</p>
+        <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Clear All Filters
         </button>
       } @else {
-        <button class="page-cta-btn" (click)="openCreateModal()">
-          <i class="bi bi-plus-lg me-2"></i>Create Community
+        <h5 class="jb-empty__title">No communities created yet</h5>
+        <p class="jb-empty__text">No communities exist. Create the first one now.</p>
+        <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openCreateModal()">
+          <i class="bi bi-plus-lg me-1"></i>Create a Community
         </button>
       }
     </div>
-
   } @else {
-
-    <!-- ── Cards Grid ───────────────────────────────────────── -->
+    <!-- ── COMMUNITIES LIST ────────────────────────────────────────────────── -->
     <div class="row g-4 mb-2">
       @for (community of communities(); track community.id) {
         <div class="col-12 col-md-6 col-xl-4">
@@ -312,10 +315,9 @@
             </button>
           </li>
         </ul>
-      </nav>
-    }
-
-  }
+       </nav>
+     }
+   }
 }
 
 <!-- Create / Edit Modal Backdrop -->

@@ -1,8 +1,365 @@
 @use '../../../../assets/styles/index' as *;
 
-// ===========================
-// Admin Business Styles
-// ===========================
+// ═══════════════════════════════════════════════════════════════
+// Admin Business Styles — Premium Design (shared with Jobs)
+// ═══════════════════════════════════════════════════════════════
+
+// ── ADMIN STATS BAR ──────────────────────────────────────────────
+.admin-stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: $radius-lg;
+  flex: 1;
+  min-width: 140px;
+  min-height: 88px;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  @include transition-short(all);
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.18);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    &--jobs     { background: rgba(220, 38, 38, 0.10); color: #DC2626; }
+    &--fulltime { background: #DCFCE7; color: #15803D; }
+    &--parttime { background: #E0F2FE; color: #0284C7; }
+    &--contract { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
+  }
+
+  &__body { display: flex; flex-direction: column; min-width: 0; }
+
+  &__value {
+    font-family: $font-family-header;
+    font-size: 2rem;
+    font-weight: $font-weight-bold;
+    color: $color-stone-800;
+    line-height: 1.1;
+  }
+
+  &__label { font-size: $font-size-xs; color: $color-text-muted; font-weight: $font-weight-medium; margin-top: 1px; }
+  &__sub   { font-size: 11px; color: $color-stone-400; margin-top: 2px; }
+
+  @include media-sm-max { &__value { font-size: $font-size-xl; } }
+}
+
+// ── PREMIUM PAGE HEADER ──────────────────────────────────────────
+.jb-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  position: sticky;
+  top: 70px;
+  z-index: $z-sticky;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+
+  &__left { min-width: 0; }
+}
+
+.jb-page-header__title {
+  font-family: $font-family-header;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 800;
+  color: $color-stone-900;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
+.jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
+
+// ── BUTTONS ───────────────────────────────────────────────────────
+.jb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: $radius-md;
+  font-family: $font-family-body;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  @include transition-short(all);
+
+  &--neon {
+    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+    color: $color-on-primary;
+    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45); color: $color-on-primary; }
+    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1.5px solid rgba(251, 191, 36, 0.40);
+    color: $color-primary-darker;
+    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.08); }
+  }
+
+  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER PANEL — Premium Design
+// ═══════════════════════════════════════════════════════════════
+
+.jb-filter-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.jb-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &--top   { gap: $spacing-sm; flex-wrap: wrap; }
+  &--split { flex-direction: row; align-items: flex-start; gap: $spacing-lg; flex-wrap: wrap; }
+  &--footer { padding-top: $spacing-sm; border-top: 1px solid $color-border; gap: $spacing-sm; }
+}
+
+.jb-filter-group { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+.jb-filter-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-stone-500;
+  white-space: nowrap;
+  .bi { color: $color-primary-dark; font-size: 0.8rem; }
+}
+
+.jb-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+
+  &__icon { position: absolute; left: 12px; color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
+
+  &__input {
+    width: 100%;
+    height: 40px;
+    padding: 0 36px;
+    border: 1.5px solid $color-border;
+    border-radius: $radius-md;
+    background: $color-bg-page;
+    font-size: $font-size-sm;
+    color: $color-stone-800;
+    outline: none;
+    transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+    &::placeholder { color: $color-stone-400; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__clear {
+    position: absolute;
+    right: 10px;
+    width: 22px; height: 22px;
+    border: none;
+    background: $color-stone-200;
+    border-radius: 50%;
+    color: $color-stone-600;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    @include transition-quick(background-color);
+    &:hover { background: $color-stone-300; }
+  }
+}
+
+.jb-sort-wrap { min-width: 155px; flex-shrink: 0; }
+
+.jb-chip-group { display: flex; flex-wrap: wrap; gap: 5px; &--sm { gap: 4px; } }
+
+.jb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  height: 30px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  white-space: nowrap;
+  @include transition-short(all);
+
+  &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
+  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-white; }
+  &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
+}
+
+.jb-location-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  flex: 1;
+  app-searchable-select { flex: 1; min-width: 130px; }
+}
+
+.jb-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  @include transition-short(all);
+  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+}
+
+.jb-advanced-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
+}
+
+.jb-advanced-chevron {
+  font-size: 0.75rem;
+  transition: transform $duration-base $easing-standard;
+  &--open { transform: rotate(180deg); }
+}
+
+.jb-clear-all-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: none; padding: 6px 10px;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  color: $color-danger; cursor: pointer;
+  @include transition-quick(all);
+  &:hover { background: $color-error-bg; }
+  &--inline { margin-left: auto; color: $color-stone-500; &:hover { color: $color-danger; background: none; } }
+}
+
+.jb-advanced-panel {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
+.jb-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: $spacing-md;
+}
+
+.jb-adv-field {
+  display: flex; flex-direction: column; gap: 6px;
+  &--wide { grid-column: span 2; @include media-sm-max { grid-column: span 1; } }
+}
+
+.jb-adv-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: $color-stone-500; margin-bottom: 2px;
+  .bi { color: $color-primary-dark; font-size: 0.8rem; }
+}
+
+.jb-adv-input-wrap { position: relative; }
+
+.jb-adv-input {
+  width: 100%; height: 38px; padding: 0 $spacing-sm;
+  border: 1.5px solid $color-border; border-radius: $radius-md;
+  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800;
+  outline: none;
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); }
+}
+
+.jb-adv-range {
+  display: flex; align-items: center; gap: $spacing-sm;
+  app-searchable-select { flex: 1; }
+  &__sep { color: $color-stone-300; font-weight: $font-weight-semibold; flex-shrink: 0; }
+}
+
+.jb-adv-salary-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: $spacing-sm;
+  .jb-adv-input-wrap { flex: 1; min-width: 100px; }
+}
+
+.jb-active-chips {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: $spacing-sm;
+  &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-400; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+}
+
+.jb-active-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: $radius-full;
+  border: 1px solid rgba(251, 191, 36, 0.40);
+  background: rgba(251, 191, 36, 0.10);
+  color: $color-primary-darker;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &__remove {
+    display: flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px;
+    border: none; background: rgba(180, 83, 9, 0.15); border-radius: 50%;
+    color: $color-primary-darker; font-size: 0.6rem; cursor: pointer; padding: 0;
+    @include transition-quick(background-color);
+    &:hover { background: rgba(180, 83, 9, 0.30); }
+  }
+}
 
 // ── Opening hours time picker separator ──────────────────────────
 .biz-hours-sep {
@@ -966,118 +1323,9 @@
 // BUSINESS DIRECTORY — Premium Category View
 // ═══════════════════════════════════════════════════════════
 
-// ── Header ───────────────────────────────────────────────────
-.biz-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-  flex-wrap: wrap;
 
-  &__left { min-width: 0; }
 
-  &__title {
-    font-family: $font-family-header;
-    font-size: clamp(1.15rem, 2.5vw, 1.5rem);
-    font-weight: 800;
-    color: $color-stone-900;
-    letter-spacing: -0.02em;
-    margin: 0 0 3px;
-  }
 
-  &__sub { font-size: $font-size-sm; color: $color-text-muted; margin: 0 0 $spacing-sm; }
-
-  &__stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 6px;
-  }
-}
-
-.biz-stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  border-radius: $radius-full;
-  background: rgba(251,191,36,0.10);
-  border: 1px solid rgba(251,191,36,0.25);
-  font-size: $font-size-xs;
-  color: $color-primary-darker;
-  .bi { font-size: 0.8em; }
-  strong { font-weight: $font-weight-bold; }
-}
-
-.biz-add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: $radius-md;
-  border: none;
-  background: linear-gradient(135deg, $color-primary, $color-saffron);
-  color: $color-on-primary;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-bold;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(251,191,36,0.35);
-  white-space: nowrap;
-  flex-shrink: 0;
-  @include transition-short(all);
-  &:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(251,191,36,0.45); }
-  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
-}
-
-// ── Toolbar ──────────────────────────────────────────────────
-.biz-toolbar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-lg;
-  flex-wrap: wrap;
-
-  &__right {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    flex-shrink: 0;
-  }
-}
-
-.biz-search {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-
-  &__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
-
-  &__input {
-    width: 100%;
-    height: 40px;
-    padding: 0 36px;
-    border: 1.5px solid $color-border;
-    border-radius: $radius-md;
-    background: #fff;
-    font-size: $font-size-sm;
-    color: $color-stone-800;
-    outline: none;
-    @include transition-short(all);
-    &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
-    &::-webkit-search-cancel-button { display: none; }
-  }
-
-  &__clear {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    width: 20px; height: 20px; border: none; background: $color-stone-200; border-radius: 50%;
-    color: $color-stone-600; font-size: 0.7rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    @include transition-quick(background-color);
-    &:hover { background: $color-stone-300; }
-  }
-}
 
 .biz-select {
   height: 40px;
@@ -1107,7 +1355,15 @@
   @include transition-quick(all);
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
   &--active { background: $color-stone-900; color: #fff; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+   &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
+// ── Categories Toolbar Right (Sort + View Toggle) ────────────────
+.biz-cat-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
 }
 
 // ── Grid / List layouts ───────────────────────────────────────
@@ -1335,16 +1591,12 @@ $accents: (
   &__title { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-800; margin-bottom: $spacing-sm; }
   &__sub   { font-size: $font-size-sm; color: $color-text-muted; max-width: 320px; line-height: 1.6; margin-bottom: $spacing-lg; }
 }
-
 // ── Responsive ────────────────────────────────────────────────
 @include media-md-max {
-  .biz-header { flex-direction: column; align-items: flex-start; }
   .biz-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: $spacing-md; }
 }
 
 @include media-sm-max {
-  .biz-toolbar { flex-direction: column; align-items: stretch; }
-  .biz-toolbar__right { justify-content: space-between; }
   .biz-grid { grid-template-columns: 1fr 1fr; gap: $spacing-sm; }
 }
 
@@ -1488,26 +1740,11 @@ $accents: (
 
 
 // ═══════════════════════════════════════════════════════════════
-// BUSINESS LIST VIEW — Premium Redesign
+// BREADCRUMB & BUSINESS LIST HEADER — Premium Redesign
 // ═══════════════════════════════════════════════════════════════
 
-.bl-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: $spacing-md; margin-bottom: $spacing-lg; flex-wrap: wrap;
-  &__left { min-width: 0; }
-  &__title-row { display: flex; align-items: center; gap: $spacing-md; margin-top: 8px; }
-  &__icon {
-    width: 52px; height: 52px; border-radius: $radius-full; flex-shrink: 0;
-    background: var(--cat-accent-bg, rgba(251,191,36,0.12));
-    border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; color: var(--cat-accent, #F97316);
-  }
-  &__title { font-family: $font-family-header; font-size: clamp(1.1rem,2.5vw,1.5rem); font-weight: 800; color: $color-stone-900; letter-spacing: -0.02em; margin: 0 0 2px; }
-  &__count { font-size: $font-size-sm; color: $color-text-muted; strong { color: $color-stone-800; } }
-}
-
-.bl-breadcrumb { display: flex; align-items: center; gap: 4px; list-style: none; padding: 0; margin: 0; }
+// ── Breadcrumb Navigation ────────────────────────────────────────
+.bl-breadcrumb { display: flex; align-items: center; gap: 4px; list-style: none; padding: 0; margin: 0 0 $spacing-sm; }
 .bl-breadcrumb__item { font-size: $font-size-xs; color: $color-stone-500; }
 .bl-breadcrumb__item--active { color: $color-stone-700; font-weight: $font-weight-medium; }
 .bl-breadcrumb__sep { color: $color-stone-300; font-size: 0.7rem; }
@@ -1519,19 +1756,18 @@ $accents: (
   &:hover { color: $color-primary-dark; }
 }
 
-.bl-toolbar {
-  display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; flex-wrap: wrap;
-  .biz-search { flex: 1; min-width: 200px; }
-  &__right { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
+// ── Business List Header (Category Icon + Title) ──────────────────
+.bl-header__title-row { display: flex; align-items: center; gap: $spacing-md; margin-top: $spacing-sm; }
+.bl-header__icon {
+  width: 52px; height: 52px; border-radius: $radius-full; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
 }
 
-.bl-clear-btn {
-  display: inline-flex; align-items: center; gap: 5px; height: 40px; padding: 0 14px;
-  border: none; background: none; color: $color-danger; font-size: $font-size-xs;
-  font-weight: $font-weight-semibold; cursor: pointer; border-radius: $radius-md;
-  @include transition-quick(background-color);
-  &:hover { background: $color-error-bg; }
-}
+// ═══════════════════════════════════════════════════════════════
+// BUSINESS LIST VIEW — Premium Redesign
+// ═══════════════════════════════════════════════════════════════
+
 
 .bl-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1612,13 +1848,10 @@ $accents: (
 }
 
 @include media-md-max {
-  .bl-header { flex-direction: column; align-items: flex-start; }
   .bl-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: $spacing-md; }
 }
 @include media-sm-max {
   .bl-grid { grid-template-columns: 1fr; }
-  .bl-toolbar { flex-direction: column; align-items: stretch; }
-  .bl-toolbar__right { justify-content: space-between; }
 }
 
 

@@ -8,6 +8,282 @@ $_rm: $radius-md;
 $_rs: $radius-sm;
 $_t:  0.2s ease;
 
+// ═════════════════════════════════════════════════════════════
+// PREMIUM UI COMPONENTS (adapted from Jobs)
+// ═════════════════════════════════════════════════════════════
+
+// ── ADMIN STATS BAR ──────────────────────────────────────────────
+.admin-stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: $radius-lg;
+  flex: 1;
+  min-width: 140px;
+  min-height: 88px;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  @include transition-short(all);
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.18);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    color: var(--ic);
+    background: var(--bg);
+  }
+
+  &__content { display: flex; flex-direction: column; min-width: 0; }
+
+  &__value {
+    font-family: $font-family-header;
+    font-size: 2rem;
+    font-weight: $font-weight-bold;
+    color: $color-stone-800;
+    line-height: 1.1;
+  }
+
+  &__label { font-size: $font-size-xs; color: $color-text-muted; font-weight: $font-weight-medium; margin-top: 1px; }
+
+  @include media-sm-max { &__value { font-size: $font-size-xl; } }
+  
+  &--active {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: $color-primary;
+  }
+}
+
+// ── PAGE HEADER ──────────────────────────────────────────────────
+.jb-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+
+  &__left { min-width: 0; }
+}
+
+.jb-page-header__title {
+  font-family: $font-family-header;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 800;
+  color: $color-stone-900;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
+.jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
+
+// ── BUTTONS ───────────────────────────────────────────────────────
+.jb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: $radius-md;
+  font-family: $font-family-body;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  @include transition-short(all);
+
+  &--neon {
+    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+    color: $color-on-primary;
+    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45); color: $color-on-primary; }
+    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1.5px solid rgba(251, 191, 36, 0.40);
+    color: $color-primary-darker;
+    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.08); }
+  }
+
+  &--solid {
+    background: $color-primary;
+    color: $color-on-primary;
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35); }
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+  }
+
+  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+}
+
+// ── FILTER PANEL ─────────────────────────────────────────────────
+.jb-filter-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.jb-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+}
+
+.jb-search-icon { position: absolute; left: 12px; color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
+
+.jb-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 36px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  font-size: $font-size-sm;
+  color: $color-stone-800;
+  outline: none;
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+  &::-webkit-search-cancel-button { display: none; }
+}
+
+.jb-filter-select {
+  padding: 8px 12px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-card;
+  font-size: $font-size-sm;
+  color: $color-stone-800;
+  outline: none;
+  cursor: pointer;
+  @include transition-short(border-color);
+
+  &:hover { border-color: $color-primary; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); }
+}
+
+.jb-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  @include transition-short(all);
+  
+  &:hover, &.active { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+}
+
+.jb-advanced-panel {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.jb-active-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.jb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  border: 1px solid rgba(251, 191, 36, 0.40);
+  background: rgba(251, 191, 36, 0.10);
+  color: $color-primary-darker;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &__label { flex: 1; }
+
+  &__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: none;
+    background: rgba(180, 83, 9, 0.15);
+    border-radius: 50%;
+    color: $color-primary-darker;
+    font-size: 0.6rem;
+    cursor: pointer;
+    padding: 0;
+    @include transition-quick(background-color);
+    &:hover { background: rgba(180, 83, 9, 0.30); }
+  }
+}
+
+.jb-badge-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: $radius-full;
+  background: $color-primary;
+  color: $color-on-primary;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+}
+
 // ─────────────────────────────────────────────────────────────
 // SHIMMER
 // ─────────────────────────────────────────────────────────────
@@ -84,62 +360,23 @@ $_t:  0.2s ease;
   animation: fadeIn 0.25s ease;
 }
 
-// Users tab wrapper — fills remaining height after header/tabs/stats/filter
+// Users tab wrapper — now ONLY contains the table (scrollable)
 .um-users-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
+
 // ─────────────────────────────────────────────────────────────
-// HEADER
+// HEADER — Now using .jb-page-header (premium design)
+// Export dropdown still used — kept below
 // ─────────────────────────────────────────────────────────────
-.um-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-
-  &__title {
-    font-family: $font-family-header;
-    font-size: $font-xl;
-    font-weight: $font-bold;
-    color: $color-text-primary;
-    margin: 0 0 4px;
-  }
-
-  &__subtitle {
-    font-size: $font-sm;
-    color: $color-text-muted;
-    margin: 0;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-}
-
-.um-add-btn {
-  font-weight: $font-semibold;
-  padding: 7px 16px;
-  font-size: $font-sm;
-}
 
 // Export dropdown
 .um-export-wrap { position: relative; }
-
-.um-export-btn {
-  font-size: $font-sm;
-  padding: 6px 12px;
-  .um-chevron { transition: transform $_t; &.rotate { transform: rotate(180deg); } }
-}
 
 .um-export-menu {
   position: absolute;
@@ -190,210 +427,17 @@ app-profile-tabs {
   animation: fadeIn 0.2s ease;
 }
 
-// ─────────────────────────────────────────────────────────────
-// STAT CARDS
-// ─────────────────────────────────────────────────────────────
-.um-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  @media (max-width: 991px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 479px) { grid-template-columns: repeat(2, 1fr); }
-}
-
-.um-stat {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  background: $color-bg-card;
-  border: 1.5px solid $color-border;
-  border-radius: $_r;
-  cursor: pointer;
-  text-align: left;
-  transition: all $_t;
-  overflow: hidden;
-
-  &:hover {
-    border-color: $color-primary;
-    box-shadow: $shadow-card-hover;
-  }
-
-  &--active {
-    border-color: $color-primary;
-    background: $color-primary-light;
-    box-shadow: $shadow-primary-sm;
-  }
-
-  &__icon {
-    width: 46px; height: 46px;
-    border-radius: 12px;
-    background: var(--bg);
-    color: var(--ic);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.15rem;
-    flex-shrink: 0;
-  }
-
-  &__value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: $font-bold;
-    color: $color-text-primary;
-    line-height: 1.1;
-  }
-
-  &__label {
-    display: block;
-    font-size: $font-xs;
-    color: $color-text-muted;
-    font-weight: $font-medium;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin-top: 2px;
-  }
-
-  &__filter-dot {
-    position: absolute;
-    top: 10px; right: 10px;
-    width: 8px; height: 8px;
-    background: $color-primary;
-    border-radius: $radius-full;
-  }
-}
 
 // ─────────────────────────────────────────────────────────────
-// FILTER BAR
+// STAT CARDS — Now using .admin-stat-card (premium design)
 // ─────────────────────────────────────────────────────────────
-.um-filter-card {
-  width: 100%;
-  background: $color-bg-card;
-  border: 1px solid $color-border;
-  border-radius: $_r;
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  box-sizing: border-box;
-}
 
-.um-filter-divider {
-  width: 1px;
-  height: 24px;
-  background: $color-border;
-  flex-shrink: 0;
-  margin: 0 2px;
-}
 
-// Search input
-.um-search-wrap {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 140px;
-}
 
-.um-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: $color-text-muted;
-  font-size: 0.85rem;
-  pointer-events: none;
-}
+// ─────────────────────────────────────────────────────────────
+// FILTER BAR — Now using .jb-filter-panel (premium design)
+// ─────────────────────────────────────────────────────────────
 
-.um-search-input {
-  width: 100%;
-  height: 48px;
-  padding: 0 12px 0 38px;
-  border: 1.5px solid $color-border;
-  border-radius: 10px;
-  font-size: $font-sm;
-  color: $color-text-body;
-  background: $color-bg-page;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  outline: none;
-
-  &::placeholder { color: $color-text-secondary; }
-
-  &:focus {
-    border-color: $color-primary;
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-    background: $color-bg-card;
-  }
-
-  &:hover:not(:focus) { border-color: $color-primary; }
-}
-
-.um-select {
-  height: 48px;
-  padding: 0 10px;
-  border: 1.5px solid $color-border;
-  border-radius: 10px;
-  font-size: $font-sm;
-  color: $color-text-body;
-  background: $color-bg-page;
-  cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  outline: none;
-  min-width: 110px;
-  max-width: 140px;
-  flex-shrink: 0;
-
-  &:focus {
-    border-color: $color-primary;
-    background: $color-bg-card;
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-  }
-
-  &:hover:not(:focus) { border-color: $color-primary; }
-
-  &--sm {
-    height: 34px;
-    padding: 0 8px;
-    border-radius: $radius-sm;
-    font-size: $font-xs;
-    min-width: 80px;
-    max-width: none;
-    box-shadow: none;
-  }
-}
-
-.um-search-btn {
-  height: 48px;
-  padding: 0 18px;
-  font-size: $font-sm;
-  font-weight: $font-semibold;
-  white-space: nowrap;
-  border-radius: 10px !important;
-}
-
-.um-clear-btn {
-  height: 48px;
-  padding: 0 14px;
-  font-size: $font-sm;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  border-radius: 10px !important;
-}
-
-.um-clear-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px; height: 18px;
-  background: $color-danger;
-  color: #fff;
-  border-radius: $radius-full;
-  font-size: 0.65rem;
-  font-weight: $font-bold;
-  line-height: 1;
-}
 
 // Toolbar icon buttons
 .um-icon-btn {
