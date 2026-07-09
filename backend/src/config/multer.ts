@@ -73,16 +73,9 @@ export const uploadVideo = multer({
 });
 
 // Generic image + PDF uploader used by business/events/jobs/upload endpoints
+// Uses memory storage so buffer is available for validation with Sharp
 export const uploadImages = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => {
-      cb(null, uploadsBase);
-    },
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname);
-      cb(null, uuidv4() + ext);
-    },
-  }),
+  storage: multer.memoryStorage(),
   fileFilter: mimeFilter([
     'image/jpeg',
     'image/png',

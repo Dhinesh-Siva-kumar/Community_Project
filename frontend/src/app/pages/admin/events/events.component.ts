@@ -5,6 +5,7 @@ import { EventService } from '../../../core/services/event.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -21,7 +22,7 @@ function endTimeValidator(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })

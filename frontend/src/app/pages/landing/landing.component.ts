@@ -721,8 +721,8 @@ const TRANSLATIONS = {
       { icon: 'bi-briefcase-fill',       label: 'தினமும் வேலை வாய்ப்புகள்',    desc: 'தினமும் புதிய வேலை வாய்ப்பு தகவல்கள்',            color: 'green'   },
       { icon: 'bi-book-fill',            label: 'மாணவர் ஆதரவு நெட்வொர்க்',   desc: 'மாணவர் ஆதரவு நெட்வொர்க் — எப்போதும் கிடைக்கும்', color: 'violet'  },
       { icon: 'bi-shield-fill-check',    label: 'அவசர உதவி வலைப்பின்னல்',     desc: 'அவசர உதவி வலைப்பின்னல் — 24/7',                   color: 'pink'    },
-      { icon: 'bi-calendar-event-fill',  label: 'Tamil Events & Meetups',       desc: 'உங்கள் நகரில் Tamil Events & Meetups',             color: 'yellow'  },
-      { icon: 'bi-globe2',               label: 'Global Tamil Business Network', desc: 'உலக தமிழ் வணிக வலைப்பின்னல்',                    color: 'accent'  },
+      { icon: 'bi-calendar-event-fill',  label: 'தமிழ் நிகழ்வுகள் & கூட்டங்கள்',       desc: 'உங்கள் நகரில் தமிழ் நிகழ்வுகள் & கூட்டங்கள்',             color: 'yellow'  },
+      { icon: 'bi-globe2',               label: 'உலக தமிழ் வணிக வலைப்பின்னல்', desc: 'உலக தமிழ் வணிக வலைப்பின்னல்',                    color: 'accent'  },
     ],
 
     // ── Ask the Community ──

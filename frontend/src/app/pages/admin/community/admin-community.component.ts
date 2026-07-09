@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 
 // ── Module-level custom validators ──────────────────────────────────────────
 
@@ -381,10 +382,10 @@ export class AdminCommunityComponent implements OnInit {
     this.submitting.set(true);
     const file = this.selectedImage();
 
-    // Upload image first (if a new file was chosen), then create/update.
-    const upload$: Observable<{ path: string } | null> = file
-      ? this.apiService.postWithFile<{ path: string }>('/upload', {}, [{ field: 'file', file }])
-      : of(null);
+     // Upload image first (if a new file was chosen), then create/update.
+     const upload$: Observable<{ path: string } | null> = file
+       ? this.apiService.postWithFile<{ path: string }>('/upload', {}, [{ field: FORM_DATA_FIELD_NAMES.FILE, file }])
+       : of(null);
 
     upload$
       .pipe(

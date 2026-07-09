@@ -10,6 +10,8 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
@@ -24,7 +26,7 @@ type ViewState = 'categories' | 'list' | 'detail';
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, ImageUrlPipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -905,11 +907,12 @@ private initForms(): void {
     delete raw['openingHoursFrom'];
     delete raw['openingHoursTo'];
 
-    const images  = this.selectedImages();
-    const editing = this.editingBusiness();
-    const req = editing
-      ? this.businessService.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined)
-      : this.businessService.createBusiness(raw, images.length > 0 ? images : undefined);
+     const images  = this.selectedImages();
+     const logo    = this.selectedLogo();
+     const editing = this.editingBusiness();
+     const req = editing
+       ? this.businessService.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined, logo ?? undefined)
+       : this.businessService.createBusiness(raw, images.length > 0 ? images : undefined, logo ?? undefined);
 
     req.subscribe({
       next: (biz) => {
@@ -1045,5 +1048,14 @@ private initForms(): void {
       return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(biz.address)}`;
     }
     return '#';
+  }
+
+  /**
+   * Get fallback image URLs for a business (remaining images after the first one)
+   */
+  getBusinessFallbackImages(business: Business): string[] {
+    return business.images && business.images.length > 1
+      ? business.images.slice(1)
+      : [];
   }
 }

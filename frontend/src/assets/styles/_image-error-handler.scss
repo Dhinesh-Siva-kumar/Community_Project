@@ -1,0 +1,65 @@
+// ============================================================
+// IMAGE ERROR HANDLER STYLES
+// ============================================================
+// Styling for broken/failed image loading states
+
+.image-error {
+  // Visual indication that image failed to load
+  opacity: 0.6;
+  border: 1px dashed #ccc;
+  background-color: #f9f9f9;
+
+  // Prevent distorted placeholder from stretching
+  object-fit: contain;
+  object-position: center;
+
+  // Optional: Add a subtle gray filter to differentiate
+  filter: grayscale(100%);
+}
+
+// Loading placeholder animation
+@keyframes image-pulse {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+// Applied while image is loading
+img[loading='lazy'] {
+  animation: none;
+
+  &.image-error {
+    animation: none;
+  }
+}
+
+// Container for images with error handling
+.image-error-container {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    &.image-error {
+      opacity: 0.7;
+      background-color: #fafafa;
+    }
+  }
+}
+
+// Responsive image error states
+@media (max-width: 768px) {
+  .image-error {
+    border-width: 1px;
+  }
+}

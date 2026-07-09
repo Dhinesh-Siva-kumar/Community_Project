@@ -1,12 +1,49 @@
 import { Request, Response, NextFunction } from 'express';
 import { CreateEventDto, UpdateEventDto, ListEventsQueryDto } from './events.dto';
 import * as eventsService from './events.service';
+import { FileValidationService } from '../../services/file-validation.service';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { env } from '../../config/env';
+
+// Helper to save buffer to disk
+async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
+  const uploadsBase = path.resolve(env.UPLOADS_PATH);
+  const ext = path.extname(originalName);
+  const filename = uuidv4() + ext;
+  const filePath = path.join(uploadsBase, filename);
+  
+  if (!fs.existsSync(uploadsBase)) {
+    fs.mkdirSync(uploadsBase, { recursive: true });
+  }
+  
+  fs.writeFileSync(filePath, buffer);
+  return filename;
+}
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+
+    // Validate uploaded images
+    const validation = await FileValidationService.validateMulterFiles(files);
+    if (!validation.valid) {
+      res.status(400).json({
+        message: 'Image validation failed',
+        errors: validation.invalidFiles,
+      });
+      return;
+    }
+
+    // Save validated files to disk
+    const filenames = await Promise.all(
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+    );
+    const imagePaths = filenames.map((f) => `/uploads/${f}`);
+
     const rawBody = { ...req.body };
-    if (files.length) rawBody['images'] = files.map((f) => `/uploads/${f.filename}`);
+    if (imagePaths.length) rawBody['images'] = imagePaths;
     
     // Ensure all fields from DTO are present in rawBody before parsing
     const expectedFields = Object.keys(CreateEventDto.shape);
@@ -41,8 +78,25 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+
+    // Validate uploaded images
+    const validation = await FileValidationService.validateMulterFiles(files);
+    if (!validation.valid) {
+      res.status(400).json({
+        message: 'Image validation failed',
+        errors: validation.invalidFiles,
+      });
+      return;
+    }
+
+    // Save validated files to disk
+    const filenames = await Promise.all(
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+    );
+    const imagePaths = filenames.map((f) => `/uploads/${f}`);
+
     const rawBody = { ...req.body };
-    if (files.length) rawBody['images'] = files.map((f) => `/uploads/${f.filename}`);
+    if (imagePaths.length) rawBody['images'] = imagePaths;
     
     // Ensure all fields from DTO are present in rawBody before parsing
     const expectedFields = Object.keys(UpdateEventDto.shape);

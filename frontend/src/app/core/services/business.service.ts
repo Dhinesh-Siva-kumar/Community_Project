@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Business, BusinessCategory, PaginatedResponse } from '../models';
+import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 @Injectable({ providedIn: 'root' })
 export class BusinessService {
@@ -43,21 +44,33 @@ export class BusinessService {
     return this.api.get<Business>(`/business/${id}`);
   }
 
-  createBusiness(data: Record<string, any>, images?: File[]): Observable<Business> {
-    if (images && images.length > 0) {
-      const files = images.map((file) => ({ field: 'images', file }));
-      return this.api.postWithFile<Business>('/business', data, files);
-    }
-    return this.api.post<Business>('/business', data);
-  }
+   createBusiness(data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {
+     const files: Array<{ field: string; file: File }> = [];
+     if (images && images.length > 0) {
+       images.forEach((file) => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+     }
+     if (logo) {
+       files.push({ field: 'logo', file: logo });
+     }
+     if (files.length > 0) {
+       return this.api.postWithFile<Business>('/business', data, files);
+     }
+     return this.api.post<Business>('/business', data);
+   }
 
-  updateBusiness(id: string, data: Record<string, any>, images?: File[]): Observable<Business> {
-    if (images && images.length > 0) {
-      const files = images.map((file) => ({ field: 'images', file }));
-      return this.api.putWithFile<Business>(`/business/${id}`, data, files);
-    }
-    return this.api.put<Business>(`/business/${id}`, data);
-  }
+   updateBusiness(id: string, data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {
+     const files: Array<{ field: string; file: File }> = [];
+     if (images && images.length > 0) {
+       images.forEach((file) => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+     }
+     if (logo) {
+       files.push({ field: 'logo', file: logo });
+     }
+     if (files.length > 0) {
+       return this.api.putWithFile<Business>(`/business/${id}`, data, files);
+     }
+     return this.api.put<Business>(`/business/${id}`, data);
+   }
 
   deleteBusiness(id: string): Observable<void> {
     return this.api.delete<void>(`/business/${id}`);

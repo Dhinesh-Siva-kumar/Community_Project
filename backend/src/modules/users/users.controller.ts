@@ -5,6 +5,7 @@ import {
   AuditLogQueryDto, BroadcastNotificationDto,
 } from './users.dto';
 import * as usersService from './users.service';
+import { FileValidationService } from '../../services/file-validation.service';
 
 export async function getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try { res.json(await usersService.getProfile(req.user!.sub)); } catch (e) { next(e); }
@@ -13,7 +14,20 @@ export async function getProfile(req: Request, res: Response, next: NextFunction
 export async function updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const rawBody = { ...req.body };
-    if (req.file) rawBody['avatar'] = `/uploads/profiles/${req.file.filename}`;
+
+    // Validate avatar file if present
+    if (req.file) {
+      const validation = await FileValidationService.validateMulterFile(req.file);
+      if (!validation.valid) {
+        res.status(400).json({
+          message: 'Avatar validation failed',
+          error: validation.error,
+        });
+        return;
+      }
+      rawBody['avatar'] = `/uploads/profiles/${req.file.filename}`;
+    }
+
     res.json(await usersService.updateProfile(req.user!.sub, UpdateUserDto.parse(rawBody)));
   } catch (e) { next(e); }
 }

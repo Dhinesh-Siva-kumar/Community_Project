@@ -152,7 +152,7 @@
 
           <div class="bl-card__img-wrap">
             @if (biz.images && biz.images.length > 0) {
-              <img [src]="biz.images[0]" [alt]="biz.name" class="bl-card__img" loading="lazy" />
+              <img [src]="biz.images[0] | imageUrl" [alt]="biz.name" class="bl-card__img" loading="lazy" fetchpriority="high" />
             } @else {
               <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
             }
@@ -279,17 +279,21 @@
 
     <div class="bd-hero">
       <div class="bd-hero__cover">
-        @if (biz.images && biz.images.length > 0) {
-          <img [src]="biz.images[0]" [alt]="biz.name" class="bd-hero__cover-img" loading="lazy" />
-        } @else {
-          <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
-        }
+         @if (biz.images && biz.images.length > 0) {
+           <img [src]="biz.images[0] | imageUrl" [alt]="biz.name" class="bd-hero__cover-img" loading="eager" />
+         } @else {
+           <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
+         }
       </div>
-      <div class="bd-hero__profile">
-        <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}">
-          <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
-        </div>
-        <div class="bd-hero__info">
+       <div class="bd-hero__profile">
+         <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}">
+           @if ($any(biz).logo) {
+             <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="w-100 h-100 object-fit-cover rounded-circle" loading="eager" />
+           } @else {
+             <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
+           }
+         </div>
+         <div class="bd-hero__info">
           <div class="bd-hero__name-row">
             <h1 class="bd-hero__name">{{ biz.name }}</h1>
             @if (biz.isActive) { <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span> }
@@ -316,6 +320,14 @@
             <p class="bd-section__body">{{ biz.description }}</p>
           </div>
         }
+        @if ($any(biz).logo) {
+          <div class="bd-section">
+            <h3 class="bd-section__title"><i class="bi bi-building"></i> Logo</h3>
+            <div style="max-width: 200px;">
+              <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="img-fluid rounded" loading="lazy" />
+            </div>
+          </div>
+        }
         @if (biz.phone || biz.email || biz.website || $any(biz).whatsapp) {
           <div class="bd-section">
             <h3 class="bd-section__title"><i class="bi bi-telephone"></i> Contact</h3>
@@ -332,7 +344,7 @@
             <h3 class="bd-section__title"><i class="bi bi-images"></i> Gallery</h3>
             <div class="bd-gallery">
               @for (img of biz.images; track $index) {
-                <img [src]="img" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" (click)="setActiveImage($index)" />
+                <img [src]="img | imageUrl" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" fetchpriority="auto" (click)="setActiveImage($index)" />
               }
             </div>
           </div>
@@ -430,11 +442,11 @@
                 <!-- Business Logo -->
                 <div class="col-12">
                   <label class="jb-label">Business Logo <span class="text-danger">*</span></label>
-                  @if (logoPreview()) {
-                    <div class="jb-logo-preview">
-                      <img [src]="logoPreview()!" alt="Logo preview" class="jb-logo-preview__img" />
-                      <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
-                    </div>
+                   @if (logoPreview()) {
+                     <div class="jb-logo-preview">
+                       <img [src]="logoPreview()!" alt="Logo preview" class="jb-logo-preview__img" loading="lazy" />
+                       <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
+                     </div>
                   } @else {
                     <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
                       [resetCounter]="logoUploadReset()" label="Upload business logo (JPG, PNG, WEBP)"

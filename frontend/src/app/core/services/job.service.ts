@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Job, PaginatedResponse } from '../models';
+import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface JobsQueryParams {
   // ── Pagination ───────────────────────────────────────────────
@@ -70,21 +71,21 @@ export class JobService {
     return this.api.get<Job>(`/jobs/${id}`);
   }
 
-  createJob(data: Record<string, any>, images?: File[], logo?: File): Observable<Job> {
-    const files: { field: string; file: File }[] = [];
-    if (logo)           files.push({ field: 'logo',   file: logo });
-    if (images?.length) images.forEach(f => files.push({ field: 'images', file: f }));
-    if (files.length > 0) return this.api.postWithFile<Job>('/jobs', data, files);
-    return this.api.post<Job>('/jobs', data);
-  }
+   createJob(data: Record<string, any>, images?: File[], logo?: File): Observable<Job> {
+     const files: { field: string; file: File }[] = [];
+     if (logo)           files.push({ field: FORM_DATA_FIELD_NAMES.LOGO,   file: logo });
+     if (images?.length) images.forEach(f => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file: f }));
+     if (files.length > 0) return this.api.postWithFile<Job>('/jobs', data, files);
+     return this.api.post<Job>('/jobs', data);
+   }
 
-  updateJob(id: string, data: Record<string, any>, images?: File[], logo?: File): Observable<Job> {
-    const files: { field: string; file: File }[] = [];
-    if (logo)           files.push({ field: 'logo',   file: logo });
-    if (images?.length) images.forEach(f => files.push({ field: 'images', file: f }));
-    if (files.length > 0) return this.api.putWithFile<Job>(`/jobs/${id}`, data, files);
-    return this.api.put<Job>(`/jobs/${id}`, data);
-  }
+   updateJob(id: string, data: Record<string, any>, images?: File[], logo?: File): Observable<Job> {
+     const files: { field: string; file: File }[] = [];
+     if (logo)           files.push({ field: FORM_DATA_FIELD_NAMES.LOGO,   file: logo });
+     if (images?.length) images.forEach(f => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file: f }));
+     if (files.length > 0) return this.api.putWithFile<Job>(`/jobs/${id}`, data, files);
+     return this.api.put<Job>(`/jobs/${id}`, data);
+   }
 
   deleteJob(id: string): Observable<void> {
     return this.api.delete<void>(`/jobs/${id}`);

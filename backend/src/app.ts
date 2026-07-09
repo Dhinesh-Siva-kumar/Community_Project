@@ -6,6 +6,7 @@ import path from 'path';
 import { env } from './config/env';
 import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
+import { imageServeWithCache } from './middleware/cacheHeaders';
 
 // Routers
 import authRouter from './modules/auth/auth.router';
@@ -47,9 +48,10 @@ app.use(cookieParser());
 // 6. Rate limit all /api routes
 app.use('/api', apiLimiter);
 
-// 7. Serve static uploads
+// 7. Serve static uploads with cache headers
 app.use(
   '/uploads',
+  imageServeWithCache,
   express.static(path.resolve(env.UPLOADS_PATH), {
     maxAge: '30d',
     index: false,
