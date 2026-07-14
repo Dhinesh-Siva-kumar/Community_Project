@@ -52,6 +52,19 @@ export class UserManagementComponent implements OnInit {
       .filter(Boolean).length,
   );
 
+  // ── Premium filter UI state ───────────────────────────────────────────────
+  showAdvancedFilters = signal(false);
+
+  // Active filter chips for display
+  activeFilterChips = computed<{ key: string; label: string; value: any }[]>(() => {
+    const chips: { key: string; label: string; value: any }[] = [];
+    if (this.appliedSearch()) chips.push({ key: 'search', label: `"${this.appliedSearch()}"`, value: this.appliedSearch() });
+    if (this.filterRole()) chips.push({ key: 'role', label: this.filterRole(), value: this.filterRole() });
+    if (this.filterStatus()) chips.push({ key: 'status', label: this.filterStatus()!, value: this.filterStatus() });
+    if (this.filterJoined()) chips.push({ key: 'joined', label: `Last ${this.filterJoined()}`, value: this.filterJoined() });
+    return chips;
+  });
+
   // ── Selection / bulk ──────────────────────────────────────────────────────
   selectedIds    = signal<Set<string>>(new Set());
   bulkRoleTarget = signal<'ADMIN' | 'USER'>('USER');
@@ -158,6 +171,30 @@ export class UserManagementComponent implements OnInit {
     this.filterRole.set('');
     this.filterStatus.set('');
     this.filterJoined.set('');
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  removeFilter(filterKey: string): void {
+    switch (filterKey) {
+      case 'search':
+        this.searchInput.set('');
+        this.appliedSearch.set('');
+        break;
+      case 'role':
+        this.filterRole.set('');
+        break;
+      case 'status':
+        this.filterStatus.set('');
+        break;
+      case 'joined':
+        this.filterJoined.set('');
+        break;
+    }
     this.currentPage.set(1);
     this.loadUsers();
   }

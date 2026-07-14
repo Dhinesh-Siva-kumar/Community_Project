@@ -1,11 +1,48 @@
 import { Request, Response, NextFunction } from 'express';
 import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
 import * as postsService from './posts.service';
+import { FileValidationService } from '../../services/file-validation.service';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { env } from '../../config/env';
+
+// Helper to save buffer to disk
+async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
+  const uploadsBase = path.resolve(env.UPLOADS_PATH);
+  const ext = path.extname(originalName);
+  const filename = uuidv4() + ext;
+  const filePath = path.join(uploadsBase, filename);
+  
+  // Ensure directory exists
+  if (!fs.existsSync(uploadsBase)) {
+    fs.mkdirSync(uploadsBase, { recursive: true });
+  }
+  
+  fs.writeFileSync(filePath, buffer);
+  return filename;
+}
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-    const imagePaths = files.map((f) => `/uploads/${f.filename}`);
+
+    // Validate uploaded images
+    const validation = await FileValidationService.validateMulterFiles(files);
+    if (!validation.valid) {
+      res.status(400).json({
+        message: 'Image validation failed',
+        errors: validation.invalidFiles,
+      });
+      return;
+    }
+
+    // Save validated files to disk
+    const filenames = await Promise.all(
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+    );
+    const imagePaths = filenames.map((f) => `/uploads/${f}`);
+    
     const rawBody = { ...req.body };
     if (imagePaths.length) rawBody['images'] = imagePaths;
     const body = CreatePostDto.parse(rawBody);
@@ -55,7 +92,23 @@ export async function deletePost(req: Request, res: Response, next: NextFunction
 export async function updatePost(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
-    const imagePaths = files.map((f) => `/uploads/${f.filename}`);
+
+    // Validate uploaded images
+    const validation = await FileValidationService.validateMulterFiles(files);
+    if (!validation.valid) {
+      res.status(400).json({
+        message: 'Image validation failed',
+        errors: validation.invalidFiles,
+      });
+      return;
+    }
+
+    // Save validated files to disk
+    const filenames = await Promise.all(
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+    );
+    const imagePaths = filenames.map((f) => `/uploads/${f}`);
+    
     const rawBody = { ...req.body };
     if (imagePaths.length) rawBody['images'] = imagePaths;
     const body = UpdatePostBodyDto.parse(rawBody);

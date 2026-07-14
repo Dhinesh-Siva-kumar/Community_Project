@@ -5,6 +5,7 @@ import {
   User, UserDetail, UserListResponse, AuditLog, AuditLogResponse,
   NotificationType, PaginatedResponse, DashboardStats, ChartData,
 } from '../models';
+import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface AdminCreateUserPayload {
   userName:    string;
@@ -42,12 +43,12 @@ export class UserService {
     return this.api.get<User>('/users/profile');
   }
 
-  updateProfile(data: Record<string, any>, avatar?: File): Observable<User> {
-    if (avatar) {
-      return this.api.putWithFile<User>('/users/profile', data, [{ field: 'avatar', file: avatar }]);
-    }
-    return this.api.put<User>('/users/profile', data);
-  }
+   updateProfile(data: Record<string, any>, avatar?: File): Observable<User> {
+     if (avatar) {
+       return this.api.putWithFile<User>('/users/profile', data, [{ field: FORM_DATA_FIELD_NAMES.AVATAR, file: avatar }]);
+     }
+     return this.api.put<User>('/users/profile', data);
+   }
 
   getDashboardStats(): Observable<DashboardStats> {
     return this.api.get<DashboardStats>('/users/dashboard');

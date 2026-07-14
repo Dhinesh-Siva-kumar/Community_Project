@@ -27,7 +27,50 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   chartData      = signal<ChartData | null>(null);
   today          = signal(new Date());
 
+  // Pagination & Filter for Recent Activity
+  activityCurrentPage    = signal(1);
+  activityItemsPerPage   = signal(6);
+  activitySelectedFilter = signal<string | 'all'>('all');
+
   pendingCount = computed(() => this.pendingPosts().length);
+
+  // Filtered and paginated activity list
+  filteredActivity = computed(() => {
+    const activity = this.stats()?.recentActivity ?? [];
+    const filter = this.activitySelectedFilter();
+    
+    if (filter === 'all') {
+      return activity;
+    }
+    return activity.filter(item => item.type === filter);
+  });
+
+  paginatedActivity = computed(() => {
+    const filtered = this.filteredActivity();
+    const page = this.activityCurrentPage();
+    const itemsPerPage = this.activityItemsPerPage();
+    const startIdx = (page - 1) * itemsPerPage;
+    return filtered.slice(startIdx, startIdx + itemsPerPage);
+  });
+
+  activityTotalPages = computed(() => {
+    const filtered = this.filteredActivity();
+    const itemsPerPage = this.activityItemsPerPage();
+    return Math.ceil(filtered.length / itemsPerPage);
+  });
+
+  // Get unique activity types for filter dropdown
+  activityTypes = computed(() => {
+    const activity = this.stats()?.recentActivity ?? [];
+    const types = new Set(activity.map(a => a.type));
+    return Array.from(types).sort();
+  });
+
+  // Helper to generate page numbers for pagination
+  getPageNumbers(): number[] {
+    const totalPages = this.activityTotalPages();
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
 
   // Derived bar height arrays — normalised 0–100 relative to max value in each series
   userBars      = computed(() => this._normalise(this.chartData()?.users));
@@ -57,6 +100,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     { label: 'Create Community',    icon: 'bi-plus-circle',  bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
     { label: 'Global Announcement', icon: 'bi-megaphone',    bg: '#e8f0ff', color: '#005ac2', route: '/admin/post-approval'   },
     { label: 'Manage Users',        icon: 'bi-person-gear',  bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
+    { label: 'Business Listings',   icon: 'bi-building',     bg: '#ffe6e6', color: '#d97706', route: '/admin/business'        },
   ];
 
   ngOnInit(): void {
@@ -188,5 +232,105 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const user = this.authService.currentUser();
     if (!user) return 'Admin';
     return (user.displayName || user.userName || 'Admin').split(' ')[0];
+  }
+
+  // ── Time-aware greeting methods ──────────────────────────────
+  
+  getGreetingText(): string {
+    const hour = new Date().getHours();
+    const firstName = this.getAdminFirstName();
+    
+    if (hour >= 5 && hour < 12) {
+      return `Good Morning, ${firstName}!`;
+    } else if (hour >= 12 && hour < 17) {
+      return `Good Afternoon, ${firstName}!`;
+    } else {
+      return `Good Evening, ${firstName}!`;
+    }
+  }
+
+  getGreetingIcon(): string {
+    const hour = new Date().getHours();
+    
+    if (hour >= 5 && hour < 12) {
+      return 'bi-sunrise'; // Morning
+    } else if (hour >= 12 && hour < 17) {
+      return 'bi-sun'; // Afternoon
+    } else {
+      return 'bi-moon'; // Evening
+    }
+  }
+
+  getGreetingEmoji(): string {
+    const hour = new Date().getHours();
+    
+    if (hour >= 5 && hour < 12) {
+      return '🌅';
+    } else if (hour >= 12 && hour < 17) {
+      return '☀️';
+    } else {
+      return '🌙';
+    }
+  }
+
+  getGreetingColor(): string {
+    const hour = new Date().getHours();
+    
+    if (hour >= 5 && hour < 12) {
+      return '#F59E0B'; // Amber (morning warmth)
+    } else if (hour >= 12 && hour < 17) {
+      return '#FBBF24'; // Bright amber (afternoon brightness)
+    } else {
+      return '#78716C'; // Muted stone (evening calm)
+    }
+  }
+
+  getAdminInitials(): string {
+    const user = this.authService.currentUser();
+    if (!user) return 'A';
+    const name = user.displayName || user.userName || 'Admin';
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  getAdminFullName(): string {
+    const user = this.authService.currentUser();
+    if (!user) return 'Admin';
+    return user.displayName || user.userName || 'Admin';
+  }
+
+  getAdminRole(): string {
+    const user = this.authService.currentUser();
+    if (!user) return 'Administrator';
+    // Assuming user object has a role property, adjust as needed
+    return user.role || 'Administrator';
+  }
+
+  // ── Pagination & Filter Methods ──────────────────────────────
+
+  setActivityFilter(type: string | 'all'): void {
+    this.activitySelectedFilter.set(type);
+    this.activityCurrentPage.set(1); // Reset to first page when filtering
+  }
+
+  goToActivityPage(page: number): void {
+    const totalPages = this.activityTotalPages();
+    if (page >= 1 && page <= totalPages) {
+      this.activityCurrentPage.set(page);
+    }
+  }
+
+  goToActivityPreviousPage(): void {
+    const currentPage = this.activityCurrentPage();
+    if (currentPage > 1) {
+      this.goToActivityPage(currentPage - 1);
+    }
+  }
+
+  goToActivityNextPage(): void {
+    const currentPage = this.activityCurrentPage();
+    const totalPages = this.activityTotalPages();
+    if (currentPage < totalPages) {
+      this.goToActivityPage(currentPage + 1);
+    }
   }
 }

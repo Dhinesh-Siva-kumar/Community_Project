@@ -9,6 +9,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -32,7 +33,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent, ImageUrlPipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -492,7 +493,12 @@ export class UserBusinessComponent implements OnInit {
     });
 
     const images = this.selectedImages();
-    const req = this.svc.createBusiness(raw, images.length > 0 ? images : undefined);
+    const logo = this.selectedLogo();
+    const req = this.svc.createBusiness(
+      raw, 
+      images.length > 0 ? images : undefined,
+      logo ?? undefined
+    );
 
     req.subscribe({
       next: (biz) => {

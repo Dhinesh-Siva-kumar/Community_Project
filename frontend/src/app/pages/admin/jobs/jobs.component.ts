@@ -14,6 +14,7 @@ import { Country, Job, PaginatedResponse } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
@@ -56,7 +57,7 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent,
+    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective,
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],

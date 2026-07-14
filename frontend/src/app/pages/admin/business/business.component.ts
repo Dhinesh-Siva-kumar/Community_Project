@@ -10,6 +10,8 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
@@ -24,7 +26,7 @@ type ViewState = 'categories' | 'list' | 'detail';
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, ImageUrlPipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -278,10 +280,19 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   filterSearch = signal('');
   filterCountry = signal<string | null>(null);
   filterOpeningHours = signal<string | null>(null);
+  showAdvancedFilters = signal(false);
 
   hasActiveFilters = computed(() =>
     !!(this.filterSearch() || this.filterCountry() || this.filterOpeningHours())
   );
+
+  activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.filterSearch()) count++;
+    if (this.filterCountry()) count++;
+    if (this.filterOpeningHours()) count++;
+    return count;
+  });
 
   // Forms
   businessForm!: FormGroup;
@@ -624,12 +635,36 @@ private initForms(): void {
     if (cat) this.loadBusinesses(cat, true);
   }
 
-  clearFilters(): void {
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  removeFilter(filterKey: 'search' | 'country' | 'hours'): void {
+    switch (filterKey) {
+      case 'search':
+        this.filterSearch.set('');
+        break;
+      case 'country':
+        this.filterCountry.set(null);
+        break;
+      case 'hours':
+        this.filterOpeningHours.set(null);
+        break;
+    }
+    this.applyFilters();
+  }
+
+  clearAllFilters(): void {
     this.filterSearch.set('');
     this.filterCountry.set(null);
     this.filterOpeningHours.set(null);
+    this.showAdvancedFilters.set(false);
     const cat = this.selectedCategory();
     if (cat) this.loadBusinesses(cat, true);
+  }
+
+  clearFilters(): void {
+    this.clearAllFilters();
   }
 
   // Navigation
@@ -872,11 +907,12 @@ private initForms(): void {
     delete raw['openingHoursFrom'];
     delete raw['openingHoursTo'];
 
-    const images  = this.selectedImages();
-    const editing = this.editingBusiness();
-    const req = editing
-      ? this.businessService.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined)
-      : this.businessService.createBusiness(raw, images.length > 0 ? images : undefined);
+     const images  = this.selectedImages();
+     const logo    = this.selectedLogo();
+     const editing = this.editingBusiness();
+     const req = editing
+       ? this.businessService.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined, logo ?? undefined)
+       : this.businessService.createBusiness(raw, images.length > 0 ? images : undefined, logo ?? undefined);
 
     req.subscribe({
       next: (biz) => {
@@ -1012,5 +1048,14 @@ private initForms(): void {
       return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(biz.address)}`;
     }
     return '#';
+  }
+
+  /**
+   * Get fallback image URLs for a business (remaining images after the first one)
+   */
+  getBusinessFallbackImages(business: Business): string[] {
+    return business.images && business.images.length > 1
+      ? business.images.slice(1)
+      : [];
   }
 }

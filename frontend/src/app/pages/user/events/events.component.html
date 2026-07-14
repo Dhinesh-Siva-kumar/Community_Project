@@ -46,7 +46,7 @@
       <article class="ev-card-h">
         <div class="ev-card-h__img-wrap">
           @if (evt.images && evt.images.length > 0) {
-            <img [src]="evt.images[0]" [alt]="evt.title" class="ev-card-h__img" loading="lazy" />
+            <img [src]="evt.images[0]" [alt]="evt.title" class="ev-card-h__img" loading="lazy" fetchpriority="high" />
           } @else {
             <div class="ev-card-h__img-empty"><i class="bi bi-calendar-event"></i></div>
           }

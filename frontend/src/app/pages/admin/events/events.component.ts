@@ -5,6 +5,7 @@ import { EventService } from '../../../core/services/event.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -21,7 +22,7 @@ function endTimeValidator(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
@@ -42,6 +43,9 @@ export class AdminEventsComponent implements OnInit {
   searchQuery = signal('');
   activeFilter = signal<'all' | 'upcoming' | 'hybrid' | 'offline' | 'completed'>('all');
   sortBy = signal<'newest' | 'oldest' | 'date'>('newest');
+  
+  // Premium filter UI state
+  showAdvancedFilters = signal(false);
 
   // Statistics
   upcomingEvents = computed(() => {
@@ -88,6 +92,15 @@ export class AdminEventsComponent implements OnInit {
     }
 
     return result;
+  });
+
+  // Computed property: count of active filters
+  activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.searchQuery()) count++;
+    if (this.activeFilter() !== 'all') count++;
+    if (this.sortBy() !== 'newest') count++;
+    return count;
   });
 
   showAddModal      = signal(false);
@@ -249,6 +262,16 @@ export class AdminEventsComponent implements OnInit {
 
   setSortBy(sort: 'newest' | 'oldest' | 'date'): void {
     this.sortBy.set(sort);
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  clearAllFilters(): void {
+    this.searchQuery.set('');
+    this.activeFilter.set('all');
+    this.sortBy.set('newest');
   }
 
   getEventStatus(evt: AppEvent): { label: string; type: string } {

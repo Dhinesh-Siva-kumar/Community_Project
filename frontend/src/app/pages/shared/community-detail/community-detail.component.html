@@ -261,7 +261,7 @@
     <!-- Banner: only shown when community has an image -->
     @if (community()!.image) {
       <div class="cd-hero-banner">
-        <img [src]="community()!.image | imageUrl" [alt]="community()!.name" class="cd-banner-img" />
+        <img [src]="community()!.image | imageUrl" [alt]="community()!.name" class="cd-banner-img" loading="eager" />
         <div class="cd-banner-overlay"></div>
       </div>
     } @else {
@@ -276,7 +276,7 @@
         <!-- Community Avatar -->
         <div class="cd-community-avatar" [class.cd-community-avatar--lg]="!community()!.image">
           @if (community()!.image) {
-            <img [src]="community()!.image | imageUrl" [alt]="community()!.name" />
+            <img [src]="community()!.image | imageUrl" [alt]="community()!.name" loading="eager" />
           } @else {
             <div class="cd-avatar-placeholder">
               <i class="bi bi-people-fill"></i>
@@ -451,16 +451,16 @@
               <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
                 <div class="card-body">
                    <!-- Post header -->
-                  <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="post-avatar flex-shrink-0">
-                      @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" />
-                      } @else {
-                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
-                          {{ getUserInitials(post.user) }}
-                        </div>
-                      }
-                    </div>
+                   <div class="d-flex align-items-center gap-3 mb-3">
+                     <div class="post-avatar flex-shrink-0">
+                       @if (post.user?.avatar) {
+                         <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" appImageError />
+                       } @else {
+                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                           {{ getUserInitials(post.user) }}
+                         </div>
+                       }
+                     </div>
                     <div class="flex-grow-1">
                       <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
                       <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
@@ -491,20 +491,20 @@
 
                   <p class="post-content mb-3">{{ post.content }}</p>
 
-                  @if (post.images && post.images.length > 0) {
-                    <div class="post-images mb-3">
-                      @if (post.images.length === 1) {
-                        <img [src]="post.images[0]" alt="Post image" class="img-fluid rounded single-image" />
-                      } @else {
-                        <div class="image-grid">
-                          @for (img of post.images; track $index) {
-                            <img [src]="img" alt="Post image" class="rounded" />
-                          }
-                        </div>
-                      }
-                    </div>
-                  }
 
+                   @if (post.images && post.images.length > 0) {
+                      <div class="post-images mb-3">
+                        @if (post.images.length === 1) {
+                          <img [src]="post.images[0] | imageUrl" alt="Post image" class="img-fluid rounded single-image" appImageError />
+                        } @else {
+                          <div class="image-grid">
+                            @for (img of post.images; track $index) {
+                              <img [src]="img | imageUrl" alt="Post image" class="rounded" appImageError />
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
                   <!-- Post actions -->
                   <div class="d-flex gap-1 border-top pt-2">
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn"
@@ -535,7 +535,7 @@
                           <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                             <div class="comment-avatar flex-shrink-0">
                               @if (comment.user?.avatar) {
-                                <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" />
+                                <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" appImageError />
                               } @else {
                                 <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
                                   {{ getUserInitials(comment.user) }}
@@ -557,7 +557,7 @@
                         <div class="d-flex gap-2">
                           <div class="comment-avatar flex-shrink-0">
                             @if (currentUser()?.avatar) {
-                              <img [src]="currentUser()!.avatar" class="rounded-circle" />
+                              <img [src]="currentUser()!.avatar" class="rounded-circle" appImageError />
                             } @else {
                               <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
                                 {{ getUserInitials(currentUser()) }}
@@ -610,7 +610,7 @@
                   <div class="cd-compose-header">
                     <div class="post-avatar flex-shrink-0">
                       @if (currentUser()?.avatar) {
-                        <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" />
+                        <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                           {{ getUserInitials(currentUser()) }}
@@ -758,11 +758,11 @@
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mb-3">
                       @if (post.images.length === 1) {
-                        <img [src]="post.images[0]" alt="Post image" class="img-fluid rounded single-image" />
+                        <img [src]="post.images[0] | imageUrl" alt="Post image" class="img-fluid rounded single-image" />
                       } @else {
                         <div class="image-grid">
                           @for (img of post.images; track $index) {
-                            <img [src]="img" alt="Post image" class="rounded" />
+                            <img [src]="img | imageUrl" alt="Post image" class="rounded" />
                           }
                         </div>
                       }
@@ -936,11 +936,11 @@
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mb-3">
                       @if (post.images.length === 1) {
-                        <img [src]="post.images[0]" alt="Post image" class="img-fluid rounded single-image" />
+                        <img [src]="post.images[0] | imageUrl" alt="Post image" class="img-fluid rounded single-image" />
                       } @else {
                         <div class="image-grid">
                           @for (img of post.images; track $index) {
-                            <img [src]="img" alt="Post image" class="rounded" />
+                            <img [src]="img | imageUrl" alt="Post image" class="rounded" />
                           }
                         </div>
                       }

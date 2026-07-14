@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Post, Comment, PaginatedResponse, PostType } from '../models';
+import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 @Injectable({ providedIn: 'root' })
 export class PostService {
@@ -12,22 +13,22 @@ export class PostService {
     return this.api.get<PaginatedResponse<Post>>('/posts', { communityId, ...params });
   }
 
-  createPost(communityId: string, data: { content: string; type: PostType }, images?: File[]): Observable<Post> {
-    const body = { ...data, communityId };
-    if (images && images.length > 0) {
-      const files = images.map((file, index) => ({ field: 'images', file }));
-      return this.api.postWithFile<Post>('/posts', body, files);
-    }
-    return this.api.post<Post>('/posts', body);
-  }
+   createPost(communityId: string, data: { content: string; type: PostType }, images?: File[]): Observable<Post> {
+     const body = { ...data, communityId };
+     if (images && images.length > 0) {
+       const files = images.map((file, index) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+       return this.api.postWithFile<Post>('/posts', body, files);
+     }
+     return this.api.post<Post>('/posts', body);
+   }
 
-  updatePost(id: string, data: { content?: string; type?: PostType }, images?: File[]): Observable<Post> {
-    if (images && images.length > 0) {
-      const files = images.map((file) => ({ field: 'images', file }));
-      return this.api.putWithFile<Post>(`/posts/${id}`, data, files);
-    }
-    return this.api.put<Post>(`/posts/${id}`, data);
-  }
+   updatePost(id: string, data: { content?: string; type?: PostType }, images?: File[]): Observable<Post> {
+     if (images && images.length > 0) {
+       const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+       return this.api.putWithFile<Post>(`/posts/${id}`, data, files);
+     }
+     return this.api.put<Post>(`/posts/${id}`, data);
+   }
 
   deletePost(id: string): Observable<void> {
     return this.api.delete<void>(`/posts/${id}`);

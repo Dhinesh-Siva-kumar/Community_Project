@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 
@@ -16,7 +17,7 @@ type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageUrlPipe, FileUploadComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })

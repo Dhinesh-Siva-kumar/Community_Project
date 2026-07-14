@@ -489,13 +489,13 @@ export async function getDashboardStats(userId: string, role: string) {
         .select('j.id', 'j.title', 'j.created_at', 'u.display_name', 'u.user_name').orderBy('j.created_at', 'desc').limit(5),
     ]);
 
-    type ActivityItem = { type: string; message: string; createdAt: Date };
+    type ActivityItem = { type: string; userName: string; message: string; createdAt: Date };
     const activity: ActivityItem[] = [
-      ...(recentUsers as any[]).map((u) => ({ type: 'user', message: `New user registered: ${u.display_name || u.user_name}`, createdAt: u.created_at })),
-      ...(recentPosts as any[]).map((p) => ({ type: p.status === 'PENDING' ? 'pending_post' : p.type === 'EMERGENCY' ? 'emergency_post' : 'post', message: `${p.type} post in "${p.community_name}" by ${p.display_name ?? p.user_name}`, createdAt: p.created_at })),
-      ...(recentBusinesses as any[]).map((b) => ({ type: 'business', message: `New business: "${b.name}" by ${b.display_name ?? b.user_name}`, createdAt: b.created_at })),
-      ...(recentEvents as any[]).map((e) => ({ type: 'event', message: `New event: "${e.title}" by ${e.display_name ?? e.user_name}`, createdAt: e.created_at })),
-      ...(recentJobs as any[]).map((j) => ({ type: 'job', message: `New job: "${j.title}" by ${j.display_name ?? j.user_name}`, createdAt: j.created_at })),
+      ...(recentUsers as any[]).map((u) => ({ type: 'user', userName: u.display_name || u.user_name || 'User', message: `New user registered: ${u.display_name || u.user_name}`, createdAt: u.created_at })),
+      ...(recentPosts as any[]).map((p) => ({ type: p.status === 'PENDING' ? 'pending_post' : p.type === 'EMERGENCY' ? 'emergency_post' : 'post', userName: p.display_name ?? p.user_name ?? 'User', message: `${p.type} post in "${p.community_name}" by ${p.display_name ?? p.user_name}`, createdAt: p.created_at })),
+      ...(recentBusinesses as any[]).map((b) => ({ type: 'business', userName: b.display_name ?? b.user_name ?? 'User', message: `New business: "${b.name}" by ${b.display_name ?? b.user_name}`, createdAt: b.created_at })),
+      ...(recentEvents as any[]).map((e) => ({ type: 'event', userName: e.display_name ?? e.user_name ?? 'User', message: `New event: "${e.title}" by ${e.display_name ?? e.user_name}`, createdAt: e.created_at })),
+      ...(recentJobs as any[]).map((j) => ({ type: 'job', userName: j.display_name ?? j.user_name ?? 'User', message: `New job: "${j.title}" by ${j.display_name ?? j.user_name}`, createdAt: j.created_at })),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
     return {

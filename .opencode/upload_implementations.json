@@ -1,0 +1,329 @@
+﻿{
+    "totalImplementations":  7,
+    "timestamp":  "2026-07-09 03:13:43",
+    "title":  "Upload Implementations Analysis",
+    "implementations":  [
+                            {
+                                "endpoint":  "PUT /users/profile",
+                                "id":  1,
+                                "uploadField":  "avatar",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/profiles/{uuid}.ext",
+                                "multerConfig":  "uploadProfile",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/webp"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\user.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\shared\\components\\profile-avatar\\profile-avatar.component.ts",
+                                "uploadMode":  "Single",
+                                "databaseField":  "User.avatar",
+                                "serviceMethod":  "updateProfile(data, avatar?: File)",
+                                "maxSize":  "5 MB",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\users\\users.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe",
+                                "name":  "User Profile Avatar Upload",
+                                "maxFiles":  1,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\users\\users.controller.ts"
+                            },
+                            {
+                                "endpoint":  [
+                                                 "POST /business",
+                                                 "PUT /business/{id}"
+                                             ],
+                                "id":  2,
+                                "uploadField":  "images",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "multerConfig":  "uploadImages.array(\u0027images\u0027, 10)",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\business.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\user\\business\\business.component.ts",
+                                "uploadMode":  "Multiple",
+                                "databaseField":  "Business.images (array)",
+                                "serviceMethod":  [
+                                                      "createBusiness",
+                                                      "updateBusiness"
+                                                  ],
+                                "maxSize":  "5 MB each",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\business\\business.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe, ApiService",
+                                "name":  "Business Listings Images",
+                                "maxFiles":  10,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\business\\business.controller.ts"
+                            },
+                            {
+                                "endpoint":  [
+                                                 "POST /jobs",
+                                                 "PUT /jobs/{id}"
+                                             ],
+                                "id":  3,
+                                "uploadField":  "logo",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "multerConfig":  "uploadImages.fields([{name: \u0027logo\u0027, maxCount: 1}])",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\job.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\user\\jobs\\jobs.component.ts",
+                                "uploadMode":  "Single",
+                                "databaseField":  "Job.companyLogo",
+                                "serviceMethod":  [
+                                                      "createJob",
+                                                      "updateJob"
+                                                  ],
+                                "maxSize":  "5 MB",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\jobs\\jobs.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe, ApiService",
+                                "name":  "Job Listings - Logo",
+                                "maxFiles":  1,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\jobs\\jobs.controller.ts"
+                            },
+                            {
+                                "endpoint":  [
+                                                 "POST /jobs",
+                                                 "PUT /jobs/{id}"
+                                             ],
+                                "id":  4,
+                                "uploadField":  "images",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "multerConfig":  "uploadImages.fields([{name: \u0027images\u0027, maxCount: 10}])",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\job.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\user\\jobs\\jobs.component.ts",
+                                "uploadMode":  "Multiple",
+                                "databaseField":  "Job.images (array)",
+                                "serviceMethod":  [
+                                                      "createJob",
+                                                      "updateJob"
+                                                  ],
+                                "maxSize":  "5 MB each",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\jobs\\jobs.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe, ApiService",
+                                "name":  "Job Listings - Images",
+                                "maxFiles":  10,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\jobs\\jobs.controller.ts"
+                            },
+                            {
+                                "endpoint":  [
+                                                 "POST /events",
+                                                 "PUT /events/{id}"
+                                             ],
+                                "id":  5,
+                                "uploadField":  "images",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "multerConfig":  "uploadImages.array(\u0027images\u0027, 10)",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\event.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\user\\events\\events.component.ts",
+                                "uploadMode":  "Multiple",
+                                "databaseField":  "Event.images (array)",
+                                "serviceMethod":  [
+                                                      "createEvent",
+                                                      "updateEvent"
+                                                  ],
+                                "maxSize":  "5 MB each",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\events\\events.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe, ApiService",
+                                "name":  "Events Images",
+                                "maxFiles":  10,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\events\\events.controller.ts"
+                            },
+                            {
+                                "endpoint":  [
+                                                 "POST /posts",
+                                                 "PUT /posts/{id}"
+                                             ],
+                                "id":  6,
+                                "adminComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\admin\\post-approval\\post-approval.component.ts (displays only, no upload)",
+                                "uploadField":  "images",
+                                "type":  "Image",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "multerConfig":  "uploadImages.array(\u0027images\u0027, 10)",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "frontendService":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\post.service.ts",
+                                "frontendComponent":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\pages\\shared\\community-detail\\community-detail.component.ts",
+                                "uploadMode":  "Multiple",
+                                "databaseField":  "Post.images (array)",
+                                "serviceMethod":  [
+                                                      "createPost",
+                                                      "updatePost"
+                                                  ],
+                                "maxSize":  "5 MB each",
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\posts\\posts.router.ts",
+                                "sharedComponent":  "FileUploadComponent, ImageUrlPipe, ApiService",
+                                "name":  "Community Posts Images",
+                                "maxFiles":  10,
+                                "backendController":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\posts\\posts.controller.ts"
+                            },
+                            {
+                                "id":  7,
+                                "backendRouter":  "D:\\Infort Projects\\Community_Project\\backend\\src\\modules\\upload\\upload.router.ts",
+                                "maxFiles":  {
+                                                 "multiple":  10,
+                                                 "single":  1
+                                             },
+                                "multerConfig":  "uploadImages",
+                                "name":  "Generic Upload Endpoints",
+                                "type":  "Image/PDF",
+                                "uploadMode":  "Single/Multiple",
+                                "storageLocation":  "/uploads/{uuid}.ext",
+                                "allowedMIME":  [
+                                                    "image/jpeg",
+                                                    "image/png",
+                                                    "image/gif",
+                                                    "image/webp",
+                                                    "application/pdf"
+                                                ],
+                                "uploadFields":  [
+                                                     "file",
+                                                     "files"
+                                                 ],
+                                "maxSize":  "5 MB each",
+                                "note":  "Currently NOT used by frontend services - exists for future use or direct API calls",
+                                "endpoints":  {
+                                                  "multiple":  "POST /api/upload/multiple",
+                                                  "single":  "POST /api/upload"
+                                              }
+                            }
+                        ],
+    "storageStructure":  {
+                             "baseDirectory":  "D:\\Infort Projects\\Community_Project\\backend\\uploads",
+                             "structure":  {
+                                               "profiles/":  "User avatar images",
+                                               "videos/":  "Video files (unused)",
+                                               "certificates/":  "Certificates (unused)",
+                                               "resumes/":  "Job resumes (unused)",
+                                               "/":  "Business, Events, Jobs, Posts, Generic upload images"
+                                           }
+                         },
+    "keyPatterns":  [
+                        "All uploads use FormData with field-based file mapping",
+                        "File paths stored as /uploads/{filename} in database",
+                        "UUID + original extension for filename uniqueness",
+                        "FileReader.readAsDataURL for Base64 previews",
+                        "MIME type validation at multer level + file size limits",
+                        "Local disk storage (no S3 integration)",
+                        "ImageUrlPipe resolves relative paths for frontend display",
+                        "Consistent service pattern across all modules",
+                        "No direct API usage of generic /api/upload endpoints by frontend"
+                    ],
+    "multerConfiguration":  {
+                                "path":  "D:\\Infort Projects\\Community_Project\\backend\\src\\config\\multer.ts",
+                                "profiles":  {
+                                                 "uploadVideo":  {
+                                                                     "fileSize":  "200 MB",
+                                                                     "allowedMIME":  [
+                                                                                         "video/mp4",
+                                                                                         "video/webm",
+                                                                                         "video/quicktime"
+                                                                                     ],
+                                                                     "usage":  "Not currently used in UI",
+                                                                     "folder":  "videos"
+                                                                 },
+                                                 "uploadImages":  {
+                                                                      "fileSize":  "5 MB",
+                                                                      "allowedMIME":  [
+                                                                                          "image/jpeg",
+                                                                                          "image/png",
+                                                                                          "image/gif",
+                                                                                          "image/webp",
+                                                                                          "application/pdf"
+                                                                                      ],
+                                                                      "usage":  "Business, Events, Jobs, Posts, Generic endpoints",
+                                                                      "folder":  "root (uploads/)"
+                                                                  },
+                                                 "uploadResume":  {
+                                                                      "fileSize":  "10 MB",
+                                                                      "allowedMIME":  [
+                                                                                          "application/pdf",
+                                                                                          "application/msword",
+                                                                                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                                                      ],
+                                                                      "usage":  "Not currently used in UI",
+                                                                      "folder":  "resumes"
+                                                                  },
+                                                 "uploadCertificate":  {
+                                                                           "fileSize":  "10 MB",
+                                                                           "allowedMIME":  [
+                                                                                               "application/pdf",
+                                                                                               "image/jpeg",
+                                                                                               "image/png"
+                                                                                           ],
+                                                                           "usage":  "Not currently used in UI",
+                                                                           "folder":  "certificates"
+                                                                       },
+                                                 "uploadProfile":  {
+                                                                       "fileSize":  "5 MB",
+                                                                       "allowedMIME":  [
+                                                                                           "image/jpeg",
+                                                                                           "image/png",
+                                                                                           "image/webp"
+                                                                                       ],
+                                                                       "usage":  "User avatar uploads",
+                                                                       "folder":  "profiles"
+                                                                   }
+                                             }
+                            },
+    "sharedUtilities":  [
+                            {
+                                "path":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\shared\\components\\file-upload\\file-upload.component.ts",
+                                "description":  "Reusable upload handler with drag-drop, validation, and Base64 preview generation",
+                                "name":  "FileUploadComponent",
+                                "features":  [
+                                                 "Drag-drop support",
+                                                 "File validation (type, size)",
+                                                 "FileReader.readAsDataURL() for previews",
+                                                 "Single/Multi-file modes",
+                                                 "Dynamic file filtering by MIME type"
+                                             ]
+                            },
+                            {
+                                "path":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\shared\\pipes\\image-url.pipe.ts",
+                                "description":  "Converts relative upload paths to absolute URLs for display",
+                                "name":  "ImageUrlPipe",
+                                "logic":  "If relative (starts with /): prepend environment.wsUrl; If absolute: return as-is"
+                            },
+                            {
+                                "path":  "D:\\Infort Projects\\Community_Project\\frontend\\src\\app\\core\\services\\api.service.ts",
+                                "description":  "Handles FormData creation and multipart HTTP requests",
+                                "name":  "ApiService",
+                                "methods":  [
+                                                "postWithFile(path, data, files)",
+                                                "putWithFile(path, data, files)"
+                                            ]
+                            }
+                        ]
+}

@@ -54,6 +54,7 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       category_id: data.categoryId,
       description: data.description ?? null,
       images: data.images ?? [],
+      logo: data.logo ?? null,
       address: data.address ?? null,
       pincode: data.pincode ?? null,
       country: data.country ?? 'United Kingdom',
@@ -173,26 +174,27 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own business');
   }
 
-  const updateData: Record<string, unknown> = {};
-  if (data.name !== undefined) updateData['name'] = data.name;
-  if (data.categoryId !== undefined) updateData['category_id'] = data.categoryId;
-  if (data.description !== undefined) updateData['description'] = data.description;
-  if (data.images !== undefined) updateData['images'] = data.images;
-  if (data.address !== undefined) updateData['address'] = data.address;
-  if (data.pincode !== undefined) updateData['pincode'] = data.pincode;
-  if (data.country !== undefined) updateData['country'] = data.country;
-  if (data.location !== undefined) updateData['location'] = data.location;
-  if (data.latitude !== undefined) updateData['latitude'] = data.latitude;
-  if (data.longitude !== undefined) updateData['longitude'] = data.longitude;
-  if (data.phone !== undefined) updateData['phone'] = data.phone;
-  if (data.email !== undefined) updateData['email'] = data.email;
-  if (data.website !== undefined) updateData['website'] = data.website;
-  if (data.openingHours !== undefined) updateData['opening_hours'] = data.openingHours;
-  if (data.city !== undefined) updateData['city'] = data.city;
-  if (data.state !== undefined) updateData['state'] = data.state;
-  if (data.openingDays !== undefined) updateData['opening_days'] = data.openingDays;
-  if (data.whatsapp !== undefined) updateData['whatsapp'] = data.whatsapp;
-  if (data.mapsLink !== undefined) updateData['maps_link'] = data.mapsLink;
+   const updateData: Record<string, unknown> = {};
+   if (data.name !== undefined) updateData['name'] = data.name;
+   if (data.categoryId !== undefined) updateData['category_id'] = data.categoryId;
+   if (data.description !== undefined) updateData['description'] = data.description;
+   if (data.images !== undefined) updateData['images'] = data.images;
+   if (data.logo !== undefined) updateData['logo'] = data.logo;
+   if (data.address !== undefined) updateData['address'] = data.address;
+   if (data.pincode !== undefined) updateData['pincode'] = data.pincode;
+   if (data.country !== undefined) updateData['country'] = data.country;
+   if (data.location !== undefined) updateData['location'] = data.location;
+   if (data.latitude !== undefined) updateData['latitude'] = data.latitude;
+   if (data.longitude !== undefined) updateData['longitude'] = data.longitude;
+   if (data.phone !== undefined) updateData['phone'] = data.phone;
+   if (data.email !== undefined) updateData['email'] = data.email;
+   if (data.website !== undefined) updateData['website'] = data.website;
+   if (data.openingHours !== undefined) updateData['opening_hours'] = data.openingHours;
+   if (data.city !== undefined) updateData['city'] = data.city;
+   if (data.state !== undefined) updateData['state'] = data.state;
+   if (data.openingDays !== undefined) updateData['opening_days'] = data.openingDays;
+   if (data.whatsapp !== undefined) updateData['whatsapp'] = data.whatsapp;
+   if (data.mapsLink !== undefined) updateData['maps_link'] = data.mapsLink;
 
   await db('businesses').where({ id }).update(updateData);
   return findOne(id);

@@ -4,12 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { PostService } from '../../../core/services/post.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Post, PaginatedResponse } from '../../../core/models';
-import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+
+// Filter chip interface (for active filter display)
+export interface FilterChip { key: string; label: string; value: any; }
 
 @Component({
   selector: 'app-post-approval',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent],
+  imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './post-approval.component.html',
   styleUrls: ['./post-approval.component.scss'],
 })
@@ -33,6 +36,7 @@ export class PostApprovalComponent implements OnInit {
   // Filters
   filterCommunity = signal('');
   filterType = signal('');
+  showAdvancedFilters = signal(false);
 
   readonly postTypeOptions: SelectOption[] = [
     { value: '', label: 'All Types' },
@@ -59,6 +63,31 @@ export class PostApprovalComponent implements OnInit {
   });
 
   selectedCount = computed(() => this.selectedIds().size);
+
+  // Statistics by post type
+  postStats = computed(() => {
+    const posts = this.pendingPosts();
+    return {
+      total: posts.length,
+      general: posts.filter(p => p.type === 'GENERAL').length,
+      help: posts.filter(p => p.type === 'HELP').length,
+      emergency: posts.filter(p => p.type === 'EMERGENCY').length,
+    };
+  });
+
+  // Active filter chips for display
+  activeFilterChips = computed<FilterChip[]>(() => {
+    const chips: FilterChip[] = [];
+    const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
+    if (this.filterCommunity()) add('community', this.filterCommunity(), this.filterCommunity());
+    if (this.filterType()) {
+      const typeLabel = this.postTypeOptions.find(opt => opt.value === this.filterType())?.label ?? this.filterType();
+      add('type', typeLabel, this.filterType());
+    }
+    return chips;
+  });
+
+  activeFilterCount = computed(() => this.activeFilterChips().length);
 
   ngOnInit(): void {
     this.loadPendingPosts();
@@ -207,6 +236,30 @@ export class PostApprovalComponent implements OnInit {
         },
       });
     });
+  }
+
+  // Filters & Search
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update((v) => !v);
+  }
+
+  clearFilters(): void {
+    this.filterCommunity.set('');
+    this.filterType.set('');
+    this.selectedIds.set(new Set());
+    this.selectAll.set(false);
+  }
+
+  removeFilter(key: string): void {
+    switch (key) {
+      case 'community':
+        this.filterCommunity.set('');
+        break;
+      case 'type':
+        this.filterType.set('');
+        break;
+    }
   }
 
   // Filters

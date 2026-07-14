@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Event, PaginatedResponse } from '../models';
+import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 @Injectable({ providedIn: 'root' })
 export class EventService {
@@ -19,21 +20,21 @@ export class EventService {
     return this.api.get<Event>(`/events/${id}`);
   }
 
-  createEvent(data: Record<string, any>, images?: File[]): Observable<Event> {
-    if (images && images.length > 0) {
-      const files = images.map((file) => ({ field: 'images', file }));
-      return this.api.postWithFile<Event>('/events', data, files);
-    }
-    return this.api.post<Event>('/events', data);
-  }
+   createEvent(data: Record<string, any>, images?: File[]): Observable<Event> {
+     if (images && images.length > 0) {
+       const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+       return this.api.postWithFile<Event>('/events', data, files);
+     }
+     return this.api.post<Event>('/events', data);
+   }
 
-  updateEvent(id: string, data: Record<string, any>, images?: File[]): Observable<Event> {
-    if (images && images.length > 0) {
-      const files = images.map((file) => ({ field: 'images', file }));
-      return this.api.putWithFile<Event>(`/events/${id}`, data, files);
-    }
-    return this.api.put<Event>(`/events/${id}`, data);
-  }
+   updateEvent(id: string, data: Record<string, any>, images?: File[]): Observable<Event> {
+     if (images && images.length > 0) {
+       const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+       return this.api.putWithFile<Event>(`/events/${id}`, data, files);
+     }
+     return this.api.put<Event>(`/events/${id}`, data);
+   }
 
   deleteEvent(id: string): Observable<void> {
     return this.api.delete<void>(`/events/${id}`);

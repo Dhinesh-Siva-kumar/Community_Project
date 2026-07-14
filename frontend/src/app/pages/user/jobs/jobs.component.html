@@ -322,7 +322,7 @@
             <div class="jb-card__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
               @if (getCompanyLogoSrc(job)) {
                 <img [src]="getCompanyLogoSrc(job)!" [alt]="job.companyName ?? job.title"
-                  class="jb-card__logo-img" loading="lazy" />
+                  class="jb-card__logo-img" loading="lazy" fetchpriority="high" />
               } @else {
                 <span class="jb-card__logo-initials">{{ getPosterInitials(job) }}</span>
               }
@@ -787,12 +787,12 @@
                     <i class="bi bi-images"></i>
                     <span>Gallery</span>
                   </div>
-                  <div class="jbd-gallery">
-                    @for (img of job.images; track $index) {
-                      <img [src]="img" [alt]="job.title + ' image ' + ($index + 1)"
-                        class="jbd-gallery__img" loading="lazy" />
-                    }
-                  </div>
+                   <div class="jbd-gallery">
+                     @for (img of job.images; track $index) {
+                       <img [src]="img" [alt]="job.title + ' image ' + ($index + 1)"
+                         class="jbd-gallery__img" loading="lazy" fetchpriority="auto" />
+                     }
+                   </div>
                 </div>
               }
 

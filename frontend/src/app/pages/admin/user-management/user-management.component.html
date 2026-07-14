@@ -28,24 +28,23 @@
 ══════════════════════════════════════════════════════════════ -->
 <div class="um-layout" (click)="closeDropdowns()">
 
-  <!-- ── Page Header ──────────────────────────────────────────── -->
-  <div class="um-header">
-    <div class="um-header__text">
-      <h4 class="um-header__title">User Management</h4>
-      <p class="um-header__subtitle">{{ subtitle() }}</p>
+  <!-- ── Premium Page Header ──────────────────────────────────── -->
+  <div class="jb-page-header">
+    <div class="jb-page-header__left">
+      <h2 class="jb-page-header__title">User Management</h2>
+      <p class="jb-page-header__sub">{{ subtitle() }}</p>
     </div>
-    <div class="um-header__actions">
+    <div class="jb-page-header__actions">
       <!-- Export -->
       <div class="um-export-wrap" (click)="$event.stopPropagation()">
-        <button class="btn btn-outline-secondary btn-sm um-export-btn"
-          (click)="toggleExportMenu($event)" [disabled]="exporting()">
+        <button class="jb-btn jb-btn--ghost jb-btn--sm" 
+          (click)="toggleExportMenu($event)" [disabled]="exporting()" aria-label="Export users">
           @if (exporting()) {
             <span class="spinner-border spinner-border-sm me-1"></span>
           } @else {
-            <i class="bi bi-download me-1"></i>
+            <i class="bi bi-download"></i>
           }
-          Export
-          <i class="bi bi-chevron-down ms-1 um-chevron" [class.rotate]="exportMenuOpen()"></i>
+          <span>Export</span>
         </button>
         @if (exportMenuOpen()) {
           <div class="um-export-menu">
@@ -59,8 +58,9 @@
         }
       </div>
       <!-- Add User -->
-      <button class="btn btn-primary btn-sm um-add-btn" (click)="showAddDrawer.set(true)">
-        <i class="bi bi-person-plus-fill me-1"></i> Add User
+      <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="showAddDrawer.set(true)" aria-label="Add new user">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Add User</span>
       </button>
     </div>
   </div>
@@ -74,110 +74,140 @@
 
   <!-- ── Users Tab ─────────────────────────────────────────── -->
   @if (activeTab() === 'users') {
-  <div class="um-users-section">
-  <div class="um-stats">
-    <button class="um-stat" [class.um-stat--active]="filterStatus() === ''"
-      (click)="setStatFilter('')">
-      <div class="um-stat__icon" style="--ic:#4f46e5;--bg:#eef2ff">
+  <!-- Stats Bar (outside scroll container) -->
+  <div class="admin-stats-bar">
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === ''"
+      (click)="setStatFilter('')" aria-label="Filter by all users">
+      <div class="admin-stat-card__icon" style="--ic:#4f46e5;--bg:#eef2ff">
         <i class="bi bi-people-fill"></i>
       </div>
-      <div class="um-stat__body">
-        <span class="um-stat__value">{{ stats().total }}</span>
-        <span class="um-stat__label">Total Users</span>
+      <div class="admin-stat-card__content">
+        <span class="admin-stat-card__value">{{ stats().total }}</span>
+        <span class="admin-stat-card__label">Total Users</span>
       </div>
     </button>
 
-    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'active'"
-      (click)="setStatFilter('active')">
-      <div class="um-stat__icon" style="--ic:#059669;--bg:#ecfdf5">
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'active'"
+      (click)="setStatFilter('active')" aria-label="Filter by active users">
+      <div class="admin-stat-card__icon" style="--ic:#059669;--bg:#ecfdf5">
         <i class="bi bi-check-circle-fill"></i>
       </div>
-      <div class="um-stat__body">
-        <span class="um-stat__value">{{ stats().active }}</span>
-        <span class="um-stat__label">Active</span>
+      <div class="admin-stat-card__content">
+        <span class="admin-stat-card__value">{{ stats().active }}</span>
+        <span class="admin-stat-card__label">Active</span>
       </div>
-      @if (filterStatus() === 'active') {
-        <span class="um-stat__filter-dot"></span>
-      }
     </button>
 
-    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'blocked'"
-      (click)="setStatFilter('blocked')">
-      <div class="um-stat__icon" style="--ic:#dc2626;--bg:#fef2f2">
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'blocked'"
+      (click)="setStatFilter('blocked')" aria-label="Filter by blocked users">
+      <div class="admin-stat-card__icon" style="--ic:#dc2626;--bg:#fef2f2">
         <i class="bi bi-slash-circle-fill"></i>
       </div>
-      <div class="um-stat__body">
-        <span class="um-stat__value">{{ stats().blocked }}</span>
-        <span class="um-stat__label">Blocked</span>
+      <div class="admin-stat-card__content">
+        <span class="admin-stat-card__value">{{ stats().blocked }}</span>
+        <span class="admin-stat-card__label">Blocked</span>
       </div>
-      @if (filterStatus() === 'blocked') {
-        <span class="um-stat__filter-dot"></span>
-      }
     </button>
 
-    <button class="um-stat" [class.um-stat--active]="filterStatus() === 'trusted'"
-      (click)="setStatFilter('trusted')">
-      <div class="um-stat__icon" style="--ic:#d97706;--bg:#fffbeb">
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'trusted'"
+      (click)="setStatFilter('trusted')" aria-label="Filter by trusted users">
+      <div class="admin-stat-card__icon" style="--ic:#d97706;--bg:#fffbeb">
         <i class="bi bi-shield-fill-check"></i>
       </div>
-      <div class="um-stat__body">
-        <span class="um-stat__value">{{ stats().trusted }}</span>
-        <span class="um-stat__label">Trusted</span>
+      <div class="admin-stat-card__content">
+        <span class="admin-stat-card__value">{{ stats().trusted }}</span>
+        <span class="admin-stat-card__label">Trusted</span>
       </div>
-      @if (filterStatus() === 'trusted') {
-        <span class="um-stat__filter-dot"></span>
-      }
     </button>
   </div>
 
-  <!-- ── Filter Bar ──────────────────────────────────────────── -->
-  <div class="um-filter-card">
-    <div class="um-search-wrap">
-      <i class="bi bi-search um-search-icon"></i>
-      <input type="text" class="um-search-input"
+  <!-- Premium Filter Panel (outside scroll container) -->
+  <div class="jb-filter-panel">
+    <!-- Search Bar -->
+    <div class="jb-search-wrap">
+      <i class="bi bi-search jb-search-icon"></i>
+      <input type="text" class="jb-search-input"
         placeholder="Search by name, email or phone…"
         [ngModel]="searchInput()"
         (ngModelChange)="searchInput.set($event)"
-        (keydown)="onSearchKeydown($event)" />
+        (keydown)="onSearchKeydown($event)"
+        aria-label="Search users" />
     </div>
 
-    <select class="um-select" [ngModel]="filterRole()"
-      (ngModelChange)="filterRole.set($event); onFilterChange()">
+    <!-- Basic Filters -->
+    <select class="jb-filter-select" [ngModel]="filterRole()"
+      (ngModelChange)="filterRole.set($event); onFilterChange()"
+      aria-label="Filter by role">
       <option value="">All Roles</option>
       <option value="ADMIN">Admin</option>
       <option value="USER">User</option>
     </select>
 
-    <select class="um-select" [ngModel]="filterStatus()"
-      (ngModelChange)="filterStatus.set($event); onFilterChange()">
+    <select class="jb-filter-select" [ngModel]="filterStatus()"
+      (ngModelChange)="filterStatus.set($event); onFilterChange()"
+      aria-label="Filter by status">
       <option value="">All Status</option>
       <option value="active">Active</option>
       <option value="blocked">Blocked</option>
       <option value="trusted">Trusted</option>
     </select>
 
-    <select class="um-select" [ngModel]="filterJoined()"
-      (ngModelChange)="filterJoined.set($event); onFilterChange()">
-      <option value="">All Time</option>
-      <option value="today">Today</option>
-      <option value="7d">Last 7 Days</option>
-      <option value="30d">Last 30 Days</option>
-      <option value="90d">Last 3 Months</option>
-    </select>
+    <!-- Advanced Filters Toggle -->
+    <button class="jb-advanced-toggle" 
+      (click)="toggleAdvancedFilters()"
+      [class.active]="showAdvancedFilters()"
+      aria-label="Toggle advanced filters" aria-expanded="showAdvancedFilters()">
+      <i class="bi" [ngClass]="showAdvancedFilters() ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      <span>More</span>
+    </button>
 
-    <div class="um-filter-divider"></div>
-
-    <button class="btn btn-primary btn-sm um-search-btn" (click)="applyFilters()">
-      <i class="bi bi-search me-1"></i> Search
+    <!-- Search & Clear Actions -->
+    <button class="jb-btn jb-btn--solid jb-btn--sm" (click)="applyFilters()" aria-label="Apply search">
+      <i class="bi bi-search"></i>
+      <span>Search</span>
     </button>
 
     @if (activeFilterCount() > 0) {
-      <button class="btn btn-outline-secondary btn-sm um-clear-btn" (click)="clearFilters()">
-        <i class="bi bi-x-circle me-1"></i> Clear
-        <span class="um-clear-badge">{{ activeFilterCount() }}</span>
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()" aria-label="Clear all filters">
+        <i class="bi bi-x-circle"></i>
+        <span>Clear</span>
+        <span class="jb-badge-sm">{{ activeFilterCount() }}</span>
       </button>
     }
   </div>
+
+  <!-- Advanced Filters Panel (outside scroll container) -->
+  @if (showAdvancedFilters()) {
+    <div class="jb-advanced-panel">
+      <select class="jb-filter-select" [ngModel]="filterJoined()"
+        (ngModelChange)="filterJoined.set($event); onFilterChange()"
+        aria-label="Filter by join date">
+        <option value="">All Time</option>
+        <option value="today">Today</option>
+        <option value="7d">Last 7 Days</option>
+        <option value="30d">Last 30 Days</option>
+        <option value="90d">Last 3 Months</option>
+      </select>
+    </div>
+  }
+
+  <!-- Active Filter Chips (outside scroll container) -->
+  @if (activeFilterChips().length > 0) {
+    <div class="jb-active-chips">
+      @for (chip of activeFilterChips(); track chip.key) {
+        <div class="jb-chip">
+          <span class="jb-chip__label">{{ chip.label }}</span>
+          <button class="jb-chip__remove" (click)="removeFilter(chip.key)" 
+            [attr.aria-label]="'Remove ' + chip.label + ' filter'">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Scrollable User Table Section -->
+  <div class="um-users-section">
 
   <!-- ── Bulk Action Bar ────────────────────────────────────── -->
   @if (selectedCount() > 0) {

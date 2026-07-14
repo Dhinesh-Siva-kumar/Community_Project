@@ -172,7 +172,7 @@
               <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
                 <div class="d-flex align-items-center gap-3">
                   @if (biz.images.length) {
-                    <img [src]="biz.images[0]" class="rounded" width="50" height="50" style="object-fit:cover;" [alt]="biz.name" />
+                    <img [src]="biz.images[0]" class="rounded" width="50" height="50" style="object-fit:cover;" [alt]="biz.name" loading="lazy" fetchpriority="auto" />
                   } @else {
                     <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
                       <i class="bi bi-shop text-muted"></i>

@@ -1,4 +1,109 @@
-<!-- Loading State -->
+<!-- ═══════════════════════════════════════════════════════════
+     ADMIN POST APPROVAL — Premium Design
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<div class="jb-page-header">
+  <div class="jb-page-header__left">
+    <h2 class="jb-page-header__title">Post Approval</h2>
+    <p class="jb-page-header__sub">Review and moderate community posts pending approval.</p>
+  </div>
+  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="loadPendingPosts()" aria-label="Refresh pending posts">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+</div>
+
+<!-- ── STATS BAR ────────────────────────────────────────────── -->
+@if (!loading()) {
+  <div class="admin-stats-bar">
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-file-earmark-text"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ postStats().total }}</span>
+        <span class="admin-stat-card__label">Pending Posts</span>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-chat-left"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ postStats().general }}</span>
+        <span class="admin-stat-card__label">General</span>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ postStats().help }}</span>
+        <span class="admin-stat-card__label">Help</span>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-lightning-fill"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ postStats().emergency }}</span>
+        <span class="admin-stat-card__label">Emergency</span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── TOOLBAR ───────────────────────────────────────────────── -->
+<div class="jb-filter-panel">
+  <div class="jb-filter-row jb-filter-row--top">
+    <div class="jb-search-wrap">
+      <i class="bi bi-search jb-search-wrap__icon"></i>
+      <input type="search" class="jb-search-wrap__input"
+        placeholder="Filter by community name…"
+        [value]="filterCommunity()" (input)="onFilterCommunity($event)" autocomplete="off"
+        aria-label="Filter by community" />
+      @if (filterCommunity()) {
+        <button class="jb-search-wrap__clear" (click)="filterCommunity.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
+      }
+    </div>
+    <!-- Advanced filters -->
+    <div class="jb-filter-row">
+      <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+        <i class="bi bi-sliders2"></i>
+        Advanced Filters
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
+        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+      </button>
+      @if (activeFilterCount() > 0) {
+        <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+      }
+    </div>
+  </div>
+
+  @if (showAdvancedFilters()) {
+    <div class="jb-advanced-panel animate-slide-in-up">
+      <div class="jb-filter-row">
+        <span class="jb-filter-section-label"><i class="bi bi-tag"></i> Post Type</span>
+        <div class="jb-chip-group" role="group">
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === ''" (click)="filterType.set('')">All</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'GENERAL'" (click)="filterType.set('GENERAL')">General</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'HELP'" (click)="filterType.set('HELP')">Help</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'EMERGENCY'" (click)="filterType.set('EMERGENCY')">Emergency</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
+@if (activeFilterChips().length > 0) {
+  <div class="jb-active-chips" role="group" aria-label="Active filters">
+    <span class="jb-active-chips__label">Active:</span>
+    @for (chip of activeFilterChips(); track chip.key) {
+      <span class="jb-active-chip">
+        {{ chip.label }}
+        <button class="jb-active-chip__remove" (click)="removeFilter(chip.key)"><i class="bi bi-x"></i></button>
+      </span>
+    }
+    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearFilters()">Clear All</button>
+  </div>
+}
+
+<!-- ── CONTENT SECTION ──────────────────────────────────────── -->
 @if (loading()) {
   <div class="d-flex justify-content-center align-items-center py-5">
     <div class="text-center">
@@ -9,85 +114,49 @@
     </div>
   </div>
 } @else {
-  <!-- Page Header -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <div class="d-flex align-items-center gap-2">
-      <h4 class="fw-bold mb-0">Post Approval</h4>
-      <span class="badge bg-warning text-dark">{{ pendingCount() }} pending</span>
+  <!-- Bulk Actions Bar -->
+  <div class="jb-bulk-actions-bar">
+    <div class="jb-bulk-actions-left">
+      <button class="btn btn-outline-secondary btn-sm" (click)="toggleSelectAll()">
+        <i class="bi" [ngClass]="selectAll() ? 'bi-check-square' : 'bi-square'"></i>
+        {{ selectAll() ? 'Deselect All' : 'Select All' }}
+      </button>
     </div>
-    <button class="btn btn-outline-primary btn-sm" (click)="loadPendingPosts()">
-      <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-    </button>
-  </div>
-
-  <!-- Filters & Bulk Actions -->
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-3">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label class="form-label small fw-semibold">Filter by Community</label>
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            placeholder="Search community..."
-            [value]="filterCommunity()"
-            (input)="onFilterCommunity($event)"
-          />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small fw-semibold">Post Type</label>
-          <app-searchable-select
-            [ngModel]="filterType()"
-            (ngModelChange)="filterType.set($event)"
-            [options]="postTypeOptions"
-            placeholder="All Types"
-          ></app-searchable-select>
-        </div>
-        <div class="col-md-5">
-          <div class="d-flex gap-2 justify-content-md-end">
-            <button
-              class="btn btn-outline-secondary btn-sm"
-              (click)="toggleSelectAll()"
-            >
-              <i class="bi" [ngClass]="selectAll() ? 'bi-check-square' : 'bi-square'"></i>
-              {{ selectAll() ? 'Deselect All' : 'Select All' }}
-            </button>
-            @if (selectedCount() > 0) {
-              <button
-                class="btn btn-success btn-sm"
-                [disabled]="bulkProcessing()"
-                (click)="approveSelected()"
-              >
-                @if (bulkProcessing()) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>
-                }
-                Approve ({{ selectedCount() }})
-              </button>
-              <button
-                class="btn btn-danger btn-sm"
-                [disabled]="bulkProcessing()"
-                (click)="rejectSelected()"
-              >
-                Reject ({{ selectedCount() }})
-              </button>
-            }
-          </div>
-        </div>
-      </div>
+    <div class="jb-bulk-actions-right">
+      @if (selectedCount() > 0) {
+        <span class="jb-selection-count">{{ selectedCount() }} selected</span>
+        <button
+          class="btn btn-success btn-sm"
+          [disabled]="bulkProcessing()"
+          (click)="approveSelected()"
+        >
+          @if (bulkProcessing()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          Approve ({{ selectedCount() }})
+        </button>
+        <button
+          class="btn btn-danger btn-sm"
+          [disabled]="bulkProcessing()"
+          (click)="rejectSelected()"
+        >
+          Reject ({{ selectedCount() }})
+        </button>
+      }
     </div>
   </div>
 
   <!-- Post Cards -->
   @if (filteredPosts().length === 0) {
-    <div class="empty-state text-center py-5">
-      <div class="empty-icon mb-3">
-        <i class="bi bi-check-circle"></i>
+    <div class="jb-empty" role="status">
+      <div class="jb-empty__illustration">
+        <i class="bi bi-check-circle" style="font-size: 3rem; color: #10B981;"></i>
       </div>
-      <h5 class="fw-bold text-dark">All caught up!</h5>
-      <p class="text-muted">There are no pending posts to review.</p>
+      <h5 class="jb-empty__title">All caught up!</h5>
+      <p class="jb-empty__text">There are no pending posts to review.</p>
     </div>
   } @else {
-    <div class="d-flex flex-column gap-3">
+    <div class="jb-posts-grid">
       @for (post of filteredPosts(); track post.id) {
         <div class="card post-card border-0 shadow-sm" [class.selected]="isSelected(post.id)">
           <div class="card-body">
