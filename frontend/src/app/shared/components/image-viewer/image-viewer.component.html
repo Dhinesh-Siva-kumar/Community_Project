@@ -1,0 +1,70 @@
+<!-- Image Viewer Modal Overlay -->
+<div class="iv-overlay" 
+  [class.iv-overlay--open]="isOpen()" 
+  (click)="onBackdropClick($event)"
+  role="presentation">
+  
+  <div class="iv-container">
+    <!-- Close Button -->
+    <button 
+      class="iv-close-btn" 
+      (click)="closeViewer()"
+      type="button"
+      title="Close (Esc)"
+      aria-label="Close image viewer">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <!-- Main Image Display -->
+    <div class="iv-main">
+      @if (currentImage(); as image) {
+        <div class="iv-image-wrapper">
+          <img 
+            [src]="image | imageUrl" 
+            [alt]="'Image ' + imagePosition()"
+            class="iv-image"
+            (load)="onImageLoad()"
+            (error)="onImageError()"
+            loading="eager" />
+          
+          <!-- Loading spinner -->
+          @if (isLoading()) {
+            <div class="iv-loading">
+              <div class="iv-spinner"></div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Navigation Controls -->
+    @if (imageCount() > 1) {
+      <div class="iv-controls">
+        <!-- Previous Button -->
+        <button 
+          class="iv-nav-btn iv-nav-btn--prev"
+          (click)="previousImage()"
+          [disabled]="!canGoPrevious()"
+          type="button"
+          title="Previous (←)"
+          aria-label="Previous image">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <!-- Image Counter -->
+        <div class="iv-counter">{{ imagePosition() }}</div>
+
+        <!-- Next Button -->
+        <button 
+          class="iv-nav-btn iv-nav-btn--next"
+          (click)="nextImage()"
+          [disabled]="!canGoNext()"
+          type="button"
+          title="Next (→)"
+          aria-label="Next image">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    }
+  </div>
+</div>

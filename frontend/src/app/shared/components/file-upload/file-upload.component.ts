@@ -11,6 +11,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 
 export type UploadMode = 'single' | 'multi';
 export type UploadVariant = 'default' | 'avatar';
@@ -18,7 +19,7 @@ export type UploadVariant = 'default' | 'avatar';
 @Component({
   selector: 'app-file-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ImageUrlPipe],
   templateUrl: './file-upload.component.html',
   styleUrls: ['./file-upload.component.scss'],
 })
@@ -30,6 +31,7 @@ export class FileUploadComponent implements OnChanges {
   @Input() maxFiles = 10;
   @Input() label = 'Drag & drop or click to browse';
   @Input() existingPreview: string | null | undefined = null;
+  @Input() existingPreviews: string[] | undefined = undefined;
   @Input() showError = false;
   @Input() errorMessage = 'This field is required.';
   @Input() resetCounter = 0;
@@ -48,6 +50,13 @@ export class FileUploadComponent implements OnChanges {
   readonly displayPreview = computed<string | null>(() =>
     this.previews()[0] ?? this.existingPreview ?? null,
   );
+
+  /** For multi-mode: combine newly uploaded and existing previews */
+  readonly allPreviews = computed<string[]>(() => {
+    const newPreviews = this.previews();
+    const existingPreviews = this.existingPreviews ?? [];
+    return [...newPreviews, ...existingPreviews];
+  });
 
   ngOnChanges(changes: SimpleChanges): void {
     const ep = changes['existingPreview'];

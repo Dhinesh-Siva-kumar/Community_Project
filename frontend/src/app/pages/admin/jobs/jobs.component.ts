@@ -15,6 +15,8 @@ import { SelectOption, SearchableSelectComponent } from '../../../shared/compone
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
@@ -57,7 +59,7 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective,
+    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
@@ -153,6 +155,11 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // Show-more/less for job descriptions
   expandedDescIds = signal<Set<string>>(new Set());
 
+  // ─── Image Viewer ────────────────────────────────────────────
+  imageViewerOpen = signal(false);
+  imageViewerImages = signal<string[]>([]);
+  imageViewerInitialIndex = signal(0);
+
   isDescExpanded(jobId: string): boolean { return this.expandedDescIds().has(jobId); }
   toggleDescription(jobId: string, event: Event): void {
     event.stopPropagation();
@@ -164,6 +171,18 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   }
   isDescLong(job: Job): boolean { return (this.getDescription(job)?.length ?? 0) > 400; }
   getShortDescription(job: Job): string { return this.getDescription(job).substring(0, 400) + '…'; }
+
+  // ─── Image Viewer ────────────────────────────────────────────
+  openImageViewer(images: string[], index: number = 0, event: Event): void {
+    event.stopPropagation();
+    this.imageViewerImages.set(images);
+    this.imageViewerInitialIndex.set(index);
+    this.imageViewerOpen.set(true);
+  }
+
+  closeImageViewer(): void {
+    this.imageViewerOpen.set(false);
+  }
 
   // ─── Modal ───────────────────────────────────────────────────
   showAddModal    = signal(false);
