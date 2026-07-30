@@ -1,34 +1,44 @@
-import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
+import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
+import { Community, CommunityMember, CommunityRequest, Country, Post, Comment, PostType, interests } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 
 type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, SearchableSelectComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
-export class CommunityDetailComponent implements OnInit {
+export class CommunityDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
+  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+
+  countries: Country[] = [];
+  interests: interests[] = [];
+  countryOptions: SelectOption[] = [];
+  interestOptions: SelectOption[] = [];
 
   // Signals
   community = signal<Community | null>(null);
@@ -60,6 +70,11 @@ export class CommunityDetailComponent implements OnInit {
   // Admin actions — delete modal
   deleteModalOpen    = signal(false);
   deletingCommunity  = signal(false);
+  editCommunityModalOpen = signal(false);
+  savingCommunityEdit = signal(false);
+  selectedCommunityImage = signal<File | null>(null);
+  communityImageResetCounter = signal(0);
+  communityFormSubmitAttempted = signal(false);
 
   // Post options menu (three-dot)
   postMenuOpenId = signal<string | null>(null);
@@ -96,7 +111,17 @@ export class CommunityDetailComponent implements OnInit {
   editPostForm: FormGroup = this.fb.group({
     content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
   });
+  communityEditForm: FormGroup = this.fb.group({
+    communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+    description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(500)]],
+    interests: [null, Validators.required],
+    countryId: [null, Validators.required],
+    visibility: ['', Validators.required],
+    isDefault: [false],
+  });
   commentForms: Map<string, FormGroup> = new Map();
+  private previousBodyOverflow: string | null = null;
+  private previousHtmlOverflow: string | null = null;
 
   // ── Computed ──────────────────────────────────────────────
   currentUser    = computed(() => this.authService.currentUser());
@@ -136,6 +161,8 @@ export class CommunityDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForms();
+    this.loadCountries();
+    this.loadInterests();
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
@@ -154,6 +181,44 @@ export class CommunityDetailComponent implements OnInit {
     });
     this.editPostForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+    });
+    this.communityEditForm = this.fb.group({
+      communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+      description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(500)]],
+      interests: [null, Validators.required],
+      countryId: [null, Validators.required],
+      visibility: ['', Validators.required],
+      isDefault: [false],
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.unlockPageScroll();
+  }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.countries = res.data;
+        this.countryOptions = this.countries.map((country) => {
+          const flag = country.flag_emoji || [...country.iso2.toUpperCase()].map((ch) => String.fromCodePoint(127397 + ch.charCodeAt(0))).join('');
+          return { value: country.id, label: `${flag} ${country.name}` };
+        });
+      },
+      error: () => this.toast.error('Failed to load countries'),
+    });
+  }
+
+  loadInterests(): void {
+    this.authService.getInterests().subscribe({
+      next: (res) => {
+        this.interests = res.data;
+        this.interestOptions = this.interests.map((interest) => ({
+          value: interest.interest_id,
+          label: interest.interest_name,
+        }));
+      },
+      error: () => this.toast.error('Failed to load interests'),
     });
   }
 
@@ -405,12 +470,14 @@ export class CommunityDetailComponent implements OnInit {
     this.editImages.set([]);
     this.editImageResetCounter.update((n) => n + 1);
     this.editModalOpen.set(true);
+    this.syncPageScrollLock();
   }
 
   closeEditModal(): void {
     this.editModalOpen.set(false);
     this.editingPost.set(null);
     this.editPostForm.reset();
+    this.syncPageScrollLock();
   }
 
   setEditPostType(type: PostType): void { this.selectedEditType.set(type); }
@@ -444,11 +511,13 @@ export class CommunityDetailComponent implements OnInit {
     this.postMenuOpenId.set(null);
     this.deletePostTarget.set(post);
     this.deletePostModalOpen.set(true);
+    this.syncPageScrollLock();
   }
 
   closeDeletePostModal(): void {
     this.deletePostModalOpen.set(false);
     this.deletePostTarget.set(null);
+    this.syncPageScrollLock();
   }
 
   confirmDeletePost(): void {
@@ -469,8 +538,79 @@ export class CommunityDetailComponent implements OnInit {
 
   // ── Admin Actions ─────────────────────────────────────────
 
-  openDeleteModal():  void { this.deleteModalOpen.set(true); }
-  closeDeleteModal(): void { this.deleteModalOpen.set(false); }
+  openDeleteModal():  void { this.deleteModalOpen.set(true); this.syncPageScrollLock(); }
+  closeDeleteModal(): void { this.deleteModalOpen.set(false); this.syncPageScrollLock(); }
+
+  openEditCommunityModal(): void {
+    const current = this.community();
+    if (!current) return;
+
+    const visibility = current.is_private ? 'private' : current.is_global ? 'global' : 'default';
+    this.communityEditForm.patchValue({
+      communityName: current.name,
+      description: current.description ?? '',
+      interests: current.interest_id ?? null,
+      countryId: current.country_id ?? null,
+      visibility,
+      isDefault: current.is_default ?? false,
+    });
+
+    this.selectedCommunityImage.set(null);
+    this.communityImageResetCounter.update((n) => n + 1);
+    this.communityFormSubmitAttempted.set(false);
+    this.editCommunityModalOpen.set(true);
+    this.syncPageScrollLock();
+  }
+
+  closeEditCommunityModal(): void {
+    this.editCommunityModalOpen.set(false);
+    this.communityEditForm.reset();
+    this.selectedCommunityImage.set(null);
+    this.communityFormSubmitAttempted.set(false);
+    this.syncPageScrollLock();
+  }
+
+  onCommunityImageChange(files: File[]): void {
+    this.selectedCommunityImage.set(files[0] ?? null);
+  }
+
+  submitCommunityEdit(): void {
+    this.communityFormSubmitAttempted.set(true);
+    if (this.communityEditForm.invalid) {
+      this.communityEditForm.markAllAsTouched();
+      return;
+    }
+
+    const current = this.community();
+    if (!current) return;
+
+    this.savingCommunityEdit.set(true);
+    const file = this.selectedCommunityImage();
+
+    const upload$: Observable<{ path: string } | null> = file
+      ? this.apiService.postWithFile<{ path: string }>('/upload', {}, [{ field: FORM_DATA_FIELD_NAMES.FILE, file }])
+      : of(null);
+
+    upload$
+      .pipe(
+        switchMap((uploadResult) => {
+          const payload = this.mapCommunityEditPayload(uploadResult?.path ?? null);
+          return this.communityService.updateCommunity(current.id, payload);
+        })
+      )
+      .subscribe({
+        next: (updated) => {
+          this.community.set(updated);
+          this.toast.success('Community updated successfully');
+          this.savingCommunityEdit.set(false);
+          this.closeEditCommunityModal();
+        },
+        error: () => {
+          this.toast.error('Failed to update community');
+          this.savingCommunityEdit.set(false);
+        },
+      });
+  }
 
   onJoinCommunity(): void {
     this.joiningCommunity.set(true);
@@ -520,9 +660,49 @@ export class CommunityDetailComponent implements OnInit {
       error: () => {
         this.toast.error('Failed to delete community');
         this.deletingCommunity.set(false);
-        this.deleteModalOpen.set(false);
+        this.closeDeleteModal();
       },
     });
+  }
+
+  private syncPageScrollLock(): void {
+    const hasOpenModal =
+      this.deleteModalOpen() ||
+      this.editModalOpen() ||
+      this.deletePostModalOpen() ||
+      this.editCommunityModalOpen();
+
+    if (hasOpenModal) {
+      this.lockPageScroll();
+      return;
+    }
+    this.unlockPageScroll();
+  }
+
+  private lockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    if (this.previousBodyOverflow === null) {
+      this.previousBodyOverflow = body.style.overflow;
+    }
+    if (this.previousHtmlOverflow === null) {
+      this.previousHtmlOverflow = html.style.overflow;
+    }
+
+    body.style.overflow = 'hidden';
+    html.style.overflow = 'hidden';
+  }
+
+  private unlockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    body.style.overflow = this.previousBodyOverflow ?? '';
+    html.style.overflow = this.previousHtmlOverflow ?? '';
+
+    this.previousBodyOverflow = null;
+    this.previousHtmlOverflow = null;
   }
 
   getCommunityStatus(): { label: string; cls: string } {
@@ -544,6 +724,10 @@ export class CommunityDetailComponent implements OnInit {
 
   // ── Utility ───────────────────────────────────────────────
 
+  get cf() {
+    return this.communityEditForm.controls;
+  }
+
   getPostTypeBadge(type: PostType): { label: string; class: string; icon: string } {
     switch (type) {
       case 'EMERGENCY': return { label: 'Emergency', class: 'bg-danger',              icon: 'bi-exclamation-triangle-fill' };
@@ -563,6 +747,31 @@ export class CommunityDetailComponent implements OnInit {
 
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  private mapCommunityEditPayload(newImageUrl: string | null): CommunityRequest {
+    const form = this.communityEditForm.value;
+    const current = this.community();
+    const selectedCountry = this.countries.find((country) => country.id === form.countryId);
+
+    let image: string | undefined;
+    if (newImageUrl) {
+      image = newImageUrl;
+    } else {
+      image = current?.image ?? undefined;
+    }
+
+    return {
+      name: form.communityName,
+      description: form.description,
+      image,
+      interest_id: form.interests ?? undefined,
+      country_id: form.countryId ?? undefined,
+      country: selectedCountry?.name,
+      is_private: form.visibility === 'private',
+      is_global: form.visibility === 'global',
+      is_default: form.isDefault ?? false,
+    };
   }
 
   getUserInitials(user?: { displayName?: string; userName?: string } | null): string {

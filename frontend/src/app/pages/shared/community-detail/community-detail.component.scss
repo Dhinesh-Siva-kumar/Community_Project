@@ -1,4 +1,9 @@
 @use '../../../../assets/styles/index' as *;
+@use '../../admin/community/admin-community.component' as admin-community;
+
+:host {
+  --cd-sticky-top: #{$header-height};
+}
 
 // ============================================================
 // Community Detail — Premium Amber Design System
@@ -115,6 +120,38 @@
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
   border: 1px solid $color-stone-200;
+  position: relative;
+}
+
+.cd-hero-top-actions {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+}
+
+.cd-back-btn--in-hero {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+  color: $color-stone-700;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+
+  i {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  &:hover {
+    border-color: rgba($primary, 0.55);
+    background: rgba(255, 255, 255, 0.96);
+    color: $primary-dark;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+  }
 }
 
 // Banner (image present)
@@ -129,6 +166,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: scale(1.06);
+  filter: blur(3px);
 }
 
 .cd-banner-overlay {
@@ -137,7 +176,14 @@
   left: 0;
   right: 0;
   height: 90px;
-  background: linear-gradient(transparent, rgba(255,255,255,0.95));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 28%,
+    rgba(255, 255, 255, 0.58) 58%,
+    rgba(255, 255, 255, 0.9) 82%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
 }
 
 // Accent strip — replaces noisy placeholder when no image
@@ -378,12 +424,13 @@
 
   i { font-size: 11px; }
 
-  &.cd-chip-members  { background: $amber-50; color: $color-primary-darker; border: 1px solid $color-amber-200; }
-  &.cd-chip-posts    { background: $color-success-light; color: $color-success; border: 1px solid rgba($color-success, 0.2); }
-  &.cd-chip-category { background: rgba($color-primary-darker, 0.07); color: $color-primary-darker; border: 1px solid $color-amber-200; }
-  &.cd-chip-country  { background: $color-stone-100; color: $color-stone-700; border: 1px solid $color-stone-200; }
-  &.cd-chip-location { background: $color-stone-100; color: $color-stone-600; border: 1px solid $color-stone-200; }
-  &.cd-chip-date     { background: $color-stone-100; color: $color-stone-500; border: 1px solid $color-stone-200; }
+  &.cd-chip-members  { background: #fff7ed; color: #9a3412; border: 1px solid rgba(251, 146, 60, 0.36); }
+  &.cd-chip-posts    { background: #ecfdf3; color: #166534; border: 1px solid rgba(34, 197, 94, 0.32); }
+  &.cd-chip-category { background: #f5f3ff; color: #5b21b6; border: 1px solid rgba(139, 92, 246, 0.34); }
+  &.cd-chip-country  { background: #eff6ff; color: #1d4ed8; border: 1px solid rgba(59, 130, 246, 0.34); }
+  &.cd-chip-location { background: #f0fdfa; color: #0f766e; border: 1px solid rgba(20, 184, 166, 0.34); }
+  &.cd-chip-date     { background: #fdf4ff; color: #a21caf; border: 1px solid rgba(217, 70, 239, 0.3); }
+
 }
 
 // Visibility badge (hero title row + About tab info rows)
@@ -443,16 +490,16 @@
   flex-shrink: 0;
 
   &.cd-icon-btn--edit {
-    background: $amber-50;
-    color: $color-primary-darker;
-    border-color: $color-amber-200;
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.35);
 
     &:hover {
-      background: $color-amber-100;
-      border-color: $primary;
-      color: $primary-dark;
+      background: #dbeafe;
+      border-color: rgba(37, 99, 235, 0.55);
+      color: #1d4ed8;
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba($primary, 0.2);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
     }
   }
 
@@ -642,10 +689,12 @@
 .cd-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: $color-stone-100;
+  gap: 5px;
+  background: transparent;
   border-radius: 14px;
-  padding: 4px;
+  padding: 3px;
+  border: none;
+  box-shadow: none;
   flex-wrap: wrap;
 }
 
@@ -653,49 +702,67 @@
 
 .cd-tabs-wrap {
   position: sticky;
-  top: $header-height;
+  top: var(--cd-sticky-top);
   z-index: 100;
-  background: $color-stone-50;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
   margin-bottom: 20px;
-  padding-bottom: 4px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
 }
 
 .cd-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 40px;
-  padding: 0 14px;
+  height: 39px;
+  padding: 0 13px;
   border-radius: 10px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  color: $color-stone-500;
+  color: $color-stone-600;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   position: relative;
 
-  i { font-size: 13px; transition: transform 0.2s ease; }
+  i { font-size: 13px; transition: color 0.2s ease; }
   .cd-tab-label { line-height: 1; }
 
   &:hover {
-    color: $primary-dark;
-    background: rgba($primary, 0.07);
-    i { transform: scale(1.1); }
+    color: $color-stone-800;
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(148, 163, 184, 0.34);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($primary, 0.32);
+    outline-offset: 1px;
   }
 
   &.cd-tab-btn--active {
     background: $white;
-    color: $primary-dark;
+    color: $color-stone-900;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
-
-    i { transform: none; }
+    border-color: rgba(100, 116, 139, 0.32);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.09), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
   }
 
   // Help tab variant
+  &.cd-tab-btn--posts:hover,
+  &.cd-tab-btn--posts.cd-tab-btn--active {
+    color: #1d4ed8;
+  }
+
+  &.cd-tab-btn--posts.cd-tab-btn--active {
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.16), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  }
+
   &.cd-tab-btn--help:hover,
   &.cd-tab-btn--help.cd-tab-btn--active {
     color: $color-warning;
@@ -714,6 +781,24 @@
   &.cd-tab-btn--emergency.cd-tab-btn--active {
     box-shadow: 0 2px 8px rgba($danger, 0.12), 0 1px 3px rgba(0,0,0,0.04);
   }
+
+  &.cd-tab-btn--members:hover,
+  &.cd-tab-btn--members.cd-tab-btn--active {
+    color: #0f766e;
+  }
+
+  &.cd-tab-btn--members.cd-tab-btn--active {
+    box-shadow: 0 2px 8px rgba(15, 118, 110, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  }
+
+  &.cd-tab-btn--about:hover,
+  &.cd-tab-btn--about.cd-tab-btn--active {
+    color: #6d28d9;
+  }
+
+  &.cd-tab-btn--about.cd-tab-btn--active {
+    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  }
 }
 
 // Tab count badge
@@ -725,16 +810,16 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 10px;
-  background: $color-stone-200;
-  color: $color-stone-600;
+  background: #e2e8f0;
+  color: #475569;
   font-size: 10.5px;
   font-weight: 700;
   line-height: 1;
   transition: all 0.2s ease;
 
   .cd-tab-btn--active & {
-    background: $amber-50;
-    color: $color-primary-darker;
+    background: #dbeafe;
+    color: #1d4ed8;
   }
 
   &.cd-tab-badge--help {
@@ -784,11 +869,20 @@
 }
 
 .cd-feed-col,
-.cd-sidebar-col { min-width: 0; }
+.cd-sidebar-col {
+  min-width: 0;
+  overflow: visible;
+}
+
+.cd-sidebar-col {
+  align-self: stretch;
+}
 
 .cd-sidebar-sticky {
+  position: -webkit-sticky;
   position: sticky;
-  top: calc(#{$header-height} + 92px);
+  top: var(--cd-sticky-top);
+  height: fit-content;
 }
 
 // ── Compose Card — Posts Tab ──────────────────────────────────
@@ -1850,12 +1944,27 @@
   .cd-tab-btn .bi + .cd-tab-label { display: none; }
 
   .cd-posts-layout { grid-template-columns: 1fr; }
+  .cd-sidebar-sticky {
+    position: static;
+    top: auto;
+    height: auto;
+  }
 
   .post-images .image-grid { grid-template-columns: 1fr; img { height: 160px; } }
   .cd-stat-card { padding: 1rem; }
 }
 
 @include media-sm-max {
+  .cd-hero-top-actions {
+    top: 10px;
+    left: 10px;
+  }
+
+  .cd-back-btn--in-hero {
+    width: 30px;
+    height: 30px;
+  }
+
   .cd-hero-banner { height: 55px; }
   .cd-community-avatar { width: 60px; height: 60px; border-radius: 14px; }
   .cd-community-avatar--lg { width: 68px; height: 68px; border-radius: 16px; }
@@ -1889,13 +1998,13 @@
   .cd-member-row { padding: 0.6rem 1rem; gap: 10px; }
 
   .cd-posts-layout { grid-template-columns: 1fr; }
-  .cd-sidebar-col  { order: -1; }
+  .cd-sidebar-col  { order: 0; }
 
   .cd-tabs {
     overflow-x: auto;
     flex-wrap: nowrap;
     border-radius: 12px;
-    padding: 3px;
+    padding: 4px;
     gap: 2px;
     scrollbar-width: none;
     &::-webkit-scrollbar { display: none; }

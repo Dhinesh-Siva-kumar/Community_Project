@@ -192,6 +192,152 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════════
+       EDIT COMMUNITY MODAL
+  ══════════════════════════════════════════════════════════════ -->
+  @if (isAdmin() && editCommunityModalOpen()) {
+    <div class="au-backdrop" (click)="closeEditCommunityModal()"></div>
+    <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="cdEditCommunityModalTitle">
+      <div class="au-header cm-modal-header">
+        <div class="au-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="au-header__icon cm-modal-icon">
+          <i class="bi bi-pencil-square"></i>
+        </div>
+        <div class="au-header__text cm-modal-header-inner">
+          <h5 class="au-header__title cm-modal-title" id="cdEditCommunityModalTitle">Edit Community</h5>
+          <p class="au-header__sub cm-modal-subtitle">Update the details of this community</p>
+        </div>
+        <button type="button" class="au-close cm-close-btn" (click)="closeEditCommunityModal()" [disabled]="savingCommunityEdit()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="au-body cm-modal-body">
+        <form [formGroup]="communityEditForm" (ngSubmit)="submitCommunityEdit()" class="au-form cm-form">
+          <div class="cm-section">
+            <div class="cm-section-header">
+              <span class="cm-section-badge"><i class="bi bi-info-circle-fill"></i></span>
+              <span class="cm-section-title">Basic Information</span>
+            </div>
+
+            <div class="cm-field-row">
+              <div class="cm-field-group">
+                <label class="cm-label">Community Name <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-people cm-input-icon"></i>
+                  <input type="text" formControlName="communityName" maxlength="150" class="cm-input" [class.cm-input-error]="cf['communityName'].touched && cf['communityName'].invalid" />
+                </div>
+                @if (cf['communityName'].touched && cf['communityName'].invalid) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Community Name is required.</div>
+                }
+              </div>
+
+              <div class="cm-field-group" [class.cm-field-group--error]="cf['interests'].touched && cf['interests'].invalid">
+                <label class="cm-label">Category <span class="cm-required">*</span></label>
+                <app-searchable-select formControlName="interests" [options]="interestOptions" placeholder="Select a category"></app-searchable-select>
+                @if (cf['interests'].touched && cf['interests'].invalid) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Please select a category.</div>
+                }
+              </div>
+            </div>
+
+            <div class="cm-field-group">
+              <div class="cm-label-row">
+                <label class="cm-label">Description <span class="cm-required">*</span></label>
+                <span class="cm-char-count">{{ cf['description'].value?.length ?? 0 }}/500</span>
+              </div>
+              <div class="cm-input-wrap cm-textarea-wrap">
+                <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+                <textarea formControlName="description" rows="3" maxlength="500" class="cm-input cm-textarea" [class.cm-input-error]="cf['description'].touched && cf['description'].invalid"></textarea>
+              </div>
+              @if (cf['description'].touched && cf['description'].invalid) {
+                <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Description is required.</div>
+              }
+            </div>
+          </div>
+
+          <div class="cm-section">
+            <div class="cm-section-header">
+              <span class="cm-section-badge"><i class="bi bi-gear-fill"></i></span>
+              <span class="cm-section-title">Settings</span>
+            </div>
+
+            <div class="cm-field-row">
+              <div class="cm-field-group" [class.cm-field-group--error]="cf['countryId'].touched && cf['countryId'].invalid">
+                <label class="cm-label">Country <span class="cm-required">*</span></label>
+                <app-searchable-select formControlName="countryId" [options]="countryOptions" placeholder="Select country"></app-searchable-select>
+                @if (cf['countryId'].touched && cf['countryId'].invalid) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Please select a country.</div>
+                }
+              </div>
+
+              <div class="cm-field-group">
+                <label class="cm-label">Visibility <span class="cm-required">*</span></label>
+                <div class="cm-toggle-group" [class.cm-toggle-group--error]="communityFormSubmitAttempted() && !cf['visibility'].value">
+                  <label class="cm-toggle-pill" [class.cm-toggle-active]="cf['visibility'].value === 'private'">
+                    <input type="radio" formControlName="visibility" value="private" hidden />
+                    <i class="bi bi-lock-fill me-1"></i> Private
+                  </label>
+                  <label class="cm-toggle-pill" [class.cm-toggle-active]="cf['visibility'].value === 'global'">
+                    <input type="radio" formControlName="visibility" value="global" hidden />
+                    <i class="bi bi-globe2 me-1"></i> Global
+                  </label>
+                </div>
+                @if (communityFormSubmitAttempted() && !cf['visibility'].value) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.</div>
+                }
+              </div>
+            </div>
+
+            <div class="cm-default-row">
+              <div class="cm-default-label">
+                <i class="bi bi-star-fill"></i>
+                <span>Default Community</span>
+                <span class="cm-default-hint">Mark this as the default community for new users</span>
+              </div>
+              <label class="cm-switch">
+                <input type="checkbox" formControlName="isDefault" />
+                <span class="cm-switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="cm-section cm-section-last">
+            <div class="cm-section-header">
+              <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
+              <span class="cm-section-title">Community Image</span>
+            </div>
+
+            <app-file-upload
+              mode="single"
+              accept="image/*"
+              [maxSizeMb]="5"
+              label="Community Image"
+              [existingPreview]="community()?.image ?? null | imageUrl"
+              (filesChange)="onCommunityImageChange($event)"
+            ></app-file-upload>
+          </div>
+        </form>
+      </div>
+
+      <div class="au-footer cm-modal-footer">
+        <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeEditCommunityModal()" [disabled]="savingCommunityEdit()">
+          Cancel
+        </button>
+        <button type="button" class="au-btn au-btn--primary cm-btn-submit" [disabled]="savingCommunityEdit()" (click)="submitCommunityEdit()">
+          @if (savingCommunityEdit()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>Updating...
+          } @else {
+            <i class="bi bi-check-lg me-1"></i>Update Community
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════
        DELETE POST CONFIRMATION MODAL
   ══════════════════════════════════════════════════════════════ -->
   @if (deletePostModalOpen()) {
@@ -245,18 +391,16 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════════
-       BACK BUTTON
-  ══════════════════════════════════════════════════════════════ -->
-  <div class="mb-3">
-    <a [routerLink]="backRoute()" class="cd-back-btn">
-      <i class="bi bi-arrow-left"></i>Back to Communities
-    </a>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════
        COMMUNITY HERO CARD
   ══════════════════════════════════════════════════════════════ -->
   <div class="cd-hero-card header-entrance mb-4">
+
+    <!-- Back button inside hero -->
+    <div class="cd-hero-top-actions">
+      <a [routerLink]="backRoute()" class="cd-back-btn cd-back-btn--in-hero" aria-label="Back to Communities" title="Back to Communities">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+    </div>
 
     <!-- Banner: only shown when community has an image -->
     @if (community()!.image) {
@@ -299,9 +443,9 @@
             <!-- Admin compact icon actions -->
             @if (isAdmin()) {
               <div class="cd-admin-actions">
-                <a [routerLink]="backRoute()" class="cd-icon-btn cd-icon-btn--edit" title="Edit community" aria-label="Edit community">
+                <button type="button" class="cd-icon-btn cd-icon-btn--edit" (click)="openEditCommunityModal()" title="Edit community" aria-label="Edit community">
                   <i class="bi bi-pencil-fill"></i>
-                </a>
+                </button>
                 <button type="button" class="cd-icon-btn cd-icon-btn--delete" (click)="openDeleteModal()" title="Delete community" aria-label="Delete community">
                   <i class="bi bi-trash3-fill"></i>
                 </button>
@@ -365,56 +509,56 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       TAB NAVIGATION — Modern pill tabs with counts
-  ══════════════════════════════════════════════════════════════ -->
-  <div class="cd-tabs-wrap">
-  <div class="cd-tabs" role="tablist">
+  <!-- Shared tabs template -->
+  <ng-template #communityTabs>
+    <div class="cd-tabs-wrap">
+      <div class="cd-tabs" role="tablist">
 
-    <button class="cd-tab-btn" role="tab" [class.cd-tab-btn--active]="activeTab() === 'posts'"
-      (click)="setTab('posts')" [attr.aria-selected]="activeTab() === 'posts'">
-      <i class="bi bi-card-text"></i>
-      <span class="cd-tab-label">Posts</span>
-      @if (postCount() > 0) {
-        <span class="cd-tab-badge">{{ postCount() }}</span>
-      }
-    </button>
+        <button class="cd-tab-btn cd-tab-btn--posts" role="tab" [class.cd-tab-btn--active]="activeTab() === 'posts'"
+          (click)="setTab('posts')" [attr.aria-selected]="activeTab() === 'posts'">
+          <i class="bi bi-card-text"></i>
+          <span class="cd-tab-label">Posts</span>
+          @if (postCount() > 0) {
+            <span class="cd-tab-badge">{{ postCount() }}</span>
+          }
+        </button>
 
-    <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="activeTab() === 'help'"
-      (click)="setTab('help')" [attr.aria-selected]="activeTab() === 'help'">
-      <i class="bi bi-life-preserver"></i>
-      <span class="cd-tab-label">Help</span>
-      @if (helpCount() > 0) {
-        <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
-      }
-    </button>
+        <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="activeTab() === 'help'"
+          (click)="setTab('help')" [attr.aria-selected]="activeTab() === 'help'">
+          <i class="bi bi-life-preserver"></i>
+          <span class="cd-tab-label">Help</span>
+          @if (helpCount() > 0) {
+            <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
+          }
+        </button>
 
-    <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="activeTab() === 'emergency'"
-      (click)="setTab('emergency')" [attr.aria-selected]="activeTab() === 'emergency'">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <span class="cd-tab-label">Emergency</span>
-      @if (emergencyCount() > 0) {
-        <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
-      }
-    </button>
+        <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="activeTab() === 'emergency'"
+          (click)="setTab('emergency')" [attr.aria-selected]="activeTab() === 'emergency'">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span class="cd-tab-label">Emergency</span>
+          @if (emergencyCount() > 0) {
+            <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
+          }
+        </button>
 
-    <button class="cd-tab-btn" role="tab" [class.cd-tab-btn--active]="activeTab() === 'members'"
-      (click)="setTab('members')" [attr.aria-selected]="activeTab() === 'members'">
-      <i class="bi bi-people"></i>
-      <span class="cd-tab-label">Members</span>
-      @if (memberCount() > 0) {
-        <span class="cd-tab-badge">{{ memberCount() }}</span>
-      }
-    </button>
+        <button class="cd-tab-btn cd-tab-btn--members" role="tab" [class.cd-tab-btn--active]="activeTab() === 'members'"
+          (click)="setTab('members')" [attr.aria-selected]="activeTab() === 'members'">
+          <i class="bi bi-people"></i>
+          <span class="cd-tab-label">Members</span>
+          @if (memberCount() > 0) {
+            <span class="cd-tab-badge">{{ memberCount() }}</span>
+          }
+        </button>
 
-    <button class="cd-tab-btn" role="tab" [class.cd-tab-btn--active]="activeTab() === 'about'"
-      (click)="setTab('about')" [attr.aria-selected]="activeTab() === 'about'">
-      <i class="bi bi-info-circle"></i>
-      <span class="cd-tab-label">About</span>
-    </button>
+        <button class="cd-tab-btn cd-tab-btn--about" role="tab" [class.cd-tab-btn--active]="activeTab() === 'about'"
+          (click)="setTab('about')" [attr.aria-selected]="activeTab() === 'about'">
+          <i class="bi bi-info-circle"></i>
+          <span class="cd-tab-label">About</span>
+        </button>
 
-  </div>
-  </div>
+      </div>
+    </div>
+  </ng-template>
 
   <!-- ═══════════════════════════════════════════════════════════
        TAB CONTENT
@@ -431,6 +575,7 @@
 
             <!-- ── Feed Column ─────────────────────────────────── -->
             <div class="cd-feed-col">
+              <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
 
               <!-- ── Posts List ──────────────────────────────── -->
           @if (loadingPosts()) {
@@ -705,6 +850,7 @@
 
             <!-- ── Feed Column ─────────────────────────────────── -->
             <div class="cd-feed-col">
+              <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
 
               <!-- Help posts list -->
           @if (filteredPosts().length === 0) {
@@ -883,6 +1029,7 @@
 
             <!-- ── Feed Column ─────────────────────────────────── -->
             <div class="cd-feed-col">
+              <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
 
               <!-- Emergency posts list -->
           @if (filteredPosts().length === 0) {
@@ -1057,6 +1204,7 @@
       ══════════════════════════════════════════════════════════ -->
       @case ('members') {
         <div class="tab-enter">
+          <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
 
           <div class="card border-0 shadow-sm cd-members-card-full fade-in-up">
 
@@ -1156,6 +1304,7 @@
       ══════════════════════════════════════════════════════════ -->
       @case ('about') {
         <div class="tab-enter">
+          <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
 
           <!-- Stats Row — 4 metrics -->
           <div class="row g-3 mb-4">

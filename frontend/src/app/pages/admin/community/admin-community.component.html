@@ -4,7 +4,7 @@
     <h2 class="jb-page-header__title">Communities Management</h2>
     <p class="jb-page-header__sub">Review, moderate and manage all communities.</p>
   </div>
-  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openCreateModal()" aria-label="Create a new community">
+  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openCreateModal()" aria-label="Create a new community">
     <i class="bi bi-plus-lg"></i> Create Community
   </button>
 </div>
@@ -85,23 +85,60 @@
            </app-searchable-select>
          </div>
        </div>
-      <div class="jb-advanced-grid">
-         <div class="jb-adv-field">
-           <label class="jb-adv-label"><i class="bi bi-calendar3"></i> From Date</label>
-           <div class="jb-adv-input-wrap">
-             <input type="date" class="jb-adv-input" [value]="filterFromDate()"
-               (change)="onFilterFromDateChange($event)"
-               placeholder="From date" />
-           </div>
-         </div>
-         <div class="jb-adv-field">
-           <label class="jb-adv-label"><i class="bi bi-calendar3"></i> To Date</label>
-           <div class="jb-adv-input-wrap">
-             <input type="date" class="jb-adv-input" [value]="filterToDate()"
-               (change)="onFilterToDateChange($event)"
-               placeholder="To date" />
-           </div>
-         </div>
+      <div class="jb-advanced-grid jb-advanced-grid--dates">
+        <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterFromDate()">
+          <div class="jb-adv-date-head">
+            <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
+            <span class="jb-adv-date-help">Start date</span>
+          </div>
+          <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+            <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
+            <input id="communityFilterFromDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterFromDate()"
+              (change)="onFilterFromDateChange($event)"
+              placeholder="From date" />
+          </div>
+        </div>
+
+        <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
+          <div class="jb-adv-date-head">
+            <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
+            <span class="jb-adv-date-help">End date</span>
+          </div>
+          <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+            <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
+            <input id="communityFilterToDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterToDate()"
+              (change)="onFilterToDateChange($event)"
+              placeholder="To date" />
+          </div>
+        </div>
+      </div>
+
+      <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
+        <span class="jb-quick-date-row__label">Quick range:</span>
+        <button
+          type="button"
+          class="jb-quick-date-btn"
+          [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
+          (click)="applyQuickDatePreset('today')"
+        >
+          Today
+        </button>
+        <button
+          type="button"
+          class="jb-quick-date-btn"
+          [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
+          (click)="applyQuickDatePreset('7d')"
+        >
+          Last 7 Days
+        </button>
+        <button
+          type="button"
+          class="jb-quick-date-btn"
+          [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
+          (click)="applyQuickDatePreset('30d')"
+        >
+          Last 30 Days
+        </button>
       </div>
     </div>
   }
@@ -179,7 +216,11 @@
     <div class="row g-4 mb-2">
       @for (community of communities(); track community.id) {
         <div class="col-12 col-md-6 col-xl-4">
-          <div class="community-card h-100">
+          <div class="community-card h-100" role="button" tabindex="0"
+               [attr.aria-label]="'View ' + community.name"
+               (click)="viewCommunity(community.id)"
+               (keydown.enter)="viewCommunity(community.id)"
+               (keydown.space)="$event.preventDefault(); viewCommunity(community.id)">
 
             <!-- Head: compact strip — cover image or amber gradient -->
             <div class="cc-head"
@@ -269,21 +310,21 @@
 
               <!-- Actions -->
               <div class="cc-actions">
-                <a [routerLink]="['/admin/community', community.id]" class="cc-icon-action cc-icon-action--view" title="View community">
+                <a [routerLink]="['/admin/community', community.id]" class="cc-icon-action cc-icon-action--view" title="View community" (click)="$event.stopPropagation()">
                   <i class="bi bi-eye-fill me-1"></i>View
                 </a>
-                <button class="cc-icon-action" title="Edit community" (click)="openEditModal(community)">
+                <button class="cc-icon-action cc-icon-action--edit" title="Edit community" (click)="$event.stopPropagation(); openEditModal(community)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 @if (deleteConfirmId() === community.id) {
-                  <button class="cc-icon-action cc-icon-action--confirm" title="Confirm delete" (click)="deleteCommunity(community.id)">
+                  <button class="cc-icon-action cc-icon-action--confirm" title="Confirm delete" (click)="$event.stopPropagation(); deleteCommunity(community.id)">
                     <i class="bi bi-check-lg"></i>
                   </button>
-                  <button class="cc-icon-action" title="Cancel" (click)="cancelDelete()">
+                  <button class="cc-icon-action cc-icon-action--cancel" title="Cancel" (click)="$event.stopPropagation(); cancelDelete()">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 } @else {
-                  <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="confirmDelete(community.id)">
+                  <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="$event.stopPropagation(); confirmDelete(community.id)">
                     <i class="bi bi-trash-fill"></i>
                   </button>
                 }
@@ -322,32 +363,32 @@
 
 <!-- Create / Edit Modal Backdrop -->
 @if (showModal()) {
-  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
-  <div class="modal fade show d-block" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg">
+  <div class="au-backdrop" (click)="closeModal()"></div>
+  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle()">
 
-        <!-- Modal Header -->
-        <div class="cm-modal-header">
-          <div class="cm-modal-header-inner">
-            <div class="cm-modal-icon">
-              <i class="bi" [class.bi-people-fill]="!isEditing()" [class.bi-pencil-square]="isEditing()"></i>
-            </div>
-            <div>
-              <h5 class="cm-modal-title">{{ modalTitle() }}</h5>
-              <p class="cm-modal-subtitle">
-                {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
-              </p>
-            </div>
-          </div>
-          <button type="button" class="cm-close-btn" (click)="closeModal()">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [class.bi-people-fill]="!isEditing()" [class.bi-pencil-square]="isEditing()"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title">{{ modalTitle() }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">
+          {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
+        </p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="closeModal()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
 
-        <!-- Modal Body -->
-        <div class="modal-body px-4 py-0">
-          <form [formGroup]="communityForm" (ngSubmit)="submitForm()" class="cm-form">
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="communityForm" (ngSubmit)="submitForm()" class="au-form cm-form">
 
             <!-- ── SECTION 1: Basic Information ── -->
             <div class="cm-section">
@@ -514,32 +555,29 @@
                 (filesChange)="onCommunityImageChange($event)"
               ></app-file-upload>
             </div>
-
-          </form>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="cm-modal-footer">
-          <button type="button" class="cm-btn-cancel" (click)="closeModal()">
-            <i class="bi bi-x me-1"></i>Cancel
-          </button>
-          <button
-            type="button"
-            class="cm-btn-submit"
-            [disabled]="submitting()"
-            (click)="submitForm()"
-          >
-            @if (submitting()) {
-              <span class="spinner-border spinner-border-sm me-2"></span>
-              {{ isEditing() ? 'Updating...' : 'Creating...' }}
-            } @else {
-              <i class="bi me-2" [class.bi-check-lg]="isEditing()" [class.bi-plus-lg]="!isEditing()"></i>
-              {{ isEditing() ? 'Update Community' : 'Create Community' }}
-            }
-          </button>
-        </div>
-
-      </div>
+      </form>
     </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeModal()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="au-btn au-btn--primary cm-btn-submit"
+        [disabled]="submitting()"
+        (click)="submitForm()"
+      >
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ isEditing() ? 'Updating...' : 'Creating...' }}
+        } @else {
+          <i class="bi me-1" [class.bi-check-lg]="isEditing()" [class.bi-plus-lg]="!isEditing()"></i>
+          {{ isEditing() ? 'Update Community' : 'Create Community' }}
+        }
+      </button>
+    </div>
+
   </div>
 }

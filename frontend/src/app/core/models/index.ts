@@ -171,6 +171,13 @@ export interface CommunityMember {
   joinedAt: string;
 }
 
+export interface CommunityAnalyticsCounts {
+  total: number;
+  global: number;
+  private: number;
+  default: number;
+}
+
 export type PostType = 'GENERAL' | 'HELP' | 'EMERGENCY';
 export type PostStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 

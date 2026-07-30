@@ -221,6 +221,42 @@ export async function findAll(params: {
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
+export async function getAnalytics(params: {
+  page?: number;
+  limit?: number;
+  skipActiveFilter?: boolean;
+}) {
+  const { skipActiveFilter } = params;
+
+  const baseQuery = db('communities as c')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id');
+
+  if (!skipActiveFilter) {
+    baseQuery.where('c.is_active', true);
+  }
+
+  const grouped = await baseQuery
+    .groupBy('c.id')
+    .select(
+      'c.id',
+      db.raw('MAX(CASE WHEN c.is_global THEN 1 ELSE 0 END) as is_global_flag'),
+      db.raw('MAX(CASE WHEN c.is_private THEN 1 ELSE 0 END) as is_private_flag'),
+      db.raw('MAX(CASE WHEN c.is_default THEN 1 ELSE 0 END) as is_default_flag'),
+    );
+
+  const total = grouped.length;
+  const global = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_global_flag'] ?? 0) > 0 ? 1 : 0), 0);
+  const privateCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_private_flag'] ?? 0) > 0 ? 1 : 0), 0);
+  const defaultCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_default_flag'] ?? 0) > 0 ? 1 : 0), 0);
+
+  return {
+    total,
+    global,
+    private: privateCount,
+    default: defaultCount,
+  };
+}
+
 export async function findOne(id: string) {
   const community = await db('communities as c')
     .leftJoin('users as u', 'c.created_by_id', 'u.id')

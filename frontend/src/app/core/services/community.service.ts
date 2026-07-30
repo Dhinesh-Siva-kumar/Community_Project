@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Community, CommunityMember, CommunityRequest, PaginatedResponse } from '../models';
+import { Community, CommunityAnalyticsCounts, CommunityMember, CommunityRequest, PaginatedResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class CommunityService {
@@ -10,6 +10,10 @@ export class CommunityService {
 
   getCommunities(params?: Record<string, any>): Observable<PaginatedResponse<Community>> {
     return this.api.get<PaginatedResponse<Community>>('/communities', params);
+  }
+
+  getCommunityAnalytics(params?: Record<string, any>): Observable<CommunityAnalyticsCounts> {
+    return this.api.get<CommunityAnalyticsCounts>('/communities/analytics', params);
   }
 
   getJoinedCommunities(): Observable<Community[]> {

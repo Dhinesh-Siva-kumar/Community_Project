@@ -1,12 +1,12 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Community, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
+import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
@@ -41,8 +41,9 @@ function minLengthTrimmed(min: number) {
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
-export class AdminCommunityComponent implements OnInit {
+export class AdminCommunityComponent implements OnInit, OnDestroy {
   private communityService = inject(CommunityService);
+  private router = inject(Router);
   private apiService = inject(ApiService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
@@ -78,13 +79,18 @@ export class AdminCommunityComponent implements OnInit {
   deleteConfirmId    = signal<string | null>(null);
   formSubmitAttempted = signal(false);
 
+  private previousBodyOverflow: string | null = null;
+  private previousHtmlOverflow: string | null = null;
+
   // ── Filter signals ────────────────────────────────────────
   filterCountry    = signal<string | number | null>(null);
   filterCategory   = signal<string | number | null>(null);
   filterVisibility = signal<string | number | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
+  activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
   showAdvancedFilters = signal(false);
+  communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0 });
 
   // ── Filter chip interface ─────────────────────────────────
   readonly FilterChip = class {
@@ -94,17 +100,6 @@ export class AdminCommunityComponent implements OnInit {
   // ── Computed ─────────────────────────────────────────────────
   /** Server-side filtering: component list is whatever the API returned. */
   filteredCommunities = computed(() => this.communities());
-
-  /** Community counts by visibility type. */
-  communityCounts = computed(() => {
-    const data = this.communities();
-    return {
-      total: data.length,
-      global: data.filter(c => c.is_global).length,
-      private: data.filter(c => c.is_private).length,
-      default: data.filter(c => c.is_default).length,
-    };
-  });
 
   /** Active filter chips for display. */
   activeFilterChips = computed<any[]>(() => {
@@ -136,6 +131,10 @@ export class AdminCommunityComponent implements OnInit {
     this.loadCountries();
     this.loadInterests();
     this.loadCommunities();
+  }
+
+  ngOnDestroy(): void {
+    this.unlockPageScroll();
   }
 
   initForm(): void {
@@ -216,6 +215,8 @@ export class AdminCommunityComponent implements OnInit {
     if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
     if (this.filterToDate())     params['to_date']    = this.filterToDate();
 
+    this.loadCommunityAnalytics();
+
     this.communityService.getCommunities(params).subscribe({
       next: (response: PaginatedResponse<Community>) => {
         this.communities.set(response.data);
@@ -230,6 +231,15 @@ export class AdminCommunityComponent implements OnInit {
     });
   }
 
+  loadCommunityAnalytics(): void {
+    this.communityService.getCommunityAnalytics().subscribe({
+      next: (counts) => this.communityCounts.set(counts),
+      error: () => {
+        this.communityCounts.set({ total: 0, global: 0, private: 0, default: 0 });
+      },
+    });
+  }
+
   // ── Search / pagination ───────────────────────────────────────
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
@@ -237,12 +247,34 @@ export class AdminCommunityComponent implements OnInit {
   }
 
   onFilterFromDateChange(event: Event): void {
+    this.activeQuickRange.set(null);
     this.filterFromDate.set((event.target as HTMLInputElement).value);
     this.applyFilters();
   }
 
   onFilterToDateChange(event: Event): void {
+    this.activeQuickRange.set(null);
     this.filterToDate.set((event.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  applyQuickDatePreset(preset: 'today' | '7d' | '30d'): void {
+    const today = new Date();
+    const to = this.toInputDate(today);
+
+    if (preset === 'today') {
+      this.filterFromDate.set(to);
+      this.filterToDate.set(to);
+      this.activeQuickRange.set('today');
+      this.applyFilters();
+      return;
+    }
+
+    const fromDate = new Date(today);
+    fromDate.setDate(today.getDate() - (preset === '7d' ? 6 : 29));
+    this.filterFromDate.set(this.toInputDate(fromDate));
+    this.filterToDate.set(to);
+    this.activeQuickRange.set(preset);
     this.applyFilters();
   }
 
@@ -275,6 +307,7 @@ export class AdminCommunityComponent implements OnInit {
     this.filterVisibility.set(null);
     this.filterFromDate.set('');
     this.filterToDate.set('');
+    this.activeQuickRange.set(null);
     this.currentPage.set(1);
     this.loadCommunities();
   }
@@ -294,6 +327,7 @@ export class AdminCommunityComponent implements OnInit {
       case 'fromDate':   this.filterFromDate.set('');    break;
       case 'toDate':     this.filterToDate.set('');      break;
     }
+    if (key === 'fromDate' || key === 'toDate') this.activeQuickRange.set(null);
     this.applyFilters();
   }
 
@@ -330,6 +364,7 @@ export class AdminCommunityComponent implements OnInit {
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
+    this.lockPageScroll();
     this.showModal.set(true);
   }
 
@@ -346,15 +381,43 @@ export class AdminCommunityComponent implements OnInit {
       isDefault:     c['is_default'] ?? false,
     });
     this.selectedImage.set(null);
+    this.lockPageScroll();
     this.showModal.set(true);
   }
 
   closeModal(): void {
     this.showModal.set(false);
+    this.unlockPageScroll();
     this.editingCommunity.set(null);
     this.communityForm.reset();
     this.formSubmitAttempted.set(false);
     this.selectedImage.set(null);
+  }
+
+  private lockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    if (this.previousBodyOverflow === null) {
+      this.previousBodyOverflow = body.style.overflow;
+    }
+    if (this.previousHtmlOverflow === null) {
+      this.previousHtmlOverflow = html.style.overflow;
+    }
+
+    body.style.overflow = 'hidden';
+    html.style.overflow = 'hidden';
+  }
+
+  private unlockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    body.style.overflow = this.previousBodyOverflow ?? '';
+    html.style.overflow = this.previousHtmlOverflow ?? '';
+
+    this.previousBodyOverflow = null;
+    this.previousHtmlOverflow = null;
   }
 
   // ── Image handling ────────────────────────────────────────────
@@ -467,6 +530,17 @@ export class AdminCommunityComponent implements OnInit {
   truncate(text: string | undefined, length: number): string {
     if (!text) return '';
     return text.length > length ? text.substring(0, length) + '...' : text;
+  }
+
+  viewCommunity(communityId: string): void {
+    this.router.navigate(['/admin/community', communityId]);
+  }
+
+  private toInputDate(date: Date): string {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   // ── Payload builder ───────────────────────────────────────────
