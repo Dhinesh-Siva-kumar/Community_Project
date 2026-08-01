@@ -55,7 +55,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   try {
     const query = ListPostsQueryDto.parse(req.query);
     const isAdmin = req.user?.role === 'ADMIN';
-    const result = await postsService.findAll({ ...query, isAdmin });
+    const result = await postsService.findAll({ ...query, isAdmin, currentUserId: req.user?.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -108,9 +108,19 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
       files.map((f) => saveBufferToFile(f.buffer, f.originalname))
     );
     const imagePaths = filenames.map((f) => `/uploads/${f}`);
-    
+
     const rawBody = { ...req.body };
-    if (imagePaths.length) rawBody['images'] = imagePaths;
+    const incomingImages = rawBody['images'];
+    const retainedImages = Array.isArray(incomingImages)
+      ? incomingImages
+      : typeof incomingImages === 'string' && incomingImages.length > 0
+        ? [incomingImages]
+        : [];
+
+    if (retainedImages.length || imagePaths.length) {
+      rawBody['images'] = [...retainedImages, ...imagePaths];
+    }
+
     const body = UpdatePostBodyDto.parse(rawBody);
     const result = await postsService.updatePost(req.params['id'] as string, req.user!.sub, body);
     res.json(result);

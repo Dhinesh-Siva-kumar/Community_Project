@@ -22,7 +22,7 @@ export class PostService {
      return this.api.post<Post>('/posts', body);
    }
 
-   updatePost(id: string, data: { content?: string; type?: PostType }, images?: File[]): Observable<Post> {
+   updatePost(id: string, data: { content?: string; type?: PostType; images?: string[] }, images?: File[]): Observable<Post> {
      if (images && images.length > 0) {
        const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
        return this.api.putWithFile<Post>(`/posts/${id}`, data, files);

@@ -20,6 +20,7 @@ import notificationsRouter from './modules/notifications/notifications.router';
 import masterDataRouter from './modules/master-data/master-data.router';
 import uploadRouter from './modules/upload/upload.router';
 import otpRouter from './modules/otp/otp.router';
+import shareRouter from './modules/share/share.router';
 
 const app = express();
 
@@ -84,6 +85,7 @@ app.use('/api/master-data', masterDataRouter);
 app.use('/api/upload', uploadRouter);
 // OTP standalone endpoints were at /api/send-otp and /api/verify-otp in NestJS
 app.use('/api', otpRouter);
+app.use('/share', shareRouter);
 
 // 11. Global error handler — MUST be last
 app.use(errorHandler);

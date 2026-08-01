@@ -4,7 +4,10 @@ export const CreatePostDto = z.object({
   content: z.string().min(1, 'Content is required'),
   communityId: z.string().uuid('Valid community ID required'),
   type: z.enum(['GENERAL', 'HELP', 'EMERGENCY']).optional(),
-  images: z.array(z.string()).optional(),
+  images: z
+    .union([z.array(z.string()), z.string()])
+    .transform((value) => (typeof value === 'string' ? [value] : value))
+    .optional(),
 });
 
 export const UpdatePostDto = CreatePostDto.partial();

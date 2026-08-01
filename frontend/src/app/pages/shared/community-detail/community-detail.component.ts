@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, HostListener } from '@angular/core';
+import { ApplicationRef, Component, ComponentRef, EnvironmentInjector, HostListener, OnDestroy, OnInit, computed, createComponent, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -14,7 +14,9 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { DeletePostModalComponent } from '../../../shared/components/delete-post-modal/delete-post-modal.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
+import { environment } from '../../../../environments/environment';
 
 type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
 
@@ -34,6 +36,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private appRef = inject(ApplicationRef);
+  private environmentInjector = inject(EnvironmentInjector);
 
   countries: Country[] = [];
   interests: interests[] = [];
@@ -60,6 +64,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   expandedComments = signal<Set<string>>(new Set());
   loadingComments = signal<Set<string>>(new Set());
   postComments = signal<Map<string, Comment[]>>(new Map());
+  expandedPostContent = signal<Set<string>>(new Set());
   submittingComment = signal<string | null>(null);
   likingPost = signal<string | null>(null);
 
@@ -79,11 +84,23 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   // Post options menu (three-dot)
   postMenuOpenId = signal<string | null>(null);
 
+  // Image lightbox preview
+  lightboxOpen = signal(false);
+  lightboxImages = signal<string[]>([]);
+  activeImageIndex = signal(0);
+
+  // Share modal
+  shareModalOpen = signal(false);
+  shareTargetPost = signal<Post | null>(null);
+  sharePopupBlocked = signal(false);
+  blockedShareUrl = signal<string | null>(null);
+
   // Edit post modal
   editingPost          = signal<Post | null>(null);
   editModalOpen        = signal(false);
   savingEdit           = signal(false);
   selectedEditType     = signal<PostType>('GENERAL');
+  editExistingImages   = signal<string[]>([]);
   editImages           = signal<File[]>([]);
   editImageResetCounter = signal(0);
 
@@ -105,11 +122,15 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   loadingMoreMembers = signal(false);
 
   // Forms
+  readonly postContentMinLength = 3;
+  readonly postContentMaxLength = 2000;
+  readonly postContentPreviewLimit = 220;
+
   postForm: FormGroup = this.fb.group({
-    content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+    content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
   });
   editPostForm: FormGroup = this.fb.group({
-    content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+    content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
   });
   communityEditForm: FormGroup = this.fb.group({
     communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
@@ -122,6 +143,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   commentForms: Map<string, FormGroup> = new Map();
   private previousBodyOverflow: string | null = null;
   private previousHtmlOverflow: string | null = null;
+  private lockedScrollY: number | null = null;
+  private deletePostModalRef: ComponentRef<DeletePostModalComponent> | null = null;
+  private deletePostModalHost: HTMLElement | null = null;
 
   // ── Computed ──────────────────────────────────────────────
   currentUser    = computed(() => this.authService.currentUser());
@@ -152,6 +176,48 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP').length);
   emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY').length);
 
+  communityCreatorId = computed(() => {
+    const c = this.community();
+    return c?.createdBy?.id || c?.createdById || '';
+  });
+
+  communityAuthor = computed(() => {
+    const c = this.community();
+    if (!c) return null;
+
+    if (c.createdBy) {
+      return c.createdBy;
+    }
+
+    const creatorId = c.createdById;
+    if (!creatorId) return null;
+
+    const creatorMember = this.members().find((member) => member.user?.id === creatorId);
+    if (creatorMember?.user) {
+      return {
+        id: creatorMember.user.id,
+        userName: creatorMember.user.userName,
+        displayName: creatorMember.user.displayName,
+      };
+    }
+
+    return { id: creatorId, userName: '', displayName: 'Community Admin' };
+  });
+
+  displayMembers = computed(() => {
+    const list = this.members();
+    const creatorId = this.communityCreatorId();
+    if (!creatorId || list.length < 2) return list;
+
+    const creatorIndex = list.findIndex((member) => member.user?.id === creatorId);
+    if (creatorIndex <= 0) return list;
+
+    const next = [...list];
+    const [creator] = next.splice(creatorIndex, 1);
+    next.unshift(creator);
+    return next;
+  });
+
   daysActive = computed(() => {
     const c = this.community();
     if (!c) return 0;
@@ -177,10 +243,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   initForms(): void {
     this.postForm = this.fb.group({
-      content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
     });
     this.editPostForm = this.fb.group({
-      content: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
     });
     this.communityEditForm = this.fb.group({
       communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
@@ -193,6 +259,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyDeletePostModal();
     this.unlockPageScroll();
   }
 
@@ -227,7 +294,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       this.commentForms.set(
         postId,
         this.fb.group({
-          content: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(500)]],
+          content: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(300)]],
         })
       );
     }
@@ -321,7 +388,45 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         default:          this.selectedPostType.set('GENERAL');   break;
       }
       this.tabTransition.set(false);
+      this.scheduleTabPanelScroll(tab);
     }, 150);
+  }
+
+  private scheduleTabPanelScroll(tab: TabType): void {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => this.scrollToTabPanelStart(tab));
+    });
+  }
+
+  private scrollToTabPanelStart(tab: TabType, attempt = 0): void {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const panel = document.querySelector<HTMLElement>(`[data-tab-panel="${tab}"] .cd-tab-panel-start`);
+    if (!panel) {
+      if (attempt < 6) {
+        window.setTimeout(() => this.scrollToTabPanelStart(tab, attempt + 1), 16);
+      }
+      return;
+    }
+
+    const panelTop = panel.getBoundingClientRect().top;
+    const stickyTabs = document.querySelector<HTMLElement>(`[data-tab-panel="${tab}"] .cd-tabs-sticky`);
+    const tabsWrap = stickyTabs?.querySelector<HTMLElement>('.cd-tabs-wrap');
+    const stickyTop = stickyTabs ? (parseFloat(window.getComputedStyle(stickyTabs).top) || 0) : 0;
+    const stickyPadTop = stickyTabs ? (parseFloat(window.getComputedStyle(stickyTabs).paddingTop) || 0) : 0;
+    const tabsHeight = (tabsWrap?.offsetHeight ?? stickyTabs?.offsetHeight ?? 0) + stickyPadTop;
+    const breathingSpace = 10;
+    const desiredPanelTop = stickyTop + tabsHeight + breathingSpace;
+    const targetTop = Math.max(0, window.scrollY + panelTop - desiredPanelTop);
+
+    if (Math.abs(window.scrollY - targetTop) <= 2) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({
+      top: targetTop,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
   }
 
   // ── Post Creation ─────────────────────────────────────────
@@ -358,24 +463,92 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   // ── Post Interactions ─────────────────────────────────────
 
+  openImagePreview(images: string[], startIndex = 0): void {
+    if (!images?.length) return;
+    this.lightboxImages.set(images);
+    this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
+    this.lightboxOpen.set(true);
+    this.syncPageScrollLock();
+  }
+
+  closeImagePreview(): void {
+    this.lightboxOpen.set(false);
+    this.lightboxImages.set([]);
+    this.activeImageIndex.set(0);
+    this.syncPageScrollLock();
+  }
+
+  nextPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current + 1) % images.length);
+  }
+
+  prevPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current - 1 + images.length) % images.length);
+  }
+
+  getActivePreviewImage(): string | null {
+    const images = this.lightboxImages();
+    const index = this.activeImageIndex();
+    if (!images.length || index < 0 || index >= images.length) return null;
+    return images[index] ?? null;
+  }
+
   toggleLike(post: Post): void {
+    if (this.likingPost() === post.id) return;
+
     this.likingPost.set(post.id);
-    const action$ = post.isLiked ? this.postService.unlikePost(post.id) : this.postService.likePost(post.id);
-    const likeDelta = post.isLiked ? -1 : 1;
+    const currentlyLiked = !!post.isLiked;
+    const action$ = currentlyLiked ? this.postService.unlikePost(post.id) : this.postService.likePost(post.id);
+    const likeDelta = currentlyLiked ? -1 : 1;
+
+    this.posts.update((posts) =>
+      posts.map((p) =>
+        p.id === post.id
+          ? {
+              ...p,
+              isLiked: !currentlyLiked,
+              _count: {
+                ...p._count!,
+                likes: Math.max(0, (p._count?.likes ?? 0) + likeDelta),
+                comments: p._count?.comments ?? 0,
+              },
+            }
+          : p
+      )
+    );
 
     action$.subscribe({
       next: () => {
+        this.likingPost.set(null);
+      },
+      error: () => {
         this.posts.update((posts) =>
           posts.map((p) =>
             p.id === post.id
-              ? { ...p, isLiked: !post.isLiked, _count: { ...p._count!, likes: Math.max(0, (p._count?.likes ?? 0) + likeDelta), comments: p._count?.comments ?? 0 } }
+              ? {
+                  ...p,
+                  isLiked: currentlyLiked,
+                  _count: {
+                    ...p._count!,
+                    likes: Math.max(0, (p._count?.likes ?? 0) - likeDelta),
+                    comments: p._count?.comments ?? 0,
+                  },
+                }
               : p
           )
         );
+        this.toast.error('Failed to update like');
         this.likingPost.set(null);
       },
-      error: () => { this.toast.error('Failed to update like'); this.likingPost.set(null); },
     });
+  }
+
+  isCommentByPostAuthor(post: Post, comment: Comment): boolean {
+    return post.userId === comment.userId;
   }
 
   toggleComments(postId: string): void {
@@ -420,7 +593,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       next: (comment) => {
         this.postComments.update((map) => {
           const m = new Map(map);
-          m.set(postId, [...(m.get(postId) ?? []), comment]);
+          m.set(postId, [comment, ...(m.get(postId) ?? [])]);
           return m;
         });
         this.posts.update((posts) =>
@@ -431,17 +604,218 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
           )
         );
         form.reset();
+        setTimeout(() => {
+          const container = document.querySelector<HTMLElement>(`.comment-list-scroll[data-post-id="${postId}"]`);
+          if (container) {
+            container.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 0);
         this.submittingComment.set(null);
       },
       error: () => { this.toast.error('Failed to add comment'); this.submittingComment.set(null); },
     });
   }
 
-  sharePost(post: Post): void {
-    const url = `${window.location.origin}${this.isAdmin() ? '/admin' : '/user'}/community/${this.communityId()}`;
-    navigator.clipboard.writeText(url)
-      .then(() => this.toast.success('Link copied to clipboard!'))
-      .catch(() => this.toast.error('Failed to copy link'));
+  async sharePost(post: Post): Promise<void> {
+    const shareUrl = this.getShareUrl(post.id);
+    const postText = this.getShareContentText(post);
+    const shareTitle = `${this.community()?.name ?? 'Community'} Post`;
+
+    if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+      this.openShareModal(post);
+      return;
+    }
+
+    try {
+      const shareData: ShareData = {
+        title: shareTitle,
+        text: postText,
+        url: shareUrl,
+      };
+
+      const files = await this.buildShareFiles(post.images);
+      if (files.length > 0) {
+        const withFiles: ShareData = { ...shareData, files };
+        if (typeof navigator.canShare === 'function' && navigator.canShare(withFiles)) {
+          await navigator.share(withFiles);
+          return;
+        }
+      }
+
+      await navigator.share(shareData);
+    } catch (error: unknown) {
+      const err = error as { name?: string };
+      if (err?.name === 'AbortError') return;
+      this.openShareModal(post);
+    }
+  }
+
+  openShareModal(post: Post): void {
+    this.shareTargetPost.set(post);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    this.shareModalOpen.set(true);
+    this.syncPageScrollLock();
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen.set(false);
+    this.shareTargetPost.set(null);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    this.syncPageScrollLock();
+  }
+
+  shareVia(platform: 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest'): void {
+    const post = this.shareTargetPost();
+    if (!post) return;
+
+    const shareUrl = this.getShareUrl(post.id);
+    const text = this.getShareContentText(post);
+    const imageUrl = post.images?.[0] ? this.resolveImageUrl(post.images[0]) : null;
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(text);
+    const encodedTextWithUrl = encodeURIComponent(`${shareUrl}\n\n${text}`);
+    const encodedImage = imageUrl ? encodeURIComponent(imageUrl) : '';
+
+    let target = '';
+    switch (platform) {
+      case 'whatsapp':
+        target = `https://wa.me/?text=${encodedTextWithUrl}`;
+        break;
+      case 'facebook':
+        target = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'x':
+        target = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'telegram':
+        target = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'linkedin':
+        target = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'email':
+        target = `mailto:?subject=${encodeURIComponent(`${this.community()?.name ?? 'Community'} Post`)}&body=${encodedTextWithUrl}`;
+        break;
+      case 'pinterest':
+        target = imageUrl
+          ? `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImage}&description=${encodedText}`
+          : `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`;
+        break;
+    }
+
+    if (platform === 'email') {
+      window.location.href = target;
+      return;
+    }
+
+    this.openShareTarget(target, platform);
+  }
+
+  private openShareTarget(target: string, platform: 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'pinterest'): void {
+    const popupFeatures = platform === 'whatsapp'
+      ? 'width=980,height=760'
+      : 'width=680,height=720';
+
+    const popup = window.open(target, '_blank', popupFeatures);
+    if (!popup) {
+      this.sharePopupBlocked.set(true);
+      this.blockedShareUrl.set(target);
+      return;
+    }
+
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    popup.opener = null;
+  }
+
+  openShareInSameTab(): void {
+    const target = this.blockedShareUrl();
+    if (!target) return;
+    window.location.href = target;
+  }
+
+  copyShareLink(): void {
+    const post = this.shareTargetPost();
+    if (!post) return;
+
+    const shareUrl = this.getShareUrl(post.id);
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => this.toast.success('Share link copied.'))
+      .catch(() => this.toast.error('Failed to copy share link.'));
+  }
+
+  private getShareUrl(postId: string): string {
+    const base = this.getShareBaseOrigin();
+    return `${base}/share/post/${postId}`;
+  }
+
+  getShareText(post: Post): string {
+    const compact = this.getCompactPostContent(post);
+    if (!compact) return `${this.community()?.name ?? 'Community'} shared a post`;
+
+    const previewLimit = 220;
+    if (compact.length <= previewLimit) {
+      return compact;
+    }
+    return `${compact.slice(0, previewLimit - 1).trimEnd()}...`;
+  }
+
+  private getShareContentText(post: Post): string {
+    const communityName = this.community()?.name ?? 'Community';
+    const compact = this.getCompactPostContent(post);
+    return compact ? `${communityName}: ${compact}` : `${communityName} shared a post`;
+  }
+
+  private getCompactPostContent(post: Post): string {
+    return (post.content || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private async buildShareFiles(images: string[] | undefined): Promise<File[]> {
+    const firstImage = images?.[0];
+    if (!firstImage) return [];
+
+    try {
+      const imageUrl = this.resolveImageUrl(firstImage);
+      const response = await fetch(imageUrl, { mode: 'cors' });
+      if (!response.ok) return [];
+
+      const blob = await response.blob();
+      const mime = blob.type || 'image/jpeg';
+      const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+      const file = new File([blob], `community-post.${ext}`, { type: mime });
+      return [file];
+    } catch {
+      return [];
+    }
+  }
+
+  private resolveImageUrl(pathOrUrl: string): string {
+    if (/^(https?:)?\/\//i.test(pathOrUrl) || pathOrUrl.startsWith('data:')) {
+      return pathOrUrl;
+    }
+    const base = environment.wsUrl || window.location.origin;
+    const normalized = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    return `${base.replace(/\/$/, '')}${normalized}`;
+  }
+
+  private getShareBaseOrigin(): string {
+    const wsOrigin = (environment.wsUrl || '').trim();
+    if (wsOrigin) {
+      return wsOrigin.replace(/\/$/, '');
+    }
+
+    const apiUrl = (environment.apiUrl || '').trim();
+    if (apiUrl) {
+      try {
+        return new URL(apiUrl, window.location.origin).origin;
+      } catch {
+        // ignore and fallback to current origin
+      }
+    }
+
+    return window.location.origin.replace(/\/$/, '');
   }
 
   // ── Post Options Menu ─────────────────────────────────────
@@ -449,6 +823,38 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.postMenuOpenId.set(null);
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    if (this.lightboxOpen()) {
+      event.preventDefault();
+      this.closeImagePreview();
+      return;
+    }
+    if (this.shareModalOpen()) {
+      event.preventDefault();
+      this.closeShareModal();
+      return;
+    }
+    if (this.deletePostModalOpen()) {
+      event.preventDefault();
+      this.closeDeletePostModal();
+    }
+  }
+
+  @HostListener('document:keydown.arrowright', ['$event'])
+  onArrowRightKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.nextPreviewImage();
+  }
+
+  @HostListener('document:keydown.arrowleft', ['$event'])
+  onArrowLeftKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.prevPreviewImage();
   }
 
   togglePostMenu(postId: string, event: MouseEvent): void {
@@ -467,6 +873,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editingPost.set(post);
     this.selectedEditType.set(post.type);
     this.editPostForm.setValue({ content: post.content });
+    this.editExistingImages.set([...(post.images ?? [])]);
     this.editImages.set([]);
     this.editImageResetCounter.update((n) => n + 1);
     this.editModalOpen.set(true);
@@ -476,6 +883,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   closeEditModal(): void {
     this.editModalOpen.set(false);
     this.editingPost.set(null);
+    this.editExistingImages.set([]);
     this.editPostForm.reset();
     this.syncPageScrollLock();
   }
@@ -483,6 +891,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   setEditPostType(type: PostType): void { this.selectedEditType.set(type); }
 
   onEditImagesChange(files: File[]): void { this.editImages.set(files); }
+
+  removeEditExistingImage(index: number): void {
+    this.editExistingImages.update((images) => images.filter((_, i) => i !== index));
+  }
 
   saveEditPost(): void {
     if (this.editPostForm.invalid) { this.editPostForm.markAllAsTouched(); return; }
@@ -492,9 +904,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.savingEdit.set(true);
     const content = this.editPostForm.get('content')!.value as string;
     const type    = this.selectedEditType();
+    const retainedImages = this.editExistingImages();
     const images  = this.editImages();
 
-    this.postService.updatePost(post.id, { content, type }, images.length > 0 ? images : undefined).subscribe({
+    this.postService.updatePost(post.id, { content, type, images: retainedImages }, images.length > 0 ? images : undefined).subscribe({
       next: (updated) => {
         this.posts.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
         this.toast.success('Post updated successfully!');
@@ -510,13 +923,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   openDeletePostModal(post: Post): void {
     this.postMenuOpenId.set(null);
     this.deletePostTarget.set(post);
+    this.deletingPost.set(false);
     this.deletePostModalOpen.set(true);
+    this.renderDeletePostModal();
     this.syncPageScrollLock();
   }
 
   closeDeletePostModal(): void {
     this.deletePostModalOpen.set(false);
     this.deletePostTarget.set(null);
+    this.deletingPost.set(false);
+    this.destroyDeletePostModal();
     this.syncPageScrollLock();
   }
 
@@ -525,14 +942,31 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     if (!post) return;
 
     this.deletingPost.set(true);
+    this.updateDeletePostModalInputs();
     this.postService.deletePost(post.id).subscribe({
       next: () => {
         this.posts.update((current) => current.filter((p) => p.id !== post.id));
+        this.community.update((current) => {
+          if (!current) return current;
+          const currentMembers = current._count?.members ?? 0;
+          const currentPosts = current._count?.posts ?? 0;
+          return {
+            ...current,
+            _count: {
+              members: currentMembers,
+              posts: Math.max(0, currentPosts - 1),
+            },
+          };
+        });
         this.toast.success('Post deleted successfully.');
         this.deletingPost.set(false);
         this.closeDeletePostModal();
       },
-      error: () => { this.toast.error('Failed to delete post'); this.deletingPost.set(false); },
+      error: () => {
+        this.toast.error('Failed to delete post');
+        this.deletingPost.set(false);
+        this.updateDeletePostModalInputs();
+      },
     });
   }
 
@@ -665,12 +1099,65 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  getDeletePostPreview(): string | null {
+    const content = this.deletePostTarget()?.content;
+    if (!content) return null;
+    return `${content.slice(0, 120)}${content.length > 120 ? '...' : ''}`;
+  }
+
+  private renderDeletePostModal(): void {
+    if (!this.deletePostModalOpen()) return;
+
+    if (!this.deletePostModalRef) {
+      const host = document.createElement('div');
+      document.body.appendChild(host);
+
+      const ref = createComponent(DeletePostModalComponent, {
+        environmentInjector: this.environmentInjector,
+        hostElement: host,
+      });
+
+      ref.instance.cancel.subscribe(() => this.closeDeletePostModal());
+      ref.instance.confirm.subscribe(() => this.confirmDeletePost());
+
+      this.appRef.attachView(ref.hostView);
+
+      this.deletePostModalRef = ref;
+      this.deletePostModalHost = host;
+    }
+
+    this.updateDeletePostModalInputs();
+  }
+
+  private updateDeletePostModalInputs(): void {
+    if (!this.deletePostModalRef) return;
+    this.deletePostModalRef.instance.open = this.deletePostModalOpen();
+    this.deletePostModalRef.instance.deleting = this.deletingPost();
+    this.deletePostModalRef.instance.previewContent = this.getDeletePostPreview();
+    this.deletePostModalRef.changeDetectorRef.detectChanges();
+  }
+
+  private destroyDeletePostModal(): void {
+    if (!this.deletePostModalRef) return;
+
+    this.appRef.detachView(this.deletePostModalRef.hostView);
+    this.deletePostModalRef.destroy();
+    this.deletePostModalRef = null;
+
+    if (this.deletePostModalHost) {
+      this.deletePostModalHost.remove();
+      this.deletePostModalHost = null;
+    }
+  }
+
   private syncPageScrollLock(): void {
     const hasOpenModal =
       this.deleteModalOpen() ||
       this.editModalOpen() ||
       this.deletePostModalOpen() ||
-      this.editCommunityModalOpen();
+      this.editCommunityModalOpen() ||
+      this.lightboxOpen() ||
+      this.shareModalOpen();
 
     if (hasOpenModal) {
       this.lockPageScroll();
@@ -683,12 +1170,16 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     const body = document.body;
     const html = document.documentElement;
 
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+
     if (this.previousBodyOverflow === null) {
       this.previousBodyOverflow = body.style.overflow;
     }
     if (this.previousHtmlOverflow === null) {
       this.previousHtmlOverflow = html.style.overflow;
     }
+
+    this.lockedScrollY = scrollY;
 
     body.style.overflow = 'hidden';
     html.style.overflow = 'hidden';
@@ -701,8 +1192,13 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     body.style.overflow = this.previousBodyOverflow ?? '';
     html.style.overflow = this.previousHtmlOverflow ?? '';
 
+    if (this.lockedScrollY !== null && Math.abs(window.scrollY - this.lockedScrollY) > 1) {
+      window.scrollTo(0, this.lockedScrollY);
+    }
+
     this.previousBodyOverflow = null;
     this.previousHtmlOverflow = null;
+    this.lockedScrollY = null;
   }
 
   getCommunityStatus(): { label: string; cls: string } {
@@ -726,6 +1222,32 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   get cf() {
     return this.communityEditForm.controls;
+  }
+
+  shouldTruncatePost(content: string | undefined | null): boolean {
+    return (content?.length ?? 0) > this.postContentPreviewLimit;
+  }
+
+  isPostExpanded(postId: string): boolean {
+    return this.expandedPostContent().has(postId);
+  }
+
+  togglePostExpanded(postId: string): void {
+    this.expandedPostContent.update((current) => {
+      const next = new Set(current);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  }
+
+  getPostPreview(content: string | undefined | null): string {
+    const text = content ?? '';
+    if (!this.shouldTruncatePost(text)) return text;
+    return `${text.slice(0, this.postContentPreviewLimit).trimEnd()}...`;
   }
 
   getPostTypeBadge(type: PostType): { label: string; class: string; icon: string } {
@@ -782,5 +1304,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   getUserFullName(user?: { displayName?: string; userName?: string } | null): string {
     if (!user) return 'Unknown User';
     return user.displayName || user.userName || 'Unknown User';
+  }
+
+  isCommunityCreator(member: CommunityMember): boolean {
+    const creatorId = this.communityCreatorId();
+    return !!creatorId && member.user?.id === creatorId;
   }
 }
