@@ -521,33 +521,48 @@ export async function getDashboardStats(userId: string, role: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Chart data — 7-day daily counts for users, communities, posts
+// Chart data — daily counts for users, communities, posts over a date range
+// (defaults to the last 7 days when no range is given)
 // ---------------------------------------------------------------------------
-export async function getChartData() {
-  // Build an array of the last 7 days (today inclusive), each as a YYYY-MM-DD string
+const CHART_MAX_RANGE_DAYS = 90;
+
+export async function getChartData(from?: string, to?: string) {
+  const toDate = to ? new Date(to + 'T00:00:00.000Z') : new Date();
+  const fromDate = from
+    ? new Date(from + 'T00:00:00.000Z')
+    : new Date(new Date().setDate(new Date().getDate() - 6));
+
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+    throw new AppError(400, 'Invalid date range');
+  }
+  if (fromDate > toDate) throw new AppError(400, '"from" date must be before "to" date');
+
+  // Build the inclusive list of days between fromDate and toDate, each as YYYY-MM-DD
   const days: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+  for (const d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
     days.push(d.toISOString().slice(0, 10));
+  }
+  if (days.length > CHART_MAX_RANGE_DAYS) {
+    throw new AppError(400, `Date range cannot exceed ${CHART_MAX_RANGE_DAYS} days`);
   }
 
   const startDate = days[0] + 'T00:00:00.000Z';
+  const endDate = days[days.length - 1] + 'T23:59:59.999Z';
 
   const [userRows, communityRows, postRows, [{ upcoming }], [{ past }], [{ active: bizActive }], [{ total: bizTotal }], [{ active: jobActive }], [{ total: jobTotal }]] = await Promise.all([
     db('users')
       .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
-      .where('created_at', '>=', startDate)
+      .whereBetween('created_at', [startDate, endDate])
       .groupByRaw('DATE(created_at)')
       .orderBy('day'),
     db('communities')
       .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
-      .where('created_at', '>=', startDate)
+      .whereBetween('created_at', [startDate, endDate])
       .groupByRaw('DATE(created_at)')
       .orderBy('day'),
     db('posts')
       .select(db.raw("DATE(created_at) as day"), db.raw('COUNT(*) as count'))
-      .where('created_at', '>=', startDate)
+      .whereBetween('created_at', [startDate, endDate])
       .groupByRaw('DATE(created_at)')
       .orderBy('day'),
     db('events').where('event_date', '>=', db.raw('NOW()')).count({ upcoming: '*' }),

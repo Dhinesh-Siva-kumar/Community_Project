@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,12 +11,14 @@ import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { EventService } from '../../../core/services/event.service';
 import { JobService } from '../../../core/services/job.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   User,
   DashboardStats,
   Notification,
   Community,
   Post,
+  Comment,
   Event,
   Job,
   PaginatedResponse,
@@ -53,7 +56,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, ImageUrlPipe, ProfileTabsComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ProfileTabsComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -65,6 +68,8 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   private postService = inject(PostService);
   private eventService = inject(EventService);
   private jobService = inject(JobService);
+  private toast = inject(ToastService);
+  private fb = inject(FormBuilder);
   private platformId = inject(PLATFORM_ID);
 
   // Loading states
@@ -84,6 +89,14 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   allPosts = signal<Post[]>([]);
   savedPostIds = signal<Set<string>>(new Set());
 
+  // Post interactions (like / comment / share)
+  likingPost = signal<string | null>(null);
+  expandedComments = signal<Set<string>>(new Set());
+  loadingComments = signal<Set<string>>(new Set());
+  postComments = signal<Map<string, Comment[]>>(new Map());
+  submittingComment = signal<string | null>(null);
+  commentForms: Map<string, FormGroup> = new Map();
+
   // Communities, Events, Jobs
   joinedCommunities = signal<Community[]>([]);
   upcomingEvents = signal<Event[]>([]);
@@ -92,6 +105,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Computed
   profileCompletion = computed(() => this.user()?.profileCompletion ?? 0);
   firstName = computed(() => this.user()?.displayName ?? this.user()?.userName ?? 'User');
+  currentUser = computed(() => this.user());
 
   greeting = computed(() => {
     const hour = this.today().getHours();
@@ -322,6 +336,106 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return this.savedPostIds().has(postId);
   }
 
+  // ── Like / Comment / Share ─────────────────────────────────
+
+  toggleLike(post: Post): void {
+    this.likingPost.set(post.id);
+    const action$ = post.isLiked ? this.postService.unlikePost(post.id) : this.postService.likePost(post.id);
+    const likeDelta = post.isLiked ? -1 : 1;
+
+    action$.subscribe({
+      next: () => {
+        this.allPosts.update((posts) =>
+          posts.map((p) =>
+            p.id === post.id
+              ? { ...p, isLiked: !post.isLiked, _count: { ...p._count!, likes: Math.max(0, (p._count?.likes ?? 0) + likeDelta), comments: p._count?.comments ?? 0 } }
+              : p
+          )
+        );
+        this.likingPost.set(null);
+      },
+      error: () => { this.toast.error('Failed to update like'); this.likingPost.set(null); },
+    });
+  }
+
+  toggleComments(postId: string): void {
+    this.expandedComments.update((set) => {
+      const next = new Set(set);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+        if (!this.postComments().has(postId)) { this.loadComments(postId); }
+      }
+      return next;
+    });
+  }
+
+  isCommentsExpanded(postId: string): boolean { return this.expandedComments().has(postId); }
+
+  loadComments(postId: string): void {
+    this.loadingComments.update((set) => { const s = new Set(set); s.add(postId); return s; });
+    this.postService.getComments(postId).subscribe({
+      next: (comments) => {
+        this.postComments.update((map) => { const m = new Map(map); m.set(postId, comments); return m; });
+        this.loadingComments.update((set) => { const s = new Set(set); s.delete(postId); return s; });
+      },
+      error: () => {
+        this.loadingComments.update((set) => { const s = new Set(set); s.delete(postId); return s; });
+      },
+    });
+  }
+
+  getComments(postId: string): Comment[] { return this.postComments().get(postId) ?? []; }
+  isLoadingComments(postId: string): boolean { return this.loadingComments().has(postId); }
+
+  getCommentForm(postId: string): FormGroup {
+    if (!this.commentForms.has(postId)) {
+      this.commentForms.set(
+        postId,
+        this.fb.group({
+          content: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(500)]],
+        })
+      );
+    }
+    return this.commentForms.get(postId)!;
+  }
+
+  submitComment(postId: string): void {
+    const form = this.getCommentForm(postId);
+    if (form.invalid) return;
+
+    this.submittingComment.set(postId);
+    const content = form.get('content')!.value;
+
+    this.postService.addComment(postId, content).subscribe({
+      next: (comment) => {
+        this.postComments.update((map) => {
+          const m = new Map(map);
+          m.set(postId, [...(m.get(postId) ?? []), comment]);
+          return m;
+        });
+        this.allPosts.update((posts) =>
+          posts.map((p) =>
+            p.id === postId
+              ? { ...p, _count: { ...p._count!, comments: (p._count?.comments ?? 0) + 1, likes: p._count?.likes ?? 0 } }
+              : p
+          )
+        );
+        form.reset();
+        this.submittingComment.set(null);
+      },
+      error: () => { this.toast.error('Failed to add comment'); this.submittingComment.set(null); },
+    });
+  }
+
+  sharePost(post: Post): void {
+    const url = `${window.location.origin}/user/community/${post.communityId}`;
+    navigator.clipboard.writeText(url)
+      .then(() => this.toast.success('Link copied to clipboard!'))
+      .catch(() => this.toast.error('Failed to copy link'));
+  }
+
   // ── Notifications ─────────────────────────────────────────
 
   markNotificationRead(id: string): void {
@@ -426,6 +540,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   getEventDay(dateString: string): string {
     return new Date(dateString).getDate().toString();
+  }
+
+  getEventTime(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   getUserInitials(user?: User): string {
