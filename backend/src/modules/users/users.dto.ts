@@ -47,6 +47,11 @@ export const AuditLogQueryDto = z.object({
   action: z.string().optional(),
 });
 
+export const ChartDataQueryDto = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'from must be YYYY-MM-DD').optional(),
+  to:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to must be YYYY-MM-DD').optional(),
+});
+
 export const BroadcastNotificationDto = z.object({
   type:        z.enum([
     'POST_APPROVED', 'POST_REJECTED', 'NEW_COMMENT', 'NEW_LIKE',
@@ -66,3 +71,4 @@ export type AdminChangeRoleDtoType       = z.infer<typeof AdminChangeRoleDto>;
 export type AdminResetPasswordDtoType    = z.infer<typeof AdminResetPasswordDto>;
 export type AuditLogQueryDtoType         = z.infer<typeof AuditLogQueryDto>;
 export type BroadcastNotificationDtoType = z.infer<typeof BroadcastNotificationDto>;
+export type ChartDataQueryDtoType        = z.infer<typeof ChartDataQueryDto>;

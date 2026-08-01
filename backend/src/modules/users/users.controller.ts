@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import {
   UpdateUserDto, ListUsersQueryDto,
   AdminCreateUserDto, AdminChangeRoleDto, AdminResetPasswordDto,
-  AuditLogQueryDto, BroadcastNotificationDto,
+  AuditLogQueryDto, BroadcastNotificationDto, ChartDataQueryDto,
 } from './users.dto';
 import * as usersService from './users.service';
 import { FileValidationService } from '../../services/file-validation.service';
@@ -103,5 +103,8 @@ export async function untrustUser(req: Request, res: Response, next: NextFunctio
 }
 
 export async function getCharts(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try { res.json(await usersService.getChartData()); } catch (e) { next(e); }
+  try {
+    const { from, to } = ChartDataQueryDto.parse(req.query);
+    res.json(await usersService.getChartData(from, to));
+  } catch (e) { next(e); }
 }

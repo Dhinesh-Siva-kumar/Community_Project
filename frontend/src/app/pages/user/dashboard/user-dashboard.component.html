@@ -2,8 +2,15 @@
 @if (loading()) {
   <div class="db-sk">
     <div class="sk-hero"></div>
-    <div class="sk-row3">@for (_ of [1,2,3]; track _){<div class="sk-card"></div>}</div>
-    <div class="sk-grid"><div class="sk-feed">@for (_ of [1,2]; track _){<div class="sk-post"></div>}</div><div class="sk-side">@for (_ of [1,2,3]; track _){<div class="sk-card"></div>}</div></div>
+    <div class="sk-layout">
+      <div class="sk-main">
+        <div class="sk-card sk-composer"></div>
+        @for (_ of [1,2,3]; track _){<div class="sk-post"></div>}
+      </div>
+      <div class="sk-rail">
+        @for (_ of [1,2,3]; track _){<div class="sk-card"></div>}
+      </div>
+    </div>
   </div>
 } @else {
 <div class="db-page">
@@ -11,76 +18,36 @@
   <!-- ── Hero ──────────────────────────────────────────────── -->
   <section class="hero">
     <div class="hero__body">
-      <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}! 👋</h1>
-      <p class="hero__sub">
-        @if (joinedCommunities().length > 0 || upcomingEvents().length > 0) {
-          You have {{ joinedCommunities().length }} {{ joinedCommunities().length === 1 ? 'community' : 'communities' }}
-          @if (upcomingEvents().length > 0) { and {{ upcomingEvents().length }} upcoming {{ upcomingEvents().length === 1 ? 'event' : 'events' }} }
-          today.
-        } @else {
-          Discover communities and connect with people around you.
-        }
-      </p>
-      <!-- Post box -->
-      <div class="hero__postbox">
-        <div class="hero__avatar">
-          @if (user()?.avatar) {
-            <img [src]="user()!.avatar | imageUrl" alt="" />
-          } @else {
-            <span>{{ (user()?.displayName || user()?.userName || 'U').charAt(0).toUpperCase() }}</span>
-          }
-        </div>
-        <span class="hero__placeholder">What's on your mind?</span>
-        <a routerLink="/user/community" class="hero__postbtn">Post</a>
-      </div>
-    </div>
-
-    <!-- Streak / completion card -->
-    <div class="hero__card">
-      <div class="streak-ring">
-        <svg viewBox="0 0 80 80">
-          <circle class="sr-track" cx="40" cy="40" r="32"/>
-          <circle class="sr-fill"  cx="40" cy="40" r="32"
-            stroke-dasharray="201.06"
-            [attr.stroke-dashoffset]="201.06 - (201.06 * profileCompletion() / 100)"
-            transform="rotate(-90 40 40)"/>
-        </svg>
-        <div class="streak-ring__avatar">
-          @if (user()?.avatar) {
-            <img [src]="user()!.avatar | imageUrl" alt="" />
-          } @else {
-            <span>{{ (user()?.displayName || user()?.userName || 'U').charAt(0).toUpperCase() }}</span>
-          }
-        </div>
-      </div>
-      <p class="streak-ring__cap">PROFILE</p>
-      <p class="streak-ring__val">{{ profileCompletion() }}%</p>
+      <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
+      <p class="hero__sub">Here's what's happening in your communities today.</p>
     </div>
   </section>
 
-  <!-- ── Bento grid ─────────────────────────────────────────── -->
-  <div class="bento">
+  <!-- ── Social layout: feed (main) + right rail ─────────────── -->
+  <div class="db-layout">
 
-    <!-- Weekly Goals (wide) -->
-    <!-- Stat counters only -->
-    @for (stat of animatedStats(); track stat.label) {
-      <div class="bcard bcard--stat" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
-        <div class="stat-icon"><i class="bi" [ngClass]="stat.icon"></i></div>
-        <div class="stat-val">{{ stat.displayValue }}</div>
-        <div class="stat-lbl">{{ stat.label }}</div>
+    <!-- ══════════════ Main column: composer + feed ══════════════ -->
+    <div class="db-main">
+
+      <!-- Composer -->
+      <a routerLink="/user/community" class="composer-card">
+        <div class="composer-av">
+          @if (user()?.avatar) {
+            <img [src]="user()!.avatar! | imageUrl" alt="" />
+          } @else {
+            <span>{{ getUserInitials(user() ?? undefined) }}</span>
+          }
+        </div>
+        <span class="composer-input">What's on your mind, {{ firstName() }}?</span>
+      </a>
+      <div class="composer-quicklinks">
+        <a routerLink="/user/community" class="composer-qa"><i class="bi bi-image-fill"></i> Photo</a>
+        <a routerLink="/user/events" class="composer-qa"><i class="bi bi-calendar-plus"></i> Event</a>
+        <a routerLink="/user/community" class="composer-qa composer-qa--help"><i class="bi bi-question-circle-fill"></i> Ask for Help</a>
       </div>
-    }
 
-
-  </div>
-
-  <!-- ── Content: Feed + Sidebar ───────────────────────────── -->
-  <div class="content-grid">
-
-    <!-- Feed -->
-    <section class="feed-col">
-      <div class="feed-top">
-        <h2 class="feed-top__title">Community Feed</h2>
+      <!-- Feed filter tabs -->
+      <div class="feed-tabs">
         <app-profile-tabs
           [tabs]="tabs"
           [activeTab]="activeTab()"
@@ -88,8 +55,9 @@
         ></app-profile-tabs>
       </div>
 
+      <!-- Feed -->
       @if (loadingPosts()) {
-        @for (_ of [1,2]; track _){ <div class="sk-post"></div> }
+        @for (_ of [1,2,3]; track _){ <div class="sk-post"></div> }
       } @else if (filteredPosts().length === 0) {
         <div class="feed-empty">
           <i class="bi bi-inbox-fill"></i>
@@ -121,127 +89,159 @@
             <p class="post__body">{{ post.content }}</p>
 
             @if (post.images?.length) {
-              <div class="post__imgs">
-                @for (img of post.images.slice(0,2); track img) {
+              <div class="post__imgs" [class.post__imgs--single]="post.images.length === 1">
+                @for (img of post.images.slice(0,4); track img) {
                   <img [src]="img | imageUrl" alt="" />
                 }
               </div>
             }
 
             <div class="post__actions">
-              <button class="pact" type="button"><i class="bi bi-heart"></i> {{ post._count?.likes ?? 0 }}</button>
-              <button class="pact" type="button"><i class="bi bi-chat-dots"></i> {{ post._count?.comments ?? 0 }}</button>
-              <button class="pact" type="button"><i class="bi bi-share"></i></button>
+              <button class="pact" [class.pact--active]="post.isLiked" [disabled]="likingPost() === post.id"
+                      (click)="toggleLike(post)" type="button">
+                <i class="bi" [ngClass]="post.isLiked ? 'bi-heart-fill' : 'bi-heart'"></i> {{ post._count?.likes ?? 0 }}
+              </button>
+              <button class="pact" [class.pact--active]="isCommentsExpanded(post.id)"
+                      (click)="toggleComments(post.id)" type="button">
+                <i class="bi bi-chat-dots"></i> {{ post._count?.comments ?? 0 }}
+              </button>
+              <button class="pact" (click)="sharePost(post)" type="button">
+                <i class="bi bi-share"></i> Share
+              </button>
               <button class="pact pact--save" [class.saved]="isPostSaved(post.id)"
                       (click)="toggleSavePost(post.id, $event)" type="button">
                 <i class="bi" [ngClass]="isPostSaved(post.id) ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
               </button>
             </div>
+
+            <!-- Comments -->
+            @if (isCommentsExpanded(post.id)) {
+              <div class="comments">
+                @if (isLoadingComments(post.id)) {
+                  <div class="comments__loading"><span class="spinner"></span></div>
+                } @else {
+                  @for (comment of getComments(post.id); track comment.id) {
+                    <div class="comment">
+                      <div class="comment__av">
+                        @if (comment.user?.avatar) {
+                          <img [src]="comment.user!.avatar | imageUrl" alt="" />
+                        } @else {
+                          <span>{{ getUserInitials(comment.user) }}</span>
+                        }
+                      </div>
+                      <div class="comment__bubble">
+                        <strong>{{ comment.user?.displayName || comment.user?.userName }}</strong>
+                        <p>{{ comment.content }}</p>
+                      </div>
+                    </div>
+                  }
+                  @if (getComments(post.id).length === 0) {
+                    <p class="comments__empty">No comments yet. Be the first!</p>
+                  }
+                  <form class="comment-form" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                    <div class="comment__av">
+                      @if (user()?.avatar) {
+                        <img [src]="user()!.avatar! | imageUrl" alt="" />
+                      } @else {
+                        <span>{{ getUserInitials(user() ?? undefined) }}</span>
+                      }
+                    </div>
+                    <input type="text" formControlName="content" placeholder="Write a comment..." />
+                    <button type="submit" [disabled]="submittingComment() === post.id" aria-label="Post comment">
+                      <i class="bi bi-send-fill"></i>
+                    </button>
+                  </form>
+                }
+              </div>
+            }
           </article>
         }
       }
-    </section>
+    </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar-col">
+    <!-- ══════════════ Right rail ══════════════ -->
+    <aside class="db-rail">
+
+      <!-- Your activity -->
+      <div class="rail-card">
+        <h3 class="rail-card__title">Your Activity</h3>
+        <div class="rail-stats">
+          @for (stat of animatedStats(); track stat.label) {
+            <div class="rail-stat" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
+              <span class="rail-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
+              <span class="rail-stat__val">{{ stat.displayValue }}</span>
+              <span class="rail-stat__lbl">{{ stat.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Profile completion -->
+      @if (profileCompletion() < 100) {
+        <div class="rail-card">
+          <div class="rail-card__head">
+            <h3 class="rail-card__title">Complete Your Profile</h3>
+            <span class="rail-card__pct">{{ profileCompletion() }}%</span>
+          </div>
+          <div class="rail-progress"><div class="rail-progress__bar" [style.width.%]="profileCompletion()"></div></div>
+          <p class="rail-card__hint">{{ profileStrength() }} — finish these to stand out:</p>
+          <ul class="rail-checklist">
+            @for (item of incompleteItems().slice(0,3); track item.label) {
+              <li><a [routerLink]="item.route"><i class="bi bi-circle"></i> {{ item.label }}</a></li>
+            }
+          </ul>
+        </div>
+      }
 
       <!-- Upcoming Events -->
-      <div class="scard scard--tinted">
-        <h3 class="scard__title"><i class="bi bi-calendar-event-fill"></i> Upcoming Events</h3>
+      <div class="rail-card">
+        <h3 class="rail-card__title">Upcoming Events</h3>
         @if (loadingEvents()) {
           <div class="sk-line w80"></div><div class="sk-line w60"></div>
         } @else if (upcomingEvents().length === 0) {
-          <p class="scard__empty">No upcoming events. <a routerLink="/user/events">Browse events →</a></p>
+          <p class="rail-card__empty">No upcoming events.</p>
         } @else {
-          @for (ev of upcomingEvents().slice(0,3); track ev.id) {
-            <div class="ev-item">
-              <div class="ev-item__badge ev-item__badge--{{ $index % 2 === 0 ? 'green' : 'amber' }}">
-                <span>{{ getEventMonth(ev.eventDate) }}</span>
-                <strong>{{ getEventDay(ev.eventDate) }}</strong>
-              </div>
-              <div>
-                <p class="ev-item__title">{{ ev.title }}</p>
-                @if (ev.location) { <p class="ev-item__loc"><i class="bi bi-geo-alt"></i> {{ ev.location }}</p> }
-              </div>
-            </div>
-          }
-        }
-        <a routerLink="/user/events" class="scard__link">View All Events →</a>
-      </div>
-
-      <!-- My Communities (Recommended) -->
-      <div class="scard">
-        <h3 class="scard__title"><i class="bi bi-people-fill"></i>
-          @if (joinedCommunities().length > 0) { My Communities } @else { Discover Communities }
-        </h3>
-        @if (loadingCommunities()) {
-          <div class="sk-line w80"></div>
-        } @else if (joinedCommunities().length === 0) {
-          <p class="scard__empty">No communities yet.</p>
-          <a routerLink="/user/community" class="scard__join-btn"><i class="bi bi-plus-lg"></i> Join a Community</a>
-        } @else {
-          @for (c of joinedCommunities().slice(0,4); track c.id) {
-            <div class="rec-item">
-              <div class="rec-item__img">
-                @if (c.image) { <img [src]="c.image | imageUrl" alt="" /> }
-                @else { <span>{{ c.name.charAt(0) }}</span> }
-              </div>
-              <div class="rec-item__info">
-                <p>{{ c.name }}</p>
-                <span>{{ c._count?.members ?? 0 }} members</span>
-              </div>
-              <a [routerLink]="['/user/community', c.id]" class="rec-item__btn">
-                <i class="bi bi-arrow-right"></i>
-              </a>
-            </div>
-          }
-        }
-      </div>
-
-      <!-- Jobs -->
-      @if (recentJobs().length > 0) {
-        <div class="scard">
-          <h3 class="scard__title"><i class="bi bi-briefcase-fill"></i> Recent Jobs</h3>
-          @for (job of recentJobs().slice(0,3); track job.id) {
-            <a [routerLink]="['/user/jobs']" class="job-item">
-              <div>
-                <p class="job-item__title">{{ job.title }}</p>
-                <div class="job-item__meta">
-                  @if (job.jobType) { <span class="job-chip">{{ job.jobType }}</span> }
-                  @if (job.location) { <span>{{ job.location }}</span> }
+          <div class="upcoming-list">
+            @for (ev of upcomingEvents().slice(0,3); track ev.id) {
+              <div class="upcoming-item">
+                <div class="upcoming-date">
+                  <span class="date-month">{{ getEventMonth(ev.eventDate) }}</span>
+                  <strong class="date-day">{{ getEventDay(ev.eventDate) }}</strong>
+                </div>
+                <div class="upcoming-info">
+                  <p class="upcoming-title">{{ ev.title }}</p>
+                  <p class="upcoming-time">{{ getEventTime(ev.eventDate) }}</p>
                 </div>
               </div>
-              <span class="job-item__time">{{ getTimeAgo(job.createdAt) }}</span>
+            }
+          </div>
+        }
+        <a routerLink="/user/events" class="rail-card__link">See Calendar →</a>
+      </div>
+
+      <!-- Find Communities -->
+      <div class="rail-card rail-cta">
+        <i class="bi bi-people-fill rail-cta__icon"></i>
+        <h3 class="rail-cta__title">Find Communities</h3>
+        <p class="rail-cta__sub">Discover like-minded neighbors and groups based on your interests.</p>
+        <a routerLink="/user/community" class="rail-cta__btn">Explore Now</a>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="rail-card">
+        <h3 class="rail-card__title">Quick Links</h3>
+        <div class="rail-quicklinks">
+          @for (link of quickLinks(); track link.title) {
+            <a [routerLink]="link.route" class="rail-quicklink" [style.--ac]="link.color" [style.--bg]="link.bgColor">
+              <span class="rail-quicklink__icon"><i class="bi" [ngClass]="link.icon"></i></span>
+              <span class="rail-quicklink__text">
+                <strong>{{ link.title }}</strong>
+                <small>{{ link.description }}</small>
+              </span>
             </a>
           }
-          <a routerLink="/user/jobs" class="scard__link">View All Jobs →</a>
         </div>
-      }
-
-      <!-- Notifications -->
-      @if (latestNotifications().length > 0) {
-        <div class="scard">
-          <div class="scard__head">
-            <h3 class="scard__title"><i class="bi bi-bell-fill"></i> Notifications
-              @if (notificationService.unreadCount() > 0) {
-                <span class="notif-dot">{{ notificationService.unreadCount() }}</span>
-              }
-            </h3>
-            <button class="scard__mark" (click)="markAllNotificationsRead()" type="button">Mark read</button>
-          </div>
-          @for (n of latestNotifications().slice(0,4); track n.id) {
-            <div class="notif-item" [class.notif-item--unread]="!n.isRead" (click)="markNotificationRead(n.id)">
-              <div class="notif-item__ico" [style.background]="getNotificationIconColor(n.type) + '18'">
-                <i class="bi" [ngClass]="getNotificationIcon(n.type)" [style.color]="getNotificationIconColor(n.type)"></i>
-              </div>
-              <div>
-                <p class="notif-item__msg">{{ n.message }}</p>
-                <p class="notif-item__time">{{ getTimeAgo(n.createdAt) }}</p>
-              </div>
-            </div>
-          }
-        </div>
-      }
+      </div>
 
     </aside>
   </div>
