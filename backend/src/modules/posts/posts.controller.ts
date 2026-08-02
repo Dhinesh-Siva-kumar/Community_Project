@@ -148,6 +148,20 @@ export async function unlike(req: Request, res: Response, next: NextFunction): P
   } catch (err) { next(err); }
 }
 
+export async function savePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.savePost(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function unsavePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.unsavePost(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
 export async function getComments(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { page, limit } = PaginationQueryDto.parse(req.query);

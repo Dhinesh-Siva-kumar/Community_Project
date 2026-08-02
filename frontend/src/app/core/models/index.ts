@@ -206,6 +206,7 @@ export interface Post {
     likes: number;
   };
   isLiked?: boolean;
+  isSaved?: boolean;
   createdAt: string;
   updatedAt: string;
 }

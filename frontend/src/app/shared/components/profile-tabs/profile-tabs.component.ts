@@ -7,6 +7,10 @@ export interface ProfileTab {
   icon?: string;
   badge?: number;
   disabled?: boolean;
+  /** Optional per-tab accent (text/icon when active) — falls back to the default theme color when omitted. */
+  color?: string;
+  /** Optional per-tab light background (active pill / sliding indicator) — falls back to the default card color when omitted. */
+  bgColor?: string;
 }
 
 @Component({
@@ -20,7 +24,19 @@ export interface ProfileTab {
 export class ProfileTabsComponent {
   @Input() tabs: ProfileTab[] = [];
   @Input() activeTab = '';
+  /** Equal-width tabs filling one row, with a sliding active indicator. */
+  @Input() fullWidth = false;
   @Output() tabChange = new EventEmitter<string>();
+
+  get activeIndex(): number {
+    const idx = this.tabs.findIndex(t => t.id === this.activeTab);
+    return idx < 0 ? 0 : idx;
+  }
+
+  /** The active tab's light background, for the sliding indicator — null lets the default CSS color apply. */
+  get activeTabBg(): string | null {
+    return this.tabs[this.activeIndex]?.bgColor ?? null;
+  }
 
   select(tab: ProfileTab): void {
     if (!tab.disabled) this.tabChange.emit(tab.id);

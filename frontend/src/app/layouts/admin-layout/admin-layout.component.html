@@ -53,7 +53,7 @@
         <div class="sidebar-user-avatar-wrap">
           @if (authService.currentUser()?.avatar) {
             <img
-              [src]="authService.currentUser()!.avatar"
+              [src]="authService.currentUser()!.avatar | imageUrl"
               alt=""
               class="sidebar-user-avatar-img"
               aria-hidden="true"
@@ -140,7 +140,7 @@
         >
           @if (authService.currentUser()?.avatar) {
             <img
-              [src]="authService.currentUser()!.avatar"
+              [src]="authService.currentUser()!.avatar | imageUrl"
               alt="Profile picture"
               class="avatar-img"
             />

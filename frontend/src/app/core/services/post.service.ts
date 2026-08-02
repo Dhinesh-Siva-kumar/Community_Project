@@ -58,6 +58,14 @@ export class PostService {
     return this.api.delete<void>(`/posts/${postId}/like`);
   }
 
+  savePost(postId: string): Observable<void> {
+    return this.api.post<void>(`/posts/${postId}/save`);
+  }
+
+  unsavePost(postId: string): Observable<void> {
+    return this.api.delete<void>(`/posts/${postId}/save`);
+  }
+
   getComments(postId: string): Observable<Comment[]> {
     return this.api.get<any>(`/posts/${postId}/comments`).pipe(
       map((res: any) => Array.isArray(res) ? res : (res.data ?? []))

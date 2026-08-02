@@ -53,7 +53,7 @@
         <div class="sidebar-user-avatar-wrap">
           @if (authService.currentUser()?.avatar) {
             <img
-              [src]="authService.currentUser()!.avatar"
+              [src]="authService.currentUser()!.avatar | imageUrl"
               alt=""
               class="sidebar-user-avatar-img"
               aria-hidden="true"
@@ -108,11 +108,6 @@
     </div>
 
     <div class="header-right">
-      <!-- Search -->
-      <button class="header-icon-btn" type="button" aria-label="Search" title="Search">
-        <i class="bi bi-search" aria-hidden="true"></i>
-      </button>
-
       <!-- Notification bell -->
       <div
         class="header-icon-btn"
@@ -144,7 +139,7 @@
           aria-haspopup="menu"
         >
           @if (authService.currentUser()?.avatar) {
-            <img [src]="authService.currentUser()!.avatar" alt="Profile picture" class="avatar-img" />
+            <img [src]="authService.currentUser()!.avatar | imageUrl" alt="Profile picture" class="avatar-img" />
           } @else {
             <div class="avatar-initials" aria-hidden="true">{{ getUserInitials() }}</div>
           }

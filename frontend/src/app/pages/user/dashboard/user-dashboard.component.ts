@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -24,18 +24,13 @@ import {
   PaginatedResponse,
 } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
+import { environment } from '../../../../environments/environment';
 
-type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY';
+type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
-interface QuickLink {
-  title: string;
-  description: string;
-  icon: string;
-  color: string;
-  bgColor: string;
-  route: string;
-}
+type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
 
 interface ProfileItem {
   label: string;
@@ -56,7 +51,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ProfileTabsComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -87,10 +82,23 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Post feed
   activeTab = signal<PostTab>('ALL');
   allPosts = signal<Post[]>([]);
-  savedPostIds = signal<Set<string>>(new Set());
+  expandedPostContent = signal<Set<string>>(new Set());
+  readonly postContentPreviewLimit = 220;
 
-  // Post interactions (like / comment / share)
+  // Image lightbox
+  lightboxOpen = signal(false);
+  lightboxImages = signal<string[]>([]);
+  activeImageIndex = signal(0);
+
+  // Share modal
+  shareModalOpen = signal(false);
+  shareTargetPost = signal<Post | null>(null);
+  sharePopupBlocked = signal(false);
+  blockedShareUrl = signal<string | null>(null);
+
+  // Post interactions (like / comment / share / save)
   likingPost = signal<string | null>(null);
+  savingPost = signal<string | null>(null);
   expandedComments = signal<Set<string>>(new Set());
   loadingComments = signal<Set<string>>(new Set());
   postComments = signal<Map<string, Comment[]>>(new Map());
@@ -114,6 +122,17 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return 'Good evening';
   });
 
+  // Time-of-day icon for the hero — deliberately not another copy of the
+  // user's avatar, which already appears in the navbar and the composer
+  // directly below; repeating it a third time in the same viewport read
+  // as redundant clutter.
+  greetingIcon = computed(() => {
+    const hour = this.today().getHours();
+    if (hour < 12) return 'bi-sunrise';
+    if (hour < 17) return 'bi-sun';
+    return 'bi-moon-stars';
+  });
+
   profileStrength = computed(() => {
     const pct = this.profileCompletion();
     if (pct >= 100) return 'Complete';
@@ -123,27 +142,47 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return 'Just started';
   });
 
+  // allPosts() is loaded latest-first (see loadPostsFromCommunities), and a
+  // filter preserves that relative order — but each case sorts explicitly
+  // by createdAt anyway so this doesn't silently depend on that assumption.
   filteredPosts = computed(() => {
     const posts = this.allPosts();
     const tab = this.activeTab();
     switch (tab) {
       case 'POPULAR':
-        return [...posts].sort((a, b) => (b._count?.likes ?? 0) - (a._count?.likes ?? 0));
+        // Engagement score = likes + comments, most-engaged first; ties
+        // (e.g. brand-new posts with no interactions yet) fall back to
+        // most recent first.
+        return [...posts].sort((a, b) => {
+          const scoreA = (a._count?.likes ?? 0) + (a._count?.comments ?? 0);
+          const scoreB = (b._count?.likes ?? 0) + (b._count?.comments ?? 0);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return this.byLatest(a, b);
+        });
       case 'HELP':
-        return posts.filter((p) => p.type === 'HELP');
+        return posts.filter((p) => p.type === 'HELP').sort((a, b) => this.byLatest(a, b));
       case 'EMERGENCY':
-        return posts.filter((p) => p.type === 'EMERGENCY');
+        return posts.filter((p) => p.type === 'EMERGENCY').sort((a, b) => this.byLatest(a, b));
+      case 'ENQUIRY':
+        return posts.filter((p) => p.type === 'ENQUIRY').sort((a, b) => this.byLatest(a, b));
       default:
-        return posts;
+        return [...posts].sort((a, b) => this.byLatest(a, b));
     }
   });
 
+  private byLatest(a: Post, b: Post): number {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  }
+
+  // Five clearly distinct hues — the previous palette had Posts/Businesses/
+  // Events all in the amber family, which made the icons hard to tell
+  // apart at a glance in a short list.
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',          iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A' },
-    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FFFBEB', accentColor: '#F59E0B' },
-    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                  iconColor: '#D97706', bgColor: '#FEF3C7', accentColor: '#D97706' },
-    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',   iconColor: '#B45309', bgColor: '#FDE68A', accentColor: '#B45309' },
-    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',        iconColor: '#78716C', bgColor: '#F5F5F4', accentColor: '#78716C' },
+    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A' },
+    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FEF3C7', accentColor: '#F59E0B' },
+    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: '#2563EB', bgColor: '#DBEAFE', accentColor: '#2563EB' },
+    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: '#7C3AED', bgColor: '#EDE9FE', accentColor: '#7C3AED' },
+    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: '#0D9488', bgColor: '#CCFBF1', accentColor: '#0D9488' },
   ]);
 
   private animationFrameId: number | null = null;
@@ -168,18 +207,12 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return this.notificationService.notifications().slice(0, 5);
   });
 
-  quickLinks = signal<QuickLink[]>([
-    { title: 'Communities', description: 'Browse & join',  icon: 'bi-people-fill',         color: '#16A34A', bgColor: '#DCFCE7', route: '/user/community' },
-    { title: 'Businesses',  description: 'Discover local', icon: 'bi-shop',                 color: '#D97706', bgColor: '#FEF3C7', route: '/user/business' },
-    { title: 'Events',      description: 'Find nearby',    icon: 'bi-calendar-event-fill',  color: '#F59E0B', bgColor: '#FFFBEB', route: '/user/events' },
-    { title: 'Jobs',        description: 'Opportunities',  icon: 'bi-briefcase-fill',       color: '#78716C', bgColor: '#F5F5F4', route: '/user/jobs' },
-  ]);
-
   tabs: ProfileTab[] = [
-    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill' },
-    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire' },
-    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill' },
-    { id: 'EMERGENCY', label: 'Emergency',     icon: 'bi-exclamation-triangle-fill' },
+    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: '#E0F2FE' },
+    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: '#FFEDD5' },
+    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: '#FEF9C3' },
+    { id: 'EMERGENCY', label: 'Emergency',     icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: '#FEE2E2' },
+    { id: 'ENQUIRY',   label: 'Enquire',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: '#EDE9FE' },
   ];
 
   ngOnInit(): void {
@@ -195,6 +228,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (this.animationFrameId !== null && isPlatformBrowser(this.platformId)) {
       cancelAnimationFrame(this.animationFrameId);
     }
+    if (isPlatformBrowser(this.platformId)) document.body.style.overflow = '';
   }
 
   // ── Data Loading ──────────────────────────────────────────
@@ -315,25 +349,68 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   switchTab(tab: PostTab): void {
     this.activeTab.set(tab);
+    // Switching tabs swaps the whole post list, so if the reader had
+    // scrolled deep into the previous tab's feed, don't leave them stranded
+    // mid-scroll against unrelated content — bring the tab bar (and the
+    // fresh list beneath it) back into view. Same approach as
+    // community-detail's scrollToTabPanelStart.
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => this.scrollFeedToTop()));
+  }
+
+  // Note: .feed-tabs is itself `position: sticky`, so once it's stuck,
+  // getBoundingClientRect().top always reports the sticky offset (80)
+  // regardless of actual scroll depth — it can't be used to recover how
+  // far down the document you are. Its next sibling — whichever of the
+  // skeleton / empty state / post list is currently rendered right after
+  // it — is a plain, non-sticky element that scrolls normally, so *its*
+  // position is what we measure; .feed-tabs itself is only used for its
+  // (scroll-independent) sticky offset + height.
+  private scrollFeedToTop(attempt = 0): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const tabs = document.querySelector<HTMLElement>('.feed-tabs');
+    const anchor = tabs?.nextElementSibling as HTMLElement | null;
+    if (!tabs || !anchor) {
+      if (attempt < 6) window.setTimeout(() => this.scrollFeedToTop(attempt + 1), 16);
+      return;
+    }
+
+    const stickyTop = parseFloat(window.getComputedStyle(tabs).top) || 0;
+    const tabsHeight = tabs.offsetHeight;
+    const breathingSpace = 10;
+    const desiredAnchorTop = stickyTop + tabsHeight + breathingSpace;
+
+    const anchorTop = anchor.getBoundingClientRect().top;
+    const targetScrollY = Math.max(0, window.scrollY + anchorTop - desiredAnchorTop);
+
+    if (Math.abs(window.scrollY - targetScrollY) <= 2) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: targetScrollY, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }
 
   // ── Save / Bookmark ───────────────────────────────────────
 
-  toggleSavePost(postId: string, event: MouseEvent): void {
+  toggleSavePost(post: Post, event: MouseEvent): void {
     event.stopPropagation();
-    this.savedPostIds.update((ids) => {
-      const next = new Set(ids);
-      if (next.has(postId)) {
-        next.delete(postId);
-      } else {
-        next.add(postId);
-      }
-      return next;
-    });
-  }
+    if (this.savingPost() === post.id) return;
 
-  isPostSaved(postId: string): boolean {
-    return this.savedPostIds().has(postId);
+    this.savingPost.set(post.id);
+    const wasSaved = post.isSaved;
+    const action$ = wasSaved ? this.postService.unsavePost(post.id) : this.postService.savePost(post.id);
+
+    // Optimistic update — matches toggleLike's pattern.
+    this.allPosts.update((posts) => posts.map((p) => (p.id === post.id ? { ...p, isSaved: !wasSaved } : p)));
+
+    action$.subscribe({
+      next: () => this.savingPost.set(null),
+      error: () => {
+        this.toast.error(wasSaved ? 'Failed to unsave post' : 'Failed to save post');
+        this.allPosts.update((posts) => posts.map((p) => (p.id === post.id ? { ...p, isSaved: wasSaved } : p)));
+        this.savingPost.set(null);
+      },
+    });
   }
 
   // ── Like / Comment / Share ─────────────────────────────────
@@ -429,11 +506,208 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  sharePost(post: Post): void {
-    const url = `${window.location.origin}/user/community/${post.communityId}`;
-    navigator.clipboard.writeText(url)
-      .then(() => this.toast.success('Link copied to clipboard!'))
-      .catch(() => this.toast.error('Failed to copy link'));
+  async sharePost(post: Post): Promise<void> {
+    const shareUrl = this.getShareUrl(post.id);
+    const postText = this.getShareContentText(post);
+    const shareTitle = `${post.community?.name ?? 'Community'} Post`;
+
+    if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+      this.openShareModal(post);
+      return;
+    }
+
+    try {
+      const files = await this.buildShareFiles(post.images);
+
+      if (files.length > 0) {
+        // The Web Share API rejects `url` combined with `files` (canShare()
+        // returns false), so the link is folded into `text` instead — this
+        // way the image and the link still travel together in one share.
+        const withFiles: ShareData = {
+          title: shareTitle,
+          text: `${postText}\n\n${shareUrl}`,
+          files,
+        };
+        if (typeof navigator.canShare === 'function' && navigator.canShare(withFiles)) {
+          await navigator.share(withFiles);
+          return;
+        }
+      }
+
+      await navigator.share({ title: shareTitle, text: postText, url: shareUrl });
+    } catch (error: unknown) {
+      const err = error as { name?: string };
+      if (err?.name === 'AbortError') return;
+      this.openShareModal(post);
+    }
+  }
+
+  openShareModal(post: Post): void {
+    this.shareTargetPost.set(post);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    this.shareModalOpen.set(true);
+    this.syncPageScrollLock();
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen.set(false);
+    this.shareTargetPost.set(null);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    this.syncPageScrollLock();
+  }
+
+  shareVia(platform: SharePlatform): void {
+    const post = this.shareTargetPost();
+    if (!post) return;
+
+    const shareUrl = this.getShareUrl(post.id);
+    const text = this.getShareContentText(post);
+    const imageUrl = post.images?.[0] ? this.resolveImageUrl(post.images[0]) : null;
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(text);
+    const encodedTextWithUrl = encodeURIComponent(`${shareUrl}\n\n${text}`);
+    const encodedImage = imageUrl ? encodeURIComponent(imageUrl) : '';
+
+    let target = '';
+    switch (platform) {
+      case 'whatsapp':
+        target = `https://wa.me/?text=${encodedTextWithUrl}`;
+        break;
+      case 'facebook':
+        target = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'x':
+        target = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'telegram':
+        target = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'linkedin':
+        target = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'email':
+        target = `mailto:?subject=${encodeURIComponent(`${post.community?.name ?? 'Community'} Post`)}&body=${encodedTextWithUrl}`;
+        break;
+      case 'pinterest':
+        target = imageUrl
+          ? `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImage}&description=${encodedText}`
+          : `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`;
+        break;
+    }
+
+    if (platform === 'email') {
+      window.location.href = target;
+      return;
+    }
+
+    this.openShareTarget(target, platform);
+  }
+
+  private openShareTarget(target: string, platform: SharePlatform): void {
+    const popupFeatures = platform === 'whatsapp'
+      ? 'width=980,height=760'
+      : 'width=680,height=720';
+
+    const popup = window.open(target, '_blank', popupFeatures);
+    if (!popup) {
+      this.sharePopupBlocked.set(true);
+      this.blockedShareUrl.set(target);
+      return;
+    }
+
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    popup.opener = null;
+  }
+
+  openShareInSameTab(): void {
+    const target = this.blockedShareUrl();
+    if (!target) return;
+    window.location.href = target;
+  }
+
+  copyShareLink(): void {
+    const post = this.shareTargetPost();
+    if (!post) return;
+
+    const shareUrl = this.getShareUrl(post.id);
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => this.toast.success('Share link copied.'))
+      .catch(() => this.toast.error('Failed to copy share link.'));
+  }
+
+  private getShareUrl(postId: string): string {
+    const base = this.getShareBaseOrigin();
+    return `${base}/share/post/${postId}`;
+  }
+
+  getShareText(post: Post): string {
+    const compact = this.getCompactPostContent(post);
+    if (!compact) return `${post.community?.name ?? 'Community'} shared a post`;
+
+    const previewLimit = 220;
+    if (compact.length <= previewLimit) return compact;
+    return `${compact.slice(0, previewLimit - 1).trimEnd()}...`;
+  }
+
+  private getShareContentText(post: Post): string {
+    const communityName = post.community?.name ?? 'Community';
+    const compact = this.getCompactPostContent(post);
+    return compact ? `${communityName}: ${compact}` : `${communityName} shared a post`;
+  }
+
+  private getCompactPostContent(post: Post): string {
+    return (post.content || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private async buildShareFiles(images: string[] | undefined): Promise<File[]> {
+    if (!images || images.length === 0) return [];
+
+    const results = await Promise.all(
+      images.slice(0, 4).map(async (image, index) => {
+        try {
+          const imageUrl = this.resolveImageUrl(image);
+          const response = await fetch(imageUrl, { mode: 'cors' });
+          if (!response.ok) return null;
+
+          const blob = await response.blob();
+          const mime = blob.type || 'image/jpeg';
+          const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+          return new File([blob], `post-${index + 1}.${ext}`, { type: mime });
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return results.filter((file): file is File => file !== null);
+  }
+
+  private resolveImageUrl(pathOrUrl: string): string {
+    if (/^(https?:)?\/\//i.test(pathOrUrl) || pathOrUrl.startsWith('data:')) {
+      return pathOrUrl;
+    }
+    const base = environment.wsUrl || window.location.origin;
+    const normalized = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    return `${base.replace(/\/$/, '')}${normalized}`;
+  }
+
+  private getShareBaseOrigin(): string {
+    const wsOrigin = (environment.wsUrl || '').trim();
+    if (wsOrigin) return wsOrigin.replace(/\/$/, '');
+
+    const apiUrl = (environment.apiUrl || '').trim();
+    if (apiUrl) {
+      try {
+        return new URL(apiUrl, window.location.origin).origin;
+      } catch {
+        // ignore and fall back to current origin
+      }
+    }
+
+    return window.location.origin.replace(/\/$/, '');
   }
 
   // ── Notifications ─────────────────────────────────────────
@@ -485,12 +759,108 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   // ── Helpers ───────────────────────────────────────────────
 
+  shouldTruncatePost(content: string | undefined | null): boolean {
+    return (content?.length ?? 0) > this.postContentPreviewLimit;
+  }
+
+  isPostExpanded(postId: string): boolean {
+    return this.expandedPostContent().has(postId);
+  }
+
+  togglePostExpanded(postId: string): void {
+    this.expandedPostContent.update((current) => {
+      const next = new Set(current);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  }
+
+  getPostPreview(content: string | undefined | null): string {
+    const text = content ?? '';
+    if (!this.shouldTruncatePost(text)) return text;
+    return `${text.slice(0, this.postContentPreviewLimit).trimEnd()}...`;
+  }
+
+  // ── Image lightbox ───────────────────────────────────────────
+
+  openImagePreview(images: string[], startIndex = 0): void {
+    if (!images?.length) return;
+    this.lightboxImages.set(images);
+    this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
+    this.lightboxOpen.set(true);
+    this.syncPageScrollLock();
+  }
+
+  closeImagePreview(): void {
+    this.lightboxOpen.set(false);
+    this.lightboxImages.set([]);
+    this.activeImageIndex.set(0);
+    this.syncPageScrollLock();
+  }
+
+  nextPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current + 1) % images.length);
+  }
+
+  prevPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current - 1 + images.length) % images.length);
+  }
+
+  getActivePreviewImage(): string | null {
+    const images = this.lightboxImages();
+    const index = this.activeImageIndex();
+    if (!images.length || index < 0 || index >= images.length) return null;
+    return images[index] ?? null;
+  }
+
+  private syncPageScrollLock(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    document.body.style.overflow = (this.lightboxOpen() || this.shareModalOpen()) ? 'hidden' : '';
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    if (this.lightboxOpen()) {
+      event.preventDefault();
+      this.closeImagePreview();
+      return;
+    }
+    if (this.shareModalOpen()) {
+      event.preventDefault();
+      this.closeShareModal();
+    }
+  }
+
+  @HostListener('document:keydown.arrowright', ['$event'])
+  onArrowRightKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.nextPreviewImage();
+  }
+
+  @HostListener('document:keydown.arrowleft', ['$event'])
+  onArrowLeftKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.prevPreviewImage();
+  }
+
   getPostTypeBadge(type: string): { label: string; class: string; icon: string } {
     switch (type) {
       case 'EMERGENCY':
         return { label: 'Emergency', class: 'badge-emergency', icon: 'bi-exclamation-triangle-fill' };
       case 'HELP':
         return { label: 'Help', class: 'badge-help', icon: 'bi-question-circle-fill' };
+      case 'ENQUIRY':
+        return { label: 'Enquiry', class: 'badge-enquire', icon: 'bi-patch-question-fill' };
       default:
         return { label: 'General', class: 'badge-general', icon: 'bi-chat-fill' };
     }
@@ -534,22 +904,23 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return date.toLocaleDateString();
   }
 
-  getEventMonth(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short' });
-  }
-
-  getEventDay(dateString: string): string {
-    return new Date(dateString).getDate().toString();
-  }
-
   getEventTime(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  isEventSoon(dateString: string): boolean {
+    const diff = new Date(dateString).getTime() - Date.now();
+    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000; // within 3 days
   }
 
   getUserInitials(user?: User): string {
     if (!user) return '?';
     const first = user.displayName?.charAt(0) ?? '';
     return first.toUpperCase() || user.userName?.charAt(0)?.toUpperCase() || '?';
+  }
+
+  isCommentByPostAuthor(post: Post, comment: Comment): boolean {
+    return post.userId === comment.userId;
   }
 }

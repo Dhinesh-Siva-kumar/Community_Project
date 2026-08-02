@@ -17,9 +17,24 @@
 
   <!-- ── Hero ──────────────────────────────────────────────── -->
   <section class="hero">
+    <div class="hero__icon" aria-hidden="true">
+      <i class="bi" [ngClass]="greetingIcon()"></i>
+    </div>
+
     <div class="hero__body">
+      <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
       <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
       <p class="hero__sub">Here's what's happening in your communities today.</p>
+    </div>
+
+    <div class="hero__glance">
+      <div class="hero__glance-item">
+        <span class="hero__glance-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="hero__glance-text">
+          <strong>{{ joinedCommunities().length }}</strong>
+          <small>Communities</small>
+        </span>
+      </div>
     </div>
   </section>
 
@@ -30,7 +45,7 @@
     <div class="db-main">
 
       <!-- Composer -->
-      <a routerLink="/user/community" class="composer-card">
+      <a routerLink="/user/community" class="composer">
         <div class="composer-av">
           @if (user()?.avatar) {
             <img [src]="user()!.avatar! | imageUrl" alt="" />
@@ -40,17 +55,13 @@
         </div>
         <span class="composer-input">What's on your mind, {{ firstName() }}?</span>
       </a>
-      <div class="composer-quicklinks">
-        <a routerLink="/user/community" class="composer-qa"><i class="bi bi-image-fill"></i> Photo</a>
-        <a routerLink="/user/events" class="composer-qa"><i class="bi bi-calendar-plus"></i> Event</a>
-        <a routerLink="/user/community" class="composer-qa composer-qa--help"><i class="bi bi-question-circle-fill"></i> Ask for Help</a>
-      </div>
 
       <!-- Feed filter tabs -->
       <div class="feed-tabs">
         <app-profile-tabs
           [tabs]="tabs"
           [activeTab]="activeTab()"
+          [fullWidth]="true"
           (tabChange)="switchTab($any($event))"
         ></app-profile-tabs>
       </div>
@@ -66,8 +77,8 @@
           <a routerLink="/user/community" class="feed-empty__btn">Find Communities</a>
         </div>
       } @else {
-        @for (post of filteredPosts(); track post.id) {
-          <article class="post">
+        @for (post of filteredPosts(); track post.id; let i = $index) {
+          <article class="post post--stagger" [style.animation-delay]="(i * 60) + 'ms'">
             <div class="post__top">
               <div class="post__av">
                 @if (post.user?.avatar) {
@@ -86,58 +97,87 @@
               </span>
             </div>
 
-            <p class="post__body">{{ post.content }}</p>
+            <hr class="post__divider" />
+
+            <p class="post__body">
+              {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
+              @if (shouldTruncatePost(post.content)) {
+                <button type="button" class="post__toggle" (click)="togglePostExpanded(post.id)">
+                  {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
+                </button>
+              }
+            </p>
 
             @if (post.images?.length) {
-              <div class="post__imgs" [class.post__imgs--single]="post.images.length === 1">
-                @for (img of post.images.slice(0,4); track img) {
-                  <img [src]="img | imageUrl" alt="" />
+              <div class="post__imgs"
+                   [class.post__imgs--single]="post.images.length === 1"
+                   [class.post__imgs--two]="post.images.length === 2"
+                   [class.post__imgs--many]="post.images.length >= 3">
+                @for (img of post.images.slice(0,4); track img; let imgIndex = $index) {
+                  <button type="button" class="post__img-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
+                    <img [src]="img | imageUrl" alt="" loading="lazy" />
+                    @if (post.images.length > 4 && imgIndex === 3) {
+                      <span class="post__img-more">+{{ post.images.length - 4 }}</span>
+                    }
+                  </button>
                 }
               </div>
             }
 
+            <hr class="post__divider" />
+
             <div class="post__actions">
-              <button class="pact" [class.pact--active]="post.isLiked" [disabled]="likingPost() === post.id"
+              <button class="pact pact--like" [class.pact--active]="post.isLiked" [class.heartbeat]="post.isLiked"
+                      [disabled]="likingPost() === post.id"
                       (click)="toggleLike(post)" type="button">
                 <i class="bi" [ngClass]="post.isLiked ? 'bi-heart-fill' : 'bi-heart'"></i> {{ post._count?.likes ?? 0 }}
               </button>
-              <button class="pact" [class.pact--active]="isCommentsExpanded(post.id)"
+              <button class="pact pact--comment" [class.pact--active]="isCommentsExpanded(post.id)"
                       (click)="toggleComments(post.id)" type="button">
                 <i class="bi bi-chat-dots"></i> {{ post._count?.comments ?? 0 }}
               </button>
-              <button class="pact" (click)="sharePost(post)" type="button">
+              <button class="pact pact--share" (click)="sharePost(post)" type="button">
                 <i class="bi bi-share"></i> Share
               </button>
-              <button class="pact pact--save" [class.saved]="isPostSaved(post.id)"
-                      (click)="toggleSavePost(post.id, $event)" type="button">
-                <i class="bi" [ngClass]="isPostSaved(post.id) ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
+              <button class="pact pact--save" [class.saved]="post.isSaved" [disabled]="savingPost() === post.id"
+                      (click)="toggleSavePost(post, $event)" type="button"
+                      [attr.aria-label]="post.isSaved ? 'Remove from saved' : 'Save post'" [title]="post.isSaved ? 'Saved' : 'Save'">
+                <i class="bi" [ngClass]="post.isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
               </button>
             </div>
 
             <!-- Comments -->
             @if (isCommentsExpanded(post.id)) {
-              <div class="comments">
+              <div class="comments comments--expand">
                 @if (isLoadingComments(post.id)) {
                   <div class="comments__loading"><span class="spinner"></span></div>
                 } @else {
-                  @for (comment of getComments(post.id); track comment.id) {
-                    <div class="comment">
-                      <div class="comment__av">
-                        @if (comment.user?.avatar) {
-                          <img [src]="comment.user!.avatar | imageUrl" alt="" />
-                        } @else {
-                          <span>{{ getUserInitials(comment.user) }}</span>
-                        }
+                  <div class="comment-list-scroll">
+                    @for (comment of getComments(post.id); track comment.id; let ci = $index) {
+                      <div class="comment" [style.animation-delay]="(ci * 50) + 'ms'">
+                        <div class="comment__av">
+                          @if (comment.user?.avatar) {
+                            <img [src]="comment.user!.avatar | imageUrl" alt="" />
+                          } @else {
+                            <span>{{ getUserInitials(comment.user) }}</span>
+                          }
+                        </div>
+                        <div class="comment__bubble">
+                          <div class="comment__meta">
+                            <strong>{{ comment.user?.displayName || comment.user?.userName }}</strong>
+                            @if (isCommentByPostAuthor(post, comment)) {
+                              <span class="comment__author-tag">Author</span>
+                            }
+                            <span class="comment__time">{{ getTimeAgo(comment.createdAt) }}</span>
+                          </div>
+                          <p>{{ comment.content }}</p>
+                        </div>
                       </div>
-                      <div class="comment__bubble">
-                        <strong>{{ comment.user?.displayName || comment.user?.userName }}</strong>
-                        <p>{{ comment.content }}</p>
-                      </div>
-                    </div>
-                  }
-                  @if (getComments(post.id).length === 0) {
-                    <p class="comments__empty">No comments yet. Be the first!</p>
-                  }
+                    }
+                    @if (getComments(post.id).length === 0) {
+                      <p class="comments__empty">No comments yet. Be the first!</p>
+                    }
+                  </div>
                   <form class="comment-form" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
                     <div class="comment__av">
                       @if (user()?.avatar) {
@@ -146,9 +186,18 @@
                         <span>{{ getUserInitials(user() ?? undefined) }}</span>
                       }
                     </div>
-                    <input type="text" formControlName="content" placeholder="Write a comment..." />
-                    <button type="submit" [disabled]="submittingComment() === post.id" aria-label="Post comment">
-                      <i class="bi bi-send-fill"></i>
+                    <div class="comment-form__input-wrap">
+                      <input type="text" formControlName="content" maxlength="500" placeholder="Write a comment..." />
+                      @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 500) {
+                        <small class="comment-form__limit">Maximum 500 characters reached.</small>
+                      }
+                    </div>
+                    <button type="submit" class="comment-form__submit" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid" aria-label="Post comment">
+                      @if (submittingComment() === post.id) {
+                        <span class="spinner spinner--sm"></span>
+                      } @else {
+                        <i class="bi bi-send-fill"></i>
+                      }
                     </button>
                   </form>
                 }
@@ -169,8 +218,8 @@
           @for (stat of animatedStats(); track stat.label) {
             <div class="rail-stat" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
               <span class="rail-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
-              <span class="rail-stat__val">{{ stat.displayValue }}</span>
               <span class="rail-stat__lbl">{{ stat.label }}</span>
+              <span class="rail-stat__val">{{ stat.displayValue }}</span>
             </div>
           }
         </div>
@@ -195,7 +244,12 @@
 
       <!-- Upcoming Events -->
       <div class="rail-card">
-        <h3 class="rail-card__title">Upcoming Events</h3>
+        <div class="rail-card__head">
+          <h3 class="rail-card__title">Upcoming Events</h3>
+          @if (upcomingEvents().length > 0) {
+            <span class="rail-card__count">{{ upcomingEvents().length }}</span>
+          }
+        </div>
         @if (loadingEvents()) {
           <div class="sk-line w80"></div><div class="sk-line w60"></div>
         } @else if (upcomingEvents().length === 0) {
@@ -203,48 +257,148 @@
         } @else {
           <div class="upcoming-list">
             @for (ev of upcomingEvents().slice(0,3); track ev.id) {
-              <div class="upcoming-item">
-                <div class="upcoming-date">
-                  <span class="date-month">{{ getEventMonth(ev.eventDate) }}</span>
-                  <strong class="date-day">{{ getEventDay(ev.eventDate) }}</strong>
-                </div>
+              <a [routerLink]="['/user/events']" class="upcoming-item">
+                @if (ev.images?.length) {
+                  <img class="upcoming-thumb" [class.upcoming-thumb--soon]="isEventSoon(ev.eventDate)"
+                       [src]="ev.images[0] | imageUrl" appImageError alt="" />
+                } @else {
+                  <div class="upcoming-thumb upcoming-thumb--icon" [class.upcoming-thumb--soon]="isEventSoon(ev.eventDate)">
+                    <i class="bi bi-calendar-event-fill"></i>
+                  </div>
+                }
                 <div class="upcoming-info">
                   <p class="upcoming-title">{{ ev.title }}</p>
-                  <p class="upcoming-time">{{ getEventTime(ev.eventDate) }}</p>
+                  <div class="upcoming-meta">
+                    <span class="upcoming-time"><i class="bi bi-calendar3"></i> {{ getEventTime(ev.eventDate) }}</span>
+                    @if (ev.location) {
+                      <span class="upcoming-loc"><i class="bi bi-geo-alt-fill"></i> {{ ev.location }}</span>
+                    }
+                  </div>
                 </div>
-              </div>
+                @if (isEventSoon(ev.eventDate)) {
+                  <span class="upcoming-soon">Soon</span>
+                }
+              </a>
             }
           </div>
         }
         <a routerLink="/user/events" class="rail-card__link">See Calendar →</a>
       </div>
 
-      <!-- Find Communities -->
-      <div class="rail-card rail-cta">
-        <i class="bi bi-people-fill rail-cta__icon"></i>
-        <h3 class="rail-cta__title">Find Communities</h3>
-        <p class="rail-cta__sub">Discover like-minded neighbors and groups based on your interests.</p>
-        <a routerLink="/user/community" class="rail-cta__btn">Explore Now</a>
-      </div>
-
-      <!-- Quick Links -->
-      <div class="rail-card">
-        <h3 class="rail-card__title">Quick Links</h3>
-        <div class="rail-quicklinks">
-          @for (link of quickLinks(); track link.title) {
-            <a [routerLink]="link.route" class="rail-quicklink" [style.--ac]="link.color" [style.--bg]="link.bgColor">
-              <span class="rail-quicklink__icon"><i class="bi" [ngClass]="link.icon"></i></span>
-              <span class="rail-quicklink__text">
-                <strong>{{ link.title }}</strong>
-                <small>{{ link.description }}</small>
-              </span>
-            </a>
-          }
-        </div>
-      </div>
-
     </aside>
   </div>
+
+  <!-- ── Image lightbox ────────────────────────────────────── -->
+  @if (lightboxOpen()) {
+    <div class="db-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+      <div class="db-lightbox-content" (click)="$event.stopPropagation()">
+        <button type="button" class="db-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        @if (lightboxImages().length > 1) {
+          <button type="button" class="db-lightbox-nav db-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button type="button" class="db-lightbox-nav db-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        }
+
+        @if (getActivePreviewImage()) {
+          <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="db-lightbox-image" />
+        }
+
+        @if (lightboxImages().length > 1) {
+          <div class="db-lightbox-footer">
+            <span class="db-lightbox-counter">{{ activeImageIndex() + 1 }} / {{ lightboxImages().length }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Share modal ──────────────────────────────────────────
+       Native Web Share API is tried first (see sharePost()); this modal
+       is the fallback for browsers/desktops without it. -->
+  @if (shareModalOpen()) {
+    @if (shareTargetPost(); as sharePostData) {
+      <div class="db-modal-backdrop" (click)="closeShareModal()" role="dialog" aria-modal="true" aria-labelledby="dbShareModalTitle">
+        <div class="db-modal db-modal--share" (click)="$event.stopPropagation()">
+          <div class="db-modal-header">
+            <div class="db-modal-icon-wrap db-modal-icon-wrap--share">
+              <i class="bi bi-share-fill"></i>
+            </div>
+            <div class="db-modal-header-text">
+              <h5 class="db-modal-title" id="dbShareModalTitle">Share Post</h5>
+              <p class="db-modal-subtitle">Choose where to share this post</p>
+            </div>
+            <button type="button" class="db-modal-close" (click)="closeShareModal()" aria-label="Close dialog">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <div class="db-modal-body">
+            @if (sharePostData.images?.length) {
+              <div class="db-share-preview-image-wrap">
+                <img [src]="sharePostData.images[0] | imageUrl" alt="Post share preview" class="db-share-preview-image" />
+              </div>
+            }
+            <p class="db-share-preview-text">{{ getShareText(sharePostData) }}</p>
+
+            @if (sharePopupBlocked()) {
+              <div class="db-share-popup-warning" role="alert">
+                <div class="db-share-popup-warning__icon">
+                  <i class="bi bi-window"></i>
+                </div>
+                <div class="db-share-popup-warning__content">
+                  <p class="db-share-popup-warning__title">Popup blocked by browser</p>
+                  <p class="db-share-popup-warning__text">Allow popups for this site and try again, or continue in the same tab.</p>
+                  <p class="db-share-popup-warning__steps">Click the blocked popup icon near the address bar and choose <strong>Always allow pop-ups from this site</strong>.</p>
+                </div>
+                <button type="button" class="db-share-popup-warning__action" (click)="openShareInSameTab()">
+                  Open Here
+                </button>
+              </div>
+            }
+
+            <div class="db-share-grid">
+              <button type="button" class="db-share-btn db-share-btn--whatsapp" (click)="shareVia('whatsapp')">
+                <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--facebook" (click)="shareVia('facebook')">
+                <i class="bi bi-facebook"></i><span>Facebook</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--x" (click)="shareVia('x')">
+                <i class="bi bi-twitter-x"></i><span>X</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--telegram" (click)="shareVia('telegram')">
+                <i class="bi bi-telegram"></i><span>Telegram</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--linkedin" (click)="shareVia('linkedin')">
+                <i class="bi bi-linkedin"></i><span>LinkedIn</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--pinterest" (click)="shareVia('pinterest')">
+                <i class="bi bi-pinterest"></i><span>Pinterest</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--email" (click)="shareVia('email')">
+                <i class="bi bi-envelope-fill"></i><span>Email</span>
+              </button>
+              <button type="button" class="db-share-btn db-share-btn--copy" (click)="copyShareLink()">
+                <i class="bi bi-link-45deg"></i><span>Copy Link</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="db-modal-footer">
+            <button type="button" class="db-modal-btn db-modal-btn--cancel" (click)="closeShareModal()">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
 
 </div>
 }

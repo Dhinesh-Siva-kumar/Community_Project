@@ -17,6 +17,8 @@ router.put('/:id', uploadImages.array('images', 10), ctrl.updatePost);
 router.delete('/:id', ctrl.deletePost);
 router.post('/:id/like', ctrl.like);
 router.delete('/:id/like', ctrl.unlike);
+router.post('/:id/save', ctrl.savePost);
+router.delete('/:id/save', ctrl.unsavePost);
 router.get('/:id/comments', ctrl.getComments);
 router.post('/:id/comments', ctrl.addComment);
 router.delete('/comments/:commentId', ctrl.deleteComment);
