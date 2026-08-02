@@ -33,7 +33,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // Overview KPI counters animate up from 0 on first load — a small
   // "alive" touch on the numbers that matter most on the page.
   animatedOverview = signal({
-    users: 0, communities: 0, posts: 0, pending: 0, events: 0, business: 0, jobs: 0,
+    users: 0, communities: 0, posts: 0, pending: 0, events: 0, business: 0, jobs: 0, blocked: 0,
   });
   private overviewAnimFrame: number | null = null;
 
@@ -48,8 +48,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activityCurrentPage    = signal(1);
   activityItemsPerPage   = signal(6);
   activitySelectedFilter = signal<string | 'all'>('all');
-
-  pendingCount = computed(() => this.pendingPosts().length);
 
   // Filtered and paginated activity list
   filteredActivity = computed(() => {
@@ -213,11 +211,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Every entry routes to a real, currently-reachable admin page (no dead
+  // links to unwired features) — "Review Pending Posts" in particular
+  // replaces the dashboard's old inline approval queue with a direct
+  // shortcut to /admin/post-approval, so that moderation task is still
+  // one click away.
   quickActions = [
-    { label: 'Create Community',    icon: 'bi-plus-circle',  bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
-    { label: 'Global Announcement', icon: 'bi-megaphone',    bg: '#e8f0ff', color: '#005ac2', route: '/admin/post-approval'   },
-    { label: 'Manage Users',        icon: 'bi-person-gear',  bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
-    { label: 'Business Listings',   icon: 'bi-building',     bg: '#ffe6e6', color: '#d97706', route: '/admin/business'        },
+    { label: 'Create Community',      icon: 'bi-plus-circle',     bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
+    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: '#fdecea', color: '#ba1a1a', route: '/admin/post-approval'   },
+    { label: 'Manage Users',          icon: 'bi-person-gear',     bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
+    { label: 'Business Listings',     icon: 'bi-building',        bg: '#e8f0ff', color: '#005ac2', route: '/admin/business'        },
   ];
 
   ngOnInit(): void {
@@ -266,6 +269,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       events: this.stats()?.totalEvents ?? 0,
       business: this.stats()?.totalBusinesses ?? 0,
       jobs: this.stats()?.totalJobs ?? 0,
+      blocked: this.stats()?.blockedUsers ?? 0,
     };
     const duration = 900;
     const start = performance.now();
@@ -281,23 +285,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         events: Math.round(targets.events * eased),
         business: Math.round(targets.business * eased),
         jobs: Math.round(targets.jobs * eased),
+        blocked: Math.round(targets.blocked * eased),
       });
       if (progress < 1) this.overviewAnimFrame = requestAnimationFrame(tick);
     };
 
     this.overviewAnimFrame = requestAnimationFrame(tick);
-  }
-
-  approvePost(id: string): void {
-    this.postService.approvePost(id).subscribe(() =>
-      this.pendingPosts.update(list => list.filter(p => p.id !== id))
-    );
-  }
-
-  rejectPost(id: string): void {
-    this.postService.rejectPost(id).subscribe(() =>
-      this.pendingPosts.update(list => list.filter(p => p.id !== id))
-    );
   }
 
   // Upcoming's share of (upcoming + last-30-days), for the two-tone events bar
@@ -326,18 +319,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }))
       .sort((a, b) => b.count - a.count);
   });
-
-  postTypeIcon(type: string): string {
-    return type === 'EMERGENCY' ? 'bi-exclamation-triangle-fill' : 'bi-file-earmark-text';
-  }
-
-  postIconColor(type: string): string {
-    return type === 'EMERGENCY' ? '#ba1a1a' : '#005ac2';
-  }
-
-  postIconBg(type: string): string {
-    return type === 'EMERGENCY' ? '#ffdad6' : '#e8f0ff';
-  }
 
   activityIcon(type: string): string {
     const map: Record<string, string> = {

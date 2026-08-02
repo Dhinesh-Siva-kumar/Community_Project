@@ -468,7 +468,7 @@ export async function getDashboardStats(userId: string, role: string) {
     const [
       [{ total: totalUsers }], [{ total: totalCommunities }], [{ total: totalPosts }],
       [{ total: pendingPosts }], [{ total: totalBusinesses }], [{ total: totalEvents }],
-      [{ total: totalJobs }], recentUsers, recentPosts, recentBusinesses, recentEvents, recentJobs,
+      [{ total: totalJobs }], [{ total: blockedUsers }], recentUsers, recentPosts, recentBusinesses, recentEvents, recentJobs,
     ] = await Promise.all([
       db('users').count({ total: '*' }),
       db('communities').count({ total: '*' }),
@@ -477,6 +477,7 @@ export async function getDashboardStats(userId: string, role: string) {
       db('businesses').count({ total: '*' }),
       db('events').count({ total: '*' }),
       db('jobs').count({ total: '*' }),
+      db('users').where({ is_blocked: true }).count({ total: '*' }),
       db('users').select('id', 'display_name', 'user_name', 'created_at').orderBy('created_at', 'desc').limit(5),
       db('posts as p').join('users as u', 'p.user_id', 'u.id').join('communities as c', 'p.community_id', 'c.id')
         .select('p.id', 'p.type', 'p.status', 'p.created_at', 'u.display_name', 'u.user_name', 'c.name as community_name')
@@ -502,7 +503,7 @@ export async function getDashboardStats(userId: string, role: string) {
       totalUsers: Number(totalUsers), totalCommunities: Number(totalCommunities),
       totalPosts: Number(totalPosts), pendingPosts: Number(pendingPosts),
       totalBusinesses: Number(totalBusinesses), totalEvents: Number(totalEvents),
-      totalJobs: Number(totalJobs), recentActivity: activity,
+      totalJobs: Number(totalJobs), blockedUsers: Number(blockedUsers), recentActivity: activity,
     };
   }
 

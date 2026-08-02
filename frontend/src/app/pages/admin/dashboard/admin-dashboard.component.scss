@@ -252,76 +252,44 @@ $_muted:   $color-text-muted;       // was #534434
   }
 }
 
-// ── Metrics Section ────────────────────────────────────────────
-.metrics-section {
-  margin-bottom: $spacing-md;
-}
-
-.metrics-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-bottom: 0.75rem;
-}
-
-.metrics-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: $font-family-header;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: $_muted;
-  margin: 0;
-  text-transform: uppercase;
-
-  i {
-    font-size: 0.85rem;
-    color: $_blue;
-  }
-}
-
-.metrics-subtitle {
-  font-size: 12px;
-  color: $_muted;
-  margin: 0;
-  font-weight: 400;
-  opacity: 0.8;
-}
-
-// ── Overview cards (reference-matched) ───────────────────────────
-// Row 1: pastel-tinted cards with a solid colored circular icon badge —
-// the 4 metrics with real trend/detail data. Row 2: plain neutral cards,
-// no icon — supplementary counts. Two-row 4-column grid, matching the
-// provided reference exactly (label top-left, icon top-right, big number,
-// small caption).
+// ── Overview cards ──────────────────────────────────────────────
+// Eight metric cards, 4 columns (4 + 4) — kept compact/wide rather than
+// tall so this block's two rows land close to Quick Actions' natural
+// height; .db-overview-row then stretches both columns to match exactly,
+// and align-content: space-between here keeps the last row flush with
+// that shared bottom edge instead of leaving dead space beneath it.
 .ov-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  align-content: space-between;
   gap: 1rem;
 
-  @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 560px) { grid-template-columns: 1fr; }
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px)  { grid-template-columns: 1fr; }
 }
 
 .ov-card {
   position: relative;
   isolation: isolate;
   background: $_surf;
+  border: 1px solid rgba(15, 23, 42, 0.05);
   border-radius: 18px;
-  padding: 1.25rem 1.25rem 1.35rem;
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  min-height: 132px;
   // Soft ambient shadow at rest, not just on hover — a flat card with a
   // shadow only on interaction reads as "flat until proven otherwise";
   // a little depth up front is what makes it feel premium rather than static.
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 4px 10px rgba(15, 23, 42, 0.03);
-  transition: box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1), transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1), transform 280ms cubic-bezier(0.22, 1, 0.36, 1), border-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
 
   &:hover {
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.09);
     transform: translateY(-3px);
+    border-color: rgba(15, 23, 42, 0.08);
 
     .ov-card__icon { transform: scale(1.08) rotate(-4deg); }
   }
@@ -352,6 +320,10 @@ $_muted:   $color-text-muted;       // was #534434
   &--jade   { --ov-tint: #{rgba($_ov-jade, 0.14)};         --ov-accent: #{$_ov-jade};         --ov-accent-2: #{mix($_ov-jade, #fff, 30%)}; }
   &--rose   { --ov-tint: #{rgba($_ov-rose, 0.13)};         --ov-accent: #{$_ov-rose};         --ov-accent-2: #{mix($_ov-rose, #fff, 30%)}; }
   &--green  { --ov-tint: #{rgba($_green, 0.14)};           --ov-accent: #{$_green};           --ov-accent-2: #{mix($_green, #fff, 30%)}; }
+  // Slate — neutral/restrained on purpose: "Blocked Users" is a caution
+  // metric, not an alarm like Pending Approvals, and slate reads as
+  // distinct from every other hue in the grid (incl. Communities' indigo).
+  &--slate  { --ov-tint: #{rgba($color-slate-500, 0.12)};  --ov-accent: #{$color-slate-500};  --ov-accent-2: #{mix($color-slate-500, #fff, 30%)}; }
 }
 
 .ov-card__top {
@@ -359,26 +331,26 @@ $_muted:   $color-text-muted;       // was #534434
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 0.9rem;
+  margin-bottom: 1rem;
 }
 
 .ov-card__label {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: $_muted;
   padding-top: 6px;
 }
 
 .ov-card__icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: $radius-full;
   background: linear-gradient(140deg, var(--ov-accent-2), var(--ov-accent));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -387,21 +359,12 @@ $_muted:   $color-text-muted;       // was #534434
 .ov-card__value {
   @include focus-ring;
   font-family: $font-family-header;
-  font-size: 1.85rem;
+  font-size: 2rem;
   font-weight: 800;
   color: $_text;
   line-height: 1;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-}
-
-.ov-card__caption {
-  font-size: 12px;
-  color: $_muted;
-  margin: 8px 0 0;
-  min-height: 15px;
-
-  i { font-size: 9px; margin-right: 2px; }
 }
 
 @keyframes pulse {
@@ -416,25 +379,15 @@ $_muted:   $color-text-muted;       // was #534434
 // (Platform Composition now uses the unified .comp-card meter system —
 // see below, near .composition-row)
 
-// ── Mid row: composition + approvals — both want real width, so split evenly
-// Composition's cards need real width to lay out 3-wide without scrolling;
-// Approvals is a text list that reads fine narrower, so it gives up space.
+// ── Mid row: Growth Trends + Platform Composition, equal width ─
 .db-mid-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
   align-items: stretch;
 
   @media (max-width: 991px) { grid-template-columns: 1fr; }
 }
-
-// Composition and Approvals sit side by side. Rather than a fixed body
-// height with internal scrolling, .db-mid-row's align-items:stretch (below)
-// makes each panel match the OTHER's natural content height — whichever is
-// shorter just stretches, nothing scrolls or gets clipped. Composition's
-// row stack centers in any extra space (see .composition-row); Approvals'
-// list grows into it with the footer link pinned to the very bottom
-// (see .approvals-list / .panel__footer-link).
 
 // ── Panel base ────────────────────────────────────────────────
 .panel {
@@ -581,218 +534,13 @@ $_muted:   $color-text-muted;       // was #534434
   visibility: hidden;
 }
 
-// ── Action badge ──────────────────────────────────────────────
-.action-badge {
-  background: $_amber-c;
-  color: $color-text-on-amber;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 3px 8px;
-  border-radius: $radius-xs;
-}
-
-// ── Approvals list ────────────────────────────────────────────
-.panel--approvals {
-  display: flex;
-  flex-direction: column;
-}
-
-.approvals-list {
-  @media (min-width: 992px) {
-    flex: 1;
-
-    // "All caught up" is a single centered card, not a list — vertically
-    // center it in any extra height (e.g. when Composition's natural
-    // height stretches this panel taller) instead of pinning it to the top.
-    &:has(.approvals-empty) {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-  }
-}
-
-.approval-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0px 1.5rem;
-  border-bottom: 1px solid $_border;
-  gap: 1rem;
-  transition: background $_t;
-
-  &:last-child { border-bottom: none; }
-  &:hover      { background: $_surf; }
-
-  @media (max-width: 580px) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-.approval-item__left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.approval-icon {
-  width: 44px; height: 44px;
-  border-radius: $_rs;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.approval-name {
-  font-weight: 700;
-  color: $_text;
-  font-size: $font-size-sm;
-  margin: 0 0 3px;
-}
-
-.approval-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.approval-type {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.approval-time {
-  font-size: 12px;
-  color: $_muted;
-}
-
-.approval-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-reject {
-  @include focus-ring;
-  padding: 5px 14px;
-  border: 1px solid $_border;
-  background: transparent;
-  border-radius: $_rs;
-  font-size: 12px;
-  font-weight: 700;
-  color: $_text;
-  cursor: pointer;
-  transition: background $_t;
-
-  &:hover { background: $color-bg-hover; }
-}
-
-.btn-approve {
-  @include focus-ring;
-  padding: 5px 14px;
-  background: $_amber;
-  border: none;
-  border-radius: $_rs;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffffff;
-  cursor: pointer;
-  transition: opacity $_t;
-
-  &:hover { opacity: 0.88; }
-}
-
-.approvals-empty {
-  padding: 2rem 1.5rem;
-  text-align: center;
-  background: linear-gradient(135deg, rgba($_green, 0.02) 0%, rgba($_blue, 0.02) 100%);
-  border: 1px dashed rgba($_green, 0.2);
-  border-radius: $radius-md;
-  margin: 0.75rem;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.empty-state__icon {
-  font-size: 2.5rem;
-  color: $_green;
-  opacity: 0.8;
-  animation: bounceIn 600ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-.empty-state__title {
-  font-family: $font-family-header;
-  font-size: 1rem;
-  font-weight: 700;
-  color: $_text;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.empty-state__message {
-  font-size: 13px;
-  color: $_muted;
-  margin: 0;
-  font-weight: 500;
-}
-
-.empty-state__subtitle {
-  font-size: 11px;
-  color: $_muted;
-  margin: 0;
-  opacity: 0.75;
-  line-height: 1.3;
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.panel__footer-link {
-  display: block;
-  padding: 0.625rem;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: $_amber;
-  text-decoration: none;
-  background: $_surf;
-  transition: text-decoration $_t;
-
-  &:hover { text-decoration: underline; }
-}
-
 // ── Quick actions panel ───────────────────────────────────────
 .panel--qa {
   padding: 1rem 1.5rem;
   gap: 0.5rem;
   position: sticky;
   top: 20px;
-  
+
   @media (max-width: 991px) {
     position: static;
   }
@@ -801,7 +549,12 @@ $_muted:   $color-text-muted;       // was #534434
 .qa-list {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.5rem;
+  // Grows to fill any extra height .panel--qa picks up from being
+  // stretched to match the metrics grid, so the action items stay
+  // centered in the available space instead of pinned to the top.
+  flex: 1;
 }
 
 .qa-item {
@@ -1157,16 +910,18 @@ $_muted:   $color-text-muted;       // was #534434
   }
 }
 
-// ── Growth Trends + Quick Actions ──────────────────────────────
-// start (not stretch): Quick Actions is a short list and should size to its
-// own content — .panel--qa is position:sticky so it stays visible alongside
-// the taller chart as the page scrolls, instead of being stretched into a
-// tall card with empty space below the links.
-.db-analytics-row {
+// ── Platform Overview + Quick Actions ──────────────────────────
+// Quick Actions only needs enough width for a short label + icon, so it's
+// capped with minmax rather than taking a flexible share of the row — the
+// metrics grid gets the rest, which is what its 4-column card layout needs
+// to render without cramping. stretch: both columns still end at the same
+// line — the metrics grid is the natural height driver; Quick Actions (a
+// shorter list) stretches to match it, so the two panels finish flush.
+.db-overview-row {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: 1fr minmax(230px, 280px);
   gap: $spacing-lg;
-  align-items: start;
+  align-items: stretch;
 
   @media (max-width: 991px) { grid-template-columns: 1fr; }
 }

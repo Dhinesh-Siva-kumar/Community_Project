@@ -394,6 +394,7 @@ export interface DashboardStats {
   totalBusinesses?: number;
   totalEvents?: number;
   totalJobs?: number;
+  blockedUsers?: number;
   recentActivity?: { type: string; message: string; createdAt: string }[];
   // User fields (returned by backend for USER role)
   joinedCommunities?: number;
