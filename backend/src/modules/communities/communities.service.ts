@@ -41,6 +41,14 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
     .insert({ ...data, created_by_id: adminId })
     .returning('*');
 
+  // The creator is always a member of their own community, so they show up
+  // in the Members tab (with the "Author" badge — see isCommunityCreator on
+  // the frontend) and count toward _count.members from the very start.
+  await db('community_members')
+    .insert({ user_id: adminId, community_id: (community as Record<string, unknown>)['id'] as string })
+    .onConflict(['user_id', 'community_id'])
+    .ignore();
+
   // Auto-enroll existing active users when the new community is a default one
   if ((community as Record<string, unknown>)['is_default']) {
     await autoJoinExistingUsers(community as Record<string, unknown>);
@@ -81,12 +89,14 @@ export async function findAll(params: {
   country?: string;
   category?: string;
   visibility?: 'global' | 'private' | 'default';
+  community_mode?: 'HELP_EMERGENCY' | 'ENQUIRE';
+  is_default?: boolean;
   from_date?: string;
   to_date?: string;
   joined?: boolean;
   userId?: string;
 }) {
-  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, from_date, to_date, joined, userId } = params;
+  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, community_mode, is_default, from_date, to_date, joined, userId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('communities as c')
@@ -152,6 +162,18 @@ export async function findAll(params: {
   } else if (visibility === 'default') {
     query.where('c.is_default', true);
     countQuery.where('is_default', true);
+  }
+
+  // ── Community mode filter ──────────────────────────────────
+  if (community_mode) {
+    query.where('c.community_mode', community_mode);
+    countQuery.where('community_mode', community_mode);
+  }
+
+  // ── Default-community toggle filter (independent of visibility) ────
+  if (is_default !== undefined) {
+    query.where('c.is_default', is_default);
+    countQuery.where('is_default', is_default);
   }
 
   // ── Date-range filter on created_at ───────────────────────

@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { env } from './config/env';
 import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
@@ -87,7 +88,23 @@ app.use('/api/upload', uploadRouter);
 app.use('/api', otpRouter);
 app.use('/share', shareRouter);
 
-// 11. Global error handler — MUST be last
+// 11. Serve the built Angular app on the same origin (production deployment).
+//     Skipped automatically if the frontend hasn't been built into
+//     FRONTEND_DIST_PATH (e.g. local dev, where `ng serve` runs on its own port).
+const frontendDistPath = path.resolve(process.cwd(), env.FRONTEND_DIST_PATH);
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
+if (fs.existsSync(frontendIndexPath)) {
+  app.use(express.static(frontendDistPath, { index: false }));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || /^\/(api|share|uploads|health)(\/|$)/.test(req.path)) {
+      next();
+      return;
+    }
+    res.sendFile(frontendIndexPath);
+  });
+}
+
+// 12. Global error handler — MUST be last
 app.use(errorHandler);
 
 export default app;

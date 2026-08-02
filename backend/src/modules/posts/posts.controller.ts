@@ -60,6 +60,13 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   } catch (err) { next(err); }
 }
 
+export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.findOne(req.params['id'] as string, req.user?.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
 export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { page, limit } = PaginationQueryDto.parse(req.query);

@@ -31,6 +31,12 @@ const envSchema = z.object({
   // File uploads
   UPLOADS_PATH: z.string().default('uploads'),
 
+  // Built Angular app (same-domain production deployment) — resolved relative
+  // to the backend process's cwd. If the directory doesn't contain an
+  // index.html, the backend simply skips serving it (e.g. local dev, where
+  // `ng serve` runs separately).
+  FRONTEND_DIST_PATH: z.string().default('../frontend/dist/frontend/browser'),
+
   // Email (optional)
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),

@@ -98,6 +98,24 @@ export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolea
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
+export async function findOne(postId: string, currentUserId?: string) {
+  const row = await db('posts as p')
+    .join('users as u', 'p.user_id', 'u.id')
+    .join('communities as c', 'p.community_id', 'c.id')
+    .where('p.id', postId)
+    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .first() as Record<string, unknown> | undefined;
+  if (!row) throw new AppError(404, 'Post not found');
+
+  const [{ total: commentCount }] = await db('comments').where({ post_id: postId }).count({ total: '*' });
+  const [{ total: likeCount }]    = await db('likes').where({ post_id: postId }).count({ total: '*' });
+  const isLiked = currentUserId
+    ? !!(await db('likes').where({ post_id: postId, user_id: currentUserId }).first())
+    : false;
+
+  return formatPost(row, Number(commentCount), Number(likeCount), isLiked);
+}
+
 export async function findPending(page: number, limit: number) {
   return findAll({ page, limit, isAdmin: true, type: undefined, communityId: undefined });
   // Override: only PENDING

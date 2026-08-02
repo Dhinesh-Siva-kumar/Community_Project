@@ -46,7 +46,7 @@
        DELETE CONFIRMATION MODAL
   ══════════════════════════════════════════════════════════════ -->
   @if (isAdmin() && deleteModalOpen()) {
-    <div class="cd-modal-backdrop" (click)="closeDeleteModal()" role="dialog" aria-modal="true" aria-labelledby="cdDeleteModalTitle">
+    <div class="cd-modal-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1050;" (click)="closeDeleteModal()" role="dialog" aria-modal="true" aria-labelledby="cdDeleteModalTitle">
       <div class="cd-modal" (click)="$event.stopPropagation()">
 
         <!-- Modal Header -->
@@ -96,7 +96,7 @@
        EDIT POST MODAL
   ══════════════════════════════════════════════════════════════ -->
   @if (editModalOpen()) {
-    <div class="au-backdrop" (click)="closeEditModal()"></div>
+    <div class="au-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1040;" (click)="closeEditModal()"></div>
     <div class="au-modal cm-modal ep-modal" role="dialog" aria-modal="true" aria-labelledby="cdEditPostModalTitle">
 
         <!-- Modal Header -->
@@ -146,24 +146,39 @@
             <div class="mb-3">
               <label class="cm-label">Post Type</label>
               <div class="cd-type-selector">
-                <button type="button" class="cd-type-btn"
-                  [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
-                  (click)="setEditPostType('GENERAL')">
-                  <i class="bi bi-chat-dots-fill"></i>
-                  <span>General</span>
-                </button>
-                <button type="button" class="cd-type-btn cd-type-btn--help"
-                  [class.cd-type-btn--active]="selectedEditType() === 'HELP'"
-                  (click)="setEditPostType('HELP')">
-                  <i class="bi bi-life-preserver"></i>
-                  <span>Help</span>
-                </button>
-                <button type="button" class="cd-type-btn cd-type-btn--emergency"
-                  [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
-                  (click)="setEditPostType('EMERGENCY')">
-                  <i class="bi bi-exclamation-triangle-fill"></i>
-                  <span>Emergency</span>
-                </button>
+                @if (!isEnquireMode()) {
+                  <button type="button" class="cd-type-btn"
+                    [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
+                    (click)="setEditPostType('GENERAL')">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span>General</span>
+                  </button>
+                  <button type="button" class="cd-type-btn cd-type-btn--help"
+                    [class.cd-type-btn--active]="selectedEditType() === 'HELP'"
+                    (click)="setEditPostType('HELP')">
+                    <i class="bi bi-life-preserver"></i>
+                    <span>Help</span>
+                  </button>
+                  <button type="button" class="cd-type-btn cd-type-btn--emergency"
+                    [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
+                    (click)="setEditPostType('EMERGENCY')">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Emergency</span>
+                  </button>
+                } @else {
+                  <button type="button" class="cd-type-btn"
+                    [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
+                    (click)="setEditPostType('GENERAL')">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    <span>General</span>
+                  </button>
+                  <button type="button" class="cd-type-btn cd-type-btn--enquire"
+                    [class.cd-type-btn--active]="selectedEditType() === 'ENQUIRY'"
+                    (click)="setEditPostType('ENQUIRY')">
+                    <i class="bi bi-question-circle-fill"></i>
+                    <span>Enquire</span>
+                  </button>
+                }
               </div>
             </div>
 
@@ -229,7 +244,7 @@
        EDIT COMMUNITY MODAL
   ══════════════════════════════════════════════════════════════ -->
   @if (isAdmin() && editCommunityModalOpen()) {
-    <div class="au-backdrop" (click)="closeEditCommunityModal()"></div>
+    <div class="au-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1040;" (click)="closeEditCommunityModal()"></div>
     <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="cdEditCommunityModalTitle">
       <div class="au-header cm-modal-header">
         <div class="au-header__cover-shapes" aria-hidden="true">
@@ -270,7 +285,7 @@
 
               <div class="cm-field-group" [class.cm-field-group--error]="cf['interests'].touched && cf['interests'].invalid">
                 <label class="cm-label">Category <span class="cm-required">*</span></label>
-                <app-searchable-select formControlName="interests" [options]="interestOptions" placeholder="Select a category"></app-searchable-select>
+                <app-searchable-select formControlName="interests" [options]="interestOptions()" placeholder="Select a category"></app-searchable-select>
                 @if (cf['interests'].touched && cf['interests'].invalid) {
                   <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Please select a category.</div>
                 }
@@ -301,7 +316,7 @@
             <div class="cm-field-row">
               <div class="cm-field-group" [class.cm-field-group--error]="cf['countryId'].touched && cf['countryId'].invalid">
                 <label class="cm-label">Country <span class="cm-required">*</span></label>
-                <app-searchable-select formControlName="countryId" [options]="countryOptions" placeholder="Select country"></app-searchable-select>
+                <app-searchable-select formControlName="countryId" [options]="countryOptions()" placeholder="Select country"></app-searchable-select>
                 @if (cf['countryId'].touched && cf['countryId'].invalid) {
                   <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Please select a country.</div>
                 }
@@ -335,6 +350,17 @@
                 <input type="checkbox" formControlName="isDefault" />
                 <span class="cm-switch-slider"></span>
               </label>
+            </div>
+          </div>
+
+          <div class="cm-section">
+            <div class="cm-section-header">
+              <span class="cm-section-badge"><i class="bi bi-shield-check"></i></span>
+              <span class="cm-section-title">Community Rules</span>
+            </div>
+
+            <div class="cm-field-group">
+              <app-community-rules-input formControlName="rules"></app-community-rules-input>
             </div>
           </div>
 
@@ -496,8 +522,8 @@
       <div class="cd-tabs-wrap">
         <div class="cd-tabs" role="tablist">
 
-        <button class="cd-tab-btn cd-tab-btn--posts" role="tab" [class.cd-tab-btn--active]="activeTab() === 'posts'"
-          (click)="setTab('posts')" [attr.aria-selected]="activeTab() === 'posts'">
+        <button class="cd-tab-btn cd-tab-btn--posts" role="tab" [class.cd-tab-btn--active]="displayTab() === 'posts'"
+          (click)="setTab('posts')" [attr.aria-selected]="displayTab() === 'posts'">
           <i class="bi bi-card-text"></i>
           <span class="cd-tab-label">Posts</span>
           @if (postCount() > 0) {
@@ -505,26 +531,37 @@
           }
         </button>
 
-        <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="activeTab() === 'help'"
-          (click)="setTab('help')" [attr.aria-selected]="activeTab() === 'help'">
-          <i class="bi bi-life-preserver"></i>
-          <span class="cd-tab-label">Help</span>
-          @if (helpCount() > 0) {
-            <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
-          }
-        </button>
+        @if (!isEnquireMode()) {
+          <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="displayTab() === 'help'"
+            (click)="setTab('help')" [attr.aria-selected]="displayTab() === 'help'">
+            <i class="bi bi-life-preserver"></i>
+            <span class="cd-tab-label">Help</span>
+            @if (helpCount() > 0) {
+              <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
+            }
+          </button>
 
-        <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="activeTab() === 'emergency'"
-          (click)="setTab('emergency')" [attr.aria-selected]="activeTab() === 'emergency'">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          <span class="cd-tab-label">Emergency</span>
-          @if (emergencyCount() > 0) {
-            <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
-          }
-        </button>
+          <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="displayTab() === 'emergency'"
+            (click)="setTab('emergency')" [attr.aria-selected]="displayTab() === 'emergency'">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span class="cd-tab-label">Emergency</span>
+            @if (emergencyCount() > 0) {
+              <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
+            }
+          </button>
+        } @else {
+          <button class="cd-tab-btn cd-tab-btn--enquire" role="tab" [class.cd-tab-btn--active]="displayTab() === 'enquire'"
+            (click)="setTab('enquire')" [attr.aria-selected]="displayTab() === 'enquire'">
+            <i class="bi bi-question-circle-fill"></i>
+            <span class="cd-tab-label">Enquire</span>
+            @if (enquiryCount() > 0) {
+              <span class="cd-tab-badge cd-tab-badge--enquire">{{ enquiryCount() }}</span>
+            }
+          </button>
+        }
 
-        <button class="cd-tab-btn cd-tab-btn--members" role="tab" [class.cd-tab-btn--active]="activeTab() === 'members'"
-          (click)="setTab('members')" [attr.aria-selected]="activeTab() === 'members'">
+        <button class="cd-tab-btn cd-tab-btn--members" role="tab" [class.cd-tab-btn--active]="displayTab() === 'members'"
+          (click)="setTab('members')" [attr.aria-selected]="displayTab() === 'members'">
           <i class="bi bi-people"></i>
           <span class="cd-tab-label">Members</span>
           @if (memberCount() > 0) {
@@ -532,8 +569,8 @@
           }
         </button>
 
-        <button class="cd-tab-btn cd-tab-btn--about" role="tab" [class.cd-tab-btn--active]="activeTab() === 'about'"
-          (click)="setTab('about')" [attr.aria-selected]="activeTab() === 'about'">
+        <button class="cd-tab-btn cd-tab-btn--about" role="tab" [class.cd-tab-btn--active]="displayTab() === 'about'"
+          (click)="setTab('about')" [attr.aria-selected]="displayTab() === 'about'">
           <i class="bi bi-info-circle"></i>
           <span class="cd-tab-label">About</span>
         </button>
@@ -577,13 +614,13 @@
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
-              <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+              <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll [attr.data-post-id]="post.id" [class.post-card--highlighted]="highlightedPostId() === post.id">
                 <div class="card-body">
                    <!-- Post header -->
                    <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                      <div class="post-avatar flex-shrink-0">
                        @if (post.user?.avatar) {
-                         <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" appImageError />
+                         <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                        } @else {
                          <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                            {{ getUserInitials(post.user) }}
@@ -597,7 +634,8 @@
                     <span class="post-type-chip"
                       [class.post-type-chip--general]="post.type === 'GENERAL'"
                       [class.post-type-chip--help]="post.type === 'HELP'"
-                      [class.post-type-chip--emergency]="post.type === 'EMERGENCY'">
+                      [class.post-type-chip--emergency]="post.type === 'EMERGENCY'"
+                      [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
                     </span>
                     @if (canManagePost(post)) {
@@ -636,7 +674,7 @@
                       <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                         @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                           <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                            <img [src]="img | imageUrl" alt="Post image" appImageError />
+                            <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
                             @if (post.images.length > 4 && imgIndex === 3) {
                               <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                             }
@@ -676,7 +714,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" appImageError />
+                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
                                     {{ getUserInitials(comment.user) }}
@@ -830,24 +868,39 @@
 
                       <!-- Type selector -->
                       <div class="cd-type-selector">
-                        <button type="button" class="cd-type-btn cd-type-btn--general"
-                          [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
-                          (click)="setPostType('GENERAL')">
-                          <i class="bi bi-chat-dots-fill"></i>
-                          <span>General</span>
-                        </button>
-                        <button type="button" class="cd-type-btn cd-type-btn--help"
-                          [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
-                          (click)="setPostType('HELP')">
-                          <i class="bi bi-life-preserver"></i>
-                          <span>Help</span>
-                        </button>
-                        <button type="button" class="cd-type-btn cd-type-btn--emergency"
-                          [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
-                          (click)="setPostType('EMERGENCY')">
-                          <i class="bi bi-exclamation-triangle-fill"></i>
-                          <span>Emergency</span>
-                        </button>
+                        @if (!isEnquireMode()) {
+                          <button type="button" class="cd-type-btn cd-type-btn--general"
+                            [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
+                            (click)="setPostType('GENERAL')">
+                            <i class="bi bi-chat-dots-fill"></i>
+                            <span>General</span>
+                          </button>
+                          <button type="button" class="cd-type-btn cd-type-btn--help"
+                            [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
+                            (click)="setPostType('HELP')">
+                            <i class="bi bi-life-preserver"></i>
+                            <span>Help</span>
+                          </button>
+                          <button type="button" class="cd-type-btn cd-type-btn--emergency"
+                            [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
+                            (click)="setPostType('EMERGENCY')">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Emergency</span>
+                          </button>
+                        } @else {
+                          <button type="button" class="cd-type-btn cd-type-btn--general"
+                            [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
+                            (click)="setPostType('GENERAL')">
+                            <i class="bi bi-chat-dots-fill"></i>
+                            <span>General</span>
+                          </button>
+                          <button type="button" class="cd-type-btn cd-type-btn--enquire"
+                            [class.cd-type-btn--active]="selectedPostType() === 'ENQUIRY'"
+                            (click)="setPostType('ENQUIRY')">
+                            <i class="bi bi-question-circle-fill"></i>
+                            <span>Enquire</span>
+                          </button>
+                        }
                       </div>
 
                       <!-- Submit -->
@@ -901,12 +954,12 @@
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
-              <div class="card border-0 shadow-sm mb-3 post-card post-card--help post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+              <div class="card border-0 shadow-sm mb-3 post-card post-card--help post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll [attr.data-post-id]="post.id" [class.post-card--highlighted]="highlightedPostId() === post.id">
                 <div class="card-body">
                   <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" appImageError />
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
                       }
@@ -951,7 +1004,7 @@
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                         <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                          <img [src]="img | imageUrl" alt="Post image" appImageError />
+                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
                           @if (post.images.length > 4 && imgIndex === 3) {
                             <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                           }
@@ -981,7 +1034,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" appImageError />
+                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
                                 }
@@ -1129,12 +1182,12 @@
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
-              <div class="card border-0 shadow-sm mb-3 post-card post-card--emergency post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll>
+              <div class="card border-0 shadow-sm mb-3 post-card post-card--emergency post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll [attr.data-post-id]="post.id" [class.post-card--highlighted]="highlightedPostId() === post.id">
                 <div class="card-body">
                   <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" appImageError />
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
                       }
@@ -1179,7 +1232,7 @@
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                         <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                          <img [src]="img | imageUrl" alt="Post image" appImageError />
+                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
                           @if (post.images.length > 4 && imgIndex === 3) {
                             <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                           }
@@ -1209,7 +1262,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" appImageError />
+                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
                                 }
@@ -1335,6 +1388,246 @@
       }
 
       <!-- ══════════════════════════════════════════════════════
+           ENQUIRE TAB
+      ══════════════════════════════════════════════════════════ -->
+      @case ('enquire') {
+        <div class="tab-enter" data-tab-panel="enquire">
+          <div class="cd-posts-layout">
+
+            <!-- ── Feed Column ─────────────────────────────────── -->
+            <div class="cd-feed-col">
+              <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
+              <span class="cd-tab-panel-start" aria-hidden="true"></span>
+
+              <!-- Enquire posts list -->
+          @if (filteredPosts().length === 0) {
+            <div class="cd-empty-state">
+              <div class="cd-empty-icon cd-empty-icon--enquire">
+                <i class="bi bi-question-circle-fill"></i>
+              </div>
+              <h6 class="cd-empty-title">No enquiries yet</h6>
+              <p class="cd-empty-text">Raise an enquiry and the community will get back to you.</p>
+            </div>
+          } @else {
+            @for (post of filteredPosts(); track post.id; let i = $index) {
+              <div class="card border-0 shadow-sm mb-3 post-card post-card--enquire post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'" appAnimateOnScroll [attr.data-post-id]="post.id" [class.post-card--highlighted]="highlightedPostId() === post.id">
+                <div class="card-body">
+                  <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
+                    <div class="post-avatar flex-shrink-0">
+                      @if (post.user?.avatar) {
+                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
+                      }
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
+                      <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
+                    </div>
+                    <span class="post-type-chip post-type-chip--enquire">
+                      <i class="bi bi-question-circle-fill"></i>Enquire
+                    </span>
+                    @if (canManagePost(post)) {
+                      <div class="cd-post-options-wrap">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        @if (postMenuOpenId() === post.id) {
+                          <div class="cd-post-menu" role="menu">
+                            @if (isAdmin()) {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                <i class="bi bi-pencil-fill"></i>Edit
+                              </button>
+                            }
+                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                              <i class="bi bi-trash3-fill"></i>Delete
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                  <hr class="post-divider" />
+                  <p class="post-content post-content--compact mb-3">
+                    {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
+                    @if (shouldTruncatePost(post.content)) {
+                      <button type="button" class="post-content-toggle" (click)="togglePostExpanded(post.id)">
+                        {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
+                      </button>
+                    }
+                  </p>
+                  @if (post.images && post.images.length > 0) {
+                    <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
+                      @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
+                        <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
+                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
+                          @if (post.images.length > 4 && imgIndex === 3) {
+                            <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
+                  <hr class="post-divider" />
+                  <div class="d-flex gap-1 post-actions-row">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)">
+                      <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--comment" (click)="toggleComments(post.id)">
+                      <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
+                    </button>
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--share" (click)="sharePost(post)">
+                      <i class="bi bi-share me-1"></i>Share
+                    </button>
+                  </div>
+                  @if (isCommentsExpanded(post.id)) {
+                    <div class="comments-section mt-3 pt-3 border-top comments-expand">
+                      @if (isLoadingComments(post.id)) {
+                        <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-muted"></div></div>
+                      } @else {
+                        <div class="comment-list-scroll" [attr.data-post-id]="post.id">
+                          @for (comment of getComments(post.id); track comment.id; let ci = $index) {
+                            <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
+                              <div class="comment-avatar flex-shrink-0">
+                                @if (comment.user?.avatar) {
+                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                                } @else {
+                                  <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
+                                }
+                              </div>
+                              <div class="comment-body">
+                                <div class="comment-bubble p-2 rounded">
+                                  <div class="comment-meta-row">
+                                    <span class="comment-author-name">{{ getUserFullName(comment.user) }}</span>
+                                    @if (isCommentByPostAuthor(post, comment)) {
+                                      <span class="comment-author-tag">Author</span>
+                                    }
+                                    <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
+                                  </div>
+                                  <p class="mb-0 small">{{ comment.content }}</p>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                        <div class="d-flex gap-2 comment-compose-row">
+                          <div class="comment-avatar flex-shrink-0">
+                            @if (currentUser()?.avatar) {
+                              <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                            } @else {
+                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
+                            }
+                          </div>
+                          <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                            <div class="row g-2 w-100 align-items-start comment-compose-grid">
+                              <div class="col-8 comment-input-col">
+                                <div class="comment-input-wrap">
+                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" placeholder="Write a comment..." />
+                                  @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
+                                    <small class="comment-limit-msg">Maximum 300 characters reached.</small>
+                                  }
+                                </div>
+                              </div>
+                              <div class="col-4 comment-submit-col">
+                                <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                                  @if (submittingComment() === post.id) {
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                  } @else {
+                                    <i class="bi bi-send"></i>
+                                  }
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (currentPage() < totalPages()) {
+              <div class="text-center mb-4">
+                <button class="cd-load-more-btn" [disabled]="loadingMore()" (click)="loadMore()">
+                  @if (loadingMore()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>Loading...
+                  } @else {
+                    <i class="bi bi-arrow-down-circle me-1"></i>Load More
+                  }
+                </button>
+              </div>
+            }
+          }
+
+            </div>
+
+            <!-- ── Sidebar Column ──────────────────────────────── -->
+            <div class="cd-sidebar-col">
+              <div class="cd-sidebar-sticky">
+                <div class="cd-compose-card cd-compose-card--enquire">
+                  <div class="cd-compose-card-label cd-compose-card-label--enquire">
+                    <i class="bi bi-question-circle-fill"></i>
+                    <span>Raise an Enquiry</span>
+                  </div>
+                  <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+
+                    <div class="cd-compose-body">
+                      <textarea
+                        class="cd-compose-textarea cd-compose-textarea--enquire"
+                        formControlName="content"
+                        rows="3"
+                        [attr.maxlength]="postContentMaxLength"
+                        placeholder="Describe your enquiry..."
+                      ></textarea>
+                      <div class="cd-input-meta-row">
+                        <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
+                      </div>
+                      @if ((postForm.get('content')?.value?.length ?? 0) >= postContentMaxLength) {
+                        <div class="text-danger small mt-1">Maximum {{ postContentMaxLength }} characters reached.</div>
+                      }
+                      @if (postForm.get('content')?.touched && postForm.get('content')?.invalid) {
+                        <div class="text-danger small mt-1">
+                          @if (postForm.get('content')?.errors?.['required']) {
+                            Post content is required.
+                          } @else if (postForm.get('content')?.errors?.['minlength']) {
+                            Post content must be at least {{ postContentMinLength }} characters.
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Image upload -->
+                    <div class="cd-compose-upload">
+                      <app-file-upload
+                        mode="multi"
+                        accept="image/*"
+                        [maxSizeMb]="5"
+                        label="Click or drag to add photos"
+                        [resetCounter]="postImageResetCounter()"
+                        (filesChange)="onPostImagesChange($event)"
+                      ></app-file-upload>
+                    </div>
+
+                    <div class="cd-compose-footer cd-compose-footer--single">
+                      <button type="submit" class="cd-submit-btn cd-submit-btn--enquire" [disabled]="submittingPost() || postForm.invalid">
+                        @if (submittingPost()) {
+                          <span class="spinner-border spinner-border-sm me-2"></span>Posting...
+                        } @else {
+                          <i class="bi bi-send-fill me-2"></i>Post Enquiry
+                        }
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      }
+
+      <!-- ══════════════════════════════════════════════════════
            MEMBERS TAB
       ══════════════════════════════════════════════════════════ -->
       @case ('members') {
@@ -1401,7 +1694,7 @@
                     <!-- Avatar -->
                     <div class="member-avatar flex-shrink-0">
                       @if (member.user?.avatar) {
-                        <img [src]="member.user?.avatar" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" appImageError />
+                        <img [src]="member.user?.avatar" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                           {{ getUserInitials(member.user) }}
@@ -1480,28 +1773,42 @@
                 </div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl">
-              <div class="cd-stat-card cd-surface-card cd-stat-card--help">
-                <div class="cd-stat-icon-box">
-                  <i class="bi bi-life-preserver"></i>
-                </div>
-                <div class="cd-stat-body">
-                  <div class="cd-stat-value">{{ helpCount() }}</div>
-                  <div class="cd-stat-label">Help</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-4 col-xl">
-              <div class="cd-stat-card cd-surface-card cd-stat-card--emergency">
-                <div class="cd-stat-icon-box">
-                  <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-                <div class="cd-stat-body">
-                  <div class="cd-stat-value">{{ emergencyCount() }}</div>
-                  <div class="cd-stat-label">Emergency</div>
+            @if (!isEnquireMode()) {
+              <div class="col-6 col-md-4 col-xl">
+                <div class="cd-stat-card cd-surface-card cd-stat-card--help">
+                  <div class="cd-stat-icon-box">
+                    <i class="bi bi-life-preserver"></i>
+                  </div>
+                  <div class="cd-stat-body">
+                    <div class="cd-stat-value">{{ helpCount() }}</div>
+                    <div class="cd-stat-label">Help</div>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div class="col-6 col-md-4 col-xl">
+                <div class="cd-stat-card cd-surface-card cd-stat-card--emergency">
+                  <div class="cd-stat-icon-box">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                  </div>
+                  <div class="cd-stat-body">
+                    <div class="cd-stat-value">{{ emergencyCount() }}</div>
+                    <div class="cd-stat-label">Emergency</div>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div class="col-6 col-md-4 col-xl">
+                <div class="cd-stat-card cd-surface-card cd-stat-card--help">
+                  <div class="cd-stat-icon-box">
+                    <i class="bi bi-question-circle-fill"></i>
+                  </div>
+                  <div class="cd-stat-body">
+                    <div class="cd-stat-value">{{ enquiryCount() }}</div>
+                    <div class="cd-stat-label">Enquiries</div>
+                  </div>
+                </div>
+              </div>
+            }
             <div class="col-6 col-md-4 col-xl">
               <div class="cd-stat-card cd-surface-card cd-stat-card--days">
                 <div class="cd-stat-icon-box">
@@ -1536,6 +1843,21 @@
                     <p class="cd-info-value">{{ community()!.description || 'No description provided.' }}</p>
                   </div>
                 </div>
+
+                <!-- Rules -->
+                @if ((community()!.rules ?? []).length > 0) {
+                  <div class="cd-info-row cd-info-row--full cd-info-row--rules info-item-animate" style="animation-delay:20ms">
+                    <div class="cd-info-icon"><i class="bi bi-shield-check"></i></div>
+                    <div class="cd-info-content">
+                      <span class="cd-info-label">Community Rules</span>
+                      <ol class="cd-rules-list">
+                        @for (rule of community()!.rules; track $index) {
+                          <li>{{ rule }}</li>
+                        }
+                      </ol>
+                    </div>
+                  </div>
+                }
 
                 <!-- Category -->
                 <div class="cd-info-row cd-info-row--category info-item-animate" style="animation-delay:40ms">
@@ -1702,7 +2024,7 @@
 
   @if (shareModalOpen()) {
     @if (shareTargetPost(); as sharePostData) {
-      <div class="cd-modal-backdrop" (click)="closeShareModal()" role="dialog" aria-modal="true" aria-labelledby="cdShareModalTitle">
+      <div class="cd-modal-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1050;" (click)="closeShareModal()" role="dialog" aria-modal="true" aria-labelledby="cdShareModalTitle">
         <div class="cd-modal cd-modal--share" (click)="$event.stopPropagation()">
           <div class="cd-modal-header">
             <div class="cd-modal-icon-wrap cd-modal-icon-wrap--share">

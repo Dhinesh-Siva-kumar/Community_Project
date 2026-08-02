@@ -11,7 +11,11 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
+
+// Remembers the last page viewed across navigations (e.g. list → detail → back).
+const PAGE_STORAGE_KEY = 'admin-community:page';
 
 // ── Module-level custom validators ──────────────────────────────────────────
 
@@ -37,7 +41,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
@@ -61,7 +65,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterVisibilityOptions: SelectOption[] = [
     { value: 'global',  label: 'Global'  },
     { value: 'private', label: 'Private' },
-    { value: 'default', label: 'Default' },
   ];
 
   // ── Signals ──────────────────────────────────────────────────
@@ -83,9 +86,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   private previousHtmlOverflow: string | null = null;
 
   // ── Filter signals ────────────────────────────────────────
-  filterCountry    = signal<string | number | null>(null);
-  filterCategory   = signal<string | number | null>(null);
-  filterVisibility = signal<string | number | null>(null);
+  filterCountry       = signal<string | number | null>(null);
+  filterCategory      = signal<string | number | null>(null);
+  filterVisibility    = signal<string | number | null>(null);
+  filterCommunityMode = signal<'HELP_EMERGENCY' | 'ENQUIRE' | null>(null);
+  filterIsDefault     = signal<boolean | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
   activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
@@ -109,6 +114,12 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCountry())    add('country',   String(this.filterCountry()), this.filterCountry());
     if (this.filterCategory())   add('category',  String(this.filterCategory()), this.filterCategory());
     if (this.filterVisibility()) add('visibility', String(this.filterVisibility()), this.filterVisibility());
+    if (this.filterCommunityMode()) {
+      add('communityMode', this.filterCommunityMode() === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency', this.filterCommunityMode());
+    }
+    if (this.filterIsDefault() !== null) {
+      add('isDefault', this.filterIsDefault() ? 'Default Only' : 'Non-Default', this.filterIsDefault());
+    }
     if (this.filterFromDate())   add('fromDate',  `From ${this.filterFromDate()}`, this.filterFromDate());
     if (this.filterToDate())     add('toDate',    `To ${this.filterToDate()}`, this.filterToDate());
     return chips;
@@ -128,9 +139,21 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
+    this.restoreSavedPage();
     this.loadCountries();
     this.loadInterests();
     this.loadCommunities();
+  }
+
+  /**
+   * Resume on the page the admin was viewing when they drilled into a community's detail page.
+   * Consumed (removed) immediately so it only applies to that one return trip — navigating away
+   * to an unrelated section and back starts fresh on page 1.
+   */
+  private restoreSavedPage(): void {
+    const saved = Number(sessionStorage.getItem(PAGE_STORAGE_KEY));
+    sessionStorage.removeItem(PAGE_STORAGE_KEY);
+    if (saved > 0) this.currentPage.set(saved);
   }
 
   ngOnDestroy(): void {
@@ -149,6 +172,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       visibility:  [''],
       isDefault:   [false],
       countryId:   [null, Validators.required],
+      communityMode: ['HELP_EMERGENCY', Validators.required],
+      rules:       [[] as string[]],
     });
   }
 
@@ -169,10 +194,14 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
               .join('');
           return { value: c.id, label: `${flag} ${c.name}` };
         });
-        this.filterCountryOptions = this.countries.map((c) => ({
-          value: c.name,
-          label: c.name,
-        }));
+        this.filterCountryOptions = this.countries.map((c) => {
+          const flag =
+            c.flag_emoji ||
+            [...c.iso2.toUpperCase()]
+              .map((ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)))
+              .join('');
+          return { value: c.name, label: `${flag} ${c.name}` };
+        });
         // Pre-select India as default for new communities.
         const defaultCountry = this.countries.find((c) => c.name === 'India');
         if (defaultCountry) {
@@ -212,6 +241,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCountry())    params['country']    = String(this.filterCountry());
     if (this.filterCategory())   params['category']   = String(this.filterCategory());
     if (this.filterVisibility()) params['visibility'] = String(this.filterVisibility());
+    if (this.filterCommunityMode()) params['community_mode'] = this.filterCommunityMode();
+    if (this.filterIsDefault() !== null) params['is_default'] = String(this.filterIsDefault());
     if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
     if (this.filterToDate())     params['to_date']    = this.filterToDate();
 
@@ -219,6 +250,12 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
 
     this.communityService.getCommunities(params).subscribe({
       next: (response: PaginatedResponse<Community>) => {
+        // The saved page may no longer exist (e.g. communities were deleted/filtered out) — fall back to the last valid page.
+        if (response.totalPages > 0 && this.currentPage() > response.totalPages) {
+          this.currentPage.set(response.totalPages);
+          this.loadCommunities();
+          return;
+        }
         this.communities.set(response.data);
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
@@ -293,6 +330,16 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onFilterCommunityModeChange(mode: 'HELP_EMERGENCY' | 'ENQUIRE' | null): void {
+    this.filterCommunityMode.set(mode);
+    this.applyFilters();
+  }
+
+  onFilterIsDefaultChange(value: boolean | null): void {
+    this.filterIsDefault.set(value);
+    this.applyFilters();
+  }
+
   /** Apply all active filters — resets to page 1 and fires the API call. */
   applyFilters(): void {
     this.currentPage.set(1);
@@ -305,6 +352,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.filterCountry.set(null);
     this.filterCategory.set(null);
     this.filterVisibility.set(null);
+    this.filterCommunityMode.set(null);
+    this.filterIsDefault.set(null);
     this.filterFromDate.set('');
     this.filterToDate.set('');
     this.activeQuickRange.set(null);
@@ -324,6 +373,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       case 'country':    this.filterCountry.set(null);   break;
       case 'category':   this.filterCategory.set(null);  break;
       case 'visibility': this.filterVisibility.set(null); break;
+      case 'communityMode': this.filterCommunityMode.set(null); break;
+      case 'isDefault':  this.filterIsDefault.set(null);  break;
       case 'fromDate':   this.filterFromDate.set('');    break;
       case 'toDate':     this.filterToDate.set('');      break;
     }
@@ -361,6 +412,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (defaultInterest) patches['interests'] = defaultInterest.interest_id;
     const defaultCountry = this.countries.find((c) => c.name === 'India');
     if (defaultCountry) patches['countryId'] = defaultCountry.id;
+    patches['communityMode'] = 'HELP_EMERGENCY';
+    patches['rules'] = [];
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
@@ -379,6 +432,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       countryId:     c['country_id'] ?? null,
       visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
+      communityMode: c['community_mode'] ?? 'HELP_EMERGENCY',
+      rules:         c['rules'] ?? [],
     });
     this.selectedImage.set(null);
     this.lockPageScroll();
@@ -533,6 +588,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   }
 
   viewCommunity(communityId: string): void {
+    // Remembered only for this drill-down — restoreSavedPage() consumes it on return.
+    sessionStorage.setItem(PAGE_STORAGE_KEY, String(this.currentPage()));
     this.router.navigate(['/admin/community', communityId]);
   }
 
@@ -565,6 +622,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       is_private:  form.visibility === 'private',
       is_global:   form.visibility === 'global',
       is_default:  form.isDefault   ?? false,
+      community_mode: form.communityMode ?? 'HELP_EMERGENCY',
+      rules:       form.rules ?? [],
     };
   }
 }

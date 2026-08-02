@@ -72,74 +72,132 @@
 
   @if (showAdvancedFilters()) {
     <div class="jb-advanced-panel animate-slide-in-up">
-       <div class="jb-filter-row jb-filter-row--split">
-         <div class="jb-location-row">
-           <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-             (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
-           </app-searchable-select>
-           <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
-             (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
-           </app-searchable-select>
-           <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
-             (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
-           </app-searchable-select>
-         </div>
-       </div>
-      <div class="jb-advanced-grid jb-advanced-grid--dates">
-        <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterFromDate()">
-          <div class="jb-adv-date-head">
-            <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
-            <span class="jb-adv-date-help">Start date</span>
-          </div>
-          <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-            <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-            <input id="communityFilterFromDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterFromDate()"
-              (change)="onFilterFromDateChange($event)"
-              placeholder="From date" />
-          </div>
-        </div>
 
-        <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
-          <div class="jb-adv-date-head">
-            <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
-            <span class="jb-adv-date-help">End date</span>
-          </div>
-          <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-            <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-            <input id="communityFilterToDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterToDate()"
-              (change)="onFilterToDateChange($event)"
-              placeholder="To date" />
+      <!-- ── Location & Category ─────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location &amp; Category</span>
+        <div class="jb-filter-row jb-filter-row--split">
+          <div class="jb-location-row">
+            <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+              (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+            </app-searchable-select>
+            <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
+              (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
+            </app-searchable-select>
+            <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
+              (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
+            </app-searchable-select>
           </div>
         </div>
       </div>
 
-      <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
-        <span class="jb-quick-date-row__label">Quick range:</span>
-        <button
-          type="button"
-          class="jb-quick-date-btn"
-          [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
-          (click)="applyQuickDatePreset('today')"
-        >
-          Today
-        </button>
-        <button
-          type="button"
-          class="jb-quick-date-btn"
-          [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
-          (click)="applyQuickDatePreset('7d')"
-        >
-          Last 7 Days
-        </button>
-        <button
-          type="button"
-          class="jb-quick-date-btn"
-          [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
-          (click)="applyQuickDatePreset('30d')"
-        >
-          Last 30 Days
-        </button>
+      <!-- ── Community Mode + Default Community ──────────────── -->
+      <div class="jb-adv-section">
+        <div class="jb-pill-group-row">
+          <div class="jb-pill-group">
+            <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Community Mode</span>
+            <div class="jb-pill-row" role="group" aria-label="Filter by community mode">
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterCommunityMode() === null"
+                      (click)="onFilterCommunityModeChange(null)">
+                All
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
+                      (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
+                <i class="bi bi-life-preserver"></i> Help &amp; Emergency
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
+                      (click)="onFilterCommunityModeChange('ENQUIRE')">
+                <i class="bi bi-question-circle-fill"></i> Enquire
+              </button>
+            </div>
+          </div>
+
+          <div class="jb-pill-group">
+            <span class="jb-filter-section-label"><i class="bi bi-star"></i> Default Community</span>
+            <div class="jb-pill-row" role="group" aria-label="Filter by default status">
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterIsDefault() === null"
+                      (click)="onFilterIsDefaultChange(null)">
+                All
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterIsDefault() === true"
+                      (click)="onFilterIsDefaultChange(true)">
+                <i class="bi bi-star-fill"></i> Default Only
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterIsDefault() === false"
+                      (click)="onFilterIsDefaultChange(false)">
+                <i class="bi bi-star"></i> Non-Default
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- ── Date Range ───────────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Range</span>
+        <div class="jb-advanced-grid jb-advanced-grid--dates">
+          <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterFromDate()">
+            <div class="jb-adv-date-head">
+              <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
+              <span class="jb-adv-date-help">Start date</span>
+            </div>
+            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
+              <input id="communityFilterFromDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterFromDate()"
+                (change)="onFilterFromDateChange($event)"
+                placeholder="From date" />
+            </div>
+          </div>
+
+          <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
+            <div class="jb-adv-date-head">
+              <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
+              <span class="jb-adv-date-help">End date</span>
+            </div>
+            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
+              <input id="communityFilterToDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterToDate()"
+                (change)="onFilterToDateChange($event)"
+                placeholder="To date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
+          <span class="jb-quick-date-row__label">Quick range:</span>
+          <button
+            type="button"
+            class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
+            (click)="applyQuickDatePreset('today')"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
+            (click)="applyQuickDatePreset('7d')"
+          >
+            Last 7 Days
+          </button>
+          <button
+            type="button"
+            class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
+            (click)="applyQuickDatePreset('30d')"
+          >
+            Last 30 Days
+          </button>
+        </div>
+      </div>
+
     </div>
   }
 </div>
@@ -285,28 +343,33 @@
                 </span>
               </div>
 
-              <!-- Badge row: Visibility + Default shown independently -->
-              @if (community.is_private || community.is_global || community.is_default) {
-                <div class="cc-badge-row">
+              <!-- Badge row: Visibility, then Default, then Community Mode -->
+              <div class="cc-badge-row">
 
-                  @if (community.is_private) {
-                    <span class="cc-visibility-badge cc-visibility-badge--private">
-                      <i class="bi bi-lock-fill"></i> Private
-                    </span>
-                  } @else if (community.is_global) {
-                    <span class="cc-visibility-badge cc-visibility-badge--global">
-                      <i class="bi bi-globe2"></i> Global
-                    </span>
-                  }
+                @if (community.is_private) {
+                  <span class="cc-visibility-badge cc-visibility-badge--private">
+                    <i class="bi bi-lock-fill"></i> Private
+                  </span>
+                } @else if (community.is_global) {
+                  <span class="cc-visibility-badge cc-visibility-badge--global">
+                    <i class="bi bi-globe2"></i> Global
+                  </span>
+                }
 
-                  @if (community.is_default) {
-                    <span class="cc-default-badge">
-                      <i class="bi bi-star-fill"></i> Default
-                    </span>
-                  }
+                @if (community.is_default) {
+                  <span class="cc-default-badge">
+                    <i class="bi bi-star-fill"></i> Default
+                  </span>
+                }
 
-                </div>
-              }
+                <span class="cc-mode-badge"
+                      [class.cc-mode-badge--enquire]="community.community_mode === 'ENQUIRE'">
+                  <i class="bi" [class.bi-life-preserver]="community.community_mode !== 'ENQUIRE'"
+                     [class.bi-question-circle-fill]="community.community_mode === 'ENQUIRE'"></i>
+                  {{ community.community_mode === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency' }}
+                </span>
+
+              </div>
 
               <!-- Actions -->
               <div class="cc-actions">
@@ -521,6 +584,28 @@
                 </div>
               </div>
 
+              <!-- Community Mode -->
+              <div class="cm-field-group">
+                <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
+                <div class="cm-toggle-group">
+                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
+                    <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
+                    <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency
+                  </label>
+                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
+                    <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
+                    <i class="bi bi-question-circle-fill me-1"></i> Enquire
+                  </label>
+                </div>
+                <div class="cm-default-hint">
+                  @if (f['communityMode'].value === 'ENQUIRE') {
+                    Members can raise and track enquiries in a dedicated Enquire tab.
+                  } @else {
+                    Members can post Help and Emergency requests in dedicated tabs.
+                  }
+                </div>
+              </div>
+
               <!-- Default Community toggle — independent of visibility -->
               <div class="cm-default-row">
                 <div class="cm-default-label">
@@ -535,7 +620,21 @@
               </div>
             </div>
 
-            <!-- ── SECTION 3: Media ── -->
+            <!-- ── SECTION 3: Rules ── -->
+            <div class="cm-section">
+              <div class="cm-section-header">
+                <span class="cm-section-badge">
+                  <i class="bi bi-shield-check"></i>
+                </span>
+                <span class="cm-section-title">Community Rules</span>
+              </div>
+
+              <div class="cm-field-group">
+                <app-community-rules-input formControlName="rules"></app-community-rules-input>
+              </div>
+            </div>
+
+            <!-- ── SECTION 4: Media ── -->
             <div class="cm-section cm-section-last">
               <div class="cm-section-header">
                 <span class="cm-section-badge">

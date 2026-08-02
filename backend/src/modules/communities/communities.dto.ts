@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// ── Community rules — a short free-text list, each entered one at a time ──────
+const rulesSchema = z
+  .array(z.string().trim().min(1).max(150, 'Each rule must be at most 150 characters'))
+  .max(20, 'A community can have at most 20 rules')
+  .optional()
+  .default([]);
+
 // ── Update fields — all fields optional so partial patches work ───────────────
 const communityFields = z.object({
   name: z.string().trim().min(3, 'Community name must be at least 3 characters').max(150).optional(),
@@ -13,6 +20,8 @@ const communityFields = z.object({
   is_private: z.boolean().optional().default(false),
   is_global: z.boolean().optional().default(false),
   is_default: z.boolean().optional().default(false),
+  community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+  rules: rulesSchema,
 });
 
 // ── Create — all mandatory fields are required ────────────────────────────────
@@ -52,6 +61,8 @@ export const CreateCommunityDto = z
     is_private: z.boolean().optional().default(false),
     is_global: z.boolean().optional().default(false),
     is_default: z.boolean().optional().default(false),
+    community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+    rules: rulesSchema,
   })
   .refine((data) => !(data.is_private && data.is_global), {
     message: 'A community cannot be both Private and Global',
@@ -70,9 +81,11 @@ export const ListCommunitiesQueryDto = z.object({
   search:     z.string().optional(),
   pincode:    z.string().optional(),
   // ── New filter params ──────────────────────────────────────
-  country:    z.string().optional(),
-  category:   z.string().optional(),
-  visibility: z.enum(['global', 'private', 'default']).optional(),
+  country:       z.string().optional(),
+  category:      z.string().optional(),
+  visibility:    z.enum(['global', 'private', 'default']).optional(),
+  community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional(),
+  is_default:    z.enum(['true', 'false']).optional().transform((v) => (v === undefined ? undefined : v === 'true')),
   from_date:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'from_date must be YYYY-MM-DD').optional(),
   to_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to_date must be YYYY-MM-DD').optional(),
   joined:     z.coerce.boolean().optional(),   // true = return only communities the caller has joined

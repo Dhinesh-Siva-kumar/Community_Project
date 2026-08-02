@@ -51,6 +51,7 @@ import { CommonModule } from '@angular/common';
         class="tag-input-host__field"
         [(ngModel)]="inputValue"
         [disabled]="isDisabled()"
+        [attr.maxlength]="maxLength()"
         [placeholder]="tags().length === 0 ? placeholder() : ''"
         autocomplete="off"
         autocorrect="off"
@@ -63,7 +64,7 @@ import { CommonModule } from '@angular/common';
 
     @if (tags().length > 0) {
       <div class="tag-input-hint">
-        {{ tags().length }} skill{{ tags().length === 1 ? '' : 's' }} added
+        {{ tags().length }} {{ itemLabel() }}{{ tags().length === 1 ? '' : 's' }} added
         &nbsp;·&nbsp;
         <button type="button" class="tag-input-clear-all" (click)="clearAll()">
           Clear all
@@ -173,6 +174,9 @@ export class TagInputComponent implements ControlValueAccessor {
 
   // ── Inputs ────────────────────────────────────────────────────
   readonly placeholder = input<string>('Type a skill and press Enter…');
+  readonly maxLength = input<number | null>(null);
+  readonly itemLabel = input<string>('skill');
+  readonly commitOnComma = input<boolean>(true);
 
   @ViewChild('inputEl') inputElRef!: ElementRef<HTMLInputElement>;
 
@@ -200,7 +204,7 @@ export class TagInputComponent implements ControlValueAccessor {
   }
 
   protected onKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter' || (e.key === ',' && this.commitOnComma())) {
       e.preventDefault();
       this.commitTag();
     } else if (e.key === 'Backspace' && this.inputValue === '') {

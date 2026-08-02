@@ -46,6 +46,10 @@ export class PostService {
     return this.api.get<PaginatedResponse<Post>>('/posts/pending');
   }
 
+  getPost(id: string): Observable<Post> {
+    return this.api.get<Post>(`/posts/${id}`);
+  }
+
   likePost(postId: string): Observable<void> {
     return this.api.post<void>(`/posts/${postId}/like`);
   }

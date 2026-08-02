@@ -1,4 +1,4 @@
-import { ApplicationRef, Component, ComponentRef, EnvironmentInjector, HostListener, OnDestroy, OnInit, computed, createComponent, inject, signal } from '@angular/core';
+import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, EnvironmentInjector, HostListener, OnDestroy, OnInit, computed, createComponent, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -15,15 +15,17 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { DeletePostModalComponent } from '../../../shared/components/delete-post-modal/delete-post-modal.component';
+import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { environment } from '../../../../environments/environment';
 
-type TabType = 'posts' | 'help' | 'emergency' | 'members' | 'about';
+type TabType = 'posts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, SearchableSelectComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, SearchableSelectComponent, CommunityRulesInputComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -41,8 +43,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   countries: Country[] = [];
   interests: interests[] = [];
-  countryOptions: SelectOption[] = [];
-  interestOptions: SelectOption[] = [];
+  // Signals (not plain fields): they're passed as an @Input to
+  // <app-searchable-select>, and under OnPush a plain field mutated from an
+  // HTTP subscribe callback wouldn't mark this component dirty.
+  countryOptions = signal<SelectOption[]>([]);
+  interestOptions = signal<SelectOption[]>([]);
 
   // Signals
   community = signal<Community | null>(null);
@@ -51,8 +56,15 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   loading = signal(true);
   loadingPosts = signal(false);
   activeTab = signal<TabType>('posts');
+  pendingTab = signal<TabType | null>(null);
   communityId = signal<string>('');
   tabTransition = signal(false);
+  private tabSwitchTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private tabSwitchToken = 0;
+
+  /** Ticks periodically so relative timestamps stay live under OnPush. */
+  clockTick = signal(0);
+  private clockTickIntervalId: ReturnType<typeof setInterval> | null = null;
 
   // Post creation
   submittingPost = signal(false);
@@ -94,6 +106,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   shareTargetPost = signal<Post | null>(null);
   sharePopupBlocked = signal(false);
   blockedShareUrl = signal<string | null>(null);
+
+  // Shared-post deep link (opened via a share link's #post-<id> fragment)
+  highlightedPostId = signal<string | null>(null);
+  private pendingSharedPostId: string | null = null;
 
   // Edit post modal
   editingPost          = signal<Post | null>(null);
@@ -139,6 +155,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     countryId: [null, Validators.required],
     visibility: ['', Validators.required],
     isDefault: [false],
+    rules: [[] as string[]],
   });
   commentForms: Map<string, FormGroup> = new Map();
   private previousBodyOverflow: string | null = null;
@@ -153,6 +170,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   isAdmin = computed(() => this.router.url.startsWith('/admin'));
 
+  communityMode = computed(() => this.community()?.community_mode ?? 'HELP_EMERGENCY');
+  isEnquireMode = computed(() => this.communityMode() === 'ENQUIRE');
+
   isMember = computed(() => {
     const uid = this.currentUserId();
     if (!uid) return false;
@@ -161,12 +181,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   backRoute = computed(() => this.isAdmin() ? '/admin/community' : '/user/community');
 
+  // The tab button should light up the instant it's clicked, even while the
+  // 150ms fade transition (and `activeTab` itself) hasn't switched over yet.
+  displayTab = computed(() => this.pendingTab() ?? this.activeTab());
+
   filteredPosts = computed(() => {
     const tab = this.activeTab();
     const allPosts = this.posts();
     switch (tab) {
       case 'help':      return allPosts.filter((p) => p.type === 'HELP');
       case 'emergency': return allPosts.filter((p) => p.type === 'EMERGENCY');
+      case 'enquire':   return allPosts.filter((p) => p.type === 'ENQUIRY');
       default:          return allPosts;
     }
   });
@@ -175,6 +200,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   postCount      = computed(() => this.community()?._count?.posts ?? 0);
   helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP').length);
   emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY').length);
+  enquiryCount   = computed(() => this.posts().filter((p) => p.type === 'ENQUIRY').length);
 
   communityCreatorId = computed(() => {
     const c = this.community();
@@ -229,16 +255,35 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.initForms();
     this.loadCountries();
     this.loadInterests();
+
+    // Under OnPush, this component only re-renders when something it owns
+    // actually changes — so relative timestamps ("5m ago") would otherwise
+    // freeze until an unrelated interaction happens to trigger a re-render.
+    // Ticking this signal periodically keeps them live.
+    if (typeof window !== 'undefined') {
+      this.clockTickIntervalId = window.setInterval(() => this.clockTick.update((n) => n + 1), 60_000);
+    }
+
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
         this.communityId.set(id);
+        // Read the fragment fresh on every navigation (not just the first),
+        // so opening a shared link for a different community still works
+        // if Angular reuses this component instance (e.g. same-route nav).
+        this.pendingSharedPostId = this.parseSharedPostId(this.route.snapshot.fragment);
         this.loadCommunity();
         this.loadPosts();
         this.membersPage.set(1);
         this.loadMembers();
       }
     });
+  }
+
+  private parseSharedPostId(fragment: string | null): string | null {
+    if (!fragment) return null;
+    const match = /^post-(.+)$/.exec(fragment);
+    return match ? match[1] : null;
   }
 
   initForms(): void {
@@ -255,10 +300,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       countryId: [null, Validators.required],
       visibility: ['', Validators.required],
       isDefault: [false],
+      rules: [[] as string[]],
     });
   }
 
   ngOnDestroy(): void {
+    if (this.tabSwitchTimeoutId !== null) {
+      clearTimeout(this.tabSwitchTimeoutId);
+    }
+    if (this.clockTickIntervalId !== null) {
+      clearInterval(this.clockTickIntervalId);
+    }
     this.destroyDeletePostModal();
     this.unlockPageScroll();
   }
@@ -267,10 +319,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.authService.getCountries().subscribe({
       next: (res) => {
         this.countries = res.data;
-        this.countryOptions = this.countries.map((country) => {
+        this.countryOptions.set(this.countries.map((country) => {
           const flag = country.flag_emoji || [...country.iso2.toUpperCase()].map((ch) => String.fromCodePoint(127397 + ch.charCodeAt(0))).join('');
           return { value: country.id, label: `${flag} ${country.name}` };
-        });
+        }));
       },
       error: () => this.toast.error('Failed to load countries'),
     });
@@ -280,10 +332,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.authService.getInterests().subscribe({
       next: (res) => {
         this.interests = res.data;
-        this.interestOptions = this.interests.map((interest) => ({
+        this.interestOptions.set(this.interests.map((interest) => ({
           value: interest.interest_id,
           label: interest.interest_name,
-        }));
+        })));
       },
       error: () => this.toast.error('Failed to load interests'),
     });
@@ -326,6 +378,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.totalPages.set(response.totalPages);
         this.loadingPosts.set(false);
         this.loadingMore.set(false);
+
+        if (!append) {
+          this.resolveSharedPostDeepLink();
+        }
       },
       error: () => {
         this.toast.error('Failed to load posts');
@@ -333,6 +389,60 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.loadingMore.set(false);
       },
     });
+  }
+
+  private resolveSharedPostDeepLink(): void {
+    const postId = this.pendingSharedPostId;
+    if (!postId) return;
+    this.pendingSharedPostId = null;
+
+    if (this.posts().some((p) => p.id === postId)) {
+      this.highlightSharedPost(postId);
+      return;
+    }
+
+    const requestedForCommunityId = this.communityId();
+    this.postService.getPost(postId).subscribe({
+      next: (post) => {
+        // Bail if the user navigated to a different community while this was in flight.
+        if (this.communityId() !== requestedForCommunityId) return;
+        this.posts.update((list) => (list.some((p) => p.id === post.id) ? list : [post, ...list]));
+        this.highlightSharedPost(postId);
+      },
+      error: () => this.toast.error('This post is no longer available.'),
+    });
+  }
+
+  private highlightSharedPost(postId: string): void {
+    this.highlightedPostId.set(postId);
+    this.scheduleSharedPostScroll(postId);
+    setTimeout(() => {
+      if (this.highlightedPostId() === postId) {
+        this.highlightedPostId.set(null);
+      }
+    }, 2500);
+  }
+
+  private scheduleSharedPostScroll(postId: string): void {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => this.scrollToSharedPost(postId));
+    });
+  }
+
+  private scrollToSharedPost(postId: string, attempt = 0): void {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const target = document.querySelector<HTMLElement>(`[data-post-id="${postId}"]`);
+    if (!target) {
+      if (attempt < 6) {
+        window.setTimeout(() => this.scrollToSharedPost(postId, attempt + 1), 16);
+      }
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
   }
 
   loadMembers(append = false): void {
@@ -379,33 +489,49 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   setTab(tab: TabType): void {
     if (this.activeTab() === tab) return;
+
+    // Cancel any switch that's still pending so rapid clicks can't leave
+    // `tabTransition` cleared early or scroll to a tab that's no longer current.
+    if (this.tabSwitchTimeoutId !== null) {
+      clearTimeout(this.tabSwitchTimeoutId);
+    }
+
+    const token = ++this.tabSwitchToken;
+    this.pendingTab.set(tab);
     this.tabTransition.set(true);
-    setTimeout(() => {
+
+    this.tabSwitchTimeoutId = setTimeout(() => {
+      this.tabSwitchTimeoutId = null;
+      if (token !== this.tabSwitchToken) return;
+
       this.activeTab.set(tab);
       switch (tab) {
         case 'help':      this.selectedPostType.set('HELP');      break;
         case 'emergency': this.selectedPostType.set('EMERGENCY'); break;
+        case 'enquire':   this.selectedPostType.set('ENQUIRY');   break;
         default:          this.selectedPostType.set('GENERAL');   break;
       }
       this.tabTransition.set(false);
-      this.scheduleTabPanelScroll(tab);
+      this.pendingTab.set(null);
+      this.scheduleTabPanelScroll(tab, token);
     }, 150);
   }
 
-  private scheduleTabPanelScroll(tab: TabType): void {
+  private scheduleTabPanelScroll(tab: TabType, token: number): void {
     if (typeof window === 'undefined') return;
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => this.scrollToTabPanelStart(tab));
+      window.requestAnimationFrame(() => this.scrollToTabPanelStart(tab, token));
     });
   }
 
-  private scrollToTabPanelStart(tab: TabType, attempt = 0): void {
+  private scrollToTabPanelStart(tab: TabType, token: number, attempt = 0): void {
+    if (token !== this.tabSwitchToken) return;
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     const panel = document.querySelector<HTMLElement>(`[data-tab-panel="${tab}"] .cd-tab-panel-start`);
     if (!panel) {
       if (attempt < 6) {
-        window.setTimeout(() => this.scrollToTabPanelStart(tab, attempt + 1), 16);
+        window.setTimeout(() => this.scrollToTabPanelStart(tab, token, attempt + 1), 16);
       }
       return;
     }
@@ -627,22 +753,24 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const shareData: ShareData = {
-        title: shareTitle,
-        text: postText,
-        url: shareUrl,
-      };
-
       const files = await this.buildShareFiles(post.images);
+
       if (files.length > 0) {
-        const withFiles: ShareData = { ...shareData, files };
+        // The Web Share API rejects `url` combined with `files` (canShare()
+        // returns false), so the link is folded into `text` instead — this
+        // way the image and the link still travel together in one share.
+        const withFiles: ShareData = {
+          title: shareTitle,
+          text: `${postText}\n\n${shareUrl}`,
+          files,
+        };
         if (typeof navigator.canShare === 'function' && navigator.canShare(withFiles)) {
           await navigator.share(withFiles);
           return;
         }
       }
 
-      await navigator.share(shareData);
+      await navigator.share({ title: shareTitle, text: postText, url: shareUrl });
     } catch (error: unknown) {
       const err = error as { name?: string };
       if (err?.name === 'AbortError') return;
@@ -773,22 +901,26 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   private async buildShareFiles(images: string[] | undefined): Promise<File[]> {
-    const firstImage = images?.[0];
-    if (!firstImage) return [];
+    if (!images || images.length === 0) return [];
 
-    try {
-      const imageUrl = this.resolveImageUrl(firstImage);
-      const response = await fetch(imageUrl, { mode: 'cors' });
-      if (!response.ok) return [];
+    const results = await Promise.all(
+      images.slice(0, 4).map(async (image, index) => {
+        try {
+          const imageUrl = this.resolveImageUrl(image);
+          const response = await fetch(imageUrl, { mode: 'cors' });
+          if (!response.ok) return null;
 
-      const blob = await response.blob();
-      const mime = blob.type || 'image/jpeg';
-      const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
-      const file = new File([blob], `community-post.${ext}`, { type: mime });
-      return [file];
-    } catch {
-      return [];
-    }
+          const blob = await response.blob();
+          const mime = blob.type || 'image/jpeg';
+          const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+          return new File([blob], `community-post-${index + 1}.${ext}`, { type: mime });
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return results.filter((file): file is File => file !== null);
   }
 
   private resolveImageUrl(pathOrUrl: string): string {
@@ -987,6 +1119,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       countryId: current.country_id ?? null,
       visibility,
       isDefault: current.is_default ?? false,
+      rules: current.rules ?? [],
     });
 
     this.selectedCommunityImage.set(null);
@@ -1167,38 +1300,51 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   private lockPageScroll(): void {
+    // Guard against re-entrant locking (e.g. two modal signals flipping in
+    // the same tick).
+    if (this.lockedScrollY !== null) return;
+
     const body = document.body;
     const html = document.documentElement;
 
+    this.previousBodyOverflow = body.style.overflow;
+    this.previousHtmlOverflow = html.style.overflow;
     const scrollY = window.scrollY || window.pageYOffset || 0;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
     this.lockedScrollY = scrollY;
 
-    body.style.overflow = 'hidden';
     html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+
+    // Inserting the popup's fixed-position content can nudge the browser
+    // back to the top of the page on the next paint; re-assert the scroll
+    // position a frame later so it opens over exactly what the user was
+    // looking at instead of jumping to the top.
+    requestAnimationFrame(() => {
+      if (this.lockedScrollY === scrollY) {
+        window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+      }
+    });
   }
 
   private unlockPageScroll(): void {
+    if (this.lockedScrollY === null) return;
+
     const body = document.body;
     const html = document.documentElement;
+    const scrollY = this.lockedScrollY;
 
     body.style.overflow = this.previousBodyOverflow ?? '';
     html.style.overflow = this.previousHtmlOverflow ?? '';
 
-    if (this.lockedScrollY !== null && Math.abs(window.scrollY - this.lockedScrollY) > 1) {
-      window.scrollTo(0, this.lockedScrollY);
-    }
-
     this.previousBodyOverflow = null;
     this.previousHtmlOverflow = null;
     this.lockedScrollY = null;
+
+    // Explicit behavior:'auto' forces an instant jump. The page has a global
+    // `scroll-behavior: smooth` (styles.scss); the old 2-arg scrollTo(x, y)
+    // form inherits that, so restoring here visibly animated the background
+    // back into place instead of snapping to it.
+    window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
   }
 
   getCommunityStatus(): { label: string; cls: string } {
@@ -1254,11 +1400,15 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     switch (type) {
       case 'EMERGENCY': return { label: 'Emergency', class: 'bg-danger',              icon: 'bi-exclamation-triangle-fill' };
       case 'HELP':      return { label: 'Help',      class: 'bg-warning text-dark',   icon: 'bi-life-preserver'            };
+      case 'ENQUIRY':   return { label: 'Enquire',   class: 'bg-enquire',             icon: 'bi-question-circle-fill'      };
       default:          return { label: 'General',   class: 'bg-primary',             icon: 'bi-chat-dots-fill'            };
     }
   }
 
   getTimeAgo(dateStr: string): string {
+    // Reading this signal makes the calling template expression re-evaluate
+    // as clockTick ticks, so "5m ago" keeps advancing under OnPush.
+    this.clockTick();
     const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
     if (seconds < 60)     return 'Just now';
     if (seconds < 3600)   return `${Math.floor(seconds / 60)}m ago`;
@@ -1293,6 +1443,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       is_private: form.visibility === 'private',
       is_global: form.visibility === 'global',
       is_default: form.isDefault ?? false,
+      rules: form.rules ?? [],
     };
   }
 
