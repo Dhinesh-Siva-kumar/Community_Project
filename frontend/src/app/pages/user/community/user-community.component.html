@@ -29,6 +29,27 @@
   </div>
 
   <div class="uc-head-controls">
+    <div class="uc-tabs-wrap">
+      <div class="uc-tabs" role="tablist">
+        @for (tab of pageTabs(); track tab.id) {
+          <button
+            role="tab"
+            type="button"
+            class="uc-tab uc-tab--{{ tab.id }}"
+            [class.active]="activeTab() === tab.id"
+            [attr.aria-selected]="activeTab() === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            <i [class]="'bi ' + tab.icon" aria-hidden="true"></i>
+            {{ tab.label }}
+            @if (tab.badge) {
+              <span class="uc-tab-count">{{ tab.badge }}</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
     <div class="uc-view-toggle" role="group" aria-label="Switch view mode">
       <button
         class="uc-view-btn"
@@ -69,55 +90,6 @@
   </div>
 </div>
 
-<!-- ── TABS ─────────────────────────────────────────────────── -->
-<div class="uc-tabs-wrap">
-  <div class="uc-tabs" role="tablist">
-    @for (tab of pageTabs(); track tab.id) {
-      <button
-        role="tab"
-        type="button"
-        class="uc-tab uc-tab--{{ tab.id }}"
-        [class.active]="activeTab() === tab.id"
-        [attr.aria-selected]="activeTab() === tab.id"
-        (click)="setTab(tab.id)"
-      >
-        <i [class]="'bi ' + tab.icon" aria-hidden="true"></i>
-        {{ tab.label }}
-        @if (tab.badge) {
-          <span class="uc-tab-count">{{ tab.badge }}</span>
-        }
-      </button>
-    }
-  </div>
-</div>
-
-<!-- ── TOPIC CHIPS ──────────────────────────────────────────── -->
-@if (trendingTopics().length > 0) {
-  <div class="uc-topics" role="list" aria-label="Filter by topic">
-    <button
-      class="uc-topic-chip"
-      role="listitem"
-      type="button"
-      [class.active]="!searchTerm()"
-      (click)="clearSearch()"
-    >
-      All topics
-    </button>
-    @for (topic of trendingTopics(); track topic) {
-      <button
-        class="uc-topic-chip"
-        role="listitem"
-        type="button"
-        [class.active]="searchTerm() === topic"
-        (click)="searchTerm.set(topic)"
-        [attr.aria-label]="'Filter by ' + topic"
-      >
-        #{{ topic }}
-      </button>
-    }
-  </div>
-}
-
 <!-- ── SPOTLIGHT ────────────────────────────────────────────── -->
 @if (activeTab() === 'all' && !searchTerm() && featuredCommunities().length > 1) {
   <section class="uc-spotlight" aria-label="Most popular communities">
@@ -154,7 +126,11 @@
 
           <div class="uc-spot-content">
             <div class="uc-spot-id-row">
-              <div class="uc-spot-avatar" aria-hidden="true">{{ getInitials(community.name) }}</div>
+              @if (community.image) {
+                <img class="uc-spot-avatar" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
+              } @else {
+                <div class="uc-spot-avatar" aria-hidden="true">{{ getInitials(community.name) }}</div>
+              }
               <div class="uc-spot-name-group">
                 <h3 class="uc-spot-name">{{ community.name }}</h3>
                 <span class="uc-spot-category">
@@ -293,6 +269,14 @@
             </div>
 
             <div class="uc-g-body">
+              @if (community.image) {
+                <img class="uc-g-avatar" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
+              } @else {
+                <div class="uc-g-avatar" [style.background]="getCoverGradient(community.name)" aria-hidden="true">
+                  {{ getInitials(community.name) }}
+                </div>
+              }
+
               <div class="uc-g-top-row">
                 <div class="uc-g-title-group">
                   <h3 class="uc-g-name">{{ community.name }}</h3>

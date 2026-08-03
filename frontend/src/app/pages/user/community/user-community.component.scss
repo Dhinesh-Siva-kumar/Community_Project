@@ -98,6 +98,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   display: flex;
   align-items: center;
   gap: $spacing-sm;
+  flex-wrap: wrap;
 }
 
 // ── View toggle (grid/list) ────────────────────────────────
@@ -205,35 +206,35 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 // ============================================================
 .uc-tabs-wrap {
   position: relative;
+  flex-shrink: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
   border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: $radius-lg;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
-  padding: 8px;
+  border-radius: $radius-md;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  padding: 4px;
   backdrop-filter: blur(10px);
-  margin-bottom: $spacing-lg;
   display: inline-block;
 }
 
-.uc-tabs { display: flex; gap: 6px; }
+.uc-tabs { display: flex; gap: 3px; }
 
 .uc-tab {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 39px;
-  padding: 0 15px;
-  border-radius: $radius-md;
+  gap: 5px;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: $radius-sm;
   border: 1px solid transparent;
   background: transparent;
   color: $color-text-muted;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: $font-weight-semibold;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color $_transition, color $_transition, border-color $_transition, box-shadow $_transition;
 
-  i { font-size: 14px; }
+  i { font-size: 12px; }
 
   &:hover { color: $color-text-primary; background: rgba(255, 255, 255, 0.7); }
 
@@ -258,45 +259,14 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 18px;
-  padding: 0 5px;
+  min-width: 17px;
+  height: 16px;
+  padding: 0 4px;
   border-radius: $radius-full;
   background: $color-stone-200;
   color: $color-stone-600;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: $font-weight-bold;
-}
-
-// ============================================================
-// TOPIC CHIPS
-// ============================================================
-.uc-topics {
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
-  margin-bottom: $spacing-xl;
-}
-
-.uc-topic-chip {
-  padding: 5px 12px;
-  border-radius: $radius-full;
-  border: 1px solid $color-border;
-  background: $color-bg-card;
-  font-size: 12px;
-  font-weight: $font-weight-semibold;
-  color: $color-text-body;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background $_transition, color $_transition, border-color $_transition;
-
-  &:hover { border-color: $color-amber-300; color: $color-primary-darker; }
-
-  &.active {
-    background: $color-primary-light;
-    border-color: $color-amber-200;
-    color: $color-primary-darker;
-  }
 }
 
 // ============================================================
@@ -411,7 +381,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.42) 70%, rgba(0, 0, 0, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.1) 22%, rgba(0, 0, 0, 0.58) 62%, rgba(0, 0, 0, 0.88) 100%);
 }
 
 .uc-spot-top-badges {
@@ -518,7 +488,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   width: 100%;
   height: 40px;
   border-radius: $radius-md;
-  border: none;
+  border: 1.5px solid transparent;
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-darker 100%);
   color: $color-on-primary;
   font-weight: $font-weight-extrabold;
@@ -529,11 +499,15 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   gap: 7px;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
-  transition: transform $_transition, box-shadow $_transition;
+  transition: transform $_transition, border-color $_transition, color $_transition;
 
   i { font-size: 13px; }
 
-  &:hover:not(:disabled) { transform: translateY(-2px); }
+  // Hover highlights via border + text only — background never changes.
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgba($color-on-primary, 0.5);
+  }
   &:disabled { opacity: 0.7; cursor: not-allowed; }
 
   &.is-joined {
@@ -543,7 +517,10 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
     box-shadow: none;
     backdrop-filter: blur(8px);
 
-    &:hover:not(:disabled) { background: rgba($color-danger, 0.4); border-color: rgba($color-danger, 0.6); }
+    &:hover:not(:disabled) {
+      border-color: $color-danger;
+      color: $color-danger;
+    }
   }
 }
 
@@ -676,12 +653,18 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 // ============================================================
 .uc-grid {
   display: none;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 
   &.active { display: grid; }
 
-  @include media-lg-max { grid-template-columns: repeat(2, 1fr); }
+  // Only step up to 3 columns once there's enough room for cards to stay
+  // comfortably sized — default is 2-up so cards (and their cover photos)
+  // aren't cramped.
+  @media (min-width: 1300px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   @include media-sm-max { grid-template-columns: 1fr; }
 }
 
@@ -710,7 +693,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   &:focus-visible { box-shadow: $shadow-focus-ring; }
 }
 
-.uc-g-cover { position: relative; height: 84px; overflow: hidden; }
+.uc-g-cover { position: relative; height: 118px; overflow: hidden; }
 .uc-g-cover-bg {
   position: absolute; inset: 0;
   transition: transform .5s cubic-bezier(.2, .8, .2, 1);
@@ -737,9 +720,29 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   &--popular { background: rgba($color-primary, 0.94); color: $color-on-primary; }
 }
 
-.uc-g-body { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 9px 11px 10px; }
-.uc-g-top-row { display: flex; align-items: flex-start; gap: 6px; }
+.uc-g-body { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 12px 11px; }
+.uc-g-top-row { display: flex; align-items: center; gap: 8px; }
 .uc-g-title-group { flex: 1; min-width: 0; }
+
+// Straddles the seam between the cover photo and the text area — half on the
+// image, half on the card body — instead of sitting inline next to the name.
+.uc-g-avatar {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: $radius-sm;
+  margin-top: -19px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-white;
+  font-family: $font-family-header;
+  font-weight: $font-weight-extrabold;
+  font-size: 12.5px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px $color-bg-card, 0 0 0 3.5px rgba($color-primary, 0.45);
+}
 
 .uc-g-name {
   font-family: $font-family-header;

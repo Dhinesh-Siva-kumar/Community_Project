@@ -19,14 +19,6 @@ interface FilterTab {
   badge?: number;
 }
 
-// Generic words that describe the entity itself rather than a real subject/interest —
-// excluded so "topic" chips surface meaningful keywords instead of structural nouns.
-const TOPIC_STOPWORDS = new Set([
-  'community', 'communities', 'group', 'network', 'association', 'society',
-  'circle', 'hub', 'club', 'team', 'collective', 'organization', 'organisation',
-  'people', 'members', 'connect', 'this', 'that', 'with', 'from', 'their',
-]);
-
 @Component({
   selector: 'app-user-community',
   standalone: true,
@@ -115,34 +107,6 @@ export class UserCommunityComponent implements OnInit {
   totalMembersCount = computed(() =>
     this.communities().reduce((sum, c) => sum + (c._count?.members ?? 0), 0)
   );
-
-  // ── Computed: trending topic chips (derived from data) ─────
-  // Keyword-mines community names rather than reading a real "category" field
-  // (Community has none). A word only becomes a topic chip if it appears in at
-  // least 2 different community names, so one-off structural nouns don't drown
-  // out words that genuinely group communities together.
-  trendingTopics = computed((): string[] => {
-    const wordMap = new Map<string, number>();
-
-    this.communities().forEach((c) => {
-      const seenInThisName = new Set<string>();
-      c.name
-        .split(/[\s\-_,]+/)
-        .filter((w) => w.length > 3)
-        .forEach((word) => {
-          const key = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-          if (TOPIC_STOPWORDS.has(key.toLowerCase()) || seenInThisName.has(key)) return;
-          seenInThisName.add(key);
-          wordMap.set(key, (wordMap.get(key) ?? 0) + 1);
-        });
-    });
-
-    return Array.from(wordMap.entries())
-      .filter(([, count]) => count >= 2)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([word]) => word);
-  });
 
   // ── Popular posts (sidebar) ─────────────────────────────────
   popularPosts  = signal<Post[]>([]);
