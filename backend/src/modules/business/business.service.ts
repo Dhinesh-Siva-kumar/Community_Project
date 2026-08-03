@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
 export async function createCategory(data: CreateBusinessCategoryDtoType) {
@@ -197,6 +198,16 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.mapsLink !== undefined) updateData['maps_link'] = data.mapsLink;
 
   await db('businesses').where({ id }).update(updateData);
+
+  if (data.images !== undefined) {
+    const oldImages = Array.isArray(business['images']) ? (business['images'] as unknown[]) : [];
+    const newImages = data.images ?? [];
+    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
+  if (data.logo !== undefined && business['logo'] !== data.logo) {
+    deleteUploadedFile(business['logo']);
+  }
+
   return findOne(id);
 }
 
@@ -210,5 +221,7 @@ export async function deleteBusiness(id: string, userId: string) {
   }
 
   await db('businesses').where({ id }).delete();
+  deleteUploadedFiles(business['images']);
+  deleteUploadedFile(business['logo']);
   return { message: 'Business deleted successfully' };
 }

@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
 const POST_USER_SELECT = [
@@ -185,6 +186,7 @@ export async function deletePost(postId: string, userId: string) {
   }
 
   await db('posts').where({ id: postId }).delete();
+  deleteUploadedFiles(post['images']);
   return { message: 'Post deleted successfully' };
 }
 
@@ -205,6 +207,12 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update');
 
   await db('posts').where({ id: postId }).update(updateFields);
+
+  if (data.images !== undefined) {
+    const oldImages = Array.isArray(post['images']) ? (post['images'] as unknown[]) : [];
+    const newImages = data.images ?? [];
+    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
 
   const row = await db('posts as p')
     .join('users as u', 'p.user_id', 'u.id')

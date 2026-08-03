@@ -1,25 +1,15 @@
 import multer, { StorageEngine } from 'multer';
 import path from 'path';
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
-import { env } from './env';
+import { UPLOADS_BASE, ensureUploadDirs } from '../services/upload-storage.service';
 
-const uploadsBase = path.resolve(env.UPLOADS_PATH);
-
-// Create all sub-directories at startup
-const subDirs = ['profiles', 'resumes', 'certificates', 'videos'];
-for (const dir of subDirs) {
-  const full = path.join(uploadsBase, dir);
-  if (!fs.existsSync(full)) {
-    fs.mkdirSync(full, { recursive: true });
-  }
-}
+ensureUploadDirs();
 
 function makeStorage(folder: string): StorageEngine {
   return multer.diskStorage({
     destination: (_req, _file, cb) => {
-      cb(null, path.join(uploadsBase, folder));
+      cb(null, path.join(UPLOADS_BASE, folder));
     },
     filename: (_req, file, cb) => {
       const ext = path.extname(file.originalname);

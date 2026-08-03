@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import type { CreateEventDtoType, UpdateEventDtoType, ListEventsQueryDtoType } from './events.dto';
 
 export async function create(data: CreateEventDtoType, userId: string) {
@@ -157,6 +158,13 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   if (data.country !== undefined) updateData['country'] = data.country;
 
   await db('events').where({ id }).update(updateData);
+
+  if (data.images !== undefined) {
+    const oldImages = Array.isArray(event['images']) ? (event['images'] as unknown[]) : [];
+    const newImages = data.images ?? [];
+    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
+
   return findOne(id);
 }
 
@@ -170,5 +178,6 @@ export async function deleteEvent(id: string, userId: string) {
   }
 
   await db('events').where({ id }).delete();
+  deleteUploadedFiles(event['images']);
   return { message: 'Event deleted successfully' };
 }

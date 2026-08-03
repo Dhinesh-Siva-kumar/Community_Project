@@ -28,8 +28,14 @@ const envSchema = z.object({
   APP_URL: z.string().default('http://localhost:3000'),
   FRONTEND_URL: z.string().default('http://localhost:4200'),
 
-  // File uploads
-  UPLOADS_PATH: z.string().default('uploads'),
+  // File uploads — resolved via path.resolve(), so a relative value (the
+  // default) resolves against the backend process's cwd, fine for local
+  // dev. In production, set an ABSOLUTE path to a persistent, mounted
+  // volume/disk outside the deployed app directory (e.g.
+  // /var/data/community-uploads) — otherwise every uploaded file is lost
+  // on the next redeploy/rebuild, since a relative path just recreates an
+  // empty folder inside whatever fresh app directory gets deployed.
+  UPLOADS_PATH: z.string().min(1).default('uploads'),
 
   // Built Angular app (same-domain production deployment) — resolved relative
   // to the backend process's cwd. If the directory doesn't contain an

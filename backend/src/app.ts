@@ -8,6 +8,7 @@ import { env } from './config/env';
 import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { imageServeWithCache } from './middleware/cacheHeaders';
+import { UPLOADS_BASE } from './services/upload-storage.service';
 
 // Routers
 import authRouter from './modules/auth/auth.router';
@@ -54,7 +55,7 @@ app.use('/api', apiLimiter);
 app.use(
   '/uploads',
   imageServeWithCache,
-  express.static(path.resolve(env.UPLOADS_PATH), {
+  express.static(UPLOADS_BASE, {
     maxAge: '30d',
     index: false,
     dotfiles: 'deny',

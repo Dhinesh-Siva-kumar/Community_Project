@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFile } from '../../services/upload-storage.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
 // ---------------------------------------------------------------------------
@@ -320,6 +321,10 @@ export async function update(id: string, data: UpdateCommunityDtoType) {
 
   await db('communities').where({ id }).update(data);
 
+  if (data.image !== undefined && before['image'] !== data.image) {
+    deleteUploadedFile(before['image']);
+  }
+
   // If this edit turns is_default ON for the first time, backfill existing users.
   // Merge before + data so the effective is_global / is_private / country are correct
   // even when those fields are also changed in the same request.
@@ -332,10 +337,11 @@ export async function update(id: string, data: UpdateCommunityDtoType) {
 }
 
 export async function deleteCommunity(id: string) {
-  const community = await db('communities').where({ id }).first();
+  const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found');
 
   await db('communities').where({ id }).delete();
+  deleteUploadedFile(community['image']);
   return { message: 'Community deleted successfully' };
 }
 

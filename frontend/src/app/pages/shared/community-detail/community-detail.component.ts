@@ -1155,7 +1155,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     const file = this.selectedCommunityImage();
 
     const upload$: Observable<{ path: string } | null> = file
-      ? this.apiService.postWithFile<{ path: string }>('/upload', {}, [{ field: FORM_DATA_FIELD_NAMES.FILE, file }])
+      ? this.apiService.postWithFile<{ path: string }>('/upload', { folder: 'communities' }, [{ field: FORM_DATA_FIELD_NAMES.FILE, file }])
       : of(null);
 
     upload$
