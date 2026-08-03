@@ -2,29 +2,20 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { uploadImages } from '../../config/multer';
 import { FileValidationService } from '../../services/file-validation.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { env } from '../../config/env';
+import { saveBufferToFile, isAllowedUploadFolder } from '../../services/upload-storage.service';
+
+function resolveFolder(body: Request['body'], res: Response): string | undefined | false {
+  const folder = body?.folder;
+  if (folder === undefined) return undefined;
+  if (!isAllowedUploadFolder(folder)) {
+    res.status(400).json({ message: `Invalid folder: ${folder}` });
+    return false;
+  }
+  return folder;
+}
 
 const router = Router();
 router.use(authenticate);
-
-// Helper to save buffer to disk
-async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
-  const uploadsBase = path.resolve(env.UPLOADS_PATH);
-  const ext = path.extname(originalName);
-  const filename = uuidv4() + ext;
-  const filePath = path.join(uploadsBase, filename);
-  
-  // Ensure directory exists
-  if (!fs.existsSync(uploadsBase)) {
-    fs.mkdirSync(uploadsBase, { recursive: true });
-  }
-  
-  fs.writeFileSync(filePath, buffer);
-  return filename;
-}
 
 // POST /api/upload — single file
 router.post(
@@ -48,8 +39,11 @@ router.post(
         return;
       }
 
+      const folder = resolveFolder(req.body, res);
+      if (folder === false) return;
+
       // Save buffer to disk after validation
-      const filename = await saveBufferToFile(file.buffer, file.originalname);
+      const filename = await saveBufferToFile(file.buffer, file.originalname, folder);
 
       res.json({
         filename,
@@ -82,10 +76,13 @@ router.post(
         return;
       }
 
+      const folder = resolveFolder(req.body, res);
+      if (folder === false) return;
+
       // Save all validated files to disk
       const savedFiles = await Promise.all(
         files.map(async (f) => {
-          const filename = await saveBufferToFile(f.buffer, f.originalname);
+          const filename = await saveBufferToFile(f.buffer, f.originalname, folder);
           return {
             filename,
             originalname: f.originalname,

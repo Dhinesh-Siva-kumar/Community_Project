@@ -15,6 +15,8 @@ import { Country, Job, PaginatedResponse } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
@@ -63,7 +65,7 @@ export interface FilterChip {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent,
+    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
@@ -105,6 +107,23 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   /** Description is long if > 400 chars */
   isDescLong(job: Job): boolean { return (this.getDescription(job)?.length ?? 0) > 400; }
   getShortDescription(job: Job): string { return this.getDescription(job).substring(0, 400) + '…'; }
+
+  // ─── Image Viewer ────────────────────────────────────────────
+  imageViewerOpen = signal(false);
+  imageViewerImages = signal<string[]>([]);
+  imageViewerInitialIndex = signal(0);
+
+  // ─── Modal ───────────────────────────────────────────────────
+  openImageViewer(images: string[], index: number = 0, event: Event): void {
+    event.stopPropagation();
+    this.imageViewerImages.set(images);
+    this.imageViewerInitialIndex.set(index);
+    this.imageViewerOpen.set(true);
+  }
+
+  closeImageViewer(): void {
+    this.imageViewerOpen.set(false);
+  }
 
   // ─── Modal ───────────────────────────────────────────────────
   showAddModal    = signal(false);

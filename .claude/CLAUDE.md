@@ -138,6 +138,13 @@ test      npm test           # ng test (Karma + Jasmine)
   invalid config fails fast at startup and invalid requests fail uniformly at the edge.
 - **Centralized error handling** via one `errorHandler` so all responses share a shape and a
   `requestId`.
+- **Same-domain production deployment.** In production the Express app itself serves the built
+  Angular app (from `FRONTEND_DIST_PATH`, default `../frontend/dist/frontend/browser`) and falls
+  back to `index.html` for any non-`/api`, `/share`, `/uploads`, `/health` GET route, so
+  `apiUrl: '/api'` / `wsUrl: ''` in `frontend/src/environments/environment.prod.ts` (and share
+  links built from `window.location.origin`) resolve correctly on one origin. This is skipped
+  automatically if that directory has no `index.html` (e.g. local dev, where `ng serve` runs on
+  its own port) — see `backend/src/app.ts`.
 
 ## 7. Things Claude Should NEVER Do
 - (No project-specific hard rules defined. Follow general good practice and confirm before

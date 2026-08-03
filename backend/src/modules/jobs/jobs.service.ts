@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import type { CreateJobDtoType, UpdateJobDtoType, ListJobsQueryDtoType } from './jobs.dto';
 
 // ─────────────────────────────────────────────────────────────
@@ -382,6 +383,16 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
   Object.assign(updateData, mapNewFields(data));
 
   await db('jobs').where({ id }).update(updateData);
+
+  if (data.images !== undefined) {
+    const oldImages = Array.isArray(job['images']) ? (job['images'] as unknown[]) : [];
+    const newImages = data.images ?? [];
+    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
+  if (data.companyLogo !== undefined && job['company_logo'] !== data.companyLogo) {
+    deleteUploadedFile(job['company_logo']);
+  }
+
   return findOne(id);
 }
 
@@ -398,5 +409,7 @@ export async function deleteJob(id: string, userId: string) {
   }
 
   await db('jobs').where({ id }).delete();
+  deleteUploadedFiles(job['images']);
+  deleteUploadedFile(job['company_logo']);
   return { message: 'Job deleted successfully' };
 }

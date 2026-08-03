@@ -1,299 +1,705 @@
 @use '../../../../assets/styles/index' as *;
 
-$_border: #d8c3ad;
-$_text:   #0b1c30;
-$_muted:  #534434;
-$_card:   #ffffff;
-$_bg:     #FAFAFA;
-$_amber:  #855300;
-$_ac:     #f59e0b;
-$_green:  #006c49;
-$_red:    #ba1a1a;
-$_r: 16px; $_ri: 8px; $_t: 0.2s ease;
+$_r: 16px; $_ri: 10px; $_t: 0.2s ease;
 
 // ── Shimmer ──────────────────────────────────────────────────
 @keyframes shimmer { from{background-position:-600px 0} to{background-position:600px 0} }
 @mixin sk {
-  background: linear-gradient(90deg,#f0ede9 25%,#faf8f5 50%,#f0ede9 75%);
+  background: linear-gradient(90deg, $color-stone-100 25%, $color-stone-50 50%, $color-stone-100 75%);
   background-size: 1200px 100%; animation: shimmer 1.5s infinite linear; border-radius: $_ri;
 }
 
 .db-sk { display:flex; flex-direction:column; gap:20px; }
-.sk-hero { @include sk; height:200px; border-radius:$_r; }
-.sk-row3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; .sk-card{@include sk;height:140px;} }
-.sk-grid { display:grid; grid-template-columns:1fr 300px; gap:24px; @media(max-width:1024px){grid-template-columns:1fr} }
-.sk-feed { display:flex; flex-direction:column; gap:16px; .sk-post{@include sk;height:180px;} }
-.sk-side { display:flex; flex-direction:column; gap:16px; .sk-card{@include sk;height:120px;} }
+.sk-hero { @include sk; height:150px; border-radius:$_r; }
+.sk-layout { display:grid; grid-template-columns:1fr 320px; gap:24px; @media(max-width:1024px){grid-template-columns:1fr} }
+.sk-main { display:flex; flex-direction:column; gap:16px; }
+.sk-composer { @include sk; height:64px; }
+.sk-rail { display:flex; flex-direction:column; gap:16px; }
+.sk-post { @include sk; height:180px; }
+.sk-card { @include sk; height:120px; }
 .sk-line { @include sk; height:12px; &.w80{width:80%} &.w60{width:60%} }
 
 // ── Page ─────────────────────────────────────────────────────
+// Body copy uses $font-family-body (Inter) — the same token every other
+// page in the app inherits from the global `body` rule. This page used to
+// override it with 'Plus Jakarta Sans', a font never loaded anywhere
+// (only Inter/Poppins/Roboto are linked in index.html), so it was silently
+// falling back to the browser's generic sans-serif — visibly different
+// from the rest of the app. Headings use $font-family-header (Poppins),
+// matching the admin dashboard's convention.
 .db-page {
-  display: flex; flex-direction: column; gap: 2rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
   max-width: 1280px; margin: 0 auto;
-  font-family: 'Plus Jakarta Sans', sans-serif; color: $_text;
+  font-family: $font-family-body; color: $color-text-primary;
 }
 
 // ── Hero ─────────────────────────────────────────────────────
 .hero {
   position: relative; overflow: hidden;
-  background: linear-gradient(135deg, #3d2100 0%, $_amber 50%, #6b3a00 100%);
-  border-radius: $_r; padding: 2.5rem 2rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+  background: $gradient-hero;
+  border-radius: $_r; padding: 1.75rem 2.5rem;
+  display: flex; align-items: center; justify-content: flex-start; gap: 1.5rem;
   color: #fff;
 
   &::before { content:''; position:absolute; width:280px; height:280px; border-radius:50%;
-              background:rgba(255,255,255,0.06); top:-80px; right:25%; pointer-events:none; }
+              background:rgba(251,191,36,0.10); top:-80px; right:15%; pointer-events:none; }
+  &::after  { content:''; position:absolute; width:180px; height:180px; border-radius:50%;
+              background:rgba(255,255,255,0.05); bottom:-90px; right:28%; pointer-events:none; }
 
-  &__body { position:relative; z-index:1; flex:1; min-width:0; }
+  // Time-of-day icon, not the user's avatar — that's already shown in the
+  // navbar and the composer just below, so repeating it here would be the
+  // same photo three times in one viewport.
+  &__icon {
+    position: relative; z-index: 1; flex-shrink: 0;
+    width: 68px; height: 68px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.16);
+    border: 2px solid rgba(255,255,255,0.35);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    i { font-size: 1.6rem; color: $color-amber-200; }
+
+    @media(max-width:640px){ width:56px; height:56px; i{font-size:1.3rem} }
+  }
+
+  &__body { position:relative; z-index:1; flex:1; min-width: 0; }
+
+  &__date {
+    display: block; font-size:12px; font-weight:700; letter-spacing:0.04em;
+    text-transform: uppercase; opacity: .75; margin-bottom: 4px;
+  }
 
   &__title {
-    font-size: 2rem; font-weight: 800; margin: 0 0 8px; line-height: 1.2;
-    @media(max-width:640px){font-size:1.5rem}
+    font-family: $font-family-header;
+    font-size: 1.85rem; font-weight: 800; margin: 0 0 6px; line-height: 1.2;
+    background: linear-gradient(135deg, #fff 0%, $color-amber-200 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    @media(max-width:640px){font-size:1.4rem}
   }
-  &__sub { font-size:14px; opacity:.82; margin:0 0 1.25rem; max-width:460px; }
+  &__sub { font-size:14px; opacity:.85; margin:0; }
 
-  &__postbox {
+  &__glance {
+    position: relative; z-index: 1; flex-shrink: 0;
+    display: flex; gap: 10px;
+    @media(max-width:900px) { display:none; }
+  }
+
+  &__glance-item {
     display: flex; align-items: center; gap: 10px;
-    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.22);
-    backdrop-filter: blur(8px); border-radius: $_ri; padding: 10px 14px; max-width: 500px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(6px);
+    transition: background $_t, transform $_t;
+
+    &:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
   }
 
-  &__avatar {
-    width:32px; height:32px; border-radius:50%; overflow:hidden; flex-shrink:0;
-    background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;
-    img{width:100%;height:100%;object-fit:cover;} span{font-size:13px;font-weight:700;color:#fff;}
+  &__glance-icon {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.18);
+    font-size: 0.9rem; color: #fff;
   }
-  &__placeholder { flex:1; font-size:13px; color:rgba(255,255,255,.65); }
-  &__postbtn {
-    padding:6px 18px; background:$_green; color:#fff; border-radius:$_ri;
-    font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap;
-    transition:opacity $_t; &:hover{opacity:.88}
+
+  &__glance-text {
+    display: flex; flex-direction: column; line-height: 1.2;
+    strong { font-size: 1.15rem; font-weight: 800; }
+    small  { font-size: 10px; font-weight: 600; letter-spacing:0.03em; text-transform: uppercase; opacity: .75; }
   }
-  &__card { position:relative; z-index:1; flex-shrink:0; text-align:center;
-            @media(max-width:768px){display:none} }
+
+  @media(max-width:768px) {
+    padding: 1.5rem 1.25rem;
+    flex-wrap: wrap;
+  }
 }
 
-// Streak ring
-.streak-ring {
-  position:relative; width:96px; height:96px; margin:0 auto;
-  svg{width:100%;height:100%;}
-  .sr-track{fill:none;stroke:rgba(255,255,255,.2);stroke-width:7;}
-  .sr-fill{fill:none;stroke:$_ac;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
-  &__avatar {
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    img { width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.4); }
-    span { font-size:1.5rem; font-weight:800; color:#fff; }
-  }
-  &__cap{font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.6);text-transform:uppercase;margin:6px 0 0;}
-  &__val{font-size:1.25rem;font-weight:800;color:#fff;margin:2px 0 0;}
-}
-
-// ── Bento grid (5-col stat counters) ─────────────────────────
-.bento {
+// ── Social layout: main feed + right rail ───────────────────
+.db-layout {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1rem;
-  @media(max-width:900px) { grid-template-columns: repeat(3,1fr); }
-  @media(max-width:580px) { grid-template-columns: repeat(2,1fr); }
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media(max-width:1024px) { grid-template-columns: 1fr; }
 }
 
-.bcard--stat {
-  background: $_card; border: 1px solid $_border;
-  border-top: 3px solid var(--ac, $_ac); border-radius: $_r;
-  padding: 1rem; display: flex; flex-direction: column; gap: 6px;
-  transition: transform $_t, box-shadow $_t;
-  &:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.07); }
-}
-.stat-icon { width:32px; height:32px; border-radius:$_ri; background:var(--bg,#fff8ee);
-             display:flex; align-items:center; justify-content:center;
-             i { color:var(--ac,$_ac); font-size:14px; } }
-.stat-val { font-size:1.5rem; font-weight:800; color:$_text; line-height:1; }
-.stat-lbl { font-size:11px; font-weight:700; letter-spacing:.05em; color:$_muted; text-transform:uppercase; }
+.db-main { display:flex; flex-direction:column; gap:1rem; min-width:0; }
 
-// ── Content grid ─────────────────────────────────────────────
-.content-grid {
-  display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start;
-  @media(max-width:1024px){grid-template-columns:1fr}
+// ── Composer ─────────────────────────────────────────────────
+.composer {
+  display:flex; align-items:center; gap:12px;
+  background:$color-bg-card; border:1px solid $color-border; border-radius:$_r;
+  padding:1rem 1.25rem; text-decoration:none; cursor:pointer;
+  transition:box-shadow $_t, transform $_t;
+  &:hover { box-shadow:0 4px 14px rgba(28,25,23,.08); transform:translateY(-1px); }
 }
 
-// ── Feed ─────────────────────────────────────────────────────
-.feed-col { display:flex; flex-direction:column; gap:1rem; }
-.feed-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.feed-top__title { font-size:1.125rem; font-weight:700; color:$_text; margin:0; }
-.feed-tabs { display:flex; gap:6px; }
-.feed-tab {
-  padding:5px 14px; border:none; background:#ede8e2; color:$_muted;
-  border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; transition:all $_t;
-  &--active { background:$_amber; color:#fff; }
+.composer-av {
+  width:46px; height:46px; border-radius:50%; overflow:hidden; flex-shrink:0;
+  background:$gradient-primary; border:2px solid $color-bg-light;
+  display:flex; align-items:center; justify-content:center;
+  img{width:100%;height:100%;object-fit:cover;}
+  span{font-size:16px;font-weight:800;color:$color-on-primary;}
+}
+
+.composer-input {
+  flex:1; background:$color-bg-light; border-radius:24px; padding:12px 20px;
+  font-size:14.5px; font-weight:500; color:$color-text-muted;
+  transition:background $_t, color $_t;
+  .composer:hover & { background:$color-primary-light; color:$color-text-body; }
+}
+
+// ── Feed tabs ────────────────────────────────────────────────
+// Sticks under the top navbar exactly like .db-rail (same top offset, so
+// both line up while scrolling) instead of scrolling away with the feed.
+// Spacing to the composer above and the feed below is left entirely to
+// .db-main's flex `gap` (16px, same as every other gap in this column) —
+// margin: 0 here, and app-profile-tabs' own $section-gap-v host margin is
+// zeroed too, since with no padding/border between them it would otherwise
+// collapse into .feed-tabs' margin and silently win out (24px > 16px),
+// stacking on top of the flex gap for an oversized, inconsistent gap below.
+.feed-tabs {
+  position: sticky;
+  top: 80px;
+  z-index: $z-sticky;
+  margin: 0;
+
+  app-profile-tabs { margin-bottom: 0; }
+
+  @media(max-width:1024px) { position: static; }
 }
 
 .feed-empty {
-  background:$_card; border:1px solid $_border; border-radius:$_r; padding:3rem;
+  background:$color-bg-card; border:1px solid $color-border; border-radius:$_r; padding:3rem;
   text-align:center;
-  i  { font-size:2.5rem; color:$_ac; display:block; margin-bottom:12px; }
-  h4 { font-size:15px; font-weight:700; color:$_text; margin:0 0 6px; }
-  p  { font-size:13px; color:$_muted; margin:0 0 16px; }
-  &__btn { display:inline-flex; align-items:center; gap:6px; background:$_amber; color:#fff;
+  i  { font-size:2.5rem; color:$color-primary-dark; display:block; margin-bottom:12px; }
+  h4 { font-family:$font-family-header; font-size:15px; font-weight:700; color:$color-text-primary; margin:0 0 6px; }
+  p  { font-size:13px; color:$color-text-muted; margin:0 0 16px; }
+  &__btn { display:inline-flex; align-items:center; gap:6px; background:$gradient-primary; color:$color-on-primary;
            padding:8px 20px; border-radius:20px; font-size:13px; font-weight:700; text-decoration:none; }
 }
 
-// Post card
+// ── Post card ────────────────────────────────────────────────
+// Same visual language as the Community Posts view (community-detail):
+// lift-on-hover card, hr dividers, colored type chips, content truncation,
+// a size-aware image grid, and rounded-rect equal-width action buttons —
+// ported here (with the dashboard's own "Save" action added on top).
 .post {
-  background:$_card; border:1px solid $_border; border-radius:$_r; overflow:hidden;
-  transition:box-shadow $_t, transform $_t;
-  &:hover { box-shadow:0 4px 18px rgba(0,0,0,.09); transform:translateY(-2px); }
+  background:$color-bg-card; border:1px solid rgba(148,163,184,.28); border-radius:$_r; overflow:hidden;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  &:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(15,23,42,.09); border-color:rgba(59,130,246,.28); }
 
-  &__top { display:flex; align-items:flex-start; gap:12px; padding:1.25rem 1.25rem 0; }
+  &--stagger { opacity:0; animation:postSlideIn .38s ease forwards; }
+
+  &__top { display:flex; align-items:flex-start; gap:12px; padding:1.125rem 1.125rem 0; }
 
   &__av {
-    width:44px; height:44px; border-radius:50%; overflow:hidden; flex-shrink:0;
-    background:linear-gradient(135deg,$_ac,darken($_ac,10%));
+    width:42px; height:42px; border-radius:50%; overflow:hidden; flex-shrink:0;
+    background:$gradient-primary;
     display:flex; align-items:center; justify-content:center;
     img{width:100%;height:100%;object-fit:cover;}
-    span{font-size:15px;font-weight:700;color:#fff;}
+    span{font-size:14px;font-weight:700;color:$color-on-primary;}
   }
 
   &__who {
     flex:1; min-width:0;
-    strong{display:block;font-size:14px;font-weight:700;color:$_text;}
-    span{font-size:12px;color:$_muted;}
+    strong{display:block;font-size:14px;font-weight:700;color:$color-text-primary;}
+    span{font-size:12px;color:$color-text-muted;}
   }
-  &__comm { color:$_green; font-weight:700; }
+  &__comm { color:$color-success; font-weight:700; }
 
   &__badge {
-    font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; white-space:nowrap;
-    &.badge-emergency{background:#ffdad6;color:$_red;}
-    &.badge-help     {background:#fff3e0;color:$_amber;}
-    &.badge-general  {background:rgba($_ac,.12);color:$_amber;}
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap;
+    border:1px solid transparent; letter-spacing:.01em;
+    i { font-size:11px; }
+    &.badge-general  { background:#eff6ff; color:#1d4ed8; border-color:rgba(59,130,246,.36); }
+    &.badge-help     { background:#fffbeb; color:#a16207; border-color:rgba(245,158,11,.35); }
+    &.badge-emergency{ background:#fef2f2; color:#b91c1c; border-color:rgba(239,68,68,.34); }
+    &.badge-enquire  { background:#f5f3ff; color:#6d28d9; border-color:rgba(109,40,217,.34); }
   }
 
+  &__divider { margin:.7rem 1.125rem; border:0; border-top:1px solid rgba(203,213,225,.75); }
+
   &__body {
-    padding:10px 1.25rem 0; font-size:14px; line-height:1.6; color:darken($_text,5%);
-    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    padding:0 1.125rem; font-size:14px; line-height:1.65; color:$color-stone-700;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  &__toggle {
+    border:none; background:transparent; color:#2563eb; font-size:12px; font-weight:600;
+    margin-left:6px; padding:0; cursor:pointer; line-height:1.3;
+    &:hover { color:#1d4ed8; text-decoration:underline; }
   }
 
   &__imgs {
-    display:flex; gap:8px; padding:10px 1.25rem 0;
-    img{flex:1;height:150px;object-fit:cover;border-radius:$_ri;min-width:0;}
+    display:grid; gap:8px; padding:0 1.125rem;
+
+    &--single { grid-template-columns:1fr; .post__img-tile { height:280px; } }
+    &--two    { grid-template-columns:repeat(2, minmax(0,1fr)); .post__img-tile { height:180px; } }
+    &--many {
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      .post__img-tile { height:160px; }
+      .post__img-tile:first-child { grid-column:span 2; height:210px; }
+    }
+  }
+
+  &__img-tile {
+    position:relative; border-radius:12px; overflow:hidden; background:rgba(15,23,42,.04);
+    border:none; padding:0; cursor:zoom-in; display:block; width:100%; height:100%;
+
+    img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .22s ease; }
+
+    &::after {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(15,23,42,0) 30%, rgba(15,23,42,.36) 100%);
+      opacity:0; transition:opacity .18s ease;
+    }
+    &:hover img { transform:scale(1.04); }
+    &:hover::after { opacity:1; }
+  }
+
+  &__img-more {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(15,23,42,.45); color:#fff; font-size:1.15rem; font-weight:800; z-index:2;
   }
 
   &__actions {
-    display:flex; align-items:center; gap:4px; padding:8px 1rem 12px;
-    border-top:1px solid #f5f0ea; margin-top:10px;
+    display:flex; align-items:center; gap:6px; padding:.85rem 1.125rem 1.125rem;
   }
+}
+
+@keyframes postSlideIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+@keyframes postHeartbeat {
+  0%   { transform:scale(1); }
+  25%  { transform:scale(1.35); }
+  50%  { transform:scale(.95); }
+  100% { transform:scale(1); }
 }
 
 .pact {
-  display:flex; align-items:center; gap:5px; padding:5px 10px;
-  border:none; background:transparent; border-radius:20px;
-  font-size:12px; font-weight:600; color:$_muted; cursor:pointer; transition:all $_t;
-  &:hover{background:#f5f0ea;color:$_text;}
-  &--save{margin-left:auto;}
-  &.saved i{color:$_ac;}
-}
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  flex:1 1 0;
+  padding:7px 10px;
+  border:1px solid rgba(203,213,225,.9);
+  background:#f8fafc;
+  border-radius:10px;
+  font-size:12.5px; font-weight:600; color:$color-stone-600; cursor:pointer;
+  transition:all .18s ease;
 
-// ── Sidebar ──────────────────────────────────────────────────
-.sidebar-col {
-  display:flex; flex-direction:column; gap:1.25rem;
-  position:sticky; top:80px; align-self:start;
-  @media(max-width:1024px){position:static}
-}
+  &:hover { background:#f1f5f9; color:$color-stone-800; }
+  &:disabled { opacity:.6; cursor:default; }
 
-.scard {
-  background:$_card; border:1px solid $_border; border-radius:$_r; padding:1.25rem;
-  display:flex; flex-direction:column; gap:.75rem;
+  &--like:hover { border-color:rgba(239,68,68,.34); background:#fff1f2; color:#dc2626; }
+  &--like.pact--active { color:#dc2626; border-color:rgba(239,68,68,.38); background:#fff1f2; font-weight:700; }
+  &.heartbeat .bi-heart-fill { animation:postHeartbeat .4s ease; }
 
-  &--tinted { background:rgba(#eff4ff,.8); }
+  &--comment:hover { border-color:rgba(37,99,235,.35); background:#eff6ff; color:#1d4ed8; }
+  &--comment.pact--active { color:#1d4ed8; border-color:rgba(37,99,235,.35); background:#eff6ff; font-weight:700; }
 
-  &__head { display:flex; align-items:center; justify-content:space-between; }
-  &__title {
-    font-size:14px; font-weight:700; color:$_text; margin:0;
-    display:flex; align-items:center; gap:7px;
-    i{color:$_ac;font-size:1rem;}
-  }
-  &__mark { background:none; border:none; font-size:11px; font-weight:600; color:$_muted; cursor:pointer; }
-  &__link { font-size:12px; font-weight:700; color:$_amber; text-decoration:none; text-align:center;
-            &:hover{text-decoration:underline} }
-  &__empty { font-size:12px; color:$_muted; margin:0; a{color:$_amber;text-decoration:none;font-weight:600;} }
-  &__join-btn {
-    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
-    color:$_amber; background:rgba($_ac,.1); padding:6px 14px; border-radius:20px; text-decoration:none;
-    align-self:flex-start;
+  &--share:hover { border-color:rgba(14,116,144,.34); background:#ecfeff; color:#0f766e; }
+
+  &--save {
+    flex:0 0 auto;
+    &.saved { color:$color-primary-dark; border-color:rgba($color-primary-dark,.4); background:rgba($color-primary-dark,.08); }
   }
 }
 
-// Event items
-.ev-item {
-  display:flex; align-items:center; gap:12px;
-  background:$_card; border:1px solid $_border; border-radius:$_ri; padding:.75rem;
-  transition:transform $_t; cursor:pointer;
-  &:hover{transform:translateY(-2px)}
-
-  &__badge {
-    min-width:48px; height:52px; border-radius:$_ri; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; flex-shrink:0;
-    span{font-size:9px;font-weight:800;text-transform:uppercase;}
-    strong{font-size:1.25rem;font-weight:800;line-height:1;}
-    &--green { background:rgba($_green,.1); span,strong{color:$_green;} }
-    &--amber { background:rgba($_amber,.1); span,strong{color:$_amber;} }
-  }
-
-  &__title { font-size:13px; font-weight:700; color:$_text; margin:0 0 2px; }
-  &__loc   { font-size:11px; color:$_muted; margin:0; i{font-size:10px;} }
+// ── Image lightbox ──────────────────────────────────────────
+// Same treatment as community-detail's .cd-lightbox.
+.db-lightbox {
+  position:fixed; inset:0; z-index:$z-modal;
+  background:rgba(2,6,23,.84); backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center; padding:1rem;
 }
 
-// Recommended / community rows
-.rec-item {
+.db-lightbox-content {
+  position:relative;
+  width:min(980px, calc(100vw - 24px));
+  max-height:calc(100vh - 24px);
+  border-radius:16px;
+  background:rgba(15,23,42,.48);
+  border:1px solid rgba(148,163,184,.28);
+  box-shadow:0 24px 60px rgba(2,6,23,.5);
+  padding:46px 16px 44px;
+}
+
+.db-lightbox-image {
+  width:100%; max-height:calc(100vh - 160px); object-fit:contain;
+  display:block; border-radius:12px;
+}
+
+.db-lightbox-close,
+.db-lightbox-nav {
+  border:1px solid rgba(226,232,240,.35);
+  background:rgba(15,23,42,.6); color:#fff;
+  width:36px; height:36px; border-radius:10px;
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .18s ease, border-color .18s ease;
+
+  &:hover { background:rgba(30,41,59,.78); border-color:rgba(226,232,240,.48); }
+}
+
+.db-lightbox-close { position:absolute; top:10px; right:10px; }
+
+.db-lightbox-nav {
+  position:absolute; top:50%; transform:translateY(-50%);
+  &--prev { left:10px; }
+  &--next { right:10px; }
+}
+
+.db-lightbox-footer {
+  position:absolute; left:0; right:0; bottom:10px;
+  display:flex; justify-content:center;
+}
+
+.db-lightbox-counter {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:78px; height:28px; padding:0 10px;
+  border-radius:999px;
+  background:rgba(15,23,42,.72); border:1px solid rgba(226,232,240,.28);
+  color:#f8fafc; font-size:12px; font-weight:700;
+}
+
+// ── Share modal ──────────────────────────────────────────────
+// Same treatment as community-detail's .cd-modal / .cd-share-*.
+.db-modal-backdrop {
+  position:fixed; inset:0; z-index:$z-modal;
+  background:transparent; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center; padding:1rem;
+}
+
+.db-modal {
+  background:#fff; border-radius:20px; width:100%; max-width:440px;
+  max-height:calc(100vh - 2rem);
+  box-shadow:0 20px 60px rgba(0,0,0,.2), 0 4px 16px rgba(0,0,0,.08);
+  animation:dbModalSlideUp .25s cubic-bezier(.34,1.56,.64,1) forwards;
+  overflow:hidden; display:flex; flex-direction:column;
+
+  &--share { max-width:560px; }
+}
+
+@keyframes dbModalSlideUp {
+  from { opacity:0; transform:translateY(20px) scale(.96); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+.db-modal-header { display:flex; align-items:flex-start; gap:12px; padding:1.5rem 1.5rem 1rem; flex-shrink:0; }
+
+.db-modal-icon-wrap {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(37,99,235,.1); border:1.5px solid rgba(37,99,235,.24);
+
+  i { font-size:1.2rem; color:#1d4ed8; }
+}
+
+.db-modal-header-text { flex:1; min-width:0; }
+.db-modal-title { font-size:16px; font-weight:700; color:$color-stone-800; margin:0 0 2px; }
+.db-modal-subtitle { font-size:12.5px; color:$color-stone-500; margin:0; }
+
+.db-modal-close {
+  width:32px; height:32px; border-radius:8px; border:none; margin-top:-2px; flex-shrink:0;
+  background:$color-stone-100; color:$color-stone-500; font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .15s ease;
+  &:hover { background:$color-stone-200; color:$color-stone-700; }
+}
+
+.db-modal-body { padding:0 1.5rem 1.25rem; flex:1 1 auto; min-height:0; overflow-y:auto; }
+
+.db-modal-footer {
+  display:flex; align-items:center; justify-content:flex-end; gap:8px;
+  padding:1rem 1.5rem 1.5rem; border-top:1px solid $color-stone-100; flex-shrink:0;
+}
+
+.db-modal-btn {
+  display:inline-flex; align-items:center; height:38px; padding:0 18px;
+  border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer; border:none;
+  transition:all .18s ease; white-space:nowrap;
+
+  &--cancel { background:$color-stone-100; color:$color-stone-700; &:hover { background:$color-stone-200; } }
+}
+
+.db-share-preview-image-wrap {
+  border-radius:12px; overflow:hidden; border:1px solid rgba(148,163,184,.3);
+  background:#f8fafc; margin-bottom:8px;
+}
+
+.db-share-preview-image { width:100%; height:170px; object-fit:cover; display:block; }
+
+.db-share-preview-text { font-size:13px; line-height:1.55; color:$color-stone-700; margin:0 0 12px; }
+
+.db-share-popup-warning {
+  display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  border:1px solid rgba(217,119,6,.35); background:#fffbeb; color:#92400e;
+  border-radius:12px; padding:10px 12px;
+
+  &__icon {
+    width:28px; height:28px; border-radius:8px; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(217,119,6,.14);
+  }
+  &__content { min-width:0; flex:1; }
+  &__title { margin:0; font-size:12.5px; font-weight:700; color:#78350f; }
+  &__text { margin:1px 0 0; font-size:12px; line-height:1.35; color:#92400e; }
+  &__steps { margin:4px 0 0; font-size:11.5px; line-height:1.35; color:#7c2d12; }
+  &__action {
+    border:1px solid rgba(217,119,6,.45); background:#fff7ed; color:#7c2d12;
+    font-size:12px; font-weight:700; border-radius:9px; height:31px; padding:0 10px; cursor:pointer;
+  }
+}
+
+.db-share-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+
+.db-share-btn {
+  height:42px; border-radius:11px; border:1px solid rgba(148,163,184,.33);
+  background:#fff; color:$color-stone-700;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  font-size:13px; font-weight:700; transition:all .15s ease; cursor:pointer;
+
+  i { font-size:15px; line-height:1; }
+  &:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(15,23,42,.08); }
+
+  &--whatsapp  { color:#0f9f5e; border-color:rgba(16,185,129,.35); background:#f0fdf4; }
+  &--facebook  { color:#1d4ed8; border-color:rgba(59,130,246,.35); background:#eff6ff; }
+  &--x         { color:#111827; border-color:rgba(17,24,39,.3);   background:#f8fafc; }
+  &--telegram  { color:#0284c7; border-color:rgba(14,165,233,.34); background:#f0f9ff; }
+  &--linkedin  { color:#0a66c2; border-color:rgba(10,102,194,.36); background:#eff6ff; }
+  &--pinterest { color:#b91c1c; border-color:rgba(239,68,68,.34); background:#fef2f2; }
+  &--email     { color:#854d0e; border-color:rgba(217,119,6,.32); background:#fffbeb; }
+  &--copy      { color:#334155; border-color:rgba(100,116,139,.32); background:#f8fafc; }
+}
+
+@media (max-width:480px) {
+  .db-share-grid { grid-template-columns:1fr; }
+}
+
+// ── Comments ─────────────────────────────────────────────────
+// Same treatment as community-detail: a scrollable list (max 240px) with
+// fade edges and a custom scrollbar, rather than the whole card growing
+// with every comment.
+.comments {
+  padding:0 1.125rem 1.125rem; display:flex; flex-direction:column; gap:10px;
+  border-top:1px solid $color-border; margin-top:.8rem; padding-top:.75rem;
+
+  &--expand {
+    animation:commentsExpand .3s ease forwards;
+    overflow:hidden;
+  }
+}
+
+@keyframes commentsExpand {
+  from { opacity:0; max-height:0; }
+  to   { opacity:1; max-height:2000px; }
+}
+
+.comments__loading { display:flex; justify-content:center; padding:8px 0; }
+.comments__empty { font-size:12px; color:$color-text-muted; text-align:center; margin:0; }
+
+.spinner {
+  width:16px; height:16px; border-radius:50%;
+  border:2px solid $color-border; border-top-color:$color-primary-dark;
+  animation:spin .7s linear infinite;
+  &--sm { width:14px; height:14px; border-width:2px; border-color:rgba(29,78,216,.25); border-top-color:#1d4ed8; }
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.comment-list-scroll {
+  position:relative;
+  max-height:240px; overflow-y:auto; overflow-x:hidden;
+  padding:6px; margin-bottom:2px;
+  border:1px solid $color-border; border-radius:12px;
+  background:linear-gradient(180deg, rgba(248,250,252,.92) 0%, rgba(255,255,255,.98) 100%);
+  scrollbar-width:thin; scrollbar-color:rgba(148,163,184,.72) rgba(241,245,249,.75);
+  scroll-behavior:smooth; overscroll-behavior:contain;
+
+  &::-webkit-scrollbar { width:6px; }
+  &::-webkit-scrollbar-track { background:rgba(241,245,249,.75); border-radius:999px; }
+  &::-webkit-scrollbar-thumb {
+    background:rgba(148,163,184,.72); border-radius:999px;
+    &:hover { background:rgba(100,116,139,.8); }
+  }
+}
+
+.comment {
+  display:flex; gap:8px; padding:6px; border-radius:10px;
+  transition:background-color .15s ease;
+  opacity:0; animation:commentFadeIn .28s ease forwards;
+  &:hover { background:rgba(241,245,249,.72); }
+
+  &__av {
+    width:30px; height:30px; border-radius:50%; overflow:hidden; flex-shrink:0;
+    background:$color-primary-light;
+    display:flex; align-items:center; justify-content:center;
+    img{width:100%;height:100%;object-fit:cover;}
+    span{font-size:11px;font-weight:700;color:$color-primary-darker;}
+  }
+  &__bubble {
+    background:$color-stone-100; border:1px solid $color-stone-200; border-radius:12px; padding:8px 12px; flex:1; min-width:0;
+    p { font-size:13px; color:$color-text-body; margin:2px 0 0; }
+  }
+  &__meta {
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    strong { font-size:12px; font-weight:700; color:$color-text-primary; }
+  }
+  &__author-tag {
+    display:inline-flex; align-items:center; height:18px; padding:0 7px;
+    border-radius:999px; background:#eff6ff; border:1px solid rgba(59,130,246,.32);
+    color:#1d4ed8; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+  }
+  &__time { margin-left:auto; font-size:11px; color:$color-text-muted; line-height:1; }
+}
+
+@keyframes commentFadeIn {
+  from { opacity:0; transform:translateX(-8px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+.comment-form {
   display:flex; align-items:center; gap:10px;
 
-  &__img {
-    width:36px; height:36px; border-radius:$_ri; overflow:hidden; flex-shrink:0;
-    background:rgba($_ac,.12); display:flex; align-items:center; justify-content:center;
-    img{width:100%;height:100%;object-fit:cover;}
-    span{font-size:14px;font-weight:700;color:$_amber;}
+  &__input-wrap { flex:1; min-width:0; display:flex; flex-direction:column; }
+
+  input {
+    width:100%; height:36px; border:1px solid $color-border; border-radius:10px; padding:0 12px;
+    font-size:13px; background:$color-bg-page;
+    &:focus { outline:none; border-color:$color-primary-dark; box-shadow:0 0 0 3px rgba($color-primary-dark,.1); }
   }
 
-  &__info {
-    flex:1; min-width:0;
-    p{font-size:13px;font-weight:700;color:$_text;margin:0 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    span{font-size:11px;color:$_muted;}
-  }
+  &__limit { margin-top:4px; font-size:10.5px; color:$color-danger; line-height:1; }
 
-  &__btn {
-    width:28px; height:28px; border-radius:50%; background:rgba($_amber,.1);
+  &__submit {
+    height:36px; min-width:72px; padding:0 14px; border-radius:10px; flex-shrink:0;
+    border:1px solid rgba(59,130,246,.38); background:#eff6ff; color:#1d4ed8; box-shadow:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .18s ease;
+
+    &:hover:not(:disabled) { transform:translateY(-1px); border-color:rgba(37,99,235,.52); background:#dbeafe; color:#1e40af; }
+    &:disabled { opacity:.6; cursor:default; }
+  }
+}
+
+// ── Right rail ───────────────────────────────────────────────
+.db-rail {
+  display:flex; flex-direction:column; gap:1rem;
+  position:sticky; top:80px; align-self:start;
+  @media(max-width:1024px) { position:static; }
+}
+
+.rail-card {
+  background:$color-bg-card; border:1px solid $color-border; border-radius:$_r; padding:1.125rem;
+  display:flex; flex-direction:column; gap:.75rem;
+
+  &__head { display:flex; align-items:center; justify-content:space-between; }
+  &__title { font-family:$font-family-header; font-size:13px; font-weight:700; color:$color-text-primary; margin:0; text-transform:uppercase; letter-spacing:.03em; }
+  &__pct { font-family:$font-family-header; font-size:12px; font-weight:800; color:$color-primary-darker; }
+  &__count {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+    background:$color-primary-light; color:$color-primary-darker;
+    font-family:$font-family-header; font-size:11px; font-weight:800;
+  }
+  &__hint { font-size:12px; color:$color-text-muted; margin:0; }
+  &__empty { font-size:12px; color:$color-text-muted; margin:0; }
+  &__link {
+    font-size:12px; font-weight:700; color:$color-primary-darker; text-decoration:none; text-align:center;
+    &:hover { text-decoration:underline; }
+  }
+}
+
+// Activity mini stats — a compact row list (icon · label · value) reads
+// better than a grid of tiles for an odd item count (5): a grid leaves an
+// orphan cell on the last row, a list just ends cleanly.
+.rail-stats { display:flex; flex-direction:column; }
+.rail-stat {
+  display:flex; align-items:center; gap:.7rem;
+  padding:.6rem .65rem;
+  border-radius:$_ri;
+  transition:background $_t;
+
+  & + & { border-top:1px solid $color-border; }
+
+  // Was `var(--bg, ...)` — the same custom property the icon badge uses for
+  // its own permanent tint, so hovering made the icon disappear into an
+  // identically-colored row and left the count with no visual separation
+  // from the fill. A fixed neutral keeps the icon's color legible and the
+  // count readable regardless of that item's accent.
+  &:hover { background:$color-bg-light; }
+
+  &__icon {
+    width:36px; height:36px; border-radius:11px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    text-decoration:none; color:$_amber; font-size:13px;
-    transition:background $_t; flex-shrink:0;
-    &:hover{background:$_amber;color:#fff;}
+    background:var(--bg, $color-bg-light);
+    border:1px solid color-mix(in srgb, var(--ac, $color-primary-dark) 16%, transparent);
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1);
+    i { color:var(--ac, $color-primary-dark); font-size:15px; }
+  }
+
+  &:hover &__icon { transform:scale(1.08) rotate(-4deg); }
+  &__lbl { flex:1; font-size:12.5px; font-weight:600; color:$color-text-body; }
+  &__val { font-family:$font-family-header; font-size:1rem; font-weight:800; color:$color-text-primary; font-variant-numeric:tabular-nums; }
+}
+
+// Profile completion
+.rail-progress {
+  height:6px; border-radius:6px; background:$color-bg-light; overflow:hidden;
+  &__bar { height:100%; background:$gradient-primary; border-radius:6px; transition:width .4s ease; }
+}
+.rail-checklist {
+  list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;
+  a {
+    display:flex; align-items:center; gap:8px; font-size:12px; color:$color-text-body; text-decoration:none;
+    i { font-size:10px; color:$color-border-strong; }
+    &:hover { color:$color-primary-darker; }
   }
 }
 
-// Job items
-.job-item {
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:.625rem 0; border-bottom:1px solid #f5f0ea; text-decoration:none;
-  &:last-of-type{border-bottom:none}
-  &:hover .job-item__title{color:$_amber}
-  &__title { font-size:13px; font-weight:700; color:$_text; margin:0 0 3px; transition:color $_t; }
-  &__meta  { display:flex; align-items:center; gap:6px; font-size:11px; color:$_muted; }
-  &__time  { font-size:11px; color:$_muted; white-space:nowrap; flex-shrink:0; }
-}
-.job-chip { background:rgba($_green,.1); color:$_green; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:700; }
+// Upcoming events (rail)
+.upcoming-list { display:flex; flex-direction:column; gap:.5rem; }
+.upcoming-item {
+  position:relative;
+  display:flex; align-items:center; gap:.7rem; padding:.6rem;
+  border:1px solid transparent; border-radius:$_ri;
+  text-decoration:none; transition:background $_t, border-color $_t, transform $_t;
 
-// Notification items
-.notif-dot {
-  display:inline-flex; align-items:center; justify-content:center;
-  width:16px; height:16px; border-radius:50%; background:$_red; color:#fff;
-  font-size:9px; font-weight:700; margin-left:5px;
+  &:hover { background:$color-bg-light; border-color:$color-border; transform:translateX(2px); }
+}
+// Event thumbnail — the event's own photo when it has one; a plain icon
+// placeholder (not a broken-image icon) when it doesn't or the image
+// fails to load (see appImageError on the <img>).
+.upcoming-thumb {
+  width:42px; height:42px; border-radius:$_ri; flex-shrink:0;
+  object-fit:cover; border:1px solid $color-border; background:$color-bg-light;
+
+  &--icon {
+    display:flex; align-items:center; justify-content:center;
+    background:#eef2ff; color:$color-indigo-600; border-color:rgba($color-indigo-600,.22);
+    i { font-size:1.05rem; }
+  }
+
+  // Urgency is already communicated by the separate "Soon" tag — a ring
+  // around the thumbnail is enough, no need to recolor the photo itself.
+  &--soon {
+    border:2px solid $color-indigo-600;
+    box-shadow:0 3px 10px rgba($color-indigo-600,.28);
+  }
+}
+.upcoming-info { flex:1; min-width:0; }
+.upcoming-title { font-size:12.5px; font-weight:700; color:$color-text-primary; margin:0 0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upcoming-meta { display:flex; flex-direction:column; gap:1px; }
+.upcoming-time, .upcoming-loc {
+  display:flex; align-items:center; gap:4px; font-size:10.5px; color:$color-text-muted; margin:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  i { font-size:9px; flex-shrink:0; }
+}
+.upcoming-soon {
+  flex-shrink:0; align-self:flex-start;
+  padding:2px 8px; border-radius:999px;
+  background:rgba($color-danger,.1); color:$color-danger;
+  font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
 }
 
-.notif-item {
-  display:flex; align-items:flex-start; gap:10px; cursor:pointer; padding:4px 0;
-  border-bottom:1px solid #f5f0ea;
-  &:last-child{border-bottom:none}
-  &:hover{opacity:.8}
-  &--unread{background:rgba($_ac,.04);border-radius:$_ri;padding:6px 8px;}
-  &__ico{width:28px;height:28px;border-radius:$_ri;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
-  &__msg{font-size:12px;color:$_text;margin:0 0 2px;line-height:1.4;}
-  &__time{font-size:11px;color:$_muted;margin:0;}
-}

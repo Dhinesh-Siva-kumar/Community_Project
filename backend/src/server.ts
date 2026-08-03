@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import http from 'http';
-import path from 'path';
-import fs from 'fs';
 import app from './app';
 import db from './config/db';
 import { env } from './config/env';
 import { createSocketIOServer, initNotificationsGateway } from './services/notifications.gateway';
+import { ensureUploadDirs } from './services/upload-storage.service';
 
 async function bootstrap(): Promise<void> {
   // ------------------------------------------------------------------
@@ -22,18 +21,7 @@ async function bootstrap(): Promise<void> {
   // ------------------------------------------------------------------
   // 2. Ensure upload sub-directories exist
   // ------------------------------------------------------------------
-  const uploadsBase = path.resolve(env.UPLOADS_PATH);
-  for (const dir of ['profiles', 'resumes', 'certificates', 'videos']) {
-    const full = path.join(uploadsBase, dir);
-    if (!fs.existsSync(full)) {
-      fs.mkdirSync(full, { recursive: true });
-    }
-    // Create .gitkeep placeholder
-    const keep = path.join(full, '.gitkeep');
-    if (!fs.existsSync(keep)) {
-      fs.writeFileSync(keep, '');
-    }
-  }
+  ensureUploadDirs();
 
   // ------------------------------------------------------------------
   // 3. Create HTTP server and attach Socket.IO

@@ -54,8 +54,11 @@ export class UserService {
     return this.api.get<DashboardStats>('/users/dashboard');
   }
 
-  getChartData(): Observable<ChartData> {
-    return this.api.get<ChartData>('/users/charts');
+  getChartData(from?: string, to?: string): Observable<ChartData> {
+    const params: Record<string, string> = {};
+    if (from) params['from'] = from;
+    if (to) params['to'] = to;
+    return this.api.get<ChartData>('/users/charts', params);
   }
 
   // ── Admin — list & detail ─────────────────────────────────────────────────

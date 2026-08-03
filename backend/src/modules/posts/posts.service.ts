@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
 const POST_USER_SELECT = [
@@ -9,7 +10,7 @@ const POST_COMMUNITY_SELECT = [
   'c.id as community_id', 'c.name as community_name',
 ];
 
-function formatPost(row: Record<string, unknown>, commentCount: number, likeCount: number) {
+function formatPost(row: Record<string, unknown>, commentCount: number, likeCount: number, isLiked = false, isSaved = false) {
   return {
     id: row['id'],
     content: row['content'],
@@ -23,6 +24,8 @@ function formatPost(row: Record<string, unknown>, commentCount: number, likeCoun
     user: { id: row['user_id'], userName: row['user_name'], displayName: row['display_name'], avatar: row['avatar'] },
     community: { id: row['c_community_id'] ?? row['community_id'], name: row['community_name'] },
     _count: { comments: commentCount, likes: likeCount },
+    isLiked,
+    isSaved,
   };
 }
 
@@ -56,8 +59,8 @@ export async function create(data: CreatePostDtoType, userId: string) {
   return formatPost(row, 0, 0);
 }
 
-export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolean }) {
-  const { communityId, type, page, limit, isAdmin } = params;
+export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolean; currentUserId?: string }) {
+  const { communityId, type, page, limit, isAdmin, currentUserId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('posts as p')
@@ -82,15 +85,44 @@ export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolea
   const ids = (posts as Array<Record<string, unknown>>).map((p) => p['id'] as string);
   const commentCounts = ids.length ? await db('comments').whereIn('post_id', ids).count({ total: '*' }).select('post_id').groupBy('post_id') : [];
   const likeCounts = ids.length ? await db('likes').whereIn('post_id', ids).count({ total: '*' }).select('post_id').groupBy('post_id') : [];
+  const currentUserLikes = (ids.length && currentUserId)
+    ? await db('likes').whereIn('post_id', ids).andWhere('user_id', currentUserId).select('post_id')
+    : [];
+  const currentUserSaves = (ids.length && currentUserId)
+    ? await db('post_saves').whereIn('post_id', ids).andWhere('user_id', currentUserId).select('post_id')
+    : [];
 
   const commentMap = new Map((commentCounts as Array<Record<string, unknown>>).map((r) => [r['post_id'], Number(r['total'])]));
   const likeMap = new Map((likeCounts as Array<Record<string, unknown>>).map((r) => [r['post_id'], Number(r['total'])]));
+  const likedPostIdSet = new Set((currentUserLikes as Array<Record<string, unknown>>).map((row) => String(row['post_id'])));
+  const savedPostIdSet = new Set((currentUserSaves as Array<Record<string, unknown>>).map((row) => String(row['post_id'])));
 
   const data = (posts as Array<Record<string, unknown>>).map((p) =>
-    formatPost(p, commentMap.get(p['id']) ?? 0, likeMap.get(p['id']) ?? 0),
+    formatPost(p, commentMap.get(p['id']) ?? 0, likeMap.get(p['id']) ?? 0, likedPostIdSet.has(String(p['id'])), savedPostIdSet.has(String(p['id']))),
   );
 
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+export async function findOne(postId: string, currentUserId?: string) {
+  const row = await db('posts as p')
+    .join('users as u', 'p.user_id', 'u.id')
+    .join('communities as c', 'p.community_id', 'c.id')
+    .where('p.id', postId)
+    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .first() as Record<string, unknown> | undefined;
+  if (!row) throw new AppError(404, 'Post not found');
+
+  const [{ total: commentCount }] = await db('comments').where({ post_id: postId }).count({ total: '*' });
+  const [{ total: likeCount }]    = await db('likes').where({ post_id: postId }).count({ total: '*' });
+  const isLiked = currentUserId
+    ? !!(await db('likes').where({ post_id: postId, user_id: currentUserId }).first())
+    : false;
+  const isSaved = currentUserId
+    ? !!(await db('post_saves').where({ post_id: postId, user_id: currentUserId }).first())
+    : false;
+
+  return formatPost(row, Number(commentCount), Number(likeCount), isLiked, isSaved);
 }
 
 export async function findPending(page: number, limit: number) {
@@ -154,6 +186,7 @@ export async function deletePost(postId: string, userId: string) {
   }
 
   await db('posts').where({ id: postId }).delete();
+  deleteUploadedFiles(post['images']);
   return { message: 'Post deleted successfully' };
 }
 
@@ -174,6 +207,12 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update');
 
   await db('posts').where({ id: postId }).update(updateFields);
+
+  if (data.images !== undefined) {
+    const oldImages = Array.isArray(post['images']) ? (post['images'] as unknown[]) : [];
+    const newImages = data.images ?? [];
+    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
 
   const row = await db('posts as p')
     .join('users as u', 'p.user_id', 'u.id')
@@ -209,6 +248,26 @@ export async function unlike(postId: string, userId: string) {
   return { message: 'Post unliked successfully', likeCount: Number(likeCount) };
 }
 
+export async function savePost(postId: string, userId: string) {
+  const post = await db('posts').where({ id: postId }).first();
+  if (!post) throw new AppError(404, 'Post not found');
+
+  const existing = await db('post_saves').where({ post_id: postId, user_id: userId }).first();
+  if (existing) throw new AppError(409, 'You have already saved this post');
+
+  await db('post_saves').insert({ post_id: postId, user_id: userId });
+  return { message: 'Post saved successfully' };
+}
+
+export async function unsavePost(postId: string, userId: string) {
+  const saveRow = await db('post_saves').where({ post_id: postId, user_id: userId }).first() as Record<string, unknown> | undefined;
+  if (!saveRow) throw new AppError(404, 'You have not saved this post');
+
+  await db('post_saves').where({ id: saveRow['id'] }).delete();
+  return { message: 'Post unsaved successfully' };
+}
+
+
 export async function getComments(postId: string, page: number, limit: number) {
   const offset = (page - 1) * limit;
 
@@ -243,8 +302,25 @@ export async function addComment(postId: string, userId: string, content: string
     .insert({ content, post_id: postId, user_id: userId })
     .returning('*');
 
-  const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first();
-  return { ...(comment as Record<string, unknown>), user };
+  const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first() as Record<string, unknown> | undefined;
+  const commentRow = comment as Record<string, unknown>;
+
+  return {
+    id: commentRow['id'],
+    content: commentRow['content'],
+    postId: commentRow['post_id'],
+    userId: commentRow['user_id'],
+    createdAt: commentRow['created_at'],
+    updatedAt: commentRow['updated_at'],
+    user: user
+      ? {
+          id: user['id'],
+          userName: user['user_name'],
+          displayName: user['display_name'],
+          avatar: user['avatar'],
+        }
+      : undefined,
+  };
 }
 
 export async function deleteComment(commentId: string, userId: string) {

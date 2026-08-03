@@ -5,7 +5,8 @@ import { forkJoin } from 'rxjs';
 import { UserService } from '../../../core/services/user.service';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { DashboardStats, Post, AuditLog, ChartData } from '../../../core/models';
+import { CommunityService } from '../../../core/services/community.service';
+import { DashboardStats, Post, AuditLog, ChartData, CommunityAnalyticsCounts } from '../../../core/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -18,21 +19,35 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   private postService = inject(PostService);
   private authService = inject(AuthService);
+  private communityService = inject(CommunityService);
   private clockTimer?: number;
 
-  loading        = signal(true);
-  stats          = signal<DashboardStats | null>(null);
-  pendingPosts   = signal<Post[]>([]);
-  auditLogs      = signal<AuditLog[]>([]);
-  chartData      = signal<ChartData | null>(null);
-  today          = signal(new Date());
+  loading         = signal(true);
+  stats           = signal<DashboardStats | null>(null);
+  pendingPosts    = signal<Post[]>([]);
+  auditLogs       = signal<AuditLog[]>([]);
+  chartData       = signal<ChartData | null>(null);
+  communityCounts = signal<CommunityAnalyticsCounts | null>(null);
+  today           = signal(new Date());
+
+  // Overview KPI counters animate up from 0 on first load — a small
+  // "alive" touch on the numbers that matter most on the page.
+  animatedOverview = signal({
+    users: 0, communities: 0, posts: 0, pending: 0, events: 0, business: 0, jobs: 0, blocked: 0,
+  });
+  private overviewAnimFrame: number | null = null;
+
+  // Growth Trends date range
+  loadingChart  = signal(false);
+  chartPreset   = signal<'7d' | '30d' | '90d' | 'custom'>('7d');
+  chartFrom     = signal<string>(this.isoDaysAgo(6));
+  chartTo       = signal<string>(this.isoDaysAgo(0));
+  chartRangeMax = this.isoDaysAgo(0); // date inputs can't select into the future
 
   // Pagination & Filter for Recent Activity
   activityCurrentPage    = signal(1);
   activityItemsPerPage   = signal(6);
   activitySelectedFilter = signal<string | 'all'>('all');
-
-  pendingCount = computed(() => this.pendingPosts().length);
 
   // Filtered and paginated activity list
   filteredActivity = computed(() => {
@@ -96,20 +111,135 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return values.map(v => Math.max(8, Math.round((v / max) * 100)));
   }
 
+  // ── Line chart geometry (0–100 viewBox, indexed to each series' own max) ──
+  chartPointCount = computed(() => this.chartLabels().length || 7);
+
+  chartX = computed(() => {
+    const n = this.chartPointCount();
+    const step = n > 1 ? 100 / (n - 1) : 0;
+    return Array.from({ length: n }, (_, i) => Number((i * step).toFixed(2)));
+  });
+
+  private toPolyline(bars: number[]): string {
+    const xs = this.chartX();
+    return bars.map((v, i) => `${xs[i] ?? 0},${(100 - v).toFixed(2)}`).join(' ');
+  }
+
+  userLine      = computed(() => this.toPolyline(this.userBars()));
+  communityLine = computed(() => this.toPolyline(this.communityBars()));
+  postLine      = computed(() => this.toPolyline(this.postBars()));
+
+  // Simple first-vs-last % change over the selected Growth Trends range —
+  // powers the delta badge on the hero KPI tiles (Users/Communities/Posts).
+  metricDeltaPct(values: number[]): number {
+    if (!values.length) return 0;
+    const first = values[0] ?? 0;
+    const last = values[values.length - 1] ?? 0;
+    if (first === 0) return last > 0 ? 100 : 0;
+    return Math.round(((last - first) / first) * 100);
+  }
+
+  // ── Hover crosshair ──────────────────────────────────────────
+  hoveredIndex = signal<number | null>(null);
+
+  setHoveredIndex(i: number): void { this.hoveredIndex.set(i); }
+  clearHoveredIndex(): void { this.hoveredIndex.set(null); }
+
+  hoveredXPct = computed(() => {
+    const i = this.hoveredIndex();
+    if (i === null) return 0;
+    return this.chartX()[i] ?? 0;
+  });
+
+  // keep the tooltip card fully inside the chart card at the edges
+  tooltipLeftPct = computed(() => Math.min(88, Math.max(12, this.hoveredXPct())));
+
+  // Thin out x-axis text on long ranges (e.g. 90 points) so labels don't collide —
+  // the hit column / tooltip still exists for every single day either way.
+  chartLabelStride = computed(() => Math.max(1, Math.ceil(this.chartPointCount() / 8)));
+
+  chartRangeLabel = computed(() => {
+    switch (this.chartPreset()) {
+      case '7d':  return 'Last 7 days';
+      case '30d': return 'Last 30 days';
+      case '90d': return 'Last 90 days';
+      default: {
+        const from = this.chartFrom(), to = this.chartTo();
+        if (!from || !to) return '';
+        const fmt = (s: string) => new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `${fmt(from)} – ${fmt(to)}`;
+      }
+    }
+  });
+
+  private isoDaysAgo(n: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  setChartPreset(preset: '7d' | '30d' | '90d'): void {
+    this.chartPreset.set(preset);
+    const daysBack = preset === '7d' ? 6 : preset === '30d' ? 29 : 89;
+    this.chartFrom.set(this.isoDaysAgo(daysBack));
+    this.chartTo.set(this.isoDaysAgo(0));
+    this.loadChartData();
+  }
+
+  showCustomRange(): void {
+    this.chartPreset.set('custom');
+  }
+
+  onChartFromInput(event: Event): void {
+    this.chartFrom.set((event.target as HTMLInputElement).value);
+  }
+
+  onChartToInput(event: Event): void {
+    this.chartTo.set((event.target as HTMLInputElement).value);
+  }
+
+  applyCustomChartRange(): void {
+    if (!this.chartFrom() || !this.chartTo() || this.chartFrom() > this.chartTo()) return;
+    this.loadChartData();
+  }
+
+  loadChartData(): void {
+    this.loadingChart.set(true);
+    this.userService.getChartData(this.chartFrom(), this.chartTo()).subscribe({
+      next: (charts) => { this.chartData.set(charts); this.loadingChart.set(false); },
+      error: () => this.loadingChart.set(false),
+    });
+  }
+
+  // Every entry routes to a real, currently-reachable admin page (no dead
+  // links to unwired features) — "Review Pending Posts" in particular
+  // replaces the dashboard's old inline approval queue with a direct
+  // shortcut to /admin/post-approval, so that moderation task is still
+  // one click away.
   quickActions = [
-    { label: 'Create Community',    icon: 'bi-plus-circle',  bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
-    { label: 'Global Announcement', icon: 'bi-megaphone',    bg: '#e8f0ff', color: '#005ac2', route: '/admin/post-approval'   },
-    { label: 'Manage Users',        icon: 'bi-person-gear',  bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
-    { label: 'Business Listings',   icon: 'bi-building',     bg: '#ffe6e6', color: '#d97706', route: '/admin/business'        },
+    { label: 'Create Community',      icon: 'bi-plus-circle',     bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
+    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: '#fdecea', color: '#ba1a1a', route: '/admin/post-approval'   },
+    { label: 'Manage Users',          icon: 'bi-person-gear',     bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
+    { label: 'Business Listings',     icon: 'bi-building',        bg: '#e8f0ff', color: '#005ac2', route: '/admin/business'        },
   ];
 
   ngOnInit(): void {
     this.load();
+    this.loadChartData();
+    this.loadCommunityCounts();
     this.clockTimer = window.setInterval(() => this.today.set(new Date()), 60_000);
+  }
+
+  loadCommunityCounts(): void {
+    this.communityService.getCommunityAnalytics().subscribe({
+      next: (counts) => this.communityCounts.set(counts),
+      error: () => {},
+    });
   }
 
   ngOnDestroy(): void {
     if (this.clockTimer) clearInterval(this.clockTimer);
+    if (this.overviewAnimFrame !== null) cancelAnimationFrame(this.overviewAnimFrame);
   }
 
   load(): void {
@@ -118,62 +248,77 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       stats:   this.userService.getDashboardStats(),
       pending: this.postService.getPendingPosts(),
       audit:   this.userService.getAuditLogs({ limit: 5 }),
-      charts:  this.userService.getChartData(),
     }).subscribe({
-      next: ({ stats, pending, audit, charts }) => {
+      next: ({ stats, pending, audit }) => {
         this.stats.set(stats);
         this.pendingPosts.set(pending.data ?? []);
         this.auditLogs.set(audit.data ?? []);
-        this.chartData.set(charts);
         this.loading.set(false);
+        this.animateOverviewCounters();
       },
       error: () => this.loading.set(false),
     });
   }
 
-  approvePost(id: string): void {
-    this.postService.approvePost(id).subscribe(() =>
-      this.pendingPosts.update(list => list.filter(p => p.id !== id))
-    );
+  private animateOverviewCounters(): void {
+    const targets = {
+      users: this.stats()?.totalUsers ?? 0,
+      communities: this.stats()?.totalCommunities ?? 0,
+      posts: this.stats()?.totalPosts ?? 0,
+      pending: this.pendingPosts().length,
+      events: this.stats()?.totalEvents ?? 0,
+      business: this.stats()?.totalBusinesses ?? 0,
+      jobs: this.stats()?.totalJobs ?? 0,
+      blocked: this.stats()?.blockedUsers ?? 0,
+    };
+    const duration = 900;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      this.animatedOverview.set({
+        users: Math.round(targets.users * eased),
+        communities: Math.round(targets.communities * eased),
+        posts: Math.round(targets.posts * eased),
+        pending: Math.round(targets.pending * eased),
+        events: Math.round(targets.events * eased),
+        business: Math.round(targets.business * eased),
+        jobs: Math.round(targets.jobs * eased),
+        blocked: Math.round(targets.blocked * eased),
+      });
+      if (progress < 1) this.overviewAnimFrame = requestAnimationFrame(tick);
+    };
+
+    this.overviewAnimFrame = requestAnimationFrame(tick);
   }
 
-  rejectPost(id: string): void {
-    this.postService.rejectPost(id).subscribe(() =>
-      this.pendingPosts.update(list => list.filter(p => p.id !== id))
-    );
+  // Upcoming's share of (upcoming + last-30-days), for the two-tone events bar
+  eventUpcomingSharePct(): number {
+    const upcoming = this.chartData()?.eventsUpcoming ?? 0;
+    const past = this.chartData()?.eventsPast30d ?? 0;
+    const total = upcoming + past;
+    return total > 0 ? Math.round((upcoming / total) * 100) : 50;
   }
 
-  gaugeOffset(pct: number): number {
-    return 238.76 - (238.76 * pct) / 100;
-  }
-
-  businessPct(): number {
-    const total = this.stats()?.totalBusinesses ?? 0;
-    return total > 0 ? Math.min(100, Math.round((total / (total + 50)) * 100)) : 0;
-  }
-
-  // Bar width % relative to the larger of the two event values
-  eventBarPct(value?: number, other?: number): number {
-    const max = Math.max(value ?? 0, other ?? 0, 1);
-    return Math.round(((value ?? 0) / max) * 100);
-  }
-
-  jobFillPct(): number {
-    const jobs = this.stats()?.totalJobs ?? 0;
-    return jobs > 0 ? Math.min(100, Math.round((jobs / (jobs + Math.ceil(jobs * 0.12))) * 100)) : 0;
-  }
-
-  postTypeIcon(type: string): string {
-    return type === 'EMERGENCY' ? 'bi-exclamation-triangle-fill' : 'bi-file-earmark-text';
-  }
-
-  postIconColor(type: string): string {
-    return type === 'EMERGENCY' ? '#ba1a1a' : '#005ac2';
-  }
-
-  postIconBg(type: string): string {
-    return type === 'EMERGENCY' ? '#ffdad6' : '#e8f0ff';
-  }
+  // ── Activity mix — breakdown of the Recent Activity feed by type.
+  // Each entry has exactly one type, so unlike business/job active-counts
+  // this is a true partition (shares sum to 100%) — a fair use of a segmented bar.
+  activityMix = computed(() => {
+    const activity = this.stats()?.recentActivity ?? [];
+    const counts = new Map<string, number>();
+    for (const item of activity) counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
+    const total = activity.length;
+    return Array.from(counts.entries())
+      .map(([type, count]) => ({
+        type,
+        label: this.activityLabel(type),
+        color: this.activityColor(type),
+        count,
+        pct: total > 0 ? Math.round((count / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+  });
 
   activityIcon(type: string): string {
     const map: Record<string, string> = {
@@ -198,6 +343,26 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       post: 'Post', business: 'Business', event: 'Event', job: 'Job',
     };
     return map[type] ?? type;
+  }
+
+  // ── Activity timeline day grouping ──────────────────────────
+  activityDayLabel(dateStr: string): string {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const startOfDay = (dt: Date) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86_400_000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return d.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric',
+      year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
+  }
+
+  isNewActivityDay(index: number): boolean {
+    if (index === 0) return true;
+    const list = this.paginatedActivity();
+    return this.activityDayLabel(list[index].createdAt) !== this.activityDayLabel(list[index - 1].createdAt);
   }
 
   auditInitials(log: AuditLog): string {

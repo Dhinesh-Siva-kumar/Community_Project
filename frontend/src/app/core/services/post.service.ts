@@ -9,7 +9,7 @@ import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 export class PostService {
   private api = inject(ApiService);
 
-  getPosts(communityId: string, params?: Record<string, any>): Observable<PaginatedResponse<Post>> {
+  getPosts(communityId?: string, params?: Record<string, any>): Observable<PaginatedResponse<Post>> {
     return this.api.get<PaginatedResponse<Post>>('/posts', { communityId, ...params });
   }
 
@@ -22,7 +22,7 @@ export class PostService {
      return this.api.post<Post>('/posts', body);
    }
 
-   updatePost(id: string, data: { content?: string; type?: PostType }, images?: File[]): Observable<Post> {
+   updatePost(id: string, data: { content?: string; type?: PostType; images?: string[] }, images?: File[]): Observable<Post> {
      if (images && images.length > 0) {
        const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
        return this.api.putWithFile<Post>(`/posts/${id}`, data, files);
@@ -46,12 +46,24 @@ export class PostService {
     return this.api.get<PaginatedResponse<Post>>('/posts/pending');
   }
 
+  getPost(id: string): Observable<Post> {
+    return this.api.get<Post>(`/posts/${id}`);
+  }
+
   likePost(postId: string): Observable<void> {
     return this.api.post<void>(`/posts/${postId}/like`);
   }
 
   unlikePost(postId: string): Observable<void> {
     return this.api.delete<void>(`/posts/${postId}/like`);
+  }
+
+  savePost(postId: string): Observable<void> {
+    return this.api.post<void>(`/posts/${postId}/save`);
+  }
+
+  unsavePost(postId: string): Observable<void> {
+    return this.api.delete<void>(`/posts/${postId}/save`);
   }
 
   getComments(postId: string): Observable<Comment[]> {

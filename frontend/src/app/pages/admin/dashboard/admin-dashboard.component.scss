@@ -6,43 +6,124 @@ $_rm:  $radius-md;   // 12px
 $_rs:  $radius-sm;   // 8px
 $_t:   $transition-base $transition-easing;
 
-// Design-spec colors (from DESIGN.md — not in project tokens)
-$_amber:   #855300;
-$_amber-c: #f59e0b;
-$_green:   #006c49;
-$_blue:    #005ac2;
-$_red:     #ba1a1a;
-$_teal:    #005236;
-$_border:  #d8c3ad;
-$_surf:    #f8f9ff;
-$_card:    #ffffff;
-$_text:    #0b1c30;
-$_muted:   #534434;
+// Consistent branded focus ring for keyboard nav — used on every interactive
+// element in this file instead of each one growing its own ad-hoc outline.
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $color-primary-dark;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+// Brand tokens (aliased from assets/styles/_colors.scss — amber/saffron system)
+$_amber:   $color-primary-darker;   // Amber 600 — deep accent (was #855300)
+$_amber-c: $color-primary-dark;     // Amber 500 — bright accent (was #f59e0b)
+$_purple:  $color-violet;           // was ad-hoc #9f7aea
+$_green:   $color-success;          // was #006c49
+$_blue:    $color-info;             // was #005ac2
+$_red:     $color-danger;           // was #ba1a1a
+$_teal:    $color-saffron;          // was #005236 — distinct 3rd series hue
+$_ov-jade: #0D9488;                 // Teal 600 — Platform Overview "Events" card only
+$_ov-rose: #DB2777;                 // Pink 600 — Platform Overview "Business" card only
+$_border:  $color-border;           // was #d8c3ad
+$_surf:    $color-bg-light;         // was #f8f9ff
+$_card:    $color-bg-card;          // was #ffffff
+$_text:    $color-text-primary;     // was #0b1c30
+$_muted:   $color-text-muted;       // was #534434
 
 // ── Skeleton ──────────────────────────────────────────────────
 @keyframes shimmer {
   0%   { background-position: -600px 0; }
   100% { background-position:  600px 0; }
 }
-@mixin sk { background: linear-gradient(90deg,#f0f0ef 25%,#fafaf9 50%,#f0f0ef 75%); background-size:1200px 100%; animation: shimmer 1.5s infinite; border-radius: $_r; }
+@mixin sk { background: linear-gradient(90deg,$color-stone-100 25%,$color-stone-50 50%,$color-stone-100 75%); background-size:1200px 100%; animation: shimmer 1.5s infinite; border-radius: $_r; }
 
 .db-skeleton { display:flex; flex-direction:column; gap:$spacing-xl; }
 .sk-header   { @include sk; height:52px; width:300px; }
 .sk-card     { @include sk; height:160px; }
 .sk-panel    { @include sk; height:240px; }
 
-// ── Activity list (inside panel--table, for recentActivity) ───
-.activity-list   { padding: 0 1.5rem; }
-.activity-item   {
-  display: flex; align-items: center; gap: 12px;
-  padding: 0.875rem 0; border-bottom: 1px solid $_border;
-  &:last-child { border-bottom: none; }
+// ── Activity timeline (inside panel--table, for recentActivity) ───
+.activity-list { padding: 0.25rem 1.5rem 0.5rem; }
+
+.activity-day-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $_muted;
+  padding: 14px 0 8px 3.5rem;
+
+  &:first-child { padding-top: 2px; }
 }
-.activity-icon   { width:36px; height:36px; border-radius:$_rs; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.activity-content { flex:1; min-width:0; }
-.activity-message { font-size:$font-size-sm; color:$_text; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.activity-time   { font-size:11px; color:$_muted; }
-.activity-badge  { font-size:10px; font-weight:700; letter-spacing:0.04em; padding:3px 8px; border-radius:$radius-xs; white-space:nowrap; }
+
+.activity-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0.65rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: $_rs;
+  transition: background $_t;
+
+  &:hover { background: $_surf; }
+
+  // Connecting timeline rail behind the icon node
+  &::before {
+    content: '';
+    position: absolute;
+    left: calc(0.5rem + 17px);
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: $_border;
+    z-index: 0;
+  }
+  &:first-child::before { top: 50%; }
+  &:last-child::before  { bottom: 50%; }
+}
+
+.activity-icon {
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  background: $_card;
+  border: 2px solid $_border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.activity-content { flex: 1; min-width: 0; padding-top: 2px; }
+.activity-message {
+  font-size: $font-size-sm;
+  color: $_text;
+  font-weight: 500;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.activity-time { font-size: 11px; color: $_muted; }
+
+.activity-badge {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border: 1px solid transparent;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
 
 // ── Bar tooltip (pure CSS, works on hover + touch focus) ─────
 [data-tip] {
@@ -91,612 +172,199 @@ $_muted:   #534434;
   padding-bottom: $spacing-xl;
 }
 
-// ── Welcome header ────────────────────────────────────────────
+// ── Welcome header (compact, with a little personality) ─────────
 .db-welcome {
-  &__title {
-    font-family: $font-family-header;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: $_text;
-    margin: 0 0 4px;
-    line-height: 1.3;
-  }
-  &__sub {
-    font-size: $font-size-sm;
-    color: $_muted;
-    margin: 0;
-  }
-}
-
-// ── Enhanced Welcome header ────────────────────────────────────
-.db-welcome--enhanced {
-  position: relative;
   display: flex;
-  align-items: flex-start;
-  border-radius: $_r;
-  overflow: hidden;
-  animation: slideInDown 300ms $_t backwards;
-}
-
-// ── Gradient background layers ─────────────────────────────────
-.db-welcome__background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.db-welcome__gradient-primary {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba($_amber-c, 0.12) 0%,
-    rgba($_green, 0.08) 25%,
-    rgba($_blue, 0.06) 50%,
-    rgba($_amber-c, 0.08) 75%,
-    rgba($_amber, 0.1) 100%
-  );
-  animation: gradientShift 12s ease-in-out infinite;
-}
-
-.db-welcome__gradient-secondary {
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba($_amber-c, 0.15) 0%, transparent 70%);
-  border-radius: $radius-full;
-  filter: blur(60px);
-  animation: floatGentle 8s ease-in-out infinite;
-}
-
-.db-welcome__gradient-accent {
-  position: absolute;
-  bottom: -30%;
-  left: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba($_green, 0.12) 0%, transparent 70%);
-  border-radius: $radius-full;
-  filter: blur(50px);
-  animation: floatGentle 10s ease-in-out infinite reverse;
-}
-
-// ── Glassmorphism overlay ──────────────────────────────────────
-.db-welcome__glass-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  background: linear-gradient(180deg,
-    rgba($_card, 0.5) 0%,
-    rgba($_card, 0.35) 50%,
-    rgba($_card, 0.45) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba($_border, 0.3);
-  pointer-events: none;
-}
-
-// ── Content inner wrapper ──────────────────────────────────────
-.db-welcome__inner {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: $spacing-md;
-  width: 100%;
-  padding: $spacing-lg;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(120deg, $color-primary-light 0%, $_card 60%);
+  border: 1px solid $_border;
+  border-radius: $_r;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  animation: fadeIn 350ms $_t backwards;
 
   @media (max-width: 640px) {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: $spacing-lg $spacing-md;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
 
-// ── Content section ───────────────────────────────────────────
-.db-welcome__content {
-  flex: 1;
-  animation: fadeIn 400ms $_t 150ms backwards;
-  min-width: 0;
-
-  @media (max-width: 640px) {
-    width: 100%;
-  }
-}
-
-.db-welcome__greeting {
+.db-welcome__left {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-sm;
+  gap: 12px;
+  min-width: 0;
+}
 
-  @media (max-width: 640px) {
-    justify-content: center;
-  }
+.db-welcome__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $_rs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
 }
 
 .db-welcome__title {
   font-family: $font-family-header;
-  font-size: 2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: $_text;
   margin: 0;
-  line-height: 1.2;
-  animation: fadeIn 400ms $_t 180ms backwards;
-  background: linear-gradient(135deg, $_text 0%, $_amber 50%, $_text 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  @media (max-width: 768px) {
-    font-size: 1.5rem;
-  }
+  line-height: 1.3;
 }
 
-// ── Info section ──────────────────────────────────────────────
-.db-welcome__info {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-}
-
-.db-welcome__meta {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  animation: fadeIn 500ms $_t 220ms backwards;
-
-  @media (max-width: 640px) {
-    justify-content: center;
-  }
-}
-
-.db-welcome__role {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: $_amber;
-  background: linear-gradient(135deg, 
-    rgba($_amber-c, 0.15),
-    rgba($_amber, 0.1)
-  );
-  border: 1px solid rgba($_amber-c, 0.3);
-  padding: 4px 10px;
-  border-radius: $_rs;
-  backdrop-filter: blur(6px);
-  transition: all $_t;
-
-  &:hover {
-    background: linear-gradient(135deg, 
-      rgba($_amber-c, 0.25),
-      rgba($_amber, 0.2)
-    );
-    box-shadow: 0 4px 12px rgba($_amber-c, 0.2);
-  }
+.db-welcome__sub {
+  font-size: 12px;
+  color: $_muted;
+  margin: 2px 0 0;
 }
 
 .db-welcome__status {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: $font-size-sm;
+  font-size: 11px;
+  font-weight: 600;
   color: $_muted;
-  font-weight: 500;
+  flex-shrink: 0;
   padding: 4px 10px;
   background: rgba($_green, 0.08);
-  border: 1px solid rgba($_green, 0.2);
-  border-radius: $_rs;
-  backdrop-filter: blur(6px);
+  border: 1px solid rgba($_green, 0.18);
+  border-radius: $radius-full;
 }
 
 .db-welcome__status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: $radius-full;
-  background: #22C55E;
+  background: $color-success;
+  box-shadow: 0 0 4px rgba($color-success, 0.5);
   animation: pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-  
+
   @media (prefers-reduced-motion: reduce) {
     animation: none;
-    box-shadow: none;
   }
 }
 
-.db-welcome__sub {
-  font-size: $font-size-sm;
-  color: $_muted;
-  margin: 0;
-  animation: fadeIn 400ms $_t 250ms backwards;
-  font-weight: 500;
+// ── Overview cards ──────────────────────────────────────────────
+// Eight metric cards, 4 columns (4 + 4) — kept compact/wide rather than
+// tall so this block's two rows land close to Quick Actions' natural
+// height; .db-overview-row then stretches both columns to match exactly,
+// and align-content: space-between here keeps the last row flush with
+// that shared bottom edge instead of leaving dead space beneath it.
+.ov-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-content: space-between;
+  gap: 1rem;
 
-  @media (max-width: 640px) {
-    font-size: $font-size-xs;
-  }
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px)  { grid-template-columns: 1fr; }
 }
 
-// ── Decorative shapes ──────────────────────────────────────────
-.db-welcome__decorations {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.db-welcome__shape {
-  position: absolute;
-  opacity: 0.08;
-  filter: blur(1px);
-}
-
-.shape-1 {
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, $_amber-c, $_green);
-  border-radius: $radius-full;
-  top: -100px;
-  right: -100px;
-  animation: floatGentle 15s ease-in-out infinite;
-}
-
-.shape-2 {
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(45deg, $_blue, $_amber-c);
-  border-radius: $radius-full;
-  bottom: -50px;
-  left: 10%;
-  animation: floatGentle 12s ease-in-out infinite reverse;
-}
-
-.shape-3 {
-  width: 150px;
-  height: 150px;
-  background: linear-gradient(180deg, $_green, $_blue);
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-  top: 50%;
-  right: 20%;
-  animation: floatGentle 18s ease-in-out infinite;
-}
-
-// ── Animations ────────────────────────────────────────────────
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes floatBackground {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  25% { transform: translateY(-20px) translateX(10px); }
-  50% { transform: translateY(-40px) translateX(0); }
-  75% { transform: translateY(-20px) translateX(-10px); }
-}
-
-// ── Accessibility: Reduced Motion ──────────────────────────────
-@media (prefers-reduced-motion: reduce) {
-  .db-welcome--enhanced,
-  .db-welcome__avatar-section,
-  .db-welcome__content,
-  .db-welcome__greeting,
-  .db-welcome__title,
-  .db-welcome__meta,
-  .db-welcome__sub,
-  .db-welcome__gradient-primary,
-  .db-welcome__gradient-secondary,
-  .db-welcome__gradient-accent,
-  .db-welcome__shape {
-    animation: none !important;
-  }
-
-  .db-welcome__avatar {
-    &:hover {
-      transform: none;
-    }
-  }
-
-  .db-welcome__status-dot {
-    box-shadow: none;
-  }
-}
-
-// ── Metrics Section ────────────────────────────────────────────
-.metrics-section {
-  margin-bottom: $spacing-md;
-}
-
-.metrics-header {
+.ov-card {
+  position: relative;
+  isolation: isolate;
+  background: $_surf;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  border-radius: 18px;
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  margin-bottom: 0.75rem;
-}
+  justify-content: space-between;
+  min-height: 132px;
+  // Soft ambient shadow at rest, not just on hover — a flat card with a
+  // shadow only on interaction reads as "flat until proven otherwise";
+  // a little depth up front is what makes it feel premium rather than static.
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 4px 10px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1), transform 280ms cubic-bezier(0.22, 1, 0.36, 1), border-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
 
-.metrics-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: $font-family-header;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: $_muted;
-  margin: 0;
-  text-transform: uppercase;
-
-  i {
-    font-size: 0.85rem;
-    color: $_blue;
-  }
-}
-
-.metrics-subtitle {
-  font-size: 12px;
-  color: $_muted;
-  margin: 0;
-  font-weight: 400;
-  opacity: 0.8;
-}
-
-// ── Metrics Grid ──────────────────────────────────────────────
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.75rem;
-  background: $_card;
-  border: 1px solid $_border;
-  border-radius: $_r;
-  padding: 1rem;
-
-  @media (max-width: 1400px) { grid-template-columns: repeat(4, 1fr); }
-  @media (max-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); gap: 0.625rem; padding: 0.875rem; }
-  @media (max-width: 480px) { grid-template-columns: 1fr; gap: 0.5rem; }
-}
-
-// ── Metric Card ───────────────────────────────────────────────
-.metric-card {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  padding: 10px;
-  border-radius: $radius-md;
-  background: transparent;
-  border: 1px solid transparent;
-  min-height: 60px;
-  transition: background $_t, border-color $_t, transform $_t, box-shadow $_t;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-
-  // Hover state with smooth background transition
   &:hover {
-    background: linear-gradient(135deg, rgba($_blue, 0.03) 0%, rgba($_text, 0.02) 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba($_text, 0.04);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.09);
+    transform: translateY(-3px);
+    border-color: rgba(15, 23, 42, 0.08);
 
-    // Icon animation on hover
-    .metric-icon {
-      transform: scale(1.06);
-      box-shadow: 0 0 8px rgba($_text, 0.08);
-    }
-
-    // Value animation on hover
-    .metric-value {
-      color: $_blue;
-    }
+    .ov-card__icon { transform: scale(1.08) rotate(-4deg); }
   }
 
-  // Focus state for keyboard navigation
-  &:focus-within {
-    outline: 2px solid $_blue;
-    outline-offset: 2px;
+  // Faint inner top highlight — a one-pixel "sheen" along the top edge,
+  // the same trick glass/premium card UIs use for a subtle embossed feel.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    pointer-events: none;
   }
 
-  // Alert variant
-  &--alert {
-    &:hover {
-      background: linear-gradient(135deg, rgba($_red, 0.03) 0%, rgba($_text, 0.02) 100%);
-
-      .metric-icon {
-        box-shadow: 0 0 8px rgba($_red, 0.2);
-      }
-
-      .metric-value {
-        color: $_red;
-      }
-    }
+  &--accent {
+    background: var(--ov-tint);
   }
 
-  @media (max-width: 640px) {
-    gap: 8px;
-    padding: 8px;
-    min-height: 55px;
-  }
+  &--blue   { --ov-tint: #{rgba($_blue, 0.14)};           --ov-accent: #{$_blue};           --ov-accent-2: #{mix($_blue, #fff, 30%)}; }
+  &--indigo { --ov-tint: #{rgba($color-indigo-600, 0.14)}; --ov-accent: #{$color-indigo-600}; --ov-accent-2: #{mix($color-indigo-600, #fff, 30%)}; }
+  &--amber  { --ov-tint: #{rgba($_amber-c, 0.16)};         --ov-accent: #{$_amber};           --ov-accent-2: #{mix($_amber-c, #fff, 30%)}; }
+  &--red    { --ov-tint: #{rgba($_red, 0.12)};             --ov-accent: #{$_red};             --ov-accent-2: #{mix($_red, #fff, 30%)}; }
+  // Jade (Events) and Rose (Business) — NOT $_teal/$_purple. Those aliases
+  // (saffron-orange and violet) sit too close to Posts' amber and
+  // Communities' indigo respectively to tell apart at a glance in a grid
+  // where those pairs land in the same row/column. Dedicated hues instead.
+  &--jade   { --ov-tint: #{rgba($_ov-jade, 0.14)};         --ov-accent: #{$_ov-jade};         --ov-accent-2: #{mix($_ov-jade, #fff, 30%)}; }
+  &--rose   { --ov-tint: #{rgba($_ov-rose, 0.13)};         --ov-accent: #{$_ov-rose};         --ov-accent-2: #{mix($_ov-rose, #fff, 30%)}; }
+  &--green  { --ov-tint: #{rgba($_green, 0.14)};           --ov-accent: #{$_green};           --ov-accent-2: #{mix($_green, #fff, 30%)}; }
+  // Slate — neutral/restrained on purpose: "Blocked Users" is a caution
+  // metric, not an alarm like Pending Approvals, and slate reads as
+  // distinct from every other hue in the grid (incl. Communities' indigo).
+  &--slate  { --ov-tint: #{rgba($color-slate-500, 0.12)};  --ov-accent: #{$color-slate-500};  --ov-accent-2: #{mix($color-slate-500, #fff, 30%)}; }
 }
 
-// ── Metric Icon ───────────────────────────────────────────────
-.metric-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: $_rs;
+.ov-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.ov-card__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $_muted;
+  padding-top: 6px;
+}
+
+.ov-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-full;
+  background: linear-gradient(140deg, var(--ov-accent-2), var(--ov-accent));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
-  transition: background $_t, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), 
-              box-shadow $_t, color $_t;
-  line-height: 1;
-
-  &--blue {
-    background: linear-gradient(135deg, rgba($_blue, 0.12) 0%, rgba($_blue, 0.08) 100%);
-    color: $_blue;
-  }
-
-  &--green {
-    background: linear-gradient(135deg, rgba($_green, 0.12) 0%, rgba($_green, 0.08) 100%);
-    color: $_green;
-  }
-
-  &--cyan {
-    background: linear-gradient(135deg, rgba($_teal, 0.12) 0%, rgba($_teal, 0.08) 100%);
-    color: $_teal;
-  }
-
-  &--purple {
-    background: linear-gradient(135deg, rgba(#9f7aea, 0.12) 0%, rgba(#9f7aea, 0.08) 100%);
-    color: #9f7aea;
-  }
-
-  &--orange {
-    background: linear-gradient(135deg, rgba($_amber, 0.12) 0%, rgba($_amber, 0.08) 100%);
-    color: $_amber;
-  }
-
-  &--red {
-    background: linear-gradient(135deg, rgba($_red, 0.12) 0%, rgba($_red, 0.08) 100%);
-    color: $_red;
-  }
-
-  @media (max-width: 640px) {
-    width: 32px;
-    height: 32px;
-    font-size: 0.95rem;
-  }
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-// ── Metric Content ────────────────────────────────────────────
-.metric-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-}
-
-// ── Metric Value ──────────────────────────────────────────────
-.metric-value {
+.ov-card__value {
+  @include focus-ring;
   font-family: $font-family-header;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
   color: $_text;
-  margin: 0;
-  padding: 0;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  transition: color 200ms ease-out;
-
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
-
-  @media (max-width: 640px) {
-    font-size: 0.9rem;
-  }
-}
-
-// ── Metric Label ──────────────────────────────────────────────
-.metric-label {
-  font-size: 11px;
-  color: $_muted;
-  margin: 0;
-  padding: 0;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3;
-  transition: color $_t;
-
-  @media (max-width: 640px) {
-    font-size: 10px;
-  }
-}
-
-// ── Metric Trend ──────────────────────────────────────────────
-.metric-trend {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  margin-top: 4px;
-  padding: 2px 6px;
-  border-radius: $radius-xs;
-  width: fit-content;
-  transition: background $_t, color $_t;
-
-  i {
-    font-size: 9px;
-    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  &--up {
-    color: $_green;
-    background: rgba($_green, 0.1);
-
-    i {
-      animation: slideUp 600ms cubic-bezier(0.34, 1.56, 0.64, 1) 300ms backwards;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      i {
-        animation: none;
-      }
-    }
-  }
-
-  &--neutral {
-    color: $_muted;
-    background: rgba($_text, 0.05);
-  }
-
-  &--warning {
-    color: $_amber;
-    background: rgba($_amber, 0.1);
-
-    i {
-      animation: pulse 2s ease-in-out infinite;
-      animation-delay: 300ms;
-
-      @media (prefers-reduced-motion: reduce) {
-        animation: none;
-      }
-    }
-  }
-}
-
-// ── Animations ────────────────────────────────────────────────
-@keyframes slideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes pulse {
@@ -708,135 +376,41 @@ $_muted:   #534434;
   }
 }
 
-// ── Business gauge ────────────────────────────────────────────
-.gauge-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 0;
-}
+// (Platform Composition now uses the unified .comp-card meter system —
+// see below, near .composition-row)
 
-.gauge-svg {
-  width: 88px;
-  height: 88px;
-}
-
-.gauge-track { stroke: #e5eeff; }
-.gauge-fill  { stroke: $_amber-c; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
-
-.gauge-label {
-  position: absolute;
-  font-family: $font-family-header;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: $_text;
-}
-
-// ── Events bars ───────────────────────────────────────────────
-.events-bars {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  margin-top: 4px;
-}
-
-.events-bar-row { display: flex; flex-direction: column; gap: 4px; }
-
-.events-bar-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  font-weight: 700;
-  color: $_muted;
-}
-
-.events-bar-track {
-  height: 8px;
-  background: #e5eeff;
-  border-radius: $radius-full;
-  overflow: hidden;
-}
-
-.events-bar-fill {
-  height: 100%;
-  border-radius: $radius-full;
-
-  &--teal      { background: $_teal; }
-  &--teal-dim  { background: rgba($_teal, 0.3); }
-  &--amber     { background: $_amber-c; }
-  &--amber-dim { background: rgba($_amber-c, 0.3); }
-  &--red       { background: $_red; }
-  &--red-dim   { background: rgba($_red, 0.3); }
-}
-
-// ── Job listings progress bar ─────────────────────────────────
-.job-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: right;
-}
-
-.job-legend-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  font-size: $font-size-sm;
-  color: $_text;
-
-  .muted { color: $_muted; font-weight: 400; }
-}
-
-.dot {
-  width: 8px; height: 8px; border-radius: $radius-full; flex-shrink: 0;
-  &--red   { background: $_red; }
-  &--muted { background: $_border; }
-}
-
-.job-bar-track {
-  position: relative;
-  height: 24px;
-  background: #e5eeff;
-  border-radius: $_rs;
-  overflow: hidden;
-}
-
-.job-bar-fill {
-  height: 100%;
-  background: $_red;
-  border-radius: $_rs;
-  transition: width 0.5s ease;
-}
-
-.job-bar-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  font-weight: 700;
-  color: $_muted;
-  margin-top: 2px;
-}
-
-// ── Mid row: approvals + quick actions ───────────────────────
+// ── Mid row: Growth Trends + Platform Composition, equal width ─
 .db-mid-row {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: $spacing-lg;
-  align-items: start;
+  align-items: stretch;
 
   @media (max-width: 991px) { grid-template-columns: 1fr; }
 }
 
 // ── Panel base ────────────────────────────────────────────────
 .panel {
+  position: relative;
   background: $_card;
   border: 1px solid $_border;
   border-radius: $_r;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  // Same quiet depth as the overview cards, so panels and cards read as
+  // one consistent, slightly-elevated surface system rather than flat
+  // boxes that only look "designed" on hover.
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 6px 16px rgba(15, 23, 42, 0.03);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+  }
 }
 
 .panel__head {
@@ -855,196 +429,109 @@ $_muted:   #534434;
   margin: 0;
 }
 
-// ── Action badge ──────────────────────────────────────────────
-.action-badge {
-  background: $_amber-c;
-  color: #613b00;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 3px 8px;
-  border-radius: $radius-xs;
-}
-
-// ── Approvals list ────────────────────────────────────────────
-.panel--approvals {
-  display: flex;
+// Chart panel header: title/legend row + a filter row underneath
+.panel__head--chart {
   flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
 }
 
-.approvals-list {
-  overflow-y: auto;
-}
-
-.approval-item {
+.panel__head-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0px 1.5rem;
-  border-bottom: 1px solid $_border;
-  gap: 1rem;
-  transition: background $_t;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
-  &:last-child { border-bottom: none; }
-  &:hover      { background: $_surf; }
+// ── Chart date-range filters ────────────────────────────────────
+.chart-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
-  @media (max-width: 580px) {
-    flex-direction: column;
-    align-items: flex-start;
+.chart-presets {
+  display: inline-flex;
+  align-items: center;
+  background: $_surf;
+  border: 1px solid $_border;
+  border-radius: $_rs;
+  padding: 2px;
+  gap: 2px;
+}
+
+.chart-preset-btn {
+  @include focus-ring;
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: calc(#{$_rs} - 2px);
+  font-size: 11px;
+  font-weight: 700;
+  color: $_muted;
+  cursor: pointer;
+  transition: background $_t, color $_t;
+
+  &:hover { color: $_text; }
+
+  &.active {
+    background: $_card;
+    color: $_amber;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 }
 
-.approval-item__left {
+.chart-custom-range {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
 }
 
-.approval-icon {
-  width: 44px; height: 44px;
+.chart-date-input {
+  border: 1px solid $_border;
   border-radius: $_rs;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.approval-name {
-  font-weight: 700;
+  padding: 5px 8px;
+  font-size: 12px;
   color: $_text;
-  font-size: $font-size-sm;
-  margin: 0 0 3px;
+  background: $_card;
+  cursor: pointer;
+  transition: border-color $_t;
+
+  &:hover, &:focus { border-color: $_amber-c; outline: none; }
 }
 
-.approval-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.approval-type {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.approval-time {
+.chart-range-sep {
   font-size: 12px;
   color: $_muted;
 }
 
-.approval-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-reject {
-  padding: 5px 14px;
-  border: 1px solid $_border;
-  background: transparent;
-  border-radius: $_rs;
-  font-size: 12px;
-  font-weight: 700;
-  color: $_text;
-  cursor: pointer;
-  transition: background $_t;
-
-  &:hover { background: #f5f5f5; }
-}
-
-.btn-approve {
-  padding: 5px 14px;
-  background: $_amber;
+.chart-apply-btn {
   border: none;
+  background: $_amber;
+  color: #fff;
+  padding: 5px 14px;
   border-radius: $_rs;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
   cursor: pointer;
   transition: opacity $_t;
 
-  &:hover { opacity: 0.88; }
+  &:hover:not(:disabled) { opacity: 0.88; }
+  &:disabled { opacity: 0.5; cursor: default; }
 }
 
-.approvals-empty {
-  padding: 2rem 1.5rem;
-  text-align: center;
-  background: linear-gradient(135deg, rgba($_green, 0.02) 0%, rgba($_blue, 0.02) 100%);
-  border: 1px dashed rgba($_green, 0.2);
-  border-radius: $radius-md;
-  margin: 0.75rem;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
+.chart-loading {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  color: $_amber-c;
+
+  .spinner-border-sm { width: 14px; height: 14px; border-width: 2px; }
 }
 
-.empty-state__icon {
-  font-size: 2.5rem;
-  color: $_green;
-  opacity: 0.8;
-  animation: bounceIn 600ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-.empty-state__title {
-  font-family: $font-family-header;
-  font-size: 1rem;
-  font-weight: 700;
-  color: $_text;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.empty-state__message {
-  font-size: 13px;
-  color: $_muted;
-  margin: 0;
-  font-weight: 500;
-}
-
-.empty-state__subtitle {
-  font-size: 11px;
-  color: $_muted;
-  margin: 0;
-  opacity: 0.75;
-  line-height: 1.3;
-}
-
-@keyframes bounceIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.panel__footer-link {
-  display: block;
-  padding: 0.625rem;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: $_amber;
-  text-decoration: none;
-  background: $_surf;
-  transition: text-decoration $_t;
-
-  &:hover { text-decoration: underline; }
+.linechart__axis-label--hidden {
+  visibility: hidden;
 }
 
 // ── Quick actions panel ───────────────────────────────────────
@@ -1053,7 +540,7 @@ $_muted:   #534434;
   gap: 0.5rem;
   position: sticky;
   top: 20px;
-  
+
   @media (max-width: 991px) {
     position: static;
   }
@@ -1062,10 +549,16 @@ $_muted:   #534434;
 .qa-list {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.5rem;
+  // Grows to fill any extra height .panel--qa picks up from being
+  // stretched to match the metrics grid, so the action items stay
+  // centered in the available space instead of pinned to the top.
+  flex: 1;
 }
 
 .qa-item {
+  @include focus-ring;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1197,7 +690,7 @@ $_muted:   #534434;
   color: $_muted;
   transition: background $_t;
 
-  &:hover { background: #f5f5f5; }
+  &:hover { background: $color-bg-hover; }
 }
 
 .table-wrap { overflow-x: auto; }
@@ -1245,7 +738,7 @@ $_muted:   #534434;
 .op-avatar {
   width: 32px; height: 32px;
   border-radius: $radius-full;
-  background: #e5eeff;
+  background: $color-info-light;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1257,12 +750,12 @@ $_muted:   #534434;
 
 .action-chip {
   padding: 3px 8px;
-  background: #e5eeff;
+  background: $color-info-light;
   border-radius: $radius-xs;
   font-size: 12px;
   color: $_text;
 
-  &--danger { background: #ffdad6; color: #93000a; }
+  &--danger { background: $color-error-bg; color: $color-error-dark; }
 }
 
 .target-cell { font-weight: 600; }
@@ -1406,13 +899,449 @@ $_muted:   #534434;
   cursor: pointer;
   transition: all $_t;
   padding: 0;
-  
+
   &:hover:not(.active) {
     border-color: $_amber;
   }
-  
+
   &.active {
     background: $_amber;
     border-color: $_amber;
   }
+}
+
+// ── Platform Overview + Quick Actions ──────────────────────────
+// Quick Actions only needs enough width for a short label + icon, so it's
+// capped with minmax rather than taking a flexible share of the row — the
+// metrics grid gets the rest, which is what its 4-column card layout needs
+// to render without cramping. stretch: both columns still end at the same
+// line — the metrics grid is the natural height driver; Quick Actions (a
+// shorter list) stretches to match it, so the two panels finish flush.
+.db-overview-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(230px, 280px);
+  gap: $spacing-lg;
+  align-items: stretch;
+
+  @media (max-width: 991px) { grid-template-columns: 1fr; }
+}
+
+.panel--chart, .panel--composition {
+  padding: 0 0 1.25rem;
+}
+
+.panel__title-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: $_muted;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-left: 4px;
+}
+
+// Series identity — validated for CVD + normal-vision separation
+// (run scripts/validate_palette.js "#0EA5E9,#7C3AED,#F59E0B" --mode light)
+$_s-users:       $_blue;    // sky info
+$_s-communities: $_purple;  // violet
+$_s-posts:       $_amber-c; // amber
+
+// Legend — line-swatch keys (mirrors the line mark, not a dot)
+.chart-legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: $_muted;
+}
+.legend-swatch {
+  width: 14px; height: 2px; border-radius: 2px; flex-shrink: 0;
+  &--users        { background: $_s-users; }
+  &--communities  { background: $_s-communities; }
+  &--posts        { background: $_s-posts; }
+}
+
+// ── Line chart ─────────────────────────────────────────────────
+.linechart {
+  padding: 1.25rem 1.5rem 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.linechart__plot {
+  position: relative;
+  height: 180px;
+}
+
+.linechart__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.linechart__grid {
+  stroke: $_border;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.linechart__crosshair {
+  stroke: $_muted;
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.linechart__line {
+  fill: none;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+
+  &--users       { stroke: $_s-users; }
+  &--communities { stroke: $_s-communities; }
+  &--posts       { stroke: $_s-posts; }
+}
+
+.linechart__end {
+  stroke: $_card;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+
+  &--users       { fill: $_s-users; }
+  &--communities { fill: $_s-communities; }
+  &--posts       { fill: $_s-posts; }
+}
+
+// Hover point markers — HTML/CSS (not SVG) so they stay circular
+// regardless of the chart's non-uniform x/y scaling
+.linechart__pt {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: $radius-full;
+  border: 2px solid $_card;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  &--users       { background: $_s-users; }
+  &--communities { background: $_s-communities; }
+  &--posts       { background: $_s-posts; }
+}
+
+// Invisible hit columns — one per day, keyboard-focusable
+.linechart__hits {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.linechart__hit {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid $_amber-c;
+    outline-offset: -2px;
+  }
+}
+
+// Tooltip
+.linechart__tooltip {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -6px) translateY(-100%);
+  background: $_text;
+  color: #fff;
+  border-radius: $_rs;
+  padding: 8px 10px;
+  min-width: 148px;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  z-index: 2;
+}
+
+.linechart__tooltip-day {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+
+.linechart__tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.linechart__tooltip-key {
+  width: 10px; height: 2px; border-radius: 2px; flex-shrink: 0;
+  &--users       { background: $_s-users; }
+  &--communities { background: $_s-communities; }
+  &--posts       { background: $_s-posts; }
+}
+
+.linechart__tooltip-name { flex: 1; opacity: 0.85; }
+.linechart__tooltip-value { font-weight: 700; }
+
+// X-axis labels
+.linechart__axis {
+  display: flex;
+}
+
+.linechart__axis-label {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: $_muted;
+  white-space: nowrap;
+}
+
+// Visually-hidden accessible data table (chart alternative)
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ── Platform composition — horizontal rows, not portrait cards ──
+// Each row is a breakdown that doesn't exist anywhere in Platform Overview
+// (Overview only has raw totals) — Community Mix and Activity Mix are true
+// partitions with no equivalent above; Events is a time-windowed split of a
+// total that IS shown above, but split by "when", not restating "how many".
+//
+// A 3-across card grid kept losing the fight for width: this panel's real
+// width depends on its sibling (Pending Approvals shares the row with it)
+// and the sidebar's state, so 3 portrait cards either got squeezed/clipped
+// or needed horizontal scrolling. This panel is naturally tall and only
+// moderately wide, so the rows now run WITH that shape instead of against
+// it: one row per breakdown, full panel width, stacked vertically — no
+// scrolling, no fragile column-fit math, every row always fully visible.
+//
+// Row surface is a neutral cool tint shared by all three (not per-row
+// accent-tinted) — only the icon badge, hero number, and bar/dots carry
+// each row's accent color. A deliberate, scoped departure from the app's
+// warm amber/stone palette for this one panel.
+$_comp-bg:     #EEF1FB;
+$_comp-border: #DCE1F5;
+
+.composition-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+
+  @media (min-width: 992px) {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.comp-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.9rem 1.25rem;
+  background: $_comp-bg;
+  border: 1px solid $_comp-border;
+  border-radius: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1), transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  &:hover { box-shadow: 0 6px 16px rgba(30, 41, 59, 0.08); transform: translateY(-2px); }
+
+  &--community { --accent: #{$color-indigo-600}; --accent-tint: #{rgba($color-indigo-600, 0.14)}; }
+  &--activity  { --accent: #{$_purple};           --accent-tint: #{rgba($_purple, 0.14)}; }
+  &--events    { --accent: #{$_amber};             --accent-tint: #{rgba($_amber-c, 0.16)}; }
+
+  @media (max-width: 560px) {
+    flex-wrap: wrap;
+  }
+}
+
+.comp-row__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.comp-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 118px;
+  flex-shrink: 0;
+}
+
+.comp-row__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $_muted;
+  margin: 0;
+}
+
+.comp-row__hero {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.comp-row__num {
+  font-family: $font-family-header;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.comp-row__unit {
+  font-size: 11px;
+  color: $_muted;
+}
+
+.comp-row__divider {
+  width: 1px;
+  align-self: stretch;
+  background: $_comp-border;
+  flex-shrink: 0;
+
+  @media (max-width: 560px) { display: none; }
+}
+
+.comp-row__detail {
+  flex: 1;
+  min-width: 0;
+}
+
+// Meter — track is a lighter tint of the same accent (state reads across the bar)
+.comp-meter {
+  width: 100%;
+  height: 7px;
+  background: var(--accent-tint);
+  border-radius: $radius-full;
+  overflow: hidden;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.comp-meter__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: $radius-full;
+  transition: width 0.5s ease;
+}
+
+.comp-meter__seg {
+  height: 100%;
+  transition: width 0.5s ease, flex-grow 0.5s ease;
+}
+
+// Community Mix — non-exclusive flags, shown as inline stats rather than a bar
+.comp-stat-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 1.5rem;
+}
+
+.comp-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.comp-stat-row__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+
+  &--a { background: $color-indigo-600; }
+  &--b { background: $_purple; }
+  &--c { background: $_amber-c; }
+}
+
+.comp-stat-row__label { color: $_text; font-weight: 500; }
+.comp-stat-row__value { font-weight: 700; color: $_text; margin-left: 3px; }
+
+// Activity Mix — segmented bar sized by flex-grow (exact proportions, no rounding drift)
+.comp-meter--mix {
+  height: 7px;
+  gap: 2px;
+  background: transparent;
+  margin-bottom: 8px;
+
+  .comp-meter__seg {
+    border-radius: 3px;
+    cursor: pointer;
+  }
+}
+
+.comp-mix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 1.25rem;
+}
+
+.comp-mix-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: $_text;
+
+  b { font-weight: 700; margin-left: 1px; }
+}
+
+.comp-mix-legend__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+// Events — "Last 30 days" comparison row above the single-tone meter
+.comp-card__row-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: $_text;
+  margin-bottom: 6px;
+
+  strong { font-weight: 700; }
+}
+
+.comp-card__empty {
+  font-size: 12px;
+  color: $_muted;
+  margin: 6px 0 0;
+
+  &--italic { font-style: italic; }
 }

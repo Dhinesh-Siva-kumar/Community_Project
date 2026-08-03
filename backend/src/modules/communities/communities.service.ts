@@ -1,5 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { deleteUploadedFile } from '../../services/upload-storage.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
 // ---------------------------------------------------------------------------
@@ -41,6 +42,14 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
     .insert({ ...data, created_by_id: adminId })
     .returning('*');
 
+  // The creator is always a member of their own community, so they show up
+  // in the Members tab (with the "Author" badge — see isCommunityCreator on
+  // the frontend) and count toward _count.members from the very start.
+  await db('community_members')
+    .insert({ user_id: adminId, community_id: (community as Record<string, unknown>)['id'] as string })
+    .onConflict(['user_id', 'community_id'])
+    .ignore();
+
   // Auto-enroll existing active users when the new community is a default one
   if ((community as Record<string, unknown>)['is_default']) {
     await autoJoinExistingUsers(community as Record<string, unknown>);
@@ -81,12 +90,14 @@ export async function findAll(params: {
   country?: string;
   category?: string;
   visibility?: 'global' | 'private' | 'default';
+  community_mode?: 'HELP_EMERGENCY' | 'ENQUIRE';
+  is_default?: boolean;
   from_date?: string;
   to_date?: string;
   joined?: boolean;
   userId?: string;
 }) {
-  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, from_date, to_date, joined, userId } = params;
+  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, community_mode, is_default, from_date, to_date, joined, userId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('communities as c')
@@ -152,6 +163,18 @@ export async function findAll(params: {
   } else if (visibility === 'default') {
     query.where('c.is_default', true);
     countQuery.where('is_default', true);
+  }
+
+  // ── Community mode filter ──────────────────────────────────
+  if (community_mode) {
+    query.where('c.community_mode', community_mode);
+    countQuery.where('community_mode', community_mode);
+  }
+
+  // ── Default-community toggle filter (independent of visibility) ────
+  if (is_default !== undefined) {
+    query.where('c.is_default', is_default);
+    countQuery.where('is_default', is_default);
   }
 
   // ── Date-range filter on created_at ───────────────────────
@@ -221,6 +244,42 @@ export async function findAll(params: {
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
+export async function getAnalytics(params: {
+  page?: number;
+  limit?: number;
+  skipActiveFilter?: boolean;
+}) {
+  const { skipActiveFilter } = params;
+
+  const baseQuery = db('communities as c')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id');
+
+  if (!skipActiveFilter) {
+    baseQuery.where('c.is_active', true);
+  }
+
+  const grouped = await baseQuery
+    .groupBy('c.id')
+    .select(
+      'c.id',
+      db.raw('MAX(CASE WHEN c.is_global THEN 1 ELSE 0 END) as is_global_flag'),
+      db.raw('MAX(CASE WHEN c.is_private THEN 1 ELSE 0 END) as is_private_flag'),
+      db.raw('MAX(CASE WHEN c.is_default THEN 1 ELSE 0 END) as is_default_flag'),
+    );
+
+  const total = grouped.length;
+  const global = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_global_flag'] ?? 0) > 0 ? 1 : 0), 0);
+  const privateCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_private_flag'] ?? 0) > 0 ? 1 : 0), 0);
+  const defaultCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_default_flag'] ?? 0) > 0 ? 1 : 0), 0);
+
+  return {
+    total,
+    global,
+    private: privateCount,
+    default: defaultCount,
+  };
+}
+
 export async function findOne(id: string) {
   const community = await db('communities as c')
     .leftJoin('users as u', 'c.created_by_id', 'u.id')
@@ -262,6 +321,10 @@ export async function update(id: string, data: UpdateCommunityDtoType) {
 
   await db('communities').where({ id }).update(data);
 
+  if (data.image !== undefined && before['image'] !== data.image) {
+    deleteUploadedFile(before['image']);
+  }
+
   // If this edit turns is_default ON for the first time, backfill existing users.
   // Merge before + data so the effective is_global / is_private / country are correct
   // even when those fields are also changed in the same request.
@@ -274,10 +337,11 @@ export async function update(id: string, data: UpdateCommunityDtoType) {
 }
 
 export async function deleteCommunity(id: string) {
-  const community = await db('communities').where({ id }).first();
+  const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found');
 
   await db('communities').where({ id }).delete();
+  deleteUploadedFile(community['image']);
   return { message: 'Community deleted successfully' };
 }
 

@@ -74,11 +74,11 @@
 
     <!-- ── Multi mode ── -->
     @if (mode === 'multi') {
-      @if (files().length > 0) {
+      @if (allPreviews().length > 0) {
         <div class="fu-grid" (click)="$event.stopPropagation()">
-          @for (preview of previews(); track $index) {
+          @for (preview of allPreviews(); track $index) {
             <div class="fu-thumb">
-              <img [src]="preview" [alt]="'Image ' + ($index + 1)" class="fu-thumb-img">
+              <img [src]="preview | imageUrl" [alt]="'Image ' + ($index + 1)" class="fu-thumb-img">
               <button
                 type="button"
                 class="fu-thumb-del"
@@ -89,7 +89,7 @@
               </button>
             </div>
           }
-          @if (files().length < maxFiles) {
+          @if (allPreviews().length < maxFiles) {
             <div class="fu-thumb fu-thumb--add" (click)="triggerInput()">
               <i class="bi bi-plus-lg"></i>
             </div>

@@ -17,175 +17,99 @@
 <div class="db-page">
 
   <!-- Welcome header -->
-  <div class="db-welcome db-welcome--enhanced">
-    <!-- Gradient background with aurora effect -->
-    <div class="db-welcome__background">
-      <div class="db-welcome__gradient-primary"></div>
-      <div class="db-welcome__gradient-secondary"></div>
-      <div class="db-welcome__gradient-accent"></div>
-    </div>
-    
-    <!-- Glass morphism overlay -->
-    <div class="db-welcome__glass-overlay"></div>
-
-    <!-- Content container -->
-    <div class="db-welcome__inner">
-      <div class="db-welcome__content">
-        <div class="db-welcome__greeting">
-          <h1 class="db-welcome__title">{{ getGreetingText() }}</h1>
-        </div>
-        
-        <div class="db-welcome__info">
-          <div class="db-welcome__meta">
-            <span class="db-welcome__role">{{ getAdminRole() }}</span>
-            <span class="db-welcome__status">
-              <span class="db-welcome__status-dot"></span>
-              Online
-            </span>
-          </div>
-          <p class="db-welcome__sub">Here is a summary of the community's health and activity today.</p>
-        </div>
-      </div>
-
-      <!-- Decorative elements -->
-      <div class="db-welcome__decorations">
-        <div class="db-welcome__shape shape-1"></div>
-        <div class="db-welcome__shape shape-2"></div>
-        <div class="db-welcome__shape shape-3"></div>
+  <div class="db-welcome">
+    <div class="db-welcome__left">
+      <span class="db-welcome__icon" [style.background]="getGreetingColor() + '1a'" [style.color]="getGreetingColor()">
+        <i class="bi" [ngClass]="getGreetingIcon()"></i>
+      </span>
+      <div class="db-welcome__text">
+        <h1 class="db-welcome__title">{{ getGreetingText() }}</h1>
+        <p class="db-welcome__sub">{{ getAdminRole() }} · Here's today's community summary.</p>
       </div>
     </div>
+    <span class="db-welcome__status">
+      <span class="db-welcome__status-dot"></span>
+      Online
+    </span>
   </div>
 
-  <!-- ── Platform Overview Metrics ────────────────────────────── -->
-  <div class="metrics-section">
-    <div class="metrics-header">
-      <h2 class="metrics-title">
-        <i class="bi bi-grid-3x2-gap-fill"></i>
-        PLATFORM OVERVIEW
-      </h2>
-    </div>
-    
-    <div class="metrics-grid">
+  <!-- ── Platform Overview + Quick Actions ───────────────────────
+       Eight metric cards on the left, Quick Actions on the right —
+       both columns stretch to end at the same line (see .db-overview-row). -->
+  <div class="db-overview-row">
+
+    <div class="ov-grid">
       <!-- Total Users -->
-      <div class="metric-card" role="region" aria-label="Total Users metric">
-        <div class="metric-icon metric-icon--blue">
-          <i class="bi bi-people-fill"></i>
+      <div class="ov-card ov-card--accent ov-card--blue">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Users</span>
+          <span class="ov-card__icon"><i class="bi bi-people-fill"></i></span>
         </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ (stats()?.totalUsers ?? 0) | number }}</h3>
-          <p class="metric-label">Total Users</p>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().users | number }}</div>
+      </div>
+
+      <!-- Total Communities -->
+      <div class="ov-card ov-card--accent ov-card--indigo">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Communities</span>
+          <span class="ov-card__icon"><i class="bi bi-diagram-3-fill"></i></span>
         </div>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().communities | number }}</div>
       </div>
 
       <!-- Total Posts -->
-      <div class="metric-card" role="region" aria-label="Total Posts metric">
-        <div class="metric-icon metric-icon--cyan">
-          <i class="bi bi-file-earmark-text-fill"></i>
+      <div class="ov-card ov-card--accent ov-card--amber">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Posts</span>
+          <span class="ov-card__icon"><i class="bi bi-file-earmark-text-fill"></i></span>
         </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ (stats()?.totalPosts ?? 0) | number }}</h3>
-          <p class="metric-label">Total Posts</p>
-
-        </div>
-      </div>
-
-      <!-- Total Events -->
-      <div class="metric-card" role="region" aria-label="Total Events metric">
-        <div class="metric-icon metric-icon--orange">
-          <i class="bi bi-calendar-event-fill"></i>
-        </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ (stats()?.totalEvents ?? 0) | number }}</h3>
-          <p class="metric-label">Total Events</p>
-        </div>
-      </div>
-
-      <!-- Total Business -->
-      <div class="metric-card" role="region" aria-label="Total Businesses metric">
-        <div class="metric-icon metric-icon--purple">
-          <i class="bi bi-building"></i>
-        </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ (stats()?.totalBusinesses ?? 0) | number }}</h3>
-          <p class="metric-label">Total Business</p>
-        </div>
-      </div>
-
-      <!-- Total Jobs -->
-      <div class="metric-card" role="region" aria-label="Total Jobs metric">
-        <div class="metric-icon metric-icon--green">
-          <i class="bi bi-briefcase-fill"></i>
-        </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ (stats()?.totalJobs ?? 0) | number }}</h3>
-          <p class="metric-label">Total Jobs</p>
-        </div>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().posts | number }}</div>
       </div>
 
       <!-- Pending Approvals -->
-      <div class="metric-card metric-card--alert" role="region" aria-label="Pending Approvals metric">
-        <div class="metric-icon metric-icon--red">
-          <i class="bi bi-hourglass-split"></i>
+      <div class="ov-card ov-card--accent ov-card--red">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Pending Approvals</span>
+          <span class="ov-card__icon"><i class="bi bi-hourglass-split"></i></span>
         </div>
-        <div class="metric-content">
-          <h3 class="metric-value" tabindex="0">{{ pendingCount() | number }}</h3>
-          <p class="metric-label">Pending Approvals</p>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().pending | number }}</div>
+      </div>
+
+      <!-- Blocked Users -->
+      <div class="ov-card ov-card--accent ov-card--slate">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Blocked Users</span>
+          <span class="ov-card__icon"><i class="bi bi-person-fill-slash"></i></span>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Approvals + Quick Actions ─────────────────────────────── -->
-  <div class="db-mid-row">
-
-    <!-- Pending Approvals -->
-    <div class="panel panel--approvals">
-      <div class="panel__head">
-        <h3 class="panel__title">Pending Approvals</h3>
-        @if (pendingCount() > 0) {
-          <span class="action-badge">{{ pendingCount() }} ACTION ITEMS</span>
-        }
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().blocked | number }}</div>
       </div>
 
-      <div class="approvals-list">
-        @if (pendingPosts().length === 0) {
-          <div class="approvals-empty">
-            <div class="empty-state">
-              <div class="empty-state__icon">
-                <i class="bi bi-check-circle-fill"></i>
-              </div>
-              <h4 class="empty-state__title">All Caught Up!</h4>
-              <p class="empty-state__message">No pending approvals at the moment</p>
-              <p class="empty-state__subtitle">New posts will appear here when they need your attention</p>
-            </div>
-          </div>
-        }
-        @for (post of pendingPosts(); track post.id) {
-          <div class="approval-item">
-            <div class="approval-item__left">
-              <div class="approval-icon" [style.background]="postIconBg(post.type)">
-                <i class="bi" [class]="postTypeIcon(post.type)" [style.color]="postIconColor(post.type)"></i>
-              </div>
-              <div>
-                <p class="approval-name">{{ post.content | slice:0:60 }}{{ post.content.length > 60 ? '…' : '' }}</p>
-                <div class="approval-meta">
-                  <span class="approval-type" [style.color]="postIconColor(post.type)">{{ post.type }}</span>
-                  <span class="approval-time">{{ getTimeAgo(post.createdAt) }}</span>
-                  @if (post.community?.name) {
-                    <span class="approval-time">· {{ post.community!.name }}</span>
-                  }
-                </div>
-              </div>
-            </div>
-            <div class="approval-actions">
-              <button class="btn-reject"  (click)="rejectPost(post.id)"  type="button">Reject</button>
-              <button class="btn-approve" (click)="approvePost(post.id)" type="button">Approve</button>
-            </div>
-          </div>
-        }
+      <!-- Total Events -->
+      <div class="ov-card ov-card--accent ov-card--jade">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Events</span>
+          <span class="ov-card__icon"><i class="bi bi-calendar-event-fill"></i></span>
+        </div>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().events | number }}</div>
       </div>
 
-      <a routerLink="/admin/post-approval" class="panel__footer-link">VIEW ALL PENDING REQUESTS</a>
+      <!-- Total Business -->
+      <div class="ov-card ov-card--accent ov-card--rose">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Business</span>
+          <span class="ov-card__icon"><i class="bi bi-building"></i></span>
+        </div>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().business | number }}</div>
+      </div>
+
+      <!-- Total Jobs -->
+      <div class="ov-card ov-card--accent ov-card--green">
+        <div class="ov-card__top">
+          <span class="ov-card__label">Total Jobs</span>
+          <span class="ov-card__icon"><i class="bi bi-briefcase-fill"></i></span>
+        </div>
+        <div class="ov-card__value" tabindex="0">{{ animatedOverview().jobs | number }}</div>
+      </div>
     </div>
 
     <!-- Quick Actions -->
@@ -199,6 +123,228 @@
             <i class="bi bi-chevron-right qa-item__chevron"></i>
           </a>
         }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Growth Trends + Platform Composition ────────────────────
+       Equal-width columns (see .db-mid-row). -->
+  <div class="db-mid-row">
+
+    <div class="panel panel--chart">
+      <div class="panel__head panel__head--chart">
+      <div class="panel__head-top">
+        <h3 class="panel__title">Growth Trends <span class="panel__title-sub">({{ chartRangeLabel() }})</span></h3>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-swatch legend-swatch--users"></span>Users</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--communities"></span>Communities</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--posts"></span>Posts</span>
+        </div>
+      </div>
+
+      <div class="chart-filters">
+        <div class="chart-presets" role="group" aria-label="Date range preset">
+          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='7d'" (click)="setChartPreset('7d')">7D</button>
+          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='30d'" (click)="setChartPreset('30d')">30D</button>
+          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='90d'" (click)="setChartPreset('90d')">90D</button>
+          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='custom'" (click)="showCustomRange()">Custom</button>
+        </div>
+
+        @if (chartPreset() === 'custom') {
+          <div class="chart-custom-range">
+            <input type="date" class="chart-date-input" [value]="chartFrom()" [max]="chartTo() || chartRangeMax"
+                   (change)="onChartFromInput($event)" aria-label="From date" />
+            <span class="chart-range-sep">–</span>
+            <input type="date" class="chart-date-input" [value]="chartTo()" [min]="chartFrom()" [max]="chartRangeMax"
+                   (change)="onChartToInput($event)" aria-label="To date" />
+            <button type="button" class="chart-apply-btn" [disabled]="loadingChart()" (click)="applyCustomChartRange()">Apply</button>
+          </div>
+        }
+
+        @if (loadingChart()) {
+          <span class="chart-loading" aria-live="polite">
+            <span class="spinner-border spinner-border-sm"></span>
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="linechart">
+      <div class="linechart__plot" (pointerleave)="clearHoveredIndex()">
+        <svg class="linechart__svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line class="linechart__grid" x1="0" y1="20" x2="100" y2="20" />
+          <line class="linechart__grid" x1="0" y1="50" x2="100" y2="50" />
+          <line class="linechart__grid" x1="0" y1="80" x2="100" y2="80" />
+
+          @if (hoveredIndex() !== null) {
+            <line class="linechart__crosshair" [attr.x1]="hoveredXPct()" y1="2" [attr.x2]="hoveredXPct()" y2="100" />
+          }
+
+          <polyline class="linechart__line linechart__line--users" [attr.points]="userLine()" />
+          <polyline class="linechart__line linechart__line--communities" [attr.points]="communityLine()" />
+          <polyline class="linechart__line linechart__line--posts" [attr.points]="postLine()" />
+
+          <!-- Today's end-point marker per series -->
+          <circle class="linechart__end linechart__end--users" [attr.cx]="chartX()[chartX().length-1]" [attr.cy]="100 - (userBars()[userBars().length-1] ?? 0)" r="1.6" />
+          <circle class="linechart__end linechart__end--communities" [attr.cx]="chartX()[chartX().length-1]" [attr.cy]="100 - (communityBars()[communityBars().length-1] ?? 0)" r="1.6" />
+          <circle class="linechart__end linechart__end--posts" [attr.cx]="chartX()[chartX().length-1]" [attr.cy]="100 - (postBars()[postBars().length-1] ?? 0)" r="1.6" />
+        </svg>
+
+        @if (hoveredIndex() !== null) {
+          <span class="linechart__pt linechart__pt--users" [style.left.%]="hoveredXPct()" [style.top.%]="100 - (userBars()[hoveredIndex()!] ?? 0)"></span>
+          <span class="linechart__pt linechart__pt--communities" [style.left.%]="hoveredXPct()" [style.top.%]="100 - (communityBars()[hoveredIndex()!] ?? 0)"></span>
+          <span class="linechart__pt linechart__pt--posts" [style.left.%]="hoveredXPct()" [style.top.%]="100 - (postBars()[hoveredIndex()!] ?? 0)"></span>
+
+          <div class="linechart__tooltip" [style.left.%]="tooltipLeftPct()">
+            <strong class="linechart__tooltip-day">{{ chartLabels()[hoveredIndex()!] }}</strong>
+            <div class="linechart__tooltip-row">
+              <span class="linechart__tooltip-key linechart__tooltip-key--users"></span>
+              <span class="linechart__tooltip-name">Users</span>
+              <span class="linechart__tooltip-value">{{ userValues()[hoveredIndex()!] ?? 0 }}</span>
+            </div>
+            <div class="linechart__tooltip-row">
+              <span class="linechart__tooltip-key linechart__tooltip-key--communities"></span>
+              <span class="linechart__tooltip-name">Communities</span>
+              <span class="linechart__tooltip-value">{{ communityValues()[hoveredIndex()!] ?? 0 }}</span>
+            </div>
+            <div class="linechart__tooltip-row">
+              <span class="linechart__tooltip-key linechart__tooltip-key--posts"></span>
+              <span class="linechart__tooltip-name">Posts</span>
+              <span class="linechart__tooltip-value">{{ postValues()[hoveredIndex()!] ?? 0 }}</span>
+            </div>
+          </div>
+        }
+
+        <div class="linechart__hits">
+          @for (label of chartLabels(); track label; let i = $index) {
+            <button type="button" class="linechart__hit"
+                    (pointerenter)="setHoveredIndex(i)"
+                    (focus)="setHoveredIndex(i)"
+                    [attr.aria-label]="label + ': ' + (userValues()[i] ?? 0) + ' users, ' + (communityValues()[i] ?? 0) + ' communities, ' + (postValues()[i] ?? 0) + ' posts'">
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="linechart__axis">
+        @for (label of chartLabels(); track label; let i = $index) {
+          <span class="linechart__axis-label" [class.linechart__axis-label--hidden]="i % chartLabelStride() !== 0">{{ label }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Accessible data-table equivalent of the chart above -->
+    <table class="sr-only">
+      <caption>Daily growth for the last 7 days: new users, communities, and posts</caption>
+      <thead><tr><th scope="col">Day</th><th scope="col">Users</th><th scope="col">Communities</th><th scope="col">Posts</th></tr></thead>
+      <tbody>
+        @for (label of chartLabels(); track label; let i = $index) {
+          <tr>
+            <th scope="row">{{ label }}</th>
+            <td>{{ userValues()[i] ?? 0 }}</td>
+            <td>{{ communityValues()[i] ?? 0 }}</td>
+            <td>{{ postValues()[i] ?? 0 }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+    <!-- Platform composition: breakdowns that don't overlap the totals above -->
+    <div class="panel panel--composition">
+      <div class="panel__head">
+        <h3 class="panel__title">Platform Composition</h3>
+      </div>
+
+      <div class="composition-row">
+
+        <!-- Community Mix — visibility flags aren't mutually exclusive, so shown as stat rows, not a bar -->
+        <div class="comp-row comp-row--community">
+          <span class="comp-row__icon"><i class="bi bi-diagram-3-fill"></i></span>
+          <div class="comp-row__main">
+            <p class="comp-row__label">Community Mix</p>
+            <div class="comp-row__hero">
+              <span class="comp-row__num">{{ communityCounts()?.total ?? 0 }}</span>
+              <span class="comp-row__unit">communities</span>
+            </div>
+          </div>
+          <div class="comp-row__divider"></div>
+          <div class="comp-row__detail comp-stat-rows">
+            <div class="comp-stat-row">
+              <span class="comp-stat-row__dot comp-stat-row__dot--a"></span>
+              <span class="comp-stat-row__label">Global</span>
+              <span class="comp-stat-row__value">{{ communityCounts()?.global ?? 0 }}</span>
+            </div>
+            <div class="comp-stat-row">
+              <span class="comp-stat-row__dot comp-stat-row__dot--b"></span>
+              <span class="comp-stat-row__label">Private</span>
+              <span class="comp-stat-row__value">{{ communityCounts()?.private ?? 0 }}</span>
+            </div>
+            <div class="comp-stat-row">
+              <span class="comp-stat-row__dot comp-stat-row__dot--c"></span>
+              <span class="comp-stat-row__label">Default</span>
+              <span class="comp-stat-row__value">{{ communityCounts()?.default ?? 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Mix — each recent-activity item has exactly one type, so this is a true partition -->
+        <div class="comp-row comp-row--activity">
+          <span class="comp-row__icon"><i class="bi bi-pie-chart-fill"></i></span>
+          <div class="comp-row__main">
+            <p class="comp-row__label">Activity Mix</p>
+            <div class="comp-row__hero">
+              <span class="comp-row__num">{{ stats()?.recentActivity?.length ?? 0 }}</span>
+              <span class="comp-row__unit">events</span>
+            </div>
+          </div>
+          <div class="comp-row__divider"></div>
+          <div class="comp-row__detail">
+            @if (activityMix().length > 0) {
+              <div class="comp-meter comp-meter--mix">
+                @for (m of activityMix(); track m.type) {
+                  <div class="comp-meter__seg" [style.flex-grow]="m.count" [style.background]="m.color" [attr.data-tip]="m.label + ': ' + m.count"></div>
+                }
+              </div>
+              <div class="comp-mix-legend">
+                @for (m of activityMix().slice(0, 4); track m.type) {
+                  <span class="comp-mix-legend__item">
+                    <span class="comp-mix-legend__dot" [style.background]="m.color"></span>{{ m.label }} <b>{{ m.count }}</b>
+                  </span>
+                }
+              </div>
+            } @else {
+              <p class="comp-card__empty">No recent activity yet.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Events — a time-windowed split, distinct from the all-time "Total Events" count above -->
+        <div class="comp-row comp-row--events">
+          <span class="comp-row__icon"><i class="bi bi-calendar-event-fill"></i></span>
+          <div class="comp-row__main">
+            <p class="comp-row__label">Events</p>
+            <div class="comp-row__hero">
+              <span class="comp-row__num">{{ chartData()?.eventsUpcoming ?? 0 }}</span>
+              <span class="comp-row__unit">upcoming</span>
+            </div>
+          </div>
+          <div class="comp-row__divider"></div>
+          <div class="comp-row__detail">
+            <div class="comp-card__row-line">
+              <span>Last 30 days</span>
+              <strong>{{ chartData()?.eventsPast30d ?? 0 }}</strong>
+            </div>
+            <div class="comp-meter">
+              <div class="comp-meter__fill" [style.width.%]="100 - eventUpcomingSharePct()"></div>
+            </div>
+            @if ((chartData()?.eventsUpcoming ?? 0) === 0 && (chartData()?.eventsPast30d ?? 0) === 0) {
+              <p class="comp-card__empty comp-card__empty--italic">No active events scheduled</p>
+            }
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -222,16 +368,19 @@
 
       <div class="activity-list">
         @if (paginatedActivity().length > 0) {
-          @for (item of paginatedActivity(); track item.createdAt) {
+          @for (item of paginatedActivity(); track item.createdAt; let i = $index) {
+            @if (isNewActivityDay(i)) {
+              <div class="activity-day-label">{{ activityDayLabel(item.createdAt) }}</div>
+            }
             <div class="activity-item">
-              <div class="activity-icon" [style.background]="activityColor(item.type) + '18'">
+              <div class="activity-icon" [style.border-color]="activityColor(item.type)">
                 <i class="bi" [class]="activityIcon(item.type)" [style.color]="activityColor(item.type)"></i>
               </div>
               <div class="activity-content">
                 <p class="activity-message">{{ item.message }}</p>
                 <span class="activity-time">{{ getTimeAgo(item.createdAt) }}</span>
               </div>
-              <span class="activity-badge" [style.background]="activityColor(item.type) + '18'" [style.color]="activityColor(item.type)">
+              <span class="activity-badge" [style.background]="activityColor(item.type) + '14'" [style.color]="activityColor(item.type)" [style.border-color]="activityColor(item.type) + '33'">
                 {{ activityLabel(item.type) }}
               </span>
             </div>

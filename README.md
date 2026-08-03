@@ -130,6 +130,7 @@ GOOGLE_CLIENT_ID=
 | `APP_URL`               | no       | Public backend URL                                          |
 | `FRONTEND_URL`          | no       | Frontend URL used in links/redirects                        |
 | `UPLOADS_PATH`          | no       | Directory for uploaded files (default `uploads`)            |
+| `FRONTEND_DIST_PATH`    | no       | Path to the built Angular app (`ng build` output) for same-domain production deployment; skipped if it has no `index.html` |
 | `SMTP_*`, `EMAIL_FROM`, `ADMIN_EMAIL` | no | Email delivery; omit to fall back to an Ethereal test account |
 | `TWILIO_*`              | no       | WhatsApp OTP via Twilio; omit to disable                    |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | no | OpenAI integration; omit to disable                       |

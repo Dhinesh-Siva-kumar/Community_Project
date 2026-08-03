@@ -1487,6 +1487,20 @@
   flex-wrap: wrap;
   gap: $spacing-sm;
 
+  &__btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+
+    &:focus-visible {
+      outline: 2px solid $color-accent;
+      outline-offset: 2px;
+      border-radius: $radius-md;
+    }
+  }
+
   &__img {
     width: 110px;
     height: 78px;

@@ -2,25 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto } from './business.dto';
 import * as businessService from './business.service';
 import { FileValidationService } from '../../services/file-validation.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { env } from '../../config/env';
-
-// Helper to save buffer to disk
-async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
-  const uploadsBase = path.resolve(env.UPLOADS_PATH);
-  const ext = path.extname(originalName);
-  const filename = uuidv4() + ext;
-  const filePath = path.join(uploadsBase, filename);
-  
-  if (!fs.existsSync(uploadsBase)) {
-    fs.mkdirSync(uploadsBase, { recursive: true });
-  }
-  
-  fs.writeFileSync(filePath, buffer);
-  return filename;
-}
+import { saveBufferToFile } from '../../services/upload-storage.service';
 
 export async function createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -82,7 +64,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 
     // Save validated files to disk
     const filenames = await Promise.all(
-      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname))
+      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
     );
     const imagePaths = filenames.map((f) => `/uploads/${f}`);
 
@@ -91,7 +73,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 
     // Save logo if present
     if (logoFiles.length > 0) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname);
+      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'business');
       rawBody['logo'] = `/uploads/${logoFilename}`;
     }
 
@@ -146,7 +128,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 
     // Save validated files to disk
     const filenames = await Promise.all(
-      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname))
+      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
     );
     const imagePaths = filenames.map((f) => `/uploads/${f}`);
 
@@ -155,7 +137,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 
     // Save logo if present
     if (logoFiles.length > 0) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname);
+      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'business');
       rawBody['logo'] = `/uploads/${logoFilename}`;
     }
 

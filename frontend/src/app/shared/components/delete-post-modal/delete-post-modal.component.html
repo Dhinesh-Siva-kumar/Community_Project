@@ -1,0 +1,51 @@
+@if (open) {
+  <div
+    class="dpm-backdrop"
+    style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1rem;background:transparent;z-index:1200;"
+    (click)="onBackdropClick()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="dpmTitle"
+  >
+    <div class="dpm-modal" (click)="$event.stopPropagation()">
+      <div class="dpm-header">
+        <div class="dpm-icon-wrap">
+          <i class="bi bi-trash3-fill"></i>
+        </div>
+        <div class="dpm-header-text">
+          <h5 class="dpm-title" id="dpmTitle">Delete Post</h5>
+          <p class="dpm-subtitle">This action cannot be undone</p>
+        </div>
+        <button type="button" class="dpm-close" (click)="onCancel()" [disabled]="deleting" aria-label="Close dialog">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="dpm-body">
+        <p class="dpm-message">Are you sure you want to permanently delete this post?</p>
+        @if (previewContent) {
+          <div class="dpm-post-preview">
+            <p class="mb-0 small">{{ previewContent }}</p>
+          </div>
+        }
+        <div class="dpm-warning-box">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>All comments and likes on this post will also be removed.</span>
+        </div>
+      </div>
+
+      <div class="dpm-footer">
+        <button type="button" class="dpm-btn dpm-btn--cancel" (click)="onCancel()" [disabled]="deleting">
+          Cancel
+        </button>
+        <button type="button" class="dpm-btn dpm-btn--delete" (click)="onConfirm()" [disabled]="deleting">
+          @if (deleting) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+          } @else {
+            <i class="bi bi-trash3-fill me-2"></i>Delete Post
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

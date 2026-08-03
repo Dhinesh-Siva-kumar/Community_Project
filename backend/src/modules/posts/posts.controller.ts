@@ -2,26 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
 import * as postsService from './posts.service';
 import { FileValidationService } from '../../services/file-validation.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { env } from '../../config/env';
-
-// Helper to save buffer to disk
-async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
-  const uploadsBase = path.resolve(env.UPLOADS_PATH);
-  const ext = path.extname(originalName);
-  const filename = uuidv4() + ext;
-  const filePath = path.join(uploadsBase, filename);
-  
-  // Ensure directory exists
-  if (!fs.existsSync(uploadsBase)) {
-    fs.mkdirSync(uploadsBase, { recursive: true });
-  }
-  
-  fs.writeFileSync(filePath, buffer);
-  return filename;
-}
+import { saveBufferToFile } from '../../services/upload-storage.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -39,10 +20,10 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 
     // Save validated files to disk
     const filenames = await Promise.all(
-      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname, 'posts'))
     );
     const imagePaths = filenames.map((f) => `/uploads/${f}`);
-    
+
     const rawBody = { ...req.body };
     if (imagePaths.length) rawBody['images'] = imagePaths;
     const body = CreatePostDto.parse(rawBody);
@@ -55,7 +36,14 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   try {
     const query = ListPostsQueryDto.parse(req.query);
     const isAdmin = req.user?.role === 'ADMIN';
-    const result = await postsService.findAll({ ...query, isAdmin });
+    const result = await postsService.findAll({ ...query, isAdmin, currentUserId: req.user?.sub });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.findOne(req.params['id'] as string, req.user?.sub);
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -105,12 +93,22 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
 
     // Save validated files to disk
     const filenames = await Promise.all(
-      files.map((f) => saveBufferToFile(f.buffer, f.originalname))
+      files.map((f) => saveBufferToFile(f.buffer, f.originalname, 'posts'))
     );
     const imagePaths = filenames.map((f) => `/uploads/${f}`);
-    
+
     const rawBody = { ...req.body };
-    if (imagePaths.length) rawBody['images'] = imagePaths;
+    const incomingImages = rawBody['images'];
+    const retainedImages = Array.isArray(incomingImages)
+      ? incomingImages
+      : typeof incomingImages === 'string' && incomingImages.length > 0
+        ? [incomingImages]
+        : [];
+
+    if (retainedImages.length || imagePaths.length) {
+      rawBody['images'] = [...retainedImages, ...imagePaths];
+    }
+
     const body = UpdatePostBodyDto.parse(rawBody);
     const result = await postsService.updatePost(req.params['id'] as string, req.user!.sub, body);
     res.json(result);
@@ -127,6 +125,20 @@ export async function like(req: Request, res: Response, next: NextFunction): Pro
 export async function unlike(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await postsService.unlike(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function savePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.savePost(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function unsavePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.unsavePost(req.params['id'] as string, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }

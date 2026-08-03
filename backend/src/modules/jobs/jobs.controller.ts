@@ -2,25 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateJobDto, UpdateJobDto, ListJobsQueryDto } from './jobs.dto';
 import * as jobsService from './jobs.service';
 import { FileValidationService } from '../../services/file-validation.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { env } from '../../config/env';
-
-// Helper to save buffer to disk
-async function saveBufferToFile(buffer: Buffer, originalName: string): Promise<string> {
-  const uploadsBase = path.resolve(env.UPLOADS_PATH);
-  const ext = path.extname(originalName);
-  const filename = uuidv4() + ext;
-  const filePath = path.join(uploadsBase, filename);
-  
-  if (!fs.existsSync(uploadsBase)) {
-    fs.mkdirSync(uploadsBase, { recursive: true });
-  }
-  
-  fs.writeFileSync(filePath, buffer);
-  return filename;
-}
+import { saveBufferToFile } from '../../services/upload-storage.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -56,14 +38,14 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 
     // Save and extract company logo (single file under 'logo' field)
     if (logoFiles.length) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname);
+      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'jobs');
       rawBody['companyLogo'] = `/uploads/${logoFilename}`;
     }
 
     // Save and extract job gallery images (multiple files under 'images' field)
     if (imageFiles.length) {
       const imageFilenames = await Promise.all(
-        imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname))
+        imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'jobs'))
       );
       rawBody['images'] = imageFilenames.map((f) => `/uploads/${f}`);
     }
@@ -123,14 +105,14 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 
     // Save and extract company logo if provided
     if (logoFiles.length) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname);
+      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'jobs');
       rawBody['companyLogo'] = `/uploads/${logoFilename}`;
     }
 
     // Save and extract gallery images if provided
     if (imageFiles.length) {
       const imageFilenames = await Promise.all(
-        imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname))
+        imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'jobs'))
       );
       rawBody['images'] = imageFilenames.map((f) => `/uploads/${f}`);
     }

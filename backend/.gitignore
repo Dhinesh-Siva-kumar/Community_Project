@@ -3,14 +3,38 @@ dist/
 .env
 
 # Upload files (keep .gitkeep placeholders)
+# Ignore everything saved directly at the uploads root (posts/business/jobs/
+# events/standalone-upload endpoints save flat here), but re-include the
+# named subdirectories themselves so the more specific rules below can still
+# apply inside them (git won't descend into an ignored directory otherwise).
+uploads/*
+!uploads/profiles/
+!uploads/resumes/
+!uploads/certificates/
+!uploads/videos/
+!uploads/communities/
+!uploads/posts/
+!uploads/business/
+!uploads/events/
+!uploads/jobs/
 uploads/profiles/*
 uploads/resumes/*
 uploads/certificates/*
 uploads/videos/*
+uploads/communities/*
+uploads/posts/*
+uploads/business/*
+uploads/events/*
+uploads/jobs/*
 !uploads/profiles/.gitkeep
 !uploads/resumes/.gitkeep
 !uploads/certificates/.gitkeep
 !uploads/videos/.gitkeep
+!uploads/communities/.gitkeep
+!uploads/posts/.gitkeep
+!uploads/business/.gitkeep
+!uploads/events/.gitkeep
+!uploads/jobs/.gitkeep
 
 # Legacy NestJS artefacts
 prisma/

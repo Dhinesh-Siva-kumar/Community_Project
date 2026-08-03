@@ -321,7 +321,7 @@
             <!-- Logo / Avatar -->
             <div class="jb-card__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
               @if (getCompanyLogoSrc(job)) {
-                <img [src]="getCompanyLogoSrc(job)!" [alt]="job.companyName ?? job.title"
+                <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
                   class="jb-card__logo-img" loading="lazy" fetchpriority="high" />
               } @else {
                 <span class="jb-card__logo-initials">{{ getPosterInitials(job) }}</span>
@@ -438,7 +438,7 @@
                   <!-- Logo -->
                   <div class="jbd-company-header__logo-wrap">
                     @if (getCompanyLogoSrc(job)) {
-                      <img [src]="getCompanyLogoSrc(job)!" [alt]="job.companyName ?? 'Company'"
+                      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? 'Company'"
                         class="jbd-company-header__logo-img" />
                     } @else {
                       <div class="jbd-company-header__logo-ph" [style.background-color]="getAvatarColor(job)">
@@ -481,10 +481,17 @@
                           <i class="bi bi-globe2"></i> Website
                         </a>
                       }
-                    </div>
-                  </div>
-                </div>
-              }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Image Viewer Modal -->
+<app-image-viewer 
+  [images]="imageViewerImages()"
+  [isOpen]="imageViewerOpen()"
+  [initialIndex]="imageViewerInitialIndex()"
+  (close)="closeImageViewer()"></app-image-viewer>
 
               <!-- ═══ SECTION 2: JOB OVERVIEW (info cards grid) ═══ -->
               @if (job.workMode || job.shiftType || getExperienceLabel(job) || job.education || job.openings || job.jobType) {
@@ -780,21 +787,28 @@
                 </div>
               }
 
-              <!-- ═══ SECTION 9: GALLERY ═══ -->
-              @if (job.images && job.images.length) {
-                <div class="jbd-section">
-                  <div class="jbd-section__header">
-                    <i class="bi bi-images"></i>
-                    <span>Gallery</span>
+                <!-- ═══ SECTION 9: GALLERY ═══ -->
+                @if (job.images && job.images.length) {
+                  <div class="jbd-section">
+                    <div class="jbd-section__header">
+                      <i class="bi bi-images"></i>
+                      <span>Gallery</span>
+                    </div>
+                     <div class="jbd-gallery">
+                       @for (img of job.images; track $index) {
+                         <button 
+                           type="button"
+                           class="jbd-gallery__btn"
+                           [title]="'View image ' + ($index + 1)"
+                           (click)="openImageViewer(job.images, $index, $event)"
+                           [attr.aria-label]="'View image ' + ($index + 1) + ' of ' + job.images.length">
+                           <img [src]="img | imageUrl" [alt]="job.title + ' image ' + ($index + 1)"
+                             class="jbd-gallery__img" loading="lazy" fetchpriority="auto" />
+                         </button>
+                       }
+                     </div>
                   </div>
-                   <div class="jbd-gallery">
-                     @for (img of job.images; track $index) {
-                       <img [src]="img" [alt]="job.title + ' image ' + ($index + 1)"
-                         class="jbd-gallery__img" loading="lazy" fetchpriority="auto" />
-                     }
-                   </div>
-                </div>
-              }
+                }
 
               <!-- ═══ SECTION 10: ACTIONS ═══ -->
               <div class="jbd-actions-bar">
@@ -904,7 +918,7 @@
                   <label class="jb-label">Logo <span class="jb-label__optional">(optional)</span></label>
                   @if (logoPreview()) {
                     <div class="jb-logo-preview">
-                      <img [src]="logoPreview()!" alt="Logo preview" class="jb-logo-preview__img" />
+                      <img [src]="logoPreview()! | imageUrl" alt="Logo preview" class="jb-logo-preview__img" />
                       <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                     </div>
                   } @else {
@@ -1185,7 +1199,8 @@
                 <div><span class="jb-form-section__num">10</span><span class="jb-form-section__name">Job Images <span class="jb-label__optional">(optional)</span></span></div>
               </div>
               <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
-                [resetCounter]="fileUploadReset()" label="Drag & drop or click to upload"
+                [resetCounter]="fileUploadReset()" [existingPreviews]="editingJob()?.images ?? []"
+                label="Drag & drop or click to upload"
                 (filesChange)="onJobImagesChange($event)"></app-file-upload>
             </div>
 

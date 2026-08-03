@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 
 interface NavItem {
   label: string;
@@ -24,7 +25,7 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe],
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
 })

@@ -1,4 +1,13 @@
-<nav class="profile-tabs" role="tablist" aria-label="Profile sections">
+<nav class="profile-tabs" [class.profile-tabs--full]="fullWidth" role="tablist" aria-label="Profile sections">
+  @if (fullWidth && tabs.length > 0) {
+    <span
+      class="tab-indicator"
+      [style.width]="'calc((100% - 10px) / ' + tabs.length + ')'"
+      [style.transform]="'translateX(calc(' + activeIndex + ' * 100%))'"
+      [style.background]="activeTabBg"
+      aria-hidden="true"
+    ></span>
+  }
   @for (tab of tabs; track tab.id) {
     <button
       role="tab"
@@ -7,6 +16,7 @@
       [disabled]="tab.disabled"
       [attr.aria-selected]="tab.id === activeTab"
       [attr.aria-disabled]="tab.disabled || null"
+      [style.--tab-color]="tab.color"
       (click)="select(tab)"
     >
       @if (tab.icon) {

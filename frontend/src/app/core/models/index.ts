@@ -128,7 +128,11 @@ export interface CommunityRequest {
   is_private?: boolean;
   is_global?: boolean;
   is_default?: boolean;
+  community_mode?: CommunityMode;
+  rules?: string[];
 }
+
+export type CommunityMode = 'HELP_EMERGENCY' | 'ENQUIRE';
 
 export interface Community {
   id: string;
@@ -160,6 +164,10 @@ export interface Community {
   is_default?: boolean;
   // Joined field from interest_master (resolved via category JOIN in service)
   category_name?: string;
+  // Added in migration 20240009 — gates which tabs community-detail shows.
+  community_mode?: CommunityMode;
+  // Added in migration 20240011.
+  rules?: string[];
 }
 
 export interface CommunityMember {
@@ -171,7 +179,14 @@ export interface CommunityMember {
   joinedAt: string;
 }
 
-export type PostType = 'GENERAL' | 'HELP' | 'EMERGENCY';
+export interface CommunityAnalyticsCounts {
+  total: number;
+  global: number;
+  private: number;
+  default: number;
+}
+
+export type PostType = 'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
 export type PostStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Post {
@@ -191,6 +206,7 @@ export interface Post {
     likes: number;
   };
   isLiked?: boolean;
+  isSaved?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -379,6 +395,7 @@ export interface DashboardStats {
   totalBusinesses?: number;
   totalEvents?: number;
   totalJobs?: number;
+  blockedUsers?: number;
   recentActivity?: { type: string; message: string; createdAt: string }[];
   // User fields (returned by backend for USER role)
   joinedCommunities?: number;

@@ -6,6 +6,7 @@
 }
 
 .profile-tabs {
+  position: relative;
   display: inline-flex;
   gap: 4px;
   padding: 5px;
@@ -17,6 +18,47 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 
+  // ── Equal-width row variant ────────────────────────────────
+  // Rounded-rect radius (not the default pill) so this reads as one of the
+  // page's cards, matching .rail-card / .composer / .post — nested radius
+  // is $tab-radius (12px) on the inner tab/indicator against $radius-lg
+  // (16px) on the outer track, so the corners stay concentric.
+  &--full {
+    display: flex;
+    width: 100%;
+    gap: 0;
+    overflow: visible;
+    border-radius: $radius-lg;
+
+    .tab-indicator { border-radius: $tab-radius; }
+
+    .profile-tab {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 0;
+      justify-content: center;
+      border-radius: $tab-radius;
+
+      &.active {
+        background: transparent;
+        box-shadow: none;
+      }
+    }
+  }
+
+  .tab-indicator {
+    position: absolute;
+    z-index: 0;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    border-radius: $radius-full;
+    background: $color-bg-card;
+    box-shadow: $shadow-2;
+    transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1), background-color 220ms ease;
+    pointer-events: none;
+  }
+
   .profile-tab {
     display: inline-flex;
     align-items: center;
@@ -26,22 +68,24 @@
     border-radius: $radius-full;
     background: transparent;
     color: $color-text-muted;
+    font-family: $font-family-body;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     white-space: nowrap;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    transition: background 220ms ease, color 220ms ease, box-shadow 220ms ease;
 
     i { font-size: 0.95em; }
 
     &:hover:not(.active):not(:disabled) {
-      color: $color-text-primary;
+      color: var(--tab-color, #{$color-primary-darker});
       background: rgba($color-primary, 0.1);
+      background: color-mix(in srgb, var(--tab-color, #{$color-primary}) 14%, transparent);
     }
 
     &.active {
       background: $color-bg-card;
-      color: $color-amber-700;
+      color: var(--tab-color, #{$color-primary-darker});
       box-shadow: $shadow-2;
     }
 
