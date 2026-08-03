@@ -3,34 +3,47 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { CommunityService } from '../../../core/services/community.service';
-import { EventService } from '../../../core/services/event.service';
+import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Community, Event as AppEvent, PaginatedResponse } from '../../../core/models';
+import { Community, Post, PaginatedResponse } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
-import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 
 export type CommunityTab = 'all' | 'joined' | 'trending';
+export type CommunityViewMode = 'grid' | 'list';
+
+interface FilterTab {
+  id: CommunityTab;
+  label: string;
+  icon: string;
+  badge?: number;
+}
+
+// Generic words that describe the entity itself rather than a real subject/interest —
+// excluded so "topic" chips surface meaningful keywords instead of structural nouns.
+const TOPIC_STOPWORDS = new Set([
+  'community', 'communities', 'group', 'network', 'association', 'society',
+  'circle', 'hub', 'club', 'team', 'collective', 'organization', 'organisation',
+  'people', 'members', 'connect', 'this', 'that', 'with', 'from', 'their',
+]);
 
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, ImageUrlPipe, ProfileTabsComponent],
+  imports: [CommonModule, RouterLink, ImageUrlPipe],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
 export class UserCommunityComponent implements OnInit {
   private communityService = inject(CommunityService);
-  private eventService      = inject(EventService);
+  private postService       = inject(PostService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
   private router            = inject(Router);
 
   // ── Core data signals ──────────────────────────────────────
-  communities     = signal<Community[]>([]);
-  upcomingEvents  = signal<AppEvent[]>([]);
-  loading         = signal(true);
-  eventsLoading   = signal(true);
+  communities  = signal<Community[]>([]);
+  loading      = signal(true);
 
   // ── Pagination ─────────────────────────────────────────────
   searchTerm   = signal('');
@@ -45,32 +58,17 @@ export class UserCommunityComponent implements OnInit {
 
   // ── UI state ───────────────────────────────────────────────
   activeTab = signal<CommunityTab>('all');
+  viewMode  = signal<CommunityViewMode>('grid');
 
-  // ── Profile-tabs compatible tab definitions ────────────────
-  pageTabs = computed<ProfileTab[]>(() => [
+  // ── Filter-tab definitions (segmented control) ──────────────
+  pageTabs = computed<FilterTab[]>(() => [
     { id: 'all',      label: 'All',      icon: 'bi-grid-3x3-gap', badge: this.totalItems() || undefined },
     { id: 'joined',   label: 'Joined',   icon: 'bi-person-check', badge: this.joinedCommunities().length || undefined },
-    { id: 'trending', label: 'Trending', icon: 'bi-fire' },
+    { id: 'trending', label: 'Trending', icon: 'bi-lightning-fill' },
   ]);
 
   // ── Joined community ID tracker ───────────────────────────
   joinedCommunityIds = signal<Set<string>>(new Set());
-
-  // ── Computed: current user ─────────────────────────────────
-  currentUser   = computed(() => this.authService.currentUser());
-  currentUserId = computed(() => this.currentUser()?.id ?? '');
-
-  getUserInitials(): string {
-    const user = this.currentUser();
-    if (!user) return 'U';
-    return (user.displayName?.charAt(0) || user.userName?.charAt(0) || 'U').toUpperCase();
-  }
-
-  getUserDisplayName(): string {
-    const user = this.currentUser();
-    if (!user) return 'there';
-    return user.displayName || user.userName || 'there';
-  }
 
   // ── Computed: communities by tab ───────────────────────────
   filteredCommunities = computed(() => {
@@ -106,7 +104,7 @@ export class UserCommunityComponent implements OnInit {
     this.communities().filter((c) => c.is_joined || this.isJoined(c.id))
   );
 
-  // ── Computed: featured communities (top 4 by member count) ─
+  // ── Computed: spotlight communities (top 4 by member count) ─
   featuredCommunities = computed(() =>
     [...this.communities()]
       .sort((a, b) => (b._count?.members ?? 0) - (a._count?.members ?? 0))
@@ -119,37 +117,41 @@ export class UserCommunityComponent implements OnInit {
   );
 
   // ── Computed: trending topic chips (derived from data) ─────
+  // Keyword-mines community names rather than reading a real "category" field
+  // (Community has none). A word only becomes a topic chip if it appears in at
+  // least 2 different community names, so one-off structural nouns don't drown
+  // out words that genuinely group communities together.
   trendingTopics = computed((): string[] => {
-    const names = this.communities().map((c) => c.name);
-    // Extract meaningful single/double word tokens from community names
     const wordMap = new Map<string, number>();
-    names.forEach((name) => {
-      name
+
+    this.communities().forEach((c) => {
+      const seenInThisName = new Set<string>();
+      c.name
         .split(/[\s\-_,]+/)
         .filter((w) => w.length > 3)
         .forEach((word) => {
           const key = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          if (TOPIC_STOPWORDS.has(key.toLowerCase()) || seenInThisName.has(key)) return;
+          seenInThisName.add(key);
           wordMap.set(key, (wordMap.get(key) ?? 0) + 1);
         });
     });
+
     return Array.from(wordMap.entries())
+      .filter(([, count]) => count >= 2)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, 8)
       .map(([word]) => word);
   });
 
-  // ── Computed: upcoming events (next 4 future events) ───────
-  nextEvents = computed(() =>
-    [...this.upcomingEvents()]
-      .filter((e) => new Date(e.eventDate) >= new Date())
-      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-      .slice(0, 4)
-  );
+  // ── Popular posts (sidebar) ─────────────────────────────────
+  popularPosts  = signal<Post[]>([]);
+  postsLoading  = signal(true);
 
   // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadCommunities();
-    this.loadUpcomingEvents();
+    this.loadPopularPosts();
   }
 
   // ── Load communities ───────────────────────────────────────
@@ -176,16 +178,24 @@ export class UserCommunityComponent implements OnInit {
     });
   }
 
-  // ── Load upcoming events ───────────────────────────────────
-  loadUpcomingEvents(): void {
-    this.eventsLoading.set(true);
-    this.eventService.getEvents().subscribe({
-      next: (response: PaginatedResponse<AppEvent>) => {
-        this.upcomingEvents.set(response.data);
-        this.eventsLoading.set(false);
+  // ── Load popular posts (sidebar) ───────────────────────────
+  // Fetches recent posts across all communities and ranks them client-side by
+  // engagement (likes + comments) — same pattern as featuredCommunities above,
+  // using real _count fields rather than a dedicated "popular" endpoint.
+  loadPopularPosts(): void {
+    this.postsLoading.set(true);
+    this.postService.getPosts(undefined, { limit: 20 }).subscribe({
+      next: (response: PaginatedResponse<Post>) => {
+        const ranked = [...response.data].sort((a, b) => {
+          const scoreA = (a._count?.likes ?? 0) + (a._count?.comments ?? 0);
+          const scoreB = (b._count?.likes ?? 0) + (b._count?.comments ?? 0);
+          return scoreB - scoreA;
+        });
+        this.popularPosts.set(ranked.slice(0, 3));
+        this.postsLoading.set(false);
       },
       error: () => {
-        this.eventsLoading.set(false);
+        this.postsLoading.set(false);
       },
     });
   }
@@ -207,6 +217,10 @@ export class UserCommunityComponent implements OnInit {
   setTab(tab: CommunityTab): void {
     this.activeTab.set(tab);
     this.searchTerm.set('');
+  }
+
+  setViewMode(mode: CommunityViewMode): void {
+    this.viewMode.set(mode);
   }
 
   // ── Search ─────────────────────────────────────────────────
@@ -275,10 +289,6 @@ export class UserCommunityComponent implements OnInit {
     this.router.navigate(['/user/community', communityId]);
   }
 
-  navigateToEvents(): void {
-    this.router.navigate(['/user/events']);
-  }
-
   // ── Pagination ─────────────────────────────────────────────
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
@@ -300,35 +310,14 @@ export class UserCommunityComponent implements OnInit {
     return pages;
   }
 
-  // ── Helpers ────────────────────────────────────────────────
-  formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day:   'numeric',
-      year:  'numeric',
-    });
+  // ── Initials for avatar tiles (used when no cover image) ──
+  getInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).slice(0, 2);
+    const initials = parts.map((p) => p.charAt(0).toUpperCase()).join('');
+    return initials || '?';
   }
 
-  formatEventDate(dateStr: string): { day: string; month: string; weekday: string } {
-    const d = new Date(dateStr);
-    return {
-      day:     d.toLocaleDateString('en-US', { day: '2-digit' }),
-      month:   d.toLocaleDateString('en-US', { month: 'short' }),
-      weekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
-    };
-  }
-
-  isEventSoon(dateStr: string): boolean {
-    const diff = new Date(dateStr).getTime() - Date.now();
-    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000; // within 3 days
-  }
-
-  truncate(text: string | undefined, length: number): string {
-    if (!text) return '';
-    return text.length > length ? text.substring(0, length) + '…' : text;
-  }
-
-  // ── Cover gradient placeholder (based on name hash) ───────
+  // ── Avatar/cover gradient placeholder (based on name hash) ─
   getCoverGradient(name: string): string {
     const gradients = [
       'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',

@@ -9,7 +9,7 @@ import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 export class PostService {
   private api = inject(ApiService);
 
-  getPosts(communityId: string, params?: Record<string, any>): Observable<PaginatedResponse<Post>> {
+  getPosts(communityId?: string, params?: Record<string, any>): Observable<PaginatedResponse<Post>> {
     return this.api.get<PaginatedResponse<Post>>('/posts', { communityId, ...params });
   }
 
