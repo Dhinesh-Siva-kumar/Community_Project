@@ -3,10 +3,25 @@ import { CommonModule, DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../../../core/services/user.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { UserDetail, User } from '../../../../../core/models';
+import { UserDetail, User, AuditLog, AuditLogResponse } from '../../../../../core/models';
 import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 
 type DrawerTab = 'overview' | 'activity' | 'actions';
+
+// Same mapping as the (now-retired) global activity-log-drawer, so a user's
+// per-account log reads with the same color/icon language elsewhere in the app.
+const ACTION_COLORS: Record<string, string> = {
+  USER_CREATED: '#22c55e', USER_DELETED: '#ef4444', USER_BLOCKED: '#f59e0b',
+  USER_UNBLOCKED: '#22c55e', ROLE_CHANGED: '#6366f1', PASSWORD_RESET: '#0ea5e9',
+  PROFILE_UPDATE: '#8b5cf6', TRUST_GRANTED: '#f59e0b', TRUST_REVOKED: '#94a3b8',
+};
+const ACTION_ICONS: Record<string, string> = {
+  USER_CREATED: 'bi-person-plus-fill', USER_DELETED: 'bi-trash-fill',
+  USER_BLOCKED: 'bi-lock-fill', USER_UNBLOCKED: 'bi-unlock-fill',
+  ROLE_CHANGED: 'bi-person-gear', PASSWORD_RESET: 'bi-key-fill',
+  PROFILE_UPDATE: 'bi-pencil-fill', TRUST_GRANTED: 'bi-shield-fill-check',
+  TRUST_REVOKED: 'bi-shield-x',
+};
 
 @Component({
   selector: 'app-user-detail-drawer',
@@ -34,7 +49,55 @@ export class UserDetailDrawerComponent implements OnInit {
   newPassword = signal('');
   showResetPw = signal(false);
 
+  // Per-user activity log
+  auditLogs       = signal<AuditLog[]>([]);
+  auditLoading    = signal(false);
+  auditLoaded     = false;
+  auditTotal      = signal(0);
+  auditTotalPages = signal(1);
+  auditPage       = signal(1);
+
   ngOnInit(): void { this.loadUser(); }
+
+  selectTab(tab: DrawerTab): void {
+    this.activeTab.set(tab);
+    if (tab === 'activity' && !this.auditLoaded) this.loadAuditLog();
+  }
+
+  loadAuditLog(): void {
+    this.auditLoading.set(true);
+    this.auditLoaded = true;
+    this.userService.getAuditLogs({ page: this.auditPage(), limit: 15, userId: this.userId }).subscribe({
+      next: (res: AuditLogResponse) => {
+        this.auditLogs.set(res.data);
+        this.auditTotal.set(res.total);
+        this.auditTotalPages.set(res.totalPages);
+        this.auditLoading.set(false);
+      },
+      error: () => { this.auditLoading.set(false); },
+    });
+  }
+
+  goToAuditPage(p: number): void {
+    if (p < 1 || p > this.auditTotalPages()) return;
+    this.auditPage.set(p);
+    this.loadAuditLog();
+  }
+
+  getActionColor(action: string): string { return ACTION_COLORS[action] ?? '#94a3b8'; }
+  getActionIcon(action: string):  string { return ACTION_ICONS[action]  ?? 'bi-activity'; }
+
+  formatAction(action: string): string {
+    return action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  getAuditDesc(log: AuditLog): string {
+    const m = log.metadata as any;
+    if (!m) return '';
+    if (m.from && m.to) return `Role changed from ${m.from} to ${m.to}`;
+    if (m.role)         return `Created as ${m.role}`;
+    return '';
+  }
 
   loadUser(): void {
     this.loading.set(true);

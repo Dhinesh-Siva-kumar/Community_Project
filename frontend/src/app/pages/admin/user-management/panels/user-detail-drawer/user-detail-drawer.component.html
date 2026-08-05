@@ -106,19 +106,19 @@
     <div class="ud-tabs" role="tablist">
       <button class="ud-tab" role="tab"
         [class.ud-tab--active]="activeTab() === 'overview'"
-        (click)="activeTab.set('overview')">
+        (click)="selectTab('overview')">
         <i class="bi bi-person-lines-fill"></i>
         <span>Overview</span>
       </button>
       <button class="ud-tab" role="tab"
         [class.ud-tab--active]="activeTab() === 'activity'"
-        (click)="activeTab.set('activity')">
-        <i class="bi bi-graph-up-arrow"></i>
-        <span>Activity</span>
+        (click)="selectTab('activity')">
+        <i class="bi bi-clock-history"></i>
+        <span>Activity Log</span>
       </button>
       <button class="ud-tab" role="tab"
         [class.ud-tab--active]="activeTab() === 'actions'"
-        (click)="activeTab.set('actions')">
+        (click)="selectTab('actions')">
         <i class="bi bi-sliders"></i>
         <span>Actions</span>
       </button>
@@ -226,72 +226,66 @@
         }
       }
 
-      <!-- ──────────── ACTIVITY ──────────── -->
+      <!-- ──────────── ACTIVITY LOG ──────────── -->
       @if (activeTab() === 'activity') {
-        <div class="ud-stat-row">
-          <div class="ud-stat-card">
-            <div class="ud-stat-card__icon" style="--c:#6366f1;--bg:#eef2ff">
-              <i class="bi bi-file-richtext-fill"></i>
-            </div>
-            <div class="ud-stat-card__val">{{ u.activity.posts }}</div>
-            <div class="ud-stat-card__lbl">Posts Created</div>
+        @if (auditLoading()) {
+          <div class="ud-log-skeleton">
+            @for (_ of [1,2,3,4]; track $index) { <div class="ud-log-skel-row"></div> }
           </div>
-          <div class="ud-stat-card">
-            <div class="ud-stat-card__icon" style="--c:#0ea5e9;--bg:#e0f2fe">
-              <i class="bi bi-chat-dots-fill"></i>
-            </div>
-            <div class="ud-stat-card__val">{{ u.activity.comments }}</div>
-            <div class="ud-stat-card__lbl">Comments</div>
+        } @else if (auditLogs().length === 0) {
+          <div class="ud-log-empty">
+            <i class="bi bi-clock-history"></i>
+            <p>No recorded activity for this user yet.</p>
           </div>
-          <div class="ud-stat-card">
-            <div class="ud-stat-card__icon" style="--c:#22c55e;--bg:#dcfce7">
-              <i class="bi bi-people-fill"></i>
-            </div>
-            <div class="ud-stat-card__val">{{ u.activity.communities }}</div>
-            <div class="ud-stat-card__lbl">Communities</div>
+        } @else {
+          <div class="ud-timeline">
+            @for (log of auditLogs(); track log.id; let last = $last) {
+              <div class="ud-tl-item">
+                <div class="ud-tl-item__rail">
+                  <span class="ud-tl-item__dot" [style.background]="getActionColor(log.action)"></span>
+                  @if (!last) { <span class="ud-tl-item__line"></span> }
+                </div>
+                <div class="ud-tl-item__card">
+                  <div class="ud-tl-item__head">
+                    <span class="ud-tl-item__icon"
+                      [style.background]="getActionColor(log.action) + '1a'"
+                      [style.color]="getActionColor(log.action)">
+                      <i class="bi" [ngClass]="getActionIcon(log.action)"></i>
+                    </span>
+                    <div class="ud-tl-item__titlewrap">
+                      <span class="ud-tl-item__title">{{ formatAction(log.action) }}</span>
+                      @if (getAuditDesc(log)) {
+                        <p class="ud-tl-item__desc">{{ getAuditDesc(log) }}</p>
+                      }
+                    </div>
+                  </div>
+                  <div class="ud-tl-item__foot">
+                    <span class="ud-tl-item__time">
+                      <i class="bi bi-clock"></i>{{ log.createdAt | date:'d MMM yyyy, h:mm a' }}
+                    </span>
+                    @if (log.actor) {
+                      <span class="ud-tl-item__actor">
+                        <i class="bi bi-person-fill"></i>{{ log.actor.displayName }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
           </div>
-        </div>
 
-        <!-- Engagement summary -->
-        <div class="ud-engagement">
-          <div class="ud-engagement__header">
-            <i class="bi bi-lightning-charge-fill"></i>
-            <span>Engagement Summary</span>
-          </div>
-          <div class="ud-engagement__list">
-            <div class="ud-engagement__row">
-              <span class="ud-engagement__key">Total contributions</span>
-              <span class="ud-engagement__val">{{ u.activity.posts + u.activity.comments }}</span>
+          @if (auditTotalPages() > 1) {
+            <div class="ud-log-pagination">
+              <button class="ud-pg-btn" [disabled]="auditPage() === 1" (click)="goToAuditPage(auditPage() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <span class="ud-log-pagination__label">Page {{ auditPage() }} of {{ auditTotalPages() }}</span>
+              <button class="ud-pg-btn" [disabled]="auditPage() === auditTotalPages()" (click)="goToAuditPage(auditPage() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
             </div>
-            <div class="ud-engagement__row">
-              <span class="ud-engagement__key">Communities joined</span>
-              <span class="ud-engagement__val">{{ u.activity.communities }}</span>
-            </div>
-            <div class="ud-engagement__row">
-              <span class="ud-engagement__key">Account status</span>
-              <span class="ud-engagement__val">
-                <span class="ud-pill ud-pill--sm"
-                  [class.ud-pill--active]="!u.isBlocked && u.isActive"
-                  [class.ud-pill--blocked]="u.isBlocked"
-                  [class.ud-pill--inactive]="!u.isBlocked && !u.isActive">
-                  {{ getStatusLabel(u) }}
-                </span>
-              </span>
-            </div>
-            <div class="ud-engagement__row">
-              <span class="ud-engagement__key">Trust level</span>
-              <span class="ud-engagement__val">
-                @if (u.isTrusted) {
-                  <span class="ud-pill ud-pill--sm ud-pill--trusted">
-                    <i class="bi bi-star-fill"></i> Trusted
-                  </span>
-                } @else {
-                  <span class="ud-pill ud-pill--sm ud-pill--inactive">Standard</span>
-                }
-              </span>
-            </div>
-          </div>
-        </div>
+          }
+        }
       }
 
       <!-- ──────────── ACTIONS ──────────── -->

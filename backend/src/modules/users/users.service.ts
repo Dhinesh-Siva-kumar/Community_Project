@@ -333,7 +333,7 @@ export async function adminResetPassword(adminId: string, userId: string, data: 
 // ---------------------------------------------------------------------------
 // Admin — audit log
 // ---------------------------------------------------------------------------
-export async function getAuditLogs(page: number, limit: number, action?: string) {
+export async function getAuditLogs(page: number, limit: number, action?: string, userId?: string) {
   const offset = (page - 1) * limit;
 
   const query = db('audit_logs as al')
@@ -351,6 +351,11 @@ export async function getAuditLogs(page: number, limit: number, action?: string)
   if (action) {
     query.where('al.action', action);
     countQuery.where({ action });
+  }
+
+  if (userId) {
+    query.where('al.resource', 'users').andWhere('al.resource_id', userId);
+    countQuery.where({ resource: 'users', resource_id: userId });
   }
 
   const [logs, [{ total }]] = await Promise.all([

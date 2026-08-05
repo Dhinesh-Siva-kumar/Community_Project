@@ -111,7 +111,7 @@ export class UserService {
   }
 
   // ── Admin — audit & notifications ────────────────────────────────────────
-  getAuditLogs(params?: { page?: number; limit?: number; action?: string }): Observable<AuditLogResponse> {
+  getAuditLogs(params?: { page?: number; limit?: number; action?: string; userId?: string }): Observable<AuditLogResponse> {
     return this.api.get<AuditLogResponse>('/users/audit-logs', params ?? {});
   }
 
