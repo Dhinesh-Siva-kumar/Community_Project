@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -81,9 +81,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   selectedImage      = signal<File | null>(null);
   deleteConfirmId    = signal<string | null>(null);
   formSubmitAttempted = signal(false);
+  showCreateFab      = signal(false);
 
   private previousBodyOverflow: string | null = null;
   private previousHtmlOverflow: string | null = null;
+  private scrollTicking = false;
 
   // ── Filter signals ────────────────────────────────────────
   filterCountry       = signal<string | number | null>(null);
@@ -154,6 +156,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     const saved = Number(sessionStorage.getItem(PAGE_STORAGE_KEY));
     sessionStorage.removeItem(PAGE_STORAGE_KEY);
     if (saved > 0) this.currentPage.set(saved);
+  }
+
+  /** Reveals the floating create button once the page header has scrolled out of view. */
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showCreateFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
   }
 
   ngOnDestroy(): void {

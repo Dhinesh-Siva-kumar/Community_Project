@@ -1,4 +1,4 @@
-<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
     <h2 class="jb-page-header__title">Communities Management</h2>
@@ -423,6 +423,12 @@
      }
    }
 }
+
+<!-- ── Floating create button — shown while scrolling up ──────── -->
+<button class="community-fab" [class.community-fab--visible]="showCreateFab()"
+        (click)="openCreateModal()" aria-label="Create a new community" title="Create Community">
+  <i class="bi bi-plus-lg"></i>
+</button>
 
 <!-- Create / Edit Modal Backdrop -->
 @if (showModal()) {
