@@ -131,18 +131,20 @@
       <!-- User dropdown -->
       <div class="user-dropdown-wrapper">
         <button
-          class="user-avatar-btn"
+          class="user-profile-btn"
           (click)="toggleUserDropdown()"
           type="button"
           [attr.aria-expanded]="userDropdownOpen()"
-          aria-label="User menu"
+          [attr.aria-label]="'User menu — ' + getUserFullName()"
           aria-haspopup="menu"
         >
           @if (authService.currentUser()?.avatar) {
-            <img [src]="authService.currentUser()!.avatar | imageUrl" alt="Profile picture" class="avatar-img" />
+            <img [src]="authService.currentUser()!.avatar | imageUrl" alt="" class="avatar-img" />
           } @else {
             <div class="avatar-initials" aria-hidden="true">{{ getUserInitials() }}</div>
           }
+          <span class="user-profile-name">{{ getUserFullName() }}</span>
+          <i class="bi bi-chevron-down user-profile-caret" [class.user-profile-caret--open]="userDropdownOpen()" aria-hidden="true"></i>
         </button>
 
         @if (userDropdownOpen()) {

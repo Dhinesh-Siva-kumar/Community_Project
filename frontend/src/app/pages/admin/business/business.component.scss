@@ -76,13 +76,115 @@
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: $radius-lg;
   margin-bottom: $spacing-lg;
-  position: sticky;
-  top: 70px;
-  z-index: $z-sticky;
-  backdrop-filter: blur(12px);
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
 
   &__left { min-width: 0; }
+}
+
+// ── FLOATING HEADER ACTION — icon-only, appears once scrolled past the header ──
+.admin-page-fab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: $z-fixed;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffbeb;
+  color: $color-primary-darker;
+  box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px) scale(0.9);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+
+  i { font-size: 1.2rem; }
+
+  &:hover {
+    background: #fef3c7;
+    border-color: rgba(217, 119, 6, 0.6);
+    color: #78350f;
+    box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
+  }
+
+  &--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.55);
+    outline-offset: 2px;
+  }
+
+  @include media-sm-max {
+    right: 18px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+// ── Header CTA — light amber pill instead of a solid gradient fill ──
+.jb-btn--header-cta {
+  position: relative;
+  isolation: isolate;
+  min-height: 40px;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.01em;
+
+  i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.12);
+    font-size: 0.8rem;
+    transition: background 0.2s ease;
+  }
+
+  &.jb-btn--neon {
+    background: #fffbeb;
+    border: 1.5px solid rgba(245, 158, 11, 0.45);
+    color: $color-primary-darker;
+    box-shadow: 0 2px 8px rgba(28, 25, 23, 0.08);
+
+    &:hover:not(:disabled) {
+      background: #fef3c7;
+      border-color: rgba(217, 119, 6, 0.6);
+      color: #78350f;
+      box-shadow: 0 4px 14px rgba(28, 25, 23, 0.12);
+
+      i {
+        background: rgba(217, 119, 6, 0.18);
+      }
+    }
+
+    &:active:not(:disabled) {
+      box-shadow: 0 2px 6px rgba(28, 25, 23, 0.08);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(245, 158, 11, 0.45);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.18), 0 2px 8px rgba(28, 25, 23, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      box-shadow: none;
+    }
+  }
 }
 
 .jb-page-header__title {
@@ -1327,18 +1429,9 @@
 
 
 
-.biz-select {
-  height: 40px;
-  padding: 0 10px;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-md;
-  background: #fff;
-  font-size: $font-size-sm;
-  color: $color-stone-700;
-  cursor: pointer;
-  outline: none;
-  @include transition-quick(border-color);
-  &:focus { border-color: $color-primary; }
+.biz-sort-select {
+  width: 190px;
+  flex-shrink: 0;
 }
 
 .biz-view-toggle {
@@ -1369,160 +1462,173 @@
 // ── Grid / List layouts ───────────────────────────────────────
 .biz-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: $spacing-lg;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
   margin-bottom: $spacing-lg;
 }
 
 .biz-list-view {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: $spacing-lg;
 
   .biz-cat-card {
     flex-direction: row;
     align-items: center;
-    padding: $spacing-md $spacing-lg;
-    text-align: left;
+    padding: 10px $spacing-md;
     gap: $spacing-md;
 
-    &__icon-wrap { width: 48px; height: 48px; min-width: 48px; font-size: 1.3rem; }
-    &__name { font-size: $font-size-md; margin: 0; }
-    &__desc { display: none; }
-    &__count { margin: 0; }
-    &__status { margin: 0; }
-    &__actions { margin-left: auto; margin-top: 0; }
+    &__row { flex: 1; min-width: 0; }
+    &__desc-wrap { display: none; }
   }
 }
 
-// ── Category Card ─────────────────────────────────────────────
+// ── Category Card — compact, data-first admin card ─────────────
 .biz-cat-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: $spacing-lg $spacing-md $spacing-md;
+  gap: 8px;
+  padding: $spacing-md;
   background: #fff;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-lg;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
-  box-shadow: 0 1px 3px rgba(28,25,23,0.06);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 1px 2px rgba(28,25,23,0.04);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(28,25,23,0.12);
     border-color: var(--cat-accent);
+    box-shadow: 0 4px 14px rgba(28,25,23,0.08);
+  }
 
-    .biz-cat-card__icon-wrap { transform: scale(1.08); }
+  // Full description only reveals when the cursor is over the description
+  // text itself, not anywhere on the card.
+  &__desc-wrap--has-more:hover &__desc-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  &:focus-within .biz-cat-card__desc-wrap--has-more .biz-cat-card__desc-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
   }
 
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
-  // Top accent bar
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--cat-accent);
-    opacity: 0;
-    transition: opacity 250ms ease;
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
   }
-  &:hover::before { opacity: 1; }
 
-  &__icon-wrap {
-    width: 64px;
-    height: 64px;
-    border-radius: $radius-full;
+  &__icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: $radius-md;
     background: var(--cat-accent-bg);
-    border: 2px solid var(--cat-accent-border);
+    border: 1px solid var(--cat-accent-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: $spacing-sm;
-    font-size: 1.7rem;
+    font-size: 1.05rem;
     color: var(--cat-accent);
-    transition: transform 250ms ease;
   }
+
+  &__main { min-width: 0; flex: 1; }
 
   &__name {
     font-family: $font-family-header;
-    font-size: 1rem;
+    font-size: $font-size-sm;
     font-weight: $font-weight-bold;
     color: $color-stone-900;
-    margin: 0 0 5px;
+    margin: 0;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-stone-500;
+    font-weight: $font-weight-medium;
+    margin-top: 1px;
+
+    &--empty { color: $color-stone-400; font-style: italic; }
+  }
+
+  &__desc-wrap {
+    position: relative;
   }
 
   &__desc {
     font-size: $font-size-xs;
     color: $color-text-muted;
     line-height: 1.5;
-    margin: 0 0 $spacing-sm;
+    margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  &__count {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    color: $color-stone-600;
-    margin-bottom: 6px;
-    .bi { color: var(--cat-accent); }
-
-    &--empty { color: $color-stone-400; font-style: italic; font-weight: normal; }
+  &__desc-wrap--has-more &__desc {
+    cursor: help;
   }
 
-  &__status {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: $font-weight-bold;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #15803D;
-    background: rgba(22,163,74,0.10);
-    border: 1px solid rgba(22,163,74,0.25);
-    padding: 2px 8px;
-    border-radius: $radius-full;
-    margin-bottom: $spacing-sm;
-    .bi { font-size: 7px; color: #16A34A; }
+  // Full description — revealed as a floating panel on hover/focus so it
+  // never pushes the card taller or reflows sibling cards in the grid.
+  &__desc-popover {
+    position: absolute;
+    left: -1px;
+    right: -1px;
+    top: 0;
+    z-index: 5;
+    background: #fff;
+    color: $color-stone-700;
+    font-size: $font-size-xs;
+    line-height: 1.55;
+    padding: 8px 10px;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    box-shadow: 0 10px 26px rgba(28,25,23,0.16);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-3px);
+    transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+    pointer-events: none;
   }
 
   &__actions {
     display: flex;
     gap: 6px;
-    margin-top: auto;
-    padding-top: $spacing-sm;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   &__action-btn {
-    width: 36px; height: 36px;
+    width: 30px; height: 30px;
     border-radius: $radius-sm;
-    border: 1.5px solid transparent;
-    font-size: 0.82rem;
+    border: 1px solid transparent;
+    font-size: 0.75rem;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     @include transition-short(all);
 
     &--edit {
-      background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #0284C7;
-      &:hover { background: rgba(14,165,233,0.18); border-color: #0284C7; transform: translateY(-1px); }
+      background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.22); color: #0284C7;
+      &:hover { background: rgba(14,165,233,0.16); border-color: #0284C7; }
     }
     &--delete {
-      background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger;
-      &:hover { background: rgba(220,38,38,0.15); border-color: $color-danger; transform: translateY(-1px); }
-      &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+      background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.2); color: $color-danger;
+      &:hover { background: rgba(220,38,38,0.14); border-color: $color-danger; }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
     }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
@@ -1564,17 +1670,18 @@ $accents: (
 .biz-cat-skeleton {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: $spacing-lg $spacing-md $spacing-md;
+  padding: $spacing-md;
   background: #fff;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-lg;
-  gap: 10px;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  gap: 8px;
 
-  &__icon  { width: 64px; height: 64px; border-radius: $radius-full; }
-  &__line  { height: 14px; width: 70%; border-radius: $radius-sm; }
-  &__line--short { width: 45%; }
-  &__badge { height: 22px; width: 80px; border-radius: $radius-full; }
+  &__row  { display: flex; align-items: center; gap: 10px; }
+  &__icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: $radius-md; }
+  &__lines { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  &__line  { height: 12px; width: 70%; border-radius: $radius-sm; }
+  &__line--short { width: 45%; height: 10px; }
+  &__actions { height: 30px; width: 100%; border-radius: $radius-sm; margin-top: 2px; }
 }
 
 // ── Empty state ───────────────────────────────────────────────
@@ -1592,12 +1699,12 @@ $accents: (
   &__sub   { font-size: $font-size-sm; color: $color-text-muted; max-width: 320px; line-height: 1.6; margin-bottom: $spacing-lg; }
 }
 // ── Responsive ────────────────────────────────────────────────
-@include media-md-max {
-  .biz-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: $spacing-md; }
+@include media-lg-max {
+  .biz-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @include media-sm-max {
-  .biz-grid { grid-template-columns: 1fr 1fr; gap: $spacing-sm; }
+  .biz-grid { grid-template-columns: 1fr; gap: $spacing-sm; }
 }
 
 

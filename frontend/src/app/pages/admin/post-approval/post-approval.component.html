@@ -2,13 +2,13 @@
      ADMIN POST APPROVAL — Premium Design
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
     <h2 class="jb-page-header__title">Post Approval</h2>
     <p class="jb-page-header__sub">Review and moderate community posts pending approval.</p>
   </div>
-  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="loadPendingPosts()" aria-label="Refresh pending posts">
+  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="loadPendingPosts()" aria-label="Refresh pending posts">
     <i class="bi bi-arrow-clockwise"></i> Refresh
   </button>
 </div>
@@ -246,3 +246,9 @@
     </div>
   }
 }
+
+<!-- ── Floating refresh button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="loadPendingPosts()" aria-label="Refresh pending posts" title="Refresh">
+  <i class="bi bi-arrow-clockwise"></i>
+</button>

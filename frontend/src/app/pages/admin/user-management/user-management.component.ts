@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, inject, signal, computed, ChangeDetectionStrategy,
+  Component, OnInit, HostListener, inject, signal, computed, ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +35,20 @@ export class UserManagementComponent implements OnInit {
   totalPages = signal(1);
   currentPage = signal(1);
   pageSize   = signal(10);
+
+  // ── Floating header action (shows once scrolled past the page header) ─────
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
 
   // ── Filter state ──────────────────────────────────────────────────────────
   searchInput  = signal('');      // live-bound to input

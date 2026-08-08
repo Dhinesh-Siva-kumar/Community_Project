@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, inject, signal, computed
+  Component, OnInit, OnDestroy, HostListener, inject, signal, computed
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -202,6 +202,10 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   jobToDelete       = signal<Job | null>(null);
   deleting          = signal(false);
 
+  // ─── Floating header action (shows once scrolled past the page header) ───
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
   // Admin always has permission — helper kept for HTML symmetry
   canEditJob(_job: Job): boolean { return true; }
 
@@ -298,6 +302,16 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
   }
 
   private loadCountries(): void {

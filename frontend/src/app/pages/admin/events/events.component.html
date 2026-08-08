@@ -5,7 +5,7 @@
     <p class="jb-page-header__sub">Review, moderate and manage all community events</p>
   </div>
   <div class="jb-page-header__actions">
-    <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
+    <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i>
       <span>New Event</span>
     </button>
@@ -301,6 +301,12 @@
     </nav>
   }
 }
+
+<!-- ── Floating create button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="openAddModal()" aria-label="Add a new event" title="New Event">
+  <i class="bi bi-plus-lg"></i>
+</button>
 
 <!-- ── ADD / EDIT MODAL ───────────────────────────────────── -->
 @if (showAddModal()) {

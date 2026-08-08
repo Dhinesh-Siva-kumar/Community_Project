@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
@@ -35,6 +35,20 @@ export class AdminEventsComponent implements OnInit {
   loading    = signal(true);
   submitting = signal(false);
   skeletons  = Array(6);
+
+  // Floating header action (shows once scrolled past the page header)
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
 
   currentPage = signal(1);
   totalPages  = signal(1);

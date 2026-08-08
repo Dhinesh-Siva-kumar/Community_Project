@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
@@ -11,6 +11,7 @@ import { Business, BusinessCategory, PaginatedResponse, Country } from '../../..
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { TruncatedDirective } from '../../../shared/directives/truncated.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
@@ -26,7 +27,7 @@ type ViewState = 'categories' | 'list' | 'detail';
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, ImageUrlPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -40,9 +41,17 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // ── Countries for filter dropdown ──────────────────────────
   filterCountryOptions: SelectOption[] = [];
+  filterOpeningHoursOptions: SelectOption[] = [
+    { value: '9-5',  label: '9 AM - 5 PM' },
+    { value: '24/7', label: '24/7' },
+  ];
 
   // View state
   currentView = signal<ViewState>('categories');
+
+  // Floating header action (shows once scrolled past the page header)
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
 
   // Data
   categories = signal<BusinessCategory[]>([]);
@@ -305,11 +314,38 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     return sum;
   });
   totalCategories = computed(() => this.categories().length);
+  avgBusinessesPerCategory = computed(() => {
+    const cats = this.totalCategories();
+    return cats > 0 ? Math.round(this.totalBusinesses() / cats) : 0;
+  });
+  emptyCategoriesCount = computed(() =>
+    this.categories().filter((c) => (c._count?.businesses ?? 0) === 0).length
+  );
 
   // ── Category view controls ───────────────────────────────────
   catSearch   = signal('');
   catSortBy   = signal<'name'|'count'|'newest'>('name');
   catViewMode = signal<'grid'|'list'>('grid');
+  catSortOptions: SelectOption[] = [
+    { value: 'name',    label: 'Name A–Z' },
+    { value: 'count',   label: 'Most Businesses' },
+    { value: 'newest',  label: 'Newest First' },
+  ];
+
+  onCatSortByChange(value: string | number): void {
+    this.catSortBy.set(value as 'name' | 'count' | 'newest');
+  }
+
+  /** Category IDs whose description text is actually clipped — gates the hover "read more" popover. */
+  truncatedCategoryIds = signal<Set<string>>(new Set());
+
+  onDescTruncatedChange(categoryId: string, isTruncated: boolean): void {
+    const current = this.truncatedCategoryIds();
+    if (current.has(categoryId) === isTruncated) return;
+    const next = new Set(current);
+    if (isTruncated) next.add(categoryId); else next.delete(categoryId);
+    this.truncatedCategoryIds.set(next);
+  }
 
   filteredCategories = computed(() => {
     const q = this.catSearch().toLowerCase();
@@ -352,6 +388,16 @@ getCategoryAccent(icon?: string): string {
   }
 
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
 
   // ── Phone countries (dial‑code dropdown) ────────────────────
 

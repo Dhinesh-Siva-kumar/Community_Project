@@ -34,6 +34,35 @@
       <h2 class="jb-page-header__title">User Management</h2>
       <p class="jb-page-header__sub">Manage user accounts, roles and access across the platform.</p>
     </div>
+    <div class="jb-page-header__actions">
+      <!-- Export -->
+      <div class="um-export-wrap" (click)="$event.stopPropagation()">
+        <button class="jb-btn jb-btn--ghost jb-btn--sm" 
+          (click)="toggleExportMenu($event)" [disabled]="exporting()" aria-label="Export users">
+          @if (exporting()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          } @else {
+            <i class="bi bi-download"></i>
+          }
+          <span>Export</span>
+        </button>
+        @if (exportMenuOpen()) {
+          <div class="um-export-menu">
+            <button class="um-export-item" (click)="exportCSV()">
+              <i class="bi bi-filetype-csv"></i> Download CSV
+            </button>
+            <button class="um-export-item" (click)="exportJSON()">
+              <i class="bi bi-filetype-json"></i> Download JSON
+            </button>
+          </div>
+        }
+      </div>
+      <!-- Add User -->
+      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="showAddDrawer.set(true)" aria-label="Add new user">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Add User</span>
+      </button>
+    </div>
   </div>
 
   <!-- Stats Bar (outside scroll container) -->
@@ -457,6 +486,12 @@
 </div><!-- /.um-layout -->
 
 } <!-- end @if loading -->
+
+<!-- ── Floating create button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="showAddDrawer.set(true)" aria-label="Add a new user" title="Add User">
+  <i class="bi bi-person-plus-fill"></i>
+</button>
 
 <!-- ══════════════════════════════════════════════════════════════
      PANELS & MODALS

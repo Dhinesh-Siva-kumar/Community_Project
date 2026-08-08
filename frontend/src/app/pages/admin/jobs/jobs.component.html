@@ -2,13 +2,13 @@
      ADMIN JOBS MANAGEMENT — Premium Design
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
     <h2 class="jb-page-header__title">Jobs Management</h2>
     <p class="jb-page-header__sub">Review, moderate and manage all job listings.</p>
   </div>
-  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()" aria-label="Post a new job">
+  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddModal()" aria-label="Post a new job">
     <i class="bi bi-plus-lg"></i> Post Job
   </button>
 </div>
@@ -598,6 +598,12 @@
     }
   }
 }
+
+<!-- ── Floating create button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="openAddModal()" aria-label="Post a new job" title="Post Job">
+  <i class="bi bi-plus-lg"></i>
+</button>
 
 <!-- ═══════════════════════════════════════════════════════════
      POST JOB MODAL (shared form with admin extras)

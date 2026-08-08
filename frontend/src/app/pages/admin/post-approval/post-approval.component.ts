@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostService } from '../../../core/services/post.service';
@@ -37,6 +37,20 @@ export class PostApprovalComponent implements OnInit {
   filterCommunity = signal('');
   filterType = signal('');
   showAdvancedFilters = signal(false);
+
+  // Floating header action (shows once scrolled past the page header)
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
 
   readonly postTypeOptions: SelectOption[] = [
     { value: '', label: 'All Types' },
