@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
+import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto, ListPendingPostsQueryDto } from './posts.dto';
 import * as postsService from './posts.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -50,8 +50,8 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 
 export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { page, limit } = PaginationQueryDto.parse(req.query);
-    const result = await postsService.findPendingOnly(page, limit);
+    const query = ListPendingPostsQueryDto.parse(req.query);
+    const result = await postsService.findPendingOnly(query);
     res.json(result);
   } catch (err) { next(err); }
 }

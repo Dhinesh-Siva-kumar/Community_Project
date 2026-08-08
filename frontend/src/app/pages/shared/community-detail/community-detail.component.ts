@@ -998,6 +998,14 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     return this.isAdmin() || post.userId === this.currentUserId();
   }
 
+  reportPost(post: Post): void {
+    this.postMenuOpenId.set(null);
+    this.postService.reportPost(post.id).subscribe({
+      next: () => this.toast.success('Post reported. Our team will review it.'),
+      error: () => this.toast.error('Failed to report post'),
+    });
+  }
+
   // ── Edit Post ─────────────────────────────────────────────
 
   openEditPostModal(post: Post): void {
@@ -1398,7 +1406,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   getPostTypeBadge(type: PostType): { label: string; class: string; icon: string } {
     switch (type) {
-      case 'EMERGENCY': return { label: 'Emergency', class: 'bg-danger',              icon: 'bi-exclamation-triangle-fill' };
+      case 'EMERGENCY': return { label: 'Emergency Assistance', class: 'bg-danger',   icon: 'bi-exclamation-triangle-fill' };
       case 'HELP':      return { label: 'Help',      class: 'bg-warning text-dark',   icon: 'bi-life-preserver'            };
       case 'ENQUIRY':   return { label: 'Enquire',   class: 'bg-enquire',             icon: 'bi-question-circle-fill'      };
       default:          return { label: 'General',   class: 'bg-primary',             icon: 'bi-chat-dots-fill'            };

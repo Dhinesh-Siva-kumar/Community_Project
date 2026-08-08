@@ -86,7 +86,8 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListBusinessQueryDto.parse(req.query);
-    const result = await businessService.findAll(query);
+    const skipActiveFilter = req.user!.role === 'ADMIN';
+    const result = await businessService.findAll({ ...query, skipActiveFilter });
     res.json(result);
   } catch (err) { next(err); }
 }

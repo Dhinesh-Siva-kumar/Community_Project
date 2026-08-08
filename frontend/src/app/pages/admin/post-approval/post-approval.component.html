@@ -41,7 +41,7 @@
       <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-lightning-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ postStats().emergency }}</span>
-        <span class="admin-stat-card__label">Emergency</span>
+        <span class="admin-stat-card__label">Emergency Assistance</span>
       </div>
     </div>
   </div>
@@ -53,11 +53,11 @@
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
       <input type="search" class="jb-search-wrap__input"
-        placeholder="Filter by community name…"
+        placeholder="Search by community or post content…"
         [value]="filterCommunity()" (input)="onFilterCommunity($event)" autocomplete="off"
-        aria-label="Filter by community" />
+        aria-label="Search pending posts" />
       @if (filterCommunity()) {
-        <button class="jb-search-wrap__clear" (click)="filterCommunity.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
+        <button class="jb-search-wrap__clear" (click)="filterCommunity.set(''); applyFilters()" aria-label="Clear search"><i class="bi bi-x"></i></button>
       }
     </div>
     <!-- Advanced filters -->
@@ -79,10 +79,28 @@
       <div class="jb-filter-row">
         <span class="jb-filter-section-label"><i class="bi bi-tag"></i> Post Type</span>
         <div class="jb-chip-group" role="group">
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === ''" (click)="filterType.set('')">All</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'GENERAL'" (click)="filterType.set('GENERAL')">General</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'HELP'" (click)="filterType.set('HELP')">Help</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'EMERGENCY'" (click)="filterType.set('EMERGENCY')">Emergency</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === ''" (click)="filterType.set(''); applyFilters()">All</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'GENERAL'" (click)="filterType.set('GENERAL'); applyFilters()">General</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'HELP'" (click)="filterType.set('HELP'); applyFilters()">Help</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'EMERGENCY'" (click)="filterType.set('EMERGENCY'); applyFilters()">Emergency Assistance</button>
+        </div>
+      </div>
+      <div class="jb-advanced-grid">
+        <div class="jb-adv-field">
+          <label class="jb-adv-label"><i class="bi bi-globe"></i> Country</label>
+          <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+            (ngModelChange)="setCountryFilter($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="paFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+          <input id="paFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
+            (change)="onFilterDateFromChange($event)" />
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="paFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+          <input id="paFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
+            (change)="onFilterDateToChange($event)" />
         </div>
       </div>
     </div>
@@ -138,7 +156,7 @@
         <button
           class="btn btn-danger btn-sm"
           [disabled]="bulkProcessing()"
-          (click)="rejectSelected()"
+          (click)="requestRejectSelected()"
         >
           Reject ({{ selectedCount() }})
         </button>
@@ -156,6 +174,9 @@
       <p class="jb-empty__text">There are no pending posts to review.</p>
     </div>
   } @else {
+    <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
+      (sortChange)="onSortChange($event)">
+    </app-sort-bar>
     <div class="jb-posts-grid">
       @for (post of filteredPosts(); track post.id) {
         <div class="card post-card border-0 shadow-sm" [class.selected]="isSelected(post.id)">
@@ -227,7 +248,7 @@
                     <button
                       class="btn btn-danger btn-sm"
                       [disabled]="rejectingId() === post.id"
-                      (click)="rejectPost(post.id)"
+                      (click)="requestRejectPost(post)"
                     >
                       @if (rejectingId() === post.id) {
                         <span class="spinner-border spinner-border-sm me-1"></span>
@@ -244,6 +265,32 @@
         </div>
       }
     </div>
+
+    <div class="jb-pagination-row">
+      <div class="jb-pagesize">
+        <span>Rows per page</span>
+        <div class="jb-pagesize__select">
+          <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+            (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+            aria-label="Rows per page">
+          </app-searchable-select>
+        </div>
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="jb-pagination" aria-label="Pages">
+          <button class="jb-pagination__btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+          @for (page of getPages(); track page) {
+            <button class="jb-pagination__btn" [class.jb-pagination__btn--active]="page === currentPage()"
+              (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="jb-pagination__btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+          <span class="jb-pagination__info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        </nav>
+      }
+    </div>
   }
 }
 
@@ -252,3 +299,56 @@
         (click)="loadPendingPosts()" aria-label="Refresh pending posts" title="Refresh">
   <i class="bi bi-arrow-clockwise"></i>
 </button>
+
+<!-- ── REJECT CONFIRM (single) ──────────────────────────────── -->
+@if (confirmRejectTarget(); as post) {
+  <div class="modal-backdrop fade show" style="z-index:1060"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true" style="z-index:1070">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-body text-center py-4">
+          <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-x-circle-fill"></i></div>
+          <h6 class="fw-bold">Reject this post?</h6>
+          <p class="text-muted small mb-0">
+            Are you sure you want to reject this post by <strong>{{ post.user?.displayName ?? post.user?.userName }}</strong>?
+            The author will not be notified it was published.
+          </p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm"
+            (click)="cancelRejectConfirm()" [disabled]="rejectingId() !== null">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm"
+            (click)="confirmRejectPostExecute()" [disabled]="rejectingId() !== null">
+            @if (rejectingId() !== null) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            <i class="bi bi-x-lg me-1"></i>Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── REJECT CONFIRM (bulk) ────────────────────────────────── -->
+@if (confirmRejectBulk()) {
+  <div class="modal-backdrop fade show" style="z-index:1060"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true" style="z-index:1070">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-body text-center py-4">
+          <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-x-circle-fill"></i></div>
+          <h6 class="fw-bold">Reject {{ selectedCount() }} post{{ selectedCount() === 1 ? '' : 's' }}?</h6>
+          <p class="text-muted small mb-0">Are you sure? This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm"
+            (click)="cancelRejectConfirm()" [disabled]="bulkProcessing()">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm"
+            (click)="confirmRejectSelectedExecute()" [disabled]="bulkProcessing()">
+            @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            <i class="bi bi-x-lg me-1"></i>Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

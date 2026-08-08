@@ -4,16 +4,29 @@ import { ApiService } from './api.service';
 import { Event, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
+export interface EventsQueryParams {
+  pincode?:  string;
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  status?:   'active' | 'inactive';
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'name' | 'eventDate' | 'joined';
+  sortDir?:  'asc' | 'desc';
+}
+
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private api = inject(ApiService);
 
-  getEvents(pincode?: string): Observable<PaginatedResponse<Event>> {
-    const params: Record<string, any> = {};
-    if (pincode) {
-      params['pincode'] = pincode;
-    }
-    return this.api.get<PaginatedResponse<Event>>('/events', params);
+  getEvents(params: EventsQueryParams = {}): Observable<PaginatedResponse<Event>> {
+    const clean: Record<string, any> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') clean[k] = v;
+    });
+    return this.api.get<PaginatedResponse<Event>>('/events', clean);
   }
 
   getEvent(id: string): Observable<Event> {

@@ -79,17 +79,31 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
   return { ...(business as Record<string, unknown>), category, user };
 }
 
-export async function findAll(params: ListBusinessQueryDtoType) {
-  const { categoryId, categoryIds, pincode, page, limit, search, country, openingHours, dateFrom, dateTo } = params;
+export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean }) {
+  const {
+    categoryId, categoryIds, pincode, page, limit, search, country, openingHours,
+    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter,
+  } = params;
   const offset = (page - 1) * limit;
 
   const query = db('businesses as b')
     .join('users as u', 'b.user_id', 'u.id')
     .join('business_categories as bc', 'b.category_id', 'bc.id')
-    .where('b.is_active', true)
     .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon');
 
-  const countQuery = db('businesses').where({ is_active: true });
+  const countQuery = db('businesses');
+
+  // Admin callers set skipActiveFilter=true to see inactive businesses too,
+  // unless they've explicitly picked a status to filter by below.
+  if (!skipActiveFilter) {
+    query.where('b.is_active', true);
+    countQuery.where({ is_active: true });
+  }
+  if (status) {
+    const isActive = status === 'active';
+    query.andWhere('b.is_active', isActive);
+    countQuery.andWhere('is_active', isActive);
+  }
 
   if (categoryId) { query.andWhere('b.category_id', categoryId); countQuery.andWhere('category_id', categoryId); }
   if (categoryIds) {
@@ -122,8 +136,9 @@ export async function findAll(params: ListBusinessQueryDtoType) {
     countQuery.andWhere('created_at', '<=', toEnd);
   }
 
+  const sortColumn = sortBy === 'name' ? 'b.name' : 'b.created_at';
   const [businesses, [{ total }]] = await Promise.all([
-    query.orderBy('b.created_at', 'desc').limit(limit).offset(offset),
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 

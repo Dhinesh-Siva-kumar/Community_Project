@@ -58,13 +58,13 @@
   <div class="jb-filter-row jb-filter-row--top">
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
-      <input type="search" class="jb-search-wrap__input" 
-        placeholder="Search events by title, location..." 
-        [value]="searchQuery()" 
-        (input)="searchQuery.set($any($event.target).value)" 
+      <input type="search" class="jb-search-wrap__input"
+        placeholder="Search events by title, location..."
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
         autocomplete="off" />
       @if (searchQuery()) {
-        <button class="jb-search-wrap__clear" (click)="searchQuery.set('')" aria-label="Clear search">
+        <button class="jb-search-wrap__clear" (click)="searchQuery.set(''); applyFilters()" aria-label="Clear search">
           <i class="bi bi-x"></i>
         </button>
       }
@@ -87,43 +87,27 @@
   @if (showAdvancedFilters()) {
     <div class="jb-advanced-panel">
       <div class="jb-advanced-grid">
-        <!-- Status/Type Filter Chips -->
         <div class="jb-adv-field">
-          <label class="jb-adv-label"><i class="bi bi-tag"></i> Event Status</label>
-          <div class="jb-chip-group">
-            <button class="jb-chip" 
-              [class.jb-chip--active]="activeFilter() === 'all'" 
-              (click)="setFilter('all')">All</button>
-            <button class="jb-chip" 
-              [class.jb-chip--active]="activeFilter() === 'upcoming'" 
-              (click)="setFilter('upcoming')">Upcoming</button>
-            <button class="jb-chip" 
-              [class.jb-chip--active]="activeFilter() === 'completed'" 
-              (click)="setFilter('completed')">Completed</button>
-          </div>
+          <label class="jb-adv-label"><i class="bi bi-globe"></i> Country</label>
+          <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+            (ngModelChange)="setCountryFilter($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
+          </app-searchable-select>
         </div>
-
-        <!-- Event Mode Filter -->
         <div class="jb-adv-field">
-          <label class="jb-adv-label"><i class="bi bi-diagram-3"></i> Event Mode</label>
-          <div class="jb-chip-group">
-            <button class="jb-chip" 
-              [class.jb-chip--active]="activeFilter() === 'hybrid'" 
-              (click)="setFilter('hybrid')">Hybrid</button>
-            <button class="jb-chip" 
-              [class.jb-chip--active]="activeFilter() === 'offline'" 
-              (click)="setFilter('offline')">Offline</button>
-          </div>
+          <label class="jb-adv-label"><i class="bi bi-toggle-on"></i> Status</label>
+          <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+            (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+          </app-searchable-select>
         </div>
-
-        <!-- Sort By -->
         <div class="jb-adv-field">
-          <label class="jb-adv-label" for="evSortSelect"><i class="bi bi-arrow-down-up"></i> Sort By</label>
-          <select id="evSortSelect" class="jb-adv-input" [value]="sortBy()" (change)="setSortBy($any($event.target).value)">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="date">Event Date</option>
-          </select>
+          <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+          <input id="evFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
+            (change)="onFilterDateFromChange($event)" />
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+          <input id="evFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
+            (change)="onFilterDateToChange($event)" />
         </div>
       </div>
 
@@ -135,23 +119,39 @@
             @if (searchQuery()) {
               <span class="jb-active-chip">
                 "{{ searchQuery() }}"
-                <button class="jb-active-chip__remove" (click)="searchQuery.set('')" aria-label="Remove search">
+                <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search">
                   <i class="bi bi-x"></i>
                 </button>
               </span>
             }
-            @if (activeFilter() !== 'all') {
+            @if (filterCountry()) {
               <span class="jb-active-chip">
-                {{ activeFilter() | titlecase }}
-                <button class="jb-active-chip__remove" (click)="setFilter('all')" aria-label="Clear filter">
+                Country: {{ filterCountry() }}
+                <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter">
                   <i class="bi bi-x"></i>
                 </button>
               </span>
             }
-            @if (sortBy() !== 'newest') {
+            @if (filterStatus()) {
               <span class="jb-active-chip">
-                Sort: {{ sortBy() | titlecase }}
-                <button class="jb-active-chip__remove" (click)="setSortBy('newest')" aria-label="Reset sort">
+                Status: {{ filterStatus() === 'active' ? 'Active' : 'Inactive' }}
+                <button class="jb-active-chip__remove" (click)="removeFilter('status')" aria-label="Remove status filter">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            }
+            @if (filterDateFrom()) {
+              <span class="jb-active-chip">
+                From: {{ filterDateFrom() }}
+                <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            }
+            @if (filterDateTo()) {
+              <span class="jb-active-chip">
+                To: {{ filterDateTo() }}
+                <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter">
                   <i class="bi bi-x"></i>
                 </button>
               </span>
@@ -186,11 +186,11 @@
     <div class="ev-empty__icon">
       <i class="bi bi-calendar-x"></i>
     </div>
-    <h3 class="ev-empty__title">{{ searchQuery() || activeFilter() !== 'all' ? 'No events found' : 'No events yet' }}</h3>
+    <h3 class="ev-empty__title">{{ activeFilterCount() > 0 ? 'No events found' : 'No events yet' }}</h3>
     <p class="ev-empty__subtitle">
-      {{ searchQuery() || activeFilter() !== 'all' ? 'Try adjusting your search or filters' : 'Create your first community event to get started' }}
+      {{ activeFilterCount() > 0 ? 'Try adjusting your search or filters' : 'Create your first community event to get started' }}
     </p>
-    @if (!searchQuery() && activeFilter() === 'all') {
+    @if (activeFilterCount() === 0) {
       <button class="ev-btn-primary" (click)="openAddModal()">
         <i class="bi bi-plus-lg"></i>
         <span>New Event</span>
@@ -198,6 +198,9 @@
     }
   </div>
 } @else {
+  <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
+    (sortChange)="onSortChange($event)">
+  </app-sort-bar>
   <div class="ev-grid">
     @for (evt of filteredEvents(); track evt.id) {
       <article class="ev-card">
@@ -291,15 +294,27 @@
     }
   </div>
 
-  @if (totalPages() > 1) {
-    <nav class="ev-pagination" aria-label="Pages">
-      <button class="ev-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage()-1)"><i class="bi bi-chevron-left"></i></button>
-      @for (p of getPages(); track p) {
-        <button class="ev-page-btn" [class.ev-page-btn--active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
-      }
-      <button class="ev-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage()+1)"><i class="bi bi-chevron-right"></i></button>
-    </nav>
-  }
+  <div class="ev-pagination-row">
+    <div class="ev-pagesize">
+      <span>Rows per page</span>
+      <div class="ev-pagesize__select">
+        <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+          (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+          aria-label="Rows per page">
+        </app-searchable-select>
+      </div>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="ev-pagination" aria-label="Pages">
+        <button class="ev-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage()-1)"><i class="bi bi-chevron-left"></i></button>
+        @for (p of getPages(); track p) {
+          <button class="ev-page-btn" [class.ev-page-btn--active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+        }
+        <button class="ev-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage()+1)"><i class="bi bi-chevron-right"></i></button>
+      </nav>
+    }
+  </div>
 }
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->
@@ -513,7 +528,7 @@
         <div class="modal-body text-center py-4">
           <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
           <h6 class="fw-bold">Delete "{{ eventToDelete()!.title }}"?</h6>
-          <p class="text-muted small mb-0">This action cannot be undone.</p>
+          <p class="text-muted small mb-0">Are you sure? This action cannot be undone.</p>
         </div>
         <div class="modal-footer border-0 justify-content-center gap-2">
           <button type="button" class="jb-btn jb-btn--ghost" (click)="closeDeleteConfirm()" [disabled]="deleting()">Cancel</button>

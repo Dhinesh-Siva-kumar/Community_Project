@@ -107,10 +107,12 @@
             (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
           </app-searchable-select>
           <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
-            (ngModelChange)="onFilterStateChange($event)" [placeholder]="filterStates().length ? 'State / Region' : 'Select country first'">
+            (ngModelChange)="onFilterStateChange($event)"
+            [placeholder]="filterStatesLoading() ? 'Loading…' : (filterStates().length ? 'State / Region' : 'Select country first')">
           </app-searchable-select>
           <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
-            (ngModelChange)="onFilterCityChange($event)" [placeholder]="filterCities().length ? 'City' : 'Select state first'">
+            (ngModelChange)="onFilterCityChange($event)"
+            [placeholder]="filterCitiesLoading() ? 'Loading…' : (filterCities().length ? 'City' : 'Select state first')">
           </app-searchable-select>
         </div>
       </div>
@@ -181,6 +183,22 @@
             }
           </div>
       </div>
+      <div class="jb-adv-field">
+        <label class="jb-adv-label"><i class="bi bi-toggle-on"></i> Status</label>
+        <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+          (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+        </app-searchable-select>
+      </div>
+      <div class="jb-adv-field">
+        <label class="jb-adv-label" for="jobFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+        <input id="jobFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
+          (change)="onFilterDateFromChange($event)" />
+      </div>
+      <div class="jb-adv-field">
+        <label class="jb-adv-label" for="jobFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+        <input id="jobFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
+          (change)="onFilterDateToChange($event)" />
+      </div>
     </div>
   </div>
 }
@@ -217,6 +235,9 @@
       }
     </span>
   </div>
+  <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBarField()" [sortDir]="sortBarDir()"
+    (sortChange)="onSortBarChange($event)">
+  </app-sort-bar>
 }
 
 <!-- ── SKELETON ──────────────────────────────────────────────── -->
@@ -581,21 +602,33 @@
       }
     </div>
 
-    <!-- ── PAGINATION ─────────────────────────────────────────── -->
-    @if (totalPages() > 1) {
-      <nav class="jb-pagination" aria-label="Pages">
-        <button class="jb-pagination__btn" [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
-        @for (page of getPages(); track page) {
-          <button class="jb-pagination__btn"
-            [class.jb-pagination__btn--active]="page === currentPage()"
-            (click)="goToPage(page)">{{ page }}</button>
-        }
-        <button class="jb-pagination__btn" [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
-        <span class="jb-pagination__info">Page {{ currentPage() }} of {{ totalPages() }}</span>
-      </nav>
-    }
+    <!-- ── PAGINATION + Page size ────────────────────────────────── -->
+    <div class="jb-pagination-row">
+      <div class="jb-pagesize">
+        <span>Rows per page</span>
+        <div class="jb-pagesize__select">
+          <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+            (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+            aria-label="Rows per page">
+          </app-searchable-select>
+        </div>
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="jb-pagination" aria-label="Pages">
+          <button class="jb-pagination__btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+          @for (page of getPages(); track page) {
+            <button class="jb-pagination__btn"
+              [class.jb-pagination__btn--active]="page === currentPage()"
+              (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="jb-pagination__btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+          <span class="jb-pagination__info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        </nav>
+      }
+    </div>
   }
 }
 

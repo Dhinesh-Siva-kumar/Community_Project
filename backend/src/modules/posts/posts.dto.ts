@@ -21,6 +21,18 @@ export const ListPostsQueryDto = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const ListPendingPostsQueryDto = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  limit:    z.coerce.number().int().min(1).max(100).default(20),
+  search:   z.string().optional(),
+  country:  z.string().optional(),
+  type:     z.enum(['GENERAL', 'HELP', 'EMERGENCY', 'ENQUIRY']).optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['joined', 'community']).default('joined'),
+  sortDir:  z.enum(['asc', 'desc']).default('desc'),
+});
+
 export const AddCommentDto = z.object({
   content: z.string().min(1, 'Comment content is required'),
 });
@@ -33,3 +45,4 @@ export const PaginationQueryDto = z.object({
 export type CreatePostDtoType = z.infer<typeof CreatePostDto>;
 export type UpdatePostBodyDtoType = z.infer<typeof UpdatePostBodyDto>;
 export type ListPostsQueryDtoType = z.infer<typeof ListPostsQueryDto>;
+export type ListPendingPostsQueryDtoType = z.infer<typeof ListPendingPostsQueryDto>;

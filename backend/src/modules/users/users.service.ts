@@ -155,14 +155,27 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
 // ---------------------------------------------------------------------------
 // Admin — list users with full filter support
 // ---------------------------------------------------------------------------
-export async function getUsers(
-  page: number,
-  limit: number,
-  search?: string,
-  role?: 'ADMIN' | 'USER',
-  status?: 'active' | 'blocked' | 'trusted',
-  joined?: 'today' | '7d' | '30d' | '90d',
-) {
+export interface GetUsersOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  role?:    'ADMIN' | 'USER';
+  status?:  'active' | 'blocked' | 'trusted';
+  joined?:  'today' | '7d' | '30d' | '90d';
+  country?: string;
+  sortBy?:  'name' | 'email' | 'joined' | 'role';
+  sortDir?: 'asc' | 'desc';
+}
+
+const USER_SORT_COLUMNS: Record<NonNullable<GetUsersOptions['sortBy']>, string> = {
+  name:   'display_name',
+  email:  'email',
+  joined: 'created_at',
+  role:   'role',
+};
+
+export async function getUsers(options: GetUsersOptions) {
+  const { page, limit, search, role, status, joined, country, sortBy = 'joined', sortDir = 'desc' } = options;
   const offset = (page - 1) * limit;
 
   function applyFilters(q: ReturnType<typeof db>) {
@@ -178,6 +191,7 @@ export async function getUsers(
     if (status === 'blocked') q.where({ is_blocked: true });
     else if (status === 'active') q.where({ is_blocked: false, is_active: true });
     else if (status === 'trusted') q.where({ is_trusted: true });
+    if (country) q.where({ country });
     if (joined) {
       const now = new Date();
       const since = new Date(now);
@@ -202,7 +216,7 @@ export async function getUsers(
 
   // Counts for stat cards (always un-filtered by user filters)
   const [users, [{ total }], [{ active }], [{ blocked }], [{ trusted }], [{ adminCount }]] = await Promise.all([
-    query.orderBy('created_at', 'desc').limit(limit).offset(offset),
+    query.orderBy(USER_SORT_COLUMNS[sortBy], sortDir).limit(limit).offset(offset),
     countQuery,
     db('users').count({ active: '*' }).where({ is_blocked: false, is_active: true }),
     db('users').count({ blocked: '*' }).where({ is_blocked: true }),
@@ -473,7 +487,10 @@ export async function getDashboardStats(userId: string, role: string) {
     const [
       [{ total: totalUsers }], [{ total: totalCommunities }], [{ total: totalPosts }],
       [{ total: pendingPosts }], [{ total: totalBusinesses }], [{ total: totalEvents }],
-      [{ total: totalJobs }], [{ total: blockedUsers }], recentUsers, recentPosts, recentBusinesses, recentEvents, recentJobs,
+      [{ total: totalJobs }], [{ total: blockedUsers }],
+      [{ total: pendingUserVerification }], [{ total: pendingBusinessVerification }],
+      [{ total: pendingJobApproval }], [{ total: reportsToReview }], [{ total: communityEmergencyRequests }],
+      recentUsers, recentPosts, recentBusinesses, recentEvents, recentJobs,
     ] = await Promise.all([
       db('users').count({ total: '*' }),
       db('communities').count({ total: '*' }),
@@ -483,6 +500,11 @@ export async function getDashboardStats(userId: string, role: string) {
       db('events').count({ total: '*' }),
       db('jobs').count({ total: '*' }),
       db('users').where({ is_blocked: true }).count({ total: '*' }),
+      db('users').where({ verification_status: 'PENDING' }).count({ total: '*' }),
+      db('businesses').where({ status: 'PENDING' }).count({ total: '*' }),
+      db('jobs').where({ status: 'PENDING' }).count({ total: '*' }),
+      db('reports').where({ status: 'PENDING' }).count({ total: '*' }),
+      db('posts').where({ type: 'EMERGENCY', status: 'APPROVED' }).count({ total: '*' }),
       db('users').select('id', 'display_name', 'user_name', 'created_at').orderBy('created_at', 'desc').limit(5),
       db('posts as p').join('users as u', 'p.user_id', 'u.id').join('communities as c', 'p.community_id', 'c.id')
         .select('p.id', 'p.type', 'p.status', 'p.created_at', 'u.display_name', 'u.user_name', 'c.name as community_name')
@@ -508,7 +530,13 @@ export async function getDashboardStats(userId: string, role: string) {
       totalUsers: Number(totalUsers), totalCommunities: Number(totalCommunities),
       totalPosts: Number(totalPosts), pendingPosts: Number(pendingPosts),
       totalBusinesses: Number(totalBusinesses), totalEvents: Number(totalEvents),
-      totalJobs: Number(totalJobs), blockedUsers: Number(blockedUsers), recentActivity: activity,
+      totalJobs: Number(totalJobs), blockedUsers: Number(blockedUsers),
+      pendingUserVerification: Number(pendingUserVerification),
+      pendingBusinessVerification: Number(pendingBusinessVerification),
+      pendingJobApproval: Number(pendingJobApproval),
+      reportsToReview: Number(reportsToReview),
+      communityEmergencyRequests: Number(communityEmergencyRequests),
+      recentActivity: activity,
     };
   }
 

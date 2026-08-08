@@ -19,6 +19,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
+import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
 export interface FilterChip { key: string; label: string; value: any; }
 
@@ -60,6 +61,7 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
     SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
+    SortBarComponent,
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
@@ -104,7 +106,49 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   filterCompanyName   = signal('');
   filterSalaryHidden  = signal<boolean | null>(null);
   filterPostedWithin  = signal<number | null>(null);
+  filterStatus        = signal<'active' | 'inactive' | ''>('');
+  filterDateFrom      = signal('');
+  filterDateTo        = signal('');
   sortBy              = signal<string>('newest');
+
+  readonly statusFilterOptions: SelectOption[] = [
+    { value: '',         label: 'All Status' },
+    { value: 'active',   label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
+  readonly pageSizeOptions: SelectOption[] = [
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
+  ];
+  pageSize = signal(20);
+
+  // ── Sort-bar — column-click-sort equivalent for this card layout.
+  // Jobs' backend sort is a single combined enum (newest/oldest/salary_high/
+  // salary_low/company_az), so the generic {field, dir} from the sort-bar
+  // is translated to/from that enum here; "company" only has one backend
+  // direction (company_az) so it's left off the bar and stays in the
+  // existing sort dropdown below.
+  readonly sortFields: SortField[] = [
+    { key: 'date',   label: 'Date' },
+    { key: 'salary', label: 'Salary' },
+  ];
+  sortBarField = computed<string>(() => {
+    const s = this.sortBy();
+    if (s === 'newest' || s === 'oldest') return 'date';
+    if (s === 'salary_high' || s === 'salary_low') return 'salary';
+    return '';
+  });
+  sortBarDir = computed<SortDir>(() => {
+    const s = this.sortBy();
+    return (s === 'oldest' || s === 'salary_low') ? 'asc' : 'desc';
+  });
+
+  onSortBarChange(change: SortChange): void {
+    if (change.sortBy === 'date') this.sortBy.set(change.sortDir === 'asc' ? 'oldest' : 'newest');
+    else if (change.sortBy === 'salary') this.sortBy.set(change.sortDir === 'asc' ? 'salary_low' : 'salary_high');
+    this.loadJobs(1);
+  }
 
   // Filter location cascade
   filterStates  = signal<MasterState[]>([]);
@@ -141,6 +185,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       const labels: Record<number, string> = { 1: 'Today', 7: 'Last 7 days', 30: 'Last 30 days' };
       add('postedWithin', labels[this.filterPostedWithin()!] ?? `Last ${this.filterPostedWithin()} days`, this.filterPostedWithin());
     }
+    if (this.filterStatus())   add('status',   this.filterStatus() === 'active' ? 'Active' : 'Inactive', this.filterStatus());
+    if (this.filterDateFrom()) add('dateFrom', `From ${this.filterDateFrom()}`, this.filterDateFrom());
+    if (this.filterDateTo())   add('dateTo',   `To ${this.filterDateTo()}`, this.filterDateTo());
     return chips;
   });
 
@@ -373,7 +420,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.confirmDeleteId.set(null);
     this.activeJobId.set(null);
 
-    const query: JobsQueryParams = { page };
+    const query: JobsQueryParams = { page, limit: this.pageSize() };
     if (this.searchQuery().trim())    query.search      = this.searchQuery().trim();
     if (this.filterJobType())         query.jobType     = this.filterJobType();
     if (this.filterWorkMode())        query.workMode    = this.filterWorkMode();
@@ -388,6 +435,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     if (this.filterSalaryMax() != null) query.salaryMax = this.filterSalaryMax()!;
     if (this.filterSalaryHidden() != null) query.salaryHidden = this.filterSalaryHidden()!;
     if (this.filterPostedWithin() != null) query.postedWithin = this.filterPostedWithin()!;
+    if (this.filterStatus())          query.status      = this.filterStatus() as 'active' | 'inactive';
+    if (this.filterDateFrom())        query.dateFrom    = this.filterDateFrom();
+    if (this.filterDateTo())          query.dateTo      = this.filterDateTo();
     if (this.sortBy() && this.sortBy() !== 'newest') query.sortBy = this.sortBy() as any;
 
     this.jobService.getJobs(query).subscribe({
@@ -499,7 +549,30 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       case 'salaryMax':    this.filterSalaryMax.set(null);   break;
       case 'salaryHidden': this.filterSalaryHidden.set(null); break;
       case 'postedWithin': this.filterPostedWithin.set(null); break;
+      case 'status':       this.filterStatus.set('');        break;
+      case 'dateFrom':     this.filterDateFrom.set('');      break;
+      case 'dateTo':       this.filterDateTo.set('');        break;
     }
+    this.loadJobs(1);
+  }
+
+  setStatusFilter(v: string | number): void {
+    this.filterStatus.set(v as 'active' | 'inactive' | '');
+    this.loadJobs(1);
+  }
+
+  onFilterDateFromChange(e: Event): void {
+    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.loadJobs(1);
+  }
+
+  onFilterDateToChange(e: Event): void {
+    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.loadJobs(1);
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
     this.loadJobs(1);
   }
 
@@ -510,6 +583,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.filterExpMin.set(null); this.filterExpMax.set(null);
     this.filterSalaryMin.set(null); this.filterSalaryMax.set(null);
     this.filterSalaryHidden.set(null); this.filterPostedWithin.set(null);
+    this.filterStatus.set(''); this.filterDateFrom.set(''); this.filterDateTo.set('');
     this.filterStates.set([]); this.filterCities.set([]);
     this.sortBy.set('newest');
     this.loadJobs(1);

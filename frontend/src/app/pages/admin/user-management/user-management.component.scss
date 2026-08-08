@@ -213,6 +213,7 @@ $_t:  0.2s ease;
 }
 
 .jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
+.jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
 
 // ── BUTTONS ───────────────────────────────────────────────────────
 .jb-btn {
@@ -720,6 +721,22 @@ $_t:  0.2s ease;
   z-index: 2;
 
   &--actions { width: 170px; text-align: right; padding-right: 16px; }
+
+  &--sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+
+    &:hover { color: $color-primary-darker; }
+  }
+}
+
+.um-th__sort-icon {
+  margin-left: 4px;
+  font-size: 0.65rem;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
 }
 
 .um-row {

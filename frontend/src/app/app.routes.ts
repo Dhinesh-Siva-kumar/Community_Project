@@ -131,6 +131,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'analytics',
+        loadComponent: () =>
+          import('./pages/admin/analytics/analytics.component').then(
+            (m) => m.AdminAnalyticsComponent
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./pages/admin/profile/profile.component').then(

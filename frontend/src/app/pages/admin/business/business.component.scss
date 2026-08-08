@@ -1937,6 +1937,27 @@ $accents: (
   &__line--xs    { width: 40%; height: 12px; }
 }
 
+.bl-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .bl-pagination { margin-bottom: 0; flex: 1; }
+}
+
+.bl-pagesize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: $font-size-xs;
+  color: $color-stone-400;
+  margin-bottom: $spacing-lg;
+
+  &__select { width: 80px; }
+}
+
 .bl-pagination {
   display: flex; align-items: center; gap: 4px; justify-content: center;
   margin-bottom: $spacing-lg; flex-wrap: wrap;

@@ -15,12 +15,15 @@ export const UpdateUserDto = z.object({
 });
 
 export const ListUsersQueryDto = z.object({
-  page:   z.coerce.number().int().min(1).default(1),
-  limit:  z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().optional(),
-  role:   z.enum(['ADMIN', 'USER']).optional(),
-  status: z.enum(['active', 'blocked', 'trusted']).optional(),
-  joined: z.enum(['today', '7d', '30d', '90d']).optional(),
+  page:    z.coerce.number().int().min(1).default(1),
+  limit:   z.coerce.number().int().min(1).max(100).default(20),
+  search:  z.string().optional(),
+  role:    z.enum(['ADMIN', 'USER']).optional(),
+  status:  z.enum(['active', 'blocked', 'trusted']).optional(),
+  joined:  z.enum(['today', '7d', '30d', '90d']).optional(),
+  country: z.string().optional(),
+  sortBy:  z.enum(['name', 'email', 'joined', 'role']).default('joined'),
+  sortDir: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export const AdminCreateUserDto = z.object({

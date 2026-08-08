@@ -4,8 +4,9 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService, UserFilterParams } from '../../../core/services/user.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { User, UserListResponse } from '../../../core/models';
+import { User, UserListResponse, Country } from '../../../core/models';
 import { AddUserDrawerComponent }      from './panels/add-user-drawer/add-user-drawer.component';
 import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-detail-drawer.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -25,6 +26,7 @@ type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
 })
 export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private toast       = inject(ToastService);
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -34,7 +36,7 @@ export class UserManagementComponent implements OnInit {
   total      = signal(0);
   totalPages = signal(1);
   currentPage = signal(1);
-  pageSize   = signal(10);
+  pageSize   = signal(20);
 
   // ── Floating header action (shows once scrolled past the page header) ─────
   showHeaderFab = signal(false);
@@ -56,9 +58,14 @@ export class UserManagementComponent implements OnInit {
   filterRole   = signal<'ADMIN' | 'USER' | ''>('');
   filterStatus = signal<'active' | 'blocked' | 'trusted' | ''>('');
   filterJoined = signal<'today' | '7d' | '30d' | '90d' | ''>('');
+  filterCountry = signal<string>('');
+
+  // ── Sort state — driven by clicking a table column header ──────────────────
+  sortBy  = signal<'name' | 'email' | 'joined' | 'role'>('joined');
+  sortDir = signal<'asc' | 'desc'>('desc');
 
   activeFilterCount = computed(() =>
-    [this.appliedSearch(), this.filterRole(), this.filterStatus(), this.filterJoined()]
+    [this.appliedSearch(), this.filterRole(), this.filterStatus(), this.filterJoined(), this.filterCountry()]
       .filter(Boolean).length,
   );
 
@@ -84,10 +91,12 @@ export class UserManagementComponent implements OnInit {
     { value: '90d',   label: 'Last 3 Months' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
-    { value: 10, label: '10' },
-    { value: 20, label: '20' },
-    { value: 50, label: '50' },
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
   ];
+
+  filterCountryOptions: SelectOption[] = [];
 
   // Active filter chips for display
   activeFilterChips = computed<{ key: string; label: string; value: any }[]>(() => {
@@ -96,6 +105,7 @@ export class UserManagementComponent implements OnInit {
     if (this.filterRole()) chips.push({ key: 'role', label: this.filterRole(), value: this.filterRole() });
     if (this.filterStatus()) chips.push({ key: 'status', label: this.filterStatus()!, value: this.filterStatus() });
     if (this.filterJoined()) chips.push({ key: 'joined', label: `Last ${this.filterJoined()}`, value: this.filterJoined() });
+    if (this.filterCountry()) chips.push({ key: 'country', label: this.filterCountry(), value: this.filterCountry() });
     return chips;
   });
 
@@ -123,18 +133,30 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadCountries();
+  }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.filterCountryOptions = res.data.map((c: Country) => ({ value: c.name, label: c.name }));
+      },
+    });
   }
 
   // ── API ───────────────────────────────────────────────────────────────────
   loadUsers(): void {
     this.loading.set(true);
     const params: UserFilterParams = {
-      page:   this.currentPage(),
-      limit:  this.pageSize(),
-      search: this.appliedSearch() || undefined,
-      role:   this.filterRole()   || undefined,
-      status: this.filterStatus() || undefined,
-      joined: this.filterJoined() || undefined,
+      page:    this.currentPage(),
+      limit:   this.pageSize(),
+      search:  this.appliedSearch() || undefined,
+      role:    this.filterRole()   || undefined,
+      status:  this.filterStatus() || undefined,
+      joined:  this.filterJoined() || undefined,
+      country: this.filterCountry() || undefined,
+      sortBy:  this.sortBy(),
+      sortDir: this.sortDir(),
     };
     this.userService.getUsers(params).subscribe({
       next: (res: UserListResponse) => {
@@ -183,12 +205,31 @@ export class UserManagementComponent implements OnInit {
     this.onFilterChange();
   }
 
+  setCountryFilter(v: string | number): void {
+    this.filterCountry.set(v as string);
+    this.onFilterChange();
+  }
+
+  // Clicking a sortable column header: same field toggles asc/desc,
+  // a different field starts at desc — matches app-sort-bar's behavior.
+  toggleSort(field: 'name' | 'email' | 'joined' | 'role'): void {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('desc');
+    }
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
+
   clearFilters(): void {
     this.searchInput.set('');
     this.appliedSearch.set('');
     this.filterRole.set('');
     this.filterStatus.set('');
     this.filterJoined.set('');
+    this.filterCountry.set('');
     this.currentPage.set(1);
     this.loadUsers();
   }
@@ -207,6 +248,9 @@ export class UserManagementComponent implements OnInit {
         break;
       case 'joined':
         this.filterJoined.set('');
+        break;
+      case 'country':
+        this.filterCountry.set('');
         break;
     }
     this.currentPage.set(1);
@@ -247,7 +291,10 @@ export class UserManagementComponent implements OnInit {
     this.openDropdownId.set(this.openDropdownId() === id ? null : id);
   }
 
-  closeDropdowns(): void { this.openDropdownId.set(null); }
+  closeDropdowns(): void {
+    this.openDropdownId.set(null);
+    this.exportMenuOpen.set(false);
+  }
 
   viewUser(id: string): void {
     this.detailUserId.set(id);
@@ -372,35 +419,58 @@ export class UserManagementComponent implements OnInit {
     this.exportMenuOpen.update((v) => !v);
   }
 
+  private readonly exportHeaders = [
+    'ID', 'Display Name', 'Username', 'Email', 'Phone', 'Role', 'Status', 'Trusted',
+    'Country', 'Location', 'Pincode', 'Professional Category', 'Interests', 'Bio',
+    'Profile Completion %', 'Joined', 'Last Updated',
+  ];
+
+  private buildExportRows(users: User[]): (string | number)[][] {
+    return users.map((u) => [
+      u.id, u.displayName, u.userName, u.email ?? '', u.phoneNo ?? '',
+      u.role, u.isBlocked ? 'Blocked' : u.isActive ? 'Active' : 'Inactive',
+      u.isTrusted ? 'Yes' : 'No', u.country, u.location ?? '', u.pincode ?? '',
+      u.professionalCategory ?? '', (u.interests ?? []).join('; '), u.bio ?? '',
+      u.profileCompletion, u.createdAt, u.updatedAt,
+    ]);
+  }
+
+  // Overall export — every user in the system, independent of whatever
+  // search/role/status filters are currently applied to the table.
   exportCSV(): void {
     this.exportMenuOpen.set(false);
     this.exporting.set(true);
-    this.userService.exportUsers({
-      search: this.appliedSearch() || undefined,
-      role:   this.filterRole()   || undefined,
-      status: this.filterStatus() || undefined,
-    }).subscribe({
-      next: (res) => {
-        const headers = ['ID', 'Display Name', 'Username', 'Email', 'Phone', 'Role', 'Status', 'Trusted', 'Country', 'Joined'];
-        const rows = res.data.map((u) => [
-          u.id, u.displayName, u.userName, u.email ?? '', u.phoneNo ?? '',
-          u.role, u.isBlocked ? 'Blocked' : u.isActive ? 'Active' : 'Inactive',
-          u.isTrusted ? 'Yes' : 'No', u.country, u.createdAt,
-        ]);
-        const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    this.userService.exportAllUsers().subscribe({
+      next: (users) => {
+        const rows = this.buildExportRows(users);
+        const csv = [this.exportHeaders, ...rows]
+          .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+          .join('\n');
         this.downloadFile(csv, 'users.csv', 'text/csv');
+        this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to CSV`);
         this.exporting.set(false);
       },
       error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
     });
   }
 
-  exportJSON(): void {
+  exportExcel(): void {
     this.exportMenuOpen.set(false);
     this.exporting.set(true);
-    this.userService.exportUsers().subscribe({
-      next: (res) => {
-        this.downloadFile(JSON.stringify(res.data, null, 2), 'users.json', 'application/json');
+    this.userService.exportAllUsers().subscribe({
+      next: (users) => {
+        const rows = this.buildExportRows(users);
+        const escapeHtml = (v: string | number) =>
+          String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const headerRow = `<tr>${this.exportHeaders.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`;
+        const bodyRows = rows.map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
+        const table = `<table border="1">${headerRow}${bodyRows}</table>`;
+        // Excel opens an HTML table saved with an .xls extension directly —
+        // no charting/formula needs here, so this avoids pulling in a full
+        // spreadsheet-writing library just to produce a flat data export.
+        const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>${table}</body></html>`;
+        this.downloadFile(html, 'users.xls', 'application/vnd.ms-excel');
+        this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to Excel`);
         this.exporting.set(false);
       },
       error: () => { this.toast.error('Export failed'); this.exporting.set(false); },

@@ -154,23 +154,34 @@ export async function create(data: CreateJobDtoType, userId: string) {
 // ─────────────────────────────────────────────────────────────
 // findAll
 // ─────────────────────────────────────────────────────────────
-export async function findAll(params: ListJobsQueryDtoType) {
+export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?: boolean }) {
   const {
     pincode, page, limit, search,
     country, state, city,
     jobType, workMode, shiftType, education,
     expMin, expMax,
     salaryMin, salaryMax, salaryHidden,
-    postedWithin, sortBy,
+    postedWithin, dateFrom, dateTo, status, sortBy, skipActiveFilter,
   } = params;
   const offset = (page - 1) * limit;
 
   const query = db('jobs as j')
     .join('users as u', 'j.user_id', 'u.id')
-    .where('j.is_active', true)
     .select('j.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
 
-  const countQuery = db('jobs').where({ is_active: true });
+  const countQuery = db('jobs');
+
+  // Admin callers set skipActiveFilter=true to see inactive jobs too,
+  // unless they've explicitly picked a status to filter by below.
+  if (!skipActiveFilter) {
+    query.where('j.is_active', true);
+    countQuery.where({ is_active: true });
+  }
+  if (status) {
+    const isActive = status === 'active';
+    query.andWhere('j.is_active', isActive);
+    countQuery.andWhere('is_active', isActive);
+  }
 
   // ── Helper to apply the same condition to both queries ──────
   const addFilter = (queryFn: (q: typeof query) => void, countFn: (q: typeof countQuery) => void) => {
@@ -306,6 +317,21 @@ export async function findAll(params: ListJobsQueryDtoType) {
     addFilter(
       q => q.andWhereRaw(`j.created_at >= NOW() - INTERVAL '${Number(postedWithin)} days'`),
       q => q.andWhereRaw(`created_at >= NOW() - INTERVAL '${Number(postedWithin)} days'`),
+    );
+  }
+
+  // ── Explicit date range ───────────────────────────────────────
+  if (dateFrom) {
+    addFilter(
+      q => q.andWhere('j.created_at', '>=', dateFrom),
+      q => q.andWhere('created_at', '>=', dateFrom),
+    );
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    addFilter(
+      q => q.andWhere('j.created_at', '<=', toEnd),
+      q => q.andWhere('created_at', '<=', toEnd),
     );
   }
 

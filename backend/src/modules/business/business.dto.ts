@@ -46,6 +46,9 @@ export const ListBusinessQueryDto = z.object({
   openingHours: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+  sortBy: z.enum(['name', 'joined']).default('joined'),
+  sortDir: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export type CreateBusinessDtoType = z.infer<typeof CreateBusinessDto>;

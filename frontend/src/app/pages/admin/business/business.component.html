@@ -263,6 +263,23 @@
                 placeholder="All Hours">
               </app-searchable-select>
             </div>
+            <div class="jb-adv-field">
+              <label class="jb-adv-label"><i class="bi bi-toggle-on"></i> Status</label>
+              <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+                (ngModelChange)="setStatusFilter($event)"
+                placeholder="All Status">
+              </app-searchable-select>
+            </div>
+            <div class="jb-adv-field">
+              <label class="jb-adv-label" for="bizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+              <input id="bizFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
+                (change)="onFilterDateFromChange($event)" />
+            </div>
+            <div class="jb-adv-field">
+              <label class="jb-adv-label" for="bizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+              <input id="bizFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
+                (change)="onFilterDateToChange($event)" />
+            </div>
           </div>
         </div>
       }
@@ -288,6 +305,24 @@
           <span class="jb-active-chip">
             Hours: {{ filterOpeningHours() }}
             <button class="jb-active-chip__remove" (click)="removeFilter('hours')" aria-label="Remove hours filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterStatus()) {
+          <span class="jb-active-chip">
+            Status: {{ filterStatus() === 'active' ? 'Active' : 'Inactive' }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('status')" aria-label="Remove status filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterDateFrom()) {
+          <span class="jb-active-chip">
+            From: {{ filterDateFrom() }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterDateTo()) {
+          <span class="jb-active-chip">
+            To: {{ filterDateTo() }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter"><i class="bi bi-x"></i></button>
           </span>
         }
       </div>
@@ -319,6 +354,9 @@
         }
       </div>
     } @else {
+      <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
+        (sortChange)="onSortChange($event)">
+      </app-sort-bar>
       <div class="bl-grid">
         @for (biz of businesses(); track biz.id) {
           <article class="bl-card" role="button" tabindex="0"
@@ -376,18 +414,30 @@
         }
       </div>
 
-      @if (totalPages() > 1) {
-        <nav class="bl-pagination" aria-label="Pages">
-          <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
-          @for (page of getPages(); track page) {
-            <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
-              [attr.aria-current]="page === currentPage() ? 'page' : null"
-              (click)="goToPage(page)">{{ page }}</button>
-          }
-          <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
-          <span class="bl-pagination__info">{{ currentPage() }} / {{ totalPages() }}</span>
-        </nav>
-      }
+      <div class="bl-pagination-row">
+        <div class="bl-pagesize">
+          <span>Rows per page</span>
+          <div class="bl-pagesize__select">
+            <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+              aria-label="Rows per page">
+            </app-searchable-select>
+          </div>
+        </div>
+
+        @if (totalPages() > 1) {
+          <nav class="bl-pagination" aria-label="Pages">
+            <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+            @for (page of getPages(); track page) {
+              <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
+                [attr.aria-current]="page === currentPage() ? 'page' : null"
+                (click)="goToPage(page)">{{ page }}</button>
+            }
+            <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+            <span class="bl-pagination__info">{{ currentPage() }} / {{ totalPages() }}</span>
+          </nav>
+        }
+      </div>
     }
   }
 
@@ -658,7 +708,7 @@
         <div class="modal-body text-center py-4">
           <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
           <h6 class="fw-bold">Delete "{{ categoryToDelete()!.name }}"?</h6>
-          <p class="text-muted small mb-0">This action cannot be undone.</p>
+          <p class="text-muted small mb-0">Are you sure? This action cannot be undone.</p>
           @if ((categoryToDelete()!._count?.businesses ?? 0) > 0) {
             <p class="text-warning small mt-2">
               <i class="bi bi-exclamation-triangle-fill me-1"></i>
@@ -1017,7 +1067,7 @@
         <div class="modal-body text-center py-4">
           <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
           <h6 class="fw-bold">Delete "{{ businessToDelete()!.name }}"?</h6>
-          <p class="text-muted small mb-0">This action cannot be undone.</p>
+          <p class="text-muted small mb-0">Are you sure? This action cannot be undone.</p>
         </div>
         <div class="modal-footer border-0 justify-content-center gap-2">
           <button type="button" class="btn btn-outline-secondary btn-sm"

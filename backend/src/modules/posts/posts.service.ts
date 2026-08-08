@@ -130,7 +130,20 @@ export async function findPending(page: number, limit: number) {
   // Override: only PENDING
 }
 
-export async function findPendingOnly(page: number, limit: number) {
+export interface FindPendingOnlyOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  country?: string;
+  type?:    'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:  'joined' | 'community';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function findPendingOnly(options: FindPendingOnlyOptions) {
+  const { page, limit, search, country, type, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
   const offset = (page - 1) * limit;
 
   const query = db('posts as p')
@@ -139,9 +152,40 @@ export async function findPendingOnly(page: number, limit: number) {
     .where('p.status', 'PENDING')
     .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
 
+  const countQuery = db('posts as p')
+    .join('communities as c', 'p.community_id', 'c.id')
+    .where('p.status', 'PENDING');
+
+  if (search) {
+    query.andWhere(function () {
+      this.whereILike('c.name', `%${search}%`).orWhereILike('p.content', `%${search}%`);
+    });
+    countQuery.andWhere(function () {
+      this.whereILike('c.name', `%${search}%`).orWhereILike('p.content', `%${search}%`);
+    });
+  }
+  if (country) {
+    query.andWhere('c.country', country);
+    countQuery.andWhere('c.country', country);
+  }
+  if (type) {
+    query.andWhere('p.type', type);
+    countQuery.andWhere('p.type', type);
+  }
+  if (dateFrom) {
+    query.andWhere('p.created_at', '>=', dateFrom);
+    countQuery.andWhere('p.created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('p.created_at', '<=', toEnd);
+    countQuery.andWhere('p.created_at', '<=', toEnd);
+  }
+
+  const sortColumn = sortBy === 'community' ? 'c.name' : 'p.created_at';
   const [posts, [{ total }]] = await Promise.all([
-    query.orderBy('p.created_at', 'desc').limit(limit).offset(offset),
-    db('posts').where({ status: 'PENDING' }).count({ total: '*' }),
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
   ]);
 
   const ids = (posts as Array<Record<string, unknown>>).map((p) => p['id'] as string);

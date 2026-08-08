@@ -576,6 +576,27 @@
 .skel-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
 
 // ── Pagination ────────────────────────────────────────────────────────────
+.ev-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .ev-pagination { padding: 0; flex: 1; }
+}
+
+.ev-pagesize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  padding: $spacing-lg 0;
+
+  &__select { width: 80px; }
+}
+
 .ev-pagination {
   display: flex; justify-content: center; align-items: center; gap: 8px;
   padding: $spacing-lg 0;

@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import {
   User, UserDetail, UserListResponse, AuditLog, AuditLogResponse,
@@ -18,12 +19,15 @@ export interface AdminCreateUserPayload {
 }
 
 export interface UserFilterParams {
-  page?:   number;
-  limit?:  number;
-  search?: string;
-  role?:   'ADMIN' | 'USER' | '';
-  status?: 'active' | 'blocked' | 'trusted' | '';
-  joined?: 'today' | '7d' | '30d' | '90d' | '';
+  page?:    number;
+  limit?:   number;
+  search?:  string;
+  role?:    'ADMIN' | 'USER' | '';
+  status?:  'active' | 'blocked' | 'trusted' | '';
+  joined?:  'today' | '7d' | '30d' | '90d' | '';
+  country?: string;
+  sortBy?:  'name' | 'email' | 'joined' | 'role';
+  sortDir?: 'asc' | 'desc';
 }
 
 export interface BroadcastPayload {
@@ -120,7 +124,22 @@ export class UserService {
   }
 
   // ── Admin — export ────────────────────────────────────────────────────────
-  exportUsers(params?: UserFilterParams): Observable<UserListResponse> {
-    return this.getUsers({ ...params, limit: 9999, page: 1 });
+  // Overall export: every user in the system, ignoring any active list
+  // filters. The listing endpoint caps `limit` at 100 per request, so this
+  // pages through everything and stitches the results back together.
+  private static readonly EXPORT_PAGE_SIZE = 100;
+
+  exportAllUsers(): Observable<User[]> {
+    return this.getUsers({ page: 1, limit: UserService.EXPORT_PAGE_SIZE }).pipe(
+      switchMap((first) => {
+        if (first.totalPages <= 1) return of(first.data);
+        const remainingPages = Array.from({ length: first.totalPages - 1 }, (_, i) =>
+          this.getUsers({ page: i + 2, limit: UserService.EXPORT_PAGE_SIZE }),
+        );
+        return forkJoin(remainingPages).pipe(
+          map((pages) => [...first.data, ...pages.flatMap((p) => p.data)]),
+        );
+      }),
+    );
   }
 }

@@ -163,7 +163,7 @@
                     [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
                     (click)="setEditPostType('EMERGENCY')">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Emergency</span>
+                    <span>Emergency Assistance</span>
                   </button>
                 } @else {
                   <button type="button" class="cd-type-btn"
@@ -544,7 +544,7 @@
           <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="displayTab() === 'emergency'"
             (click)="setTab('emergency')" [attr.aria-selected]="displayTab() === 'emergency'">
             <i class="bi bi-exclamation-triangle-fill"></i>
-            <span class="cd-tab-label">Emergency</span>
+            <span class="cd-tab-label">Emergency Assistance</span>
             @if (emergencyCount() > 0) {
               <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
             }
@@ -638,21 +638,27 @@
                       [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
                     </span>
-                    @if (canManagePost(post)) {
+                    @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
                           <div class="cd-post-menu" role="menu">
-                            @if (isAdmin()) {
-                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                <i class="bi bi-pencil-fill"></i>Edit
+                            @if (canManagePost(post)) {
+                              @if (isAdmin()) {
+                                <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                  <i class="bi bi-pencil-fill"></i>Edit
+                                </button>
+                              }
+                              <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                                <i class="bi bi-trash3-fill"></i>Delete
+                              </button>
+                            } @else {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
+                                <i class="bi bi-flag-fill"></i>Report
                               </button>
                             }
-                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                              <i class="bi bi-trash3-fill"></i>Delete
-                            </button>
                           </div>
                         }
                       </div>
@@ -885,7 +891,7 @@
                             [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
                             (click)="setPostType('EMERGENCY')">
                             <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Emergency</span>
+                            <span>Emergency Assistance</span>
                           </button>
                         } @else {
                           <button type="button" class="cd-type-btn cd-type-btn--general"
@@ -971,21 +977,27 @@
                     <span class="post-type-chip post-type-chip--help">
                       <i class="bi bi-life-preserver"></i>Help
                     </span>
-                    @if (canManagePost(post)) {
+                    @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
                           <div class="cd-post-menu" role="menu">
-                            @if (isAdmin()) {
-                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                <i class="bi bi-pencil-fill"></i>Edit
+                            @if (canManagePost(post)) {
+                              @if (isAdmin()) {
+                                <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                  <i class="bi bi-pencil-fill"></i>Edit
+                                </button>
+                              }
+                              <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                                <i class="bi bi-trash3-fill"></i>Delete
+                              </button>
+                            } @else {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
+                                <i class="bi bi-flag-fill"></i>Report
                               </button>
                             }
-                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                              <i class="bi bi-trash3-fill"></i>Delete
-                            </button>
                           </div>
                         }
                       </div>
@@ -1197,23 +1209,29 @@
                       <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
                     </div>
                     <span class="post-type-chip post-type-chip--emergency">
-                      <i class="bi bi-exclamation-triangle-fill"></i>Emergency
+                      <i class="bi bi-exclamation-triangle-fill"></i>Emergency Assistance
                     </span>
-                    @if (canManagePost(post)) {
+                    @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
                           <div class="cd-post-menu" role="menu">
-                            @if (isAdmin()) {
-                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                <i class="bi bi-pencil-fill"></i>Edit
+                            @if (canManagePost(post)) {
+                              @if (isAdmin()) {
+                                <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                  <i class="bi bi-pencil-fill"></i>Edit
+                                </button>
+                              }
+                              <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                                <i class="bi bi-trash3-fill"></i>Delete
+                              </button>
+                            } @else {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
+                                <i class="bi bi-flag-fill"></i>Report
                               </button>
                             }
-                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                              <i class="bi bi-trash3-fill"></i>Delete
-                            </button>
                           </div>
                         }
                       </div>
@@ -1328,7 +1346,7 @@
                 <div class="cd-compose-card cd-compose-card--emergency">
                   <div class="cd-compose-card-label cd-compose-card-label--emergency">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Report Emergency</span>
+                    <span>Request Emergency Assistance</span>
                   </div>
                   <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
@@ -1374,7 +1392,7 @@
                         @if (submittingPost()) {
                           <span class="spinner-border spinner-border-sm me-2"></span>Posting...
                         } @else {
-                          <i class="bi bi-send-fill me-2"></i>Post Emergency Alert
+                          <i class="bi bi-send-fill me-2"></i>Post Emergency Assistance Request
                         }
                       </button>
                     </div>
@@ -1427,21 +1445,27 @@
                     <span class="post-type-chip post-type-chip--enquire">
                       <i class="bi bi-question-circle-fill"></i>Enquire
                     </span>
-                    @if (canManagePost(post)) {
+                    @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
                           <div class="cd-post-menu" role="menu">
-                            @if (isAdmin()) {
-                              <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                <i class="bi bi-pencil-fill"></i>Edit
+                            @if (canManagePost(post)) {
+                              @if (isAdmin()) {
+                                <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
+                                  <i class="bi bi-pencil-fill"></i>Edit
+                                </button>
+                              }
+                              <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
+                                <i class="bi bi-trash3-fill"></i>Delete
+                              </button>
+                            } @else {
+                              <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
+                                <i class="bi bi-flag-fill"></i>Report
                               </button>
                             }
-                            <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                              <i class="bi bi-trash3-fill"></i>Delete
-                            </button>
                           </div>
                         }
                       </div>
@@ -1792,7 +1816,7 @@
                   </div>
                   <div class="cd-stat-body">
                     <div class="cd-stat-value">{{ emergencyCount() }}</div>
-                    <div class="cd-stat-label">Emergency</div>
+                    <div class="cd-stat-label">Emergency Assistance</div>
                   </div>
                 </div>
               </div>

@@ -5,6 +5,18 @@ import { ApiService } from './api.service';
 import { Post, Comment, PaginatedResponse, PostType } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
+export interface PendingPostsQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  type?:     PostType;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'community';
+  sortDir?:  'asc' | 'desc';
+}
+
 @Injectable({ providedIn: 'root' })
 export class PostService {
   private api = inject(ApiService);
@@ -42,8 +54,14 @@ export class PostService {
     return this.api.put<Post>(`/posts/${id}/reject`);
   }
 
-  getPendingPosts(): Observable<PaginatedResponse<Post>> {
-    return this.api.get<PaginatedResponse<Post>>('/posts/pending');
+  getPendingPosts(params?: PendingPostsQueryParams): Observable<PaginatedResponse<Post>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Post>>('/posts/pending', clean);
   }
 
   getPost(id: string): Observable<Post> {
@@ -78,5 +96,9 @@ export class PostService {
 
   deleteComment(commentId: string): Observable<void> {
     return this.api.delete<void>(`/posts/comments/${commentId}`);
+  }
+
+  reportPost(postId: string, reason?: string): Observable<void> {
+    return this.api.post<void>('/reports', { targetType: 'POST', targetId: postId, reason });
   }
 }

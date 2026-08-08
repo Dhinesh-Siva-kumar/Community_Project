@@ -51,8 +51,8 @@
             <button class="um-export-item" (click)="exportCSV()">
               <i class="bi bi-filetype-csv"></i> Download CSV
             </button>
-            <button class="um-export-item" (click)="exportJSON()">
-              <i class="bi bi-filetype-json"></i> Download JSON
+            <button class="um-export-item" (click)="exportExcel()">
+              <i class="bi bi-file-earmark-excel"></i> Download Excel
             </button>
           </div>
         }
@@ -147,6 +147,13 @@
       </app-searchable-select>
     </div>
 
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+        (ngModelChange)="setCountryFilter($event)" placeholder="All Countries"
+        aria-label="Filter by country">
+      </app-searchable-select>
+    </div>
+
     <!-- View mode toggle (table / grid) -->
     <div class="um-view-toggle" role="group" aria-label="Switch view mode">
       <button class="um-view-btn" type="button" [class.active]="viewMode() === 'table'"
@@ -227,12 +234,40 @@
         <table class="um-table">
           <thead>
             <tr>
-              <th class="um-th">User</th>
-              <th class="um-th d-none d-md-table-cell">Email</th>
+              <th class="um-th um-th--sortable" (click)="toggleSort('name')">
+                User
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'name'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-md-table-cell" (click)="toggleSort('email')">
+                Email
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'email' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'email' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'email'"
+                ></i>
+              </th>
               <th class="um-th d-none d-lg-table-cell">Phone</th>
-              <th class="um-th">Role</th>
+              <th class="um-th um-th--sortable" (click)="toggleSort('role')">
+                Role
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'role' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'role' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'role'"
+                ></i>
+              </th>
               <th class="um-th">Status</th>
-              <th class="um-th d-none d-xl-table-cell">Joined</th>
+              <th class="um-th um-th--sortable d-none d-xl-table-cell" (click)="toggleSort('joined')">
+                Joined
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'joined'"
+                ></i>
+              </th>
               <th class="um-th um-th--actions">Actions</th>
             </tr>
           </thead>

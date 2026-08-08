@@ -24,6 +24,12 @@ export const ListEventsQueryDto = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   pincode: z.string().optional(),
   search: z.string().optional(),
+  country: z.string().optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['name', 'eventDate', 'joined']).default('eventDate'),
+  sortDir:  z.enum(['asc', 'desc']).default('asc'),
 });
 
 export type CreateEventDtoType = z.infer<typeof CreateEventDto>;

@@ -34,8 +34,8 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 
 export async function getUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { page, limit, search, role, status, joined } = ListUsersQueryDto.parse(req.query);
-    res.json(await usersService.getUsers(page, limit, search, role, status, joined));
+    const query = ListUsersQueryDto.parse(req.query);
+    res.json(await usersService.getUsers(query));
   } catch (e) { next(e); }
 }
 

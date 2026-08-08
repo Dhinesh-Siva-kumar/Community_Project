@@ -586,6 +586,27 @@
 }
 
 
+// ── PAGINATION ROW + PAGE SIZE ─────────────────────────────────────
+.jb-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .jb-pagination { flex: 1; }
+}
+
+.jb-pagesize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+
+  &__select { width: 80px; }
+}
+
 // ── RESULTS META ─────────────────────────────────────────────────
 .jb-meta {
   display: flex;
