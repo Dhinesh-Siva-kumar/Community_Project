@@ -7,7 +7,7 @@ import { saveBufferToFile } from '../../services/upload-storage.service';
 export async function createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = CreateBusinessCategoryDto.parse(req.body);
-    const result = await businessService.createCategory(body);
+    const result = await businessService.createCategory(body, req.user!.sub);
     res.status(201).json(result);
   } catch (err) { next(err); }
 }
@@ -22,14 +22,14 @@ export async function getCategories(_req: Request, res: Response, next: NextFunc
 export async function updateCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = UpdateBusinessCategoryDto.parse(req.body);
-    const result = await businessService.updateCategory(req.params['id'] as string, body);
+    const result = await businessService.updateCategory(req.params['id'] as string, body, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }
 
 export async function deleteCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await businessService.deleteCategory(req.params['id'] as string);
+    const result = await businessService.deleteCategory(req.params['id'] as string, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }

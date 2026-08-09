@@ -1,6 +1,7 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
+import { logAudit } from '../../services/audit.service';
 import type { CreateEventDtoType, UpdateEventDtoType, ListEventsQueryDtoType } from './events.dto';
 
 export async function create(data: CreateEventDtoType, userId: string) {
@@ -26,6 +27,7 @@ export async function create(data: CreateEventDtoType, userId: string) {
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first();
   const e = event as Record<string, unknown>;
+  await logAudit(userId, 'EVENT_CREATED', { title: data.title }, 'events', e['id'] as string);
   return {
     id: e['id'],
     title: e['title'],
@@ -164,7 +166,8 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
   if (!event) throw new AppError(404, 'Event not found');
 
-  if (event['user_id'] !== userId) {
+  const byAdmin = event['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own events');
   }
@@ -193,6 +196,8 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
     deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
   }
 
+  await logAudit(userId, 'EVENT_UPDATED', { byAdmin, fields: Object.keys(updateData) }, 'events', id);
+
   return findOne(id);
 }
 
@@ -200,12 +205,14 @@ export async function deleteEvent(id: string, userId: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
   if (!event) throw new AppError(404, 'Event not found');
 
-  if (event['user_id'] !== userId) {
+  const byAdmin = event['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own events');
   }
 
   await db('events').where({ id }).delete();
   deleteUploadedFiles(event['images']);
+  await logAudit(userId, 'EVENT_DELETED', { byAdmin, title: event['title'] }, 'events', id);
   return { message: 'Event deleted successfully' };
 }

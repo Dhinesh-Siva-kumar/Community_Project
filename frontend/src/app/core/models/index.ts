@@ -95,6 +95,8 @@ export interface AuditLog {
   resourceId: string | null;
   metadata:   Record<string, unknown> | null;
   createdAt:  string;
+  ipAddress:  string | null;
+  userAgent:  string | null;
   actor: {
     id:          string;
     displayName: string;

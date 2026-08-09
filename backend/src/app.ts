@@ -8,6 +8,7 @@ import { env } from './config/env';
 import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { imageServeWithCache } from './middleware/cacheHeaders';
+import { requestContext } from './middleware/requestContext';
 import { UPLOADS_BASE } from './services/upload-storage.service';
 
 // Routers
@@ -19,6 +20,7 @@ import businessRouter from './modules/business/business.router';
 import eventsRouter from './modules/events/events.router';
 import jobsRouter from './modules/jobs/jobs.router';
 import notificationsRouter from './modules/notifications/notifications.router';
+import auditRouter from './modules/audit/audit.router';
 import masterDataRouter from './modules/master-data/master-data.router';
 import uploadRouter from './modules/upload/upload.router';
 import otpRouter from './modules/otp/otp.router';
@@ -53,6 +55,11 @@ app.use(cookieParser());
 // 6. Rate limit all /api routes
 app.use('/api', apiLimiter);
 
+// 6b. Bind request IP/user-agent for the lifetime of the request so deep,
+//     fire-and-forget writes (e.g. audit logging) can attribute themselves
+//     without every service function threading `req` through.
+app.use(requestContext);
+
 // 7. Serve static uploads with cache headers
 app.use(
   '/uploads',
@@ -85,6 +92,7 @@ app.use('/api/business', businessRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/audit-logs', auditRouter);
 app.use('/api/master-data', masterDataRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/reports', reportsRouter);

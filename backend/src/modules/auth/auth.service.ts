@@ -4,6 +4,7 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
 import { sendOtp, deliverOtp, verifyOtp, getUserIdByPhone } from '../../services/otp.service';
+import { logAudit } from '../../services/audit.service';
 import { env } from '../../config/env';
 import type {
   RegisterDtoType,
@@ -136,6 +137,8 @@ export async function register(dto: RegisterDtoType) {
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
+  await logAudit((user as UserRow).id, 'USER_REGISTER', undefined, 'users', (user as UserRow).id);
+
   return {
     ...tokens,
     user: toClientUser(user as UserRow, 1),
@@ -168,6 +171,8 @@ export async function login(dto: LoginDtoType) {
   const tokens = generateTokenPair(toJwtPayload(user));
   await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
+  await logAudit(user.id, 'USER_LOGIN', undefined, 'users', user.id);
+
   return {
     ...tokens,
     user: toClientUser(user),
@@ -197,6 +202,8 @@ export async function adminLogin(dto: LoginDtoType) {
 
   const tokens = generateTokenPair(toJwtPayload(user));
   await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
+
+  await logAudit(user.id, 'USER_LOGIN', { adminPanel: true }, 'users', user.id);
 
   return {
     ...tokens,
@@ -280,6 +287,8 @@ export async function resetPasswordVerify(dto: ResetPasswordDtoType): Promise<{ 
 
   // verifyOtp already cleared the store entry on success; no need to clearOtp here.
 
+  await logAudit(userId, 'PASSWORD_RESET', { selfService: true }, 'users', userId);
+
   return { success: true, message: 'Password updated successfully' };
 }
 
@@ -311,6 +320,7 @@ export async function refreshToken(rawToken: string) {
 // ---------------------------------------------------------------------------
 export async function logout(userId: string): Promise<void> {
   await db('users').where({ id: userId }).update({ refresh_token: null });
+  await logAudit(userId, 'USER_LOGOUT', undefined, 'users', userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -430,6 +440,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
     if (existingGoogle.is_blocked) throw new AppError(403, 'Your account has been blocked.');
     const tokens = generateTokenPair(toJwtPayload(existingGoogle));
     await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
+    await logAudit(existingGoogle.id, 'USER_LOGIN', { google: true }, 'users', existingGoogle.id);
     return {
       needsUsername: false as const,
       isNewUser:     false as const,
@@ -482,6 +493,8 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
+  await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
+
   return {
     needsUsername: false as const,
     isNewUser:     true as const,
@@ -506,6 +519,7 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   if (existingGoogle) {
     const tokens = generateTokenPair(toJwtPayload(existingGoogle));
     await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
+    await logAudit(existingGoogle.id, 'USER_LOGIN', { google: true }, 'users', existingGoogle.id);
     return {
       isNewUser: false as const,
       ...tokens,
@@ -543,6 +557,8 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
 
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
+
+  await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
 
   return {
     isNewUser: true as const,

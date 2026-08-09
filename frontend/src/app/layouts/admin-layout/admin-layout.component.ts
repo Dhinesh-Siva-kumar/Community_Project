@@ -23,6 +23,7 @@ const ROUTE_TITLES: Record<string, string> = {
   'user-management': 'User Management',
   'post-approval':   'Post Approval',
   analytics:         'Analytics',
+  'audit-log':       'Audit Log',
   profile:           'Profile',
 };
 
@@ -57,6 +58,7 @@ export class AdminLayoutComponent {
     { label: 'User Management', icon: 'bi-person-gear',       route: '/admin/user-management', sectionLabel: 'ADMIN'       },
     { label: 'Post Approval',   icon: 'bi-check-circle',      route: '/admin/post-approval'                                 },
     { label: 'Analytics',       icon: 'bi-graph-up',          route: '/admin/analytics'                                     },
+    { label: 'Audit Log',       icon: 'bi-clock-history',     route: '/admin/audit-log'                                     },
     { label: 'Profile',         icon: 'bi-person-circle',     route: '/admin/profile',         sectionLabel: 'ACCOUNT'    },
   ];
 

@@ -95,11 +95,11 @@ export async function unblockUser(req: Request, res: Response, next: NextFunctio
 }
 
 export async function trustUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try { res.json(await usersService.trustUser(req.params['id'] as string)); } catch (e) { next(e); }
+  try { res.json(await usersService.trustUser(req.params['id'] as string, req.user!.sub)); } catch (e) { next(e); }
 }
 
 export async function untrustUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try { res.json(await usersService.untrustUser(req.params['id'] as string)); } catch (e) { next(e); }
+  try { res.json(await usersService.untrustUser(req.params['id'] as string, req.user!.sub)); } catch (e) { next(e); }
 }
 
 export async function getCharts(req: Request, res: Response, next: NextFunction): Promise<void> {

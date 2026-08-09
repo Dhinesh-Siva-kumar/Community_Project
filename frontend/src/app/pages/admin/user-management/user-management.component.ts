@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { UserService, UserFilterParams } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -28,6 +29,7 @@ export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast       = inject(ToastService);
+  private route        = inject(ActivatedRoute);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   users      = signal<User[]>([]);
@@ -134,6 +136,11 @@ export class UserManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadCountries();
+
+    // Deep-link support — e.g. "View Record" from the Audit Log page opens
+    // this user's detail drawer directly via /admin/user-management?userId=…
+    const userId = this.route.snapshot.queryParamMap.get('userId');
+    if (userId) this.viewUser(userId);
   }
 
   loadCountries(): void {
