@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Post, Comment, PaginatedResponse, PostType } from '../models';
+import { Post, Comment, PaginatedResponse, PostType, PostStatus } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface PendingPostsQueryParams {
@@ -15,6 +15,7 @@ export interface PendingPostsQueryParams {
   dateTo?:   string;
   sortBy?:   'joined' | 'community';
   sortDir?:  'asc' | 'desc';
+  authorStatus?: 'trusted' | 'untrusted';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,8 +51,8 @@ export class PostService {
     return this.api.put<Post>(`/posts/${id}/approve`);
   }
 
-  rejectPost(id: string): Observable<Post> {
-    return this.api.put<Post>(`/posts/${id}/reject`);
+  rejectPost(id: string, reason?: string): Observable<Post> {
+    return this.api.put<Post>(`/posts/${id}/reject`, reason ? { reason } : {});
   }
 
   getPendingPosts(params?: PendingPostsQueryParams): Observable<PaginatedResponse<Post>> {
@@ -62,6 +63,20 @@ export class PostService {
       });
     }
     return this.api.get<PaginatedResponse<Post>>('/posts/pending', clean);
+  }
+
+  getPendingCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/posts/pending-count');
+  }
+
+  getMyPosts(params?: { page?: number; limit?: number; status?: PostStatus; communityId?: string }): Observable<PaginatedResponse<Post>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params as Record<string, any>).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Post>>('/posts/mine', clean);
   }
 
   getPost(id: string): Observable<Post> {

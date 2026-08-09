@@ -197,6 +197,12 @@ $_sb-active-text:    $color-primary-dark;
   letter-spacing: -0.1px;
 
   // Fixed-width icon container → labels always start at the same column
+  .nav-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
   .bi {
     font-size: 1.0625rem;
     width: 20px;
@@ -206,6 +212,17 @@ $_sb-active-text:    $color-primary-dark;
     color: $color-text-muted;
     opacity: 0.7;
     transition: color $_transition, opacity $_transition, transform 0.18s ease;
+  }
+
+  .nav-icon-dot {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: $color-danger;
+    border-radius: $radius-full;
+    border: 1.5px solid $_sb-bg;
   }
 
   .nav-label {

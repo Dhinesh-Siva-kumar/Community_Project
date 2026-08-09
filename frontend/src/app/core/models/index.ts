@@ -195,6 +195,7 @@ export interface Post {
   images: string[];
   type: PostType;
   status: PostStatus;
+  rejectionReason?: string | null;
   communityId: string;
   userId: string;
   community?: Community;

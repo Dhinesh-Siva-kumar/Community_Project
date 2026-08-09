@@ -38,7 +38,12 @@
         [title]="sidebarCollapsed() && !isMobile() ? item.label : ''"
         [attr.aria-label]="item.label"
       >
-        <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
+        <span class="nav-icon-wrap">
+          <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
+          @if (item.route === '/admin/post-approval' && hasPendingApprovals()) {
+            <span class="nav-icon-dot" aria-label="Pending approvals"></span>
+          }
+        </span>
         @if (!sidebarCollapsed() || isMobile()) {
           <span class="nav-label">{{ item.label }}</span>
         }

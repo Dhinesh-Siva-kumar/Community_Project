@@ -5,6 +5,7 @@ import { sendNotification } from '../../services/notifications.gateway';
 export type NotificationType =
   | 'POST_APPROVED'
   | 'POST_REJECTED'
+  | 'POST_PENDING'
   | 'NEW_COMMENT'
   | 'NEW_LIKE'
   | 'COMMUNITY_POST'

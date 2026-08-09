@@ -709,9 +709,12 @@
 
 // ── Tab Navigation — Modern pill tabs ────────────────────────
 
+// Flexbox instead of a fixed-column grid so the tab count can vary (e.g. the
+// Help/Emergency pair vs. the single Enquire tab, or an extra "My Posts" tab)
+// without ever wrapping to a second row — overflow tabs go in the "More" menu.
 .cd-tabs {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   align-items: stretch;
   gap: 6px;
   background: transparent;
@@ -746,6 +749,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
   gap: 6px;
   height: 39px;
   padding: 0 13px;
@@ -759,6 +764,13 @@
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   position: relative;
+  overflow: hidden;
+
+  .cd-tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   i { font-size: 13px; transition: color 0.2s ease; }
   .cd-tab-label { line-height: 1; }
@@ -839,6 +851,47 @@
   &.cd-tab-btn--about.cd-tab-btn--active {
     box-shadow: 0 2px 8px rgba(109, 40, 217, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
   }
+
+  // "More" overflow tab (Members / About)
+  &.cd-tab-btn--more {
+    width: 100%;
+
+    &:hover,
+    &.cd-tab-btn--active {
+      color: #0f766e;
+    }
+
+    &.cd-tab-btn--active {
+      box-shadow: 0 2px 8px rgba(15, 118, 110, 0.14), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+    }
+  }
+}
+
+// Wrapper for the "More" tab button + its dropdown menu — takes one flex
+// slot in .cd-tabs, same as any other tab button.
+.cd-tabs-more-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.cd-tabs-more-menu {
+  min-width: 170px;
+}
+
+.cd-tabs-more-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: $color-stone-100;
+  color: $color-stone-600;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 // Tab count badge
@@ -1789,6 +1842,86 @@
     background: #f5f3ff;
     color: #6d28d9;
     border-color: rgba(109, 40, 217, 0.34);
+  }
+}
+
+// Approval-status chip for the "My Posts" tab — same pill recipe as
+// .post-type-chip, colored by status instead of post type.
+.post-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  background: #f8fafc;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+
+  i { font-size: 11px; line-height: 1; }
+
+  &.post-status-chip--pending {
+    background: #fffbeb;
+    color: #a16207;
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+
+  &.post-status-chip--approved {
+    background: #ecfdf5;
+    color: #15803d;
+    border-color: rgba(22, 163, 74, 0.34);
+  }
+
+  &.post-status-chip--rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.34);
+  }
+}
+
+// Rejection reason line — quiet, informative, not alarming
+.mp-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #991b1b;
+  font-size: 12.5px;
+  line-height: 1.5;
+
+  i { font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+}
+
+// Edit & Resubmit CTA — warm/primary gradient, mirrors .cd-btn-join's recipe
+.mp-resubmit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background: $gradient-primary;
+  color: $color-on-primary;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba($primary, 0.3);
+  white-space: nowrap;
+
+  i { font-size: 12px; }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary, 0.4);
   }
 }
 
@@ -3011,6 +3144,12 @@
       background: #fff5f5;
       color: #b02a37;
     }
+  }
+
+  &--active {
+    background: $color-stone-100;
+    color: $color-stone-900;
+    font-weight: 700;
   }
 }
 

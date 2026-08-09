@@ -560,20 +560,38 @@
           </button>
         }
 
-        <button class="cd-tab-btn cd-tab-btn--members" role="tab" [class.cd-tab-btn--active]="displayTab() === 'members'"
-          (click)="setTab('members')" [attr.aria-selected]="displayTab() === 'members'">
-          <i class="bi bi-people"></i>
-          <span class="cd-tab-label">Members</span>
-          @if (memberCount() > 0) {
-            <span class="cd-tab-badge cd-tab-badge--members">{{ memberCount() }}</span>
-          }
-        </button>
+        @if (!isAdmin()) {
+          <button class="cd-tab-btn cd-tab-btn--myposts" role="tab" [class.cd-tab-btn--active]="displayTab() === 'myposts'"
+            (click)="setTab('myposts')" [attr.aria-selected]="displayTab() === 'myposts'">
+            <i class="bi bi-file-post"></i>
+            <span class="cd-tab-label">My Posts</span>
+            @if (myPostsInCommunity().length > 0) {
+              <span class="cd-tab-badge cd-tab-badge--posts">{{ myPostsInCommunity().length }}</span>
+            }
+          </button>
+        }
 
-        <button class="cd-tab-btn cd-tab-btn--about" role="tab" [class.cd-tab-btn--active]="displayTab() === 'about'"
-          (click)="setTab('about')" [attr.aria-selected]="displayTab() === 'about'">
-          <i class="bi bi-info-circle"></i>
-          <span class="cd-tab-label">About</span>
-        </button>
+        <div class="cd-tabs-more-wrap" (click)="$event.stopPropagation()">
+          <button type="button" class="cd-tab-btn cd-tab-btn--more" [class.cd-tab-btn--active]="isMoreTabActive()"
+            (click)="toggleMoreTabsMenu($event)" aria-haspopup="true" [attr.aria-expanded]="moreTabsMenuOpen()">
+            <i class="bi bi-three-dots-vertical"></i>
+            <span class="cd-tab-label">More</span>
+          </button>
+
+          @if (moreTabsMenuOpen()) {
+            <div class="cd-post-menu cd-tabs-more-menu" role="menu">
+              <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'members'"
+                (click)="setTab('members'); closeMoreTabsMenu()">
+                <i class="bi bi-people"></i>Members
+                @if (memberCount() > 0) { <span class="cd-tabs-more-badge">{{ memberCount() }}</span> }
+              </button>
+              <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'about'"
+                (click)="setTab('about'); closeMoreTabsMenu()">
+                <i class="bi bi-info-circle"></i>About
+              </button>
+            </div>
+          }
+        </div>
 
         </div>
       </div>
@@ -2013,6 +2031,103 @@
             </div>
           }
 
+        </div>
+      }
+
+      <!-- ══════════════════════════════════════════════════════
+           MY POSTS TAB — caller's own posts in this community,
+           any status, with edit-and-resubmit for rejected ones.
+      ══════════════════════════════════════════════════════════ -->
+      @case ('myposts') {
+        <div class="tab-enter" data-tab-panel="myposts">
+          <ng-container [ngTemplateOutlet]="communityTabs"></ng-container>
+          <span class="cd-tab-panel-start" aria-hidden="true"></span>
+
+          <!-- Type filter — same segmented-control look as the compose form's type selector -->
+          <div class="cd-type-selector mb-3">
+            <button type="button" class="cd-type-btn" [class.cd-type-btn--active]="myPostsFilterType() === 'ALL'"
+              (click)="setMyPostsFilterType('ALL')">
+              <i class="bi bi-collection"></i><span>All</span>
+            </button>
+            <button type="button" class="cd-type-btn cd-type-btn--general" [class.cd-type-btn--active]="myPostsFilterType() === 'GENERAL'"
+              (click)="setMyPostsFilterType('GENERAL')">
+              <i class="bi bi-chat-dots-fill"></i><span>General</span>
+            </button>
+            @if (!isEnquireMode()) {
+              <button type="button" class="cd-type-btn cd-type-btn--help" [class.cd-type-btn--active]="myPostsFilterType() === 'HELP'"
+                (click)="setMyPostsFilterType('HELP')">
+                <i class="bi bi-life-preserver"></i><span>Help</span>
+              </button>
+              <button type="button" class="cd-type-btn cd-type-btn--emergency" [class.cd-type-btn--active]="myPostsFilterType() === 'EMERGENCY'"
+                (click)="setMyPostsFilterType('EMERGENCY')">
+                <i class="bi bi-exclamation-triangle-fill"></i><span>Emergency Assistance</span>
+              </button>
+            } @else {
+              <button type="button" class="cd-type-btn cd-type-btn--enquire" [class.cd-type-btn--active]="myPostsFilterType() === 'ENQUIRY'"
+                (click)="setMyPostsFilterType('ENQUIRY')">
+                <i class="bi bi-question-circle-fill"></i><span>Enquire</span>
+              </button>
+            }
+          </div>
+
+          @if (loadingMyPosts()) {
+            <div class="cd-posts-loading">
+              <div class="spinner-border spinner-border-sm cd-spinner-amber me-2"></div>
+              <span class="cd-loading-text">Loading your posts...</span>
+            </div>
+          } @else if (!filteredMyPosts().length) {
+            <div class="cd-empty-state">
+              <div class="cd-empty-icon">
+                <i class="bi bi-file-post"></i>
+              </div>
+              <h6 class="cd-empty-title">No posts yet</h6>
+              <p class="cd-empty-text">You haven't posted here yet — switch to the Posts tab to share something.</p>
+            </div>
+          } @else {
+            @for (post of filteredMyPosts(); track post.id; let i = $index) {
+              <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'">
+                <div class="card-body">
+                  <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="post-type-chip"
+                      [class.post-type-chip--general]="post.type === 'GENERAL'"
+                      [class.post-type-chip--help]="post.type === 'HELP'"
+                      [class.post-type-chip--emergency]="post.type === 'EMERGENCY'"
+                      [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
+                      <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
+                    </span>
+                    <span class="post-status-chip"
+                      [class.post-status-chip--pending]="post.status === 'PENDING'"
+                      [class.post-status-chip--approved]="post.status === 'APPROVED'"
+                      [class.post-status-chip--rejected]="post.status === 'REJECTED'">
+                      <i class="bi"
+                        [class.bi-hourglass-split]="post.status === 'PENDING'"
+                        [class.bi-check-circle-fill]="post.status === 'APPROVED'"
+                        [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                      @if (post.status === 'PENDING') { Pending Approval } @else if (post.status === 'APPROVED') { Approved } @else { Rejected }
+                    </span>
+                    <small class="text-muted ms-auto">{{ getTimeAgo(post.createdAt) }}</small>
+                  </div>
+
+                  <hr class="post-divider" />
+                  <p class="post-content mb-0">{{ post.content }}</p>
+
+                  @if (post.status === 'REJECTED' && post.rejectionReason) {
+                    <div class="mp-reason mt-2">
+                      <i class="bi bi-info-circle-fill"></i>{{ post.rejectionReason }}
+                    </div>
+                  }
+
+                  @if (post.status === 'REJECTED') {
+                    <div class="mt-3">
+                      <button type="button" class="mp-resubmit-btn" (click)="openEditPostModal(post)">
+                        <i class="bi bi-arrow-repeat"></i>Edit &amp; Resubmit
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
         </div>
       }
 

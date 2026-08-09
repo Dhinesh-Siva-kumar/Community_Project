@@ -4,24 +4,29 @@ import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/user.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Post, PaginatedResponse, Country } from '../../../core/models';
+import { Post, PaginatedResponse, Country, UserDetail } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 
 // Filter chip interface (for active filter display)
 export interface FilterChip { key: string; label: string; value: any; }
 
+interface PostGroup { label: string; posts: Post[]; }
+
 @Component({
   selector: 'app-post-approval',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent, SortBarComponent],
+  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent, SortBarComponent, ImageViewerComponent],
   templateUrl: './post-approval.component.html',
   styleUrls: ['./post-approval.component.scss'],
 })
 export class PostApprovalComponent implements OnInit {
   private postService = inject(PostService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
   private toast = inject(ToastService);
 
   // Data
@@ -37,16 +42,26 @@ export class PostApprovalComponent implements OnInit {
   selectedIds = signal<Set<string>>(new Set());
   selectAll = signal(false);
 
+  // View mode — card (rich content) vs table (compact scan list)
+  viewMode = signal<'cards' | 'table'>('cards');
+  setViewMode(mode: 'cards' | 'table'): void { this.viewMode.set(mode); }
+
   // Filters
   filterCommunity = signal('');   // general search — matches community name or post content
   filterType = signal('');
   filterCountry  = signal('');
   filterDateFrom = signal('');
   filterDateTo   = signal('');
+  filterAuthorStatus = signal<'' | 'trusted' | 'untrusted'>('');
   showAdvancedFilters = signal(false);
   private searchDebounce: any = null;
 
   filterCountryOptions: SelectOption[] = [];
+  readonly authorStatusOptions: SelectOption[] = [
+    { value: '',          label: 'All Authors' },
+    { value: 'trusted',   label: 'Trusted' },
+    { value: 'untrusted', label: 'Not Trusted' },
+  ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
     { value: 50,  label: '50' },
@@ -111,6 +126,30 @@ export class PostApprovalComponent implements OnInit {
     };
   });
 
+  // Pending posts grouped by submission day, for the date-wise view. The
+  // list is already ordered by the server (sortBy defaults to 'joined' desc),
+  // so grouping here just clusters consecutive posts under a day heading.
+  groupedPosts = computed<PostGroup[]>(() => {
+    const posts = this.filteredPosts();
+    const order: string[] = [];
+    const groups = new Map<string, Post[]>();
+    for (const post of posts) {
+      const label = this.dateGroupLabel(post.createdAt);
+      if (!groups.has(label)) { groups.set(label, []); order.push(label); }
+      groups.get(label)!.push(post);
+    }
+    return order.map((label) => ({ label, posts: groups.get(label)! }));
+  });
+
+  private dateGroupLabel(dateStr: string): string {
+    const date = new Date(dateStr);
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86400000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
   // Active filter chips for display
   activeFilterChips = computed<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
@@ -119,6 +158,10 @@ export class PostApprovalComponent implements OnInit {
     if (this.filterCountry()) add('country', this.filterCountry(), this.filterCountry());
     if (this.filterDateFrom()) add('dateFrom', `From ${this.filterDateFrom()}`, this.filterDateFrom());
     if (this.filterDateTo())   add('dateTo',   `To ${this.filterDateTo()}`, this.filterDateTo());
+    if (this.filterAuthorStatus()) {
+      const label = this.authorStatusOptions.find(opt => opt.value === this.filterAuthorStatus())?.label ?? this.filterAuthorStatus();
+      add('authorStatus', label, this.filterAuthorStatus());
+    }
     if (this.filterType()) {
       const typeLabel = this.postTypeOptions.find(opt => opt.value === this.filterType())?.label ?? this.filterType();
       add('type', typeLabel, this.filterType());
@@ -151,6 +194,7 @@ export class PostApprovalComponent implements OnInit {
       type: (this.filterType() || undefined) as any,
       dateFrom: this.filterDateFrom() || undefined,
       dateTo: this.filterDateTo() || undefined,
+      authorStatus: (this.filterAuthorStatus() || undefined) as any,
       sortBy: this.sortBy(),
       sortDir: this.sortDir(),
     };
@@ -199,34 +243,77 @@ export class PostApprovalComponent implements OnInit {
     return this.selectedIds().has(postId);
   }
 
-  // ── Reject confirmation (single + bulk) ─────────────────────
+  // ── View post detail popup — full content + attachments ─────
+  viewingPost = signal<Post | null>(null);
+  viewingAuthor = signal<UserDetail | null>(null);
+  viewingAuthorLoading = signal(false);
+
+  viewPost(post: Post): void {
+    this.viewingPost.set(post);
+    this.viewingAuthor.set(null);
+    const userId = post.user?.id;
+    if (!userId) return;
+    this.viewingAuthorLoading.set(true);
+    this.userService.getUserById(userId).subscribe({
+      next: (author) => { this.viewingAuthor.set(author); this.viewingAuthorLoading.set(false); },
+      error: () => { this.viewingAuthorLoading.set(false); },
+    });
+  }
+
+  closeViewPost(): void {
+    this.viewingPost.set(null);
+    this.viewingAuthor.set(null);
+  }
+
+  // ─── Image Viewer (lightbox for post attachments) ───────────
+  imageViewerOpen = signal(false);
+  imageViewerImages = signal<string[]>([]);
+  imageViewerInitialIndex = signal(0);
+
+  openImageViewer(images: string[], index: number = 0): void {
+    this.imageViewerImages.set(images);
+    this.imageViewerInitialIndex.set(index);
+    this.imageViewerOpen.set(true);
+  }
+
+  closeImageViewer(): void {
+    this.imageViewerOpen.set(false);
+  }
+
+  // ── Confirmation popup (reject) ──────────────────────────────
   confirmRejectTarget = signal<Post | null>(null);
   confirmRejectBulk = signal(false);
+  rejectReason = signal('');
 
-  requestRejectPost(post: Post): void {
+  requestReject(post: Post): void {
+    this.rejectReason.set('');
     this.confirmRejectTarget.set(post);
   }
 
   requestRejectSelected(): void {
     if (this.selectedIds().size === 0) return;
+    this.rejectReason.set('');
     this.confirmRejectBulk.set(true);
   }
 
-  cancelRejectConfirm(): void {
+  cancelConfirm(): void {
     this.confirmRejectTarget.set(null);
+  }
+
+  cancelRejectConfirm(): void {
     this.confirmRejectBulk.set(false);
   }
 
-  confirmRejectPostExecute(): void {
+  confirmRejectExecute(): void {
     const post = this.confirmRejectTarget();
     if (!post) return;
     this.confirmRejectTarget.set(null);
-    this.rejectPost(post.id);
+    this.rejectPost(post.id, this.rejectReason());
   }
 
   confirmRejectSelectedExecute(): void {
     this.confirmRejectBulk.set(false);
-    this.rejectSelected();
+    this.rejectSelected(this.rejectReason());
   }
 
   // Approve / Reject single
@@ -251,9 +338,9 @@ export class PostApprovalComponent implements OnInit {
     });
   }
 
-  rejectPost(id: string): void {
+  rejectPost(id: string, reason?: string): void {
     this.rejectingId.set(id);
-    this.postService.rejectPost(id).subscribe({
+    this.postService.rejectPost(id, reason).subscribe({
       next: () => {
         this.pendingPosts.update((posts) => posts.filter((p) => p.id !== id));
         this.totalItems.update((v) => Math.max(0, v - 1));
@@ -311,10 +398,10 @@ export class PostApprovalComponent implements OnInit {
     this.runBulk(ids, (id) => this.postService.approvePost(id), 'approved');
   }
 
-  rejectSelected(): void {
+  rejectSelected(reason?: string): void {
     const ids = Array.from(this.selectedIds());
     if (ids.length === 0) return;
-    this.runBulk(ids, (id) => this.postService.rejectPost(id), 'rejected');
+    this.runBulk(ids, (id) => this.postService.rejectPost(id, reason), 'rejected');
   }
 
   // Filters & Search
@@ -334,6 +421,7 @@ export class PostApprovalComponent implements OnInit {
     this.filterCountry.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.filterAuthorStatus.set('');
     this.selectedIds.set(new Set());
     this.selectAll.set(false);
     this.applyFilters();
@@ -346,6 +434,7 @@ export class PostApprovalComponent implements OnInit {
       case 'country':   this.filterCountry.set('');   break;
       case 'dateFrom':  this.filterDateFrom.set('');  break;
       case 'dateTo':    this.filterDateTo.set('');    break;
+      case 'authorStatus': this.filterAuthorStatus.set(''); break;
     }
     this.applyFilters();
   }
@@ -362,8 +451,18 @@ export class PostApprovalComponent implements OnInit {
     this.applyFilters();
   }
 
+  setTypeFilter(type: string): void {
+    this.filterType.set(type);
+    this.applyFilters();
+  }
+
   setCountryFilter(v: string | number): void {
     this.filterCountry.set(v as string);
+    this.applyFilters();
+  }
+
+  setAuthorStatusFilter(v: string | number): void {
+    this.filterAuthorStatus.set(v as '' | 'trusted' | 'untrusted');
     this.applyFilters();
   }
 
@@ -394,6 +493,9 @@ export class PostApprovalComponent implements OnInit {
     const e = Math.min(total, s + max - 1); s = Math.max(1, e - max + 1);
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
+
+  showingFrom(): number { return (this.currentPage() - 1) * this.pageSize() + 1; }
+  showingTo():   number { return Math.min(this.currentPage() * this.pageSize(), this.totalItems()); }
 
   // Helpers
   getPostTypeBadge(type: string): { label: string; class: string } {

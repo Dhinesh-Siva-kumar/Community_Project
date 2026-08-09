@@ -19,7 +19,7 @@ import { CommunityRulesInputComponent } from '../../../shared/components/communi
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { environment } from '../../../../environments/environment';
 
-type TabType = 'posts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
+type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
 @Component({
   selector: 'app-community-detail',
@@ -72,6 +72,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   postImageResetCounter = signal(0);
   selectedPostType = signal<PostType>('GENERAL');
 
+  // My Posts (this community) — surfaces the caller's own pending/rejected/
+  // approved posts, since the main feed below only ever shows APPROVED ones.
+  myPostsInCommunity = signal<Post[]>([]);
+  loadingMyPosts = signal(false);
+  myPostsFilterType = signal<'ALL' | PostType>('ALL');
+
   // Post interactions
   expandedComments = signal<Set<string>>(new Set());
   loadingComments = signal<Set<string>>(new Set());
@@ -95,6 +101,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   // Post options menu (three-dot)
   postMenuOpenId = signal<string | null>(null);
+
+  // Overflow ("More") menu for tabs that don't fit in the tab bar
+  moreTabsMenuOpen = signal(false);
 
   // Image lightbox preview
   lightboxOpen = signal(false);
@@ -185,6 +194,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   // 150ms fade transition (and `activeTab` itself) hasn't switched over yet.
   displayTab = computed(() => this.pendingTab() ?? this.activeTab());
 
+  // Highlights the "More" tab button when one of its overflow items is active
+  isMoreTabActive = computed(() => this.displayTab() === 'members' || this.displayTab() === 'about');
+
   filteredPosts = computed(() => {
     const tab = this.activeTab();
     const allPosts = this.posts();
@@ -201,6 +213,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP').length);
   emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY').length);
   enquiryCount   = computed(() => this.posts().filter((p) => p.type === 'ENQUIRY').length);
+
+  filteredMyPosts = computed(() => {
+    const type = this.myPostsFilterType();
+    const posts = this.myPostsInCommunity();
+    return type === 'ALL' ? posts : posts.filter((p) => p.type === type);
+  });
 
   communityCreatorId = computed(() => {
     const c = this.community();
@@ -505,6 +523,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       if (token !== this.tabSwitchToken) return;
 
       this.activeTab.set(tab);
+      if (tab === 'myposts' && this.myPostsInCommunity().length === 0) {
+        this.loadMyPostsInCommunity();
+      }
       switch (tab) {
         case 'help':      this.selectedPostType.set('HELP');      break;
         case 'emergency': this.selectedPostType.set('EMERGENCY'); break;
@@ -582,8 +603,22 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         if (post.status === 'APPROVED') {
           this.posts.update((current) => [post, ...current]);
         }
+        this.myPostsInCommunity.update((current) => [post, ...current]);
       },
       error: () => { this.toast.error('Failed to create post'); this.submittingPost.set(false); },
+    });
+  }
+
+  // ── My Posts (this community) ────────────────────────────────
+  setMyPostsFilterType(type: 'ALL' | PostType): void {
+    this.myPostsFilterType.set(type);
+  }
+
+  loadMyPostsInCommunity(): void {
+    this.loadingMyPosts.set(true);
+    this.postService.getMyPosts({ communityId: this.communityId(), page: 1, limit: 50 }).subscribe({
+      next: (r) => { this.myPostsInCommunity.set(r.data); this.loadingMyPosts.set(false); },
+      error: () => this.loadingMyPosts.set(false),
     });
   }
 
@@ -955,6 +990,16 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.postMenuOpenId.set(null);
+    this.moreTabsMenuOpen.set(false);
+  }
+
+  toggleMoreTabsMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.moreTabsMenuOpen.update((v) => !v);
+  }
+
+  closeMoreTabsMenu(): void {
+    this.moreTabsMenuOpen.set(false);
   }
 
   @HostListener('document:keydown.escape', ['$event'])
@@ -1050,7 +1095,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.postService.updatePost(post.id, { content, type, images: retainedImages }, images.length > 0 ? images : undefined).subscribe({
       next: (updated) => {
         this.posts.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
-        this.toast.success('Post updated successfully!');
+        this.myPostsInCommunity.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+        const resubmitted = post.status === 'REJECTED' && updated.status !== 'REJECTED';
+        this.toast.success(resubmitted ? 'Post updated and resubmitted for approval!' : 'Post updated successfully!');
         this.savingEdit.set(false);
         this.closeEditModal();
       },

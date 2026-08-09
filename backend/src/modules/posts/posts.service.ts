@@ -1,10 +1,11 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
 const POST_USER_SELECT = [
-  'u.id as user_id', 'u.user_name', 'u.display_name', 'u.avatar',
+  'u.id as user_id', 'u.user_name', 'u.display_name', 'u.avatar', 'u.is_trusted', 'u.is_blocked',
 ];
 const POST_COMMUNITY_SELECT = [
   'c.id as community_id', 'c.name as community_name',
@@ -17,16 +18,39 @@ function formatPost(row: Record<string, unknown>, commentCount: number, likeCoun
     images: row['images'],
     type: row['type'],
     status: row['status'],
+    rejectionReason: row['rejection_reason'] ?? null,
     communityId: row['community_id'],
     userId: row['user_id'],
     createdAt: row['created_at'],
     updatedAt: row['updated_at'],
-    user: { id: row['user_id'], userName: row['user_name'], displayName: row['display_name'], avatar: row['avatar'] },
+    user: {
+      id: row['user_id'], userName: row['user_name'], displayName: row['display_name'], avatar: row['avatar'],
+      isTrusted: row['is_trusted'], isBlocked: row['is_blocked'],
+    },
     community: { id: row['c_community_id'] ?? row['community_id'], name: row['community_name'] },
     _count: { comments: commentCount, likes: likeCount },
     isLiked,
     isSaved,
   };
+}
+
+async function notifyAdminsOfPendingPost(postId: string, communityId: string): Promise<void> {
+  const admins = await db('users').where({ role: 'ADMIN' }).select('id');
+  if (!admins.length) return;
+
+  const community = await db('communities').where({ id: communityId }).select('name').first() as Record<string, unknown> | undefined;
+  const message = `New post pending approval in ${(community?.['name'] as string) ?? 'a community'}.`;
+
+  await Promise.all(
+    (admins as Array<Record<string, unknown>>).map((admin) =>
+      notificationsService.create(admin['id'] as string, 'POST_PENDING', message, postId),
+    ),
+  );
+}
+
+export async function countPending() {
+  const [{ count }] = await db('posts').where({ status: 'PENDING' }).count({ count: '*' });
+  return { count: Number(count) };
 }
 
 export async function create(data: CreatePostDtoType, userId: string) {
@@ -36,7 +60,8 @@ export async function create(data: CreatePostDtoType, userId: string) {
   const community = await db('communities').where({ id: data.communityId }).first();
   if (!community) throw new AppError(404, 'Community not found');
 
-  const status = (user['is_blocked']) ? 'PENDING' : 'APPROVED';
+  const isAutoApproved = user['role'] === 'ADMIN' || (user['is_trusted'] && !user['is_blocked']);
+  const status = isAutoApproved ? 'APPROVED' : 'PENDING';
 
   const [post] = await db('posts')
     .insert({
@@ -55,6 +80,10 @@ export async function create(data: CreatePostDtoType, userId: string) {
     .where('p.id', (post as Record<string, unknown>)['id'] as string)
     .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
     .first() as Record<string, unknown>;
+
+  if (status === 'PENDING') {
+    await notifyAdminsOfPendingPost((post as Record<string, unknown>)['id'] as string, data.communityId);
+  }
 
   return formatPost(row, 0, 0);
 }
@@ -140,10 +169,11 @@ export interface FindPendingOnlyOptions {
   dateTo?:   string;
   sortBy?:  'joined' | 'community';
   sortDir?: 'asc' | 'desc';
+  authorStatus?: 'trusted' | 'untrusted';
 }
 
 export async function findPendingOnly(options: FindPendingOnlyOptions) {
-  const { page, limit, search, country, type, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const { page, limit, search, country, type, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc', authorStatus } = options;
   const offset = (page - 1) * limit;
 
   const query = db('posts as p')
@@ -153,8 +183,14 @@ export async function findPendingOnly(options: FindPendingOnlyOptions) {
     .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
 
   const countQuery = db('posts as p')
+    .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.status', 'PENDING');
+
+  if (authorStatus) {
+    query.andWhere('u.is_trusted', authorStatus === 'trusted');
+    countQuery.andWhere('u.is_trusted', authorStatus === 'trusted');
+  }
 
   if (search) {
     query.andWhere(function () {
@@ -207,17 +243,64 @@ export async function approve(postId: string) {
   if (!post) throw new AppError(404, 'Post not found');
 
   const [updated] = await db('posts').where({ id: postId }).update({ status: 'APPROVED' }).returning('*');
-  const user = await db('users').where({ id: (updated as Record<string, unknown>)['user_id'] }).select('id', 'user_name', 'display_name').first();
-  return { ...(updated as Record<string, unknown>), user };
+  const updatedRow = updated as Record<string, unknown>;
+  const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
+  await notificationsService.create(updatedRow['user_id'] as string, 'POST_APPROVED', 'Your post has been approved.', postId);
+  return { ...updatedRow, user };
 }
 
-export async function reject(postId: string) {
+export async function reject(postId: string, reason?: string) {
   const post = await db('posts').where({ id: postId }).first();
   if (!post) throw new AppError(404, 'Post not found');
 
-  const [updated] = await db('posts').where({ id: postId }).update({ status: 'REJECTED' }).returning('*');
-  const user = await db('users').where({ id: (updated as Record<string, unknown>)['user_id'] }).select('id', 'user_name', 'display_name').first();
-  return { ...(updated as Record<string, unknown>), user };
+  const [updated] = await db('posts').where({ id: postId })
+    .update({ status: 'REJECTED', rejection_reason: reason ?? null })
+    .returning('*');
+  const updatedRow = updated as Record<string, unknown>;
+  const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
+  const message = `Your post has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(updatedRow['user_id'] as string, 'POST_REJECTED', message, postId);
+  return { ...updatedRow, user };
+}
+
+export async function findMine(userId: string, options: { page: number; limit: number; status?: 'PENDING' | 'APPROVED' | 'REJECTED'; communityId?: string }) {
+  const { page, limit, status, communityId } = options;
+  const offset = (page - 1) * limit;
+
+  const query = db('posts as p')
+    .join('users as u', 'p.user_id', 'u.id')
+    .join('communities as c', 'p.community_id', 'c.id')
+    .where('p.user_id', userId)
+    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
+
+  const countQuery = db('posts as p').where('p.user_id', userId);
+
+  if (status) {
+    query.andWhere('p.status', status);
+    countQuery.andWhere('p.status', status);
+  }
+  if (communityId) {
+    query.andWhere('p.community_id', communityId);
+    countQuery.andWhere('p.community_id', communityId);
+  }
+
+  const [posts, [{ total }]] = await Promise.all([
+    query.orderBy('p.created_at', 'desc').limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
+  ]);
+
+  const ids = (posts as Array<Record<string, unknown>>).map((p) => p['id'] as string);
+  const commentCounts = ids.length ? await db('comments').whereIn('post_id', ids).count({ total: '*' }).select('post_id').groupBy('post_id') : [];
+  const likeCounts = ids.length ? await db('likes').whereIn('post_id', ids).count({ total: '*' }).select('post_id').groupBy('post_id') : [];
+
+  const commentMap = new Map((commentCounts as Array<Record<string, unknown>>).map((r) => [r['post_id'], Number(r['total'])]));
+  const likeMap = new Map((likeCounts as Array<Record<string, unknown>>).map((r) => [r['post_id'], Number(r['total'])]));
+
+  const data = (posts as Array<Record<string, unknown>>).map((p) =>
+    formatPost(p, commentMap.get(p['id']) ?? 0, likeMap.get(p['id']) ?? 0),
+  );
+
+  return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
 export async function deletePost(postId: string, userId: string) {
@@ -238,15 +321,25 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
-  if (post['user_id'] !== userId) {
-    const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only edit your own posts');
+  const isOwner = post['user_id'] === userId;
+  const editor = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
+  if (!isOwner && (!editor || editor['role'] !== 'ADMIN')) {
+    throw new AppError(403, 'You can only edit your own posts');
   }
 
   const updateFields: Record<string, unknown> = {};
   if (data.content  !== undefined) updateFields['content'] = data.content;
   if (data.type     !== undefined) updateFields['type']    = data.type;
   if (data.images   !== undefined) updateFields['images']  = data.images;
+
+  // Resubmitting a rejected post: the author editing their own rejected post
+  // re-enters the approval gate exactly like a brand-new post, instead of
+  // silently staying REJECTED after the edit.
+  if (isOwner && editor && post['status'] === 'REJECTED') {
+    const isAutoApproved = editor['role'] === 'ADMIN' || (editor['is_trusted'] && !editor['is_blocked']);
+    updateFields['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
+    updateFields['rejection_reason'] = null;
+  }
 
   if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update');
 
@@ -256,6 +349,10 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
     const oldImages = Array.isArray(post['images']) ? (post['images'] as unknown[]) : [];
     const newImages = data.images ?? [];
     deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
+
+  if (updateFields['status'] === 'PENDING') {
+    await notifyAdminsOfPendingPost(postId, post['community_id'] as string);
   }
 
   const row = await db('posts as p')
