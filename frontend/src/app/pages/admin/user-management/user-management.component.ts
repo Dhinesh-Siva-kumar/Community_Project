@@ -1,19 +1,17 @@
 import {
-  Component, OnInit, inject, signal, computed, ChangeDetectionStrategy,
+  Component, OnInit, HostListener, inject, signal, computed, ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
 import { UserService, UserFilterParams } from '../../../core/services/user.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { User, UserListResponse } from '../../../core/models';
+import { User, UserListResponse, Country } from '../../../core/models';
 import { AddUserDrawerComponent }      from './panels/add-user-drawer/add-user-drawer.component';
 import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-detail-drawer.component';
-import { ActivityLogDrawerComponent }  from './panels/activity-log-drawer/activity-log-drawer.component';
-import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
+import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 
-type BulkAction = 'block' | 'unblock' | 'delete' | 'role';
-type PageTab = 'users' | 'activity' | 'reports';
+type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
 
 @Component({
   selector: 'app-user-management',
@@ -21,14 +19,14 @@ type PageTab = 'users' | 'activity' | 'reports';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, DatePipe, FormsModule,
-    AddUserDrawerComponent, UserDetailDrawerComponent, ActivityLogDrawerComponent,
-    ProfileTabsComponent,
+    AddUserDrawerComponent, UserDetailDrawerComponent, SearchableSelectComponent,
   ],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
 })
 export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private toast       = inject(ToastService);
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -40,20 +38,65 @@ export class UserManagementComponent implements OnInit {
   currentPage = signal(1);
   pageSize   = signal(20);
 
+  // ── Floating header action (shows once scrolled past the page header) ─────
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
+
   // ── Filter state ──────────────────────────────────────────────────────────
   searchInput  = signal('');      // live-bound to input
   appliedSearch = signal('');     // only updates on Search btn / Enter
   filterRole   = signal<'ADMIN' | 'USER' | ''>('');
   filterStatus = signal<'active' | 'blocked' | 'trusted' | ''>('');
   filterJoined = signal<'today' | '7d' | '30d' | '90d' | ''>('');
+  filterCountry = signal<string>('');
+
+  // ── Sort state — driven by clicking a table column header ──────────────────
+  sortBy  = signal<'name' | 'email' | 'joined' | 'role'>('joined');
+  sortDir = signal<'asc' | 'desc'>('desc');
 
   activeFilterCount = computed(() =>
-    [this.appliedSearch(), this.filterRole(), this.filterStatus(), this.filterJoined()]
+    [this.appliedSearch(), this.filterRole(), this.filterStatus(), this.filterJoined(), this.filterCountry()]
       .filter(Boolean).length,
   );
 
-  // ── Premium filter UI state ───────────────────────────────────────────────
-  showAdvancedFilters = signal(false);
+  // ── Dropdown option lists (app-searchable-select) — same component the
+  // rest of the admin console uses, so filters don't fall back to a native
+  // OS <select> list that looks out of place next to everything else.
+  readonly roleFilterOptions: SelectOption[] = [
+    { value: '',      label: 'All Roles' },
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'USER',  label: 'User' },
+  ];
+  readonly statusFilterOptions: SelectOption[] = [
+    { value: '',        label: 'All Status' },
+    { value: 'active',  label: 'Active' },
+    { value: 'blocked', label: 'Blocked' },
+    { value: 'trusted', label: 'Trusted' },
+  ];
+  readonly joinedFilterOptions: SelectOption[] = [
+    { value: '',     label: 'All Time' },
+    { value: 'today', label: 'Today' },
+    { value: '7d',    label: 'Last 7 Days' },
+    { value: '30d',   label: 'Last 30 Days' },
+    { value: '90d',   label: 'Last 3 Months' },
+  ];
+  readonly pageSizeOptions: SelectOption[] = [
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
+  ];
+
+  filterCountryOptions: SelectOption[] = [];
 
   // Active filter chips for display
   activeFilterChips = computed<{ key: string; label: string; value: any }[]>(() => {
@@ -62,32 +105,13 @@ export class UserManagementComponent implements OnInit {
     if (this.filterRole()) chips.push({ key: 'role', label: this.filterRole(), value: this.filterRole() });
     if (this.filterStatus()) chips.push({ key: 'status', label: this.filterStatus()!, value: this.filterStatus() });
     if (this.filterJoined()) chips.push({ key: 'joined', label: `Last ${this.filterJoined()}`, value: this.filterJoined() });
+    if (this.filterCountry()) chips.push({ key: 'country', label: this.filterCountry(), value: this.filterCountry() });
     return chips;
   });
 
-  // ── Selection / bulk ──────────────────────────────────────────────────────
-  selectedIds    = signal<Set<string>>(new Set());
-  bulkRoleTarget = signal<'ADMIN' | 'USER'>('USER');
-  confirmBulk    = signal<BulkAction | null>(null);
-  bulkWorking    = signal(false);
-
-  selectedCount = computed(() => this.selectedIds().size);
-  allSelected   = computed(() =>
-    this.users().length > 0 && this.users().every((u) => this.selectedIds().has(u.id)),
-  );
-
-  // ── Page tabs ─────────────────────────────────────────────────────────────
-  activeTab = signal<PageTab>('users');
-
-  pageTabs: ProfileTab[] = [
-    { id: 'users',    label: 'Users',        icon: 'bi-people-fill' },
-    { id: 'activity', label: 'Activity Log', icon: 'bi-clock-history' },
-    { id: 'reports',  label: 'Reports',      icon: 'bi-flag-fill' },
-  ];
-
-  setPageTab(id: string): void {
-    this.activeTab.set(id as PageTab);
-  }
+  // ── View mode (table / grid) ────────────────────────────────────────────
+  viewMode = signal<'table' | 'grid'>('table');
+  setViewMode(mode: 'table' | 'grid'): void { this.viewMode.set(mode); }
 
   // ── Panel visibility (add-user + detail drawers only) ─────────────────────
   showAddDrawer        = signal(false);
@@ -97,6 +121,9 @@ export class UserManagementComponent implements OnInit {
   // ── Row action state ─────────────────────────────────────────────────────
   actionWorkingId = signal<string | null>(null);
 
+  // ── Confirmation popup (block/unblock, trust/untrust, delete) ──────────────
+  confirmAction = signal<{ type: ConfirmActionType; user: User } | null>(null);
+
   // ── Export ────────────────────────────────────────────────────────────────
   exportMenuOpen  = signal(false);
   exporting       = signal(false);
@@ -104,34 +131,32 @@ export class UserManagementComponent implements OnInit {
   // ── Dropdown per row ──────────────────────────────────────────────────────
   openDropdownId = signal<string | null>(null);
 
-  // ── Computed subtitle ─────────────────────────────────────────────────────
-  subtitle = computed(() => {
-    const parts: string[] = [];
-    if (this.filterStatus() === 'blocked') parts.push('blocked');
-    if (this.filterStatus() === 'active')  parts.push('active');
-    if (this.filterStatus() === 'trusted') parts.push('trusted');
-    if (this.filterRole())                 parts.push(this.filterRole()!.toLowerCase());
-    const qualifier = parts.join(' ');
-    const count = this.total();
-    if (this.appliedSearch()) return `${count} result${count === 1 ? '' : 's'} for "${this.appliedSearch()}"`;
-    if (qualifier) return `Showing ${count} ${qualifier} user${count === 1 ? '' : 's'}`;
-    return `${count} total user${count === 1 ? '' : 's'} on the platform`;
-  });
-
   ngOnInit(): void {
     this.loadUsers();
+    this.loadCountries();
+  }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.filterCountryOptions = res.data.map((c: Country) => ({ value: c.name, label: c.name }));
+      },
+    });
   }
 
   // ── API ───────────────────────────────────────────────────────────────────
   loadUsers(): void {
     this.loading.set(true);
     const params: UserFilterParams = {
-      page:   this.currentPage(),
-      limit:  this.pageSize(),
-      search: this.appliedSearch() || undefined,
-      role:   this.filterRole()   || undefined,
-      status: this.filterStatus() || undefined,
-      joined: this.filterJoined() || undefined,
+      page:    this.currentPage(),
+      limit:   this.pageSize(),
+      search:  this.appliedSearch() || undefined,
+      role:    this.filterRole()   || undefined,
+      status:  this.filterStatus() || undefined,
+      joined:  this.filterJoined() || undefined,
+      country: this.filterCountry() || undefined,
+      sortBy:  this.sortBy(),
+      sortDir: this.sortDir(),
     };
     this.userService.getUsers(params).subscribe({
       next: (res: UserListResponse) => {
@@ -140,7 +165,6 @@ export class UserManagementComponent implements OnInit {
         this.totalPages.set(res.totalPages);
         this.stats.set(res.stats);
         this.loading.set(false);
-        this.selectedIds.set(new Set());
       },
       error: () => {
         this.toast.error('Failed to load users');
@@ -165,18 +189,49 @@ export class UserManagementComponent implements OnInit {
     this.loadUsers();
   }
 
+  // ── app-searchable-select handlers (typed value coercion) ──────────────────
+  setRoleFilter(v: string | number): void {
+    this.filterRole.set(v as 'ADMIN' | 'USER' | '');
+    this.onFilterChange();
+  }
+
+  setStatusFilter(v: string | number): void {
+    this.filterStatus.set(v as 'active' | 'blocked' | 'trusted' | '');
+    this.onFilterChange();
+  }
+
+  setJoinedFilter(v: string | number): void {
+    this.filterJoined.set(v as 'today' | '7d' | '30d' | '90d' | '');
+    this.onFilterChange();
+  }
+
+  setCountryFilter(v: string | number): void {
+    this.filterCountry.set(v as string);
+    this.onFilterChange();
+  }
+
+  // Clicking a sortable column header: same field toggles asc/desc,
+  // a different field starts at desc — matches app-sort-bar's behavior.
+  toggleSort(field: 'name' | 'email' | 'joined' | 'role'): void {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('desc');
+    }
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
+
   clearFilters(): void {
     this.searchInput.set('');
     this.appliedSearch.set('');
     this.filterRole.set('');
     this.filterStatus.set('');
     this.filterJoined.set('');
+    this.filterCountry.set('');
     this.currentPage.set(1);
     this.loadUsers();
-  }
-
-  toggleAdvancedFilters(): void {
-    this.showAdvancedFilters.update(v => !v);
   }
 
   removeFilter(filterKey: string): void {
@@ -193,6 +248,9 @@ export class UserManagementComponent implements OnInit {
         break;
       case 'joined':
         this.filterJoined.set('');
+        break;
+      case 'country':
+        this.filterCountry.set('');
         break;
     }
     this.currentPage.set(1);
@@ -227,31 +285,16 @@ export class UserManagementComponent implements OnInit {
   showingFrom(): number { return (this.currentPage() - 1) * this.pageSize() + 1; }
   showingTo():   number { return Math.min(this.currentPage() * this.pageSize(), this.total()); }
 
-  // ── Row selection ──────────────────────────────────────────────────────────
-  toggleSelectAll(): void {
-    if (this.allSelected()) {
-      this.selectedIds.set(new Set());
-    } else {
-      this.selectedIds.set(new Set(this.users().map((u) => u.id)));
-    }
-  }
-
-  toggleSelect(id: string): void {
-    const s = new Set(this.selectedIds());
-    s.has(id) ? s.delete(id) : s.add(id);
-    this.selectedIds.set(s);
-  }
-
-  isSelected(id: string): boolean { return this.selectedIds().has(id); }
-  clearSelection(): void          { this.selectedIds.set(new Set()); }
-
   // ── Single-row actions ─────────────────────────────────────────────────────
   toggleRowDropdown(id: string, e: Event): void {
     e.stopPropagation();
     this.openDropdownId.set(this.openDropdownId() === id ? null : id);
   }
 
-  closeDropdowns(): void { this.openDropdownId.set(null); }
+  closeDropdowns(): void {
+    this.openDropdownId.set(null);
+    this.exportMenuOpen.set(false);
+  }
 
   viewUser(id: string): void {
     this.detailUserId.set(id);
@@ -263,6 +306,50 @@ export class UserManagementComponent implements OnInit {
     this.detailUserId.set(id);
     this.showDetailDrawer.set(true);
     this.closeDropdowns();
+  }
+
+  // ── Confirmation popup ───────────────────────────────────────────────────
+  requestBlockToggle(user: User): void {
+    this.confirmAction.set({ type: user.isBlocked ? 'unblock' : 'block', user });
+  }
+
+  requestTrustToggle(user: User): void {
+    this.confirmAction.set({ type: user.isTrusted ? 'untrust' : 'trust', user });
+  }
+
+  requestDelete(user: User): void {
+    this.confirmAction.set({ type: 'delete', user });
+  }
+
+  cancelConfirm(): void {
+    this.confirmAction.set(null);
+  }
+
+  confirmActionExecute(): void {
+    const ca = this.confirmAction();
+    if (!ca) return;
+    this.confirmAction.set(null);
+    if (ca.type === 'block' || ca.type === 'unblock') this.toggleBlock(ca.user);
+    else if (ca.type === 'trust' || ca.type === 'untrust') this.toggleTrust(ca.user);
+    else this.deleteUser(ca.user);
+  }
+
+  confirmTitle(type: ConfirmActionType): string {
+    const map: Record<ConfirmActionType, string> = {
+      block: 'Block User', unblock: 'Unblock User',
+      trust: 'Mark as Trusted', untrust: 'Remove Trust',
+      delete: 'Delete User',
+    };
+    return map[type];
+  }
+
+  confirmIcon(type: ConfirmActionType): string {
+    const map: Record<ConfirmActionType, string> = {
+      block: 'bi-lock-fill', unblock: 'bi-unlock-fill',
+      trust: 'bi-star-fill', untrust: 'bi-star',
+      delete: 'bi-trash3-fill',
+    };
+    return map[type];
   }
 
   toggleBlock(user: User): void {
@@ -302,7 +389,6 @@ export class UserManagementComponent implements OnInit {
   }
 
   deleteUser(user: User): void {
-    if (!confirm(`Delete "${user.displayName}"? This will deactivate their account.`)) return;
     this.actionWorkingId.set(user.id);
     this.userService.softDeleteUser(user.id).subscribe({
       next: () => {
@@ -314,50 +400,6 @@ export class UserManagementComponent implements OnInit {
       },
       error: () => { this.toast.error('Failed to delete user'); this.actionWorkingId.set(null); },
     });
-  }
-
-  // ── Bulk actions ───────────────────────────────────────────────────────────
-  initBulkAction(action: BulkAction): void {
-    this.confirmBulk.set(action);
-  }
-
-  cancelBulk(): void { this.confirmBulk.set(null); }
-
-  executeBulkAction(): void {
-    const action = this.confirmBulk();
-    const ids = Array.from(this.selectedIds());
-    if (!action || ids.length === 0) return;
-
-    this.bulkWorking.set(true);
-    const calls: Observable<unknown>[] = ids.map((id) => {
-      if (action === 'block')   return this.userService.blockUser(id);
-      if (action === 'unblock') return this.userService.unblockUser(id);
-      if (action === 'delete')  return this.userService.softDeleteUser(id);
-      if (action === 'role')    return this.userService.changeUserRole(id, this.bulkRoleTarget());
-      return this.userService.blockUser(id);
-    });
-
-    let done = 0;
-    calls.forEach((obs) => obs.subscribe({
-      next: () => {
-        done++;
-        if (done === calls.length) {
-          this.toast.success(`${action} applied to ${ids.length} user${ids.length > 1 ? 's' : ''}`);
-          this.confirmBulk.set(null);
-          this.bulkWorking.set(false);
-          this.loadUsers();
-        }
-      },
-      error: () => {
-        done++;
-        if (done === calls.length) {
-          this.toast.error('Some actions failed');
-          this.confirmBulk.set(null);
-          this.bulkWorking.set(false);
-          this.loadUsers();
-        }
-      },
-    }));
   }
 
   // ── Panel handlers ────────────────────────────────────────────────────────
@@ -377,35 +419,58 @@ export class UserManagementComponent implements OnInit {
     this.exportMenuOpen.update((v) => !v);
   }
 
+  private readonly exportHeaders = [
+    'ID', 'Display Name', 'Username', 'Email', 'Phone', 'Role', 'Status', 'Trusted',
+    'Country', 'Location', 'Pincode', 'Professional Category', 'Interests', 'Bio',
+    'Profile Completion %', 'Joined', 'Last Updated',
+  ];
+
+  private buildExportRows(users: User[]): (string | number)[][] {
+    return users.map((u) => [
+      u.id, u.displayName, u.userName, u.email ?? '', u.phoneNo ?? '',
+      u.role, u.isBlocked ? 'Blocked' : u.isActive ? 'Active' : 'Inactive',
+      u.isTrusted ? 'Yes' : 'No', u.country, u.location ?? '', u.pincode ?? '',
+      u.professionalCategory ?? '', (u.interests ?? []).join('; '), u.bio ?? '',
+      u.profileCompletion, u.createdAt, u.updatedAt,
+    ]);
+  }
+
+  // Overall export — every user in the system, independent of whatever
+  // search/role/status filters are currently applied to the table.
   exportCSV(): void {
     this.exportMenuOpen.set(false);
     this.exporting.set(true);
-    this.userService.exportUsers({
-      search: this.appliedSearch() || undefined,
-      role:   this.filterRole()   || undefined,
-      status: this.filterStatus() || undefined,
-    }).subscribe({
-      next: (res) => {
-        const headers = ['ID', 'Display Name', 'Username', 'Email', 'Phone', 'Role', 'Status', 'Trusted', 'Country', 'Joined'];
-        const rows = res.data.map((u) => [
-          u.id, u.displayName, u.userName, u.email ?? '', u.phoneNo ?? '',
-          u.role, u.isBlocked ? 'Blocked' : u.isActive ? 'Active' : 'Inactive',
-          u.isTrusted ? 'Yes' : 'No', u.country, u.createdAt,
-        ]);
-        const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    this.userService.exportAllUsers().subscribe({
+      next: (users) => {
+        const rows = this.buildExportRows(users);
+        const csv = [this.exportHeaders, ...rows]
+          .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+          .join('\n');
         this.downloadFile(csv, 'users.csv', 'text/csv');
+        this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to CSV`);
         this.exporting.set(false);
       },
       error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
     });
   }
 
-  exportJSON(): void {
+  exportExcel(): void {
     this.exportMenuOpen.set(false);
     this.exporting.set(true);
-    this.userService.exportUsers().subscribe({
-      next: (res) => {
-        this.downloadFile(JSON.stringify(res.data, null, 2), 'users.json', 'application/json');
+    this.userService.exportAllUsers().subscribe({
+      next: (users) => {
+        const rows = this.buildExportRows(users);
+        const escapeHtml = (v: string | number) =>
+          String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const headerRow = `<tr>${this.exportHeaders.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`;
+        const bodyRows = rows.map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
+        const table = `<table border="1">${headerRow}${bodyRows}</table>`;
+        // Excel opens an HTML table saved with an .xls extension directly —
+        // no charting/formula needs here, so this avoids pulling in a full
+        // spreadsheet-writing library just to produce a flat data export.
+        const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>${table}</body></html>`;
+        this.downloadFile(html, 'users.xls', 'application/vnd.ms-excel');
+        this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to Excel`);
         this.exporting.set(false);
       },
       error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
@@ -425,16 +490,40 @@ export class UserManagementComponent implements OnInit {
     return (user.displayName ?? user.userName ?? '?').charAt(0).toUpperCase();
   }
 
+  // Two-letter initials for the grid card view (matches Communities page style)
+  getGridInitials(user: User): string {
+    const name = (user.displayName ?? user.userName ?? '?').trim();
+    const parts = name.split(/\s+/).slice(0, 2);
+    const initials = parts.map((p) => p.charAt(0).toUpperCase()).join('');
+    return initials || '?';
+  }
+
+  // Deterministic name-hash gradient — same palette/approach as the
+  // Communities list page, so avatars carry the same visual energy.
+  private static readonly AVATAR_GRADIENTS = [
+    'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+    'linear-gradient(135deg, #1C1917 0%, #44403C 100%)',
+    'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
+    'linear-gradient(135deg, #16A34A 0%, #15803D 100%)',
+    'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+    'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
+    'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+    'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
+  ];
+
+  getAvatarGradient(user: User): string {
+    const name = user.displayName ?? user.userName ?? '?';
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
+    }
+    return UserManagementComponent.AVATAR_GRADIENTS[hash % UserManagementComponent.AVATAR_GRADIENTS.length];
+  }
+
   getStatusLabel(user: User): string {
     if (user.isBlocked) return 'Blocked';
     if (!user.isActive) return 'Inactive';
     return 'Active';
   }
 
-  bulkActionLabel(a: BulkAction | null): string {
-    const map: Record<BulkAction, string> = {
-      block: 'Block', unblock: 'Unblock', delete: 'Delete', role: 'Change Role',
-    };
-    return a ? map[a] : '';
-  }
 }

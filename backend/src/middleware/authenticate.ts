@@ -2,6 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { AppError } from './errorHandler';
+import db from '../config/db';
+
+// Throttled "last active" touch — updated at most once every 5 minutes per
+// user so every authenticated request doesn't turn into a write. Fire-and-
+// forget: never blocks or fails the request it rides along with.
+function touchLastActive(userId: string): void {
+  db('users')
+    .where({ id: userId })
+    .andWhere(function () {
+      this.whereNull('last_active_at').orWhereRaw("last_active_at < NOW() - INTERVAL '5 minutes'");
+    })
+    .update({ last_active_at: db.fn.now() })
+    .catch(() => { /* best-effort only */ });
+}
 
 export interface JwtPayload {
   sub: string;
@@ -33,6 +47,7 @@ export function authenticate(
       role: decoded.role,
       roleLevel: decoded.roleLevel,
     };
+    touchLastActive(decoded.sub);
     next();
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {

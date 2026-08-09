@@ -33,7 +33,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // Overview KPI counters animate up from 0 on first load — a small
   // "alive" touch on the numbers that matter most on the page.
   animatedOverview = signal({
-    users: 0, communities: 0, posts: 0, pending: 0, events: 0, business: 0, jobs: 0, blocked: 0,
+    users: 0, communities: 0, jobs: 0, business: 0,
+    userVerification: 0, businessVerification: 0, jobApproval: 0, postApproval: 0,
+    reports: 0, emergency: 0, blocked: 0,
   });
   private overviewAnimFrame: number | null = null;
 
@@ -264,11 +266,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const targets = {
       users: this.stats()?.totalUsers ?? 0,
       communities: this.stats()?.totalCommunities ?? 0,
-      posts: this.stats()?.totalPosts ?? 0,
-      pending: this.pendingPosts().length,
-      events: this.stats()?.totalEvents ?? 0,
-      business: this.stats()?.totalBusinesses ?? 0,
       jobs: this.stats()?.totalJobs ?? 0,
+      business: this.stats()?.totalBusinesses ?? 0,
+      userVerification: this.stats()?.pendingUserVerification ?? 0,
+      businessVerification: this.stats()?.pendingBusinessVerification ?? 0,
+      jobApproval: this.stats()?.pendingJobApproval ?? 0,
+      postApproval: this.stats()?.pendingPosts ?? 0,
+      reports: this.stats()?.reportsToReview ?? 0,
+      emergency: this.stats()?.communityEmergencyRequests ?? 0,
       blocked: this.stats()?.blockedUsers ?? 0,
     };
     const duration = 900;
@@ -280,11 +285,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.animatedOverview.set({
         users: Math.round(targets.users * eased),
         communities: Math.round(targets.communities * eased),
-        posts: Math.round(targets.posts * eased),
-        pending: Math.round(targets.pending * eased),
-        events: Math.round(targets.events * eased),
-        business: Math.round(targets.business * eased),
         jobs: Math.round(targets.jobs * eased),
+        business: Math.round(targets.business * eased),
+        userVerification: Math.round(targets.userVerification * eased),
+        businessVerification: Math.round(targets.businessVerification * eased),
+        jobApproval: Math.round(targets.jobApproval * eased),
+        postApproval: Math.round(targets.postApproval * eased),
+        reports: Math.round(targets.reports * eased),
+        emergency: Math.round(targets.emergency * eased),
         blocked: Math.round(targets.blocked * eased),
       });
       if (progress < 1) this.overviewAnimFrame = requestAnimationFrame(tick);

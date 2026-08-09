@@ -201,7 +201,7 @@
 
   i { font-size: 0.6rem; }
 
-  &--admin    { background: #fef2f2;           color: $color-danger;       }
+  &--admin    { background: #f5f3ff;           color: #5b21b6;             }
   &--user     { background: $color-primary-light; color: $color-primary-dark; }
   &--active   { background: #ecfdf5;           color: $color-success;      }
   &--blocked  { background: #fef2f2;           color: $color-danger;       }
@@ -452,100 +452,156 @@
 }
 
 // ─────────────────────────────────────────────────────────────
-// Activity stat cards
+// Per-user activity log — vertical timeline
 // ─────────────────────────────────────────────────────────────
-.ud-stat-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+.ud-timeline {
+  display: flex;
+  flex-direction: column;
 }
 
-.ud-stat-card {
-  padding: 18px 12px;
-  background: $color-bg-page;
-  border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  text-align: center;
-  transition: all 0.2s ease;
+.ud-tl-item {
+  display: flex;
+  gap: 12px;
 
-  &:hover {
-    border-color: rgba($color-primary, 0.4);
-    transform: translateY(-2px);
-    box-shadow: $shadow-card-hover;
+  &__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 14px;
+    padding-top: 4px;
+  }
+
+  &__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px $color-bg-card, 0 0 0 4px $color-border;
+  }
+
+  &__line {
+    width: 2px;
+    flex: 1;
+    min-height: 22px;
+    background: $color-border;
+    margin-top: 2px;
+  }
+
+  &__card {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 20px;
+  }
+
+  &:last-child &__card { padding-bottom: 0; }
+
+  &__head {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
   }
 
   &__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: $radius-md;
-    background: var(--bg);
-    color: var(--c);
+    width: 30px;
+    height: 30px;
+    border-radius: $radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    margin: 0 auto 10px;
+    font-size: 0.82rem;
+    flex-shrink: 0;
   }
 
-  &__val {
-    font-size: 1.75rem;
-    font-weight: $font-bold;
-    font-family: $font-family-header;
+  &__titlewrap { min-width: 0; padding-top: 2px; }
+
+  &__title {
+    font-size: $font-sm;
+    font-weight: $font-semibold;
     color: $color-text-primary;
-    line-height: 1;
-    margin-bottom: 4px;
   }
 
-  &__lbl {
+  &__desc {
     font-size: $font-xs;
     color: $color-text-muted;
-    font-weight: $font-medium;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    margin: 2px 0 0;
+    line-height: 1.45;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-left: 40px;
+  }
+
+  &__time,
+  &__actor {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    color: $color-stone-400;
+
+    i { font-size: 0.7rem; }
   }
 }
 
-// Engagement summary panel
-.ud-engagement {
-  background: $color-bg-page;
-  border: 1px solid $color-border;
+.ud-log-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: $color-text-muted;
+
+  i { font-size: 1.8rem; color: $color-stone-300; margin-bottom: 10px; }
+  p { font-size: $font-sm; margin: 0; }
+}
+
+.ud-log-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ud-log-skel-row {
+  height: 62px;
   border-radius: $radius-md;
-  overflow: hidden;
+  @include sk;
+}
 
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    background: linear-gradient(135deg, $color-primary-light, #fff);
-    border-bottom: 1px solid $color-border;
-    font-size: $font-sm;
-    font-weight: $font-semibold;
-    color: $color-primary-dark;
-    i { font-size: 0.85rem; }
-  }
+.ud-log-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
 
-  &__list { padding: 4px 0; }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    &:not(:last-child) { border-bottom: 1px solid $color-border; }
-  }
-
-  &__key {
-    font-size: $font-sm;
+  &__label {
+    font-size: $font-xs;
     color: $color-text-muted;
+    font-variant-numeric: tabular-nums;
   }
+}
 
-  &__val {
-    font-size: $font-sm;
-    font-weight: $font-semibold;
-    color: $color-text-body;
-  }
+.ud-pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-sm;
+  border: 1.5px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) { border-color: $color-primary; background: $color-primary-light; color: $color-primary-dark; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 // ─────────────────────────────────────────────────────────────

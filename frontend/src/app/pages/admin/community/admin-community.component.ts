@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -13,6 +13,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
+import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -41,7 +42,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
@@ -74,16 +75,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   currentPage        = signal(1);
   totalPages         = signal(1);
   totalItems         = signal(0);
-  pageSize           = signal(9);
+  pageSize           = signal(20);
   submitting         = signal(false);
   showModal          = signal(false);
   editingCommunity   = signal<Community | null>(null);
   selectedImage      = signal<File | null>(null);
-  deleteConfirmId    = signal<string | null>(null);
+  communityToDelete  = signal<Community | null>(null);
+  deletingCommunity  = signal(false);
   formSubmitAttempted = signal(false);
+  showCreateFab      = signal(false);
 
   private previousBodyOverflow: string | null = null;
   private previousHtmlOverflow: string | null = null;
+  private scrollTicking = false;
 
   // ── Filter signals ────────────────────────────────────────
   filterCountry       = signal<string | number | null>(null);
@@ -93,9 +97,35 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterIsDefault     = signal<boolean | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
+  filterStatus     = signal<'active' | 'inactive' | ''>('');
   activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
   showAdvancedFilters = signal(false);
   communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0 });
+
+  readonly statusFilterOptions: SelectOption[] = [
+    { value: '',         label: 'All Status' },
+    { value: 'active',   label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
+  readonly pageSizeOptions: SelectOption[] = [
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
+  ];
+
+  // ── Sort — driven by the sort-bar above the grid ────────────
+  readonly sortFields: SortField[] = [
+    { key: 'name',   label: 'Name' },
+    { key: 'joined', label: 'Created' },
+  ];
+  sortBy  = signal<'name' | 'joined'>('joined');
+  sortDir = signal<SortDir>('desc');
+
+  onSortChange(change: SortChange): void {
+    this.sortBy.set(change.sortBy as 'name' | 'joined');
+    this.sortDir.set(change.sortDir);
+    this.applyFilters();
+  }
 
   // ── Filter chip interface ─────────────────────────────────
   readonly FilterChip = class {
@@ -115,13 +145,14 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCategory())   add('category',  String(this.filterCategory()), this.filterCategory());
     if (this.filterVisibility()) add('visibility', String(this.filterVisibility()), this.filterVisibility());
     if (this.filterCommunityMode()) {
-      add('communityMode', this.filterCommunityMode() === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency', this.filterCommunityMode());
+      add('communityMode', this.filterCommunityMode() === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency Assistance', this.filterCommunityMode());
     }
     if (this.filterIsDefault() !== null) {
       add('isDefault', this.filterIsDefault() ? 'Default Only' : 'Non-Default', this.filterIsDefault());
     }
     if (this.filterFromDate())   add('fromDate',  `From ${this.filterFromDate()}`, this.filterFromDate());
     if (this.filterToDate())     add('toDate',    `To ${this.filterToDate()}`, this.filterToDate());
+    if (this.filterStatus())     add('status',    this.filterStatus() === 'active' ? 'Active' : 'Inactive', this.filterStatus());
     return chips;
   });
 
@@ -154,6 +185,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     const saved = Number(sessionStorage.getItem(PAGE_STORAGE_KEY));
     sessionStorage.removeItem(PAGE_STORAGE_KEY);
     if (saved > 0) this.currentPage.set(saved);
+  }
+
+  /** Reveals the floating create button once the page header has scrolled out of view. */
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showCreateFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
   }
 
   ngOnDestroy(): void {
@@ -245,6 +287,9 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterIsDefault() !== null) params['is_default'] = String(this.filterIsDefault());
     if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
     if (this.filterToDate())     params['to_date']    = this.filterToDate();
+    if (this.filterStatus())     params['status']     = this.filterStatus();
+    params['sortBy']  = this.sortBy();
+    params['sortDir'] = this.sortDir();
 
     this.loadCommunityAnalytics();
 
@@ -356,7 +401,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.filterIsDefault.set(null);
     this.filterFromDate.set('');
     this.filterToDate.set('');
+    this.filterStatus.set('');
     this.activeQuickRange.set(null);
+    this.currentPage.set(1);
+    this.loadCommunities();
+  }
+
+  setStatusFilter(value: string | number): void {
+    this.filterStatus.set(value as 'active' | 'inactive' | '');
+    this.applyFilters();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
     this.currentPage.set(1);
     this.loadCommunities();
   }
@@ -377,6 +434,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       case 'isDefault':  this.filterIsDefault.set(null);  break;
       case 'fromDate':   this.filterFromDate.set('');    break;
       case 'toDate':     this.filterToDate.set('');      break;
+      case 'status':     this.filterStatus.set('');      break;
     }
     if (key === 'fromDate' || key === 'toDate') this.activeQuickRange.set(null);
     this.applyFilters();
@@ -543,24 +601,28 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   }
 
   // ── Delete ────────────────────────────────────────────────────
-  confirmDelete(id: string): void {
-    this.deleteConfirmId.set(id);
+  confirmDelete(community: Community): void {
+    this.communityToDelete.set(community);
   }
 
   cancelDelete(): void {
-    this.deleteConfirmId.set(null);
+    this.communityToDelete.set(null);
   }
 
-  deleteCommunity(id: string): void {
-    this.communityService.deleteCommunity(id).subscribe({
+  deleteCommunity(): void {
+    const community = this.communityToDelete();
+    if (!community) return;
+    this.deletingCommunity.set(true);
+    this.communityService.deleteCommunity(community.id).subscribe({
       next: () => {
         this.toast.success('Community deleted successfully');
-        this.deleteConfirmId.set(null);
+        this.communityToDelete.set(null);
+        this.deletingCommunity.set(false);
         this.loadCommunities();
       },
       error: () => {
         this.toast.error('Failed to delete community');
-        this.deleteConfirmId.set(null);
+        this.deletingCommunity.set(false);
       },
     });
   }

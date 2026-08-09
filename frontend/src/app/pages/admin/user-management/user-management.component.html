@@ -28,11 +28,11 @@
 ══════════════════════════════════════════════════════════════ -->
 <div class="um-layout" (click)="closeDropdowns()">
 
-  <!-- ── Premium Page Header ──────────────────────────────────── -->
+  <!-- ── Page Header ──────────────────────────────────────── -->
   <div class="jb-page-header">
     <div class="jb-page-header__left">
       <h2 class="jb-page-header__title">User Management</h2>
-      <p class="jb-page-header__sub">{{ subtitle() }}</p>
+      <p class="jb-page-header__sub">Manage user accounts, roles and access across the platform.</p>
     </div>
     <div class="jb-page-header__actions">
       <!-- Export -->
@@ -51,29 +51,20 @@
             <button class="um-export-item" (click)="exportCSV()">
               <i class="bi bi-filetype-csv"></i> Download CSV
             </button>
-            <button class="um-export-item" (click)="exportJSON()">
-              <i class="bi bi-filetype-json"></i> Download JSON
+            <button class="um-export-item" (click)="exportExcel()">
+              <i class="bi bi-file-earmark-excel"></i> Download Excel
             </button>
           </div>
         }
       </div>
       <!-- Add User -->
-      <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="showAddDrawer.set(true)" aria-label="Add new user">
+      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="showAddDrawer.set(true)" aria-label="Add new user">
         <i class="bi bi-person-plus-fill"></i>
         <span>Add User</span>
       </button>
     </div>
   </div>
 
-  <!-- ── Page Tabs ────────────────────────────────────────── -->
-  <app-profile-tabs
-    [tabs]="pageTabs"
-    [activeTab]="activeTab()"
-    (tabChange)="setPageTab($event)"
-  ></app-profile-tabs>
-
-  <!-- ── Users Tab ─────────────────────────────────────────── -->
-  @if (activeTab() === 'users') {
   <!-- Stats Bar (outside scroll container) -->
   <div class="admin-stats-bar">
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === ''"
@@ -135,31 +126,45 @@
     </div>
 
     <!-- Basic Filters -->
-    <select class="jb-filter-select" [ngModel]="filterRole()"
-      (ngModelChange)="filterRole.set($event); onFilterChange()"
-      aria-label="Filter by role">
-      <option value="">All Roles</option>
-      <option value="ADMIN">Admin</option>
-      <option value="USER">User</option>
-    </select>
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="roleFilterOptions" [ngModel]="filterRole()"
+        (ngModelChange)="setRoleFilter($event)" placeholder="All Roles"
+        aria-label="Filter by role">
+      </app-searchable-select>
+    </div>
 
-    <select class="jb-filter-select" [ngModel]="filterStatus()"
-      (ngModelChange)="filterStatus.set($event); onFilterChange()"
-      aria-label="Filter by status">
-      <option value="">All Status</option>
-      <option value="active">Active</option>
-      <option value="blocked">Blocked</option>
-      <option value="trusted">Trusted</option>
-    </select>
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+        (ngModelChange)="setStatusFilter($event)" placeholder="All Status"
+        aria-label="Filter by status">
+      </app-searchable-select>
+    </div>
 
-    <!-- Advanced Filters Toggle -->
-    <button class="jb-advanced-toggle" 
-      (click)="toggleAdvancedFilters()"
-      [class.active]="showAdvancedFilters()"
-      aria-label="Toggle advanced filters" aria-expanded="showAdvancedFilters()">
-      <i class="bi" [ngClass]="showAdvancedFilters() ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-      <span>More</span>
-    </button>
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="joinedFilterOptions" [ngModel]="filterJoined()"
+        (ngModelChange)="setJoinedFilter($event)" placeholder="All Time"
+        aria-label="Filter by join date">
+      </app-searchable-select>
+    </div>
+
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+        (ngModelChange)="setCountryFilter($event)" placeholder="All Countries"
+        aria-label="Filter by country">
+      </app-searchable-select>
+    </div>
+
+    <!-- View mode toggle (table / grid) -->
+    <div class="um-view-toggle" role="group" aria-label="Switch view mode">
+      <button class="um-view-btn" type="button" [class.active]="viewMode() === 'table'"
+        (click)="setViewMode('table')" aria-label="Table view">
+        <i class="bi bi-list-ul"></i>
+      </button>
+      <button class="um-view-btn" type="button" [class.active]="viewMode() === 'grid'"
+        (click)="setViewMode('grid')" aria-label="Grid view">
+        <i class="bi bi-grid-3x3-gap-fill"></i>
+      </button>
+    </div>
 
     <!-- Search & Clear Actions -->
     <button class="jb-btn jb-btn--solid jb-btn--sm" (click)="applyFilters()" aria-label="Apply search">
@@ -175,21 +180,6 @@
       </button>
     }
   </div>
-
-  <!-- Advanced Filters Panel (outside scroll container) -->
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel">
-      <select class="jb-filter-select" [ngModel]="filterJoined()"
-        (ngModelChange)="filterJoined.set($event); onFilterChange()"
-        aria-label="Filter by join date">
-        <option value="">All Time</option>
-        <option value="today">Today</option>
-        <option value="7d">Last 7 Days</option>
-        <option value="30d">Last 30 Days</option>
-        <option value="90d">Last 3 Months</option>
-      </select>
-    </div>
-  }
 
   <!-- Active Filter Chips (outside scroll container) -->
   @if (activeFilterChips().length > 0) {
@@ -209,81 +199,12 @@
   <!-- Scrollable User Table Section -->
   <div class="um-users-section">
 
-  <!-- ── Bulk Action Bar ────────────────────────────────────── -->
-  @if (selectedCount() > 0) {
-    <div class="um-bulk-bar">
-      <span class="um-bulk-bar__count">
-        <i class="bi bi-check-square-fill me-2"></i>
-        {{ selectedCount() }} user{{ selectedCount() > 1 ? 's' : '' }} selected
-      </span>
-      <div class="um-bulk-bar__actions">
-        <button class="btn btn-sm btn-outline-warning" (click)="initBulkAction('block')">
-          <i class="bi bi-lock-fill me-1"></i> Block
-        </button>
-        <button class="btn btn-sm btn-outline-success" (click)="initBulkAction('unblock')">
-          <i class="bi bi-unlock-fill me-1"></i> Unblock
-        </button>
-        <div class="um-bulk-role">
-          <select class="um-select um-select--sm" [ngModel]="bulkRoleTarget()"
-            (ngModelChange)="bulkRoleTarget.set($event)">
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
-          <button class="btn btn-sm btn-outline-primary" (click)="initBulkAction('role')">
-            <i class="bi bi-person-gear me-1"></i> Change Role
-          </button>
-        </div>
-        <button class="btn btn-sm btn-outline-danger" (click)="initBulkAction('delete')">
-          <i class="bi bi-trash-fill me-1"></i> Delete
-        </button>
-      </div>
-      <button class="um-bulk-bar__close" (click)="clearSelection()">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-  }
-
-  <!-- ── Bulk Confirm Dialog ──────────────────────────────────── -->
-  @if (confirmBulk()) {
-    <div class="um-confirm-backdrop" (click)="cancelBulk()">
-      <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
-        <div class="um-confirm-icon"
-          [class.um-confirm-icon--danger]="confirmBulk() === 'delete'"
-          [class.um-confirm-icon--warning]="confirmBulk() === 'block'"
-          [class.um-confirm-icon--success]="confirmBulk() === 'unblock'"
-          [class.um-confirm-icon--primary]="confirmBulk() === 'role'">
-          <i class="bi"
-            [class.bi-trash-fill]="confirmBulk() === 'delete'"
-            [class.bi-lock-fill]="confirmBulk() === 'block'"
-            [class.bi-unlock-fill]="confirmBulk() === 'unblock'"
-            [class.bi-person-gear]="confirmBulk() === 'role'">
-          </i>
-        </div>
-        <h6 class="um-confirm-title">Confirm {{ bulkActionLabel(confirmBulk()) }}</h6>
-        <p class="um-confirm-desc">
-          This will {{ bulkActionLabel(confirmBulk()).toLowerCase() }}
-          <strong>{{ selectedCount() }} user{{ selectedCount() > 1 ? 's' : '' }}</strong>.
-          @if (confirmBulk() === 'delete') { This action deactivates their accounts. }
-          Are you sure?
-        </p>
-        <div class="um-confirm-btns">
-          <button class="btn btn-sm btn-outline-secondary" (click)="cancelBulk()">Cancel</button>
-          <button class="btn btn-sm"
-            [class.btn-danger]="confirmBulk() === 'delete'"
-            [class.btn-warning]="confirmBulk() === 'block'"
-            [class.btn-success]="confirmBulk() === 'unblock'"
-            [class.btn-primary]="confirmBulk() === 'role'"
-            [disabled]="bulkWorking()"
-            (click)="executeBulkAction()">
-            @if (bulkWorking()) {
-              <span class="spinner-border spinner-border-sm me-1"></span>
-            }
-            Confirm {{ bulkActionLabel(confirmBulk()) }}
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+  <!-- ── Table Toolbar (Export) ─────────────────────── -->
+  <div class="um-table-toolbar pb-2">
+    <span class="um-table-toolbar__count">
+      <strong>{{ total() }}</strong> user{{ total() === 1 ? '' : 's' }}
+    </span>
+  </div>
 
   <!-- ── Users Table ────────────────────────────────────────── -->
   @if (users().length === 0) {
@@ -298,47 +219,61 @@
       @if (activeFilterCount() > 0 || appliedSearch()) {
         <h5 class="um-empty__title">No results found</h5>
         <p class="um-empty__desc">Try adjusting your search or filters.</p>
-        <button class="btn btn-outline-primary btn-sm mt-2" (click)="clearFilters()">
-          <i class="bi bi-x-circle me-1"></i> Clear all filters
+        <button class="jb-btn jb-btn--ghost jb-btn--sm um-empty__action" (click)="clearFilters()">
+          <i class="bi bi-x-circle"></i> Clear all filters
         </button>
       } @else {
         <h5 class="um-empty__title">No users yet</h5>
         <p class="um-empty__desc">Users who join the platform will appear here.</p>
-        <button class="btn btn-primary btn-sm mt-2" (click)="showAddDrawer.set(true)">
-          <i class="bi bi-person-plus-fill me-1"></i> Add First User
-        </button>
       }
     </div>
   } @else {
     <div class="um-table-card">
+      @if (viewMode() === 'table') {
       <div class="table-responsive">
         <table class="um-table">
           <thead>
             <tr>
-              <th class="um-th um-th--check">
-                <input type="checkbox" class="um-checkbox"
-                  [checked]="allSelected()" (change)="toggleSelectAll()" />
+              <th class="um-th um-th--sortable" (click)="toggleSort('name')">
+                User
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'name'"
+                ></i>
               </th>
-              <th class="um-th">User</th>
-              <th class="um-th d-none d-md-table-cell">Email</th>
+              <th class="um-th um-th--sortable d-none d-md-table-cell" (click)="toggleSort('email')">
+                Email
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'email' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'email' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'email'"
+                ></i>
+              </th>
               <th class="um-th d-none d-lg-table-cell">Phone</th>
-              <th class="um-th">Role</th>
+              <th class="um-th um-th--sortable" (click)="toggleSort('role')">
+                Role
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'role' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'role' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'role'"
+                ></i>
+              </th>
               <th class="um-th">Status</th>
-              <th class="um-th d-none d-xl-table-cell">Joined</th>
+              <th class="um-th um-th--sortable d-none d-xl-table-cell" (click)="toggleSort('joined')">
+                Joined
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'joined'"
+                ></i>
+              </th>
               <th class="um-th um-th--actions">Actions</th>
             </tr>
           </thead>
           <tbody>
             @for (user of users(); track user.id) {
-              <tr class="um-row" [class.um-row--selected]="isSelected(user.id)">
-
-                <!-- Checkbox -->
-                <td class="um-td um-td--check">
-                  <input type="checkbox" class="um-checkbox"
-                    [checked]="isSelected(user.id)"
-                    (change)="toggleSelect(user.id)"
-                    (click)="$event.stopPropagation()" />
-                </td>
+              <tr class="um-row">
 
                 <!-- User cell -->
                 <td class="um-td">
@@ -346,7 +281,7 @@
                     @if (user.avatar) {
                       <img [src]="user.avatar" class="um-avatar" alt="" />
                     } @else {
-                      <div class="um-avatar um-avatar--initials">{{ getInitials(user) }}</div>
+                      <div class="um-avatar um-avatar--initials" [style.background]="getAvatarGradient(user)">{{ getInitials(user) }}</div>
                     }
                     <div class="um-user-info">
                       <span class="um-user-name">{{ user.displayName }}</span>
@@ -411,7 +346,7 @@
                         [class.um-iab--block]="!user.isBlocked"
                         [class.um-iab--unblock]="user.isBlocked"
                         [attr.data-tip]="user.isBlocked ? 'Unblock User' : 'Block User'"
-                        (click)="toggleBlock(user)">
+                        (click)="requestBlockToggle(user)">
                         <i class="bi"
                           [class.bi-lock-fill]="!user.isBlocked"
                           [class.bi-unlock-fill]="user.isBlocked"></i>
@@ -419,7 +354,7 @@
 
                       <button class="um-iab um-iab--trust"
                         [attr.data-tip]="user.isTrusted ? 'Remove Trust' : 'Mark Trusted'"
-                        (click)="toggleTrust(user)">
+                        (click)="requestTrustToggle(user)">
                         <i class="bi"
                           [class.bi-star-fill]="user.isTrusted"
                           [class.bi-star]="!user.isTrusted"></i>
@@ -427,7 +362,7 @@
 
                       <button class="um-iab um-iab--delete"
                         data-tip="Delete User"
-                        (click)="deleteUser(user)">
+                        (click)="requestDelete(user)">
                         <i class="bi bi-trash3-fill"></i>
                       </button>
 
@@ -440,6 +375,96 @@
           </tbody>
         </table>
       </div>
+      } @else {
+      <!-- ── Grid / Card View ─────────────────────────────────── -->
+      <div class="um-grid-scroll">
+        <div class="um-grid">
+          @for (user of users(); track user.id; let ui = $index) {
+            <article class="um-g-card um-g-card--enter" [style.animation-delay]="(ui * 30) + 'ms'"
+              (click)="viewUser(user.id)" (keydown.enter)="viewUser(user.id)" tabindex="0"
+              [attr.aria-label]="user.displayName">
+
+              <div class="um-g-body">
+                <div class="um-g-header">
+                  @if (user.avatar) {
+                    <img [src]="user.avatar" class="um-g-avatar" alt="" />
+                  } @else {
+                    <div class="um-g-avatar um-g-avatar--initials" [style.background]="getAvatarGradient(user)">
+                      {{ getGridInitials(user) }}
+                    </div>
+                  }
+                  <div class="um-g-id">
+                    <h3 class="um-g-name">{{ user.displayName }}</h3>
+                    <span class="um-g-handle">&#64;{{ user.userName }}</span>
+                  </div>
+                </div>
+
+                <div class="um-g-badges">
+                  <span class="um-badge"
+                    [class.um-badge--admin]="user.role === 'ADMIN'"
+                    [class.um-badge--user]="user.role === 'USER'">
+                    {{ user.role }}
+                  </span>
+                  <span class="um-badge"
+                    [class.um-badge--blocked]="user.isBlocked"
+                    [class.um-badge--active]="!user.isBlocked && user.isActive"
+                    [class.um-badge--inactive]="!user.isBlocked && !user.isActive">
+                    {{ getStatusLabel(user) }}
+                  </span>
+                  @if (user.isTrusted && !user.isBlocked) {
+                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i>Trusted</span>
+                  }
+                </div>
+
+                <div class="um-g-meta">
+                  <div class="um-g-meta-row">
+                    <i class="bi bi-envelope-fill"></i><span>{{ user.email || '—' }}</span>
+                  </div>
+                  @if (user.location || user.country) {
+                    <div class="um-g-meta-row">
+                      <i class="bi bi-geo-alt-fill"></i>
+                      <span>{{ user.location ? (user.location + ', ' + user.country) : user.country }}</span>
+                    </div>
+                  }
+                  <div class="um-g-meta-row">
+                    <i class="bi bi-calendar-check-fill"></i><span>Joined {{ user.createdAt | date:'d MMM yyyy' }}</span>
+                  </div>
+                </div>
+
+                <div class="um-g-foot" (click)="$event.stopPropagation()">
+                  @if (actionWorkingId() === user.id) {
+                    <div class="um-actions-row">
+                      <span class="spinner-border spinner-border-sm text-primary"></span>
+                    </div>
+                  } @else {
+                    <div class="um-actions-row">
+                      <button class="um-iab um-iab--view" data-tip="View Details" (click)="viewUser(user.id)">
+                        <i class="bi bi-eye-fill"></i>
+                      </button>
+                      <button class="um-iab"
+                        [class.um-iab--block]="!user.isBlocked"
+                        [class.um-iab--unblock]="user.isBlocked"
+                        [attr.data-tip]="user.isBlocked ? 'Unblock User' : 'Block User'"
+                        (click)="requestBlockToggle(user)">
+                        <i class="bi" [class.bi-lock-fill]="!user.isBlocked" [class.bi-unlock-fill]="user.isBlocked"></i>
+                      </button>
+                      <button class="um-iab um-iab--trust"
+                        [attr.data-tip]="user.isTrusted ? 'Remove Trust' : 'Mark Trusted'"
+                        (click)="requestTrustToggle(user)">
+                        <i class="bi" [class.bi-star-fill]="user.isTrusted" [class.bi-star]="!user.isTrusted"></i>
+                      </button>
+                      <button class="um-iab um-iab--delete" data-tip="Delete User" (click)="requestDelete(user)">
+                        <i class="bi bi-trash3-fill"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </div>
+      }
 
       <!-- Pagination -->
       <div class="um-pagination">
@@ -453,12 +478,12 @@
           <div class="um-pg-divider"></div>
           <div class="um-pagination__size">
             <span>Rows per page</span>
-            <select class="um-pg-select" [ngModel]="pageSize()"
-              (ngModelChange)="onPageSizeChange($event)">
-              <option [value]="10">10</option>
-              <option [value]="20">20</option>
-              <option [value]="50">50</option>
-            </select>
+            <div class="jb-select-wrap jb-select-wrap--xs">
+              <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+                (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+                aria-label="Rows per page">
+              </app-searchable-select>
+            </div>
           </div>
         </div>
 
@@ -492,50 +517,16 @@
   }
 
   </div> <!-- /.um-users-section -->
-  } <!-- /.users-tab -->
-
-  <!-- ── Activity Log Tab ──────────────────────────────────── -->
-  @if (activeTab() === 'activity') {
-    <div class="um-tab-content">
-      <app-activity-log-drawer [embedded]="true"></app-activity-log-drawer>
-    </div>
-  }
-
-  <!-- ── Reports Tab ───────────────────────────────────────── -->
-  @if (activeTab() === 'reports') {
-    <div class="um-reports-card">
-      <div class="um-reports-card__header">
-        <div class="um-reports-card__icon"><i class="bi bi-flag-fill"></i></div>
-        <div>
-          <h6 class="um-reports-card__title">Reports &amp; Flagged Users</h6>
-          <p class="um-reports-card__subtitle">Track reported users and take moderation action</p>
-        </div>
-        <span class="um-reports-card__badge">Coming Soon</span>
-      </div>
-      <div class="um-reports-preview">
-        <div class="um-reports-preview__header">
-          <span>User</span><span>Reason</span><span>Date</span><span>Status</span><span>Actions</span>
-        </div>
-        @for (_ of [1,2,3]; track _) {
-          <div class="um-reports-preview__row">
-            <div class="sk-inline sk-inline--avatar"></div>
-            <div class="sk-inline sk-inline--text"></div>
-            <div class="sk-inline sk-inline--short"></div>
-            <div class="sk-inline sk-inline--badge"></div>
-            <div class="sk-inline sk-inline--short"></div>
-          </div>
-        }
-      </div>
-      <p class="um-reports-card__note">
-        <i class="bi bi-info-circle me-1"></i>
-        This feature will be available in a future platform update.
-      </p>
-    </div>
-  }
 
 </div><!-- /.um-layout -->
 
 } <!-- end @if loading -->
+
+<!-- ── Floating create button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="showAddDrawer.set(true)" aria-label="Add a new user" title="Add User">
+  <i class="bi bi-person-plus-fill"></i>
+</button>
 
 <!-- ══════════════════════════════════════════════════════════════
      PANELS & MODALS
@@ -554,4 +545,45 @@
     (userUpdated)="onUserUpdated($event)"
     (userDeleted)="loadUsers()">
   </app-user-detail-drawer>
+}
+
+<!-- ── Confirm Dialog (block/unblock, trust/untrust, delete) ─────────── -->
+@if (confirmAction(); as ca) {
+  <div class="um-confirm-backdrop" (click)="cancelConfirm()">
+    <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="um-confirm-icon"
+        [class.um-confirm-icon--danger]="ca.type === 'delete' || ca.type === 'block'"
+        [class.um-confirm-icon--warning]="ca.type === 'trust'"
+        [class.um-confirm-icon--success]="ca.type === 'unblock'"
+        [class.um-confirm-icon--primary]="ca.type === 'untrust'">
+        <i class="bi" [ngClass]="confirmIcon(ca.type)"></i>
+      </div>
+      <h6 class="um-confirm-title">{{ confirmTitle(ca.type) }}</h6>
+      <p class="um-confirm-desc">
+        @if (ca.type === 'block') {
+          This will prevent <strong>{{ ca.user.displayName }}</strong> from logging in or posting content.
+        } @else if (ca.type === 'unblock') {
+          This will restore full platform access for <strong>{{ ca.user.displayName }}</strong>.
+        } @else if (ca.type === 'trust') {
+          <strong>{{ ca.user.displayName }}</strong> will be marked as trusted and highlighted to others.
+        } @else if (ca.type === 'untrust') {
+          Trust will be removed from <strong>{{ ca.user.displayName }}</strong>.
+        } @else {
+          This will deactivate <strong>{{ ca.user.displayName }}</strong>'s account. This can be reversed later.
+        }
+        Are you sure?
+      </p>
+      <div class="um-confirm-btns">
+        <button class="um-btn um-btn--ghost" (click)="cancelConfirm()">Cancel</button>
+        <button class="um-btn"
+          [class.um-btn--danger]="ca.type === 'delete' || ca.type === 'block'"
+          [class.um-btn--warning]="ca.type === 'trust'"
+          [class.um-btn--success]="ca.type === 'unblock'"
+          [class.um-btn--primary]="ca.type === 'untrust'"
+          (click)="confirmActionExecute()">
+          {{ confirmTitle(ca.type) }}
+        </button>
+      </div>
+    </div>
+  </div>
 }

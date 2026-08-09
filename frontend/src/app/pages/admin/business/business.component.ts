@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
@@ -11,8 +11,10 @@ import { Business, BusinessCategory, PaginatedResponse, Country } from '../../..
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { TruncatedDirective } from '../../../shared/directives/truncated.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
+import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -26,7 +28,7 @@ type ViewState = 'categories' | 'list' | 'detail';
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, ImageUrlPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -40,9 +42,17 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // ── Countries for filter dropdown ──────────────────────────
   filterCountryOptions: SelectOption[] = [];
+  filterOpeningHoursOptions: SelectOption[] = [
+    { value: '9-5',  label: '9 AM - 5 PM' },
+    { value: '24/7', label: '24/7' },
+  ];
 
   // View state
   currentView = signal<ViewState>('categories');
+
+  // Floating header action (shows once scrolled past the page header)
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
 
   // Data
   categories = signal<BusinessCategory[]>([]);
@@ -280,10 +290,40 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   filterSearch = signal('');
   filterCountry = signal<string | null>(null);
   filterOpeningHours = signal<string | null>(null);
+  filterStatus = signal<'active' | 'inactive' | ''>('');
+  filterDateFrom = signal('');
+  filterDateTo = signal('');
   showAdvancedFilters = signal(false);
 
+  readonly statusFilterOptions: SelectOption[] = [
+    { value: '',         label: 'All Status' },
+    { value: 'active',   label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
+  readonly pageSizeOptions: SelectOption[] = [
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
+  ];
+  pageSize = signal(20);
+
+  // ── Sort — driven by the sort-bar above the grid ────────────
+  readonly sortFields: SortField[] = [
+    { key: 'name',   label: 'Name' },
+    { key: 'joined', label: 'Created' },
+  ];
+  sortBy  = signal<'name' | 'joined'>('joined');
+  sortDir = signal<SortDir>('desc');
+
+  onSortChange(change: SortChange): void {
+    this.sortBy.set(change.sortBy as 'name' | 'joined');
+    this.sortDir.set(change.sortDir);
+    this.applyFilters();
+  }
+
   hasActiveFilters = computed(() =>
-    !!(this.filterSearch() || this.filterCountry() || this.filterOpeningHours())
+    !!(this.filterSearch() || this.filterCountry() || this.filterOpeningHours()
+      || this.filterStatus() || this.filterDateFrom() || this.filterDateTo())
   );
 
   activeFilterCount = computed(() => {
@@ -291,6 +331,9 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     if (this.filterSearch()) count++;
     if (this.filterCountry()) count++;
     if (this.filterOpeningHours()) count++;
+    if (this.filterStatus()) count++;
+    if (this.filterDateFrom()) count++;
+    if (this.filterDateTo()) count++;
     return count;
   });
 
@@ -305,11 +348,38 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     return sum;
   });
   totalCategories = computed(() => this.categories().length);
+  avgBusinessesPerCategory = computed(() => {
+    const cats = this.totalCategories();
+    return cats > 0 ? Math.round(this.totalBusinesses() / cats) : 0;
+  });
+  emptyCategoriesCount = computed(() =>
+    this.categories().filter((c) => (c._count?.businesses ?? 0) === 0).length
+  );
 
   // ── Category view controls ───────────────────────────────────
   catSearch   = signal('');
   catSortBy   = signal<'name'|'count'|'newest'>('name');
   catViewMode = signal<'grid'|'list'>('grid');
+  catSortOptions: SelectOption[] = [
+    { value: 'name',    label: 'Name A–Z' },
+    { value: 'count',   label: 'Most Businesses' },
+    { value: 'newest',  label: 'Newest First' },
+  ];
+
+  onCatSortByChange(value: string | number): void {
+    this.catSortBy.set(value as 'name' | 'count' | 'newest');
+  }
+
+  /** Category IDs whose description text is actually clipped — gates the hover "read more" popover. */
+  truncatedCategoryIds = signal<Set<string>>(new Set());
+
+  onDescTruncatedChange(categoryId: string, isTruncated: boolean): void {
+    const current = this.truncatedCategoryIds();
+    if (current.has(categoryId) === isTruncated) return;
+    const next = new Set(current);
+    if (isTruncated) next.add(categoryId); else next.delete(categoryId);
+    this.truncatedCategoryIds.set(next);
+  }
 
   filteredCategories = computed(() => {
     const q = this.catSearch().toLowerCase();
@@ -352,6 +422,16 @@ getCategoryAccent(icon?: string): string {
   }
 
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
 
   // ── Phone countries (dial‑code dropdown) ────────────────────
 
@@ -605,10 +685,16 @@ private initForms(): void {
     const params: Record<string, any> = {
       categoryId: category.id,
       page: this.currentPage(),
+      limit: this.pageSize(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
     };
     if (this.filterSearch()) params['search'] = this.filterSearch();
     if (this.filterCountry()) params['country'] = this.filterCountry();
     if (this.filterOpeningHours()) params['openingHours'] = this.filterOpeningHours();
+    if (this.filterStatus()) params['status'] = this.filterStatus();
+    if (this.filterDateFrom()) params['dateFrom'] = this.filterDateFrom();
+    if (this.filterDateTo()) params['dateTo'] = this.filterDateTo();
 
     this.businessService.getBusinesses(params).subscribe({
       next: (response: PaginatedResponse<Business>) => {
@@ -639,7 +725,7 @@ private initForms(): void {
     this.showAdvancedFilters.update(v => !v);
   }
 
-  removeFilter(filterKey: 'search' | 'country' | 'hours'): void {
+  removeFilter(filterKey: 'search' | 'country' | 'hours' | 'status' | 'dateFrom' | 'dateTo'): void {
     switch (filterKey) {
       case 'search':
         this.filterSearch.set('');
@@ -650,14 +736,48 @@ private initForms(): void {
       case 'hours':
         this.filterOpeningHours.set(null);
         break;
+      case 'status':
+        this.filterStatus.set('');
+        break;
+      case 'dateFrom':
+        this.filterDateFrom.set('');
+        break;
+      case 'dateTo':
+        this.filterDateTo.set('');
+        break;
     }
     this.applyFilters();
+  }
+
+  setStatusFilter(v: string | number): void {
+    this.filterStatus.set(v as 'active' | 'inactive' | '');
+    this.applyFilters();
+  }
+
+  onFilterDateFromChange(e: Event): void {
+    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterDateToChange(e: Event): void {
+    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    const cat = this.selectedCategory();
+    if (cat) this.loadBusinesses(cat);
   }
 
   clearAllFilters(): void {
     this.filterSearch.set('');
     this.filterCountry.set(null);
     this.filterOpeningHours.set(null);
+    this.filterStatus.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
     this.showAdvancedFilters.set(false);
     const cat = this.selectedCategory();
     if (cat) this.loadBusinesses(cat, true);
@@ -676,6 +796,9 @@ private initForms(): void {
     this.filterSearch.set('');
     this.filterCountry.set(null);
     this.filterOpeningHours.set(null);
+    this.filterStatus.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
   }
 
   goToList(): void {

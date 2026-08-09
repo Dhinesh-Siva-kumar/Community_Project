@@ -96,8 +96,15 @@ export async function findAll(params: {
   to_date?: string;
   joined?: boolean;
   userId?: string;
+  status?: 'active' | 'inactive';
+  sortBy?: 'name' | 'joined';
+  sortDir?: 'asc' | 'desc';
 }) {
-  const { page, limit, search, pincode, skipActiveFilter, country, category, visibility, community_mode, is_default, from_date, to_date, joined, userId } = params;
+  const {
+    page, limit, search, pincode, skipActiveFilter, country, category, visibility,
+    community_mode, is_default, from_date, to_date, joined, userId,
+    status, sortBy = 'joined', sortDir = 'desc',
+  } = params;
   const offset = (page - 1) * limit;
 
   const query = db('communities as c')
@@ -113,7 +120,8 @@ export async function findAll(params: {
       'im.interest_name as category_name',
     );
 
-  // Admin callers set skipActiveFilter=true to see all communities incl. inactive.
+  // Admin callers set skipActiveFilter=true to see all communities incl. inactive,
+  // unless they've explicitly picked a status to filter by below.
   if (!skipActiveFilter) {
     query.where('c.is_active', true);
   }
@@ -121,6 +129,12 @@ export async function findAll(params: {
   const countQuery = db('communities');
   if (!skipActiveFilter) {
     countQuery.where({ is_active: true });
+  }
+
+  if (status) {
+    const isActive = status === 'active';
+    query.where('c.is_active', isActive);
+    countQuery.where('is_active', isActive);
   }
 
   if (search) {
@@ -197,8 +211,9 @@ export async function findAll(params: {
     countQuery.whereIn('id', db('community_members').select('community_id').where('user_id', userId));
   }
 
+  const sortColumn = sortBy === 'name' ? 'c.name' : 'c.created_at';
   const [communities, [{ total }]] = await Promise.all([
-    query.orderBy('c.created_at', 'desc').limit(limit).offset(offset),
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 

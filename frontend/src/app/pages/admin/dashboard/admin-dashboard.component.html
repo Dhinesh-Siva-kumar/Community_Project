@@ -3,7 +3,7 @@
   <div class="db-skeleton">
     <div class="sk-header"></div>
     <div class="db-bento">
-      @for (_ of [1,2,3,4,5,6]; track _) { <div class="sk-card"></div> }
+      @for (_ of [1,2,3,4,5,6,7,8,9,10,11]; track _) { <div class="sk-card"></div> }
     </div>
     <div class="db-mid-row">
       <div class="sk-panel"></div>
@@ -40,76 +40,103 @@
 
     <div class="ov-grid">
       <!-- Total Users -->
-      <div class="ov-card ov-card--accent ov-card--blue">
-        <div class="ov-card__top">
+      <a routerLink="/admin/user-management" class="ov-card ov-card--accent ov-card--blue">
+        <span class="ov-card__icon"><i class="bi bi-people-fill"></i></span>
+        <div class="ov-card__body">
           <span class="ov-card__label">Total Users</span>
-          <span class="ov-card__icon"><i class="bi bi-people-fill"></i></span>
+          <div class="ov-card__value">{{ animatedOverview().users | number }}</div>
         </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().users | number }}</div>
-      </div>
+      </a>
 
       <!-- Total Communities -->
-      <div class="ov-card ov-card--accent ov-card--indigo">
-        <div class="ov-card__top">
+      <a routerLink="/admin/community" class="ov-card ov-card--accent ov-card--indigo">
+        <span class="ov-card__icon"><i class="bi bi-diagram-3-fill"></i></span>
+        <div class="ov-card__body">
           <span class="ov-card__label">Total Communities</span>
-          <span class="ov-card__icon"><i class="bi bi-diagram-3-fill"></i></span>
+          <div class="ov-card__value">{{ animatedOverview().communities | number }}</div>
         </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().communities | number }}</div>
+      </a>
+
+      <!-- Total Jobs -->
+      <a routerLink="/admin/jobs" class="ov-card ov-card--accent ov-card--green">
+        <span class="ov-card__icon"><i class="bi bi-briefcase-fill"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Total Jobs</span>
+          <div class="ov-card__value">{{ animatedOverview().jobs | number }}</div>
+        </div>
+      </a>
+
+      <!-- Total Businesses -->
+      <a routerLink="/admin/business" class="ov-card ov-card--accent ov-card--rose">
+        <span class="ov-card__icon"><i class="bi bi-building"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Total Businesses</span>
+          <div class="ov-card__value">{{ animatedOverview().business | number }}</div>
+        </div>
+      </a>
+
+      <!-- Pending User Verification -->
+      <a routerLink="/admin/post-approval" class="ov-card ov-card--accent ov-card--amber">
+        <span class="ov-card__icon"><i class="bi bi-person-badge"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Users Pending</span>
+          <div class="ov-card__value">{{ animatedOverview().userVerification | number }}</div>
+        </div>
+      </a>
+
+      <!-- Pending Business Verification -->
+      <a routerLink="/admin/post-approval" class="ov-card ov-card--accent ov-card--purple">
+        <span class="ov-card__icon"><i class="bi bi-shop"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Business Pending</span>
+          <div class="ov-card__value">{{ animatedOverview().businessVerification | number }}</div>
+        </div>
+      </a>
+
+      <!-- Pending Job Approval -->
+      <a routerLink="/admin/post-approval" class="ov-card ov-card--accent ov-card--jade">
+        <span class="ov-card__icon"><i class="bi bi-clipboard-check"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Jobs Pending</span>
+          <div class="ov-card__value">{{ animatedOverview().jobApproval | number }}</div>
+        </div>
+      </a>
+
+      <!-- Pending Post Approval -->
+      <a routerLink="/admin/post-approval" class="ov-card ov-card--accent ov-card--fuchsia">
+        <span class="ov-card__icon"><i class="bi bi-hourglass-split"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Posts Pending</span>
+          <div class="ov-card__value">{{ animatedOverview().postApproval | number }}</div>
+        </div>
+      </a>
+
+      <!-- Reports to Review — no admin review page yet -->
+      <div class="ov-card ov-card--accent ov-card--orange ov-card--disabled" title="Coming soon">
+        <span class="ov-card__icon"><i class="bi bi-flag-fill"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Reports Pending</span>
+          <div class="ov-card__value">{{ animatedOverview().reports | number }}</div>
+        </div>
       </div>
 
-      <!-- Total Posts -->
-      <div class="ov-card ov-card--accent ov-card--amber">
-        <div class="ov-card__top">
-          <span class="ov-card__label">Total Posts</span>
-          <span class="ov-card__icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+      <!-- Community Emergency Assistance Requests — no dedicated admin page yet -->
+      <div class="ov-card ov-card--accent ov-card--red ov-card--disabled" title="Coming soon">
+        <span class="ov-card__icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+        <div class="ov-card__body">
+          <span class="ov-card__label">Emergency Assistance</span>
+          <div class="ov-card__value">{{ animatedOverview().emergency | number }}</div>
         </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().posts | number }}</div>
-      </div>
-
-      <!-- Pending Approvals -->
-      <div class="ov-card ov-card--accent ov-card--red">
-        <div class="ov-card__top">
-          <span class="ov-card__label">Pending Approvals</span>
-          <span class="ov-card__icon"><i class="bi bi-hourglass-split"></i></span>
-        </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().pending | number }}</div>
       </div>
 
       <!-- Blocked Users -->
-      <div class="ov-card ov-card--accent ov-card--slate">
-        <div class="ov-card__top">
+      <a routerLink="/admin/user-management" class="ov-card ov-card--accent ov-card--slate">
+        <span class="ov-card__icon"><i class="bi bi-person-fill-slash"></i></span>
+        <div class="ov-card__body">
           <span class="ov-card__label">Blocked Users</span>
-          <span class="ov-card__icon"><i class="bi bi-person-fill-slash"></i></span>
+          <div class="ov-card__value">{{ animatedOverview().blocked | number }}</div>
         </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().blocked | number }}</div>
-      </div>
-
-      <!-- Total Events -->
-      <div class="ov-card ov-card--accent ov-card--jade">
-        <div class="ov-card__top">
-          <span class="ov-card__label">Total Events</span>
-          <span class="ov-card__icon"><i class="bi bi-calendar-event-fill"></i></span>
-        </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().events | number }}</div>
-      </div>
-
-      <!-- Total Business -->
-      <div class="ov-card ov-card--accent ov-card--rose">
-        <div class="ov-card__top">
-          <span class="ov-card__label">Total Business</span>
-          <span class="ov-card__icon"><i class="bi bi-building"></i></span>
-        </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().business | number }}</div>
-      </div>
-
-      <!-- Total Jobs -->
-      <div class="ov-card ov-card--accent ov-card--green">
-        <div class="ov-card__top">
-          <span class="ov-card__label">Total Jobs</span>
-          <span class="ov-card__icon"><i class="bi bi-briefcase-fill"></i></span>
-        </div>
-        <div class="ov-card__value" tabindex="0">{{ animatedOverview().jobs | number }}</div>
-      </div>
+      </a>
     </div>
 
     <!-- Quick Actions -->

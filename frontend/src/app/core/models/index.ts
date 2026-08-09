@@ -195,6 +195,7 @@ export interface Post {
   images: string[];
   type: PostType;
   status: PostStatus;
+  rejectionReason?: string | null;
   communityId: string;
   userId: string;
   community?: Community;
@@ -396,6 +397,11 @@ export interface DashboardStats {
   totalEvents?: number;
   totalJobs?: number;
   blockedUsers?: number;
+  pendingUserVerification?: number;
+  pendingBusinessVerification?: number;
+  pendingJobApproval?: number;
+  reportsToReview?: number;
+  communityEmergencyRequests?: number;
   recentActivity?: { type: string; message: string; createdAt: string }[];
   // User fields (returned by backend for USER role)
   joinedCommunities?: number;

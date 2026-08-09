@@ -131,7 +131,7 @@ export async function register(dto: RegisterDtoType) {
 
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
 
-  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
@@ -166,7 +166,7 @@ export async function login(dto: LoginDtoType) {
   if (user.is_blocked) throw new AppError(403, 'Your account has been blocked');
 
   const tokens = generateTokenPair(toJwtPayload(user));
-  await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken });
+  await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
   return {
     ...tokens,
@@ -196,7 +196,7 @@ export async function adminLogin(dto: LoginDtoType) {
   if (user.role !== 'ADMIN') throw new AppError(403, 'Access denied. Admin only.');
 
   const tokens = generateTokenPair(toJwtPayload(user));
-  await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken });
+  await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
   return {
     ...tokens,
@@ -297,7 +297,7 @@ export async function refreshToken(rawToken: string) {
     }
 
     const tokens = generateTokenPair(toJwtPayload(user));
-    await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken });
+    await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
     return tokens;
   } catch (err) {
@@ -429,7 +429,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   if (existingGoogle) {
     if (existingGoogle.is_blocked) throw new AppError(403, 'Your account has been blocked.');
     const tokens = generateTokenPair(toJwtPayload(existingGoogle));
-    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken });
+    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
     return {
       needsUsername: false as const,
       isNewUser:     false as const,
@@ -477,7 +477,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
     .returning('*');
 
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
-  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
@@ -505,7 +505,7 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   const existingGoogle = await db('users').where({ google_id: googleId }).first() as UserRow | undefined;
   if (existingGoogle) {
     const tokens = generateTokenPair(toJwtPayload(existingGoogle));
-    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken });
+    await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
     return {
       isNewUser: false as const,
       ...tokens,
@@ -539,7 +539,7 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
     .returning('*');
 
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
-  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken });
+  await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
 
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);

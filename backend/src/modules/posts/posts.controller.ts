@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto } from './posts.dto';
+import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto, ListPendingPostsQueryDto, ListMyPostsQueryDto, RejectPostDto } from './posts.dto';
 import * as postsService from './posts.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -50,8 +50,23 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 
 export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { page, limit } = PaginationQueryDto.parse(req.query);
-    const result = await postsService.findPendingOnly(page, limit);
+    const query = ListPendingPostsQueryDto.parse(req.query);
+    const result = await postsService.findPendingOnly(query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getMyPosts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListMyPostsQueryDto.parse(req.query);
+    const result = await postsService.findMine(req.user!.sub, query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPendingCount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await postsService.countPending();
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -65,7 +80,8 @@ export async function approve(req: Request, res: Response, next: NextFunction): 
 
 export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await postsService.reject(req.params['id'] as string);
+    const { reason } = RejectPostDto.parse(req.body ?? {});
+    const result = await postsService.reject(req.params['id'] as string, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

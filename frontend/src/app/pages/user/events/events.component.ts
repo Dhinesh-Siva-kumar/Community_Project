@@ -105,7 +105,7 @@ export class UserEventsComponent implements OnInit {
 
   loadEvents(): void {
     this.loading.set(true);
-    this.eventService.getEvents(this.userPincode()).subscribe({
+    this.eventService.getEvents({ pincode: this.userPincode() }).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data); this.totalPages.set(res.totalPages); this.totalItems.set(res.total); this.loading.set(false);
       },

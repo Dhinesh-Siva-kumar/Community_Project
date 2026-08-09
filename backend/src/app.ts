@@ -23,6 +23,8 @@ import masterDataRouter from './modules/master-data/master-data.router';
 import uploadRouter from './modules/upload/upload.router';
 import otpRouter from './modules/otp/otp.router';
 import shareRouter from './modules/share/share.router';
+import reportsRouter from './modules/reports/reports.router';
+import analyticsRouter from './modules/analytics/analytics.router';
 
 const app = express();
 
@@ -85,6 +87,8 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/master-data', masterDataRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/reports', reportsRouter);
+app.use('/api/analytics', analyticsRouter);
 // OTP standalone endpoints were at /api/send-otp and /api/verify-otp in NestJS
 app.use('/api', otpRouter);
 app.use('/share', shareRouter);

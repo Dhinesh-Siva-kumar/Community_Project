@@ -1,0 +1,217 @@
+<!-- ── Loading skeleton ───────────────────────────────────────── -->
+@if (loading() && !overview()) {
+  <div class="an-skeleton">
+    <div class="an-sk-header"></div>
+    <div class="an-sk-kpis">
+      @for (_ of [1,2,3,4,5,6]; track _) { <div class="an-sk-kpi"></div> }
+    </div>
+    <div class="an-sk-filters"></div>
+    @for (_ of [1,2,3,4]; track _) { <div class="an-sk-panel"></div> }
+  </div>
+} @else {
+@if (overview(); as ov) {
+
+<div class="an-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────── -->
+  <div class="jb-page-header">
+    <div class="jb-page-header__left">
+      <h2 class="jb-page-header__title">Advanced Analytics</h2>
+      <p class="jb-page-header__sub">Platform-wide growth, engagement and retention insights · {{ rangeLabel() }}</p>
+    </div>
+    <div class="jb-page-header__actions">
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportExcel()" [disabled]="exporting() !== null" aria-label="Export as Excel">
+        @if (exporting() === 'excel') { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-file-earmark-excel"></i> }
+        <span>Excel</span>
+      </button>
+      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="exportPdf()" [disabled]="exporting() !== null" aria-label="Export as PDF">
+        @if (exporting() === 'pdf') { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-file-earmark-pdf"></i> }
+        <span>PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── At-a-glance KPI strip — read this, skip the rest if you're busy ── -->
+  <div class="an-kpis">
+    @for (card of kpiCards(); track card.label) {
+      <div class="an-kpi an-kpi--{{ card.accent }}">
+        <span class="an-kpi__icon"><i class="bi {{ card.icon }}"></i></span>
+        <div class="an-kpi__body">
+          <span class="an-kpi__value">{{ card.value }}</span>
+          <span class="an-kpi__label">{{ card.label }}</span>
+          @if (card.sub) { <span class="an-kpi__extra">{{ card.sub }}</span> }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── Date range + granularity filter ────────────────────────── -->
+  <div class="an-filter-bar">
+    <div class="an-quick-dates" role="group" aria-label="Quick date presets">
+      <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '7d'" (click)="applyPreset('7d')">7D</button>
+      <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '30d'" (click)="applyPreset('30d')">30D</button>
+      <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '90d'" (click)="applyPreset('90d')">90D</button>
+      <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '365d'" (click)="applyPreset('365d')">1Y</button>
+    </div>
+
+    <div class="an-date-inputs">
+      <input type="date" class="jb-adv-input" [value]="dateFrom()" [max]="rangeMax" (change)="onDateFromChange($event)" aria-label="From date" />
+      <span class="an-date-sep">to</span>
+      <input type="date" class="jb-adv-input" [value]="dateTo()" [max]="rangeMax" (change)="onDateToChange($event)" aria-label="To date" />
+    </div>
+
+    <div class="an-granularity jb-select-wrap jb-select-wrap--xs">
+      <app-searchable-select [options]="granularityOptions" [ngModel]="granularity()"
+        (ngModelChange)="onGranularityChange($event)" aria-label="Granularity">
+      </app-searchable-select>
+    </div>
+  </div>
+
+  <!-- ── Bento grid: full-width hero charts + left/right card pairs
+       so an admin can scan everything with far less scrolling. ────── -->
+  <div class="an-grid">
+
+    <!-- 1. User Growth — FULL -->
+    <section class="an-panel an-panel--full">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--amber"><i class="bi bi-graph-up-arrow"></i></span>
+        <div>
+          <h3 class="an-panel__title">User Growth</h3>
+          <span class="an-panel__sub">New user registrations over time</span>
+        </div>
+      </div>
+      @if (userGrowthChart(); as opts) {
+        <app-apex-chart [options]="opts"></app-apex-chart>
+      }
+    </section>
+
+    <!-- 2. Active Users — LEFT -->
+    <section class="an-panel">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--indigo"><i class="bi bi-person-check"></i></span>
+        <div>
+          <h3 class="an-panel__title">Active Users</h3>
+          <span class="an-panel__sub">Users seen in the platform recently</span>
+        </div>
+      </div>
+      <div class="an-stat-row">
+        <div class="an-stat-card">
+          <span class="an-stat-card__value">{{ ov.activeUsers.today | number }}</span>
+          <span class="an-stat-card__label">Today</span>
+        </div>
+        <div class="an-stat-card">
+          <span class="an-stat-card__value">{{ ov.activeUsers.thisWeek | number }}</span>
+          <span class="an-stat-card__label">This Week</span>
+        </div>
+        <div class="an-stat-card">
+          <span class="an-stat-card__value">{{ ov.activeUsers.thisMonth | number }}</span>
+          <span class="an-stat-card__label">This Month</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Retention Rate — RIGHT (paired with Active Users) -->
+    <section class="an-panel">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--green"><i class="bi bi-arrow-repeat"></i></span>
+        <div>
+          <h3 class="an-panel__title">Retention Rate</h3>
+          <span class="an-panel__sub">Users active 30+ days after joining</span>
+        </div>
+      </div>
+      <div class="an-retention">
+        @if (retentionChart(); as opts) {
+          <app-apex-chart [options]="opts"></app-apex-chart>
+        }
+        <div class="an-retention-summary">
+          <span class="an-retention-summary__rate">{{ ov.retentionRate.rate }}%</span>
+          <span class="an-retention-summary__desc">
+            {{ ov.retentionRate.returned | number }} of {{ ov.retentionRate.eligible | number }} eligible users returned
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Country Distribution — FULL -->
+    <section class="an-panel an-panel--full">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--purple"><i class="bi bi-globe-americas"></i></span>
+        <div>
+          <h3 class="an-panel__title">Country Distribution</h3>
+          <span class="an-panel__sub">Users by country (top 10)</span>
+        </div>
+      </div>
+      <div class="an-split">
+        <div class="an-split__chart">
+          @if (countryChart(); as opts) {
+            <app-apex-chart [options]="opts"></app-apex-chart>
+          }
+        </div>
+        <div class="an-split__table">
+          <table class="an-table">
+            <thead><tr><th>Country</th><th>Users</th></tr></thead>
+            <tbody>
+              @for (row of ov.countryDistribution; track row.country) {
+                <tr><td>{{ row.country }}</td><td>{{ row.count | number }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Job Activity — LEFT -->
+    <section class="an-panel">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--cyan"><i class="bi bi-briefcase"></i></span>
+        <div>
+          <h3 class="an-panel__title">Job Activity</h3>
+          <span class="an-panel__sub">Posted over time</span>
+        </div>
+      </div>
+      <div class="an-stat-row an-stat-row--compact">
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.active | number }}</span><span class="an-stat-card__label">Active</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.inactive | number }}</span><span class="an-stat-card__label">Inactive</span></div>
+      </div>
+      @if (jobPostedChart(); as opts) {
+        <app-apex-chart [options]="opts"></app-apex-chart>
+      }
+    </section>
+
+    <!-- 5. Business Growth — RIGHT (paired with Job Activity) -->
+    <section class="an-panel">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--rose"><i class="bi bi-shop"></i></span>
+        <div>
+          <h3 class="an-panel__title">Business Growth</h3>
+          <span class="an-panel__sub">Registered over time</span>
+        </div>
+      </div>
+      <div class="an-stat-row an-stat-row--compact">
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.verified | number }}</span><span class="an-stat-card__label">Verified</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.active | number }}</span><span class="an-stat-card__label">Active</span></div>
+      </div>
+      @if (businessGrowthChart(); as opts) {
+        <app-apex-chart [options]="opts"></app-apex-chart>
+      }
+    </section>
+
+    <!-- 6. Community Engagement — FULL -->
+    <section class="an-panel an-panel--full">
+      <div class="an-panel__head">
+        <span class="an-panel__icon an-panel__icon--jade"><i class="bi bi-chat-square-heart"></i></span>
+        <div>
+          <h3 class="an-panel__title">Community Engagement</h3>
+          <span class="an-panel__sub">Posts, comments and reactions over time</span>
+        </div>
+      </div>
+      @if (engagementChart(); as opts) {
+        <app-apex-chart [options]="opts"></app-apex-chart>
+      }
+    </section>
+
+  </div>
+
+</div>
+}
+}

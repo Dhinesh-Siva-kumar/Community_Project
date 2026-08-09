@@ -5,8 +5,9 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessService } from '../../../core/services/business.service';
 import { JobService } from '../../../core/services/job.service';
+import { PostService } from '../../../core/services/post.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { User, Business, Job } from '../../../core/models';
+import { User, Business, Job, Post } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
@@ -28,6 +29,7 @@ export class UserProfileComponent implements OnInit {
   private authService = inject(AuthService);
   private businessService = inject(BusinessService);
   private jobService = inject(JobService);
+  private postService = inject(PostService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
@@ -39,10 +41,13 @@ export class UserProfileComponent implements OnInit {
 
   myBusinesses = signal<Business[]>([]);
   myJobs = signal<Job[]>([]);
+  myPosts = signal<Post[]>([]);
   loadingBusinesses = signal(false);
   loadingJobs = signal(false);
+  loadingPosts = signal(false);
   deletingBusinessId = signal<string | null>(null);
   deletingJobId = signal<string | null>(null);
+  deletingPostId = signal<string | null>(null);
 
   avatarFile = signal<File | null>(null);
   newInterest = signal('');
@@ -54,10 +59,20 @@ export class UserProfileComponent implements OnInit {
 
   profileCompletion = computed(() => this.user()?.profileCompletion ?? 0);
 
+  postStatusCounts = computed(() => {
+    const posts = this.myPosts();
+    return {
+      pending:  posts.filter(p => p.status === 'PENDING').length,
+      approved: posts.filter(p => p.status === 'APPROVED').length,
+      rejected: posts.filter(p => p.status === 'REJECTED').length,
+    };
+  });
+
   tabs: ProfileTab[] = [
     { id: 'personal',    label: 'Personal Info',   icon: 'bi-person' },
     { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop' },
     { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase' },
+    { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post' },
   ];
 
   profCatOptions: SelectOption[] = [
@@ -116,6 +131,7 @@ export class UserProfileComponent implements OnInit {
     this.activeTab.set(id);
     if (id === 'businesses' && !this.myBusinesses().length) this.loadMyBusinesses();
     if (id === 'jobs'       && !this.myJobs().length)       this.loadMyJobs();
+    if (id === 'posts'      && !this.myPosts().length)      this.loadMyPosts();
   }
 
   toggleEdit(): void {
@@ -201,6 +217,23 @@ export class UserProfileComponent implements OnInit {
     this.jobService.deleteJob(id).subscribe({
       next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('Job deleted'); this.deletingJobId.set(null); },
       error: () => { this.toast.error('Failed to delete job'); this.deletingJobId.set(null); },
+    });
+  }
+
+  loadMyPosts(): void {
+    this.loadingPosts.set(true);
+    this.postService.getMyPosts({ page: 1, limit: 50 }).subscribe({
+      next: (r) => { this.myPosts.set(r.data); this.loadingPosts.set(false); },
+      error: () => this.loadingPosts.set(false),
+    });
+  }
+
+  deletePost(id: string): void {
+    if (!confirm('Delete this post?')) return;
+    this.deletingPostId.set(id);
+    this.postService.deletePost(id).subscribe({
+      next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('Post deleted'); this.deletingPostId.set(null); },
+      error: () => { this.toast.error('Failed to delete post'); this.deletingPostId.set(null); },
     });
   }
 }

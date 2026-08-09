@@ -35,7 +35,12 @@ export interface JobsQueryParams {
 
   // ── Date / Sort ──────────────────────────────────────────────
   postedWithin?: number;
+  dateFrom?: string;
+  dateTo?:   string;
   sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az';
+
+  // ── Status (admin only) ───────────────────────────────────────
+  status?: 'active' | 'inactive';
 }
 
 @Injectable({ providedIn: 'root' })

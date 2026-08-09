@@ -1,9 +1,10 @@
-import { Component, inject, signal, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, HostListener } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { PostService } from '../../core/services/post.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 
 interface NavItem {
@@ -21,6 +22,7 @@ const ROUTE_TITLES: Record<string, string> = {
   events:            'Events',
   'user-management': 'User Management',
   'post-approval':   'Post Approval',
+  analytics:         'Analytics',
   profile:           'Profile',
 };
 
@@ -34,6 +36,7 @@ const ROUTE_TITLES: Record<string, string> = {
 export class AdminLayoutComponent {
   authService = inject(AuthService);
   notificationService = inject(NotificationService);
+  private postService = inject(PostService);
   private router = inject(Router);
 
   sidebarCollapsed = signal(false);
@@ -41,6 +44,9 @@ export class AdminLayoutComponent {
   userDropdownOpen = signal(false);
   isMobile = signal(false);
   pageTitle = signal('Dashboard');
+
+  pendingApprovalsCount = signal(0);
+  hasPendingApprovals = computed(() => this.pendingApprovalsCount() > 0);
 
   navItems: NavItem[] = [
     { label: 'Dashboard',       icon: 'bi-grid',              route: '/admin/dashboard'                                     },
@@ -50,15 +56,27 @@ export class AdminLayoutComponent {
     { label: 'Events',          icon: 'bi-calendar-event',    route: '/admin/events'                                        },
     { label: 'User Management', icon: 'bi-person-gear',       route: '/admin/user-management', sectionLabel: 'ADMIN'       },
     { label: 'Post Approval',   icon: 'bi-check-circle',      route: '/admin/post-approval'                                 },
+    { label: 'Analytics',       icon: 'bi-graph-up',          route: '/admin/analytics'                                     },
     { label: 'Profile',         icon: 'bi-person-circle',     route: '/admin/profile',         sectionLabel: 'ACCOUNT'    },
   ];
 
   constructor() {
     this.checkScreenSize();
     this.updatePageTitle(this.router.url);
+    this.loadPendingApprovalsCount();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => this.updatePageTitle(e.urlAfterRedirects));
+      .subscribe((e) => {
+        this.updatePageTitle(e.urlAfterRedirects);
+        this.loadPendingApprovalsCount();
+      });
+  }
+
+  private loadPendingApprovalsCount(): void {
+    this.postService.getPendingCount().subscribe({
+      next: (res) => this.pendingApprovalsCount.set(res.count),
+      error: () => {},
+    });
   }
 
   @HostListener('window:resize')

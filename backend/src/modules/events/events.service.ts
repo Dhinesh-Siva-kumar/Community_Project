@@ -50,25 +50,53 @@ export async function create(data: CreateEventDtoType, userId: string) {
   };
 }
 
-export async function findAll(params: ListEventsQueryDtoType) {
-  const { pincode, page, limit, search } = params;
+export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean }) {
+  const {
+    pincode, page, limit, search, country, status,
+    dateFrom, dateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
+  } = params;
   const offset = (page - 1) * limit;
 
   const query = db('events as e')
     .join('users as u', 'e.user_id', 'u.id')
-    .where('e.is_active', true)
     .select('e.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
 
-  const countQuery = db('events').where({ is_active: true });
+  const countQuery = db('events');
+
+  // Admin callers set skipActiveFilter=true to see inactive events too,
+  // unless they've explicitly picked a status to filter by below.
+  if (!skipActiveFilter) {
+    query.where('e.is_active', true);
+    countQuery.where({ is_active: true });
+  }
+  if (status) {
+    const isActive = status === 'active';
+    query.andWhere('e.is_active', isActive);
+    countQuery.andWhere('is_active', isActive);
+  }
 
   if (pincode) { query.andWhere('e.pincode', pincode); countQuery.andWhere({ pincode }); }
   if (search) {
     query.andWhere(function () { this.whereILike('e.title', `%${search}%`).orWhereILike('e.description', `%${search}%`); });
     countQuery.andWhere(function () { this.whereILike('title', `%${search}%`).orWhereILike('description', `%${search}%`); });
   }
+  if (country) {
+    query.andWhereILike('e.country', `%${country}%`);
+    countQuery.andWhereILike('country', `%${country}%`);
+  }
+  if (dateFrom) {
+    query.andWhere('e.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('e.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
+  }
 
+  const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
   const [events, [{ total }]] = await Promise.all([
-    query.orderBy('e.event_date', 'asc').limit(limit).offset(offset),
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 

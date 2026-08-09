@@ -1,11 +1,14 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Event as AppEvent, PaginatedResponse } from '../../../core/models';
+import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -22,12 +25,13 @@ function endTimeValidator(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
 export class AdminEventsComponent implements OnInit {
   private eventService = inject(EventService);
+  private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
@@ -36,18 +40,63 @@ export class AdminEventsComponent implements OnInit {
   submitting = signal(false);
   skeletons  = Array(6);
 
+  // Floating header action (shows once scrolled past the page header)
+  showHeaderFab = signal(false);
+  private scrollTicking = false;
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.showHeaderFab.set(window.scrollY >= 120);
+      this.scrollTicking = false;
+    });
+  }
+
   currentPage = signal(1);
   totalPages  = signal(1);
   totalItems  = signal(0);
 
   searchQuery = signal('');
-  activeFilter = signal<'all' | 'upcoming' | 'hybrid' | 'offline' | 'completed'>('all');
-  sortBy = signal<'newest' | 'oldest' | 'date'>('newest');
-  
+  filterCountry  = signal('');
+  filterStatus   = signal<'active' | 'inactive' | ''>('');
+  filterDateFrom = signal('');
+  filterDateTo   = signal('');
+  private searchDebounce: any = null;
+
   // Premium filter UI state
   showAdvancedFilters = signal(false);
 
-  // Statistics
+  filterCountryOptions: SelectOption[] = [];
+  readonly statusFilterOptions: SelectOption[] = [
+    { value: '',         label: 'All Status' },
+    { value: 'active',   label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
+  readonly pageSizeOptions: SelectOption[] = [
+    { value: 20,  label: '20' },
+    { value: 50,  label: '50' },
+    { value: 100, label: '100' },
+  ];
+  pageSize = signal(20);
+
+  // ── Sort — driven by the sort-bar above the grid ────────────
+  readonly sortFields: SortField[] = [
+    { key: 'joined',    label: 'Created' },
+    { key: 'eventDate', label: 'Event Date' },
+    { key: 'name',      label: 'Name' },
+  ];
+  sortBy  = signal<'joined' | 'eventDate' | 'name'>('joined');
+  sortDir = signal<SortDir>('desc');
+
+  onSortChange(change: SortChange): void {
+    this.sortBy.set(change.sortBy as 'joined' | 'eventDate' | 'name');
+    this.sortDir.set(change.sortDir);
+    this.applyFilters();
+  }
+
+  // Statistics (server-supplied page only — a lightweight "on this page" read)
   upcomingEvents = computed(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -56,50 +105,17 @@ export class AdminEventsComponent implements OnInit {
   hybridEvents = computed(() => this.events().filter(e => e.eventMode === 'Hybrid').length);
   offlineEvents = computed(() => this.events().filter(e => e.eventMode === 'Offline').length);
 
-  filteredEvents = computed(() => {
-    let result = this.events();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Apply filter
-    const filter = this.activeFilter();
-    if (filter === 'upcoming') {
-      result = result.filter(e => new Date(e.eventDate) >= today);
-    } else if (filter === 'completed') {
-      result = result.filter(e => new Date(e.eventDate) < today);
-    } else if (filter === 'hybrid') {
-      result = result.filter(e => e.eventMode === 'Hybrid');
-    } else if (filter === 'offline') {
-      result = result.filter(e => e.eventMode === 'Offline');
-    }
-
-    // Apply search
-    const q = this.searchQuery().toLowerCase();
-    if (q) {
-      result = result.filter(e =>
-        e.title.toLowerCase().includes(q) || (e.location ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    // Apply sort
-    const sort = this.sortBy();
-    if (sort === 'newest') {
-      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sort === 'oldest') {
-      result = [...result].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    } else if (sort === 'date') {
-      result = [...result].sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-    }
-
-    return result;
-  });
+  // Server-side filtering: component list is whatever the API returned.
+  filteredEvents = computed(() => this.events());
 
   // Computed property: count of active filters
   activeFilterCount = computed(() => {
     let count = 0;
     if (this.searchQuery()) count++;
-    if (this.activeFilter() !== 'all') count++;
-    if (this.sortBy() !== 'newest') count++;
+    if (this.filterCountry()) count++;
+    if (this.filterStatus()) count++;
+    if (this.filterDateFrom()) count++;
+    if (this.filterDateTo()) count++;
     return count;
   });
 
@@ -125,7 +141,15 @@ export class AdminEventsComponent implements OnInit {
   get showAddress(): boolean      { return this.eventMode === 'Offline' || this.eventMode === 'Hybrid'; }
   get showLocationLink(): boolean { return this.eventMode === 'Online'  || this.eventMode === 'Hybrid'; }
 
-  ngOnInit(): void { this.initForm(); this.loadEvents(); }
+  ngOnInit(): void { this.initForm(); this.loadEvents(); this.loadCountries(); }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res) => {
+        this.filterCountryOptions = res.data.map((c: Country) => ({ value: c.name, label: c.name }));
+      },
+    });
+  }
 
   private initForm(): void {
     this.eventForm = this.fb.group({
@@ -167,13 +191,85 @@ export class AdminEventsComponent implements OnInit {
 
   loadEvents(): void {
     this.loading.set(true);
-    this.eventService.getEvents().subscribe({
+    const params: Record<string, any> = {
+      page: this.currentPage(),
+      limit: this.pageSize(),
+      sortBy: this.sortBy(),
+      sortDir: this.sortDir(),
+    };
+    if (this.searchQuery().trim()) params['search'] = this.searchQuery().trim();
+    if (this.filterCountry())      params['country'] = this.filterCountry();
+    if (this.filterStatus())       params['status']  = this.filterStatus();
+    if (this.filterDateFrom())     params['dateFrom'] = this.filterDateFrom();
+    if (this.filterDateTo())       params['dateTo']   = this.filterDateTo();
+
+    this.eventService.getEvents(params).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data); this.totalPages.set(res.totalPages);
         this.totalItems.set(res.total); this.loading.set(false);
       },
       error: () => { this.toast.error('Failed to load events'); this.loading.set(false); },
     });
+  }
+
+  applyFilters(): void {
+    this.currentPage.set(1);
+    this.loadEvents();
+  }
+
+  onSearchInput(value: string): void {
+    this.searchQuery.set(value);
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+    this.searchDebounce = setTimeout(() => this.applyFilters(), 300);
+  }
+
+  setCountryFilter(v: string | number): void {
+    this.filterCountry.set(v as string);
+    this.applyFilters();
+  }
+
+  setStatusFilter(v: string | number): void {
+    this.filterStatus.set(v as 'active' | 'inactive' | '');
+    this.applyFilters();
+  }
+
+  onFilterDateFromChange(e: Event): void {
+    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterDateToChange(e: Event): void {
+    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.applyFilters();
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+  }
+
+  clearAllFilters(): void {
+    this.searchQuery.set('');
+    this.filterCountry.set('');
+    this.filterStatus.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+    this.applyFilters();
+  }
+
+  removeFilter(key: string): void {
+    switch (key) {
+      case 'search':    this.searchQuery.set('');   break;
+      case 'country':   this.filterCountry.set(''); break;
+      case 'status':    this.filterStatus.set('');  break;
+      case 'dateFrom':  this.filterDateFrom.set(''); break;
+      case 'dateTo':    this.filterDateTo.set('');  break;
+    }
+    this.applyFilters();
   }
 
   openAddModal(): void {
@@ -254,24 +350,6 @@ export class AdminEventsComponent implements OnInit {
   }
   truncate(text: string | undefined, n: number): string {
     if (!text) return ''; return text.length > n ? text.substring(0, n) + '…' : text;
-  }
-
-  setFilter(filter: 'all' | 'upcoming' | 'hybrid' | 'offline' | 'completed'): void {
-    this.activeFilter.set(filter);
-  }
-
-  setSortBy(sort: 'newest' | 'oldest' | 'date'): void {
-    this.sortBy.set(sort);
-  }
-
-  toggleAdvancedFilters(): void {
-    this.showAdvancedFilters.update(v => !v);
-  }
-
-  clearAllFilters(): void {
-    this.searchQuery.set('');
-    this.activeFilter.set('all');
-    this.sortBy.set('newest');
   }
 
   getEventStatus(evt: AppEvent): { label: string; type: string } {

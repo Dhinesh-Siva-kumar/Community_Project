@@ -1,4 +1,4 @@
-<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
     <h2 class="jb-page-header__title">Communities Management</h2>
@@ -87,6 +87,9 @@
             <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
               (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
             </app-searchable-select>
+            <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+              (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+            </app-searchable-select>
           </div>
         </div>
       </div>
@@ -105,7 +108,7 @@
               <button type="button" class="jb-pill-btn"
                       [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
                       (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
-                <i class="bi bi-life-preserver"></i> Help &amp; Emergency
+                <i class="bi bi-life-preserver"></i> Help &amp; Emergency Assistance
               </button>
               <button type="button" class="jb-pill-btn"
                       [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
@@ -271,6 +274,9 @@
     </div>
   } @else {
     <!-- ── COMMUNITIES LIST ────────────────────────────────────────────────── -->
+    <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
+      (sortChange)="onSortChange($event)">
+    </app-sort-bar>
     <div class="row g-4 mb-2">
       @for (community of communities(); track community.id) {
         <div class="col-12 col-md-6 col-xl-4">
@@ -366,7 +372,7 @@
                       [class.cc-mode-badge--enquire]="community.community_mode === 'ENQUIRE'">
                   <i class="bi" [class.bi-life-preserver]="community.community_mode !== 'ENQUIRE'"
                      [class.bi-question-circle-fill]="community.community_mode === 'ENQUIRE'"></i>
-                  {{ community.community_mode === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency' }}
+                  {{ community.community_mode === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency Assistance' }}
                 </span>
 
               </div>
@@ -379,18 +385,9 @@
                 <button class="cc-icon-action cc-icon-action--edit" title="Edit community" (click)="$event.stopPropagation(); openEditModal(community)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
-                @if (deleteConfirmId() === community.id) {
-                  <button class="cc-icon-action cc-icon-action--confirm" title="Confirm delete" (click)="$event.stopPropagation(); deleteCommunity(community.id)">
-                    <i class="bi bi-check-lg"></i>
-                  </button>
-                  <button class="cc-icon-action cc-icon-action--cancel" title="Cancel" (click)="$event.stopPropagation(); cancelDelete()">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                } @else {
-                  <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="$event.stopPropagation(); confirmDelete(community.id)">
-                    <i class="bi bi-trash-fill"></i>
-                  </button>
-                }
+                <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="$event.stopPropagation(); confirmDelete(community)">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
               </div>
             </div>
 
@@ -399,30 +396,48 @@
       }
     </div>
 
-    <!-- ── Pagination ────────────────────────────────────────── -->
-    @if (totalPages() > 1) {
-      <nav class="page-pagination">
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage() === 1">
-            <button class="page-link" (click)="goToPage(currentPage() - 1)">
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          @for (page of getPages(); track page) {
-            <li class="page-item" [class.active]="page === currentPage()">
-              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+    <!-- ── Pagination + Page size ───────────────────────────────── -->
+    <div class="cm-pagination-row">
+      <div class="cm-pagesize">
+        <span>Rows per page</span>
+        <div class="cm-pagesize__select">
+          <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+            (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+            aria-label="Rows per page">
+          </app-searchable-select>
+        </div>
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="page-pagination">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage() === 1">
+              <button class="page-link" (click)="goToPage(currentPage() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
             </li>
-          }
-          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-            <button class="page-link" (click)="goToPage(currentPage() + 1)">
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-       </nav>
-     }
+            @for (page of getPages(); track page) {
+              <li class="page-item" [class.active]="page === currentPage()">
+                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+              <button class="page-link" (click)="goToPage(currentPage() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    </div>
    }
 }
+
+<!-- ── Floating create button — shown while scrolling up ──────── -->
+<button class="community-fab" [class.community-fab--visible]="showCreateFab()"
+        (click)="openCreateModal()" aria-label="Create a new community" title="Create Community">
+  <i class="bi bi-plus-lg"></i>
+</button>
 
 <!-- Create / Edit Modal Backdrop -->
 @if (showModal()) {
@@ -590,7 +605,7 @@
                 <div class="cm-toggle-group">
                   <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
                     <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
-                    <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency
+                    <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency Assistance
                   </label>
                   <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
                     <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
@@ -601,7 +616,7 @@
                   @if (f['communityMode'].value === 'ENQUIRE') {
                     Members can raise and track enquiries in a dedicated Enquire tab.
                   } @else {
-                    Members can post Help and Emergency requests in dedicated tabs.
+                    Members can post Help and Emergency Assistance requests in dedicated tabs.
                   }
                 </div>
               </div>
@@ -678,5 +693,32 @@
       </button>
     </div>
 
+  </div>
+}
+
+<!-- ── DELETE CONFIRM ─────────────────────────────────────── -->
+@if (communityToDelete(); as community) {
+  <div class="modal-backdrop fade show" style="z-index:1060"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true" style="z-index:1070">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-body text-center py-4">
+          <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
+          <h6 class="fw-bold">Delete "{{ community.name }}"?</h6>
+          <p class="text-muted small mb-0">
+            Are you sure? This will remove the community, its posts, and its members. This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm"
+            (click)="cancelDelete()" [disabled]="deletingCommunity()">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm"
+            (click)="deleteCommunity()" [disabled]="deletingCommunity()">
+            @if (deletingCommunity()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 }

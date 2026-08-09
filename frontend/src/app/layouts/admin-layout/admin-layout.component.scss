@@ -197,6 +197,12 @@ $_sb-active-text:    $color-primary-dark;
   letter-spacing: -0.1px;
 
   // Fixed-width icon container → labels always start at the same column
+  .nav-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
   .bi {
     font-size: 1.0625rem;
     width: 20px;
@@ -206,6 +212,17 @@ $_sb-active-text:    $color-primary-dark;
     color: $color-text-muted;
     opacity: 0.7;
     transition: color $_transition, opacity $_transition, transform 0.18s ease;
+  }
+
+  .nav-icon-dot {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: $color-danger;
+    border-radius: $radius-full;
+    border: 1.5px solid $_sb-bg;
   }
 
   .nav-label {
@@ -504,17 +521,23 @@ $_sb-active-text:    $color-primary-dark;
   margin-left: 4px;
 }
 
-.user-avatar-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  border-radius: $radius-full;
+.user-profile-btn {
   display: flex;
   align-items: center;
-  transition: opacity $transition-fast;
+  gap: 8px;
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px 10px 4px 4px;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: background $transition-fast $transition-easing,
+              border-color $transition-fast $transition-easing;
 
-  &:hover { opacity: 0.88; }
+  &:hover,
+  &[aria-expanded="true"] {
+    background: $color-bg-hover;
+    border-color: $color-border;
+  }
 }
 
 .avatar-img {
@@ -524,13 +547,14 @@ $_sb-active-text:    $color-primary-dark;
   object-fit: cover;
   border: 2px solid $color-border;
   display: block;
+  flex-shrink: 0;
 }
 
 .avatar-initials {
   width: 34px;
   height: 34px;
   border-radius: $radius-full;
-  background: $gradient-primary;
+  background: $color-primary;
   color: $color-on-primary;
   display: flex;
   align-items: center;
@@ -539,7 +563,30 @@ $_sb-active-text:    $color-primary-dark;
   font-weight: $font-weight-extrabold;
   font-family: $font-family-header;
   letter-spacing: -0.3px;
-  box-shadow: $shadow-primary-sm;
+  flex-shrink: 0;
+}
+
+.user-profile-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include media-sm-max { display: none; }
+}
+
+.user-profile-caret {
+  font-size: 0.65rem;
+  color: $navbar-icon-color;
+  flex-shrink: 0;
+  transition: transform $transition-fast $transition-easing;
+
+  &--open { transform: rotate(180deg); }
+
+  @include media-sm-max { display: none; }
 }
 
 // ── Dropdown Panel ────────────────────────────────────────────
@@ -568,7 +615,7 @@ $_sb-active-text:    $color-primary-dark;
   width: 38px;
   height: 38px;
   border-radius: $radius-full;
-  background: $gradient-primary;
+  background: $color-primary;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -697,7 +744,7 @@ $_sb-active-text:    $color-primary-dark;
   .sidebar-toggle,
   .header-icon-btn,
   .dropdown-item,
-  .user-avatar-btn,
+  .user-profile-btn,
   .sidebar-user {
     transition: none;
   }

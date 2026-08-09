@@ -2,48 +2,52 @@
      ADMIN POST APPROVAL — Premium Design
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ── PAGE HEADER (compact sticky) ─────────────────────────── -->
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
     <h2 class="jb-page-header__title">Post Approval</h2>
     <p class="jb-page-header__sub">Review and moderate community posts pending approval.</p>
   </div>
-  <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="loadPendingPosts()" aria-label="Refresh pending posts">
+  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="loadPendingPosts()" aria-label="Refresh pending posts">
     <i class="bi bi-arrow-clockwise"></i> Refresh
   </button>
 </div>
 
-<!-- ── STATS BAR ────────────────────────────────────────────── -->
+<!-- ── STATS BAR — clickable quick-filters by post type ─────────── -->
 @if (!loading()) {
   <div class="admin-stats-bar">
-    <div class="admin-stat-card">
-      <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-file-earmark-text"></i></div>
-      <div class="admin-stat-card__body">
-        <span class="admin-stat-card__value">{{ postStats().total }}</span>
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterType() === ''"
+      (click)="setTypeFilter('')" aria-label="Show all pending posts">
+      <div class="admin-stat-card__icon" style="--ic:#dc2626;--bg:rgba(220,38,38,0.10)"><i class="bi bi-file-earmark-text"></i></div>
+      <div class="admin-stat-card__content">
+        <span class="admin-stat-card__value">{{ pendingCount() }}</span>
         <span class="admin-stat-card__label">Pending Posts</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-chat-left"></i></div>
-      <div class="admin-stat-card__body">
+    </button>
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterType() === 'GENERAL'"
+      (click)="setTypeFilter('GENERAL')" aria-label="Filter by general posts">
+      <div class="admin-stat-card__icon" style="--ic:#15803d;--bg:#dcfce7"><i class="bi bi-chat-left"></i></div>
+      <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ postStats().general }}</span>
         <span class="admin-stat-card__label">General</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-exclamation-triangle-fill"></i></div>
-      <div class="admin-stat-card__body">
+    </button>
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterType() === 'HELP'"
+      (click)="setTypeFilter('HELP')" aria-label="Filter by help posts">
+      <div class="admin-stat-card__icon" style="--ic:#0284c7;--bg:#e0f2fe"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ postStats().help }}</span>
         <span class="admin-stat-card__label">Help</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-lightning-fill"></i></div>
-      <div class="admin-stat-card__body">
+    </button>
+    <button class="admin-stat-card" [class.admin-stat-card--active]="filterType() === 'EMERGENCY'"
+      (click)="setTypeFilter('EMERGENCY')" aria-label="Filter by emergency posts">
+      <div class="admin-stat-card__icon" style="--ic:#d97706;--bg:rgba(251,191,36,0.15)"><i class="bi bi-lightning-fill"></i></div>
+      <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ postStats().emergency }}</span>
-        <span class="admin-stat-card__label">Emergency</span>
+        <span class="admin-stat-card__label">Emergency Assistance</span>
       </div>
-    </div>
+    </button>
   </div>
 }
 
@@ -53,12 +57,21 @@
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
       <input type="search" class="jb-search-wrap__input"
-        placeholder="Filter by community name…"
+        placeholder="Search by community or post content…"
         [value]="filterCommunity()" (input)="onFilterCommunity($event)" autocomplete="off"
-        aria-label="Filter by community" />
+        aria-label="Search pending posts" />
       @if (filterCommunity()) {
-        <button class="jb-search-wrap__clear" (click)="filterCommunity.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
+        <button class="jb-search-wrap__clear" (click)="filterCommunity.set(''); applyFilters()" aria-label="Clear search"><i class="bi bi-x"></i></button>
       }
+    </div>
+    <!-- View toggle -->
+    <div class="um-view-toggle" role="group" aria-label="Switch view">
+      <button class="um-view-btn" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" aria-label="Card view" title="Card view">
+        <i class="bi bi-grid-3x3-gap-fill"></i>
+      </button>
+      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" aria-label="Table view" title="Table view">
+        <i class="bi bi-table"></i>
+      </button>
     </div>
     <!-- Advanced filters -->
     <div class="jb-filter-row">
@@ -79,10 +92,34 @@
       <div class="jb-filter-row">
         <span class="jb-filter-section-label"><i class="bi bi-tag"></i> Post Type</span>
         <div class="jb-chip-group" role="group">
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === ''" (click)="filterType.set('')">All</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'GENERAL'" (click)="filterType.set('GENERAL')">General</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'HELP'" (click)="filterType.set('HELP')">Help</button>
-          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'EMERGENCY'" (click)="filterType.set('EMERGENCY')">Emergency</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === ''" (click)="setTypeFilter('')">All</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'GENERAL'" (click)="setTypeFilter('GENERAL')">General</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'HELP'" (click)="setTypeFilter('HELP')">Help</button>
+          <button class="jb-chip" [class.jb-chip--active]="filterType() === 'EMERGENCY'" (click)="setTypeFilter('EMERGENCY')">Emergency Assistance</button>
+        </div>
+      </div>
+      <div class="jb-advanced-grid">
+        <div class="jb-adv-field">
+          <label class="jb-adv-label"><i class="bi bi-globe"></i> Country</label>
+          <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+            (ngModelChange)="setCountryFilter($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label"><i class="bi bi-shield-check"></i> Author Status</label>
+          <app-searchable-select [options]="authorStatusOptions" [ngModel]="filterAuthorStatus()"
+            (ngModelChange)="setAuthorStatusFilter($event)" placeholder="All Authors">
+          </app-searchable-select>
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="paFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+          <input id="paFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
+            (change)="onFilterDateFromChange($event)" />
+        </div>
+        <div class="jb-adv-field">
+          <label class="jb-adv-label" for="paFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+          <input id="paFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
+            (change)="onFilterDateToChange($event)" />
         </div>
       </div>
     </div>
@@ -125,28 +162,17 @@
     <div class="jb-bulk-actions-right">
       @if (selectedCount() > 0) {
         <span class="jb-selection-count">{{ selectedCount() }} selected</span>
-        <button
-          class="btn btn-success btn-sm"
-          [disabled]="bulkProcessing()"
-          (click)="approveSelected()"
-        >
-          @if (bulkProcessing()) {
-            <span class="spinner-border spinner-border-sm me-1"></span>
-          }
+        <button class="um-btn um-btn--sm um-btn--success" [disabled]="bulkProcessing()" (click)="approveSelected()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-1"></span> }
           Approve ({{ selectedCount() }})
         </button>
-        <button
-          class="btn btn-danger btn-sm"
-          [disabled]="bulkProcessing()"
-          (click)="rejectSelected()"
-        >
+        <button class="um-btn um-btn--sm um-btn--danger" [disabled]="bulkProcessing()" (click)="requestRejectSelected()">
           Reject ({{ selectedCount() }})
         </button>
       }
     </div>
   </div>
 
-  <!-- Post Cards -->
   @if (filteredPosts().length === 0) {
     <div class="jb-empty" role="status">
       <div class="jb-empty__illustration">
@@ -156,93 +182,306 @@
       <p class="jb-empty__text">There are no pending posts to review.</p>
     </div>
   } @else {
-    <div class="jb-posts-grid">
-      @for (post of filteredPosts(); track post.id) {
-        <div class="card post-card border-0 shadow-sm" [class.selected]="isSelected(post.id)">
-          <div class="card-body">
-            <div class="d-flex gap-3">
-              <!-- Checkbox -->
-              <div class="d-flex align-items-start pt-1">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  [checked]="isSelected(post.id)"
-                  (change)="toggleSelect(post.id)"
-                />
+    <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
+      (sortChange)="onSortChange($event)">
+    </app-sort-bar>
+
+    @if (viewMode() === 'cards') {
+      <!-- ── CARD VIEW ─────────────────────────────────────────── -->
+      @for (group of groupedPosts(); track group.label) {
+        <div class="pa-date-heading">{{ group.label }} <span>· {{ group.posts.length }} post{{ group.posts.length === 1 ? '' : 's' }}</span></div>
+        <div class="jb-posts-grid">
+          @for (post of group.posts; track post.id) {
+            <div class="card post-card border-0 shadow-sm" [class.selected]="isSelected(post.id)"
+              role="button" tabindex="0" (click)="viewPost(post)" (keydown.enter)="viewPost(post)">
+
+              <div class="post-card__select" (click)="$event.stopPropagation()">
+                <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" (change)="toggleSelect(post.id)" />
               </div>
 
-              <!-- User Avatar -->
-              <div class="flex-shrink-0">
-                @if (post.user?.avatar) {
-                  <img [src]="post.user?.avatar" class="post-avatar rounded-circle" width="40" height="40" />
-                } @else {
-                  <div class="post-avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    <span class="small fw-bold">
+              <div class="post-card__body">
+                <div class="post-card__author">
+                  @if (post.user?.avatar) {
+                    <img [src]="post.user?.avatar" class="post-card__avatar" />
+                  } @else {
+                    <div class="post-card__avatar post-card__avatar--initials">
                       {{ (post.user?.displayName ?? post.user?.userName)?.charAt(0)?.toUpperCase() || 'U' }}
-                    </span>
-                  </div>
-                }
-              </div>
-
-              <!-- Post Content -->
-              <div class="flex-grow-1">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                  <span class="fw-semibold small">{{ post.user?.displayName ?? post.user?.userName }}</span>
-                  @if (post.community?.name) {
-                    <span class="text-muted small">in <strong>{{ post.community?.name }}</strong></span>
+                    </div>
                   }
-                  <span class="badge" [ngClass]="getPostTypeBadge(post.type).class">
-                    {{ getPostTypeBadge(post.type).label }}
-                  </span>
+                  <div class="post-card__author-info">
+                    <span class="post-card__name">{{ post.user?.displayName ?? post.user?.userName }}</span>
+                  </div>
                 </div>
 
-                <p class="mb-2">{{ post.content }}</p>
+                <div class="post-card__meta">
+                  <span class="badge" [ngClass]="getPostTypeBadge(post.type).class">{{ getPostTypeBadge(post.type).label }}</span>
+                  @if (post.community?.name) { <span class="um-td-text">in {{ post.community?.name }}</span> }
+                  @if (post.user?.isTrusted) { <span class="um-badge um-badge--trusted">Trusted</span> }
+                  @if (post.user?.isBlocked) { <span class="um-badge um-badge--blocked">Blocked</span> }
+                </div>
 
-                <!-- Images -->
+                <p class="post-card__content">{{ post.content }}</p>
+
                 @if (post.images && post.images.length > 0) {
-                  <div class="d-flex flex-wrap gap-2 mb-2">
-                    @for (img of post.images; track $index) {
-                      <img [src]="img" class="post-image rounded" />
-                    }
-                  </div>
+                  <span class="post-card__attach-tag"><i class="bi bi-image"></i> Photos · {{ post.images.length }}</span>
                 }
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                  <small class="text-muted">
-                    <i class="bi bi-clock me-1"></i>{{ post.createdAt | date:'medium' }}
-                  </small>
-                  <div class="d-flex gap-2">
-                    <button
-                      class="btn btn-success btn-sm"
-                      [disabled]="approvingId() === post.id"
-                      (click)="approvePost(post.id)"
-                    >
-                      @if (approvingId() === post.id) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>
-                      } @else {
-                        <i class="bi bi-check-lg me-1"></i>
-                      }
-                      Approve
-                    </button>
-                    <button
-                      class="btn btn-danger btn-sm"
-                      [disabled]="rejectingId() === post.id"
-                      (click)="rejectPost(post.id)"
-                    >
-                      @if (rejectingId() === post.id) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>
-                      } @else {
-                        <i class="bi bi-x-lg me-1"></i>
-                      }
-                      Reject
-                    </button>
+                <div class="post-card__footer">
+                  <span class="post-card__date"><i class="bi bi-clock me-1"></i>{{ post.createdAt | date:'d MMM, h:mm a' }}</span>
+                  <div class="post-card__actions" (click)="$event.stopPropagation()">
+                    @if (approvingId() === post.id || rejectingId() === post.id) {
+                      <span class="spinner-border spinner-border-sm text-primary"></span>
+                    } @else {
+                      <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" (click)="approvePost(post.id)">
+                        <i class="bi bi-check-lg"></i>
+                      </button>
+                      <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" (click)="requestReject(post)">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    }
                   </div>
                 </div>
               </div>
             </div>
+          }
+        </div>
+      }
+    } @else {
+      <!-- ── TABLE VIEW ────────────────────────────────────────── -->
+      @for (group of groupedPosts(); track group.label) {
+        <div class="pa-date-heading">{{ group.label }} <span>· {{ group.posts.length }} post{{ group.posts.length === 1 ? '' : 's' }}</span></div>
+        <div class="um-table-card mb-3">
+          <div class="table-responsive">
+            <table class="um-table">
+              <thead>
+                <tr>
+                  <th class="um-th" style="width:36px"></th>
+                  <th class="um-th">Author</th>
+                  <th class="um-th">Community</th>
+                  <th class="um-th">Type</th>
+                  <th class="um-th">Content</th>
+                  <th class="um-th">Submitted</th>
+                  <th class="um-th um-th--actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (post of group.posts; track post.id) {
+                  <tr class="um-row">
+                    <td class="um-td">
+                      <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" (change)="toggleSelect(post.id)" />
+                    </td>
+                    <td class="um-td">
+                      <div class="um-user-cell">
+                        @if (post.user?.avatar) {
+                          <img [src]="post.user?.avatar" class="um-avatar" />
+                        } @else {
+                          <div class="um-avatar um-avatar--initials">{{ (post.user?.displayName ?? post.user?.userName)?.charAt(0)?.toUpperCase() || 'U' }}</div>
+                        }
+                        <div class="um-user-info">
+                          <span class="um-user-name">{{ post.user?.displayName ?? post.user?.userName }}</span>
+                          <span class="d-flex gap-1">
+                            @if (post.user?.isTrusted) { <span class="um-badge um-badge--trusted">Trusted</span> }
+                            @if (post.user?.isBlocked) { <span class="um-badge um-badge--blocked">Blocked</span> }
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="um-td"><span class="um-td-text">{{ post.community?.name || '—' }}</span></td>
+                    <td class="um-td"><span class="badge" [ngClass]="getPostTypeBadge(post.type).class">{{ getPostTypeBadge(post.type).label }}</span></td>
+                    <td class="um-td"><span class="um-td-text text-truncate d-inline-block" style="max-width:260px">{{ post.content }}</span></td>
+                    <td class="um-td"><span class="um-td-text">{{ post.createdAt | date:'d MMM, h:mm a' }}</span></td>
+                    <td class="um-td um-td--actions">
+                      <div class="um-actions-row">
+                        <button class="um-iab um-iab--view um-iab--tip-top" data-tip="View Details" (click)="viewPost(post)">
+                          <i class="bi bi-eye-fill"></i>
+                        </button>
+                        @if (approvingId() === post.id || rejectingId() === post.id) {
+                          <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
+                        } @else {
+                          <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" (click)="approvePost(post.id)">
+                            <i class="bi bi-check-lg"></i>
+                          </button>
+                          <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" (click)="requestReject(post)">
+                            <i class="bi bi-x-lg"></i>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
       }
+    }
+
+    <div class="um-pagination">
+
+      <!-- Left: count + rows per page -->
+      <div class="um-pagination__left">
+        <span class="um-pagination__info">
+          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+          of <strong>{{ totalItems() }}</strong> posts
+        </span>
+        <div class="um-pg-divider"></div>
+        <div class="um-pagination__size">
+          <span>Rows per page</span>
+          <div class="jb-select-wrap jb-select-wrap--xs">
+            <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+              aria-label="Rows per page">
+            </app-searchable-select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: page buttons -->
+      @if (totalPages() > 1) {
+        <div class="um-pagination__pages">
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(1)" title="First page">
+            <i class="bi bi-chevron-double-left"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          @for (page of getPages(); track page) {
+            <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()"
+              (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)" title="Next page">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(totalPages())" title="Last page">
+            <i class="bi bi-chevron-double-right"></i>
+          </button>
+        </div>
+      }
+
     </div>
   }
+}
+
+<!-- ── Floating refresh button — shown while scrolled past the header ── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+        (click)="loadPendingPosts()" aria-label="Refresh pending posts" title="Refresh">
+  <i class="bi bi-arrow-clockwise"></i>
+</button>
+
+<!-- ── REJECT CONFIRM (single) ──────────────────────────────── -->
+@if (confirmRejectTarget(); as post) {
+  <div class="um-confirm-backdrop" (click)="cancelConfirm()">
+    <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="um-confirm-icon um-confirm-icon--danger"><i class="bi bi-x-circle-fill"></i></div>
+      <h6 class="um-confirm-title">Reject Post</h6>
+      <p class="um-confirm-desc">
+        Are you sure you want to reject this post by <strong>{{ post.user?.displayName ?? post.user?.userName }}</strong>? The author will be notified.
+      </p>
+      <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to the author"
+        [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+      <div class="um-confirm-btns">
+        <button class="um-btn um-btn--ghost" (click)="cancelConfirm()">Cancel</button>
+        <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()">Reject Post</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── VIEW POST DETAIL POPUP ───────────────────────────────── -->
+@if (viewingPost(); as vp) {
+  <div class="um-confirm-backdrop" (click)="closeViewPost()">
+    <div class="pa-view-dialog" (click)="$event.stopPropagation()">
+      <button class="pa-view-close" (click)="closeViewPost()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+
+      <div class="pa-view-header">
+        @if (vp.user?.avatar) {
+          <img [src]="vp.user?.avatar" class="pa-view-avatar" />
+        } @else {
+          <div class="pa-view-avatar pa-view-avatar--initials">
+            {{ (vp.user?.displayName ?? vp.user?.userName)?.charAt(0)?.toUpperCase() || 'U' }}
+          </div>
+        }
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="pa-view-author">{{ vp.user?.displayName ?? vp.user?.userName }}</span>
+            @if (vp.user?.isTrusted) { <span class="um-badge um-badge--trusted">Trusted</span> }
+            @if (vp.user?.isBlocked) { <span class="um-badge um-badge--blocked">Blocked</span> }
+          </div>
+          <div class="pa-view-meta">
+            @if (vp.community?.name) { <span>in <strong>{{ vp.community?.name }}</strong></span> }
+            <span>· {{ vp.createdAt | date:'medium' }}</span>
+          </div>
+          @if (viewingAuthorLoading()) {
+            <div class="pa-view-contact"><span class="spinner-border spinner-border-sm"></span></div>
+          } @else if (viewingAuthor()) {
+            @let author = viewingAuthor()!;
+            @if (author.email || author.phoneNo) {
+              <div class="pa-view-contact">
+                @if (author.email)   { <span><i class="bi bi-envelope-fill"></i>{{ author.email }}</span> }
+                @if (author.phoneNo) { <span><i class="bi bi-telephone-fill"></i>{{ author.phoneNo }}</span> }
+              </div>
+            }
+          }
+        </div>
+        <span class="badge" [ngClass]="getPostTypeBadge(vp.type).class">{{ getPostTypeBadge(vp.type).label }}</span>
+      </div>
+
+      <div class="pa-view-body">
+        <!-- Post content ───────────────────────────────────── -->
+        <div class="pa-view-section-label"><i class="bi bi-file-text"></i> Post Content</div>
+        <p class="pa-view-content">{{ vp.content }}</p>
+
+        @if (vp.images && vp.images.length > 0) {
+          <div class="pa-view-section-label"><i class="bi bi-paperclip"></i> Attachments ({{ vp.images.length }})</div>
+          <div class="pa-view-images">
+            @for (img of vp.images; track $index) {
+              <button class="pa-view-image-btn" type="button" (click)="openImageViewer(vp.images, $index)">
+                <img [src]="img" [alt]="'Attachment ' + ($index + 1)" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="pa-view-footer">
+        <span class="flex-grow-1"></span>
+        <button class="um-btn um-btn--danger" [disabled]="rejectingId() === vp.id" (click)="closeViewPost(); requestReject(vp)">
+          <i class="bi bi-x-lg me-1"></i>Reject
+        </button>
+        <button class="um-btn um-btn--success" [disabled]="approvingId() === vp.id" (click)="closeViewPost(); approvePost(vp.id)">
+          <i class="bi bi-check-lg me-1"></i>Approve
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-image-viewer
+  [images]="imageViewerImages()"
+  [isOpen]="imageViewerOpen()"
+  [initialIndex]="imageViewerInitialIndex()"
+  (close)="closeImageViewer()"></app-image-viewer>
+
+<!-- ── REJECT CONFIRM (bulk) ────────────────────────────────── -->
+@if (confirmRejectBulk()) {
+  <div class="um-confirm-backdrop" (click)="cancelRejectConfirm()">
+    <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="um-confirm-icon um-confirm-icon--danger"><i class="bi bi-x-circle-fill"></i></div>
+      <h6 class="um-confirm-title">Reject {{ selectedCount() }} post{{ selectedCount() === 1 ? '' : 's' }}?</h6>
+      <p class="um-confirm-desc">This action cannot be undone. The same reason (if any) applies to all selected posts.</p>
+      <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to each author"
+        [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+      <div class="um-confirm-btns">
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelRejectConfirm()">Cancel</button>
+        <button class="um-btn um-btn--danger" [disabled]="bulkProcessing()" (click)="confirmRejectSelectedExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Reject
+        </button>
+      </div>
+    </div>
+  </div>
 }

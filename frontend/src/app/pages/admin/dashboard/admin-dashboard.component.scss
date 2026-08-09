@@ -24,8 +24,9 @@ $_green:   $color-success;          // was #006c49
 $_blue:    $color-info;             // was #005ac2
 $_red:     $color-danger;           // was #ba1a1a
 $_teal:    $color-saffron;          // was #005236 — distinct 3rd series hue
-$_ov-jade: #0D9488;                 // Teal 600 — Platform Overview "Events" card only
-$_ov-rose: #DB2777;                 // Pink 600 — Platform Overview "Business" card only
+$_ov-jade:    #0D9488;               // Teal 600 — Platform Overview "Jobs Pending" card only
+$_ov-rose:    #DB2777;               // Pink 600 — Platform Overview "Total Businesses" card only
+$_ov-fuchsia: #C026D3;               // Fuchsia 600 — Platform Overview "Posts Pending" card only
 $_border:  $color-border;           // was #d8c3ad
 $_surf:    $color-bg-light;         // was #f8f9ff
 $_card:    $color-bg-card;          // was #ffffff
@@ -41,7 +42,7 @@ $_muted:   $color-text-muted;       // was #534434
 
 .db-skeleton { display:flex; flex-direction:column; gap:$spacing-xl; }
 .sk-header   { @include sk; height:52px; width:300px; }
-.sk-card     { @include sk; height:160px; }
+.sk-card     { @include sk; height:100px; }
 .sk-panel    { @include sk; height:240px; }
 
 // ── Activity timeline (inside panel--table, for recentActivity) ───
@@ -262,7 +263,7 @@ $_muted:   $color-text-muted;       // was #534434
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
 
   @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
   @media (max-width: 900px)  { grid-template-columns: repeat(2, 1fr); }
@@ -274,12 +275,18 @@ $_muted:   $color-text-muted;       // was #534434
   isolation: isolate;
   background: $_surf;
   border: 1px solid rgba(15, 23, 42, 0.05);
-  border-radius: 18px;
-  padding: 1.35rem;
+  border-radius: 16px;
+  padding: 1.1rem;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 132px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 100px;
+  // Cards are rendered as <a routerLink> when a destination page exists —
+  // reset the browser's default link styling so they still read as cards.
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   // Soft ambient shadow at rest, not just on hover — a flat card with a
   // shadow only on interaction reads as "flat until proven otherwise";
   // a little depth up front is what makes it feel premium rather than static.
@@ -292,6 +299,36 @@ $_muted:   $color-text-muted;       // was #534434
     border-color: rgba(15, 23, 42, 0.08);
 
     .ov-card__icon { transform: scale(1.08) rotate(-4deg); }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary-dark;
+    outline-offset: 2px;
+  }
+
+  // On hover, each tinted card deepens to its own --ov-tint-hover instead
+  // of just lifting — makes the hover state read as belonging to that
+  // specific card's color rather than a generic shared effect.
+  &--accent:hover {
+    background: var(--ov-tint-hover);
+  }
+
+  // Cards with no destination page implemented yet — same look, but
+  // inert: no lift/tint-deepen/icon animation, and a "not yet" cursor.
+  &--disabled {
+    cursor: not-allowed;
+
+    &:hover {
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 4px 10px rgba(15, 23, 42, 0.03);
+      transform: none;
+      border-color: rgba(15, 23, 42, 0.05);
+
+      .ov-card__icon { transform: none; }
+    }
+
+    &.ov-card--accent:hover {
+      background: var(--ov-tint);
+    }
   }
 
   // Faint inner top highlight — a one-pixel "sheen" along the top edge,
@@ -309,41 +346,34 @@ $_muted:   $color-text-muted;       // was #534434
     background: var(--ov-tint);
   }
 
-  &--blue   { --ov-tint: #{rgba($_blue, 0.14)};           --ov-accent: #{$_blue};           --ov-accent-2: #{mix($_blue, #fff, 30%)}; }
-  &--indigo { --ov-tint: #{rgba($color-indigo-600, 0.14)}; --ov-accent: #{$color-indigo-600}; --ov-accent-2: #{mix($color-indigo-600, #fff, 30%)}; }
-  &--amber  { --ov-tint: #{rgba($_amber-c, 0.16)};         --ov-accent: #{$_amber};           --ov-accent-2: #{mix($_amber-c, #fff, 30%)}; }
-  &--red    { --ov-tint: #{rgba($_red, 0.12)};             --ov-accent: #{$_red};             --ov-accent-2: #{mix($_red, #fff, 30%)}; }
-  // Jade (Events) and Rose (Business) — NOT $_teal/$_purple. Those aliases
-  // (saffron-orange and violet) sit too close to Posts' amber and
-  // Communities' indigo respectively to tell apart at a glance in a grid
-  // where those pairs land in the same row/column. Dedicated hues instead.
-  &--jade   { --ov-tint: #{rgba($_ov-jade, 0.14)};         --ov-accent: #{$_ov-jade};         --ov-accent-2: #{mix($_ov-jade, #fff, 30%)}; }
-  &--rose   { --ov-tint: #{rgba($_ov-rose, 0.13)};         --ov-accent: #{$_ov-rose};         --ov-accent-2: #{mix($_ov-rose, #fff, 30%)}; }
-  &--green  { --ov-tint: #{rgba($_green, 0.14)};           --ov-accent: #{$_green};           --ov-accent-2: #{mix($_green, #fff, 30%)}; }
+  // Colors are chosen to match what each card *means*, not just to look
+  // distinct: neutral brand hues for plain totals, amber-family "attention"
+  // hues for review/approval queues, orange for flagged content (warning
+  // tier), and red for active emergencies (the one truly urgent, danger-tier
+  // metric — matches the app's existing Emergency post-type color).
+  // --ov-tint is the resting background, --ov-tint-hover is the same hue
+  // a touch stronger for the hover state.
+  &--blue    { --ov-tint: #{rgba($_blue, 0.14)};            --ov-tint-hover: #{rgba($_blue, 0.22)};            --ov-accent: #{$_blue};            --ov-accent-2: #{mix($_blue, #fff, 30%)}; }
+  &--indigo  { --ov-tint: #{rgba($color-indigo-600, 0.14)}; --ov-tint-hover: #{rgba($color-indigo-600, 0.22)}; --ov-accent: #{$color-indigo-600}; --ov-accent-2: #{mix($color-indigo-600, #fff, 30%)}; }
+  &--green   { --ov-tint: #{rgba($_green, 0.14)};           --ov-tint-hover: #{rgba($_green, 0.22)};           --ov-accent: #{$_green};           --ov-accent-2: #{mix($_green, #fff, 30%)}; }
+  &--rose    { --ov-tint: #{rgba($_ov-rose, 0.13)};         --ov-tint-hover: #{rgba($_ov-rose, 0.21)};         --ov-accent: #{$_ov-rose};         --ov-accent-2: #{mix($_ov-rose, #fff, 30%)}; }
+  &--amber   { --ov-tint: #{rgba($_amber-c, 0.16)};         --ov-tint-hover: #{rgba($_amber-c, 0.25)};         --ov-accent: #{$_amber};           --ov-accent-2: #{mix($_amber-c, #fff, 30%)}; }
+  &--purple  { --ov-tint: #{rgba($_purple, 0.13)};          --ov-tint-hover: #{rgba($_purple, 0.21)};          --ov-accent: #{$_purple};          --ov-accent-2: #{mix($_purple, #fff, 30%)}; }
+  &--jade    { --ov-tint: #{rgba($_ov-jade, 0.14)};         --ov-tint-hover: #{rgba($_ov-jade, 0.22)};         --ov-accent: #{$_ov-jade};         --ov-accent-2: #{mix($_ov-jade, #fff, 30%)}; }
+  &--fuchsia { --ov-tint: #{rgba($_ov-fuchsia, 0.13)};      --ov-tint-hover: #{rgba($_ov-fuchsia, 0.21)};      --ov-accent: #{$_ov-fuchsia};      --ov-accent-2: #{mix($_ov-fuchsia, #fff, 30%)}; }
+  &--orange  { --ov-tint: #{rgba($_teal, 0.14)};            --ov-tint-hover: #{rgba($_teal, 0.23)};            --ov-accent: #{$_teal};            --ov-accent-2: #{mix($_teal, #fff, 30%)}; }
+  &--red     { --ov-tint: #{rgba($_red, 0.13)};             --ov-tint-hover: #{rgba($_red, 0.22)};             --ov-accent: #{$_red};             --ov-accent-2: #{mix($_red, #fff, 30%)}; }
   // Slate — neutral/restrained on purpose: "Blocked Users" is a caution
-  // metric, not an alarm like Pending Approvals, and slate reads as
+  // metric, not an alarm like Emergency Posts, and slate reads as
   // distinct from every other hue in the grid (incl. Communities' indigo).
-  &--slate  { --ov-tint: #{rgba($color-slate-500, 0.12)};  --ov-accent: #{$color-slate-500};  --ov-accent-2: #{mix($color-slate-500, #fff, 30%)}; }
+  &--slate   { --ov-tint: #{rgba($color-slate-500, 0.12)};  --ov-tint-hover: #{rgba($color-slate-500, 0.20)};  --ov-accent: #{$color-slate-500};  --ov-accent-2: #{mix($color-slate-500, #fff, 30%)}; }
 }
 
-.ov-card__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 1rem;
-}
-
-.ov-card__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: $_muted;
-  padding-top: 6px;
-}
-
+// Round accent icon badge, left of the label/value column.
 .ov-card__icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
   border-radius: $radius-full;
   background: linear-gradient(140deg, var(--ov-accent-2), var(--ov-accent));
   color: #fff;
@@ -351,15 +381,32 @@ $_muted:   $color-text-muted;       // was #534434
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.ov-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.ov-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $_muted;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .ov-card__value {
-  @include focus-ring;
   font-family: $font-family-header;
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: $_text;
   line-height: 1;

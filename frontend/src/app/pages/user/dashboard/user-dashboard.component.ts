@@ -211,7 +211,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: '#E0F2FE' },
     { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: '#FFEDD5' },
     { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: '#FEF9C3' },
-    { id: 'EMERGENCY', label: 'Emergency',     icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: '#FEE2E2' },
+    { id: 'EMERGENCY', label: 'Emergency Assistance', icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: '#FEE2E2' },
     { id: 'ENQUIRY',   label: 'Enquire',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: '#EDE9FE' },
   ];
 
@@ -856,7 +856,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   getPostTypeBadge(type: string): { label: string; class: string; icon: string } {
     switch (type) {
       case 'EMERGENCY':
-        return { label: 'Emergency', class: 'badge-emergency', icon: 'bi-exclamation-triangle-fill' };
+        return { label: 'Emergency Assistance', class: 'badge-emergency', icon: 'bi-exclamation-triangle-fill' };
       case 'HELP':
         return { label: 'Help', class: 'badge-help', icon: 'bi-question-circle-fill' };
       case 'ENQUIRY':

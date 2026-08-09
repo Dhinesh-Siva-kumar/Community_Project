@@ -102,8 +102,13 @@ export const ListJobsQueryDto = z.object({
   salaryMax:    z.coerce.number().int().min(0).optional(),
   salaryHidden: z.coerce.boolean().optional(),
 
-  // ── Date range (N days ago) ──────────────────────────────────
+  // ── Date range (N days ago, or explicit from/to) ─────────────
   postedWithin: z.coerce.number().int().min(1).optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+
+  // ── Status (admin only — public job listing always shows active) ──
+  status: z.enum(['active', 'inactive']).optional(),
 
   // ── Sorting ──────────────────────────────────────────────────
   sortBy: z.enum([

@@ -45,7 +45,8 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListEventsQueryDto.parse(req.query);
-    const result = await eventsService.findAll(query);
+    const skipActiveFilter = req.user!.role === 'ADMIN';
+    const result = await eventsService.findAll({ ...query, skipActiveFilter });
     res.json(result);
   } catch (err) { next(err); }
 }
