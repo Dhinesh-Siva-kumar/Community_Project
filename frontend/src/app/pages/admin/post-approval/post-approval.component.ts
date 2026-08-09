@@ -186,6 +186,10 @@ export class PostApprovalComponent implements OnInit {
 
   loadPendingPosts(): void {
     this.loading.set(true);
+    // Any reload can change which posts are visible (filter/sort/page/refresh),
+    // so a stale selection from before the reload must not carry over.
+    this.selectedIds.set(new Set());
+    this.selectAll.set(false);
     const params = {
       page: this.currentPage(),
       limit: this.pageSize(),
@@ -278,6 +282,39 @@ export class PostApprovalComponent implements OnInit {
 
   closeImageViewer(): void {
     this.imageViewerOpen.set(false);
+  }
+
+  // ── Confirmation popup (approve) ─────────────────────────────
+  confirmApproveTarget = signal<Post | null>(null);
+  confirmApproveBulk = signal(false);
+
+  requestApprove(post: Post): void {
+    this.confirmApproveTarget.set(post);
+  }
+
+  requestApproveSelected(): void {
+    if (this.selectedIds().size === 0) return;
+    this.confirmApproveBulk.set(true);
+  }
+
+  cancelApproveConfirm(): void {
+    this.confirmApproveTarget.set(null);
+  }
+
+  cancelApproveSelectedConfirm(): void {
+    this.confirmApproveBulk.set(false);
+  }
+
+  confirmApproveExecute(): void {
+    const post = this.confirmApproveTarget();
+    if (!post) return;
+    this.confirmApproveTarget.set(null);
+    this.approvePost(post.id);
+  }
+
+  confirmApproveSelectedExecute(): void {
+    this.confirmApproveBulk.set(false);
+    this.approveSelected();
   }
 
   // ── Confirmation popup (reject) ──────────────────────────────
@@ -422,8 +459,6 @@ export class PostApprovalComponent implements OnInit {
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.filterAuthorStatus.set('');
-    this.selectedIds.set(new Set());
-    this.selectAll.set(false);
     this.applyFilters();
   }
 

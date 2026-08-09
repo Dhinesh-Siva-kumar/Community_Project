@@ -245,6 +245,11 @@ export async function approve(postId: string, adminId: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
+  if (post['status'] === 'APPROVED') {
+    const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
+    return { ...post, user };
+  }
+
   const [updated] = await db('posts').where({ id: postId }).update({ status: 'APPROVED' }).returning('*');
   const updatedRow = updated as Record<string, unknown>;
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
@@ -256,6 +261,11 @@ export async function approve(postId: string, adminId: string) {
 export async function reject(postId: string, adminId: string, reason?: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
+
+  if (post['status'] === 'REJECTED') {
+    const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
+    return { ...post, user };
+  }
 
   const [updated] = await db('posts').where({ id: postId })
     .update({ status: 'REJECTED', rejection_reason: reason ?? null })
