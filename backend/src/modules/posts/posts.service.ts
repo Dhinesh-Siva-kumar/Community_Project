@@ -1,6 +1,7 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
+import { logAudit } from '../../services/audit.service';
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
@@ -84,6 +85,8 @@ export async function create(data: CreatePostDtoType, userId: string) {
   if (status === 'PENDING') {
     await notifyAdminsOfPendingPost((post as Record<string, unknown>)['id'] as string, data.communityId);
   }
+
+  await logAudit(userId, 'POST_CREATED', { communityId: data.communityId, type: data.type ?? 'GENERAL', status }, 'posts', (post as Record<string, unknown>)['id'] as string);
 
   return formatPost(row, 0, 0);
 }
@@ -238,19 +241,20 @@ export async function findPendingOnly(options: FindPendingOnlyOptions) {
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
-export async function approve(postId: string) {
-  const post = await db('posts').where({ id: postId }).first();
+export async function approve(postId: string, adminId: string) {
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
   const [updated] = await db('posts').where({ id: postId }).update({ status: 'APPROVED' }).returning('*');
   const updatedRow = updated as Record<string, unknown>;
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
   await notificationsService.create(updatedRow['user_id'] as string, 'POST_APPROVED', 'Your post has been approved.', postId);
+  await logAudit(adminId, 'POST_APPROVED', { previousStatus: post['status'], author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
   return { ...updatedRow, user };
 }
 
-export async function reject(postId: string, reason?: string) {
-  const post = await db('posts').where({ id: postId }).first();
+export async function reject(postId: string, adminId: string, reason?: string) {
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
   const [updated] = await db('posts').where({ id: postId })
@@ -260,6 +264,7 @@ export async function reject(postId: string, reason?: string) {
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
   const message = `Your post has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
   await notificationsService.create(updatedRow['user_id'] as string, 'POST_REJECTED', message, postId);
+  await logAudit(adminId, 'POST_REJECTED', { previousStatus: post['status'], reason: reason ?? null, author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
   return { ...updatedRow, user };
 }
 
@@ -314,6 +319,10 @@ export async function deletePost(postId: string, userId: string) {
 
   await db('posts').where({ id: postId }).delete();
   deleteUploadedFiles(post['images']);
+
+  const byAdmin = post['user_id'] !== userId;
+  await logAudit(userId, 'POST_DELETED', { byAdmin, communityId: post['community_id'] }, 'posts', postId);
+
   return { message: 'Post deleted successfully' };
 }
 
@@ -354,6 +363,8 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   if (updateFields['status'] === 'PENDING') {
     await notifyAdminsOfPendingPost(postId, post['community_id'] as string);
   }
+
+  await logAudit(userId, 'POST_UPDATED', { byAdmin: !isOwner, fields: Object.keys(updateFields) }, 'posts', postId);
 
   const row = await db('posts as p')
     .join('users as u', 'p.user_id', 'u.id')

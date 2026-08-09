@@ -73,7 +73,7 @@ export async function getPendingCount(req: Request, res: Response, next: NextFun
 
 export async function approve(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await postsService.approve(req.params['id'] as string);
+    const result = await postsService.approve(req.params['id'] as string, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -81,7 +81,7 @@ export async function approve(req: Request, res: Response, next: NextFunction): 
 export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { reason } = RejectPostDto.parse(req.body ?? {});
-    const result = await postsService.reject(req.params['id'] as string, reason);
+    const result = await postsService.reject(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }
