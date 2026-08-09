@@ -54,7 +54,7 @@ export async function create(data: CreateEventDtoType, userId: string) {
 
 export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean }) {
   const {
-    pincode, page, limit, search, country, status,
+    pincode, nearPincode, eventMode, page, limit, search, country, status,
     dateFrom, dateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
   } = params;
   const offset = (page - 1) * limit;
@@ -78,6 +78,7 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
   }
 
   if (pincode) { query.andWhere('e.pincode', pincode); countQuery.andWhere({ pincode }); }
+  if (eventMode) { query.andWhere('e.event_mode', eventMode); countQuery.andWhere({ event_mode: eventMode }); }
   if (search) {
     query.andWhere(function () { this.whereILike('e.title', `%${search}%`).orWhereILike('e.description', `%${search}%`); });
     countQuery.andWhere(function () { this.whereILike('title', `%${search}%`).orWhereILike('description', `%${search}%`); });
@@ -96,9 +97,19 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     countQuery.andWhere('created_at', '<=', toEnd);
   }
 
-  const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
+  // 'near' sorts offline/hybrid events in nearPincode to the top (event date
+  // as the tiebreaker), instead of filtering everything else out.
+  if (sortBy === 'near' && nearPincode) {
+    query
+      .orderByRaw("(e.event_mode != 'Online' AND e.pincode = ?) DESC", [nearPincode])
+      .orderBy('e.event_date', 'asc');
+  } else {
+    const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
+    query.orderBy(sortColumn, sortDir);
+  }
+
   const [events, [{ total }]] = await Promise.all([
-    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    query.limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 
