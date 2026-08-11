@@ -131,6 +131,51 @@
   }
 }
 
+.jb-page-header__title {
+  font-family: $font-family-header;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 800;
+  color: $color-stone-900;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
+.jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
+
+// ── BUTTONS ───────────────────────────────────────────────────────
+.jb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: $radius-md;
+  font-family: $font-family-body;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  @include transition-short(all);
+
+  &--neon {
+    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+    color: $color-on-primary;
+    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45); color: $color-on-primary; }
+    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1.5px solid rgba(251, 191, 36, 0.40);
+    color: $color-primary-darker;
+    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.08); }
+  }
+
+  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+}
+
 // ── Header CTA — light amber pill instead of a solid gradient fill ──
 .jb-btn--header-cta {
   position: relative;
@@ -185,51 +230,6 @@
       box-shadow: none;
     }
   }
-}
-
-.jb-page-header__title {
-  font-family: $font-family-header;
-  font-size: clamp(1.15rem, 2vw, 1.4rem);
-  font-weight: 800;
-  color: $color-stone-900;
-  letter-spacing: -0.02em;
-  margin: 0 0 2px;
-}
-
-.jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
-.jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
-
-// ── BUTTONS ───────────────────────────────────────────────────────
-.jb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border-radius: $radius-md;
-  font-family: $font-family-body;
-  font-weight: $font-weight-bold;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  border: none;
-  text-decoration: none;
-  @include transition-short(all);
-
-  &--neon {
-    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
-    color: $color-on-primary;
-    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
-    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45); color: $color-on-primary; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-  }
-
-  &--ghost {
-    background: transparent;
-    border: 1.5px solid rgba(251, 191, 36, 0.40);
-    color: $color-primary-darker;
-    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.08); }
-  }
-
-  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -471,6 +471,10 @@
 }
 
 // ── Custom time dropdown ────────────────────────────────────────
+// Opening-hours time picker — mirrors .ss-trigger / .ss-panel / .ss-option
+// on the Community popup's dropdowns, so it reads as just another dropdown
+// field even though it opens a custom time-slot list instead of the shared
+// searchable-select panel.
 .time-dropdown {
   position: relative;
   width: 100%;
@@ -480,15 +484,15 @@
     align-items: center;
     gap: 6px;
     width: 100%;
-    height: 42px;
-    padding: 0 10px;
+    height: 48px;
+    padding: 0 14px;
     border: 1.5px solid $color-border;
-    border-radius: $radius-md;
-    background: $color-bg-card;
+    border-radius: 10px;
+    background: $color-bg-page;
     cursor: pointer;
     text-align: left;
     outline: none;
-    @include transition-short(all);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
     &:hover {
       border-color: $color-primary;
@@ -496,7 +500,8 @@
 
     &:focus-visible {
       border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba(251,191,36,0.18);
+      background: $color-bg-card;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
     }
   }
 
@@ -509,8 +514,7 @@
   &__value {
     flex: 1;
     font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $color-stone-800;
+    color: $color-text-body;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -520,7 +524,7 @@
     font-size: 0.65rem;
     color: $color-stone-400;
     flex-shrink: 0;
-    transition: transform 200ms ease;
+    transition: transform 0.2s ease;
   }
 
   &--open &__chevron {
@@ -529,23 +533,29 @@
 
   &--open &__trigger {
     border-color: $color-primary;
-    box-shadow: 0 0 0 3px rgba(251,191,36,0.18);
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
   }
 
   &--error &__trigger {
     border-color: $color-danger;
+    &:focus-visible { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+
+  &--error.time-dropdown--open &__trigger {
+    box-shadow: 0 0 0 3px rgba($color-danger, 0.1);
   }
 
   &__panel {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% + 5px);
     left: 0;
     right: 0;
     z-index: 1060;
-    background: #fff;
-    border: 1.5px solid $color-border;
-    border-radius: $radius-md;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+    background: $color-bg-card;
+    border: 1.5px solid $color-stone-200;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
     overflow: hidden;
     animation: timeDropdownIn 180ms ease;
   }
@@ -553,8 +563,7 @@
   &__list {
     max-height: 220px;
     overflow-y: auto;
-    scroll-behavior: smooth;
-    padding: 4px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
 
@@ -567,32 +576,32 @@
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 7px 10px;
+    padding: 8px 10px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: transparent;
     cursor: pointer;
     text-align: left;
     outline: none;
-    @include transition-quick(background-color);
+    transition: background 0.15s, color 0.15s;
 
     &:hover {
-      background: rgba(251,191,36,0.10);
+      background: $amber-50;
     }
 
     &:focus-visible {
-      background: rgba(251,191,36,0.12);
+      background: $amber-50;
     }
 
     &--selected {
-      background: rgba(251,191,36,0.18);
-      font-weight: $font-weight-bold;
+      background: rgba($color-primary, 0.1);
+      font-weight: 600;
     }
   }
 
   &__option-time {
     font-size: $font-size-sm;
-    color: $color-stone-700;
+    color: $color-text-body;
   }
 
   &__option--selected &__option-time {
@@ -1285,41 +1294,60 @@
 }
 
 // ── Category icon trigger ─────────────────────────────────────
+// Icon-picker trigger — mirrors .ss-trigger on the Community popup's
+// dropdowns (same height/radius/border/focus ring), so it reads as just
+// another dropdown field even though it opens a custom icon grid instead
+// of the shared searchable-select panel.
 .cat-icon-trigger {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 42px;
+  width: 100%;
+  height: 48px;
   padding: 0 14px;
-  border: 1.5px solid #e7e5e4;
+  border: 1.5px solid $color-border;
   border-radius: 10px;
-  background: #fff;
+  background: $color-bg-page;
   cursor: pointer;
   text-align: left;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 
-  &:hover, &:focus-visible { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); outline: none; }
+  &:hover { border-color: $color-primary; }
+  &:focus, &:focus-visible {
+    border-color: $color-primary;
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    outline: none;
+  }
 
-  &__preview   { font-size: 1.1rem; color: #92400e; }
-  &__name      { font-size: 0.8rem; color: #57534e; flex: 1; }
-  &__placeholder-icon { font-size: 1rem; color: #a8a29e; }
-  &__chevron   { font-size: 0.75rem; color: #a8a29e; transition: transform 200ms ease; &.rotated { transform: rotate(180deg); } }
+  &--error {
+    border-color: $color-danger;
+    &:focus, &:focus-visible { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+
+  &__preview   { font-size: 1.1rem; color: $color-primary-darker; }
+  &__name      { font-size: $font-size-sm; color: $color-text-body; flex: 1; }
+  &__placeholder-icon { font-size: 1rem; color: $color-stone-400; }
+  &__placeholder-text { font-size: $font-size-sm; color: $color-stone-400; flex: 1; }
+  &__chevron   { font-size: 0.75rem; color: $color-stone-400; transition: transform 0.2s ease; &.rotated { transform: rotate(180deg); } }
 }
 
-// ── Category icon picker ──────────────────────────────────────
+// ── Category icon picker — mirrors .ss-panel / .ss-search / .ss-option ──
 .cat-icon-picker {
-  border: 1.5px solid rgba(251,191,36,0.28);
+  border: 1.5px solid $color-stone-200;
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background: $color-bg-card;
   margin-top: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
   animation: catPickerOpen 180ms ease;
 
   &__search-wrap {
     position: relative;
-    padding: 8px 12px;
-    border-bottom: 1px solid #e7e5e4;
-    background: #fafaf9;
+    padding: 10px 10px;
+    border-bottom: 1px solid $color-stone-200;
+    display: flex;
+    align-items: center;
   }
 
   &__search-icon {
@@ -1327,20 +1355,24 @@
     left: 22px;
     top: 50%;
     transform: translateY(-50%);
-    color: #a8a29e;
-    font-size: 0.8rem;
+    color: $color-text-secondary;
+    font-size: 13px;
     pointer-events: none;
   }
 
   &__search {
     width: 100%;
-    height: 34px;
-    padding: 0 10px 0 28px;
-    border: 1.5px solid #e7e5e4;
+    height: 36px;
+    padding: 0 10px 0 34px;
+    border: 1.5px solid $color-border;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: 13px;
+    color: $color-text-body;
+    background: $color-bg-neutral;
     outline: none;
-    &:focus { border-color: #fbbf24; }
+    transition: border-color 0.2s, box-shadow 0.2s;
+    &::placeholder { color: $color-stone-400; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba($color-primary, 0.1); background: $color-white; }
     &::-webkit-search-cancel-button { display: none; }
   }
 
@@ -1348,11 +1380,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
     gap: 2px;
-    padding: 8px;
-    max-height: 240px;
+    padding: 6px;
+    max-height: 220px;
     overflow-y: auto;
     &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
   }
 }
 
@@ -1399,7 +1432,9 @@
   background: rgba(254,243,199,0.35);
   width: 100%;
   min-height: 110px;
+  max-width: 100%;
   justify-content: center;
+  overflow: hidden;
 
   &__icon {
     width: 52px;
@@ -1409,6 +1444,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     .bi { font-size: 1.5rem; color: #92400e; }
   }
 
@@ -1417,6 +1453,13 @@
     font-size: 0.85rem;
     color: #1c1917;
     text-align: center;
+    // Long category names wrap and break inside the card instead of
+    // overflowing past its edges (e.g. a single unbroken long word).
+    width: 100%;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 
@@ -1428,11 +1471,6 @@
 
 
 
-
-.biz-sort-select {
-  width: 190px;
-  flex-shrink: 0;
-}
 
 .biz-view-toggle {
   display: flex;
@@ -1467,21 +1505,333 @@
   margin-bottom: $spacing-lg;
 }
 
-.biz-list-view {
+// ── Category table view (mirrors .um-table* on the Post Approval page) ──
+// ── PAGE LAYOUT — mirrors .um-layout / .um-users-section on the User
+// Management page, so the table view can fill the viewport with a fixed
+// size + internal scroll instead of growing the whole page. min-height
+// (not height) so short lists still fill the viewport, but long lists grow
+// the page (and scroll it) instead of clipping content.
+// NOTE: no `gap` here — every section below (.jb-page-header,
+// .admin-stats-bar, .jb-filter-panel, .jb-active-chips) already carries its
+// own margin-bottom; adding a flex gap on top of those doubled the spacing.
+.biz-page-layout {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: $spacing-lg;
+  min-height: calc(100dvh - #{$header-height} - 3rem);
+}
 
-  .biz-cat-card {
-    flex-direction: row;
-    align-items: center;
-    padding: 10px $spacing-md;
-    gap: $spacing-md;
+.biz-results-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 
-    &__row { flex: 1; min-width: 0; }
-    &__desc-wrap { display: none; }
+.um-table-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+
+  // Fixed-size variant used by the table view — grows to fill the
+  // remaining viewport space (via .biz-results-section flex:1) and scrolls
+  // its own body internally instead of growing the whole page.
+  &--fixed {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    .table-responsive {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      // NOTE: no `scroll-behavior: smooth` — it queues a CSS scroll animation
+      // per wheel tick, and reversing direction (scroll down then up) fights
+      // the tail end of that animation, making the up-scroll feel stuck.
+      // Native OS/trackpad momentum scrolling is already smooth on its own.
+      // Contains the internal scroll to this box — reaching the top/bottom
+      // no longer hands off ("stacks") momentum onto the page scroll behind it.
+      overscroll-behavior: contain;
+
+      // Themed scrollbar — amber accent, matches the module's brand colour.
+      scrollbar-width: thin;
+      scrollbar-color: rgba(251, 191, 36, 0.45) transparent;
+
+      &::-webkit-scrollbar       { width: 6px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.45); border-radius: 999px; }
+      &::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.7); }
+    }
+
+    .um-th { position: sticky; top: 0; z-index: 2; }
   }
+}
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr:first-child th:first-child { border-top-left-radius: $radius-lg; }
+  thead tr:first-child th:last-child  { border-top-right-radius: $radius-lg; }
+  tbody tr:last-child td:first-child  { border-bottom-left-radius: $radius-lg; }
+  tbody tr:last-child td:last-child   { border-bottom-right-radius: $radius-lg; }
+}
+
+.um-th {
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $color-text-muted;
+  background: $color-bg-page;
+  border-bottom: 1px solid $color-border;
+  white-space: nowrap;
+
+  &--actions { text-align: right; padding-right: 16px; }
+
+  &--sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+
+    &:hover { color: $color-primary-darker; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+  }
+
+  // Currently-sorted column — text stays highlighted even without hover.
+  &--active {
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.um-th__sort-icon {
+  margin-left: 4px;
+  font-size: 0.65rem;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
+  .um-th--active & { opacity: 1; color: $color-primary-darker; }
+}
+
+.um-row {
+  cursor: pointer;
+  transition: background 0.2s ease;
+  &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
+  &:hover { background: rgba(254, 243, 199, 0.35); }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
+.um-td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  &--actions { padding-right: 12px; }
+}
+
+.um-td-text { font-size: $font-size-sm; color: $color-text-muted; }
+
+.um-user-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+.um-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+// Icon action button — mirrors .um-iab on the User Management page,
+// including its CSS-only tooltip (via the `data-tip` attribute).
+.um-iab {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  background: none;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &[data-tip]::before,
+  &[data-tip]::after {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: $z-tooltip;
+  }
+
+  &[data-tip]::before {
+    content: attr(data-tip);
+    background: $color-text-primary;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: $radius-xs;
+    letter-spacing: 0.2px;
+    box-shadow: $shadow-3;
+  }
+
+  &[data-tip]::after {
+    content: '';
+    top: calc(100% + 2px);
+    border: 4px solid transparent;
+    border-bottom-color: $color-text-primary;
+    border-top: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  &:hover[data-tip]::before,
+  &:hover[data-tip]::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  // Light tinted background at rest — same soft-badge treatment and exact
+  // colour values as the Community table; fills solid on hover for feedback.
+  &--edit {
+    background: rgba(2,132,199,0.08);
+    border-color: rgba(2,132,199,0.22);
+    color: #0284C7;
+    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+  }
+
+  &--delete {
+    background: rgba(220,38,38,0.06);
+    border-color: rgba(220,38,38,0.2);
+    color: $color-danger;
+    &:hover:not(:disabled) { background: $color-danger; border-color: $color-danger; color: #fff; box-shadow: 0 4px 10px rgba(220,38,38,0.3); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+
+// ── Pagination — mirrors .um-pagination on the User Management page ──
+.um-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: $spacing-lg;
+  padding: 14px 20px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-page;
+
+  &__left  { display: flex; align-items: center; gap: 10px; }
+  &__pages { display: flex; align-items: center; gap: 3px; }
+
+  &__size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+  }
+
+  &__info {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+
+    strong { color: $color-text-primary; font-weight: $font-weight-semibold; }
+  }
+
+  // Nested inside .um-table-card--fixed — shares the card's border/shadow
+  // instead of drawing its own, and stays pinned as a non-scrolling footer.
+  &--nested {
+    margin-top: 0;
+    flex-shrink: 0;
+    border: none;
+    border-top: 1px solid $color-border;
+    border-radius: 0 0 $radius-lg $radius-lg;
+  }
+}
+
+.um-pg-divider {
+  width: 1px;
+  height: 20px;
+  background: $color-border;
+  flex-shrink: 0;
+}
+
+.um-pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border-radius: $radius-md;
+  border: 1.5px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+
+  i { font-size: 0.7rem; }
+
+  &:not(:disabled):hover { border-color: $color-primary; background: $color-primary-light; color: $color-primary-dark; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 1px; }
+
+  &--num { min-width: 34px; font-variant-numeric: tabular-nums; }
+
+  &--active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    font-weight: $font-weight-bold;
+    box-shadow: $shadow-primary-sm;
+    &:hover { background: $color-primary-dark; border-color: $color-primary-dark; color: $color-on-primary; }
+  }
+}
+
+// Sizing wrapper for the rows-per-page <app-searchable-select>
+.jb-select-wrap {
+  width: 150px;
+  flex-shrink: 0;
+  &--xs { width: 88px; }
+}
+
+.biz-table-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  background: var(--cat-accent-bg);
+  border: 1px solid var(--cat-accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: var(--cat-accent);
 }
 
 // ── Category Card — compact, data-first admin card ─────────────
@@ -1713,59 +2063,8 @@ $accents: (
 // ADD / EDIT BUSINESS MODAL STYLES
 // ═══════════════════════════════════════════════════════════════
 
-.jb-modal-dialog { max-width: min(960px, 96vw); }
-
-.jb-modal {
-  border: none;
-  border-radius: $radius-xl;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(28,25,23,0.22), 0 0 0 1px rgba(251,191,36,0.12);
-
-  &__header {
-    display: flex; align-items: flex-start; gap: $spacing-md;
-    padding: $spacing-lg $spacing-xl;
-    background: linear-gradient(135deg, rgba(251,191,36,0.09) 0%, rgba(249,115,22,0.05) 100%);
-    border-bottom: 1px solid rgba(251,191,36,0.18);
-    position: sticky; top: 0; z-index: 10; flex-shrink: 0;
-  }
-
-  &__header-icon {
-    width: 42px; height: 42px; border-radius: $radius-md;
-    background: linear-gradient(135deg, $color-primary, $color-saffron);
-    display: flex; align-items: center; justify-content: center;
-    color: $color-on-primary; font-size: 1.1rem; flex-shrink: 0;
-    box-shadow: 0 3px 10px rgba(251,191,36,0.30);
-  }
-
-  &__header-text { flex: 1; min-width: 0; }
-  &__title    { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0 0 2px; }
-  &__subtitle { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
-
-  &__close {
-    width: 34px; height: 34px; border-radius: $radius-md;
-    border: 1.5px solid rgba(251,191,36,0.22); background: rgba(255,255,255,0.7);
-    color: $color-stone-600; font-size: 0.85rem; cursor: pointer; margin-left: auto;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    @include transition-short(all);
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.10); }
-  }
-
-  &__body {
-    padding: $spacing-lg $spacing-xl; background: $color-bg-page;
-    overflow-y: auto; max-height: calc(100vh - 220px);
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: $color-stone-200; border-radius: 4px; }
-  }
-
-  &__footer {
-    display: flex; justify-content: flex-end; gap: $spacing-sm;
-    padding: $spacing-md $spacing-xl; background: $color-bg-card;
-    border-top: 1px solid $color-border; position: sticky; bottom: 0; z-index: 10;
-  }
-}
-
 .jb-form-section {
-  margin-bottom: $spacing-xl; padding: $spacing-lg;
+  margin-bottom: $spacing-xl; margin-top: $spacing-xl; padding: $spacing-lg;
   background: $color-bg-card; border: 1px solid $color-border;
   border-radius: $radius-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
 
@@ -1776,40 +2075,43 @@ $accents: (
   &__optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
 }
 
-.jb-btn {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;
-  border-radius: $radius-md; font-family: $font-family-body; font-weight: $font-weight-bold;
-  font-size: $font-size-sm; cursor: pointer; border: none; text-decoration: none;
-  @include transition-short(all);
-
-  &--neon {
-    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
-    color: $color-on-primary; box-shadow: 0 4px 16px rgba(251,191,36,0.35);
-    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251,191,36,0.45); color: $color-on-primary; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-  }
-
-  &--ghost {
-    background: transparent; border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker;
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.08); }
-  }
-}
-
 .jb-label {
   display: block; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body; margin-bottom: 6px;
   &__loading { color: $color-primary-dark; font-size: $font-size-xs; margin-left: 6px; .bi { animation: bizSpin 0.8s linear infinite; } }
 }
 @keyframes bizSpin { to { transform: rotate(360deg); } }
 
+// Label row with a live character counter (e.g. category/description fields).
+.jb-label-row { display: flex; align-items: center; justify-content: space-between; }
+.jb-char-count { font-size: $font-size-xs; color: $color-text-muted; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+
+// Textarea wrapper with a live character counter pinned to the bottom-right
+// corner (e.g. "120/1000"), so it reads directly against the text being typed.
+.jb-textarea-wrap { position: relative; }
+.jb-char-count--overlay {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+// Input box + validation styling — mirrors .cm-input / .cm-error-msg on the
+// Community Create/Edit popup, so both modals' fields look and behave the same.
 .jb-input {
-  width: 100%; height: 42px; padding: 0 $spacing-md;
-  border: 1.5px solid $color-border; border-radius: $radius-md;
-  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800; outline: none;
-  @include transition-short(all);
+  width: 100%; height: 48px; padding: 0 14px;
+  border: 1.5px solid $color-border; border-radius: 10px;
+  background: $color-bg-page; font-size: $font-size-sm; color: $color-text-body; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   &::placeholder { color: $color-stone-400; }
-  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
-  &--error { border-color: $color-danger; }
-  &--textarea { height: auto; resize: vertical; padding: $spacing-sm $spacing-md; line-height: 1.65; }
+  &:focus { border-color: $color-primary; background: $color-bg-card; box-shadow: 0 0 0 3px rgba($color-primary, 0.1); }
+  &--error {
+    border-color: $color-danger;
+    &:focus { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+  &--textarea { height: auto; padding-top: 12px; padding-bottom: 12px; resize: none; }
   &--icon-left { padding-left: 40px; }
 }
 
@@ -1818,7 +2120,70 @@ $accents: (
   &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
 }
 
-.jb-field-error { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-danger; .bi { font-size: 0.8rem; flex-shrink: 0; } }
+// "Same as phone" style checkbox toggles that sit inline in a field row.
+// Custom-drawn box (native `appearance: none` + a CSS checkmark) instead of
+// the plain browser checkbox, so it matches the app's amber theme.
+.jb-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-body;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid $color-border;
+    border-radius: 4px;
+    background: $color-bg-page;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover { border-color: $color-primary; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+    &:checked {
+      background: $color-primary;
+      border-color: $color-primary;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid $color-on-primary;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Sits directly under its field's input (and error message, if any)
+  // instead of occupying its own column.
+  &--below { margin-top: 8px; }
+}
+
+.jb-field-error {
+  display: flex; align-items: center; gap: 4px; margin-top: 4px;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-danger;
+  .bi { font-size: 12px; flex-shrink: 0; }
+}
 
 .jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
 
@@ -1840,8 +2205,6 @@ $accents: (
 }
 
 @include media-md-max {
-  .jb-modal-dialog { max-width: 100%; }
-  .jb-modal__body, .jb-modal__header, .jb-modal__footer { padding: $spacing-md; }
   .jb-form-section { padding: $spacing-md; }
 }
 
@@ -1864,7 +2227,7 @@ $accents: (
 }
 
 // ── Business List Header (Category Icon + Title) ──────────────────
-.bl-header__title-row { display: flex; align-items: center; gap: $spacing-md; margin-top: $spacing-sm; }
+.bl-header__title-row { display: flex; align-items: center; gap: $spacing-md; }
 .bl-header__icon {
   width: 52px; height: 52px; border-radius: $radius-full; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -2102,4 +2465,508 @@ $accents: (
 .jb-preview-label {
   font-size: $font-size-xs; font-weight: $font-weight-semibold; text-transform: uppercase;
   letter-spacing: 0.07em; color: $color-stone-400; margin-bottom: $spacing-sm;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD / EDIT / DELETE CATEGORY MODALS
+// Same chrome as the Community page's Create/Edit/Delete popups —
+// .au-backdrop (blur) / .au-modal (radius, shadow) / .au-header
+// (gradient + icon badge) / .au-footer + .au-btn (buttons).
+// ═══════════════════════════════════════════════════════════════
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+}
+
+.au-modal.cm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, calc(100vw - 32px));
+  max-height: 92dvh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__cover-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+
+  &--1 { width: 180px; height: 180px; background: $color-primary; top: -72px; right: 48px; }
+  &--2 { width: 88px; height: 88px; background: $white; bottom: -34px; right: 130px; }
+}
+
+.au-header__icon.cm-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  i { color: $color-primary; font-size: 1.1rem; }
+}
+
+.au-header__text.cm-modal-header-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.au-header__title.cm-modal-title {
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $white;
+  margin: 0;
+}
+
+.au-header__sub.cm-modal-subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0;
+}
+
+.au-close.cm-close-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: $white; }
+}
+
+.au-body.cm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
+}
+
+.au-footer.cm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  border-radius: 0 0 $radius-xl $radius-xl;
+}
+
+.au-btn.cm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &.au-btn--ghost {
+    background: transparent;
+    border-color: $color-border;
+    color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-primary-light; }
+  }
+}
+
+.au-btn.cm-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.au-btn--primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  // Danger variant — used by the delete-confirmation popup instead of the
+  // amber `--primary` fill, same sizing/radius as the rest of `.au-btn`.
+  &.au-btn--danger {
+    background: $color-danger;
+    border-color: $color-danger;
+    color: $white;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+    &:not(:disabled):hover { background: #b91c1c; border-color: #b91c1c; box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35); }
+  }
+}
+
+// ── Delete-confirmation popup ──────────────────────────────────
+// Reuses the same .au-backdrop (blur) / .au-modal (radius, shadow) /
+// .au-footer + .au-btn tokens as the create/edit modal above, but sized
+// down for a short confirmation and re-themed red instead of amber.
+.au-modal.cm-delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 32px));
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 55%, #b91c1c 130%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__icon.cm-delete-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fca5a5;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  i { color: #fca5a5; font-size: 1.1rem; }
+}
+
+.au-body.cm-delete-modal-body {
+  padding: 20px 24px 4px;
+}
+
+.cm-delete-modal-text {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  line-height: 1.6;
+  margin: 0 0 4px;
+
+  strong { color: $color-text-primary; font-weight: $font-weight-semibold; }
+}
+
+// Business-count warning shown when deleting a category still in use.
+.cm-delete-modal-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: $font-size-xs;
+  color: $color-warning;
+  background: #fffbeb;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: $radius-md;
+  padding: 8px 12px;
+  margin: 8px 0 4px;
+}
+
+// ── Dropdown (searchable-select) styling — mirrors the Community popup's
+// .cm-field-group override, so every dropdown in the Category/Business
+// modals (Category, Country, State, City, Phone Country) matches the
+// text-input look (48px, 10px radius, same focus ring) instead of the
+// component's bare default. Scoped to the modal body so it applies to
+// every dropdown without needing a per-field wrapper class.
+.au-body.cm-modal-body {
+  ::ng-deep app-searchable-select {
+    display: block;
+
+    .ss-host {
+      position: relative;
+      display: block;
+    }
+
+    .ss-trigger {
+      width: 100%;
+      height: 48px;
+      padding: 0 38px 0 14px;
+      border: 1.5px solid $color-border !important;
+      border-radius: 10px;
+      font-size: $font-sm;
+      color: $color-text-body;
+      background: $color-bg-page;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      box-shadow: none !important;
+
+      &:focus,
+      &:focus-visible {
+        border-color: $color-primary !important;
+        background: $color-bg-card;
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.1) !important;
+        outline: none;
+      }
+
+      &.ss-placeholder .ss-trigger-text {
+        color: $gray-400;
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+    }
+
+    .ss-trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      color: $dark;
+    }
+
+    .ss-caret {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: $muted;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .ss-caret-open {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    .ss-panel {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      background: $color-bg-card;
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .ss-search-wrap {
+      position: relative;
+      padding: 10px 10px;
+      border-bottom: 1px solid $color-stone-200;
+      display: flex;
+      align-items: center;
+    }
+
+    .ss-search-icon {
+      position: absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: $muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ss-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 32px 0 34px;
+      border: 1.5px solid $border;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: $gray-400;
+      }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: $white;
+      }
+    }
+
+    .ss-clear-search {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $muted;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+
+      &:hover {
+        color: $dark;
+      }
+    }
+
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: $color-stone-300;
+        border-radius: 4px;
+      }
+    }
+
+    .ss-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: $dark;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      list-style: none;
+
+      &:hover {
+        background: $amber-50;
+        color: $color-primary-darker;
+      }
+
+      &.ss-option-selected {
+        background: rgba($primary, 0.1);
+        color: $color-primary-darker;
+        font-weight: 600;
+      }
+    }
+
+    .ss-option-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ss-check {
+      color: $primary;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .ss-no-results {
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 13px;
+      color: $muted;
+      list-style: none;
+    }
+  }
+}
+
+// Error state — toggled via [class.cm-field-group--error] on the field's
+// wrapper div, same as the Community popup's required dropdowns.
+.cm-field-group--error {
+  ::ng-deep app-searchable-select .ss-trigger {
+    border-color: $danger !important;
+
+    &:focus,
+    &:focus-visible {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1) !important;
+    }
+  }
 }

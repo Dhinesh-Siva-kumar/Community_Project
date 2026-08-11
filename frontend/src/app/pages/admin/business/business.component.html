@@ -12,6 +12,7 @@
 
   <!-- ==================== CATEGORIES VIEW ==================== -->
   @if (currentView() === 'categories') {
+  <div class="biz-page-layout">
 
     <!-- ── PAGE HEADER ────────────────────────────────────────── -->
     <div class="jb-page-header">
@@ -64,23 +65,20 @@
         <div class="jb-search-wrap">
           <i class="bi bi-search jb-search-wrap__icon"></i>
           <input type="search" class="jb-search-wrap__input" placeholder="Search categories…"
-            [value]="catSearch()" (input)="catSearch.set($any($event.target).value)"
+            [value]="catSearch()" (input)="onCatSearchChange($any($event.target).value)"
             autocomplete="off" aria-label="Search categories" />
           @if (catSearch()) {
-            <button class="jb-search-wrap__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+            <button class="jb-search-wrap__clear" (click)="clearCatSearch()" aria-label="Clear"><i class="bi bi-x"></i></button>
           }
         </div>
         <div class="biz-cat-toolbar-right">
-          <app-searchable-select class="biz-sort-select" [options]="catSortOptions" [ngModel]="catSortBy()"
-            (ngModelChange)="onCatSortByChange($event)" placeholder="Sort by" aria-label="Sort categories">
-          </app-searchable-select>
           <div class="biz-view-toggle" role="group" aria-label="View mode">
             <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'"
-              (click)="catViewMode.set('grid')" title="Grid view" aria-label="Grid view">
+              (click)="setCatViewMode('grid')" title="Grid view" aria-label="Grid view">
               <i class="bi bi-grid-3x2-gap"></i>
             </button>
             <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'list'"
-              (click)="catViewMode.set('list')" title="List view" aria-label="List view">
+              (click)="setCatViewMode('list')" title="List view" aria-label="List view">
               <i class="bi bi-list-ul"></i>
             </button>
           </div>
@@ -88,6 +86,7 @@
       </div>
     </div>
 
+    <div class="biz-results-section">
     <!-- Loading skeletons -->
     @if (loading()) {
       <div class="biz-grid">
@@ -120,14 +119,17 @@
       </div>
     }
 
-    <!-- Cards -->
-    @else {
-      <div [class]="catViewMode() === 'grid' ? 'biz-grid' : 'biz-list-view'">
-        @for (cat of filteredCategories(); track cat.id) {
+    <!-- Grid view -->
+    @else if (catViewMode() === 'grid') {
+      <app-sort-bar class="mb-3 d-block" [fields]="catSortFields" [sortBy]="catSortBy()" [sortDir]="catSortDir()"
+        (sortChange)="onCatSortBarChange($event)">
+      </app-sort-bar>
+      <div class="biz-grid">
+        @for (cat of paginatedCategories(); track cat.id) {
           <div class="biz-cat-card biz-cat-card--{{ getCategoryAccent(cat.icon) }}"
             role="button" tabindex="0"
-            (click)="loadBusinesses(cat)"
-            (keydown.enter)="loadBusinesses(cat)"
+            (click)="loadBusinesses(cat, true, true)"
+            (keydown.enter)="loadBusinesses(cat, true, true)"
             [attr.aria-label]="'View ' + cat.name + ' businesses'">
 
             <div class="biz-cat-card__row">
@@ -176,27 +178,197 @@
           </div>
         }
       </div>
+
+      <!-- ── PAGINATION — mirrors .um-pagination on the User Management page ── -->
+      <div class="um-pagination">
+        <div class="um-pagination__left">
+          <span class="um-pagination__info">
+            Showing <strong>{{ catShowingFrom() }}</strong>–<strong>{{ catShowingTo() }}</strong>
+            of <strong>{{ filteredCategories().length }}</strong> categories
+          </span>
+          <div class="um-pg-divider"></div>
+          <div class="um-pagination__size">
+            <span>Rows per page</span>
+            <div class="jb-select-wrap jb-select-wrap--xs">
+              <app-searchable-select [options]="pageSizeOptions" [ngModel]="catPageSize()"
+                (ngModelChange)="onCatPageSizeChange($event)" [placeholder]="catPageSize() + ''"
+                aria-label="Rows per page">
+              </app-searchable-select>
+            </div>
+          </div>
+        </div>
+
+        @if (catTotalPages() > 1) {
+          <div class="um-pagination__pages">
+            <button class="um-pg-btn" [disabled]="catPage() === 1"
+              (click)="goToCatPage(1)" title="First page">
+              <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="catPage() === 1"
+              (click)="goToCatPage(catPage() - 1)" title="Previous page">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            @for (page of getCatPages(); track page) {
+              <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === catPage()"
+                (click)="goToCatPage(page)">{{ page }}</button>
+            }
+            <button class="um-pg-btn" [disabled]="catPage() === catTotalPages()"
+              (click)="goToCatPage(catPage() + 1)" title="Next page">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="catPage() === catTotalPages()"
+              (click)="goToCatPage(catTotalPages())" title="Last page">
+              <i class="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+        }
+      </div>
     }
+
+    <!-- Table view -->
+    @else {
+      <div class="um-table-card um-table-card--fixed mb-3">
+        <div class="table-responsive">
+          <table class="um-table">
+            <thead>
+              <tr>
+                <th class="um-th" style="width:56px"></th>
+                <th class="um-th um-th--sortable" [class.um-th--active]="catSortBy() === 'name'" (click)="toggleCatSort('name')" role="button" tabindex="0" (keydown.enter)="toggleCatSort('name')">
+                  Category
+                  <i class="bi um-th__sort-icon"
+                    [class.bi-arrow-up]="catSortBy() === 'name' && catSortDir() === 'asc'"
+                    [class.bi-arrow-down]="catSortBy() === 'name' && catSortDir() === 'desc'"
+                    [class.bi-arrow-down-up]="catSortBy() !== 'name'"
+                  ></i>
+                </th>
+                <th class="um-th">Description</th>
+                <th class="um-th um-th--sortable" [class.um-th--active]="catSortBy() === 'count'" (click)="toggleCatSort('count')" role="button" tabindex="0" (keydown.enter)="toggleCatSort('count')">
+                  Businesses
+                  <i class="bi um-th__sort-icon"
+                    [class.bi-arrow-up]="catSortBy() === 'count' && catSortDir() === 'asc'"
+                    [class.bi-arrow-down]="catSortBy() === 'count' && catSortDir() === 'desc'"
+                    [class.bi-arrow-down-up]="catSortBy() !== 'count'"
+                  ></i>
+                </th>
+                <th class="um-th um-th--actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cat of paginatedCategories(); track cat.id) {
+                <tr class="um-row" role="button" tabindex="0"
+                  (click)="loadBusinesses(cat, true, true)" (keydown.enter)="loadBusinesses(cat, true, true)"
+                  [attr.aria-label]="'View ' + cat.name + ' businesses'">
+                  <td class="um-td">
+                    <div class="biz-table-icon biz-cat-card--{{ getCategoryAccent(cat.icon) }}">
+                      <i class="bi {{ getCategoryIcon(cat.icon) }}"></i>
+                    </div>
+                  </td>
+                  <td class="um-td"><span class="um-user-name">{{ cat.name }}</span></td>
+                  <td class="um-td">
+                    <span class="um-td-text text-truncate d-inline-block" style="max-width:360px">{{ $any(cat).description || '—' }}</span>
+                  </td>
+                  <td class="um-td">
+                    @if ((cat._count?.businesses ?? 0) > 0) {
+                      <span class="um-td-text">{{ cat._count!.businesses }}</span>
+                    } @else {
+                      <span class="biz-cat-card__count--empty">0</span>
+                    }
+                  </td>
+                  <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
+                    <div class="um-actions-row">
+                      <button class="um-iab um-iab--edit"
+                        (click)="openEditCategory($event, cat)"
+                        [attr.aria-label]="'Edit ' + cat.name" data-tip="Edit">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="um-iab um-iab--delete"
+                        (click)="openDeleteCategory($event, cat)"
+                        [attr.aria-label]="'Delete ' + cat.name" data-tip="Delete"
+                        [disabled]="deletingCategoryId() === cat.id">
+                        @if (deletingCategoryId() === cat.id) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          <i class="bi bi-trash3"></i>
+                        }
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Pagination — nested inside the table card, mirrors User Management ── -->
+        <div class="um-pagination um-pagination--nested">
+          <div class="um-pagination__left">
+            <span class="um-pagination__info">
+              Showing <strong>{{ catShowingFrom() }}</strong>–<strong>{{ catShowingTo() }}</strong>
+              of <strong>{{ filteredCategories().length }}</strong> categories
+            </span>
+            <div class="um-pg-divider"></div>
+            <div class="um-pagination__size">
+              <span>Rows per page</span>
+              <div class="jb-select-wrap jb-select-wrap--xs">
+                <app-searchable-select [options]="pageSizeOptions" [ngModel]="catPageSize()"
+                  (ngModelChange)="onCatPageSizeChange($event)" [placeholder]="catPageSize() + ''"
+                  aria-label="Rows per page">
+                </app-searchable-select>
+              </div>
+            </div>
+          </div>
+
+          @if (catTotalPages() > 1) {
+            <div class="um-pagination__pages">
+              <button class="um-pg-btn" [disabled]="catPage() === 1"
+                (click)="goToCatPage(1)" title="First page">
+                <i class="bi bi-chevron-double-left"></i>
+              </button>
+              <button class="um-pg-btn" [disabled]="catPage() === 1"
+                (click)="goToCatPage(catPage() - 1)" title="Previous page">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              @for (page of getCatPages(); track page) {
+                <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === catPage()"
+                  (click)="goToCatPage(page)">{{ page }}</button>
+              }
+              <button class="um-pg-btn" [disabled]="catPage() === catTotalPages()"
+                (click)="goToCatPage(catPage() + 1)" title="Next page">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <button class="um-pg-btn" [disabled]="catPage() === catTotalPages()"
+                (click)="goToCatPage(catTotalPages())" title="Last page">
+                <i class="bi bi-chevron-double-right"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    </div>
+  </div>
   }
 
 
   <!-- ==================== BUSINESS LIST VIEW ==================== -->
   @if (currentView() === 'list') {
 
+    <!-- ── BREADCRUMB ─────────────────────────────────────────── -->
+    <nav aria-label="breadcrumb">
+      <ol class="bl-breadcrumb">
+        <li class="bl-breadcrumb__item">
+          <button class="bl-breadcrumb__link" (click)="goToCategories()">
+            <i class="bi bi-grid-3x2-gap"></i> Categories
+          </button>
+        </li>
+        <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+        <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ selectedCategory()?.name }}</li>
+      </ol>
+    </nav>
+
     <!-- ── PAGE HEADER ────────────────────────────────────────── -->
     <div class="jb-page-header">
       <div class="jb-page-header__left">
-        <nav aria-label="breadcrumb">
-          <ol class="bl-breadcrumb">
-            <li class="bl-breadcrumb__item">
-              <button class="bl-breadcrumb__link" (click)="goToCategories()">
-                <i class="bi bi-grid-3x2-gap"></i> Categories
-              </button>
-            </li>
-            <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-            <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ selectedCategory()?.name }}</li>
-          </ol>
-        </nav>
         <div class="bl-header__title-row">
           <div class="bl-header__icon biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
             <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
@@ -209,19 +381,6 @@
       </div>
       <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
     </div>
-
-    <!-- ── STATS BAR ──────────────────────────────────────────── -->
-    @if (!loading()) {
-      <div class="admin-stats-bar">
-        <div class="admin-stat-card">
-          <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-shop"></i></div>
-          <div class="admin-stat-card__body">
-            <span class="admin-stat-card__value">{{ totalItems() }}</span>
-            <span class="admin-stat-card__label">Businesses</span>
-          </div>
-        </div>
-      </div>
-    }
 
     <!-- ── FILTER PANEL ──────────────────────────────────────── -->
     <div class="jb-filter-panel">
@@ -582,174 +741,229 @@
 
 <!-- ==================== ADD / EDIT CATEGORY MODAL ==================== -->
 @if (showAddCategoryModal()) {
-  <div class="modal-backdrop fade show"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable jb-modal-dialog">
-      <div class="modal-content jb-modal">
+  <div class="au-backdrop" (click)="closeAddCategory()"></div>
+  <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle" (click)="$event.stopPropagation()">
 
-        <div class="jb-modal__header">
-          <div class="jb-modal__header-icon">
-            <i class="bi" [ngClass]="editingCategory() ? 'bi-pencil-fill' : 'bi-tags-fill'"></i>
-          </div>
-          <div class="jb-modal__header-text">
-            <h4 class="jb-modal__title" id="catModalTitle">{{ editingCategory() ? 'Edit Category' : 'Add Category' }}</h4>
-            <p class="jb-modal__subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
-          </div>
-          <button type="button" class="jb-modal__close" (click)="closeAddCategory()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
-
-        <div class="jb-modal__body">
-          <form [formGroup]="categoryForm" novalidate>
-            <div class="row g-3">
-
-              <!-- Left: fields + icon picker -->
-              <div class="col-md-8">
-
-                <!-- Name -->
-                <div class="jb-form-section">
-                  <div class="jb-form-section__header">
-                    <div class="jb-form-section__badge"><i class="bi bi-type"></i></div>
-                    <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">Category Information</span></div>
-                  </div>
-                  <div class="row g-3">
-                    <div class="col-12">
-                      <label class="jb-label" for="catName">Category Name <span class="text-danger">*</span></label>
-                      <input id="catName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Coffee Shop"
-                        [class.jb-input--error]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" />
-                      @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
-                        <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ categoryForm.get('name')?.errors?.['required'] ? 'Name is required' : 'Max 100 characters' }}</span>
-                      }
-                    </div>
-                    <div class="col-12">
-                      <label class="jb-label" for="catDesc">Description <span class="jb-optional">(optional)</span></label>
-                      <textarea id="catDesc" class="jb-input jb-input--textarea" formControlName="description" rows="2" placeholder="Brief description…"></textarea>
-                    </div>
-                    <div class="col-12">
-                      <label class="jb-label">Bootstrap Icon <span class="text-danger">*</span></label>
-                      <button type="button" class="cat-icon-trigger w-100"
-                        [class.cat-icon-trigger--error]="categoryForm.get('icon')?.invalid && categoryForm.get('icon')?.touched"
-                        (click)="iconPickerOpen.set(!iconPickerOpen())">
-                        @if (categoryForm.get('icon')?.value) {
-                          <i class="bi {{ categoryForm.get('icon')?.value }} cat-icon-trigger__preview"></i>
-                          <span class="cat-icon-trigger__name">{{ categoryForm.get('icon')?.value }}</span>
-                        } @else {
-                          <i class="bi bi-grid cat-icon-trigger__placeholder-icon"></i>
-                          <span class="cat-icon-trigger__placeholder-text">Choose an icon…</span>
-                        }
-                        <i class="bi bi-chevron-down ms-auto cat-icon-trigger__chevron" [class.rotated]="iconPickerOpen()"></i>
-                      </button>
-                      @if (categoryForm.get('icon')?.invalid && categoryForm.get('icon')?.touched) {
-                        <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Please select an icon</span>
-                      }
-                    </div>
-                    @if (iconPickerOpen()) {
-                      <div class="col-12">
-                        <div class="cat-icon-picker">
-                          <div class="cat-icon-picker__search-wrap">
-                            <i class="bi bi-search cat-icon-picker__search-icon"></i>
-                            <input type="search" class="cat-icon-picker__search" placeholder="Search icons…"
-                              [value]="iconSearch()" (input)="iconSearch.set($any($event.target).value)" autocomplete="off" />
-                          </div>
-                          <div class="cat-icon-picker__grid">
-                            @for (icon of filteredIcons(); track icon) {
-                              <button type="button" class="cat-icon-card"
-                                [class.cat-icon-card--selected]="categoryForm.get('icon')?.value === icon"
-                                (click)="selectCategoryIcon(icon)" [title]="icon.replace('bi-', '')">
-                                <i class="bi {{ icon }}"></i>
-                                <span class="cat-icon-card__name">{{ icon.replace('bi-', '') }}</span>
-                              </button>
-                            }
-                            @if (filteredIcons().length === 0) {
-                              <p class="text-muted small text-center w-100 py-3">No icons found</p>
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right: live preview -->
-              <div class="col-md-4 d-flex flex-column align-items-center pt-4">
-                <p class="jb-preview-label">Preview</p>
-                <div class="cat-preview-card">
-                  <div class="cat-preview-card__icon">
-                    <i class="bi" [ngClass]="categoryForm.get('icon')?.value || 'bi-tags'"></i>
-                  </div>
-                  <span class="cat-preview-card__name">{{ categoryForm.get('name')?.value || 'Category' }}</span>
-                </div>
-              </div>
-
-            </div>
-          </form>
-        </div>
-
-        <div class="jb-modal__footer">
-          <button type="button" class="jb-btn jb-btn--ghost" (click)="closeAddCategory()">Cancel</button>
-          <button type="button" class="jb-btn jb-btn--neon"
-            [disabled]="categoryForm.invalid || submitting()" (click)="submitCategory()">
-            @if (submitting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            <i class="bi me-1" [ngClass]="editingCategory() ? 'bi-check-lg' : 'bi-plus-lg'"></i>
-            {{ editingCategory() ? 'Save Changes' : 'Create Category' }}
-          </button>
-        </div>
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
       </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [ngClass]="editingCategory() ? 'bi-pencil-fill' : 'bi-tags-fill'"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="catModalTitle">{{ editingCategory() ? 'Edit Category' : 'Add Category' }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="closeAddCategory()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
+
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="categoryForm" novalidate>
+        <div class="row g-3">
+
+          <!-- Left: fields + icon picker -->
+          <div class="col-md-8">
+
+            <!-- Name -->
+            <div class="jb-form-section">
+              <div class="jb-form-section__header">
+                <div class="jb-form-section__badge"><i class="bi bi-type"></i></div>
+                <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">Category Information</span></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="jb-label" for="catName">Category Name <span class="text-danger">*</span></label>
+                  <input id="catName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Coffee Shop" maxlength="100"
+                    [class.jb-input--error]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" />
+                  @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+                    <span class="jb-field-error">
+                      <i class="bi bi-exclamation-circle"></i>
+                      @if (categoryForm.get('name')?.errors?.['required']) {
+                        Category name is required
+                      } @else if (categoryForm.get('name')?.errors?.['minlength']) {
+                        Minimum 2 characters required
+                      } @else if (categoryForm.get('name')?.errors?.['maxlength']) {
+                        Maximum 100 characters allowed
+                      }
+                    </span>
+                  }
+                </div>
+                <div class="col-12">
+                  <label class="jb-label" for="catDesc">Description <span class="jb-optional">(optional)</span></label>
+                  <div class="jb-textarea-wrap">
+                    <textarea id="catDesc" class="jb-input jb-input--textarea" formControlName="description" rows="2"
+                      placeholder="Brief description…" maxlength="300"
+                      [class.jb-input--error]="categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched"></textarea>
+                    <span class="jb-char-count jb-char-count--overlay">{{ categoryForm.get('description')?.value?.length ?? 0 }}/300</span>
+                  </div>
+                  @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum 300 characters allowed</span>
+                  }
+                </div>
+                <div class="col-12">
+                  <label class="jb-label">Bootstrap Icon <span class="text-danger">*</span></label>
+                  <button type="button" class="cat-icon-trigger w-100"
+                    [class.cat-icon-trigger--error]="categoryForm.get('icon')?.invalid && categoryForm.get('icon')?.touched"
+                    (click)="iconPickerOpen.set(!iconPickerOpen())">
+                    @if (categoryForm.get('icon')?.value) {
+                      <i class="bi {{ categoryForm.get('icon')?.value }} cat-icon-trigger__preview"></i>
+                      <span class="cat-icon-trigger__name">{{ categoryForm.get('icon')?.value }}</span>
+                    } @else {
+                      <i class="bi bi-grid cat-icon-trigger__placeholder-icon"></i>
+                      <span class="cat-icon-trigger__placeholder-text">Choose an icon…</span>
+                    }
+                    <i class="bi bi-chevron-down ms-auto cat-icon-trigger__chevron" [class.rotated]="iconPickerOpen()"></i>
+                  </button>
+                  @if (categoryForm.get('icon')?.invalid && categoryForm.get('icon')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Please select an icon</span>
+                  }
+                </div>
+                @if (iconPickerOpen()) {
+                  <div class="col-12">
+                    <div class="cat-icon-picker">
+                      <div class="cat-icon-picker__search-wrap">
+                        <i class="bi bi-search cat-icon-picker__search-icon"></i>
+                        <input type="search" class="cat-icon-picker__search" placeholder="Search icons…"
+                          [value]="iconSearch()" (input)="iconSearch.set($any($event.target).value)" autocomplete="off" />
+                      </div>
+                      <div class="cat-icon-picker__grid">
+                        @for (icon of filteredIcons(); track icon) {
+                          <button type="button" class="cat-icon-card"
+                            [class.cat-icon-card--selected]="categoryForm.get('icon')?.value === icon"
+                            (click)="selectCategoryIcon(icon)" [title]="icon.replace('bi-', '')">
+                            <i class="bi {{ icon }}"></i>
+                            <span class="cat-icon-card__name">{{ icon.replace('bi-', '') }}</span>
+                          </button>
+                        }
+                        @if (filteredIcons().length === 0) {
+                          <p class="text-muted small text-center w-100 py-3">No icons found</p>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: live preview -->
+          <div class="col-md-4 d-flex flex-column align-items-center pt-4">
+            <p class="jb-preview-label">Preview</p>
+            <div class="cat-preview-card">
+              <div class="cat-preview-card__icon">
+                <i class="bi" [ngClass]="categoryForm.get('icon')?.value || 'bi-tags'"></i>
+              </div>
+              <span class="cat-preview-card__name">{{ categoryForm.get('name')?.value || 'Category' }}</span>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeAddCategory()">Cancel</button>
+      <button type="button" class="au-btn au-btn--primary cm-btn-submit"
+        [disabled]="categoryForm.invalid || submitting()" (click)="submitCategory()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ editingCategory() ? 'Saving...' : 'Creating...' }}
+        } @else {
+          <i class="bi me-1" [ngClass]="editingCategory() ? 'bi-check-lg' : 'bi-plus-lg'"></i>
+          {{ editingCategory() ? 'Save Changes' : 'Create Category' }}
+        }
+      </button>
+    </div>
+
   </div>
 }
 
 <!-- ==================== DELETE CATEGORY CONFIRM ==================== -->
 @if (showDeleteCategoryConfirm() && categoryToDelete()) {
-  <div class="modal-backdrop fade show" style="z-index:1060"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true" style="z-index:1070">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-body text-center py-4">
-          <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
-          <h6 class="fw-bold">Delete "{{ categoryToDelete()!.name }}"?</h6>
-          <p class="text-muted small mb-0">Are you sure? This action cannot be undone.</p>
-          @if ((categoryToDelete()!._count?.businesses ?? 0) > 0) {
-            <p class="text-warning small mt-2">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i>
-              {{ categoryToDelete()!._count!.businesses }} business(es) use this category — deletion will be blocked.
-            </p>
-          }
-        </div>
-        <div class="modal-footer border-0 justify-content-center gap-2">
-          <button type="button" class="btn btn-outline-secondary btn-sm"
-            (click)="closeDeleteCategory()" [disabled]="deletingCategoryId() !== null">Cancel</button>
-          <button type="button" class="btn btn-danger btn-sm"
-            (click)="confirmDeleteCategory()" [disabled]="deletingCategoryId() !== null">
-            @if (deletingCategoryId() !== null) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            <i class="bi bi-trash3 me-1"></i>Delete
-          </button>
-        </div>
+  <div class="au-backdrop" (click)="closeDeleteCategory()"></div>
+  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteCatModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-delete-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
       </div>
+      <div class="au-header__icon cm-delete-modal-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="deleteCatModalTitle">Delete Category</h5>
+        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="closeDeleteCategory()" [disabled]="deletingCategoryId() !== null" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-delete-modal-body">
+      <p class="cm-delete-modal-text">
+        Are you sure you want to delete <strong>"{{ categoryToDelete()!.name }}"</strong>?
+      </p>
+      @if ((categoryToDelete()!._count?.businesses ?? 0) > 0) {
+        <p class="cm-delete-modal-warning">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          {{ categoryToDelete()!._count!.businesses }} business(es) use this category — deletion will be blocked.
+        </p>
+      }
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="closeDeleteCategory()" [disabled]="deletingCategoryId() !== null">
+        Cancel
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--danger"
+        (click)="confirmDeleteCategory()" [disabled]="deletingCategoryId() !== null">
+        @if (deletingCategoryId() !== null) {
+          <span class="spinner-border spinner-border-sm"></span>
+          Deleting...
+        } @else {
+          <i class="bi bi-trash3-fill"></i>
+          Delete Category
+        }
+      </button>
     </div>
   </div>
 }
 
 <!-- ==================== ADD BUSINESS MODAL ==================== -->
 @if (showAddBusinessModal()) {
-  <div class="modal-backdrop fade show"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="bizModalTitle">
-    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable jb-modal-dialog">
-      <div class="modal-content jb-modal">
+  <div class="au-backdrop" (click)="closeAddBusiness()"></div>
+  <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="bizModalTitle" (click)="$event.stopPropagation()">
 
-        <div class="jb-modal__header">
-          <div class="jb-modal__header-icon">
-            <i class="bi" [ngClass]="editingBusiness() ? 'bi-pencil-fill' : 'bi-shop-window'"></i>
-          </div>
-          <div class="jb-modal__header-text">
-            <h4 class="jb-modal__title" id="bizModalTitle">{{ editingBusiness() ? 'Edit Business' : 'Add Business' }}</h4>
-            <p class="jb-modal__subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
-          </div>
-          <button type="button" class="jb-modal__close" (click)="closeAddBusiness()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [ngClass]="editingBusiness() ? 'bi-pencil-fill' : 'bi-shop-window'"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="bizModalTitle">{{ editingBusiness() ? 'Edit Business' : 'Add Business' }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="closeAddBusiness()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
 
-        <div class="jb-modal__body">
-          <form [formGroup]="businessForm" novalidate>
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="businessForm" novalidate>
 
             <!-- S1: Business Info -->
             <div class="jb-form-section">
@@ -763,10 +977,19 @@
                   <input id="bizName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Sunrise Coffee" maxlength="100"
                     [class.jb-input--error]="businessForm.get('name')?.invalid && businessForm.get('name')?.touched" />
                   @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('name')?.errors?.['required'] ? 'Name is required' : 'Max 100 characters' }}</span>
+                    <span class="jb-field-error">
+                      <i class="bi bi-exclamation-circle"></i>
+                      @if (businessForm.get('name')?.errors?.['required']) {
+                        Business name is required
+                      } @else if (businessForm.get('name')?.errors?.['minlength']) {
+                        Minimum 2 characters required
+                      } @else if (businessForm.get('name')?.errors?.['maxlength']) {
+                        Maximum 100 characters allowed
+                      }
+                    </span>
                   }
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" [class.cm-field-group--error]="businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched">
                   <label class="jb-label">Category <span class="text-danger">*</span></label>
                   <app-searchable-select formControlName="categoryId" [options]="categoryOptions()" placeholder="Select category"></app-searchable-select>
                   @if (businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched) {
@@ -775,11 +998,23 @@
                 </div>
                 <div class="col-12">
                   <label class="jb-label" for="bizDesc">Description <span class="text-danger">*</span></label>
-                  <textarea id="bizDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
-                    placeholder="Describe the business…" maxlength="1000"
-                    [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
+                  <div class="jb-textarea-wrap">
+                    <textarea id="bizDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
+                      placeholder="Describe the business… (min 10 characters)" maxlength="1000"
+                      [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
+                    <span class="jb-char-count jb-char-count--overlay">{{ businessForm.get('description')?.value?.length ?? 0 }}/1000</span>
+                  </div>
                   @if (businessForm.get('description')?.invalid && businessForm.get('description')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('description')?.errors?.['required'] ? 'Description is required' : 'Max 1000 characters' }}</span>
+                    <span class="jb-field-error">
+                      <i class="bi bi-exclamation-circle"></i>
+                      @if (businessForm.get('description')?.errors?.['required']) {
+                        Description is required
+                      } @else if (businessForm.get('description')?.errors?.['minlength']) {
+                        Minimum 10 characters required
+                      } @else if (businessForm.get('description')?.errors?.['maxlength']) {
+                        Maximum 1000 characters allowed
+                      }
+                    </span>
                   }
                 </div>
                 <!-- Business Logo -->
@@ -793,6 +1028,8 @@
                   } @else {
                     <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
                       [resetCounter]="logoUploadReset()" label="Upload business logo (JPG, PNG, WEBP)"
+                      [showError]="businessSubmitAttempted() && !logoPreview()"
+                      errorMessage="Business logo is required."
                       (filesChange)="onLogoChange($event)"></app-file-upload>
                   }
                 </div>
@@ -806,7 +1043,8 @@
                 <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">Contact Details</span></div>
               </div>
               <div class="row g-3">
-                <div class="col-md-2">
+                <!-- Row 1: phone-related fields grouped together (3+4+5 = 12) -->
+                <div class="col-md-3" [class.cm-field-group--error]="businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched">
                   <label class="jb-label">Phone Country <span class="text-danger">*</span></label>
                   <app-searchable-select formControlName="phoneCountryId" [options]="phoneCountryOptions()"
                     placeholder="Select country code"></app-searchable-select>
@@ -825,7 +1063,25 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('phone')?.errors?.['phoneInvalid'] || 'Valid phone required' }}</span>
                   }
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-5">
+                  <label class="jb-label" for="bizWa">WhatsApp</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-whatsapp jb-input-group__icon"></i>
+                    <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="+44 7700 900000" maxlength="15"
+                      [class.jb-input--error]="businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched"
+                      [disabled]="businessForm.get('sameAsPhone')?.value" />
+                  </div>
+                  @if (businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter 7-15 digits, digits only</span>
+                  }
+                  <label class="jb-checkbox-label jb-checkbox-label--below">
+                    <input type="checkbox" formControlName="sameAsPhone" />
+                    <span>Same as phone</span>
+                  </label>
+                </div>
+
+                <!-- Row 2: Email + Website (6+6 = 12) -->
+                <div class="col-md-6">
                   <label class="jb-label" for="bizEmail">Email</label>
                   <div class="jb-input-group">
                     <i class="bi bi-envelope jb-input-group__icon"></i>
@@ -836,7 +1092,7 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid email required</span>
                   }
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-6">
                   <label class="jb-label" for="bizWeb">Website</label>
                   <div class="jb-input-group">
                     <i class="bi bi-globe2 jb-input-group__icon"></i>
@@ -847,41 +1103,21 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
                   }
                 </div>
-                <div class="col-md-12">
-                  <div class="row g-3">
-                    <div class="col-md-2">
-                      <label class="jb-label">&nbsp;</label>
-                      <label class="jb-checkbox-label" style="display:flex;align-items:center;gap:4px;white-space:nowrap;cursor:pointer;padding-top:10px;">
-                        <input type="checkbox" formControlName="sameAsPhone" />
-                        <span style="font-size:0.8rem;">Same as phone</span>
-                      </label>
-                    </div>
-                    <div class="col-md-3">
-                      <label class="jb-label" for="bizWa">WhatsApp</label>
-                      <div class="jb-input-group">
-                        <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                        <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="+44 7700 900000" maxlength="15"
-                          [disabled]="businessForm.get('sameAsPhone')?.value" />
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="jb-label" for="bizMaps">Google Maps Link</label>
-                      <div class="jb-input-group">
-                        <i class="bi bi-pin-map jb-input-group__icon"></i>
-                        <input id="bizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="Auto-generated from address" maxlength="2000"
-                          [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
-                      </div>
-                      @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
-                        <span class="jb-field-hint"><i class="bi bi-robot"></i> Auto-generated from location fields</span>
-                      }
-                      @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
-                        <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
-                      }
-                    </div>
-                    <div class="col-md-3">
-                      <label class="jb-label" for="bizMapsPlaceholder">&nbsp;</label>
-                    </div>
+
+                <!-- Row 3: Maps link gets the full width — it's usually a long URL -->
+                <div class="col-12">
+                  <label class="jb-label" for="bizMaps">Google Maps Link</label>
+                  <div class="jb-input-group">
+                    <i class="bi bi-pin-map jb-input-group__icon"></i>
+                    <input id="bizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="Auto-generated from address" maxlength="2000"
+                      [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
                   </div>
+                  @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
+                    <span class="jb-field-hint"><i class="bi bi-robot"></i> Auto-generated from location fields</span>
+                  }
+                  @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                  }
                 </div>
               </div>
             </div>
@@ -893,7 +1129,7 @@
                 <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">Location</span></div>
               </div>
               <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched">
                   <label class="jb-label">Country <span class="text-danger">*</span></label>
                   <app-searchable-select formControlName="countryId" [options]="bizCountryOptions()"
                     placeholder="Select country" searchPlaceholder="Search countries…"
@@ -902,29 +1138,44 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country is required</span>
                   }
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('stateId')?.invalid && businessForm.get('stateId')?.touched">
                   <label class="jb-label">
-                    State / Region
+                    State / Region <span class="text-danger">*</span>
                     @if (bizStatesLoading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
                   </label>
                   <app-searchable-select formControlName="stateId" [options]="bizStateOptions()"
                     [placeholder]="bizStates().length ? 'Select state' : 'Select country first'"
                     (ngModelChange)="onBizStateChange($event)"></app-searchable-select>
+                  @if (businessForm.get('stateId')?.invalid && businessForm.get('stateId')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> State is required</span>
+                  }
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('city')?.invalid && businessForm.get('city')?.touched">
                   <label class="jb-label">
-                    City
+                    City <span class="text-danger">*</span>
                     @if (bizCitiesLoading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
                   </label>
                   <app-searchable-select formControlName="city" [options]="bizCityOptions()"
                     [placeholder]="bizCities().length ? 'Select city' : 'Select state first'"></app-searchable-select>
+                  @if (businessForm.get('city')?.invalid && businessForm.get('city')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> City is required</span>
+                  }
                 </div>
                 <div class="col-md-8">
                   <label class="jb-label" for="bizAddr">Address <span class="text-danger">*</span></label>
                   <input id="bizAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…" maxlength="500"
                     [class.jb-input--error]="businessForm.get('address')?.invalid && businessForm.get('address')?.touched" />
                   @if (businessForm.get('address')?.invalid && businessForm.get('address')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('address')?.errors?.['required'] ? 'Address is required' : 'Max 500 characters' }}</span>
+                    <span class="jb-field-error">
+                      <i class="bi bi-exclamation-circle"></i>
+                      @if (businessForm.get('address')?.errors?.['required']) {
+                        Address is required
+                      } @else if (businessForm.get('address')?.errors?.['minlength']) {
+                        Minimum 5 characters required
+                      } @else if (businessForm.get('address')?.errors?.['maxlength']) {
+                        Maximum 500 characters allowed
+                      }
+                    </span>
                   }
                 </div>
                 <div class="col-md-4">
@@ -932,7 +1183,7 @@
                   <input id="bizPin" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA" maxlength="12"
                     [class.jb-input--error]="businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched" />
                   @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid pin code required</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('pincode')?.errors?.['required'] ? 'Pin code is required' : '3-12 characters, no spaces' }}</span>
                   }
                 </div>
               </div>
@@ -1039,22 +1290,25 @@
               }
             </div>
 
-          </form>
-        </div>
-
-        <div class="jb-modal__footer">
-          <button type="button" class="jb-btn jb-btn--ghost" (click)="closeAddBusiness()">Cancel</button>
-          <button type="button" class="jb-btn jb-btn--neon"
-            [disabled]="businessForm.invalid || submitting()"
-            (click)="submitBusiness()">
-            @if (submitting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            <i class="bi me-1" [ngClass]="editingBusiness() ? 'bi-check-lg' : 'bi-shop-window'"></i>
-            {{ editingBusiness() ? 'Save Changes' : 'Add Business' }}
-          </button>
-        </div>
-
-      </div>
+      </form>
     </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeAddBusiness()">Cancel</button>
+      <button type="button" class="au-btn au-btn--primary cm-btn-submit"
+        [disabled]="businessForm.invalid || !logoPreview() || submitting()"
+        (click)="submitBusiness()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ editingBusiness() ? 'Saving...' : 'Creating...' }}
+        } @else {
+          <i class="bi me-1" [ngClass]="editingBusiness() ? 'bi-check-lg' : 'bi-shop-window'"></i>
+          {{ editingBusiness() ? 'Save Changes' : 'Add Business' }}
+        }
+      </button>
+    </div>
+
   </div>
 }
 

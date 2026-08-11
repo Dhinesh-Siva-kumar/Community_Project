@@ -14,6 +14,9 @@ import { SelectOption, SearchableSelectComponent } from '../../../shared/compone
 
 type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
 
+// Remembers the last selected view mode (table/grid) across navigations.
+const VIEW_STORAGE_KEY = 'admin-user-management:viewMode';
+
 @Component({
   selector: 'app-user-management',
   standalone: true,
@@ -113,7 +116,10 @@ export class UserManagementComponent implements OnInit {
 
   // ── View mode (table / grid) ────────────────────────────────────────────
   viewMode = signal<'table' | 'grid'>('table');
-  setViewMode(mode: 'table' | 'grid'): void { this.viewMode.set(mode); }
+  setViewMode(mode: 'table' | 'grid'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
 
   // ── Panel visibility (add-user + detail drawers only) ─────────────────────
   showAddDrawer        = signal(false);
@@ -134,6 +140,7 @@ export class UserManagementComponent implements OnInit {
   openDropdownId = signal<string | null>(null);
 
   ngOnInit(): void {
+    this.restoreSavedViewMode();
     this.loadUsers();
     this.loadCountries();
 
@@ -141,6 +148,12 @@ export class UserManagementComponent implements OnInit {
     // this user's detail drawer directly via /admin/user-management?userId=…
     const userId = this.route.snapshot.queryParamMap.get('userId');
     if (userId) this.viewUser(userId);
+  }
+
+  /** Resume the last selected table/grid view across navigations. */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'table' || saved === 'grid') this.viewMode.set(saved);
   }
 
   loadCountries(): void {

@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, AuthResponse, UserRegister } from '../models';
 
@@ -117,6 +117,15 @@ export class AuthService {
 
   refreshToken(): Observable<AuthResponse> {
     const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    // No stored refresh token (cleared, never issued, or already logged out
+    // elsewhere) — skip the request entirely instead of sending `null`,
+    // which the backend rejects with a 400 ("Expected string, received
+    // null") rather than the expected 401. Fail straight to logout so the
+    // interceptor's catchError redirects to login as it would for a 401.
+    if (!refreshToken) {
+      this.logout();
+      return throwError(() => new Error('No refresh token available'));
+    }
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/refresh`, { refreshToken }).pipe(
       tap((response) => this.handleAuthResponse(response)),
       catchError((error) => {

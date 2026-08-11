@@ -630,7 +630,10 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  padding: 12px;
+  // Extra top padding clears the checkbox pinned to the card's top-left
+  // corner, so the author row itself stays flush-left with the rest of
+  // the card content instead of being indented to dodge it.
+  padding: 28px 12px 12px;
 }
 
 .post-card__author {
@@ -639,8 +642,6 @@
   gap: 8px;
   margin-bottom: 6px;
   min-width: 0;
-  // Clears the checkbox pinned to the card's top-left corner
-  padding-left: 22px;
 }
 
 .post-card__avatar {
@@ -680,7 +681,14 @@
   margin-bottom: 6px;
 
   .badge { font-size: 10px; }
-  .um-td-text { font-size: 11px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+// Community name — shown in full (no truncation); wraps if the row runs out
+// of space instead of clipping with an ellipsis.
+.post-card__community {
+  font-size: 11px;
+  color: $color-text-muted;
+  word-break: break-word;
 }
 
 .post-card__content {

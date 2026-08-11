@@ -16,6 +16,9 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
+// Remembers the last selected category view mode (grid/list) across navigations.
+const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
+
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
   if (!v) return null;
@@ -24,6 +27,19 @@ function urlValidator(c: AbstractControl): ValidationErrors | null {
 }
 
 type ViewState = 'categories' | 'list' | 'detail';
+
+/**
+ * Shape pushed to `history.pushState` for each drill-down level, so the
+ * browser Back/Forward buttons step through categories → list → detail
+ * instead of leaving the page entirely. The category/business objects are
+ * carried in the state itself so restoring a view on popstate never needs
+ * a re-fetch or an array lookup that might miss (e.g. after pagination).
+ */
+interface BusinessNavState {
+  view: ViewState;
+  category?: BusinessCategory;
+  business?: Business;
+}
 
 @Component({
   selector: 'app-admin-business',
@@ -54,6 +70,10 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   showHeaderFab = signal(false);
   private scrollTicking = false;
 
+  // Body-scroll lock while any modal/confirm popup is open
+  private previousBodyOverflow: string | null = null;
+  private previousHtmlOverflow: string | null = null;
+
   // Data
   categories = signal<BusinessCategory[]>([]);
   businesses = signal<Business[]>([]);
@@ -69,6 +89,10 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   loading = signal(true);
   submitting = signal(false);
   deletingId = signal<string | null>(null);
+
+  // Gates the "Business logo is required" error until the admin actually
+  // tries to submit — matches the Community page's image-required pattern.
+  businessSubmitAttempted = signal(false);
 
   // Pagination
   currentPage = signal(1);
@@ -358,16 +382,90 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // ── Category view controls ───────────────────────────────────
   catSearch   = signal('');
-  catSortBy   = signal<'name'|'count'|'newest'>('name');
+  catSortBy   = signal<'name'|'count'>('name');
+  catSortDir  = signal<SortDir>('asc');
   catViewMode = signal<'grid'|'list'>('grid');
-  catSortOptions: SelectOption[] = [
-    { value: 'name',    label: 'Name A–Z' },
-    { value: 'count',   label: 'Most Businesses' },
-    { value: 'newest',  label: 'Newest First' },
+
+  // Grid-view sort — same pill-style sort-bar as the community grid, shown
+  // above the grid only (the table view sorts via its own column headers).
+  readonly catSortFields: SortField[] = [
+    { key: 'name',  label: 'Name' },
+    { key: 'count', label: 'Businesses' },
   ];
 
-  onCatSortByChange(value: string | number): void {
-    this.catSortBy.set(value as 'name' | 'count' | 'newest');
+  onCatSortBarChange(change: SortChange): void {
+    this.catSortBy.set(change.sortBy as 'name' | 'count');
+    this.catSortDir.set(change.sortDir);
+    this.catPage.set(1);
+  }
+
+  /** Toggle sort for a clickable table column header — re-clicking the same column flips direction. */
+  toggleCatSort(field: 'name' | 'count'): void {
+    if (this.catSortBy() === field) {
+      this.catSortDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.catSortBy.set(field);
+      this.catSortDir.set(field === 'count' ? 'desc' : 'asc');
+    }
+    this.catPage.set(1);
+  }
+
+  onCatSearchChange(value: string): void {
+    this.catSearch.set(value);
+    this.catPage.set(1);
+  }
+
+  clearCatSearch(): void {
+    this.catSearch.set('');
+    this.catPage.set(1);
+  }
+
+  // ── Category pagination (client-side — categories load in a single batch) ──
+  catPage     = signal(1);
+  catPageSize = signal(20);
+
+  catTotalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredCategories().length / this.catPageSize()))
+  );
+
+  paginatedCategories = computed(() => {
+    const list = this.filteredCategories();
+    const size = this.catPageSize();
+    const totalPages = Math.max(1, Math.ceil(list.length / size));
+    const page = Math.min(Math.max(1, this.catPage()), totalPages);
+    const start = (page - 1) * size;
+    return list.slice(start, start + size);
+  });
+
+  onCatPageSizeChange(size: number): void {
+    this.catPageSize.set(size);
+    this.catPage.set(1);
+  }
+
+  goToCatPage(page: number): void {
+    if (page < 1 || page > this.catTotalPages()) return;
+    this.catPage.set(page);
+  }
+
+  getCatPages(): number[] {
+    const total = this.catTotalPages();
+    const current = Math.min(this.catPage(), total);
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let start = Math.max(1, current - Math.floor(maxVisible / 2));
+    let end = Math.min(total, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+
+  catShowingFrom(): number {
+    const total = this.filteredCategories().length;
+    return total === 0 ? 0 : (Math.min(this.catPage(), this.catTotalPages()) - 1) * this.catPageSize() + 1;
+  }
+
+  catShowingTo(): number {
+    return Math.min(Math.min(this.catPage(), this.catTotalPages()) * this.catPageSize(), this.filteredCategories().length);
   }
 
   /** Category IDs whose description text is actually clipped — gates the hover "read more" popover. */
@@ -384,10 +482,10 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   filteredCategories = computed(() => {
     const q = this.catSearch().toLowerCase();
     let list = q ? this.categories().filter(c => c.name.toLowerCase().includes(q)) : this.categories();
+    const dir = this.catSortDir() === 'asc' ? 1 : -1;
     switch (this.catSortBy()) {
-      case 'count':  list = [...list].sort((a,b) => (b._count?.businesses??0) - (a._count?.businesses??0)); break;
-      case 'newest': list = [...list].sort((a,b) => new Date((b as any).created_at ?? b.createdAt ?? 0).getTime() - new Date((a as any).created_at ?? a.createdAt ?? 0).getTime()); break;
-      default:       list = [...list].sort((a,b) => a.name.localeCompare(b.name));
+      case 'count':  list = [...list].sort((a,b) => dir * ((a._count?.businesses??0) - (b._count?.businesses??0))); break;
+      default:       list = [...list].sort((a,b) => dir * a.name.localeCompare(b.name));
     }
     return list;
   });
@@ -414,6 +512,7 @@ getCategoryAccent(icon?: string): string {
 
 
   ngOnInit(): void {
+    this.restoreSavedViewMode();
     this.initForms();
     this.loadCountries();
     this.loadCategories();
@@ -421,7 +520,49 @@ getCategoryAccent(icon?: string): string {
     this.loadPhoneCountries();
   }
 
-  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+  /** Resume the last selected grid/list view across navigations. */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(CAT_VIEW_STORAGE_KEY);
+    if (saved === 'grid' || saved === 'list') this.catViewMode.set(saved);
+  }
+
+  setCatViewMode(mode: 'grid' | 'list'): void {
+    this.catViewMode.set(mode);
+    sessionStorage.setItem(CAT_VIEW_STORAGE_KEY, mode);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.unlockPageScroll();
+  }
+
+  /** Locks background scroll while a modal/confirm popup is open. */
+  private lockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    if (this.previousBodyOverflow === null) {
+      this.previousBodyOverflow = body.style.overflow;
+    }
+    if (this.previousHtmlOverflow === null) {
+      this.previousHtmlOverflow = html.style.overflow;
+    }
+
+    body.style.overflow = 'hidden';
+    html.style.overflow = 'hidden';
+  }
+
+  private unlockPageScroll(): void {
+    const body = document.body;
+    const html = document.documentElement;
+
+    body.style.overflow = this.previousBodyOverflow ?? '';
+    html.style.overflow = this.previousHtmlOverflow ?? '';
+
+    this.previousBodyOverflow = null;
+    this.previousHtmlOverflow = null;
+  }
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
@@ -431,6 +572,41 @@ getCategoryAccent(icon?: string): string {
       this.showHeaderFab.set(window.scrollY >= 120);
       this.scrollTicking = false;
     });
+  }
+
+  /** Browser Back/Forward — steps through categories → list → detail instead of leaving the page. */
+  @HostListener('window:popstate', ['$event'])
+  onPopState(event: PopStateEvent): void {
+    this.applyHistoryState((event.state ?? null) as BusinessNavState | null);
+  }
+
+  private applyHistoryState(state: BusinessNavState | null): void {
+    if (state?.view === 'detail' && state.business) {
+      if (state.category) this.selectedCategory.set(state.category);
+      this.selectedBusiness.set(state.business);
+      this.activeImageIndex.set(0);
+      this.currentView.set('detail');
+      return;
+    }
+
+    if (state?.view === 'list' && state.category) {
+      this.selectedBusiness.set(null);
+      this.loadBusinesses(state.category, true, false);
+      return;
+    }
+
+    // Fallback: categories view (also covers the initial entry, whose state is null).
+    this.currentView.set('categories');
+    this.selectedCategory.set(null);
+    this.selectedBusiness.set(null);
+    this.businesses.set([]);
+    this.currentPage.set(1);
+    this.filterSearch.set('');
+    this.filterCountry.set(null);
+    this.filterOpeningHours.set(null);
+    this.filterStatus.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
   }
 
   // ── Phone countries (dial‑code dropdown) ────────────────────
@@ -535,12 +711,12 @@ getCategoryAccent(icon?: string): string {
 private initForms(): void {
     this.businessForm = this.fb.group({
       name:         ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      description:  ['', [Validators.required, Validators.maxLength(1000)]],
+      description:  ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
       categoryId:   ['', Validators.required],
       countryId:    [null, Validators.required],
-      stateId:      [null],
-      city:         [''],
-      address:      ['', [Validators.required, Validators.maxLength(500)]],
+      stateId:      [null, Validators.required],
+      city:         ['', Validators.required],
+      address:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
       pincode:      ['', [Validators.required, Validators.pattern(/^\S{3,12}$/)]],
       phoneCountryId: [null, Validators.required],
       phone:        ['', [Validators.required, Validators.maxLength(15), this.phoneValidator()]],
@@ -561,7 +737,7 @@ private initForms(): void {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       icon: ['bi-shop', Validators.required],
-      description: [''],
+      description: ['', [Validators.maxLength(300)]],
     });
 
     this.setupMapsLinkAutoGeneration();
@@ -676,10 +852,13 @@ private initForms(): void {
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false): void {
+  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
     if (resetPage) this.currentPage.set(1);
+    if (pushHistory) {
+      history.pushState({ view: 'list', category } satisfies BusinessNavState, '');
+    }
     this.loading.set(true);
 
     const params: Record<string, any> = {
@@ -714,6 +893,7 @@ private initForms(): void {
     this.selectedBusiness.set(business);
     this.activeImageIndex.set(0);
     this.currentView.set('detail');
+    history.pushState({ view: 'detail', category: this.selectedCategory() ?? undefined, business } satisfies BusinessNavState, '');
   }
 
   applyFilters(): void {
@@ -787,23 +967,16 @@ private initForms(): void {
     this.clearAllFilters();
   }
 
-  // Navigation
+  // Navigation — step back through browser history rather than jumping
+  // straight to the target view, so the physical Back button retraces the
+  // same steps (categories → list → detail) instead of skipping past them.
   goToCategories(): void {
-    this.currentView.set('categories');
-    this.selectedCategory.set(null);
-    this.businesses.set([]);
-    this.currentPage.set(1);
-    this.filterSearch.set('');
-    this.filterCountry.set(null);
-    this.filterOpeningHours.set(null);
-    this.filterStatus.set('');
-    this.filterDateFrom.set('');
-    this.filterDateTo.set('');
+    const steps = this.currentView() === 'detail' ? 2 : this.currentView() === 'list' ? 1 : 0;
+    if (steps > 0) history.go(-steps);
   }
 
   goToList(): void {
-    this.currentView.set('list');
-    this.selectedBusiness.set(null);
+    if (this.currentView() === 'detail') history.go(-1);
   }
 
   // Category CRUD
@@ -812,6 +985,7 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.reset({ name: '', icon: 'bi-shop', description: '' });
+    this.lockPageScroll();
     this.showAddCategoryModal.set(true);
   }
 
@@ -821,6 +995,7 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.patchValue({ name: cat.name, icon: cat.icon ?? 'bi-shop', description: (cat as any).description ?? '' });
+    this.lockPageScroll();
     this.showAddCategoryModal.set(true);
   }
 
@@ -832,6 +1007,7 @@ private initForms(): void {
   closeAddCategory(): void {
     this.showAddCategoryModal.set(false);
     this.editingCategory.set(null);
+    this.unlockPageScroll();
   }
 
   submitCategory(): void {
@@ -865,12 +1041,14 @@ private initForms(): void {
   openDeleteCategory(event: Event, cat: BusinessCategory): void {
     event.stopPropagation();
     this.categoryToDelete.set(cat);
+    this.lockPageScroll();
     this.showDeleteCategoryConfirm.set(true);
   }
 
   closeDeleteCategory(): void {
     this.showDeleteCategoryConfirm.set(false);
     this.categoryToDelete.set(null);
+    this.unlockPageScroll();
   }
 
   confirmDeleteCategory(): void {
@@ -895,18 +1073,25 @@ private initForms(): void {
   openAddBusiness(): void {
     this.editingBusiness.set(null);
     this.businessForm.reset();
+    this.businessSubmitAttempted.set(false);
+    // Pre-fill the category with whichever category the admin is currently
+    // browsing, instead of leaving it blank for them to pick again.
+    const currentCategory = this.selectedCategory();
+    if (currentCategory) this.businessForm.get('categoryId')?.setValue(currentCategory.id);
     this.selectedImages.set([]); this.selectedLogo.set(null); this.logoPreview.set(null);
     this.selectedDays.set([]);
     this.businessForm.get('openingDays')?.setValue('');
     this.bizStates.set([]); this.bizCities.set([]);
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
     this.openingHoursTouched.set(false);
+    this.lockPageScroll();
     this.showAddBusinessModal.set(true);
   }
 
   openEditBusiness(event: Event, biz: Business): void {
     event.stopPropagation();
     this.editingBusiness.set(biz);
+    this.businessSubmitAttempted.set(false);
 
     // Restore opening days
     const days = biz.openingDays ?? (biz as any).opening_days ?? '';
@@ -986,12 +1171,14 @@ private initForms(): void {
       });
     }
 
+    this.lockPageScroll();
     this.showAddBusinessModal.set(true);
   }
 
   closeAddBusiness(): void {
     this.showAddBusinessModal.set(false);
     this.editingBusiness.set(null);
+    this.unlockPageScroll();
   }
 
   onBusinessImagesChange(files: File[]): void {
@@ -999,7 +1186,13 @@ private initForms(): void {
   }
 
   submitBusiness(): void {
-    if (this.businessForm.invalid) { this.businessForm.markAllAsTouched(); return; }
+    this.businessSubmitAttempted.set(true);
+    this.businessForm.markAllAsTouched();
+    // logoPreview() covers both cases: a freshly-selected file, or an
+    // untouched existing logo when editing. It's only empty when the admin
+    // never picked one (create) or explicitly cleared it (edit) without
+    // choosing a replacement — either way, the logo is required.
+    if (this.businessForm.invalid || !this.logoPreview()) { return; }
     this.submitting.set(true);
     const raw: Record<string, any> = { ...this.businessForm.value };
 
@@ -1060,12 +1253,14 @@ private initForms(): void {
   openDeleteBusiness(event: Event, biz: Business): void {
     event.stopPropagation();
     this.businessToDelete.set(biz);
+    this.lockPageScroll();
     this.showDeleteBusinessConfirm.set(true);
   }
 
   closeDeleteBusiness(): void {
     this.showDeleteBusinessConfirm.set(false);
     this.businessToDelete.set(null);
+    this.unlockPageScroll();
   }
 
   confirmDeleteBusiness(): void {

@@ -90,7 +90,7 @@ export const ListCommunitiesQueryDto = z.object({
   to_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to_date must be YYYY-MM-DD').optional(),
   joined:     z.coerce.boolean().optional(),   // true = return only communities the caller has joined
   status:     z.enum(['active', 'inactive']).optional(),
-  sortBy:     z.enum(['name', 'joined']).default('joined'),
+  sortBy:     z.enum(['name', 'joined', 'category', 'country', 'visibility', 'members', 'posts', 'status']).default('joined'),
   sortDir:    z.enum(['asc', 'desc']).default('desc'),
 });
 

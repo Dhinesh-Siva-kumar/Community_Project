@@ -1,20 +1,20 @@
 import { z } from 'zod';
 
 export const CreateBusinessCategoryDto = z.object({
-  name: z.string().min(1, 'Category name is required').max(100),
+  name: z.string().min(2, 'Category name must be at least 2 characters').max(100, 'Category name must be at most 100 characters'),
   icon: z.string().optional(),
-  description: z.string().optional(),
+  description: z.string().max(300, 'Description must be at most 300 characters').optional(),
 });
 
 export const UpdateBusinessCategoryDto = CreateBusinessCategoryDto.partial();
 export type UpdateBusinessCategoryDtoType = z.infer<typeof UpdateBusinessCategoryDto>;
 
 export const CreateBusinessDto = z.object({
-  name: z.string().min(1, 'Business name is required'),
+  name: z.string().min(2, 'Business name must be at least 2 characters').max(100, 'Business name must be at most 100 characters'),
   categoryId: z.string().uuid('Valid category ID required'),
-  description: z.string().optional(),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(1000, 'Description must be at most 1000 characters'),
   images: z.array(z.string()).optional(),
-  address: z.string().optional(),
+  address: z.string().min(5, 'Address must be at least 5 characters').max(500, 'Address must be at most 500 characters'),
   pincode: z.string().optional(),
   country: z.string().optional(),
   location: z.string().optional(),
@@ -25,8 +25,8 @@ export const CreateBusinessDto = z.object({
   website: z.string().optional(),
   openingHours: z.string().optional(),
   // New fields
-  city: z.string().optional(),
-  state: z.string().optional(),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
   openingDays: z.string().optional(),
   whatsapp: z.string().optional(),
   mapsLink: z.string().optional(),

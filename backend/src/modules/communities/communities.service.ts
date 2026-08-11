@@ -100,7 +100,7 @@ export async function findAll(params: {
   joined?: boolean;
   userId?: string;
   status?: 'active' | 'inactive';
-  sortBy?: 'name' | 'joined';
+  sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
 }) {
   const {
@@ -214,9 +214,29 @@ export async function findAll(params: {
     countQuery.whereIn('id', db('community_members').select('community_id').where('user_id', userId));
   }
 
-  const sortColumn = sortBy === 'name' ? 'c.name' : 'c.created_at';
+  // ── Sort — most fields map to a plain column; members/posts/visibility
+  // need a raw expression since they're either aggregated or derived from
+  // multiple boolean columns. sortDir is Zod-validated to 'asc'|'desc'
+  // before reaching this function, so it's safe to interpolate directly.
+  switch (sortBy) {
+    case 'name':       query.orderBy('c.name', sortDir); break;
+    case 'category':   query.orderBy('im.interest_name', sortDir); break;
+    case 'country':    query.orderBy('c.country', sortDir); break;
+    case 'status':     query.orderBy('c.is_active', sortDir); break;
+    case 'visibility':
+      query.orderByRaw(`CASE WHEN c.is_global THEN 2 WHEN c.is_private THEN 1 ELSE 0 END ${sortDir}`);
+      break;
+    case 'members':
+      query.orderByRaw(`(SELECT COUNT(*) FROM community_members cm WHERE cm.community_id = c.id) ${sortDir}`);
+      break;
+    case 'posts':
+      query.orderByRaw(`(SELECT COUNT(*) FROM posts p WHERE p.community_id = c.id) ${sortDir}`);
+      break;
+    default:           query.orderBy('c.created_at', sortDir);
+  }
+
   const [communities, [{ total }]] = await Promise.all([
-    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    query.limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 
