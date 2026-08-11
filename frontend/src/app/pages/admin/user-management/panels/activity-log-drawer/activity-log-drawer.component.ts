@@ -3,21 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../../../core/services/user.service';
 import { AuditLog, AuditLogResponse } from '../../../../../core/models';
-
-const ACTION_COLORS: Record<string, string> = {
-  USER_CREATED: '#22c55e', USER_DELETED: '#ef4444', USER_BLOCKED: '#f59e0b',
-  USER_UNBLOCKED: '#22c55e', ROLE_CHANGED: '#6366f1', PASSWORD_RESET: '#0ea5e9',
-  PROFILE_UPDATE: '#8b5cf6', USER_LOGIN: '#64748b', USER_REGISTER: '#22c55e',
-  NOTIFICATION_SENT: '#f97316', TRUST_GRANTED: '#f59e0b', TRUST_REVOKED: '#94a3b8',
-};
-const ACTION_ICONS: Record<string, string> = {
-  USER_CREATED: 'bi-person-plus-fill', USER_DELETED: 'bi-trash-fill',
-  USER_BLOCKED: 'bi-lock-fill', USER_UNBLOCKED: 'bi-unlock-fill',
-  ROLE_CHANGED: 'bi-person-gear', PASSWORD_RESET: 'bi-key-fill',
-  PROFILE_UPDATE: 'bi-pencil-fill', USER_LOGIN: 'bi-box-arrow-in-right',
-  USER_REGISTER: 'bi-person-badge-fill', NOTIFICATION_SENT: 'bi-bell-fill',
-  TRUST_GRANTED: 'bi-shield-fill-check', TRUST_REVOKED: 'bi-shield-x',
-};
+import { getAuditActionColor, getAuditActionIcon, formatAuditAction } from '../../../../../core/constants/audit-actions';
 
 @Component({
   selector: 'app-activity-log-drawer',
@@ -66,8 +52,8 @@ export class ActivityLogDrawerComponent implements OnInit {
   onFilterChange(): void { this.page.set(1); this.load(); }
   goToPage(p: number): void { if (p < 1 || p > this.totalPages()) return; this.page.set(p); this.load(); }
 
-  getColor(action: string): string { return ACTION_COLORS[action] ?? '#94a3b8'; }
-  getIcon(action: string):  string { return ACTION_ICONS[action]  ?? 'bi-activity'; }
+  getColor(action: string): string { return getAuditActionColor(action); }
+  getIcon(action: string):  string { return getAuditActionIcon(action); }
 
   getInitials(log: AuditLog): string {
     return (log.actor?.displayName ?? log.actor?.userName ?? '?').charAt(0).toUpperCase();
@@ -85,7 +71,6 @@ export class ActivityLogDrawerComponent implements OnInit {
   }
 
   formatAction(action: string): string {
-    return action.replace(/_/g, ' ').toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    return formatAuditAction(action);
   }
 }

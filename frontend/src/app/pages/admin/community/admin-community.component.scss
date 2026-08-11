@@ -1140,75 +1140,394 @@
   }
 }
 
-// ── Pagination ────────────────────────────────────────────────
-.cm-pagination-row {
+// ── VIEW TOGGLE (grid / table) ──────────────────────────────────
+.um-view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  background: $color-bg-light;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.um-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-sm;
+  border: none;
+  background: none;
+  color: $color-text-muted;
+  cursor: pointer;
+  transition: all $duration-short $easing-standard;
+
+  i { font-size: 0.9rem; }
+
+  &:hover { background: rgba($color-stone-900, 0.05); }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &.active {
+    background: $color-text-primary;
+    color: $color-white;
+  }
+}
+
+// ── PAGE LAYOUT — mirrors .um-layout / .um-users-section on the User
+// Management page, so the table view can fill the viewport with a fixed
+// size + internal scroll instead of growing the whole page. min-height
+// (not height) so short lists still fill the viewport, but long lists grow
+// the page (and scroll it) instead of clipping content.
+// NOTE: no `gap` here — every section below (.jb-page-header,
+// .admin-stats-bar, .jb-filter-panel, .jb-active-chips, .jb-meta) already
+// carries its own margin-bottom; adding a flex gap on top of those doubled
+// the spacing between them.
+.cm-page-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - #{$header-height} - 3rem);
+}
+
+.cm-results-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── TABLE VIEW (mirrors .um-table* on the Post Approval / User Management pages) ──
+.um-table-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+
+  // Fixed-size variant used by the table view — grows to fill the
+  // remaining viewport space (via .cm-results-section flex:1) and scrolls
+  // its own body internally instead of growing the whole page.
+  &--fixed {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    .table-responsive {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      // NOTE: no `scroll-behavior: smooth` — it queues a CSS scroll animation
+      // per wheel tick, and reversing direction (scroll down then up) fights
+      // the tail end of that animation, making the up-scroll feel stuck.
+      // Native OS/trackpad momentum scrolling is already smooth on its own.
+      // Contains the internal scroll to this box — reaching the top/bottom
+      // no longer hands off ("stacks") momentum onto the page scroll behind it.
+      overscroll-behavior: contain;
+
+      // Themed scrollbar — amber accent, matches the module's brand colour.
+      scrollbar-width: thin;
+      scrollbar-color: rgba(251, 191, 36, 0.45) transparent;
+
+      &::-webkit-scrollbar       { width: 6px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.45); border-radius: 999px; }
+      &::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.7); }
+    }
+
+    .um-th { position: sticky; top: 0; z-index: 2; }
+  }
+}
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr:first-child th:first-child { border-top-left-radius: $radius-lg; }
+  thead tr:first-child th:last-child  { border-top-right-radius: $radius-lg; }
+  tbody tr:last-child td:first-child  { border-bottom-left-radius: $radius-lg; }
+  tbody tr:last-child td:last-child   { border-bottom-right-radius: $radius-lg; }
+}
+
+.um-th {
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $color-text-muted;
+  background: $color-bg-page;
+  border-bottom: 1px solid $color-border;
+  white-space: nowrap;
+
+  &--actions { text-align: right; padding-right: 16px; }
+
+  &--sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+
+    &:hover { color: $color-primary-darker; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+  }
+
+  // Currently-sorted column — text stays highlighted even without hover.
+  &--active {
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.um-th__sort-icon {
+  margin-left: 4px;
+  font-size: 0.65rem;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
+  .um-th--active & { opacity: 1; color: $color-primary-darker; }
+}
+
+.um-row {
+  cursor: pointer;
+  transition: background 0.2s ease;
+  &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
+  &:hover { background: rgba(254, 243, 199, 0.35); }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
+.um-td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  &--actions { padding-right: 12px; }
+}
+
+.um-td-text { font-size: $font-size-sm; color: $color-text-muted; }
+
+.um-user-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.2;
+  margin-right: 6px;
+}
+
+.um-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  &--initials {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #fff;
+    font-size: 0.9rem;
+  }
+}
+
+.um-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &--trusted { background: #fffbeb; color: $color-warning; }
+  &--blocked { background: #fef2f2; color: $color-danger; }
+}
+
+.um-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+// Icon action button — mirrors .um-iab on the User Management page,
+// including its CSS-only tooltip (via the `data-tip` attribute).
+.um-iab {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  background: none;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &[data-tip]::before,
+  &[data-tip]::after {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: $z-tooltip;
+  }
+
+  &[data-tip]::before {
+    content: attr(data-tip);
+    background: $color-text-primary;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: $font-semibold;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: $radius-xs;
+    letter-spacing: 0.2px;
+    box-shadow: $shadow-3;
+  }
+
+  &[data-tip]::after {
+    content: '';
+    top: calc(100% + 2px);
+    border: 4px solid transparent;
+    border-bottom-color: $color-text-primary;
+    border-top: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  &:hover[data-tip]::before,
+  &:hover[data-tip]::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  // Light tinted background at rest — same soft-badge treatment and exact
+  // colour values on both the Community and Business tables; fills solid
+  // on hover for feedback.
+  &--view {
+    background: rgba(251, 191, 36, 0.12);
+    border-color: rgba(251, 191, 36, 0.3);
+    color: $color-primary-dark;
+    &:hover { background: $color-primary; border-color: $color-primary; color: $color-on-primary; box-shadow: $shadow-primary-sm; }
+  }
+
+  &--edit {
+    background: rgba(2,132,199,0.08);
+    border-color: rgba(2,132,199,0.22);
+    color: #0284C7;
+    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+  }
+
+  &--delete {
+    background: rgba(220,38,38,0.06);
+    border-color: rgba(220,38,38,0.2);
+    color: $color-danger;
+    &:hover { background: $color-danger; border-color: $color-danger; color: #fff; box-shadow: 0 4px 10px rgba(220,38,38,0.3); }
+  }
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+
+// ── Pagination — mirrors .um-pagination on the User Management page ──
+.um-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 12px;
-  margin-top: 1.75rem;
+  flex-wrap: wrap;
+  margin-top: $spacing-lg;
+  padding: 14px 20px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-page;
 
-  .page-pagination { margin-top: 0; flex: 1; }
-}
+  &__left  { display: flex; align-items: center; gap: 10px; }
+  &__pages { display: flex; align-items: center; gap: 3px; }
 
-.cm-pagesize {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  color: $color-text-muted;
-
-  &__select { width: 80px; }
-}
-
-.page-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.75rem;
-
-  .pagination {
-    gap: 4px;
-
-    .page-link {
-      border-radius: 8px !important;
-      margin: 0;
-      border: 1px solid rgba(148, 163, 184, 0.45);
-      background: #ffffff;
-      color: $color-stone-600;
-      min-width: 34px;
-      height: 34px;
-      padding: 0 0.7rem;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-
-      &:hover {
-        background-color: #ffffff;
-        border-color: rgba(100, 116, 139, 0.5);
-        color: #334155;
-        box-shadow: none;
-      }
-    }
-
-    .page-item.active .page-link {
-      background: #ffffff;
-      border-color: $color-primary;
-      color: $color-primary-darker;
-      font-weight: 700;
-      box-shadow: none;
-    }
-
-    .page-item.disabled .page-link {
-      opacity: 0.45;
-      background: #f8fafc;
-      border-color: rgba(203, 213, 225, 0.8);
-      color: $color-stone-400;
-      box-shadow: none;
-    }
+  &__size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
   }
+
+  &__info {
+    font-size: $font-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+
+    strong { color: $color-text-primary; font-weight: $font-semibold; }
+  }
+
+  // Nested inside .um-table-card--fixed — shares the card's border/shadow
+  // instead of drawing its own, and stays pinned as a non-scrolling footer.
+  &--nested {
+    margin-top: 0;
+    flex-shrink: 0;
+    border: none;
+    border-top: 1px solid $color-border;
+    border-radius: 0 0 $radius-lg $radius-lg;
+  }
+}
+
+.um-pg-divider {
+  width: 1px;
+  height: 20px;
+  background: $color-border;
+  flex-shrink: 0;
+}
+
+.um-pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border-radius: $radius-md;
+  border: 1.5px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+  font-size: $font-sm;
+  font-weight: $font-medium;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+
+  i { font-size: 0.7rem; }
+
+  &:not(:disabled):hover { border-color: $color-primary; background: $color-primary-light; color: $color-primary-dark; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 1px; }
+
+  &--num { min-width: 34px; font-variant-numeric: tabular-nums; }
+
+  &--active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    font-weight: $font-bold;
+    box-shadow: $shadow-primary-sm;
+    &:hover { background: $color-primary-dark; border-color: $color-primary-dark; color: $color-on-primary; }
+  }
+}
+
+// Sizing wrapper for the rows-per-page <app-searchable-select>
+.jb-select-wrap {
+  width: 150px;
+  flex-shrink: 0;
+  &--xs { width: 88px; }
 }
 
 // ── Modal styles: aligned with Add User popup design ──────────
@@ -1762,6 +2081,82 @@
     transform: none;
     box-shadow: none;
   }
+
+  // Danger variant — used by the delete-confirmation popup instead of the
+  // amber `--primary` fill, same sizing/radius as the rest of `.au-btn`.
+  &.au-btn--danger {
+    background: $color-danger;
+    border-color: $color-danger;
+    color: $white;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+
+    &:not(:disabled):hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35);
+    }
+  }
+}
+
+// ── Delete-confirmation popup ──────────────────────────────────
+// Reuses the same `.au-backdrop` (blur) / `.au-modal` (radius, shadow) /
+// `.au-footer` + `.au-btn` tokens as the create/edit modal above, but sized
+// down for a short confirmation and re-themed red instead of amber.
+.au-modal.cm-delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 32px));
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 55%, #b91c1c 130%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__icon.cm-delete-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fca5a5;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  i { color: #fca5a5; font-size: 1.1rem; }
+}
+
+.au-body.cm-delete-modal-body {
+  padding: 20px 24px 4px;
+}
+
+.cm-delete-modal-text {
+  font-size: $font-sm;
+  color: $color-text-muted;
+  line-height: 1.6;
+  margin: 0 0 4px;
+
+  strong { color: $color-text-primary; font-weight: $font-semibold; }
 }
 
 // ── Modal searchable-select overrides ─────────────────────────

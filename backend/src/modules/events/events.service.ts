@@ -1,6 +1,7 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
+import { logAudit } from '../../services/audit.service';
 import type { CreateEventDtoType, UpdateEventDtoType, ListEventsQueryDtoType } from './events.dto';
 
 export async function create(data: CreateEventDtoType, userId: string) {
@@ -26,6 +27,7 @@ export async function create(data: CreateEventDtoType, userId: string) {
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first();
   const e = event as Record<string, unknown>;
+  await logAudit(userId, 'EVENT_CREATED', { title: data.title }, 'events', e['id'] as string);
   return {
     id: e['id'],
     title: e['title'],
@@ -52,7 +54,7 @@ export async function create(data: CreateEventDtoType, userId: string) {
 
 export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean }) {
   const {
-    pincode, page, limit, search, country, status,
+    pincode, nearPincode, eventMode, page, limit, search, country, status,
     dateFrom, dateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
   } = params;
   const offset = (page - 1) * limit;
@@ -76,6 +78,7 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
   }
 
   if (pincode) { query.andWhere('e.pincode', pincode); countQuery.andWhere({ pincode }); }
+  if (eventMode) { query.andWhere('e.event_mode', eventMode); countQuery.andWhere({ event_mode: eventMode }); }
   if (search) {
     query.andWhere(function () { this.whereILike('e.title', `%${search}%`).orWhereILike('e.description', `%${search}%`); });
     countQuery.andWhere(function () { this.whereILike('title', `%${search}%`).orWhereILike('description', `%${search}%`); });
@@ -94,9 +97,19 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     countQuery.andWhere('created_at', '<=', toEnd);
   }
 
-  const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
+  // 'near' sorts offline/hybrid events in nearPincode to the top (event date
+  // as the tiebreaker), instead of filtering everything else out.
+  if (sortBy === 'near' && nearPincode) {
+    query
+      .orderByRaw("(e.event_mode != 'Online' AND e.pincode = ?) DESC", [nearPincode])
+      .orderBy('e.event_date', 'asc');
+  } else {
+    const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
+    query.orderBy(sortColumn, sortDir);
+  }
+
   const [events, [{ total }]] = await Promise.all([
-    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    query.limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
   ]);
 
@@ -164,7 +177,8 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
   if (!event) throw new AppError(404, 'Event not found');
 
-  if (event['user_id'] !== userId) {
+  const byAdmin = event['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own events');
   }
@@ -193,6 +207,8 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
     deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
   }
 
+  await logAudit(userId, 'EVENT_UPDATED', { byAdmin, fields: Object.keys(updateData) }, 'events', id);
+
   return findOne(id);
 }
 
@@ -200,12 +216,14 @@ export async function deleteEvent(id: string, userId: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
   if (!event) throw new AppError(404, 'Event not found');
 
-  if (event['user_id'] !== userId) {
+  const byAdmin = event['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own events');
   }
 
   await db('events').where({ id }).delete();
   deleteUploadedFiles(event['images']);
+  await logAudit(userId, 'EVENT_DELETED', { byAdmin, title: event['title'] }, 'events', id);
   return { message: 'Event deleted successfully' };
 }

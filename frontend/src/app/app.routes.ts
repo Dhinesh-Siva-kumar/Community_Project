@@ -138,6 +138,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'audit-log',
+        loadComponent: () =>
+          import('./pages/admin/audit-log/audit-log.component').then(
+            (m) => m.AuditLogComponent
+          ),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./pages/admin/profile/profile.component').then(

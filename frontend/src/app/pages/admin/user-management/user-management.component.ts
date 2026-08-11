@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { UserService, UserFilterParams } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -12,6 +13,9 @@ import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-de
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 
 type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
+
+// Remembers the last selected view mode (table/grid) across navigations.
+const VIEW_STORAGE_KEY = 'admin-user-management:viewMode';
 
 @Component({
   selector: 'app-user-management',
@@ -28,6 +32,7 @@ export class UserManagementComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast       = inject(ToastService);
+  private route        = inject(ActivatedRoute);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   users      = signal<User[]>([]);
@@ -111,7 +116,10 @@ export class UserManagementComponent implements OnInit {
 
   // ── View mode (table / grid) ────────────────────────────────────────────
   viewMode = signal<'table' | 'grid'>('table');
-  setViewMode(mode: 'table' | 'grid'): void { this.viewMode.set(mode); }
+  setViewMode(mode: 'table' | 'grid'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
 
   // ── Panel visibility (add-user + detail drawers only) ─────────────────────
   showAddDrawer        = signal(false);
@@ -132,8 +140,20 @@ export class UserManagementComponent implements OnInit {
   openDropdownId = signal<string | null>(null);
 
   ngOnInit(): void {
+    this.restoreSavedViewMode();
     this.loadUsers();
     this.loadCountries();
+
+    // Deep-link support — e.g. "View Record" from the Audit Log page opens
+    // this user's detail drawer directly via /admin/user-management?userId=…
+    const userId = this.route.snapshot.queryParamMap.get('userId');
+    if (userId) this.viewUser(userId);
+  }
+
+  /** Resume the last selected table/grid view across navigations. */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'table' || saved === 'grid') this.viewMode.set(saved);
   }
 
   loadCountries(): void {

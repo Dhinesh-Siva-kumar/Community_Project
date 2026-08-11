@@ -630,7 +630,10 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  padding: 12px;
+  // Extra top padding clears the checkbox pinned to the card's top-left
+  // corner, so the author row itself stays flush-left with the rest of
+  // the card content instead of being indented to dodge it.
+  padding: 28px 12px 12px;
 }
 
 .post-card__author {
@@ -639,8 +642,6 @@
   gap: 8px;
   margin-bottom: 6px;
   min-width: 0;
-  // Clears the checkbox pinned to the card's top-left corner
-  padding-left: 22px;
 }
 
 .post-card__avatar {
@@ -680,7 +681,14 @@
   margin-bottom: 6px;
 
   .badge { font-size: 10px; }
-  .um-td-text { font-size: 11px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+// Community name — shown in full (no truncation); wraps if the row runs out
+// of space instead of clipping with an ellipsis.
+.post-card__community {
+  font-size: 11px;
+  color: $color-text-muted;
+  word-break: break-word;
 }
 
 .post-card__content {
@@ -842,7 +850,7 @@
   cursor: pointer;
   font-size: 0.82rem;
   background: none;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
 
   &[data-tip]::before,
   &[data-tip]::after {
@@ -887,18 +895,21 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  // Brand-palette approve/reject — amber vs saffron (this app's actual theme
+  // tokens), not Bootstrap green/red. Mirrors the &--view button below:
+  // tinted at rest, solid fill + $color-on-primary text on hover.
   &--approve {
-    background: #ecfdf5;
-    border-color: rgba(#16a34a, 0.25);
-    color: #16a34a;
-    &:hover { background: #16a34a; border-color: #16a34a; color: #fff; box-shadow: 0 4px 10px rgba(#16a34a, 0.3); }
+    background: $color-primary-light;
+    border-color: rgba($color-primary-darker, 0.3);
+    color: $color-primary-darker;
+    &:hover { background: $color-primary-darker; border-color: $color-primary-darker; color: $color-on-primary; box-shadow: $shadow-primary-sm; }
   }
 
   &--reject {
-    background: #fef2f2;
-    border-color: rgba(#dc2626, 0.2);
-    color: #dc2626;
-    &:hover { background: #dc2626; border-color: #dc2626; color: #fff; box-shadow: 0 4px 10px rgba(#dc2626, 0.3); }
+    background: rgba($color-saffron, 0.12);
+    border-color: rgba($color-saffron, 0.35);
+    color: #c2410c;
+    &:hover { background: $color-saffron; border-color: $color-saffron; color: $color-on-primary; box-shadow: 0 4px 10px rgba($color-saffron, 0.35); }
   }
 
   &--view {
@@ -957,7 +968,8 @@
   font-size: 1.4rem;
   margin: 0 auto 16px;
 
-  &--danger { background: #fef2f2; color: $color-danger; box-shadow: 0 0 0 8px rgba($color-danger, 0.06); }
+  &--success { background: $color-primary-light; color: $color-primary-darker; box-shadow: 0 0 0 8px rgba($color-primary-darker, 0.06); }
+  &--danger { background: rgba($color-saffron, 0.12); color: #c2410c; box-shadow: 0 0 0 8px rgba($color-saffron, 0.06); }
 }
 
 .um-confirm-title {
@@ -977,6 +989,31 @@
   display: flex;
   gap: 10px;
   justify-content: center;
+
+  // Match the primary submit button style used elsewhere in the app
+  // (.au-btn.cm-btn-submit.au-btn--primary): solid fill, pill height,
+  // brand shadow at rest, darker fill + bigger shadow on hover.
+  .um-btn--success {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 10px;
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
+
+  .um-btn--danger {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 10px;
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
 }
 
 // Optional rejection-reason textarea inside the reject confirm dialogs
@@ -1010,7 +1047,7 @@
   font-weight: $font-weight-semibold;
   border: 1.5px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
 
   &:disabled { opacity: 0.6; cursor: not-allowed; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
@@ -1024,18 +1061,21 @@
     &:not(:disabled):hover { border-color: $color-border-strong; background: $color-bg-page; }
   }
 
+  // Gold for approve; tinted saffron for reject (mirrors .um-iab--reject).
+  // Confirm-dialog buttons override this back to solid gold — see
+  // .um-confirm-btns below.
   &--success {
-    background: $color-success;
-    border-color: $color-success;
-    color: #fff;
-    &:not(:disabled):hover { background: #15803d; border-color: #15803d; }
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; }
   }
 
   &--danger {
-    background: $color-danger;
-    border-color: $color-danger;
-    color: #fff;
-    &:not(:disabled):hover { background: $color-error-dark; border-color: $color-error-dark; }
+    background: rgba($color-saffron, 0.12);
+    border-color: rgba($color-saffron, 0.35);
+    color: #c2410c;
+    &:not(:disabled):hover { background: $color-saffron; border-color: $color-saffron; color: $color-on-primary; }
   }
 }
 
@@ -1177,6 +1217,22 @@
   padding: 14px 20px;
   border-top: 1px solid $color-border;
   flex-shrink: 0;
+
+  // Match the card/table action icons exactly: tinted at rest, solid brand
+  // fill on hover — instead of the always-solid .um-btn--success/--danger.
+  .um-btn--success {
+    background: $color-primary-light;
+    border-color: rgba($color-primary-darker, 0.3);
+    color: $color-primary-darker;
+    &:not(:disabled):hover { background: $color-primary-darker; border-color: $color-primary-darker; color: $color-on-primary; }
+  }
+
+  .um-btn--danger {
+    background: rgba($color-saffron, 0.12);
+    border-color: rgba($color-saffron, 0.35);
+    color: #c2410c;
+    &:not(:disabled):hover { background: $color-saffron; border-color: $color-saffron; color: $color-on-primary; }
+  }
 }
 
 // ── TABLE VIEW (mirrors .um-table* on the User Management page) ──

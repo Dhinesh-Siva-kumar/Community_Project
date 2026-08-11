@@ -154,7 +154,7 @@
   <!-- Bulk Actions Bar -->
   <div class="jb-bulk-actions-bar">
     <div class="jb-bulk-actions-left">
-      <button class="btn btn-outline-secondary btn-sm" (click)="toggleSelectAll()">
+      <button class="btn btn-outline-secondary btn-sm" [disabled]="bulkProcessing()" (click)="toggleSelectAll()">
         <i class="bi" [ngClass]="selectAll() ? 'bi-check-square' : 'bi-square'"></i>
         {{ selectAll() ? 'Deselect All' : 'Select All' }}
       </button>
@@ -162,7 +162,7 @@
     <div class="jb-bulk-actions-right">
       @if (selectedCount() > 0) {
         <span class="jb-selection-count">{{ selectedCount() }} selected</span>
-        <button class="um-btn um-btn--sm um-btn--success" [disabled]="bulkProcessing()" (click)="approveSelected()">
+        <button class="um-btn um-btn--sm um-btn--success" [disabled]="bulkProcessing()" (click)="requestApproveSelected()">
           @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-1"></span> }
           Approve ({{ selectedCount() }})
         </button>
@@ -196,7 +196,7 @@
               role="button" tabindex="0" (click)="viewPost(post)" (keydown.enter)="viewPost(post)">
 
               <div class="post-card__select" (click)="$event.stopPropagation()">
-                <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" (change)="toggleSelect(post.id)" />
+                <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(post.id)" />
               </div>
 
               <div class="post-card__body">
@@ -232,10 +232,10 @@
                     @if (approvingId() === post.id || rejectingId() === post.id) {
                       <span class="spinner-border spinner-border-sm text-primary"></span>
                     } @else {
-                      <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" (click)="approvePost(post.id)">
+                      <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" [disabled]="bulkProcessing()" (click)="requestApprove(post)">
                         <i class="bi bi-check-lg"></i>
                       </button>
-                      <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" (click)="requestReject(post)">
+                      <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" [disabled]="bulkProcessing()" (click)="requestReject(post)">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     }
@@ -268,7 +268,7 @@
                 @for (post of group.posts; track post.id) {
                   <tr class="um-row">
                     <td class="um-td">
-                      <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" (change)="toggleSelect(post.id)" />
+                      <input type="checkbox" class="form-check-input" [checked]="isSelected(post.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(post.id)" />
                     </td>
                     <td class="um-td">
                       <div class="um-user-cell">
@@ -298,10 +298,10 @@
                         @if (approvingId() === post.id || rejectingId() === post.id) {
                           <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
                         } @else {
-                          <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" (click)="approvePost(post.id)">
+                          <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" [disabled]="bulkProcessing()" (click)="requestApprove(post)">
                             <i class="bi bi-check-lg"></i>
                           </button>
-                          <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" (click)="requestReject(post)">
+                          <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" [disabled]="bulkProcessing()" (click)="requestReject(post)">
                             <i class="bi bi-x-lg"></i>
                           </button>
                         }
@@ -371,6 +371,23 @@
         (click)="loadPendingPosts()" aria-label="Refresh pending posts" title="Refresh">
   <i class="bi bi-arrow-clockwise"></i>
 </button>
+
+<!-- ── APPROVE CONFIRM (single) ─────────────────────────────── -->
+@if (confirmApproveTarget(); as post) {
+  <div class="um-confirm-backdrop" (click)="cancelApproveConfirm()">
+    <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="um-confirm-icon um-confirm-icon--success"><i class="bi bi-check-circle-fill"></i></div>
+      <h6 class="um-confirm-title">Approve Post</h6>
+      <p class="um-confirm-desc">
+        Are you sure you want to approve this post by <strong>{{ post.user?.displayName ?? post.user?.userName }}</strong>? It will become visible to the community.
+      </p>
+      <div class="um-confirm-btns">
+        <button class="um-btn um-btn--ghost" (click)="cancelApproveConfirm()">Cancel</button>
+        <button class="um-btn um-btn--success" (click)="confirmApproveExecute()">Approve Post</button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ── REJECT CONFIRM (single) ──────────────────────────────── -->
 @if (confirmRejectTarget(); as post) {
@@ -449,10 +466,10 @@
 
       <div class="pa-view-footer">
         <span class="flex-grow-1"></span>
-        <button class="um-btn um-btn--danger" [disabled]="rejectingId() === vp.id" (click)="closeViewPost(); requestReject(vp)">
+        <button class="um-btn um-btn--danger" [disabled]="rejectingId() === vp.id || bulkProcessing()" (click)="closeViewPost(); requestReject(vp)">
           <i class="bi bi-x-lg me-1"></i>Reject
         </button>
-        <button class="um-btn um-btn--success" [disabled]="approvingId() === vp.id" (click)="closeViewPost(); approvePost(vp.id)">
+        <button class="um-btn um-btn--success" [disabled]="approvingId() === vp.id || bulkProcessing()" (click)="closeViewPost(); requestApprove(vp)">
           <i class="bi bi-check-lg me-1"></i>Approve
         </button>
       </div>
@@ -465,6 +482,24 @@
   [isOpen]="imageViewerOpen()"
   [initialIndex]="imageViewerInitialIndex()"
   (close)="closeImageViewer()"></app-image-viewer>
+
+<!-- ── APPROVE CONFIRM (bulk) ───────────────────────────────── -->
+@if (confirmApproveBulk()) {
+  <div class="um-confirm-backdrop" (click)="cancelApproveSelectedConfirm()">
+    <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="um-confirm-icon um-confirm-icon--success"><i class="bi bi-check-circle-fill"></i></div>
+      <h6 class="um-confirm-title">Approve {{ selectedCount() }} post{{ selectedCount() === 1 ? '' : 's' }}?</h6>
+      <p class="um-confirm-desc">These posts will become visible to the community.</p>
+      <div class="um-confirm-btns">
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelApproveSelectedConfirm()">Cancel</button>
+        <button class="um-btn um-btn--success" [disabled]="bulkProcessing()" (click)="confirmApproveSelectedExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Approve
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ── REJECT CONFIRM (bulk) ────────────────────────────────── -->
 @if (confirmRejectBulk()) {

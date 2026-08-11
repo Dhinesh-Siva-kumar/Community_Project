@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { AppError } from '../../middleware/errorHandler';
 import { env } from '../../config/env';
-import { logAudit } from '../../services/audit.service';
+import { logAudit, listAuditLogs } from '../../services/audit.service';
 import type {
   UpdateUserDtoType,
   AdminCreateUserDtoType,
@@ -149,6 +149,7 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   await db('users').where({ id: userId }).update({ profile_completion: profileCompletion });
 
   const finalUser = await db('users').where({ id: userId }).first() as UserRow;
+  await logAudit(userId, 'PROFILE_UPDATE', { fields: Object.keys(updateData) }, 'users', userId);
   return toClientUser(finalUser);
 }
 
@@ -348,55 +349,7 @@ export async function adminResetPassword(adminId: string, userId: string, data: 
 // Admin — audit log
 // ---------------------------------------------------------------------------
 export async function getAuditLogs(page: number, limit: number, action?: string, userId?: string) {
-  const offset = (page - 1) * limit;
-
-  const query = db('audit_logs as al')
-    .leftJoin('users as u', 'al.user_id', 'u.id')
-    .select(
-      'al.id', 'al.action', 'al.resource', 'al.resource_id',
-      'al.metadata', 'al.created_at',
-      'u.id as actor_id', 'u.display_name as actor_name',
-      'u.user_name as actor_username', 'u.avatar as actor_avatar',
-    )
-    .orderBy('al.created_at', 'desc');
-
-  const countQuery = db('audit_logs');
-
-  if (action) {
-    query.where('al.action', action);
-    countQuery.where({ action });
-  }
-
-  if (userId) {
-    query.where('al.resource', 'users').andWhere('al.resource_id', userId);
-    countQuery.where({ resource: 'users', resource_id: userId });
-  }
-
-  const [logs, [{ total }]] = await Promise.all([
-    query.limit(limit).offset(offset),
-    countQuery.count({ total: '*' }),
-  ]);
-
-  return {
-    data: (logs as any[]).map((l) => ({
-      id:            l.id,
-      action:        l.action,
-      resource:      l.resource,
-      resourceId:    l.resource_id,
-      metadata:      l.metadata ? (() => { try { return JSON.parse(l.metadata); } catch { return l.metadata; } })() : null,
-      createdAt:     String(l.created_at),
-      actor: l.actor_id ? {
-        id:          l.actor_id,
-        displayName: l.actor_name,
-        userName:    l.actor_username,
-        avatar:      l.actor_avatar,
-      } : null,
-    })),
-    total:      Number(total),
-    page,
-    limit,
-    totalPages: Math.ceil(Number(total) / limit),
-  };
+  return listAuditLogs({ page, limit, action, targetUserId: userId });
 }
 
 // ---------------------------------------------------------------------------
@@ -459,22 +412,26 @@ export async function unblockUser(userId: string, adminId?: string) {
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isBlocked: updated.is_blocked };
 }
 
-export async function trustUser(userId: string) {
+export async function trustUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first();
   if (!user) throw new AppError(404, 'User not found');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_trusted: true })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
 
+  if (adminId) await logAudit(adminId, 'TRUST_GRANTED', { targetUser: updated.user_name }, 'users', userId);
+
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isTrusted: updated.is_trusted };
 }
 
-export async function untrustUser(userId: string) {
+export async function untrustUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first();
   if (!user) throw new AppError(404, 'User not found');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_trusted: false })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
+
+  if (adminId) await logAudit(adminId, 'TRUST_REVOKED', { targetUser: updated.user_name }, 'users', userId);
 
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isTrusted: updated.is_trusted };
 }

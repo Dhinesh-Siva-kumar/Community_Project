@@ -1,6 +1,7 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
+import { logAudit } from '../../services/audit.service';
 import type { CreateJobDtoType, UpdateJobDtoType, ListJobsQueryDtoType } from './jobs.dto';
 
 // ─────────────────────────────────────────────────────────────
@@ -144,6 +145,8 @@ export async function create(data: CreateJobDtoType, userId: string) {
 
   const user = await db('users').where({ id: userId })
     .select('id', 'user_name', 'display_name', 'avatar').first() as Record<string, unknown>;
+
+  await logAudit(userId, 'JOB_CREATED', { title: data.title }, 'jobs', (job as Record<string, unknown>)['id'] as string);
 
   return shapeJob(job as Record<string, unknown>, {
     id: user['id'], userName: user['user_name'],
@@ -385,7 +388,8 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
   if (!job) throw new AppError(404, 'Job not found');
 
-  if (job['user_id'] !== userId) {
+  const byAdmin = job['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own jobs');
   }
@@ -419,6 +423,8 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
     deleteUploadedFile(job['company_logo']);
   }
 
+  await logAudit(userId, 'JOB_UPDATED', { byAdmin, fields: Object.keys(updateData) }, 'jobs', id);
+
   return findOne(id);
 }
 
@@ -429,7 +435,8 @@ export async function deleteJob(id: string, userId: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
   if (!job) throw new AppError(404, 'Job not found');
 
-  if (job['user_id'] !== userId) {
+  const byAdmin = job['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own jobs');
   }
@@ -437,5 +444,6 @@ export async function deleteJob(id: string, userId: string) {
   await db('jobs').where({ id }).delete();
   deleteUploadedFiles(job['images']);
   deleteUploadedFile(job['company_logo']);
+  await logAudit(userId, 'JOB_DELETED', { byAdmin, title: job['title'] }, 'jobs', id);
   return { message: 'Job deleted successfully' };
 }

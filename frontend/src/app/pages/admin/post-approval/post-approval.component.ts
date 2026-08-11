@@ -10,16 +10,20 @@ import { Post, PaginatedResponse, Country, UserDetail } from '../../../core/mode
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 
 // Filter chip interface (for active filter display)
 export interface FilterChip { key: string; label: string; value: any; }
 
 interface PostGroup { label: string; posts: Post[]; }
 
+// Remembers the last selected view mode (cards/table) across navigations.
+const VIEW_STORAGE_KEY = 'admin-post-approval:viewMode';
+
 @Component({
   selector: 'app-post-approval',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent, SortBarComponent, ImageViewerComponent],
+  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent, SortBarComponent, ImageViewerComponent, ImageUrlPipe],
   templateUrl: './post-approval.component.html',
   styleUrls: ['./post-approval.component.scss'],
 })
@@ -44,7 +48,10 @@ export class PostApprovalComponent implements OnInit {
 
   // View mode — card (rich content) vs table (compact scan list)
   viewMode = signal<'cards' | 'table'>('cards');
-  setViewMode(mode: 'cards' | 'table'): void { this.viewMode.set(mode); }
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
 
   // Filters
   filterCommunity = signal('');   // general search — matches community name or post content
@@ -172,8 +179,15 @@ export class PostApprovalComponent implements OnInit {
   activeFilterCount = computed(() => this.activeFilterChips().length);
 
   ngOnInit(): void {
+    this.restoreSavedViewMode();
     this.loadPendingPosts();
     this.loadCountries();
+  }
+
+  /** Resume the last selected cards/table view across navigations. */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'cards' || saved === 'table') this.viewMode.set(saved);
   }
 
   loadCountries(): void {
@@ -186,6 +200,10 @@ export class PostApprovalComponent implements OnInit {
 
   loadPendingPosts(): void {
     this.loading.set(true);
+    // Any reload can change which posts are visible (filter/sort/page/refresh),
+    // so a stale selection from before the reload must not carry over.
+    this.selectedIds.set(new Set());
+    this.selectAll.set(false);
     const params = {
       page: this.currentPage(),
       limit: this.pageSize(),
@@ -278,6 +296,39 @@ export class PostApprovalComponent implements OnInit {
 
   closeImageViewer(): void {
     this.imageViewerOpen.set(false);
+  }
+
+  // ── Confirmation popup (approve) ─────────────────────────────
+  confirmApproveTarget = signal<Post | null>(null);
+  confirmApproveBulk = signal(false);
+
+  requestApprove(post: Post): void {
+    this.confirmApproveTarget.set(post);
+  }
+
+  requestApproveSelected(): void {
+    if (this.selectedIds().size === 0) return;
+    this.confirmApproveBulk.set(true);
+  }
+
+  cancelApproveConfirm(): void {
+    this.confirmApproveTarget.set(null);
+  }
+
+  cancelApproveSelectedConfirm(): void {
+    this.confirmApproveBulk.set(false);
+  }
+
+  confirmApproveExecute(): void {
+    const post = this.confirmApproveTarget();
+    if (!post) return;
+    this.confirmApproveTarget.set(null);
+    this.approvePost(post.id);
+  }
+
+  confirmApproveSelectedExecute(): void {
+    this.confirmApproveBulk.set(false);
+    this.approveSelected();
   }
 
   // ── Confirmation popup (reject) ──────────────────────────────
@@ -422,8 +473,6 @@ export class PostApprovalComponent implements OnInit {
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.filterAuthorStatus.set('');
-    this.selectedIds.set(new Set());
-    this.selectAll.set(false);
     this.applyFilters();
   }
 

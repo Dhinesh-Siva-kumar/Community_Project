@@ -1,17 +1,19 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
+import { logAudit } from '../../services/audit.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
-export async function createCategory(data: CreateBusinessCategoryDtoType) {
+export async function createCategory(data: CreateBusinessCategoryDtoType, adminId: string) {
   const existing = await db('business_categories').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Category already exists');
 
   const [category] = await db('business_categories').insert(data).returning('*');
+  await logAudit(adminId, 'BUSINESS_CATEGORY_CREATED', { name: data.name }, 'business_categories', (category as Record<string, unknown>)['id'] as string);
   return category;
 }
 
-export async function updateCategory(id: string, data: UpdateBusinessCategoryDtoType) {
+export async function updateCategory(id: string, data: UpdateBusinessCategoryDtoType, adminId: string) {
   const existing = await db('business_categories').where({ id }).first();
   if (!existing) throw new AppError(404, 'Category not found');
   if (data.name) {
@@ -19,16 +21,18 @@ export async function updateCategory(id: string, data: UpdateBusinessCategoryDto
     if (dup) throw new AppError(409, 'Category name already exists');
   }
   const [updated] = await db('business_categories').where({ id }).update(data).returning('*');
+  await logAudit(adminId, 'BUSINESS_CATEGORY_UPDATED', { fields: Object.keys(data) }, 'business_categories', id);
   return updated;
 }
 
-export async function deleteCategory(id: string) {
-  const existing = await db('business_categories').where({ id }).first();
+export async function deleteCategory(id: string, adminId: string) {
+  const existing = await db('business_categories').where({ id }).first() as Record<string, unknown> | undefined;
   if (!existing) throw new AppError(404, 'Category not found');
   const [inUse] = await db('businesses').where({ category_id: id }).count('id as count');
   if (Number((inUse as any).count) > 0)
     throw new AppError(409, `Cannot delete: ${(inUse as any).count} business(es) use this category`);
   await db('business_categories').where({ id }).delete();
+  await logAudit(adminId, 'BUSINESS_CATEGORY_DELETED', { name: existing['name'] }, 'business_categories', id);
   return { message: 'Category deleted successfully' };
 }
 
@@ -76,6 +80,7 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
     .returning('*');
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name').first();
+  await logAudit(userId, 'BUSINESS_CREATED', { name: data.name }, 'businesses', (business as Record<string, unknown>)['id'] as string);
   return { ...(business as Record<string, unknown>), category, user };
 }
 
@@ -185,7 +190,8 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
   const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
   if (!business) throw new AppError(404, 'Business not found');
 
-  if (business['user_id'] !== userId) {
+  const byAdmin = business['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own business');
   }
@@ -223,6 +229,8 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
     deleteUploadedFile(business['logo']);
   }
 
+  await logAudit(userId, 'BUSINESS_UPDATED', { byAdmin, fields: Object.keys(updateData) }, 'businesses', id);
+
   return findOne(id);
 }
 
@@ -230,7 +238,8 @@ export async function deleteBusiness(id: string, userId: string) {
   const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
   if (!business) throw new AppError(404, 'Business not found');
 
-  if (business['user_id'] !== userId) {
+  const byAdmin = business['user_id'] !== userId;
+  if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
     if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own business');
   }
@@ -238,5 +247,6 @@ export async function deleteBusiness(id: string, userId: string) {
   await db('businesses').where({ id }).delete();
   deleteUploadedFiles(business['images']);
   deleteUploadedFile(business['logo']);
+  await logAudit(userId, 'BUSINESS_DELETED', { byAdmin, name: business['name'] }, 'businesses', id);
   return { message: 'Business deleted successfully' };
 }

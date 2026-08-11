@@ -17,6 +17,11 @@ import { SortBarComponent, SortField, SortChange, SortDir } from '../../../share
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
+// Remembers the last selected view mode (grid/table) across navigations.
+const VIEW_STORAGE_KEY = 'admin-community:viewMode';
+
+/** Every column the table view can sort by (all but Actions). */
+type CommunitySortField = 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
 
 // ── Module-level custom validators ──────────────────────────────────────────
 
@@ -84,6 +89,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   deletingCommunity  = signal(false);
   formSubmitAttempted = signal(false);
   showCreateFab      = signal(false);
+  viewMode           = signal<'grid' | 'table'>('grid');
 
   private previousBodyOverflow: string | null = null;
   private previousHtmlOverflow: string | null = null;
@@ -113,17 +119,34 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     { value: 100, label: '100' },
   ];
 
-  // ── Sort — driven by the sort-bar above the grid ────────────
+  // ── Sort — driven by the sort-bar above the grid (grid only) and by
+  // clickable column headers in the table view (all columns but Actions) ──
   readonly sortFields: SortField[] = [
     { key: 'name',   label: 'Name' },
     { key: 'joined', label: 'Created' },
   ];
-  sortBy  = signal<'name' | 'joined'>('joined');
+  sortBy  = signal<CommunitySortField>('joined');
   sortDir = signal<SortDir>('desc');
 
   onSortChange(change: SortChange): void {
-    this.sortBy.set(change.sortBy as 'name' | 'joined');
+    this.sortBy.set(change.sortBy as CommunitySortField);
     this.sortDir.set(change.sortDir);
+    this.applyFilters();
+  }
+
+  setViewMode(mode: 'grid' | 'table'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
+
+  /** Toggle sort for a clickable table column header — re-clicking the same column flips direction. */
+  toggleSort(field: CommunitySortField): void {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('desc');
+    }
     this.applyFilters();
   }
 
@@ -171,9 +194,16 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initForm();
     this.restoreSavedPage();
+    this.restoreSavedViewMode();
     this.loadCountries();
     this.loadInterests();
     this.loadCommunities();
+  }
+
+  /** Resume the last selected grid/table view across navigations (e.g. list → detail → back). */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'grid' || saved === 'table') this.viewMode.set(saved);
   }
 
   /**
@@ -458,6 +488,9 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     return pages;
   }
 
+  showingFrom(): number { return this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1; }
+  showingTo():   number { return Math.min(this.currentPage() * this.pageSize(), this.totalItems()); }
+
   // ── Modal open / close ────────────────────────────────────────
   openCreateModal(): void {
     this.editingCommunity.set(null);
@@ -603,10 +636,12 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   // ── Delete ────────────────────────────────────────────────────
   confirmDelete(community: Community): void {
     this.communityToDelete.set(community);
+    this.lockPageScroll();
   }
 
   cancelDelete(): void {
     this.communityToDelete.set(null);
+    this.unlockPageScroll();
   }
 
   deleteCommunity(): void {
@@ -618,6 +653,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.toast.success('Community deleted successfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
+        this.unlockPageScroll();
         this.loadCommunities();
       },
       error: () => {

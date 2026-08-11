@@ -1,3 +1,4 @@
+<div class="cm-page-layout">
 <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
@@ -55,6 +56,15 @@
       @if (searchTerm()) {
         <button class="jb-search-wrap__clear" (click)="searchTerm.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
       }
+    </div>
+    <!-- View toggle -->
+    <div class="um-view-toggle" role="group" aria-label="Switch view">
+      <button class="um-view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" aria-label="Grid view" title="Grid view">
+        <i class="bi bi-grid-3x3-gap-fill"></i>
+      </button>
+      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" aria-label="Table view" title="Table view">
+        <i class="bi bi-table"></i>
+      </button>
     </div>
     <!-- Advanced filters -->
     <div class="jb-filter-row">
@@ -247,6 +257,7 @@
 
 <!-- ── Empty state (icon-based) ──────────────────────────────────────── -->
 @if (!loading()) {
+  <div class="cm-results-section">
   @if (communities().length === 0) {
     <div class="jb-empty">
       <div class="jb-empty__illustration" aria-hidden="true">
@@ -274,9 +285,11 @@
     </div>
   } @else {
     <!-- ── COMMUNITIES LIST ────────────────────────────────────────────────── -->
+    @if (viewMode() === 'grid') {
     <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
       (sortChange)="onSortChange($event)">
     </app-sort-bar>
+
     <div class="row g-4 mb-2">
       @for (community of communities(); track community.id) {
         <div class="col-12 col-md-6 col-xl-4">
@@ -396,42 +409,225 @@
       }
     </div>
 
-    <!-- ── Pagination + Page size ───────────────────────────────── -->
-    <div class="cm-pagination-row">
-      <div class="cm-pagesize">
-        <span>Rows per page</span>
-        <div class="cm-pagesize__select">
-          <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
-            (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-            aria-label="Rows per page">
-          </app-searchable-select>
+    <!-- ── Pagination — mirrors .um-pagination on the User Management page ── -->
+    <div class="um-pagination">
+      <div class="um-pagination__left">
+        <span class="um-pagination__info">
+          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+          of <strong>{{ totalItems() }}</strong> communities
+        </span>
+        <div class="um-pg-divider"></div>
+        <div class="um-pagination__size">
+          <span>Rows per page</span>
+          <div class="jb-select-wrap jb-select-wrap--xs">
+            <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+              aria-label="Rows per page">
+            </app-searchable-select>
+          </div>
         </div>
       </div>
 
       @if (totalPages() > 1) {
-        <nav class="page-pagination">
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" [class.disabled]="currentPage() === 1">
-              <button class="page-link" (click)="goToPage(currentPage() - 1)">
-                <i class="bi bi-chevron-left"></i>
-              </button>
-            </li>
-            @for (page of getPages(); track page) {
-              <li class="page-item" [class.active]="page === currentPage()">
-                <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
-              </li>
-            }
-            <li class="page-item" [class.disabled]="currentPage() === totalPages()">
-              <button class="page-link" (click)="goToPage(currentPage() + 1)">
-                <i class="bi bi-chevron-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
+        <div class="um-pagination__pages">
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(1)" title="First page">
+            <i class="bi bi-chevron-double-left"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          @for (page of getPages(); track page) {
+            <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()"
+              (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)" title="Next page">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(totalPages())" title="Last page">
+            <i class="bi bi-chevron-double-right"></i>
+          </button>
+        </div>
       }
     </div>
+    } @else {
+    <!-- ── COMMUNITIES TABLE ───────────────────────────────────────────────── -->
+    <div class="um-table-card um-table-card--fixed mb-3">
+      <div class="table-responsive">
+        <table class="um-table">
+          <thead>
+            <tr>
+              <th class="um-th" style="width:56px"></th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'name'" (click)="toggleSort('name')" role="button" tabindex="0" (keydown.enter)="toggleSort('name')">
+                Community
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'name'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'category'" (click)="toggleSort('category')" role="button" tabindex="0" (keydown.enter)="toggleSort('category')">
+                Category
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'category' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'category' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'category'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-lg-table-cell" [class.um-th--active]="sortBy() === 'country'" (click)="toggleSort('country')" role="button" tabindex="0" (keydown.enter)="toggleSort('country')">
+                Country
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'country' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'country' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'country'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'visibility'" (click)="toggleSort('visibility')" role="button" tabindex="0" (keydown.enter)="toggleSort('visibility')">
+                Visibility
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'visibility' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'visibility' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'visibility'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-xl-table-cell" [class.um-th--active]="sortBy() === 'members'" (click)="toggleSort('members')" role="button" tabindex="0" (keydown.enter)="toggleSort('members')">
+                Members
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'members' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'members' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'members'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-xl-table-cell" [class.um-th--active]="sortBy() === 'posts'" (click)="toggleSort('posts')" role="button" tabindex="0" (keydown.enter)="toggleSort('posts')">
+                Posts
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'posts' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'posts' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'posts'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'status'" (click)="toggleSort('status')" role="button" tabindex="0" (keydown.enter)="toggleSort('status')">
+                Status
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'status' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'status' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'status'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
+                Created
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBy() !== 'joined'"
+                ></i>
+              </th>
+              <th class="um-th um-th--actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (community of communities(); track community.id) {
+              <tr class="um-row" role="button" tabindex="0"
+                (click)="viewCommunity(community.id)" (keydown.enter)="viewCommunity(community.id)"
+                [attr.aria-label]="'View ' + community.name">
+                <td class="um-td">
+                  @if (community.image) {
+                    <img [src]="community.image | imageUrl" [alt]="community.name" class="um-avatar" />
+                  } @else {
+                    <div class="um-avatar um-avatar--initials"><i class="bi bi-people-fill"></i></div>
+                  }
+                </td>
+                <td class="um-td">
+                  <span class="um-user-name">{{ community.name }}</span>
+                  @if (community.is_default) {
+                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i> Default</span>
+                  }
+                </td>
+                <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ community.category_name || 'Uncategorized' }}</span></td>
+                <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ community.country || 'Not Specified' }}</span></td>
+                <td class="um-td">
+                  @if (community.is_private) {
+                    <span class="cc-visibility-badge cc-visibility-badge--private"><i class="bi bi-lock-fill"></i> Private</span>
+                  } @else if (community.is_global) {
+                    <span class="cc-visibility-badge cc-visibility-badge--global"><i class="bi bi-globe2"></i> Global</span>
+                  } @else {
+                    <span class="um-td-text">—</span>
+                  }
+                </td>
+                <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ community?._count?.members ?? 0 }}</span></td>
+                <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ community?._count?.posts ?? 0 }}</span></td>
+                <td class="um-td">
+                  <span class="um-badge" [class.um-badge--trusted]="community.is_active" [class.um-badge--blocked]="!community.is_active">
+                    {{ community.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ formatDate(community.created_at) }}</span></td>
+                <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
+                  <div class="um-actions-row">
+                    <a [routerLink]="['/admin/community', community.id]" class="um-iab um-iab--view" data-tip="View"><i class="bi bi-eye"></i></a>
+                    <button class="um-iab um-iab--edit" data-tip="Edit" (click)="openEditModal(community)"><i class="bi bi-pencil"></i></button>
+                    <button class="um-iab um-iab--delete" data-tip="Delete" (click)="confirmDelete(community)"><i class="bi bi-trash3"></i></button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Pagination — nested inside the table card, mirrors User Management ── -->
+      <div class="um-pagination um-pagination--nested">
+        <div class="um-pagination__left">
+          <span class="um-pagination__info">
+            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            of <strong>{{ totalItems() }}</strong> communities
+          </span>
+          <div class="um-pg-divider"></div>
+          <div class="um-pagination__size">
+            <span>Rows per page</span>
+            <div class="jb-select-wrap jb-select-wrap--xs">
+              <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+                (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+                aria-label="Rows per page">
+              </app-searchable-select>
+            </div>
+          </div>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="um-pagination__pages">
+            <button class="um-pg-btn" [disabled]="currentPage() === 1"
+              (click)="goToPage(1)" title="First page">
+              <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)" title="Previous page">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            @for (page of getPages(); track page) {
+              <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()"
+                (click)="goToPage(page)">{{ page }}</button>
+            }
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(currentPage() + 1)" title="Next page">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(totalPages())" title="Last page">
+              <i class="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+    }
    }
+  </div>
 }
+</div>
 
 <!-- ── Floating create button — shown while scrolling up ──────── -->
 <button class="community-fab" [class.community-fab--visible]="showCreateFab()"
@@ -698,27 +894,47 @@
 
 <!-- ── DELETE CONFIRM ─────────────────────────────────────── -->
 @if (communityToDelete(); as community) {
-  <div class="modal-backdrop fade show" style="z-index:1060"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true" style="z-index:1070">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-body text-center py-4">
-          <div class="mb-3" style="font-size:2.5rem;color:#dc3545"><i class="bi bi-trash3-fill"></i></div>
-          <h6 class="fw-bold">Delete "{{ community.name }}"?</h6>
-          <p class="text-muted small mb-0">
-            Are you sure? This will remove the community, its posts, and its members. This action cannot be undone.
-          </p>
-        </div>
-        <div class="modal-footer border-0 justify-content-center gap-2">
-          <button type="button" class="btn btn-outline-secondary btn-sm"
-            (click)="cancelDelete()" [disabled]="deletingCommunity()">Cancel</button>
-          <button type="button" class="btn btn-danger btn-sm"
-            (click)="deleteCommunity()" [disabled]="deletingCommunity()">
-            @if (deletingCommunity()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            <i class="bi bi-trash3 me-1"></i>Delete
-          </button>
-        </div>
+  <div class="au-backdrop" (click)="cancelDelete()"></div>
+  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-delete-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
       </div>
+      <div class="au-header__icon cm-delete-modal-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="deleteModalTitle">Delete Community</h5>
+        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="cancelDelete()" [disabled]="deletingCommunity()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-delete-modal-body">
+      <p class="cm-delete-modal-text">
+        Are you sure you want to delete <strong>"{{ community.name }}"</strong>? This will permanently remove the community, its posts, and its members.
+      </p>
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="cancelDelete()" [disabled]="deletingCommunity()">
+        Cancel
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--danger"
+        (click)="deleteCommunity()" [disabled]="deletingCommunity()">
+        @if (deletingCommunity()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          Deleting...
+        } @else {
+          <i class="bi bi-trash3-fill"></i>
+          Delete Community
+        }
+      </button>
     </div>
   </div>
 }

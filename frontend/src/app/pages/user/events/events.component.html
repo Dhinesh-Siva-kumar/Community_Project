@@ -2,22 +2,60 @@
 <div class="ev-header">
   <div class="ev-header__left">
     <h2 class="ev-header__title">Events</h2>
-    <p class="ev-header__sub">Discover events happening near you.</p>
-    <span class="ev-stat-pill"><i class="bi bi-calendar-event"></i><strong>{{ totalItems() }}</strong> Events</span>
+    <p class="ev-header__sub">Discover what's happening in your community.</p>
+    <span class="ev-stat-pill"><i class="bi bi-calendar-event"></i><strong>{{ totalItems() }}</strong> events</span>
   </div>
   <button class="ev-add-btn" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Add Event</button>
 </div>
 
-<!-- ── SEARCH ─────────────────────────────────────────────── -->
+<!-- ── TOOLBAR ────────────────────────────────────────────── -->
 <div class="ev-toolbar">
   <div class="ev-search">
     <i class="bi bi-search ev-search__icon"></i>
-    <input type="search" class="ev-search__input" placeholder="Search events by title or location…"
-      [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+    <input type="search" class="ev-search__input" placeholder="Search events by title or description…"
+      [value]="searchQuery()" (input)="onSearchInput($any($event.target).value)"
       autocomplete="off" aria-label="Search events" />
-    @if (searchQuery()) { <button class="ev-search__clear" (click)="searchQuery.set('')" aria-label="Clear"><i class="bi bi-x"></i></button> }
+    @if (searchQuery()) { <button class="ev-search__clear" (click)="clearSearch()" aria-label="Clear"><i class="bi bi-x"></i></button> }
   </div>
+
+  <div class="ev-mode-filter" role="group" aria-label="Filter by mode">
+    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'all'" (click)="setModeFilter('all')">All</button>
+    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Offline'" (click)="setModeFilter('Offline')">Offline</button>
+    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Online'" (click)="setModeFilter('Online')">Online</button>
+    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Hybrid'" (click)="setModeFilter('Hybrid')">Hybrid</button>
+  </div>
+
+  <div class="ev-sort">
+    Sort
+    <select [ngModel]="sortOption()" (ngModelChange)="setSortOption($event)" aria-label="Sort events">
+      <option value="near">Near you first</option>
+      <option value="soonest">Soonest first</option>
+      <option value="latest">Latest first</option>
+    </select>
+  </div>
+
+  <button class="ev-select-toggle" [class.is-active]="selectionMode()" (click)="toggleSelectionMode()">
+    <i class="bi" [ngClass]="selectionMode() ? 'bi-check-square-fill' : 'bi-check-square'"></i>
+    <span>{{ selectionMode() ? 'Done' : 'Select' }}</span>
+  </button>
 </div>
+
+<!-- ── BULK SELECTION BAR ─────────────────────────────────── -->
+@if (selectionMode()) {
+  <div class="ev-bulk-bar">
+    <button class="ev-bulk-bar__all" (click)="toggleSelectAll()">
+      <i class="bi" [ngClass]="allSelectedOnPage() ? 'bi-check-square-fill' : 'bi-check-square'"></i>
+      {{ allSelectedOnPage() ? 'Deselect all' : 'Select all' }}
+    </button>
+    <div class="ev-bulk-bar__right">
+      <span class="ev-bulk-bar__count">{{ selectedCount() }} selected</span>
+      <button class="ev-btn ev-btn--saffron" [disabled]="selectedCount() === 0 || bulkProcessing()" (click)="requestDeleteSelected()">
+        @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+        <i class="bi bi-trash"></i> Delete @if (selectedCount()) { ({{ selectedCount() }}) }
+      </button>
+    </div>
+  </div>
+}
 
 <!-- ── LOADING ────────────────────────────────────────────── -->
 @if (loading()) {
@@ -33,58 +71,73 @@
       </div>
     }
   </div>
-} @else if (filteredEvents().length === 0) {
+} @else if (events().length === 0) {
   <div class="ev-empty">
     <div class="ev-empty__icon"><i class="bi bi-calendar-x"></i></div>
-    <h5 class="ev-empty__title">{{ searchQuery() ? 'No matching events' : 'No Events Yet' }}</h5>
-    <p class="ev-empty__sub">{{ searchQuery() ? 'Try a different search term.' : 'Be the first to create a community event!' }}</p>
-    @if (!searchQuery()) { <button class="ev-add-btn ev-add-btn--sm" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Create Event</button> }
+    <h5 class="ev-empty__title">{{ searchQuery() || modeFilter() !== 'all' ? 'No matching events' : 'No Events Yet' }}</h5>
+    <p class="ev-empty__sub">{{ searchQuery() || modeFilter() !== 'all' ? 'Try a different search term or filter.' : 'Be the first to create a community event!' }}</p>
+    @if (!searchQuery() && modeFilter() === 'all') { <button class="ev-add-btn ev-add-btn--sm" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Create Event</button> }
   </div>
 } @else {
-  <div class="ev-list">
-    @for (evt of filteredEvents(); track evt.id) {
-      <article class="ev-card-h">
-        <div class="ev-card-h__img-wrap">
+  <div class="ev-grid">
+    @for (evt of events(); track evt.id) {
+      @let rt = relTime(evt.eventDate);
+      @let near = isNear(evt);
+      @let mine = isMine(evt);
+      <article class="ev-card" [class.is-past]="rt.isPast" [class.is-selected]="isSelected(evt.id)"
+        role="button" tabindex="0" (click)="viewEvent(evt)" (keydown.enter)="viewEvent(evt)">
+
+        <div class="ev-card__media" [class]="!evt.images?.length ? categoryGradient(evt.eventCategory) : ''">
           @if (evt.images && evt.images.length > 0) {
-            <img [src]="evt.images[0]" [alt]="evt.title" class="ev-card-h__img" loading="lazy" fetchpriority="high" />
+            <img [src]="evt.images[0] | imageUrl" [alt]="evt.title" loading="lazy" />
           } @else {
-            <div class="ev-card-h__img-empty"><i class="bi bi-calendar-event"></i></div>
+            <i class="bi watermark {{ categoryIcon(evt.eventCategory) }}"></i>
           }
+          <div class="ev-ticket">
+            <div class="ev-ticket__day">{{ evt.eventDate | date:'d' }}</div>
+            <div class="ev-ticket__mon">{{ evt.eventDate | date:'MMM' }}</div>
+          </div>
+          <div class="ev-card__tags">
+            @if (near) { <span class="ev-near-badge"><i class="bi bi-house-fill"></i>Near you</span> }
+            <span class="ev-mode-tag" [ngClass]="'m-' + evt.eventMode?.toLowerCase()">{{ evt.eventMode }}</span>
+          </div>
         </div>
 
-        <div class="ev-card-h__body">
-          <div class="ev-card-h__title-row">
-            <h3 class="ev-card-h__title">{{ evt.title }}</h3>
-            <div class="ev-card-h__badges">
-              @if (evt.eventCategory) { <span class="ev-chip ev-chip--cat">{{ evt.eventCategory }}</span> }
-              @if (evt.eventMode) { <span class="ev-chip" [class]="'ev-chip--' + evt.eventMode.toLowerCase()">{{ evt.eventMode }}</span> }
+        <div class="ev-card__body">
+          @if (selectionMode() && mine) {
+            <label class="ev-card__select" (click)="$event.stopPropagation()">
+              <input type="checkbox" class="ev-checkbox" [checked]="isSelected(evt.id)" (change)="toggleSelect(evt.id)" [attr.aria-label]="'Select ' + evt.title" />
+              <span class="ev-card__select-label">Select</span>
+            </label>
+          }
+
+          <div class="ev-card__eyebrow" [class.is-soon]="rt.cls === 'is-soon'" [class.is-past]="rt.isPast">
+            <span class="cat">{{ evt.eventCategory }}</span><span class="dot"></span><span>{{ rt.label }}</span>
+          </div>
+          <h3 class="ev-card__title">{{ evt.title }}</h3>
+          @if (evt.description) { <p class="ev-card__desc">{{ evt.description }}</p> }
+
+          <div class="ev-card__meta">
+            @if (evt.eventTime) { <div class="ev-meta-row"><i class="bi bi-clock"></i><span>{{ fmtTimeRange(evt) }}</span></div> }
+            <div class="ev-meta-row">
+              <i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-link-45deg' : 'bi-geo-alt-fill'"></i>
+              <span>{{ evt.eventMode === 'Online' ? 'Online — link on request' : (evt.location || evt.address) }}</span>
             </div>
           </div>
 
-          @if (evt.description) { <p class="ev-card-h__desc">{{ evt.description }}</p> }
-
-          <div class="ev-card-h__meta">
-            <span class="ev-meta-item"><i class="bi bi-calendar3"></i>{{ evt.eventDate | date:'EEE, d MMM y' }}</span>
-            @if (evt.eventTime) { 
-              <span class="ev-meta-item"><i class="bi bi-clock"></i>{{ evt.eventTime }}{{ evt.eventEndTime ? ' - ' + evt.eventEndTime : '' }}</span>
+          <div class="ev-card__footer">
+            <div class="ev-host">
+              <div class="ev-host__avatar">{{ (evt.user?.displayName ?? evt.user?.userName ?? '?').charAt(0).toUpperCase() }}</div>
+              <span class="ev-host__name">{{ evt.user?.displayName ?? evt.user?.userName }}</span>
+            </div>
+            @if (mine) {
+              <div class="ev-card__actions" (click)="$event.stopPropagation()">
+                <button class="ev-iab ev-iab--edit" title="Edit" aria-label="Edit event" (click)="openEditModal(evt)"><i class="bi bi-pencil-fill"></i></button>
+                <button class="ev-iab ev-iab--del" title="Delete" aria-label="Delete event" (click)="requestDelete(evt)"><i class="bi bi-trash-fill"></i></button>
+              </div>
+            } @else {
+              <span class="ev-view-tag">View <i class="bi bi-arrow-right"></i></span>
             }
-            @if (evt.timezone) { <span class="ev-meta-item"><i class="bi bi-globe2"></i>{{ evt.timezone }}</span> }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && evt.address) {
-              <span class="ev-meta-item"><i class="bi bi-geo-alt-fill"></i>{{ evt.address }}</span>
-            }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && evt.location) {
-              <span class="ev-meta-item"><i class="bi bi-pin-map"></i>{{ evt.location }}</span>
-            }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && evt.pincode) {
-              <span class="ev-meta-item"><i class="bi bi-mailbox2"></i>{{ evt.pincode }}</span>
-            }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && evt.country) {
-              <span class="ev-meta-item"><i class="bi bi-flag"></i>{{ evt.country }}</span>
-            }
-            @if ((evt.eventMode === 'Online' || evt.eventMode === 'Hybrid') && evt.locationLink) {
-              <span class="ev-meta-item ev-meta-item--link"><i class="bi bi-link-45deg"></i><a [href]="evt.locationLink" target="_blank" rel="noopener">{{ evt.locationLink }}</a></span>
-            }
-            @if (evt.user) { <span class="ev-meta-item"><i class="bi bi-person"></i>{{ evt.user.displayName }}</span> }
           </div>
         </div>
       </article>
@@ -92,17 +145,101 @@
   </div>
 
   @if (totalPages() > 1) {
-    <nav class="ev-pagination" aria-label="Pages">
-      <button class="ev-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage()-1)"><i class="bi bi-chevron-left"></i></button>
-      @for (p of getPages(); track p) {
-        <button class="ev-page-btn" [class.ev-page-btn--active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
-      }
-      <button class="ev-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage()+1)"><i class="bi bi-chevron-right"></i></button>
-    </nav>
+    <div class="ev-pagination-bar">
+      <span class="ev-pagination-info">Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong> of <strong>{{ totalItems() }}</strong> events</span>
+      <nav class="ev-pagination" aria-label="Pages">
+        <button class="ev-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage()-1)"><i class="bi bi-chevron-left"></i></button>
+        @for (p of getPages(); track p) {
+          <button class="ev-page-btn" [class.is-active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+        }
+        <button class="ev-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage()+1)"><i class="bi bi-chevron-right"></i></button>
+      </nav>
+    </div>
   }
 }
 
-<!-- ── ADD EVENT MODAL ────────────────────────────────────── -->
+<!-- ── VIEW DETAIL POPUP ─────────────────────────────────────── -->
+@if (viewingEvent(); as vp) {
+  <div class="ev-backdrop" (click)="closeView()">
+    <div class="ev-panel" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <button class="ev-panel__close" (click)="closeView()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+
+      <div class="ev-detail__media" [class]="!vp.images?.length ? categoryGradient(vp.eventCategory) : ''">
+        @if (vp.images && vp.images.length > 0) {
+          <button class="ev-detail__media-btn" type="button" (click)="openImageViewer(vp.images, 0)">
+            <img [src]="vp.images[0] | imageUrl" [alt]="vp.title" />
+          </button>
+        } @else {
+          <i class="bi watermark {{ categoryIcon(vp.eventCategory) }}"></i>
+        }
+      </div>
+
+      <div class="ev-detail__body">
+        <div class="ev-detail__eyebrow">
+          {{ vp.eventCategory }} · {{ vp.eventMode }}
+          @if (isNear(vp)) { · Near you }
+        </div>
+        <h2 class="ev-detail__title">{{ vp.title }}</h2>
+
+        <div class="ev-detail__meta">
+          <div class="ev-meta-row"><i class="bi bi-calendar3"></i><span>{{ vp.eventDate | date:'EEEE, d MMMM y' }}</span></div>
+          @if (vp.eventTime) { <div class="ev-meta-row"><i class="bi bi-clock"></i><span>{{ fmtTimeRange(vp) }} @if (vp.timezone) { ({{ vp.timezone }}) }</span></div> }
+          @if ((vp.eventMode === 'Offline' || vp.eventMode === 'Hybrid') && (vp.address || vp.location)) {
+            <div class="ev-meta-row"><i class="bi bi-geo-alt-fill"></i><span>{{ vp.address }}@if (vp.address && vp.location) { , }{{ vp.location }}</span></div>
+          }
+          @if ((vp.eventMode === 'Online' || vp.eventMode === 'Hybrid') && vp.locationLink) {
+            <div class="ev-meta-row"><i class="bi bi-link-45deg"></i><a [href]="vp.locationLink" target="_blank" rel="noopener">{{ vp.locationLink }}</a></div>
+          }
+        </div>
+
+        @if (vp.description) { <p class="ev-detail__desc">{{ vp.description }}</p> }
+
+        <div class="ev-detail__host">
+          <div class="ev-host__avatar">{{ (vp.user?.displayName ?? vp.user?.userName ?? '?').charAt(0).toUpperCase() }}</div>
+          <div>
+            <div class="ev-detail__host-name">{{ vp.user?.displayName ?? vp.user?.userName }}</div>
+            <div class="ev-detail__host-label">Hosting this event</div>
+          </div>
+        </div>
+
+        <div class="ev-detail__actions">
+          @if (isMine(vp)) {
+            <button class="ev-btn ev-btn--ghost" (click)="closeView(); requestDelete(vp)"><i class="bi bi-trash-fill"></i>Delete</button>
+            <button class="ev-btn ev-btn--gold" (click)="closeView(); openEditModal(vp)"><i class="bi bi-pencil-fill"></i>Edit Event</button>
+          } @else {
+            <button class="ev-btn ev-btn--gold" style="flex:1;" (click)="closeView()">Close</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<app-image-viewer
+  [images]="imageViewerImages()"
+  [isOpen]="imageViewerOpen()"
+  [initialIndex]="imageViewerInitialIndex()"
+  (close)="closeImageViewer()"></app-image-viewer>
+
+<!-- ── DELETE CONFIRM (single or bulk) ───────────────────────── -->
+@if (confirmDeleteIds(); as ids) {
+  <div class="ev-backdrop" (click)="cancelDeleteConfirm()">
+    <div class="ev-panel ev-confirm" (click)="$event.stopPropagation()">
+      <div class="ev-confirm__icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <h3 class="ev-confirm__title">{{ ids.length === 1 ? 'Delete this event?' : 'Delete ' + ids.length + ' events?' }}</h3>
+      <p class="ev-confirm__desc">This can't be undone.</p>
+      <div class="ev-confirm__actions">
+        <button class="ev-btn ev-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelDeleteConfirm()">Cancel</button>
+        <button class="ev-btn ev-btn--saffron" [disabled]="bulkProcessing()" (click)="confirmDeleteExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          <i class="bi bi-trash-fill"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── ADD / EDIT EVENT MODAL ─────────────────────────────── -->
 @if (showAddModal()) {
   <div class="modal-backdrop fade show"></div>
   <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="evModalTitle">
@@ -110,9 +247,9 @@
       <div class="modal-content jb-modal">
 
         <div class="jb-modal__header">
-          <div class="jb-modal__header-icon"><i class="bi bi-calendar-plus"></i></div>
+          <div class="jb-modal__header-icon"><i class="bi" [ngClass]="editingId() ? 'bi-pencil-fill' : 'bi-calendar-plus'"></i></div>
           <div class="jb-modal__header-text">
-            <h4 class="jb-modal__title" id="evModalTitle">Create Event</h4>
+            <h4 class="jb-modal__title" id="evModalTitle">{{ editingId() ? 'Edit Event' : 'Create Event' }}</h4>
             <p class="jb-modal__subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
           </div>
           <button type="button" class="jb-modal__close" (click)="closeAddModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
@@ -166,6 +303,14 @@
                       <img [src]="imagePreview()!" alt="Preview" class="jb-logo-preview__img" style="width:140px;height:100px" />
                       <button type="button" class="jb-logo-preview__remove" (click)="clearImage()"><i class="bi bi-x-lg"></i></button>
                     </div>
+                  } @else if (existingImage()) {
+                    <div class="jb-logo-preview">
+                      <img [src]="existingImage()! | imageUrl" alt="Current event image" class="jb-logo-preview__img" style="width:140px;height:100px" />
+                    </div>
+                    <p class="ev-form-hint">Upload a new photo below to replace this one.</p>
+                    <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
+                      [resetCounter]="imageUploadReset()" label="Replace event image"
+                      (filesChange)="onImageChange($event)"></app-file-upload>
                   } @else {
                     <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
                       [resetCounter]="imageUploadReset()" label="Upload event image"
@@ -227,7 +372,7 @@
                   <label class="jb-label">Event Mode <span class="text-danger">*</span></label>
                   <div class="ev-mode-chips">
                     @for (mode of EVENT_MODES; track mode) {
-                      <label class="ev-mode-chip" [class.ev-mode-chip--active]="eventMode === mode">
+                      <label class="ev-mode-chip-input" [class.ev-mode-chip-input--active]="eventMode === mode">
                         <input type="radio" formControlName="eventMode" [value]="mode" class="visually-hidden" />
                         <i class="bi" [ngClass]="mode === 'Offline' ? 'bi-geo-alt-fill' : mode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
                         {{ mode }}
@@ -283,7 +428,8 @@
           <button type="button" class="jb-btn jb-btn--ghost" (click)="closeAddModal()">Cancel</button>
           <button type="button" class="jb-btn jb-btn--neon" [disabled]="eventForm.invalid || submitting()" (click)="submitEvent()">
             @if (submitting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            <i class="bi bi-calendar-plus me-1"></i> Create Event
+            <i class="bi" [ngClass]="editingId() ? 'bi-check-lg' : 'bi-calendar-plus'"></i>
+            {{ editingId() ? 'Save Changes' : 'Create Event' }}
           </button>
         </div>
       </div>

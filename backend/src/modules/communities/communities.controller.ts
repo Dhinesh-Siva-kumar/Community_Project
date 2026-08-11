@@ -51,14 +51,14 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = UpdateCommunityDto.parse(req.body);
-    const result = await communitiesService.update(req.params['id'] as string, body);
+    const result = await communitiesService.update(req.params['id'] as string, body, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }
 
 export async function deleteCommunity(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await communitiesService.deleteCommunity(req.params['id'] as string);
+    const result = await communitiesService.deleteCommunity(req.params['id'] as string, req.user!.sub);
     res.json(result);
   } catch (err) { next(err); }
 }

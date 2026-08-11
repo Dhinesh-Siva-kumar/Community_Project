@@ -691,12 +691,22 @@ $_t:  0.2s ease;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  // NOTE: no `scroll-behavior: smooth` — it queues a CSS scroll animation
+  // per wheel tick, and reversing direction (scroll down then up) fights
+  // the tail end of that animation, making the up-scroll feel stuck.
+  // Native OS/trackpad momentum scrolling is already smooth on its own.
+  // Contains the internal scroll to this box — reaching the top/bottom
+  // no longer hands off ("stacks") momentum onto the page scroll behind it.
+  overscroll-behavior: contain;
 
-  // Custom scrollbar
-  &::-webkit-scrollbar       { width: 5px; }
+  // Themed scrollbar — amber accent, matches the module's brand colour.
+  scrollbar-width: thin;
+  scrollbar-color: rgba(251, 191, 36, 0.45) transparent;
+
+  &::-webkit-scrollbar       { width: 6px; }
   &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
-  &::-webkit-scrollbar-thumb:hover { background: $color-border-strong; }
+  &::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.45); border-radius: 999px; }
+  &::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.7); }
 }
 
 .um-table {

@@ -5,16 +5,19 @@ import { Event, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface EventsQueryParams {
-  pincode?:  string;
-  page?:     number;
-  limit?:    number;
-  search?:   string;
-  country?:  string;
-  status?:   'active' | 'inactive';
-  dateFrom?: string;
-  dateTo?:   string;
-  sortBy?:   'name' | 'eventDate' | 'joined';
-  sortDir?:  'asc' | 'desc';
+  pincode?:     string;
+  /** Used only with sortBy='near' — events matching this pincode sort first; does not filter results. */
+  nearPincode?: string;
+  eventMode?:   'Offline' | 'Online' | 'Hybrid';
+  page?:        number;
+  limit?:       number;
+  search?:      string;
+  country?:     string;
+  status?:      'active' | 'inactive';
+  dateFrom?:    string;
+  dateTo?:      string;
+  sortBy?:      'name' | 'eventDate' | 'joined' | 'near';
+  sortDir?:     'asc' | 'desc';
 }
 
 @Injectable({ providedIn: 'root' })
