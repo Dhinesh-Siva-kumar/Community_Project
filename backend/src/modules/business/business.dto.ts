@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+// Business create/update always goes through multipart FormData (a logo
+// file is required on create), which stringifies booleans to "true"/"false".
+// z.coerce.boolean() (used elsewhere, e.g. jobs.dto.ts) is unsafe for that:
+// it runs plain JS `Boolean(value)`, so the STRING "false" coerces to
+// `true`. Map the two string forms explicitly instead, so toggling a
+// business Inactive actually works when submitted alongside a file.
+const activeBool = z.preprocess(
+  (v) => (typeof v === 'string' ? v === 'true' : v),
+  z.boolean(),
+).optional();
+
 export const CreateBusinessCategoryDto = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters').max(100, 'Category name must be at most 100 characters'),
   icon: z.string().optional(),
@@ -26,11 +37,25 @@ export const CreateBusinessDto = z.object({
   openingHours: z.string().optional(),
   // New fields
   city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
+  // Optional — some countries have no state/province-level administrative
+  // division at all (confirmed real for 14/250 countries in the imported
+  // geo dataset), so this can't always be required.
+  state: z.string().optional(),
   openingDays: z.string().optional(),
   whatsapp: z.string().optional(),
   mapsLink: z.string().optional(),
   logo: z.string().optional(),
+  // Country-aware address hierarchy — optional so existing callers that
+  // only send the free-text country/state/city/pincode above keep working
+  // unchanged. When present, validated (city belongs to state belongs to
+  // country; pincode matches the country's postal format) in the service.
+  countryId: z.coerce.number().int().positive().optional(),
+  stateId: z.coerce.number().int().positive().optional(),
+  cityId: z.coerce.number().int().positive().optional(),
+  // Active/Inactive — settable by the owner or an admin (same authorization
+  // as any other business field); defaults to true (matches the DB default)
+  // when omitted on create.
+  isActive: activeBool,
 });
 
 export const UpdateBusinessDto = CreateBusinessDto.partial();

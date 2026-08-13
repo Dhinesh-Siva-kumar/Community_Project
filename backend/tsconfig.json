@@ -19,6 +19,6 @@
   "ts-node": {
     "transpileOnly": false
   },
-  "include": ["src/**/*", "knexfile.ts", "migrations/**/*", "seeds/**/*"],
+  "include": ["src/**/*", "knexfile.ts", "migrations/**/*", "seeds/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "prisma"]
 }

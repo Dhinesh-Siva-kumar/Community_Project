@@ -35,6 +35,52 @@ export interface MasterCity {
   stateId: number;
 }
 
+// ── Country-aware address hierarchy (Country → Division(s) → City → Postal) ──
+// Backed by GeographyService / /api/geography/*. Division = a row from the
+// generic, self-referential master_states table — a state, province,
+// district, county, emirate, etc. depending on the country, at level 1 or 2.
+
+export interface GeoCountry {
+  id: number;
+  name: string;
+  iso2: string;
+  dialCode: string;
+  flagEmoji: string | null;
+  postalCodeFormat: string | null;
+  postalCodeRegex: string | null;
+}
+
+export interface AdministrativeLevelConfig {
+  level: number;
+  label: string;
+}
+
+export interface CountryAddressConfig {
+  countryId: number;
+  name: string;
+  iso2: string;
+  postalCode: { format: string | null; regex: string | null; required: boolean };
+  divisionLevels: AdministrativeLevelConfig[];
+}
+
+export interface Division {
+  id: number;
+  name: string;
+  type: string | null;
+  level: number;
+  parentId: number | null;
+  countryId: number;
+}
+
+export interface GeoCity {
+  id: number;
+  name: string;
+  stateId: number | null;
+  countryId: number;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 export interface interests {
   interest_id: number;
   interest_name: string;
@@ -270,6 +316,18 @@ export interface Business {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Country-aware address hierarchy — additive alongside the free-text
+  // country/state/city/pincode above (kept for backward compatibility with
+  // records saved before this existed). `stateId` is whichever division
+  // level was ultimately selected; `stateChain` (findOne only) is its
+  // parent chain, top-level → leaf, for resurrecting the edit cascade by id.
+  countryId?: number | null;
+  stateId?: number | null;
+  cityId?: number | null;
+  countryName?: string | null;
+  stateName?: string | null;
+  cityName?: string | null;
+  stateChain?: Division[];
 }
 
 export interface Event {

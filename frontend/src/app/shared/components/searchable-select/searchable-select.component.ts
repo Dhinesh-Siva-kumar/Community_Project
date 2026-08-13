@@ -9,9 +9,11 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 
 export interface SelectOption {
   value: string | number;
@@ -72,21 +74,25 @@ export interface SelectOption {
 
           <!-- Options list -->
           <ul class="ss-list" role="listbox">
-            @for (opt of filteredOptions(); track opt.value) {
-              <li
-                class="ss-option"
-                [class.ss-option-selected]="opt.value === value()"
-                role="option"
-                [attr.aria-selected]="opt.value === value()"
-                (click)="selectOption(opt)"
-              >
-                <span class="ss-option-label">{{ opt.label }}</span>
-                @if (opt.value === value()) {
-                  <i class="bi bi-check2 ss-check"></i>
-                }
-              </li>
-            } @empty {
-              <li class="ss-no-results">{{ 'dropdown.no_results' | translate }}</li>
+            @if (remoteLoading()) {
+              <li class="ss-no-results"><span class="spinner-border spinner-border-sm"></span></li>
+            } @else {
+              @for (opt of displayOptions(); track opt.value) {
+                <li
+                  class="ss-option"
+                  [class.ss-option-selected]="opt.value === value()"
+                  role="option"
+                  [attr.aria-selected]="opt.value === value()"
+                  (click)="selectOption(opt)"
+                >
+                  <span class="ss-option-label">{{ opt.label }}</span>
+                  @if (opt.value === value()) {
+                    <i class="bi bi-check2 ss-check"></i>
+                  }
+                </li>
+              } @empty {
+                <li class="ss-no-results">{{ 'dropdown.no_results' | translate }}</li>
+              }
             }
           </ul>
 
@@ -102,6 +108,20 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   readonly options           = input<SelectOption[]>([]);
   readonly placeholder       = input<string>('Select...');
   readonly searchPlaceholder = input<string>('');
+  /**
+   * Opt-in server-side search mode (e.g. for a worldwide city list that's
+   * too large to load into `options` wholesale). When set, the dropdown
+   * calls this (debounced) instead of filtering `options` in-memory.
+   * Every other existing usage (this input left unset) is unaffected.
+   */
+  readonly remoteSearchFn    = input<((query: string) => Observable<SelectOption[]>) | null>(null);
+  /**
+   * Lets the parent seed the displayed label for the current value without
+   * a search round-trip — needed in remote-search mode when a value is set
+   * programmatically (e.g. resurrecting an edit form) before any search has
+   * run, so `options`/the not-yet-fetched remote list don't contain it yet.
+   */
+  readonly selectedOption    = input<SelectOption | null>(null);
 
   private readonly hostEl = inject(ElementRef<HTMLElement>);
 
@@ -114,6 +134,29 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   protected query   = '';
   private _querySig = signal('');
 
+  protected remoteOptions = signal<SelectOption[]>([]);
+  protected remoteLoading = signal(false);
+  private searchInput$ = new Subject<string>();
+
+  constructor() {
+    this.searchInput$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((q) => {
+          const fn = this.remoteSearchFn();
+          if (!fn) return of<SelectOption[]>([]);
+          this.remoteLoading.set(true);
+          return fn(q).pipe(catchError(() => of<SelectOption[]>([])));
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((results) => {
+        this.remoteOptions.set(results);
+        this.remoteLoading.set(false);
+      });
+  }
+
   // ── Computed ─────────────────────────────────────────────────
   protected filteredOptions = computed(() => {
     const q = this._querySig().trim().toLowerCase();
@@ -122,9 +165,21 @@ export class SearchableSelectComponent implements ControlValueAccessor {
       : this.options();
   });
 
+  /** Options actually rendered — remote results when in remote-search mode, else the in-memory filtered list. */
+  protected displayOptions = computed(() =>
+    this.remoteSearchFn() ? this.remoteOptions() : this.filteredOptions()
+  );
+
   protected selectedLabel = computed(() => {
     const v = this.value();
-    return this.options().find(o => o.value === v)?.label ?? '';
+    if (v == null) return '';
+    const fromOptions = this.options().find(o => o.value === v)?.label;
+    if (fromOptions) return fromOptions;
+    const fromRemote = this.remoteOptions().find(o => o.value === v)?.label;
+    if (fromRemote) return fromRemote;
+    const seeded = this.selectedOption();
+    if (seeded && seeded.value === v) return seeded.label;
+    return '';
   });
 
   // ── ControlValueAccessor ──────────────────────────────────────
@@ -132,7 +187,16 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   private _onTouched: () => void = () => {};
 
   writeValue(v: string | number | null): void {
-    this.value.set(v ?? null);
+    const next = v ?? null;
+    // Externally cleared (e.g. a parent form resets this field because a
+    // preceding field — like Country — changed): also drop any cached
+    // remote-search results. Otherwise, in remote-search mode, reopening
+    // the dropdown could still show/select from the previous parent's
+    // stale result set instead of fetching a fresh, correctly-scoped one.
+    if (next == null && this.value() != null && this.remoteSearchFn()) {
+      this.remoteOptions.set([]);
+    }
+    this.value.set(next);
   }
 
   registerOnChange(fn: (v: string | number | null) => void): void {
@@ -151,6 +215,10 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   protected toggleDropdown(): void {
     if (this.isDisabled()) return;
     this.isOpen.update(v => !v);
+    if (this.isOpen() && this.remoteSearchFn() && this.remoteOptions().length === 0 && !this.remoteLoading()) {
+      // Show a default list as soon as the panel opens, before the admin types anything.
+      this.searchInput$.next('');
+    }
     if (!this.isOpen()) this._onTouched();
   }
 
@@ -165,11 +233,13 @@ export class SearchableSelectComponent implements ControlValueAccessor {
 
   protected onQueryChange(val: string): void {
     this._querySig.set(val);
+    if (this.remoteSearchFn()) this.searchInput$.next(val);
   }
 
   protected clearSearch(): void {
     this.query = '';
     this._querySig.set('');
+    if (this.remoteSearchFn()) this.searchInput$.next('');
   }
 
   @HostListener('document:click', ['$event'])

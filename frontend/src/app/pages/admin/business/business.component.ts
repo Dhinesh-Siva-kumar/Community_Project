@@ -1,13 +1,13 @@
 ﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { Subject, takeUntil, combineLatest, map, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
-import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
+import { GeographyService } from '../../../core/services/geography.service';
+import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
@@ -26,6 +26,22 @@ function urlValidator(c: AbstractControl): ValidationErrors | null {
   if (!v) return null;
   try { const u = new URL(v); return (u.protocol === 'http:' || u.protocol === 'https:') ? null : { invalidUrl: true }; }
   catch { return { invalidUrl: true }; }
+}
+
+/**
+ * Country-aware postal code validator, built from the selected country's
+ * `postal_code_regex` (from the imported worldwide geo dataset). No regex
+ * for the country (many don't use postal codes) — any value is accepted.
+ * A malformed regex string is a data problem, not the user's — never
+ * hard-fails the field.
+ */
+function postalCodeValidator(regex: string | null): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = ((c.value as string) ?? '').trim();
+    if (!v || !regex) return null;
+    try { return new RegExp(regex).test(v) ? null : { postalFormat: true }; }
+    catch { return null; }
+  };
 }
 
 type ViewState = 'categories' | 'list' | 'detail';
@@ -54,7 +70,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   private businessService   = inject(BusinessService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
-  private masterDataService = inject(MasterDataService);
+  private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
@@ -163,22 +179,47 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   logoPreview     = signal<string | null>(null);
   logoUploadReset = signal(0);
 
-  // Address cascade for business form
-  bizCountries     = signal<Country[]>([]);
-  bizStates        = signal<MasterState[]>([]);
-  bizCities        = signal<MasterCity[]>([]);
-  bizStatesLoading = signal(false);
-  bizCitiesLoading = signal(false);
+  // ── Country-aware address hierarchy (Country → Division(s) → City → Postal) ──
+  // Division depth is capped at 2 (state/province, then a district/county-
+  // equivalent where the imported data has it) — the deepest the real
+  // dataset ever goes; master_states itself supports arbitrary depth via
+  // parent_id if that's ever needed. See geography.service.ts (backend).
+  geoCountries  = signal<GeoCountry[]>([]);
+  countryConfig = signal<CountryAddressConfig | null>(null);
+  adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
 
-  bizCountryOptions = computed<SelectOption[]>(() =>
-    this.bizCountries().map(c => ({ value: String((c as any).id), label: `${(c as any).flag_emoji ?? ''} ${c.name}`.trim() }))
+  geoCountryOptions = computed<SelectOption[]>(() =>
+    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
   );
-  bizStateOptions = computed<SelectOption[]>(() =>
-    this.bizStates().map(s => ({ value: String(s.id), label: s.name }))
-  );
-  bizCityOptions = computed<SelectOption[]>(() =>
-    this.bizCities().map(c => ({ value: c.name, label: c.name }))
-  );
+
+  division1Options = signal<Division[]>([]);
+  division2Options = signal<Division[]>([]);
+  division1Loading = signal(false);
+  division2Loading = signal(false);
+
+  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map(d => ({ value: d.id, label: d.name })));
+  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map(d => ({ value: d.id, label: d.name })));
+
+  selectedDivision1Name = signal<string | null>(null);
+  selectedDivision2Name = signal<string | null>(null);
+  selectedCityOption    = signal<SelectOption | null>(null);
+  selectedCityName      = signal<string | null>(null);
+
+  /** Every city ever returned by a search this session — lets id→name resolve without a re-fetch (see citySearchFn). */
+  private cityNameCache = new Map<number, string>();
+
+  /** Bound into the City field's remote-search mode — scoped to the leaf division, or the country when it has none. */
+  citySearchFn = (query: string): Observable<SelectOption[]> => {
+    const countryId = this.businessForm.get('countryId')?.value ? Number(this.businessForm.get('countryId')?.value) : undefined;
+    const divisionId = this.getLeafDivisionId() ?? undefined;
+    if (!countryId) return new Observable<SelectOption[]>(sub => { sub.next([]); sub.complete(); });
+    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
+      map(res => {
+        res.data.forEach(c => this.cityNameCache.set(c.id, c.name));
+        return res.data.map(c => ({ value: c.id, label: c.name }));
+      }),
+    );
+  };
 
   // Auto-generated maps link tracking
   mapsLinkAutoGenerated = signal(false);
@@ -540,7 +581,7 @@ getCategoryAccent(icon?: string): string {
     this.initForms();
     this.loadCountries();
     this.loadCategories();
-    this.loadMasterCountries();
+    this.loadGeoCountries();
     this.loadPhoneCountries();
   }
 
@@ -744,36 +785,126 @@ getCategoryAccent(icon?: string): string {
     };
   }
 
-  loadMasterCountries(): void {
-    this.masterDataService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
-      next: data => this.bizCountries.set(data),
-      error: () => {},
+  loadGeoCountries(): void {
+    this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
+      next: data => this.geoCountries.set(data),
+      error: () => this.toast.error('Failed to load countries'),
     });
   }
 
-  onBizCountryChange(countryId: any): void {
-    this.businessForm.get('stateId')?.setValue(null);
-    this.businessForm.get('city')?.setValue(null);
-    this.bizStates.set([]); this.bizCities.set([]);
-    if (countryId) {
-      this.bizStatesLoading.set(true);
-      this.masterDataService.getStates(Number(countryId)).pipe(takeUntil(this.destroy$)).subscribe({
-        next: s => { this.bizStates.set(s); this.bizStatesLoading.set(false); },
-        error: () => this.bizStatesLoading.set(false),
+  /** Leaf-most selected division id — whichever level the country's config actually configures. */
+  private getLeafDivisionId(): number | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) { const v = this.businessForm.get('division2Id')?.value; return v ? Number(v) : null; }
+    if (levels === 1) { const v = this.businessForm.get('division1Id')?.value; return v ? Number(v) : null; }
+    return null;
+  }
+
+  private getLeafDivisionName(): string | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) return this.selectedDivision2Name();
+    if (levels === 1) return this.selectedDivision1Name();
+    return null;
+  }
+
+  /** Rebuilds division1Id/division2Id's required-ness from the current country's configured depth (0/1/2 levels). */
+  private applyDivisionValidators(): void {
+    const levels = this.adminLevels().length;
+    const d1 = this.businessForm.get('division1Id');
+    const d2 = this.businessForm.get('division2Id');
+    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
+    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
+    d1?.updateValueAndValidity({ emitEvent: false });
+    d2?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  /** Rebuilds pincode's validator + required-ness from the current country's postal config. */
+  private applyPincodeValidators(): void {
+    const postal = this.countryConfig()?.postalCode;
+    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
+    if (postal?.required) validators.push(Validators.required);
+    const ctrl = this.businessForm.get('pincode');
+    ctrl?.setValidators(validators);
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  /** Clears every dependent field below Country — used on country change and on modal open/reset. */
+  private resetDivisionState(): void {
+    this.countryConfig.set(null);
+    this.division1Options.set([]);
+    this.division2Options.set([]);
+    this.selectedDivision1Name.set(null);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    // emitViewToModelChange:false too — a plain setValue() still re-fires the
+    // (ngModelChange) output FormControlName exposes (it's driven by the same
+    // registerOnChange callback setValue() itself calls), which would
+    // otherwise re-trigger onDivision1Change/onDivision2Change/onCityChange
+    // as if the admin had picked "nothing" — harmless here, but pointless
+    // for a purely-programmatic reset.
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.businessForm.get('division1Id')?.setValue(null, silent);
+    this.businessForm.get('division2Id')?.setValue(null, silent);
+    this.businessForm.get('cityId')?.setValue(null, silent);
+  }
+
+  onCountryChange(countryId: any): void {
+    this.resetDivisionState();
+    const id = countryId ? Number(countryId) : null;
+    if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+
+    this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+        if (config.divisionLevels.length > 0) {
+          this.division1Loading.set(true);
+          this.geographyService.getDivisions(id).pipe(takeUntil(this.destroy$)).subscribe({
+            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
+            error: () => this.division1Loading.set(false),
+          });
+        }
+      },
+      error: () => this.toast.error('Failed to load country address details'),
+    });
+  }
+
+  onDivision1Change(divisionId: any): void {
+    this.businessForm.get('division2Id')?.setValue(null);
+    this.businessForm.get('cityId')?.setValue(null);
+    this.division2Options.set([]);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision1Name.set(id ? (this.division1Options().find(d => d.id === id)?.name ?? null) : null);
+
+    const countryId = this.businessForm.get('countryId')?.value ? Number(this.businessForm.get('countryId')?.value) : null;
+    if (id && countryId && this.adminLevels().length >= 2) {
+      this.division2Loading.set(true);
+      this.geographyService.getDivisions(countryId, id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: divisions => { this.division2Options.set(divisions); this.division2Loading.set(false); },
+        error: () => this.division2Loading.set(false),
       });
     }
   }
 
-  onBizStateChange(stateId: any): void {
-    this.businessForm.get('city')?.setValue(null);
-    this.bizCities.set([]);
-    if (stateId) {
-      this.bizCitiesLoading.set(true);
-      this.masterDataService.getCities(Number(stateId)).pipe(takeUntil(this.destroy$)).subscribe({
-        next: c => { this.bizCities.set(c); this.bizCitiesLoading.set(false); },
-        error: () => this.bizCitiesLoading.set(false),
-      });
-    }
+  onDivision2Change(divisionId: any): void {
+    this.businessForm.get('cityId')?.setValue(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision2Name.set(id ? (this.division2Options().find(d => d.id === id)?.name ?? null) : null);
+  }
+
+  onCityChange(cityId: any): void {
+    const id = cityId ? Number(cityId) : null;
+    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
+    this.selectedCityName.set(name);
+    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
   }
 
   onLogoChange(files: File[]): void {
@@ -806,10 +937,15 @@ private initForms(): void {
       description:  ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
       categoryId:   ['', Validators.required],
       countryId:    [null, Validators.required],
-      stateId:      [null, Validators.required],
-      city:         ['', Validators.required],
+      // Division depth (0/1/2 levels) and postal requirement are country-
+      // specific — division1Id/division2Id/pincode's validators are set
+      // dynamically by applyDivisionValidators()/applyPincodeValidators()
+      // once a country (and its config) is selected.
+      division1Id:  [null],
+      division2Id:  [null],
+      cityId:       [null, Validators.required],
       address:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
-      pincode:      ['', [Validators.required, Validators.pattern(/^\S{3,12}$/)]],
+      pincode:      ['', [postalCodeValidator(null)]],
       phoneCountryId: [null, Validators.required],
       phone:        ['', [Validators.required, Validators.maxLength(15), this.phoneValidator()]],
       openingDays:  ['', Validators.required],
@@ -825,6 +961,9 @@ private initForms(): void {
       country:      [''],
       latitude:     [''],
       longitude:    [''],
+      // Settable by the owner or an admin — reset()'s default (below) is
+      // this literal `true`, matching the DB column's own default.
+      isActive:     [true],
     });
 
     this.categoryForm = this.fb.group({
@@ -910,8 +1049,9 @@ private initForms(): void {
 
     const locationControls = [
       this.businessForm.get('address')!,
-      this.businessForm.get('city')!,
-      this.businessForm.get('stateId')!,
+      this.businessForm.get('cityId')!,
+      this.businessForm.get('division1Id')!,
+      this.businessForm.get('division2Id')!,
       this.businessForm.get('countryId')!,
       this.businessForm.get('pincode')!,
     ];
@@ -928,26 +1068,18 @@ private initForms(): void {
         if (this.mapsLinkUserEdited()) return;
 
         const address  = this.businessForm.get('address')?.value ?? '';
-        const city     = this.businessForm.get('city')?.value ?? '';
-        const stateId  = this.businessForm.get('stateId')?.value;
-        const countryId = this.businessForm.get('countryId')?.value;
         const pincode  = this.businessForm.get('pincode')?.value ?? '';
+        const cityName = this.selectedCityName() ?? '';
+        const stateName = this.getLeafDivisionName() ?? '';
 
-        // Resolve state name from ID
-        let stateName = '';
-        if (stateId) {
-          const found = this.bizStates().find(s => String(s.id) === String(stateId));
-          if (found) stateName = found.name;
-        }
-
-        // Resolve country name from ID
+        const countryId = this.businessForm.get('countryId')?.value;
         let countryName = '';
         if (countryId) {
-          const found = this.bizCountries().find((c: any) => String(c.id) === String(countryId));
-          if (found) countryName = (found as any).name;
+          const found = this.geoCountries().find(c => String(c.id) === String(countryId));
+          if (found) countryName = found.name;
         }
 
-        const parts = [address, city, stateName, countryName, pincode].filter((v: string) => !!v.trim());
+        const parts = [address, cityName, stateName, countryName, pincode].filter((v: string) => !!v.trim());
         if (parts.length > 0) {
           const query = parts.join(', ');
           const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
@@ -1258,7 +1390,9 @@ private initForms(): void {
     this.selectedImages.set([]); this.selectedLogo.set(null); this.logoPreview.set(null);
     this.selectedDays.set([]);
     this.businessForm.get('openingDays')?.setValue('');
-    this.bizStates.set([]); this.bizCities.set([]);
+    this.resetDivisionState();
+    this.applyDivisionValidators();
+    this.applyPincodeValidators();
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
     this.openingHoursTouched.set(false);
     this.lockPageScroll();
@@ -1267,6 +1401,17 @@ private initForms(): void {
 
   openEditBusiness(event: Event, biz: Business): void {
     event.stopPropagation();
+    // The `biz` passed in comes from the list/grid/table (findAll()), which
+    // doesn't include `stateChain` — only findOne() computes it (walking the
+    // division's parent chain). Without it, the State/Division field(s)
+    // never resurrect on edit. Fetch the full record before populating the form.
+    this.businessService.getBusiness(biz.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (fullBiz) => this.applyEditFormData(fullBiz),
+      error: () => this.toast.error('Failed to load business details'),
+    });
+  }
+
+  private applyEditFormData(biz: Business): void {
     this.editingBusiness.set(biz);
     this.businessSubmitAttempted.set(false);
 
@@ -1281,8 +1426,6 @@ private initForms(): void {
       name:         biz.name         ?? '',
       description:  biz.description  ?? '',
       categoryId:   biz.categoryId   ?? (biz as any).category_id ?? biz.category?.id ?? '',
-      stateId:      null,
-      city:         biz.city         ?? '',
       address:      biz.address      ?? '',
       pincode:      biz.pincode      ?? '',
       email:        biz.email        ?? '',
@@ -1293,6 +1436,7 @@ private initForms(): void {
       country:      biz.country      ?? '',
       latitude:     biz.latitude     ?? '',
       longitude:    biz.longitude    ?? '',
+      isActive:     biz.isActive     ?? true,
     });
 
     // Phone/WhatsApp are stored as "<dial_code> <digits>" — split each back
@@ -1331,45 +1475,73 @@ private initForms(): void {
     this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
 
-    // Country cascade — run now if countries loaded, else wait
-    const doCountryCascade = () => {
-      const countryName = biz.country ?? '';
-      const matched = this.bizCountries().find((c: any) => c.name?.toLowerCase() === countryName.toLowerCase());
-      if (!matched) return;
-      const countryId = String((matched as any).id);
-      this.businessForm.get('countryId')?.setValue(countryId);
-      this.bizStates.set([]); this.bizCities.set([]);
-      this.bizStatesLoading.set(true);
-      this.masterDataService.getStates(Number(countryId)).pipe(takeUntil(this.destroy$)).subscribe({
-        next: states => {
-          this.bizStates.set(states);
-          this.bizStatesLoading.set(false);
-          const stateName = biz.state ?? '';
-          const matchedState = states.find(s => s.name?.toLowerCase() === stateName.toLowerCase());
-          if (!matchedState) return;
-          this.businessForm.get('stateId')?.setValue(String(matchedState.id));
-          this.bizCitiesLoading.set(true);
-          this.masterDataService.getCities(matchedState.id).pipe(takeUntil(this.destroy$)).subscribe({
-            next: cities => {
-              this.bizCities.set(cities);
-              this.bizCitiesLoading.set(false);
-              this.businessForm.get('city')?.setValue(biz.city ?? '');
+    // Country-aware address hierarchy — resurrected directly from the
+    // stored ids (countryId/stateId/cityId + stateChain, all returned by
+    // findOne()) rather than fragile case-insensitive name matching, so
+    // e.g. a stored "USA" vs a dataset "United States" can never silently
+    // fail to resolve.
+    //
+    // Every setValue() below is fully silent ({emitEvent:false,
+    // emitViewToModelChange:false}). formControlName's (ngModelChange)
+    // output fires from the SAME registerOnChange callback setValue()
+    // itself invokes — a plain setValue() re-triggers it just as if the
+    // admin had picked that value by hand. Without emitViewToModelChange
+    // false, setting division1Id here re-fires onDivision1Change(), which
+    // (correctly, for real user input) clears division2Id/cityId as a side
+    // effect — silently wiping out the City field this same function had
+    // just set moments earlier. Silencing every resurrection setValue()
+    // avoids the whole class of race.
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.resetDivisionState();
+    if (biz.countryId) {
+      this.businessForm.get('countryId')?.setValue(biz.countryId, silent);
+      this.geographyService.getCountryConfig(biz.countryId).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (config) => {
+          this.countryConfig.set(config);
+          this.applyDivisionValidators();
+          this.applyPincodeValidators();
+          if (config.divisionLevels.length === 0) return;
+
+          const chain = biz.stateChain ?? [];
+          this.division1Loading.set(true);
+          this.geographyService.getDivisions(biz.countryId!).pipe(takeUntil(this.destroy$)).subscribe({
+            next: (divisions) => {
+              this.division1Options.set(divisions);
+              this.division1Loading.set(false);
+              const lvl1 = chain[0];
+              if (!lvl1) return;
+              this.businessForm.get('division1Id')?.setValue(lvl1.id, silent);
+              this.selectedDivision1Name.set(lvl1.name);
+              if (config.divisionLevels.length < 2) return;
+
+              this.division2Loading.set(true);
+              this.geographyService.getDivisions(biz.countryId!, lvl1.id).pipe(takeUntil(this.destroy$)).subscribe({
+                next: (divisions2) => {
+                  this.division2Options.set(divisions2);
+                  this.division2Loading.set(false);
+                  const lvl2 = chain[1];
+                  if (!lvl2) return;
+                  this.businessForm.get('division2Id')?.setValue(lvl2.id, silent);
+                  this.selectedDivision2Name.set(lvl2.name);
+                },
+                error: () => this.division2Loading.set(false),
+              });
             },
-            error: () => this.bizCitiesLoading.set(false),
+            error: () => this.division1Loading.set(false),
           });
         },
-        error: () => this.bizStatesLoading.set(false),
-      });
-    };
-
-    if (this.bizCountries().length > 0) {
-      doCountryCascade();
-    } else {
-      // Countries not yet loaded — wait for them
-      this.masterDataService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
-        next: data => { this.bizCountries.set(data); doCountryCascade(); },
         error: () => {},
       });
+    } else {
+      this.applyDivisionValidators();
+      this.applyPincodeValidators();
+    }
+
+    if (biz.cityId) {
+      this.businessForm.get('cityId')?.setValue(biz.cityId, silent);
+      this.selectedCityName.set(biz.cityName ?? null);
+      this.selectedCityOption.set({ value: biz.cityId, label: biz.cityName ?? '' });
+      if (biz.cityName) this.cityNameCache.set(biz.cityId, biz.cityName);
     }
 
     this.lockPageScroll();
@@ -1400,13 +1572,24 @@ private initForms(): void {
     // meant the synced WhatsApp number was never actually submitted.
     const raw: Record<string, any> = { ...this.businessForm.getRawValue() };
 
-    // Resolve country name from selected countryId
-    const foundCountry = this.bizCountries().find((c: any) => String(c.id) === String(raw['countryId']));
-    if (foundCountry) raw['country'] = (foundCountry as any).name;
+    // Resolve country/state/city NAME strings for the backward-compat
+    // display columns, alongside the id-based countryId/cityId already in
+    // `raw` from the form. `stateId` isn't a real form control — it's
+    // whichever division level is actually configured/leaf-most for this
+    // country (division1Id or division2Id), collapsed to the one field the
+    // API expects.
+    const foundCountry = this.geoCountries().find(c => String(c.id) === String(raw['countryId']));
+    if (foundCountry) raw['country'] = foundCountry.name;
 
-    // Resolve state name from selected stateId
-    const foundState = this.bizStates().find(s => String(s.id) === String(raw['stateId']));
-    if (foundState) raw['state'] = foundState.name;
+    const leafDivisionId = this.getLeafDivisionId();
+    const leafDivisionName = this.getLeafDivisionName();
+    raw['stateId'] = leafDivisionId ?? undefined;
+    if (leafDivisionName) raw['state'] = leafDivisionName;
+    else delete raw['state'];
+
+    if (this.selectedCityName()) raw['city'] = this.selectedCityName();
+    delete raw['division1Id'];
+    delete raw['division2Id'];
 
     // Combine phone country dial code + local number for the phone field
     const phoneCountryId = raw['phoneCountryId'];
@@ -1433,8 +1616,6 @@ private initForms(): void {
     // Opening days from signal (authoritative source)
     raw['openingDays'] = this.selectedDays().join(',');
 
-    delete raw['countryId'];
-    delete raw['stateId'];
     delete raw['phoneCountryId'];
     delete raw['whatsappCountryId'];
     delete raw['openingHoursFrom'];

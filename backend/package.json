@@ -9,7 +9,9 @@
     "start": "node dist/src/server.js",
     "migrate": "knex --knexfile knexfile.ts migrate:latest",
     "migrate:rollback": "knex --knexfile knexfile.ts migrate:rollback",
-    "seed": "knex --knexfile knexfile.ts seed:run"
+    "seed": "knex --knexfile knexfile.ts seed:run",
+    "import:geo-data": "ts-node --project tsconfig.json -r dotenv/config scripts/import-geo-data.ts",
+    "backfill:business-geo": "ts-node --project tsconfig.json -r dotenv/config scripts/backfill-business-geo.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
