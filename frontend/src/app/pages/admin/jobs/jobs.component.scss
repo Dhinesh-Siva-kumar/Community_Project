@@ -539,12 +539,13 @@
   display: flex; flex-direction: column; align-items: center; text-align: center;
   padding: $spacing-4xl $spacing-xl;
 
-  &__icon {
-    width: 80px; height: 80px; border-radius: $radius-full;
-    background: $color-primary-light;
-    box-shadow: 0 0 0 10px rgba(251, 191, 36, 0.06);
-    display: flex; align-items: center; justify-content: center; margin-bottom: $spacing-lg;
-    .bi { font-size: 2rem; color: $color-primary-dark; }
+  // The markup uses an inline SVG illustration (matches Community's empty
+  // state exactly), not an icon glyph — this was a leftover `&__icon` rule
+  // for a class the template never uses, so the illustration rendered with
+  // no bottom margin at all.
+  &__illustration {
+    width: 96px; height: 96px;
+    margin-bottom: $spacing-lg;
   }
 
   &__title { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-800; margin-bottom: $spacing-sm; }

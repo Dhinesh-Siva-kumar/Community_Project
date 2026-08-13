@@ -344,10 +344,31 @@
 .jb-location-row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: $spacing-sm;
   flex: 1;
-  app-searchable-select { flex: 1; min-width: 130px; }
+  app-searchable-select, .jb-adv-input-wrap { flex: 1; min-width: 130px; }
 }
+
+// ── Pincode text filter — sits alongside Country in the Location row.
+// Built on the shared global `.form-control` base (same as the Country
+// dropdown's `.ss-trigger.form-control`) so both controls share an
+// identical box model and line up exactly — a bespoke `.jb-adv-input`
+// (different padding/fixed height) visibly misaligned against it. ──
+.jb-adv-input-wrap--icon {
+  .jb-adv-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: $color-stone-400;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.jb-adv-input--icon-left { padding-left: 32px; }
 
 .jb-advanced-toggle {
   display: inline-flex;
@@ -391,16 +412,107 @@
 }
 
 .jb-advanced-panel {
-  padding: $spacing-md;
+  padding: $spacing-lg;
   background: $color-bg-page;
   border: 1px solid $color-border;
   border-radius: $radius-md;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
+}
+
+// ── Filter section dividers — mirrors .jb-adv-section on the Community page,
+// separating "Location", "Opening Hours & Status" and "Date Range" blocks. ──
+.jb-adv-section {
+  & + & {
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid $color-border;
+  }
+
+  > .jb-filter-section-label {
+    display: flex;
+    margin-bottom: 10px;
+  }
+}
+
+// ── Pill-style toggle filters (Opening Hours / Status) — mirrors
+// .jb-pill-group-row / .jb-pill-group / .jb-pill-row / .jb-pill-btn on the
+// Community page's Community Mode + Default Community filters. ──
+.jb-pill-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-lg;
+
+  @include media-sm-max {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jb-pill-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  > .jb-filter-section-label { display: flex; }
+}
+
+.jb-pill-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jb-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(255, 251, 235, 0.9);
+  color: $color-primary-darker;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+  .bi { font-size: 0.85rem; }
+
+  &:hover {
+    background: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #78350f;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+  }
 }
 
 .jb-advanced-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: $spacing-md;
+
+  &--dates {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    margin-top: 2px;
+
+    @include media-sm-max {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 .jb-adv-field {
@@ -418,6 +530,20 @@
 
 .jb-adv-input-wrap { position: relative; }
 
+.jb-adv-input-wrap--date {
+  .jb-adv-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    color: $color-stone-400;
+    pointer-events: none;
+    z-index: 1;
+    transition: color $duration-short $easing-standard;
+  }
+}
+
 .jb-adv-input {
   width: 100%; height: 38px; padding: 0 $spacing-sm;
   border: 1.5px solid $color-border; border-radius: $radius-md;
@@ -426,6 +552,134 @@
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
   &::placeholder { color: $color-stone-400; }
   &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); }
+
+  &--date {
+    height: 42px;
+    padding: 0 36px 0 36px;
+    font-weight: $font-weight-medium;
+    background: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%);
+
+    &::-webkit-calendar-picker-indicator {
+      opacity: 0.72;
+      cursor: pointer;
+      transition: opacity $duration-short $easing-standard;
+    }
+
+    &:hover {
+      border-color: $color-amber-300;
+      background: #fffefb;
+
+      &::-webkit-calendar-picker-indicator {
+        opacity: 1;
+      }
+    }
+
+    &:focus {
+      background: #ffffff;
+    }
+  }
+}
+
+// ── Date-range cards + quick presets — mirrors .jb-adv-date-card /
+// .jb-quick-date-row / .jb-quick-date-btn on the Community page. ──
+.jb-adv-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 235, 0.45) 100%);
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.36);
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.1);
+  }
+
+  &:focus-within {
+    border-color: rgba(245, 158, 11, 0.48);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.14);
+
+    .jb-adv-input-icon {
+      color: $color-primary-dark;
+    }
+  }
+
+  &--filled {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.38) 100%);
+    border-color: rgba(245, 158, 11, 0.32);
+
+    .jb-adv-date-help {
+      color: $color-primary-darker;
+    }
+  }
+}
+
+.jb-adv-date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jb-adv-date-help {
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: $color-stone-400;
+}
+
+.jb-quick-date-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+
+  &__label {
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-stone-500;
+    margin-right: 2px;
+  }
+}
+
+.jb-quick-date-btn {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(255, 251, 235, 0.9);
+  color: $color-primary-darker;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+  &:hover {
+    background: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #78350f;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+  }
 }
 
 .jb-adv-range {
@@ -1640,6 +1894,38 @@
   line-height: 1.2;
 }
 
+// Row avatar/thumbnail + status badge — mirrors the Community table's cells.
+.um-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  &--initials {
+    background: linear-gradient(135deg, $color-primary, $color-saffron);
+    color: #fff;
+    font-size: 0.9rem;
+  }
+}
+
+.um-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &--trusted { background: #fffbeb; color: $color-warning; }
+  &--blocked { background: #fef2f2; color: $color-danger; }
+}
+
 .um-actions-row {
   display: flex;
   align-items: center;
@@ -2191,11 +2477,25 @@ $accents: (
 
 .jb-day-toggle {
   padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid rgba(251,191,36,0.25); background: rgba(255,255,255,0.7);
+  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
   color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
   @include transition-short(all);
-  &:hover { background: linear-gradient(135deg, $color-primary, $color-saffron); border-color: transparent; color: $color-on-primary; box-shadow: 0 2px 6px rgba(251,191,36,0.30); }
-  &--on { background: linear-gradient(135deg, $color-primary, $color-saffron); border-color: transparent; color: $color-on-primary; box-shadow: 0 2px 6px rgba(251,191,36,0.30); }
+
+  // Hover on an UNselected day — neutral gray, deliberately a different hue
+  // family from --on's amber below, so hovering can never read as "selected".
+  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  // Selected — the only state that uses amber, and stays amber regardless
+  // of hover, so it reads as "on" independent of mouse position.
+  &--on {
+    background: rgba(251,191,36,0.28);
+    border-color: $color-primary;
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
+  }
 }
 
 .jb-logo-preview {
@@ -2203,6 +2503,46 @@ $accents: (
   &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
   &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
 }
+
+// ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
+// Community Create/Edit popup's "Default Community" toggle. ──
+.cm-default-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-radius: 12px;
+  border: 1.5px solid $color-border; background: $color-bg-page;
+  transition: border-color 0.2s ease;
+  &:hover { border-color: $color-primary; }
+}
+
+.cm-default-label {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  i { font-size: 13px; color: $color-primary; flex-shrink: 0; }
+  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
+}
+
+.cm-default-hint {
+  font-size: 11px !important; font-weight: 400 !important; color: $color-text-muted !important;
+  width: 100%; margin-top: 1px;
+}
+
+.cm-switch {
+  position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0;
+  input { opacity: 0; width: 0; height: 0; position: absolute; }
+}
+
+.cm-switch-slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: $color-stone-300; border-radius: 24px; transition: background 0.25s ease;
+  &::before {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
+    background: #fff; border-radius: 50%; transition: transform 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cm-switch input:checked + .cm-switch-slider { background: $color-primary; }
+.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba(251,191,36,0.25); }
+.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
 
 @include media-md-max {
   .jb-form-section { padding: $spacing-md; }
@@ -2258,20 +2598,40 @@ $accents: (
   }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
-  &__img-wrap { position: relative; height: 180px; overflow: hidden; background: $color-bg-page; flex-shrink: 0; }
+  &__img-wrap {
+    position: relative; height: 180px; overflow: hidden; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
+  }
+  // Logo fills the whole image area (cover) instead of being letterboxed —
+  // transparent-background logos blend into the gradient behind them.
   &__img { width: 100%; height: 100%; object-fit: cover; transition: transform 350ms ease; }
   &__img-placeholder {
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
     font-size: 3rem; color: $color-primary-dark;
   }
-  &__cat-badge {
-    position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: $radius-full;
-    background: rgba(28,25,23,0.65); backdrop-filter: blur(6px);
-    color: #fff; font-size: 11px; font-weight: $font-weight-semibold; letter-spacing: 0.03em;
+  // Status badge — replaces the redundant category badge (category is
+  // already shown in the page header/breadcrumb above the list) with the
+  // one thing an admin actually needs at a glance while scanning cards.
+  // Its own opaque-ish background + shadow keeps it legible without a scrim.
+  &__status-badge {
+    position: absolute; top: 10px; left: 10px; z-index: 1;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: $radius-full;
+    backdrop-filter: blur(6px);
+    font-size: 11px; font-weight: $font-weight-semibold; letter-spacing: 0.03em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    .bi { font-size: 0.75em; }
+    &--active   { background: rgba(21,128,61,0.9);  color: #fff; }
+    &--inactive { background: rgba(28,25,23,0.75);  color: rgba(255,255,255,0.9); }
   }
   &__body { flex: 1; padding: $spacing-md $spacing-lg 0; display: flex; flex-direction: column; gap: 6px; }
   &__name { font-family: $font-family-header; font-size: 1.05rem; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0; line-height: 1.3; }
+  // Owner + created date — the "who added this and when" an admin needs for moderation.
+  &__submeta { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-top: -2px; }
+  &__submeta-item {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: $color-stone-400; font-weight: $font-weight-medium;
+    .bi { font-size: 0.85em; }
+  }
   &__desc { font-size: $font-size-xs; color: $color-text-muted; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   &__meta { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 2px; }
   &__meta-item {
@@ -2350,8 +2710,17 @@ $accents: (
   margin-top: $spacing-md;
   &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; }
   &__grid { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
+  // Same remove-badge treatment as .jb-logo-preview__remove, just per-thumbnail.
+  &__item { position: relative; display: inline-flex; }
   &__img { width: 80px; height: 60px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; }
-  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; }
+  &__remove {
+    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.6rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all);
+    &:hover { background: $color-error-bg; border-color: $color-danger; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; .bi { font-size: 0.75em; } }
 }
 
 
@@ -2362,20 +2731,27 @@ $accents: (
 .bd-hero {
   border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
   background: #fff; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
-  
 
-  &__cover { height: 200px; overflow: hidden; background: $color-bg-page; flex-shrink: 0; }
-  &__cover-img { width: 100%; height: 100%; object-fit: cover; }
-  &__cover-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.05)); font-size: 4rem; color: $color-primary-dark; opacity: 0.5; }
-
-  &__profile { display: flex; align-items: flex-start; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
+  // No cover banner — just the logo + business details, so the profile row
+  // sits flush at the top of the card.
+  &__profile { display: flex; align-items: center; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
 
   &__avatar {
-    width: 64px; height: 64px; border-radius: $radius-full; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    width: 72px; height: 72px; border-radius: $radius-full; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
     color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12));
     border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
-    margin-top: -48px; box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    padding: 0; cursor: default; overflow: hidden; @include transition-short(all);
+
+    // Same zoom-in affordance as the gallery thumbnails below, since both
+    // open the same lightbox.
+    &--clickable {
+      cursor: zoom-in;
+      &:hover { transform: scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.16); }
+      &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+    }
+    &:disabled { cursor: default; }
   }
 
   &__info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
@@ -2386,13 +2762,26 @@ $accents: (
 
   &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
   &__admin { display: flex; align-items: center; gap: 6px; }
+
+  // Edit / Delete — matched to the height of the Call/WhatsApp/Website/
+  // Directions pills (.bd-action-btn) they sit alongside in this row.
+  &__admin-btn {
+    width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: $radius-md; font-size: 0.85rem; cursor: pointer;
+    border: 1.5px solid transparent; @include transition-short(all);
+    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #0284C7; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: #0284C7; } }
+    &--delete { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger; &:hover:not(:disabled) { background: rgba(220,38,38,0.15); border-color: $color-danger; } }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
 }
 
 .bd-badge {
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
   border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
   text-transform: uppercase; letter-spacing: 0.04em;
-  &--active { background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
 }
 
 .bd-action-btn {
@@ -2437,27 +2826,89 @@ $accents: (
   &__value { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; word-break: break-word; &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
 }
 
+// Soft tinted pill — same visual language as .bd-action-btn / .jb-pill-btn
+// used everywhere else on this tab, instead of a one-off solid gradient CTA.
+// Both variants share the same shape/padding/font so the pair (primary
+// "View on Maps" vs. secondary "Get Directions" fallback) reads as one
+// consistent button style, just at two tint strengths.
 .bd-maps-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md;
   padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
   text-decoration: none; @include transition-short(all);
-  background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary;
-  box-shadow: 0 3px 10px rgba(251,191,36,0.30);
-  &:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(251,191,36,0.40); color: $color-on-primary; }
-  &--secondary { background: rgba(251,191,36,0.10); color: $color-primary-darker; box-shadow: none; border: 1.5px solid rgba(251,191,36,0.30); &:hover { background: rgba(251,191,36,0.18); box-shadow: none; } }
+  background: rgba(251,191,36,0.14); color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.35);
+  &:hover { background: rgba(251,191,36,0.22); border-color: $color-primary; transform: translateY(-1px); color: $color-primary-darker; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  &--secondary { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.24); &:hover { background: rgba(251,191,36,0.14); } }
 }
 
-.bd-days { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: $spacing-sm; }
-.bd-day  { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 34px; border-radius: $radius-sm; font-size: $font-size-xs; font-weight: $font-weight-bold; background: $color-stone-100; color: $color-stone-400; border: 1.5px solid $color-border; &--active { background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; border-color: transparent; box-shadow: 0 2px 6px rgba(251,191,36,0.30); } }
+.bd-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: $spacing-sm; }
+// Light amber tint on the selected days — matches .jb-day-toggle--on from
+// the Business creation form's Opening Days picker, instead of a heavier
+// gradient fill.
+.bd-day  {
+  display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
+  border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  background: rgba(255,255,255,0.7); color: $color-stone-500; border: 1.5px solid $color-border;
+  &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
+}
 .bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
 
 .bd-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; cursor: zoom-in; @include transition-short(all); &:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
+.bd-gallery__btn { padding: 0; border: none; background: none; cursor: zoom-in; border-radius: $radius-sm; line-height: 0; &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; } }
+.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; @include transition-short(all); .bd-gallery__btn:hover & { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
 
 @include media-sm-max {
-  .bd-hero__profile { flex-direction: column; }
-  .bd-hero__actions { margin-left: 0; }
-  .bd-hero__avatar { margin-top: -40px; }
+  .bd-hero__profile { flex-direction: column; align-items: center; text-align: center; }
+  .bd-hero__info { align-items: center; }
+  .bd-hero__actions { margin-left: 0; justify-content: center; }
+}
+
+// ── Image lightbox — copied 1:1 from community-detail.component's
+// .cd-lightbox so the logo/gallery preview here looks and behaves exactly
+// like the Community Post image viewer. ──
+.cd-lightbox {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, 0.84); backdrop-filter: blur(3px);
+  z-index: 1150; display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+
+.cd-lightbox-content {
+  position: relative; width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  border-radius: 16px; background: rgba(15, 23, 42, 0.48); border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5); padding: 46px 16px 44px;
+}
+
+.cd-lightbox-image { width: 100%; max-height: calc(100vh - 160px); object-fit: contain; display: block; border-radius: 12px; }
+
+.cd-lightbox-close,
+.cd-lightbox-nav {
+  border: 1px solid rgba(226, 232, 240, 0.35); background: rgba(15, 23, 42, 0.6); color: $white;
+  width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.18s ease, border-color 0.18s ease;
+  &:hover { background: rgba(30, 41, 59, 0.78); border-color: rgba(226, 232, 240, 0.48); }
+}
+
+.cd-lightbox-close { position: absolute; top: 10px; right: 10px; }
+
+.cd-lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  &.cd-lightbox-nav--prev { left: 10px; }
+  &.cd-lightbox-nav--next { right: 10px; }
+}
+
+.cd-lightbox-footer { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; }
+
+.cd-lightbox-counter {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 28px;
+  padding: 0 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(226, 232, 240, 0.28);
+  color: #f8fafc; font-size: 12px; font-weight: 700;
+}
+
+@include media-sm-max {
+  .cd-lightbox-content { width: min(94vw, 760px); padding: 42px 12px 40px; }
+  .cd-lightbox-image { max-height: calc(100vh - 190px); }
+  .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
+  .cd-lightbox-nav.cd-lightbox-nav--prev { left: 14px; }
+  .cd-lightbox-nav.cd-lightbox-nav--next { right: 14px; }
 }
 
 .jb-optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }

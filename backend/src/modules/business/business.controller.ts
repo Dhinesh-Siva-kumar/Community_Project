@@ -131,10 +131,32 @@ export async function update(req: Request, res: Response, next: NextFunction): P
     const filenames = await Promise.all(
       imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
     );
-    const imagePaths = filenames.map((f) => `/uploads/${f}`);
+    const newImagePaths = filenames.map((f) => `/uploads/${f}`);
 
     const rawBody = { ...req.body };
-    if (imagePaths.length) rawBody['images'] = imagePaths;
+
+    // `existingImages` (a JSON-stringified string[], sent separately from
+    // the `images` file field) carries the gallery URLs the admin chose to
+    // KEEP — i.e. didn't remove — on this edit. Without it, uploading new
+    // photos would silently wipe out every existing one instead of adding
+    // to them. Only rebuild `images` when the gallery was actually touched
+    // (a kept-list was sent, or new files were uploaded); otherwise leave
+    // it out of the DTO so the service's `data.images !== undefined` check
+    // skips the column entirely and the existing gallery is left alone.
+    const existingImagesRaw = rawBody['existingImages'];
+    delete rawBody['existingImages'];
+    let keptImages: string[] = [];
+    let existingImagesProvided = false;
+    if (typeof existingImagesRaw === 'string') {
+      existingImagesProvided = true;
+      try {
+        const parsed = JSON.parse(existingImagesRaw);
+        if (Array.isArray(parsed)) keptImages = parsed.filter((v): v is string => typeof v === 'string');
+      } catch { /* malformed — treat as no photos kept */ }
+    }
+    if (existingImagesProvided || newImagePaths.length > 0) {
+      rawBody['images'] = [...keptImages, ...newImagePaths];
+    }
 
     // Save logo if present
     if (logoFiles.length > 0) {

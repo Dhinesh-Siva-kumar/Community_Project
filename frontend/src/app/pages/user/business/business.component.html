@@ -334,7 +334,7 @@
             <div class="bd-info-list">
               @if (biz.phone) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--green"><i class="bi bi-telephone-fill"></i></div><div><span class="bd-info-row__label">Phone</span><a [href]="'tel:' + biz.phone" class="bd-info-row__value bd-info-row__value--link">{{ biz.phone }}</a></div></div> }
               @if ($any(biz).whatsapp) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--whatsapp"><i class="bi bi-whatsapp"></i></div><div><span class="bd-info-row__label">WhatsApp</span><a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ $any(biz).whatsapp }}</a></div></div> }
-              @if (biz.email) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--blue"><i class="bi bi-envelope-fill"></i></div><div><span class="bd-info-row__label">Email</span><a [href]="'mailto:' + biz.email" class="bd-info-row__value bd-info-row__value--link">{{ biz.email }}</a></div></div> }
+              @if (biz.email) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--blue"><i class="bi bi-envelope-fill"></i></div><div><span class="bd-info-row__label">Email</span><a [href]="'mailto:' + biz.email" (click)="openMailto(biz.email, $event)" class="bd-info-row__value bd-info-row__value--link">{{ biz.email }}</a></div></div> }
               @if (biz.website) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--teal"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">Website</span><a [href]="biz.website" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ biz.website }}</a></div></div> }
             </div>
           </div>
@@ -444,7 +444,7 @@
                   <label class="jb-label">Business Logo <span class="text-danger">*</span></label>
                    @if (logoPreview()) {
                      <div class="jb-logo-preview">
-                       <img [src]="logoPreview()!" alt="Logo preview" class="jb-logo-preview__img" loading="lazy" />
+                       <img [src]="logoPreview() | imageUrl" alt="Logo preview" class="jb-logo-preview__img" loading="lazy" />
                        <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                      </div>
                   } @else {
@@ -452,6 +452,23 @@
                       [resetCounter]="logoUploadReset()" label="Upload business logo (JPG, PNG, WEBP)"
                       (filesChange)="onLogoChange($event)"></app-file-upload>
                   }
+                </div>
+
+                <!-- Business Status -->
+                <div class="col-12">
+                  <div class="cm-default-row">
+                    <div class="cm-default-label">
+                      <i class="bi" [ngClass]="businessForm.get('isActive')?.value ? 'bi-check-circle-fill' : 'bi-dash-circle-fill'"></i>
+                      <span>Business Status</span>
+                      <span class="cm-default-hint">
+                        {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
+                      </span>
+                    </div>
+                    <label class="cm-switch">
+                      <input type="checkbox" formControlName="isActive" />
+                      <span class="cm-switch-slider"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -524,22 +541,68 @@
                 <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">Location</span></div>
               </div>
               <div class="row g-3">
+                <!-- Country — selecting it loads that country's own address
+                     hierarchy (division levels, labels, postal rules) below. -->
                 <div class="col-md-4">
                   <label class="jb-label">Country <span class="text-danger">*</span></label>
-                  <app-searchable-select formControlName="countryId" [options]="bizCountryOptions()"
-                    placeholder="Select country" searchPlaceholder="Search countries…"></app-searchable-select>
+                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
+                    placeholder="Select country" searchPlaceholder="Search countries…"
+                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
                   @if (businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched) {
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country is required</span>
                   }
                 </div>
+
+                <!-- Division level 1 (state/province/region/emirate/etc.) —
+                     label and presence are entirely data-driven per country. -->
+                @if (adminLevels().length >= 1) {
+                  <div class="col-md-4">
+                    <label class="jb-label">
+                      {{ adminLevels()[0].label }} <span class="text-danger">*</span>
+                      @if (division1Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
+                    </label>
+                    <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
+                      [placeholder]="division1Options().length ? ('Select ' + adminLevels()[0].label.toLowerCase()) : 'Select country first'"
+                      (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
+                    @if (businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched) {
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[0].label }} is required</span>
+                    }
+                  </div>
+                }
+
+                <!-- Division level 2 (district/county-equivalent) — only for
+                     the countries whose imported data actually nests this deep. -->
+                @if (adminLevels().length >= 2) {
+                  <div class="col-md-4">
+                    <label class="jb-label">
+                      {{ adminLevels()[1].label }} <span class="text-danger">*</span>
+                      @if (division2Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
+                    </label>
+                    <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
+                      [placeholder]="division2Options().length ? ('Select ' + adminLevels()[1].label.toLowerCase()) : ('Select ' + adminLevels()[0].label.toLowerCase() + ' first')"
+                      (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
+                    @if (businessForm.get('division2Id')?.invalid && businessForm.get('division2Id')?.touched) {
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[1].label }} is required</span>
+                    }
+                  </div>
+                }
+
+                <!-- City — server-searched and scoped to the leaf division (or
+                     the country itself for the handful of countries with no
+                     division level at all) instead of loading a whole
+                     worldwide list into the browser. -->
                 <div class="col-md-4">
-                  <label class="jb-label" for="userBizState">State / Region</label>
-                  <input id="userBizState" type="text" class="jb-input" formControlName="state" placeholder="Enter state / region" />
+                  <label class="jb-label">City <span class="text-danger">*</span></label>
+                  <app-searchable-select formControlName="cityId"
+                    [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
+                    [placeholder]="businessForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
+                    searchPlaceholder="Type to search cities…"
+                    (ngModelChange)="onCityChange($event)"></app-searchable-select>
+                  @if (businessForm.get('cityId')?.invalid && businessForm.get('cityId')?.touched) {
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> City is required</span>
+                  }
                 </div>
-                <div class="col-md-4">
-                  <label class="jb-label" for="userBizCity">City</label>
-                  <input id="userBizCity" type="text" class="jb-input" formControlName="city" placeholder="Enter city" />
-                </div>
+
                 <div class="col-md-8">
                   <label class="jb-label" for="userBizAddr">Address <span class="text-danger">*</span></label>
                   <input id="userBizAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…"
@@ -548,12 +611,28 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Address is required</span>
                   }
                 </div>
+
+                <!-- Postal code — required-ness, format hint and validation
+                     all come from the selected country's own postal rules;
+                     countries that don't use postal codes leave it optional. -->
                 <div class="col-md-4">
-                  <label class="jb-label" for="userBizPin">Pin Code <span class="text-danger">*</span></label>
-                  <input id="userBizPin" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA"
+                  <label class="jb-label" for="userBizPin">
+                    Postal Code
+                    @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
+                    @else { <span class="jb-optional">(optional)</span> }
+                  </label>
+                  <input id="userBizPin" type="text" class="jb-input" formControlName="pincode"
+                    [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'"
                     [class.jb-input--error]="businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched" />
                   @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid pin code required</span>
+                    <span class="jb-field-error">
+                      <i class="bi bi-exclamation-circle"></i>
+                      @if (businessForm.get('pincode')?.errors?.['required']) {
+                        Postal code is required
+                      } @else {
+                        Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}
+                      }
+                    </span>
                   }
                 </div>
               </div>
@@ -563,7 +642,7 @@
             <div class="jb-form-section">
               <div class="jb-form-section__header">
                 <div class="jb-form-section__badge"><i class="bi bi-clock"></i></div>
-                <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">Opening Hours</span></div>
+                <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">Opening Days &amp; Hours</span></div>
               </div>
               <div class="row g-3">
                 <div class="col-12">
@@ -572,6 +651,7 @@
                     @for (day of DAYS; track day) {
                       <button type="button" class="jb-day-toggle"
                         [class.jb-day-toggle--on]="selectedDays().includes(day)"
+                        [attr.aria-pressed]="selectedDays().includes(day)"
                         (click)="toggleDay(day)">{{ day.slice(0,3) }}</button>
                     }
                   </div>

@@ -3,6 +3,7 @@ import {
   ElementRef,
   inject,
   signal,
+  computed,
   ViewChildren,
   QueryList,
   HostBinding,
@@ -24,6 +25,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { getPhoneRule } from '../../../shared/utils/phone';
+import { computePasswordStrength } from '../../../shared/utils/password-strength';
 import {
   Subject,
   debounceTime,
@@ -78,6 +80,10 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   private savedPhone      = '';
   private savedIdentifier = '';
 
+  /** Updated by newPassword valueChanges so computed() can track it. */
+  private passwordValue = signal('');
+  passwordStrength = computed(() => computePasswordStrength(this.passwordValue()));
+
   private countdownInterval?: ReturnType<typeof setInterval>;
   private resendInterval?:    ReturnType<typeof setInterval>;
   private destroy$            = new Subject<void>();
@@ -113,6 +119,10 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     this.loadTheme();
     this.initForms();
     this.setupLookup();
+
+    this.fpForm.get('newPassword')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.passwordValue.set(v ?? ''));
   }
 
   ngOnDestroy(): void {

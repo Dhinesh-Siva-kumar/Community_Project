@@ -1,91 +1,105 @@
-<div class="auth-page d-flex align-items-center justify-content-center min-vh-100">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-5 col-lg-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-4 p-md-5">
-            <!-- Logo / Brand -->
-            <div class="text-center mb-4">
-              <div class="brand-icon mb-3">
-                <i class="bi bi-shield-lock-fill"></i>
-              </div>
-              <h3 class="fw-bold mb-1">Admin Portal</h3>
-              <p class="text-muted small">Authorized personnel only</p>
-            </div>
+<div class="auth-page admin-login-page">
+  <!-- Theme toggle -->
+  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+    <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
+  </button>
 
-            <!-- Admin Login Form -->
-            <form [formGroup]="adminLoginForm" (ngSubmit)="onSubmit()">
-              <!-- Email -->
-              <div class="mb-3">
-                <label for="email" class="form-label">Admin Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  class="form-control"
-                  formControlName="email"
-                  placeholder="admin@example.com"
-                  [class.is-invalid]="f['email'].touched && f['email'].invalid"
-                />
-                @if (f['email'].touched && f['email'].invalid) {
-                  <div class="invalid-feedback">
-                    @if (f['email'].errors?.['required']) {
-                      Email is required.
-                    } @else if (f['email'].errors?.['email']) {
-                      Please enter a valid email address.
-                    }
-                  </div>
-                }
-              </div>
+  <div class="admin-card-wrap">
+    <div class="auth-card">
 
-              <!-- Password -->
-              <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  class="form-control"
-                  formControlName="password"
-                  placeholder="Enter admin password"
-                  [class.is-invalid]="f['password'].touched && f['password'].invalid"
-                />
-                @if (f['password'].touched && f['password'].invalid) {
-                  <div class="invalid-feedback">
-                    @if (f['password'].errors?.['required']) {
-                      Password is required.
-                    } @else if (f['password'].errors?.['minlength']) {
-                      Password must be at least 6 characters.
-                    }
-                  </div>
-                }
-              </div>
-
-              <!-- Submit -->
-              <button
-                type="submit"
-                class="btn btn-admin w-100 py-2 mt-2"
-                [disabled]="loading()"
-              >
-                @if (loading()) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Authenticating...
-                } @else {
-                  Sign In as Admin
-                }
-              </button>
-            </form>
-
-            <!-- Links -->
-            <div class="text-center mt-4">
-              <p class="mb-0 small">
-                <a routerLink="/auth/login" class="text-decoration-none">
-                  <i class="bi bi-arrow-left me-1"></i>
-                  Back to User Login
-                </a>
-              </p>
-            </div>
-          </div>
+      <div class="admin-brand">
+        <div class="admin-brand-icon">
+          <i class="bi bi-shield-lock-fill"></i>
         </div>
+        <h2>Admin Portal</h2>
+        <p class="subtitle">Authorized personnel only</p>
       </div>
+
+      <form [formGroup]="adminLoginForm" (ngSubmit)="onSubmit()" class="auth-form" autocomplete="on">
+
+        <!-- Email -->
+        <div class="field-group">
+          <label class="field-label" for="admin-email">Admin Email</label>
+          <div class="field-input-wrap">
+            <i class="bi bi-envelope field-icon"></i>
+            <input
+              id="admin-email"
+              type="email"
+              formControlName="email"
+              placeholder="admin@example.com"
+              autocomplete="username"
+              class="field-input"
+              [class.is-invalid]="f['email'].touched && f['email'].invalid"
+              [attr.aria-describedby]="f['email'].touched && f['email'].invalid ? 'admin-email-error' : null"
+              [attr.aria-invalid]="f['email'].touched && f['email'].invalid"
+            />
+          </div>
+          @if (f['email'].touched && f['email'].invalid) {
+            <div class="field-error" id="admin-email-error" role="alert">
+              @if (f['email'].errors?.['required']) {
+                Email is required.
+              } @else if (f['email'].errors?.['email']) {
+                Please enter a valid email address.
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label class="field-label" for="admin-password">Password</label>
+          <div class="field-input-wrap">
+            <i class="bi bi-lock field-icon"></i>
+            <input
+              id="admin-password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter admin password"
+              autocomplete="current-password"
+              class="field-input"
+              [class.is-invalid]="f['password'].touched && f['password'].invalid"
+              [attr.aria-describedby]="f['password'].touched && f['password'].invalid ? 'admin-password-error' : null"
+              [attr.aria-invalid]="f['password'].touched && f['password'].invalid"
+            />
+            <button
+              type="button"
+              class="toggle-pw-btn"
+              (click)="showPassword.set(!showPassword())"
+              tabindex="-1"
+              aria-label="Toggle password visibility"
+            >
+              <i class="bi" [class.bi-eye-slash]="!showPassword()" [class.bi-eye]="showPassword()"></i>
+            </button>
+          </div>
+          @if (f['password'].touched && f['password'].invalid) {
+            <div class="field-error" id="admin-password-error" role="alert">
+              @if (f['password'].errors?.['required']) {
+                Password is required.
+              } @else if (f['password'].errors?.['minlength']) {
+                Password must be at least 6 characters.
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Authenticating...
+          } @else {
+            <i class="bi bi-box-arrow-in-right"></i>
+            Sign In as Admin
+          }
+        </button>
+      </form>
+
+      <p class="switch-auth">
+        <a routerLink="/auth/login" class="switch-link">
+          <i class="bi bi-arrow-left me-1"></i>
+          Back to User Login
+        </a>
+      </p>
     </div>
   </div>
 </div>

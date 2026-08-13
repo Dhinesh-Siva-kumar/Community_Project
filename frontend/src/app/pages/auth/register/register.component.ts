@@ -21,6 +21,7 @@ import {
   ValidatorFn,
 } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Country, UserRegister } from '../../../core/models';
@@ -41,6 +42,7 @@ import {
   SearchableSelectComponent,
   SelectOption,
 } from '../../../shared/components/searchable-select/searchable-select.component';
+import { computePasswordStrength } from '../../../shared/utils/password-strength';
 
 @Component({
   selector: 'app-register',
@@ -50,6 +52,7 @@ import {
     ReactiveFormsModule,
     RouterLink,
     SearchableSelectComponent,
+    A11yModule,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -81,6 +84,8 @@ export class RegisterComponent {
   private googleCredential  = signal('');
   private googleCountryId   = signal<number | null>(null);
   private googleBtnInitialized = false;
+  private googleBtnEl: HTMLElement | null = null;
+  private googleBtnResizeObserver?: ResizeObserver;
 
   /**
    * True only when a real (non-placeholder) Google Client ID is present.
@@ -97,20 +102,7 @@ export class RegisterComponent {
   /** Updated by password valueChanges so computed() can track it. */
   private passwordValue = signal('');
 
-  passwordStrength = computed(() => {
-    const pw = this.passwordValue();
-    const criteria = {
-      minLength: pw.length >= 8,
-      uppercase: /[A-Z]/.test(pw),
-      lowercase: /[a-z]/.test(pw),
-      number:    /[0-9]/.test(pw),
-      special:   /[^A-Za-z0-9]/.test(pw),
-    };
-    return {
-      ...criteria,
-      score: Object.values(criteria).filter(Boolean).length,
-    };
-  });
+  passwordStrength = computed(() => computePasswordStrength(this.passwordValue()));
 
   countries: Country[] = [];
   countryOptions: SelectOption[] = [];
@@ -134,6 +126,9 @@ export class RegisterComponent {
     this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('landing-theme', this.currentTheme);
+    }
+    if (this.googleBtnEl) {
+      this.renderGoogleButton(this.googleBtnEl);
     }
   }
 
@@ -230,6 +225,7 @@ export class RegisterComponent {
     this.destroy$.complete();
     this.stopCountdown();
     this.stopResendCooldown();
+    this.googleBtnResizeObserver?.disconnect();
   }
 
   ngAfterViewInit() {
@@ -645,6 +641,7 @@ export class RegisterComponent {
         return;
       }
       this.googleBtnInitialized = true;
+      this.googleBtnEl = container;
       win.google.accounts.id.initialize({
         client_id: environment.googleClientId,
         callback: (response: any) => {
@@ -652,18 +649,51 @@ export class RegisterComponent {
         },
         ux_mode: 'popup',
       });
-      const btnWidth = Math.min(container.offsetWidth || 420, 420);
-      win.google.accounts.id.renderButton(container, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        width: btnWidth,
-      });
+      // GSI renders at a fixed pixel width and doesn't reflow on its own, and
+      // a synchronous offsetWidth read here can race layout (container-query
+      // resolution, font load) and land on the `|| 420` fallback. Let
+      // ResizeObserver drive every render instead — it always reports a
+      // settled post-layout size, including its guaranteed initial callback,
+      // so there's no separate "first render" path to get wrong.
+      if (typeof ResizeObserver !== 'undefined') {
+        const observeTarget = (container.closest('.auth-card') as HTMLElement) ?? container;
+        let debounce: ReturnType<typeof setTimeout> | undefined;
+        this.googleBtnResizeObserver = new ResizeObserver(() => {
+          clearTimeout(debounce);
+          debounce = setTimeout(() => this.renderGoogleButton(container), 60);
+        });
+        this.googleBtnResizeObserver.observe(observeTarget);
+      } else {
+        this.renderGoogleButton(container);
+      }
     };
 
     setTimeout(tryRender, 0);
+  }
+
+  // GSI's own `renderButton` has no live theme prop — swapping app themes
+  // means clearing the container and redrawing with the matching GSI theme.
+  private renderGoogleButton(container: HTMLElement): void {
+    const win = window as any;
+    if (!win.google?.accounts?.id) return;
+    container.innerHTML = '';
+    // `container` is a flex item with no explicit width of its own — once
+    // cleared it has no content, so its offsetWidth reads ~0 and silently
+    // hits the `|| 420` fallback every render. Measure the wrapper
+    // (`.google-btn-container`, which does have a real width) instead.
+    const measureEl = container.parentElement ?? container;
+    const btnWidth = Math.min(measureEl.clientWidth || 420, 420);
+    // 'large' is the only GSI size that reliably keeps the G logo visible —
+    // 'medium'/'small' silently drop it once width gets tight. The actual
+    // fit comes from `width` tracking the card's real available space.
+    win.google.accounts.id.renderButton(container, {
+      type:  'standard',
+      theme: this.currentTheme === 'dark' ? 'filled_black' : 'outline',
+      size:  'large',
+      text:  'continue_with',
+      shape: 'rectangular',
+      width: btnWidth,
+    });
   }
 
   handleGoogleCredential(credential: string): void {

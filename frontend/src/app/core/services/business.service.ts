@@ -20,24 +20,23 @@ export class BusinessService {
     categoryId?: string;
     categoryIds?: string;
     page?: number;
+    limit?: number;
     search?: string;
     country?: string;
     openingHours?: string;
     dateFrom?: string;
     dateTo?: string;
     pincode?: string;
+    status?: 'active' | 'inactive' | '';
+    sortBy?: string;
+    sortDir?: string;
   }): Observable<PaginatedResponse<Business>> {
-    const query: Record<string, any> = {};
-    if (params.categoryId) query['categoryId'] = params.categoryId;
-    if (params.categoryIds) query['categoryIds'] = params.categoryIds;
-    if (params.page) query['page'] = params.page;
-    if (params.search) query['search'] = params.search;
-    if (params.country) query['country'] = params.country;
-    if (params.openingHours) query['openingHours'] = params.openingHours;
-    if (params.dateFrom) query['dateFrom'] = params.dateFrom;
-    if (params.dateTo) query['dateTo'] = params.dateTo;
-    if (params.pincode) query['pincode'] = params.pincode;
-    return this.api.get<PaginatedResponse<Business>>('/business', query);
+    // Forward every param as-is — api.get() already strips null/undefined/''
+    // values. Previously this cherry-picked individual fields into a fresh
+    // object and silently dropped `status`, `limit`, `sortBy` and `sortDir`
+    // even though callers passed them, so the Status filter (and page size /
+    // sorting) had no effect on the request.
+    return this.api.get<PaginatedResponse<Business>>('/business', params);
   }
 
   getBusiness(id: string): Observable<Business> {

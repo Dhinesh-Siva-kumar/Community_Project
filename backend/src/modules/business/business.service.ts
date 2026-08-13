@@ -2,6 +2,7 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
 export async function createCategory(data: CreateBusinessCategoryDtoType, adminId: string) {
@@ -53,6 +54,13 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
   const category = await db('business_categories').where({ id: data.categoryId }).first();
   if (!category) throw new AppError(404, 'Business category not found');
 
+  await validateAddressHierarchy({
+    countryId: data.countryId,
+    stateId: data.stateId,
+    cityId: data.cityId,
+    pincode: data.pincode,
+  });
+
   const [business] = await db('businesses')
     .insert({
       name: data.name,
@@ -75,6 +83,10 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       opening_days:  data.openingDays  ?? null,
       whatsapp:      data.whatsapp     ?? null,
       maps_link:     data.mapsLink     ?? null,
+      country_id:    data.countryId    ?? null,
+      state_id:      data.stateId      ?? null,
+      city_id:       data.cityId       ?? null,
+      is_active:     data.isActive     ?? true,
       user_id: userId,
     })
     .returning('*');
@@ -94,7 +106,13 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
   const query = db('businesses as b')
     .join('users as u', 'b.user_id', 'u.id')
     .join('business_categories as bc', 'b.category_id', 'bc.id')
-    .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon');
+    .leftJoin('master_countries as mc', 'b.country_id', 'mc.id')
+    .leftJoin('master_states as ms', 'b.state_id', 'ms.id')
+    .leftJoin('master_cities as mci', 'b.city_id', 'mci.id')
+    .select(
+      'b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon',
+      'mc.name as geo_country_name', 'ms.name as geo_state_name', 'mci.name as geo_city_name',
+    );
 
   const countQuery = db('businesses');
 
@@ -128,8 +146,33 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     countQuery.andWhereILike('country', `%${country}%`);
   }
   if (openingHours) {
-    query.andWhereILike('b.opening_hours', `%${openingHours}%`);
-    countQuery.andWhereILike('opening_hours', `%${openingHours}%`);
+    // `opening_hours` is free text. Businesses created/edited through the
+    // admin form always get an exact "9:00 AM – 5:00 PM" style string built
+    // from its time pickers — which never literally contains "9-5" or
+    // "24/7" — while businesses created through the user-facing form (a
+    // plain text input) might. Match both: the literal preset text (for
+    // free-typed values) and the admin form's canonical pattern for that
+    // preset, so the filter actually returns admin-created businesses too.
+    query.andWhere((qb) => {
+      qb.whereILike('b.opening_hours', `%${openingHours}%`);
+      if (openingHours === '9-5') {
+        qb.orWhereILike('b.opening_hours', '9:00 AM%');
+      } else if (openingHours === '24/7') {
+        qb.orWhere((qb2) => {
+          qb2.whereILike('b.opening_hours', '12:00 AM%').andWhereILike('b.opening_hours', '%11:30 PM');
+        });
+      }
+    });
+    countQuery.andWhere((qb) => {
+      qb.whereILike('opening_hours', `%${openingHours}%`);
+      if (openingHours === '9-5') {
+        qb.orWhereILike('opening_hours', '9:00 AM%');
+      } else if (openingHours === '24/7') {
+        qb.orWhere((qb2) => {
+          qb2.whereILike('opening_hours', '12:00 AM%').andWhereILike('opening_hours', '%11:30 PM');
+        });
+      }
+    });
   }
   if (dateFrom) {
     query.andWhere('b.created_at', '>=', dateFrom);
@@ -155,6 +198,12 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
     isRemote:     b['is_remote'],
+    countryId:    b['country_id'],
+    stateId:      b['state_id'],
+    cityId:       b['city_id'],
+    countryName:  b['geo_country_name'],
+    stateName:    b['geo_state_name'],
+    cityName:     b['geo_city_name'],
     user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   }));
@@ -166,14 +215,26 @@ export async function findOne(id: string) {
   const business = await db('businesses as b')
     .join('users as u', 'b.user_id', 'u.id')
     .join('business_categories as bc', 'b.category_id', 'bc.id')
+    .leftJoin('master_countries as mc', 'b.country_id', 'mc.id')
+    .leftJoin('master_states as ms', 'b.state_id', 'ms.id')
+    .leftJoin('master_cities as mci', 'b.city_id', 'mci.id')
     .where('b.id', id)
-    .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.email as user_email', 'u.avatar',
-            'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon')
+    .select(
+      'b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.email as user_email', 'u.avatar',
+      'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon',
+      'mc.name as geo_country_name', 'ms.name as geo_state_name', 'mci.name as geo_city_name',
+    )
     .first();
 
   if (!business) throw new AppError(404, 'Business not found');
 
   const b = business as Record<string, unknown>;
+
+  // Walks the selected division's parent chain (top-level → leaf) so the
+  // Angular edit form can populate every division dropdown's options from
+  // stored ids alone — no fragile name-matching required.
+  const stateChain = b['state_id'] ? await getDivisionChain(b['state_id'] as number) : [];
+
   return {
     ...b,
     categoryId:   b['category_id'],
@@ -181,6 +242,13 @@ export async function findOne(id: string) {
     openingDays:  b['opening_days'],
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
+    countryId:    b['country_id'],
+    stateId:      b['state_id'],
+    cityId:       b['city_id'],
+    countryName:  b['geo_country_name'],
+    stateName:    b['geo_state_name'],
+    cityName:     b['geo_city_name'],
+    stateChain,
     user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'], email: b['user_email'], avatar: b['avatar'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   };
@@ -217,6 +285,24 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.openingDays !== undefined) updateData['opening_days'] = data.openingDays;
    if (data.whatsapp !== undefined) updateData['whatsapp'] = data.whatsapp;
    if (data.mapsLink !== undefined) updateData['maps_link'] = data.mapsLink;
+   if (data.countryId !== undefined) updateData['country_id'] = data.countryId;
+   if (data.stateId !== undefined) updateData['state_id'] = data.stateId;
+   if (data.cityId !== undefined) updateData['city_id'] = data.cityId;
+   if (data.isActive !== undefined) updateData['is_active'] = data.isActive;
+
+  // Validate the hierarchy using whichever id is being set now, falling
+  // back to the business's existing stored id for any field left unchanged
+  // by this partial update.
+  const effectiveCountryId = data.countryId !== undefined ? data.countryId : (business['country_id'] as number | null);
+  const effectiveStateId   = data.stateId   !== undefined ? data.stateId   : (business['state_id']   as number | null);
+  const effectiveCityId    = data.cityId    !== undefined ? data.cityId    : (business['city_id']    as number | null);
+  const effectivePincode   = data.pincode   !== undefined ? data.pincode   : (business['pincode']    as string | null);
+  await validateAddressHierarchy({
+    countryId: effectiveCountryId,
+    stateId: effectiveStateId,
+    cityId: effectiveCityId,
+    pincode: effectivePincode,
+  });
 
   await db('businesses').where({ id }).update(updateData);
 
