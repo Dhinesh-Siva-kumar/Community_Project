@@ -594,6 +594,23 @@ export class UserBusinessComponent implements OnInit {
 
   getWhatsappUrl(number: string): string { return 'https://wa.me/' + number.replace(/\D/g, ''); }
 
+  /**
+   * `mailto:` links ignore `target="_blank"` in every major browser — the
+   * OS mail handler is launched in-place instead of a real new tab. Opening
+   * a blank tab first and then pointing *that* tab's location at `mailto:`
+   * is the only reliable way to keep this page's tab untouched.
+   */
+  openMailto(email: string, event: Event): void {
+    event.preventDefault();
+    const win = window.open('', '_blank');
+    if (win) {
+      win.opener = null;
+      win.location.href = 'mailto:' + email;
+    } else {
+      window.location.href = 'mailto:' + email;
+    }
+  }
+
   isDayActive(openingDays: string, day: string): boolean {
     return openingDays.split(',').some(x => x.trim().toLowerCase().startsWith(day.toLowerCase()));
   }

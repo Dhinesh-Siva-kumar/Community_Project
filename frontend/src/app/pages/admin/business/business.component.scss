@@ -2710,8 +2710,17 @@ $accents: (
   margin-top: $spacing-md;
   &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; }
   &__grid { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
+  // Same remove-badge treatment as .jb-logo-preview__remove, just per-thumbnail.
+  &__item { position: relative; display: inline-flex; }
   &__img { width: 80px; height: 60px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; }
-  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; }
+  &__remove {
+    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.6rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all);
+    &:hover { background: $color-error-bg; border-color: $color-danger; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; .bi { font-size: 0.75em; } }
 }
 
 
@@ -2722,20 +2731,27 @@ $accents: (
 .bd-hero {
   border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
   background: #fff; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
-  
 
-  &__cover { height: 200px; overflow: hidden; background: $color-bg-page; flex-shrink: 0; }
-  &__cover-img { width: 100%; height: 100%; object-fit: cover; }
-  &__cover-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.05)); font-size: 4rem; color: $color-primary-dark; opacity: 0.5; }
-
-  &__profile { display: flex; align-items: flex-start; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
+  // No cover banner — just the logo + business details, so the profile row
+  // sits flush at the top of the card.
+  &__profile { display: flex; align-items: center; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
 
   &__avatar {
-    width: 64px; height: 64px; border-radius: $radius-full; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    width: 72px; height: 72px; border-radius: $radius-full; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
     color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12));
     border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
-    margin-top: -48px; box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    padding: 0; cursor: default; overflow: hidden; @include transition-short(all);
+
+    // Same zoom-in affordance as the gallery thumbnails below, since both
+    // open the same lightbox.
+    &--clickable {
+      cursor: zoom-in;
+      &:hover { transform: scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.16); }
+      &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+    }
+    &:disabled { cursor: default; }
   }
 
   &__info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
@@ -2746,13 +2762,26 @@ $accents: (
 
   &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
   &__admin { display: flex; align-items: center; gap: 6px; }
+
+  // Edit / Delete — matched to the height of the Call/WhatsApp/Website/
+  // Directions pills (.bd-action-btn) they sit alongside in this row.
+  &__admin-btn {
+    width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: $radius-md; font-size: 0.85rem; cursor: pointer;
+    border: 1.5px solid transparent; @include transition-short(all);
+    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #0284C7; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: #0284C7; } }
+    &--delete { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger; &:hover:not(:disabled) { background: rgba(220,38,38,0.15); border-color: $color-danger; } }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
 }
 
 .bd-badge {
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
   border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
   text-transform: uppercase; letter-spacing: 0.04em;
-  &--active { background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
 }
 
 .bd-action-btn {
@@ -2797,27 +2826,89 @@ $accents: (
   &__value { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; word-break: break-word; &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
 }
 
+// Soft tinted pill — same visual language as .bd-action-btn / .jb-pill-btn
+// used everywhere else on this tab, instead of a one-off solid gradient CTA.
+// Both variants share the same shape/padding/font so the pair (primary
+// "View on Maps" vs. secondary "Get Directions" fallback) reads as one
+// consistent button style, just at two tint strengths.
 .bd-maps-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md;
   padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
   text-decoration: none; @include transition-short(all);
-  background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary;
-  box-shadow: 0 3px 10px rgba(251,191,36,0.30);
-  &:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(251,191,36,0.40); color: $color-on-primary; }
-  &--secondary { background: rgba(251,191,36,0.10); color: $color-primary-darker; box-shadow: none; border: 1.5px solid rgba(251,191,36,0.30); &:hover { background: rgba(251,191,36,0.18); box-shadow: none; } }
+  background: rgba(251,191,36,0.14); color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.35);
+  &:hover { background: rgba(251,191,36,0.22); border-color: $color-primary; transform: translateY(-1px); color: $color-primary-darker; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  &--secondary { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.24); &:hover { background: rgba(251,191,36,0.14); } }
 }
 
-.bd-days { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: $spacing-sm; }
-.bd-day  { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 34px; border-radius: $radius-sm; font-size: $font-size-xs; font-weight: $font-weight-bold; background: $color-stone-100; color: $color-stone-400; border: 1.5px solid $color-border; &--active { background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; border-color: transparent; box-shadow: 0 2px 6px rgba(251,191,36,0.30); } }
+.bd-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: $spacing-sm; }
+// Light amber tint on the selected days — matches .jb-day-toggle--on from
+// the Business creation form's Opening Days picker, instead of a heavier
+// gradient fill.
+.bd-day  {
+  display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
+  border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  background: rgba(255,255,255,0.7); color: $color-stone-500; border: 1.5px solid $color-border;
+  &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
+}
 .bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
 
 .bd-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; cursor: zoom-in; @include transition-short(all); &:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
+.bd-gallery__btn { padding: 0; border: none; background: none; cursor: zoom-in; border-radius: $radius-sm; line-height: 0; &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; } }
+.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; @include transition-short(all); .bd-gallery__btn:hover & { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
 
 @include media-sm-max {
-  .bd-hero__profile { flex-direction: column; }
-  .bd-hero__actions { margin-left: 0; }
-  .bd-hero__avatar { margin-top: -40px; }
+  .bd-hero__profile { flex-direction: column; align-items: center; text-align: center; }
+  .bd-hero__info { align-items: center; }
+  .bd-hero__actions { margin-left: 0; justify-content: center; }
+}
+
+// ── Image lightbox — copied 1:1 from community-detail.component's
+// .cd-lightbox so the logo/gallery preview here looks and behaves exactly
+// like the Community Post image viewer. ──
+.cd-lightbox {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, 0.84); backdrop-filter: blur(3px);
+  z-index: 1150; display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+
+.cd-lightbox-content {
+  position: relative; width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  border-radius: 16px; background: rgba(15, 23, 42, 0.48); border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5); padding: 46px 16px 44px;
+}
+
+.cd-lightbox-image { width: 100%; max-height: calc(100vh - 160px); object-fit: contain; display: block; border-radius: 12px; }
+
+.cd-lightbox-close,
+.cd-lightbox-nav {
+  border: 1px solid rgba(226, 232, 240, 0.35); background: rgba(15, 23, 42, 0.6); color: $white;
+  width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.18s ease, border-color 0.18s ease;
+  &:hover { background: rgba(30, 41, 59, 0.78); border-color: rgba(226, 232, 240, 0.48); }
+}
+
+.cd-lightbox-close { position: absolute; top: 10px; right: 10px; }
+
+.cd-lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  &.cd-lightbox-nav--prev { left: 10px; }
+  &.cd-lightbox-nav--next { right: 10px; }
+}
+
+.cd-lightbox-footer { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; }
+
+.cd-lightbox-counter {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 28px;
+  padding: 0 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(226, 232, 240, 0.28);
+  color: #f8fafc; font-size: 12px; font-weight: 700;
+}
+
+@include media-sm-max {
+  .cd-lightbox-content { width: min(94vw, 760px); padding: 42px 12px 40px; }
+  .cd-lightbox-image { max-height: calc(100vh - 190px); }
+  .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
+  .cd-lightbox-nav.cd-lightbox-nav--prev { left: 14px; }
+  .cd-lightbox-nav.cd-lightbox-nav--next { right: 14px; }
 }
 
 .jb-optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }

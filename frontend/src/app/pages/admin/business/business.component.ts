@@ -167,12 +167,20 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     return list.slice(0, 80);
   });
 
-  // Image carousel
+  // Image lightbox preview — same pattern as the Community Post image viewer
+  // (community-detail.component's .cd-lightbox), reused as-is so logo/gallery
+  // previews look and behave identically to viewing a community post's images.
+  lightboxOpen = signal(false);
+  lightboxImages = signal<string[]>([]);
   activeImageIndex = signal(0);
 
   // Image upload
   selectedImages = signal<File[]>([]);
   fileUploadReset = signal(0);
+  // Existing gallery photos still kept while editing — the admin can remove
+  // individual ones; newly uploaded files (selectedImages) get appended to
+  // whatever remains here instead of wiping the whole gallery.
+  existingGalleryImages = signal<string[]>([]);
 
   // Logo
   selectedLogo    = signal<File | null>(null);
@@ -1388,6 +1396,7 @@ private initForms(): void {
       this.businessForm.get('whatsappCountryId')?.setValue(india.id);
     }
     this.selectedImages.set([]); this.selectedLogo.set(null); this.logoPreview.set(null);
+    this.existingGalleryImages.set([]);
     this.selectedDays.set([]);
     this.businessForm.get('openingDays')?.setValue('');
     this.resetDivisionState();
@@ -1472,6 +1481,7 @@ private initForms(): void {
     this.selectedLogo.set(null);
     this.logoPreview.set(logoUrl ?? null);
     this.selectedImages.set([]);
+    this.existingGalleryImages.set(biz.images ? [...biz.images] : []);
     this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
 
@@ -1551,11 +1561,16 @@ private initForms(): void {
   closeAddBusiness(): void {
     this.showAddBusinessModal.set(false);
     this.editingBusiness.set(null);
+    this.existingGalleryImages.set([]);
     this.unlockPageScroll();
   }
 
   onBusinessImagesChange(files: File[]): void {
     this.selectedImages.set(files);
+  }
+
+  removeExistingImage(img: string): void {
+    this.existingGalleryImages.update(imgs => imgs.filter(i => i !== img));
   }
 
   submitBusiness(): void {
@@ -1624,6 +1639,10 @@ private initForms(): void {
      const images  = this.selectedImages();
      const logo    = this.selectedLogo();
      const editing = this.editingBusiness();
+     // Existing gallery photos the admin didn't remove — sent alongside any
+     // newly uploaded files so the backend can rebuild the full gallery
+     // (kept + new) instead of the new upload wiping everything out.
+     if (editing) raw['existingImages'] = JSON.stringify(this.existingGalleryImages());
      const req = editing
        ? this.businessService.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined, logo ?? undefined)
        : this.businessService.createBusiness(raw, images.length > 0 ? images : undefined, logo ?? undefined);
@@ -1718,21 +1737,61 @@ private initForms(): void {
     .some(x => x.trim().toLowerCase().startsWith(day.toLowerCase()));
   }
   
-  // Image Carousel
-  prevImage(): void {
-    const images = this.selectedBusiness()?.images ?? [];
-    if (images.length === 0) return;
-    this.activeImageIndex.update((i) => (i === 0 ? images.length - 1 : i - 1));
+  // Image lightbox — mirrors community-detail.component's openImagePreview /
+  // closeImagePreview / nextPreviewImage / prevPreviewImage / getActivePreviewImage.
+  openImagePreview(images: string[], startIndex = 0): void {
+    if (!images?.length) return;
+    this.lightboxImages.set(images);
+    this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
+    this.lightboxOpen.set(true);
+    this.lockPageScroll();
   }
 
-  nextImage(): void {
-    const images = this.selectedBusiness()?.images ?? [];
-    if (images.length === 0) return;
-    this.activeImageIndex.update((i) => (i === images.length - 1 ? 0 : i + 1));
+  closeImagePreview(): void {
+    this.lightboxOpen.set(false);
+    this.lightboxImages.set([]);
+    this.activeImageIndex.set(0);
+    this.unlockPageScroll();
   }
 
-  setActiveImage(index: number): void {
-    this.activeImageIndex.set(index);
+  nextPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current + 1) % images.length);
+  }
+
+  prevPreviewImage(): void {
+    const images = this.lightboxImages();
+    if (!images.length) return;
+    this.activeImageIndex.update((current) => (current - 1 + images.length) % images.length);
+  }
+
+  getActivePreviewImage(): string | null {
+    const images = this.lightboxImages();
+    const index = this.activeImageIndex();
+    if (!images.length || index < 0 || index >= images.length) return null;
+    return images[index] ?? null;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onLightboxEscapeKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.closeImagePreview();
+  }
+
+  @HostListener('document:keydown.arrowright', ['$event'])
+  onLightboxArrowRightKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.nextPreviewImage();
+  }
+
+  @HostListener('document:keydown.arrowleft', ['$event'])
+  onLightboxArrowLeftKey(event: KeyboardEvent): void {
+    if (!this.lightboxOpen()) return;
+    event.preventDefault();
+    this.prevPreviewImage();
   }
 
   // Pagination
@@ -1785,6 +1844,23 @@ private initForms(): void {
 
   getWhatsappUrl(number: string): string {
     return 'https://wa.me/' + number.replace(/\D/g, '');
+  }
+
+  /**
+   * `mailto:` links ignore `target="_blank"` in every major browser — the
+   * OS mail handler is launched in-place instead of a real new tab. Opening
+   * a blank tab first and then pointing *that* tab's location at `mailto:`
+   * is the only reliable way to keep this page's tab untouched.
+   */
+  openMailto(email: string, event: Event): void {
+    event.preventDefault();
+    const win = window.open('', '_blank');
+    if (win) {
+      win.opener = null;
+      win.location.href = 'mailto:' + email;
+    } else {
+      window.location.href = 'mailto:' + email;
+    }
   }
 
   getDirectionsUrl(): string {
