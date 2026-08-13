@@ -146,8 +146,33 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     countQuery.andWhereILike('country', `%${country}%`);
   }
   if (openingHours) {
-    query.andWhereILike('b.opening_hours', `%${openingHours}%`);
-    countQuery.andWhereILike('opening_hours', `%${openingHours}%`);
+    // `opening_hours` is free text. Businesses created/edited through the
+    // admin form always get an exact "9:00 AM – 5:00 PM" style string built
+    // from its time pickers — which never literally contains "9-5" or
+    // "24/7" — while businesses created through the user-facing form (a
+    // plain text input) might. Match both: the literal preset text (for
+    // free-typed values) and the admin form's canonical pattern for that
+    // preset, so the filter actually returns admin-created businesses too.
+    query.andWhere((qb) => {
+      qb.whereILike('b.opening_hours', `%${openingHours}%`);
+      if (openingHours === '9-5') {
+        qb.orWhereILike('b.opening_hours', '9:00 AM%');
+      } else if (openingHours === '24/7') {
+        qb.orWhere((qb2) => {
+          qb2.whereILike('b.opening_hours', '12:00 AM%').andWhereILike('b.opening_hours', '%11:30 PM');
+        });
+      }
+    });
+    countQuery.andWhere((qb) => {
+      qb.whereILike('opening_hours', `%${openingHours}%`);
+      if (openingHours === '9-5') {
+        qb.orWhereILike('opening_hours', '9:00 AM%');
+      } else if (openingHours === '24/7') {
+        qb.orWhere((qb2) => {
+          qb2.whereILike('opening_hours', '12:00 AM%').andWhereILike('opening_hours', '%11:30 PM');
+        });
+      }
+    });
   }
   if (dateFrom) {
     query.andWhere('b.created_at', '>=', dateFrom);
