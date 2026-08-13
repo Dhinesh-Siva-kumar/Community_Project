@@ -1,6 +1,12 @@
-<div class="toast-container">
+<div class="toast-container" aria-label="Notifications">
   @for (toast of toastService.toasts(); track toast.id) {
-    <div class="toast-item" [class]="getBgClass(toast.type)">
+    <div
+      class="toast-item"
+      [class]="getBgClass(toast.type)"
+      [attr.role]="toast.type === 'error' || toast.type === 'warning' ? 'alert' : 'status'"
+      [attr.aria-live]="toast.type === 'error' || toast.type === 'warning' ? 'assertive' : 'polite'"
+      aria-atomic="true"
+    >
       <div class="toast-body">
         <i class="bi" [class]="getIcon(toast.type)"></i>
         <span class="toast-message">{{ toast.message }}</span>

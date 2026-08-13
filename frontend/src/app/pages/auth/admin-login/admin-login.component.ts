@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostBinding, PLATFORM_ID, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,13 +17,39 @@ export class AdminLoginComponent {
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID) as object;
 
   loading = signal(false);
+  showPassword = signal(false);
+
+  // ── Theme ──────────────────────────────────────────────────────────────────
+  currentTheme: 'dark' | 'light' = 'dark';
+
+  @HostBinding('attr.data-theme')
+  get theme(): string { return this.currentTheme; }
+
+  toggleTheme(): void {
+    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('landing-theme', this.currentTheme);
+    }
+  }
+
+  private loadTheme(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('landing-theme') as 'dark' | 'light' | null;
+      if (saved) this.currentTheme = saved;
+    }
+  }
 
   adminLoginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  ngOnInit(): void {
+    this.loadTheme();
+  }
 
   onSubmit(): void {
     if (this.adminLoginForm.invalid) {

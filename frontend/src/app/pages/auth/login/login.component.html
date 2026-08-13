@@ -8,19 +8,7 @@
 
     <!-- ===== LEFT PANEL — Branding ===== -->
     <div class="auth-branding">
-      <!-- Decorative blobs -->
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-
       <div class="branding-content">
-        <div class="brand-logo-row">
-          <div class="brand-logo-icon">
-            <img src="logo.svg" alt="TamilConnect" class="auth-logo-img" />
-          </div>
-          <span class="brand-name">TamilConnect</span>
-        </div>
-
         <h1 class="brand-headline">
           Welcome back!<br />
           <span class="brand-headline-sub">We missed you.</span>
@@ -59,14 +47,6 @@
     <!-- ===== RIGHT PANEL — Form ===== -->
     <div class="auth-form-wrapper">
 
-      <!-- Mobile-only top logo -->
-      <div class="mobile-logo">
-        <div class="mobile-logo-icon">
-          <img src="logo.svg" alt="TamilConnect" class="auth-logo-img" />
-        </div>
-        <span>TamilConnect</span>
-      </div>
-
       <div class="auth-card">
         <div class="auth-card-header">
           <h2>Welcome back</h2>
@@ -88,10 +68,12 @@
                 autocomplete="username"
                 class="field-input"
                 [class.is-invalid]="f['identifier'].touched && f['identifier'].invalid"
+                [attr.aria-describedby]="f['identifier'].touched && f['identifier'].invalid ? 'login-identifier-error' : null"
+                [attr.aria-invalid]="f['identifier'].touched && f['identifier'].invalid"
               />
             </div>
             @if (f['identifier'].touched && f['identifier'].invalid) {
-              <div class="field-error">
+              <div class="field-error" id="login-identifier-error" role="alert">
                 @if (f['identifier'].errors?.['required']) {
                   Username or email is required.
                 } @else if (f['identifier'].errors?.['invalidUsernameOrEmail']) {
@@ -114,6 +96,8 @@
                 autocomplete="current-password"
                 class="field-input"
                 [class.is-invalid]="f['password'].touched && f['password'].invalid"
+                [attr.aria-describedby]="f['password'].touched && f['password'].invalid ? 'login-password-error' : null"
+                [attr.aria-invalid]="f['password'].touched && f['password'].invalid"
               />
               <button
                 type="button"
@@ -126,7 +110,7 @@
               </button>
             </div>
             @if (f['password'].touched && f['password'].invalid) {
-              <div class="field-error">
+              <div class="field-error" id="login-password-error" role="alert">
                 @if (f['password'].errors?.['required']) {
                   Password is required.
                 } @else if (f['password'].errors?.['minlength']) {
@@ -194,15 +178,15 @@
 
   <!-- ── Google username selection modal ── -->
   @if (googleNeedsUsername()) {
-    <div class="google-username-overlay">
-      <div class="google-username-card">
+    <div class="google-username-overlay" (keydown.escape)="closeGoogleModal()">
+      <div class="google-username-card" role="dialog" aria-modal="true" aria-labelledby="google-username-title" cdkTrapFocus cdkTrapFocusAutoCapture>
         <button type="button" class="google-username-close" (click)="closeGoogleModal()" aria-label="Close">
           <i class="bi bi-x-lg"></i>
         </button>
         <div class="google-username-icon">
           <i class="bi bi-person-check-fill"></i>
         </div>
-        <h3 class="google-username-title">Choose a Username</h3>
+        <h3 class="google-username-title" id="google-username-title">Choose a Username</h3>
         <p class="google-username-desc">
           Your suggested username is already taken. Pick a unique username to complete sign-in.
         </p>

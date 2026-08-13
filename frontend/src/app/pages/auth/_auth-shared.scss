@@ -1,0 +1,1391 @@
+@use '../../../assets/styles/index' as *;
+
+// ============================================================
+// AUTH SHARED PARTIAL
+// ============================================================
+// Common building blocks for Login / Register / Forgot Password / Admin
+// Login. Each page's own .scss does `@use '../_auth-shared';` to pull
+// this in, then adds only its page-specific selectors on top.
+//
+// Palette + component recipe ported from the reference design system at
+// "new design for login, registration and resetpassword/" (tokens.css +
+// auth.css) — warm neutrals, amber ramp with WCAG-safe on-amber ink,
+// pastel accent tiles, 4-bar password strength, aspect-ratio OTP boxes,
+// container-query responsiveness. Field/flow structure (what fields exist,
+// what order, validation, OTP-based reset) is the app's own and unchanged —
+// only the visual layer moved.
+//
+// Pages may override the --auth-* custom properties below (e.g. Admin
+// Login swaps in a cooler accent) — the shared rules only ever consume
+// the custom properties, never hardcode colors.
+// ============================================================
+
+// ============================================================
+// THEME VARIABLES
+// ============================================================
+:host[data-theme='light'] {
+  // warm neutrals
+  --auth-bg: #faf7f2;
+  --auth-bg-2: #f3eee5;
+  --auth-surface: #ffffff;
+  --auth-surface-2: #fbf8f3;
+  --auth-surface-3: #f4efe6;
+  --auth-ink: #1c1917;
+  --auth-ink-2: #6b6259;
+  --auth-ink-3: #9a9086;
+  --auth-border: #ece5da;
+  --auth-border-2: #ddd3c4;
+
+  // legacy names kept so page-specific .scss files (login/register/forgot-password/
+  // admin-login) that reference the old token names keep resolving correctly
+  --auth-bg2: var(--auth-surface);
+  --auth-text: var(--auth-ink);
+  --auth-text2: var(--auth-ink-2);
+  --auth-muted: var(--auth-ink-3);
+  --auth-input-bg: var(--auth-surface-2);
+  --auth-input-focus-bg: var(--auth-surface);
+  --auth-placeholder: var(--auth-ink-3);
+  --auth-toggle-bg: rgba(0, 0, 0, 0.06);
+  --auth-toggle-color: var(--auth-ink);
+  --auth-toggle-hover-bg: rgba(0, 0, 0, 0.10);
+  --auth-social-hover-bg: var(--auth-surface-2);
+  --auth-otp-box-bg: var(--auth-surface-2);
+
+  // amber — the brand
+  --auth-amber: #f5a524;
+  --auth-amber-deep: #e08700;
+  --auth-amber-press: #c97600;
+  --auth-amber-ink: #2a1c05;    // label ON amber — 9.6:1
+  --auth-butter: #fef3d0;
+  --auth-butter-2: #fde9ad;
+  --auth-amber-text: #a35f00;   // amber AS text on light — 4.9:1
+  --auth-glow-a: rgba(245, 165, 36, .30);
+  --auth-glow-b: rgba(94, 213, 161, .22);
+
+  // pastel accents — feature tiles
+  --auth-mint: #d6f5e3;  --auth-mint-ink: #0a7a4a;
+  --auth-sky: #d9eaff;   --auth-sky-ink: #1d63c9;
+  --auth-lilac: #eadcff; --auth-lilac-ink: #6b3fd4;
+  --auth-blush: #ffe0dc; --auth-blush-ink: #c33a26;
+
+  // semantic
+  --auth-ok: #0a9159; --auth-ok-soft: #e4f7ed; --auth-ok-line: #a8e3c6;
+  --auth-bad: #d4402a; --auth-bad-ink: #a82f1d; --auth-bad-soft: #fdece9; --auth-bad-line: #f5c4bb;
+  --auth-warn: #b06a00; --auth-warn-soft: #fdf1d9; --auth-warn-line: #f0d497;
+
+  --auth-s1: #d4402a; --auth-s2: #d98a00; --auth-s3: #7ba617; --auth-s4: #0a9159;
+
+  --auth-ring: rgba(245, 165, 36, .34);
+
+  --auth-sh-1: 0 1px 2px rgba(60, 45, 25, .05);
+  --auth-sh-2: 0 4px 14px -4px rgba(60, 45, 25, .10), 0 1px 3px rgba(60, 45, 25, .05);
+  --auth-sh-3: 0 20px 44px -18px rgba(60, 45, 25, .22), 0 4px 12px rgba(60, 45, 25, .06);
+  --auth-sh-btn: 0 2px 0 var(--auth-amber-press), 0 8px 18px -8px rgba(224, 135, 0, .55);
+
+  --auth-r-s: 10px; --auth-r-m: 14px; --auth-r-l: 20px; --auth-r-xl: 28px; --auth-r-f: 999px;
+  --auth-ease: cubic-bezier(.2, .8, .3, 1);
+}
+
+:host[data-theme='dark'] {
+  --auth-bg: #15120e;
+  --auth-bg-2: #1d1813;
+  --auth-surface: #221d17;
+  --auth-surface-2: #2a231c;
+  --auth-surface-3: #332b22;
+  --auth-ink: #f6f1e9;
+  --auth-ink-2: #b8ad9f;
+  --auth-ink-3: #8d8377;
+  --auth-border: #352d24;
+  --auth-border-2: #4a3f33;
+
+  --auth-bg2: var(--auth-surface);
+  --auth-text: var(--auth-ink);
+  --auth-text2: var(--auth-ink-2);
+  --auth-muted: var(--auth-ink-3);
+  --auth-input-bg: var(--auth-surface-2);
+  --auth-input-focus-bg: var(--auth-surface);
+  --auth-placeholder: var(--auth-ink-3);
+  --auth-toggle-bg: rgba(255, 255, 255, 0.08);
+  --auth-toggle-color: var(--auth-ink);
+  --auth-toggle-hover-bg: rgba(255, 255, 255, 0.14);
+  --auth-social-hover-bg: var(--auth-surface-2);
+  --auth-otp-box-bg: var(--auth-surface-2);
+
+  --auth-amber: #ffb43d; --auth-amber-deep: #f5a524; --auth-amber-press: #d98a00; --auth-amber-ink: #2a1c05;
+  --auth-butter: #3a2d15; --auth-butter-2: #4a3919; --auth-amber-text: #ffc266;
+  --auth-glow-a: rgba(245, 165, 36, .20); --auth-glow-b: rgba(94, 213, 161, .13);
+
+  --auth-mint: #123a29;  --auth-mint-ink: #6fe0ac;
+  --auth-sky: #132c4d;   --auth-sky-ink: #8cc0ff;
+  --auth-lilac: #2a1d47; --auth-lilac-ink: #c2a4ff;
+  --auth-blush: #43201a; --auth-blush-ink: #ff9d8c;
+
+  --auth-ok: #4cd39a; --auth-ok-soft: #12301f; --auth-ok-line: #2c5a41;
+  --auth-bad: #ff8a72; --auth-bad-ink: #ffab99; --auth-bad-soft: #3a1b15; --auth-bad-line: #5f2f24;
+  --auth-warn: #e0aa55; --auth-warn-soft: #33260f; --auth-warn-line: #584324;
+
+  --auth-s1: #ff8a72; --auth-s2: #e0aa55; --auth-s3: #b6d160; --auth-s4: #4cd39a;
+
+  --auth-ring: rgba(255, 180, 61, .32);
+
+  --auth-sh-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --auth-sh-2: 0 4px 14px -4px rgba(0, 0, 0, .5);
+  --auth-sh-3: 0 20px 44px -18px rgba(0, 0, 0, .72);
+  --auth-sh-btn: 0 2px 0 var(--auth-amber-press), 0 8px 18px -8px rgba(0, 0, 0, .6);
+
+  --auth-r-s: 10px; --auth-r-m: 14px; --auth-r-l: 20px; --auth-r-xl: 28px; --auth-r-f: 999px;
+  --auth-ease: cubic-bezier(.2, .8, .3, 1);
+}
+
+// Universal focus-visible ring — 2.5px amber outline on every control, both
+// themes (reference README: "Focus is a 2.5px amber ring on every control").
+:host :where(a, button, input, select, [tabindex]):not([tabindex="-1"]):focus-visible {
+  outline: 2.5px solid var(--auth-amber-deep);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+// ============================================================
+// THEME TOGGLE BUTTON
+// ============================================================
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--auth-border);
+  background: var(--auth-toggle-bg);
+  color: var(--auth-toggle-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+  backdrop-filter: blur(8px);
+
+  i {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  &:hover {
+    background: var(--auth-toggle-hover-bg);
+    transform: scale(1.08);
+  }
+}
+
+// ============================================================
+// PAGE / STAGE — warm neutral background + two soft ambient glow
+// blobs, container-query root (auth.css .au-stage)
+// ============================================================
+.auth-page {
+  position: relative;
+  container: auth / inline-size;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 34px 18px 40px;
+  overflow: hidden;
+  background: var(--auth-bg);
+}
+
+.auth-page::before,
+.auth-page::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.auth-page::before {
+  width: 520px;
+  height: 520px;
+  top: -190px;
+  right: -140px;
+  background: var(--auth-glow-a);
+}
+
+.auth-page::after {
+  width: 420px;
+  height: 420px;
+  bottom: -190px;
+  left: -150px;
+  background: var(--auth-glow-b);
+}
+
+.auth-container {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 452px;
+  align-items: center;
+  gap: 56px;
+
+  @container auth (min-width: 980px) {
+    grid-template-columns: minmax(0, 1fr) minmax(452px, .86fr);
+    max-width: 1180px;
+  }
+
+  @container auth (min-width: 1180px) {
+    gap: 76px;
+  }
+}
+
+// ============================================================
+// LEFT COLUMN — borderless "aside", shown only on wide containers
+// (auth.css .au-aside) — sits directly on the page background, no
+// card chrome of its own.
+// ============================================================
+.auth-branding {
+  display: none;
+  min-width: 0;
+  color: var(--auth-ink);
+
+  @container auth (min-width: 980px) {
+    display: block;
+  }
+}
+
+// Branding content
+.branding-content {
+  position: relative;
+  z-index: 1;
+  max-width: 360px;
+
+  .brand-headline {
+    font-family: $font-family-header;
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -.035em;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0 0 13px;
+    max-width: 13ch;
+
+    @container auth (min-width: 1180px) {
+      font-size: 44px;
+    }
+
+    .brand-headline-sub {
+      font-style: normal;
+      color: var(--auth-amber-text);
+      font-weight: 800;
+    }
+  }
+
+  .brand-desc {
+    color: var(--auth-ink-2);
+    font-size: 16px;
+    max-width: 34ch;
+    line-height: 1.6;
+    margin-bottom: 26px;
+  }
+
+  // Feature list — styled as the reference's pastel "activity tiles"
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 28px 0 0;
+    display: grid;
+    gap: 9px;
+    max-width: 330px;
+
+    li {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 14px 11px 11px;
+      border-radius: var(--auth-r-m);
+      background: var(--auth-surface);
+      border: 1px solid var(--auth-border);
+      box-shadow: var(--auth-sh-1);
+      font-size: 14px;
+      color: var(--auth-ink);
+    }
+
+    .feature-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: var(--auth-mint);
+      flex-shrink: 0;
+
+      i {
+        font-size: 15px;
+        color: var(--auth-mint-ink);
+      }
+    }
+
+    // cycle through the pastel set so the tiles don't read as identical
+    li:nth-child(2) .feature-icon { background: var(--auth-sky); i { color: var(--auth-sky-ink); } }
+    li:nth-child(3) .feature-icon { background: var(--auth-lilac); i { color: var(--auth-lilac-ink); } }
+  }
+}
+
+// Step-reactive brand text transition (Register / Forgot Password)
+.step-brand-text.step-enter {
+  animation: stepFade 0.5s ease both;
+}
+
+@keyframes stepFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// Avatar row — auth.css .au-people / .au-faces
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+
+  .avatar-stack {
+    display: flex;
+
+    .av {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2.5px solid var(--auth-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--auth-ink);
+      margin-left: -11px;
+
+      &:first-child { margin-left: 0; }
+      &.av-1 { background: var(--auth-lilac); }
+      &.av-2 { background: var(--auth-sky); }
+      &.av-3 { background: var(--auth-mint); }
+      &.av-4 { background: var(--auth-butter-2); }
+    }
+  }
+
+  .avatar-row-text {
+    font-size: 13.5px;
+    color: var(--auth-ink-2);
+  }
+}
+
+// ============================================================
+// RIGHT COLUMN — the card (auth.css .au-card)
+// ============================================================
+.auth-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.auth-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 452px;
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-border);
+  border-radius: var(--auth-r-xl);
+  box-shadow: var(--auth-sh-3);
+  padding: 32px 30px 34px;
+
+  @container auth (max-width: 359px) {
+    padding: 20px 16px 24px;
+    border-radius: var(--auth-r-l);
+  }
+
+  .auth-card-header {
+    margin-bottom: 20px;
+
+    h2 {
+      font-family: $font-family-header;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.14;
+      text-wrap: balance;
+      color: var(--auth-ink);
+      margin: 0 0 6px;
+
+      @container auth (max-width: 359px) {
+        font-size: 24px;
+      }
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--auth-ink-2);
+      margin: 0;
+
+      strong { color: var(--auth-ink); font-weight: 650; }
+    }
+  }
+}
+
+// ============================================================
+// FIELD SYSTEM
+// ============================================================
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+
+  @container auth (max-width: 559px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--auth-ink);
+}
+
+.field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .field-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 16px;
+    color: var(--auth-ink-3);
+    pointer-events: none;
+    line-height: 1;
+    z-index: 1;
+  }
+
+  &:has(.field-input.is-invalid) .field-icon {
+    color: var(--auth-bad);
+  }
+
+  .field-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 44px 0 42px;
+    border: 1.5px solid var(--auth-border-2);
+    border-radius: var(--auth-r-m);
+    font-size: 16px;
+    color: var(--auth-ink);
+    background: var(--auth-surface-2);
+    outline: none;
+    transition: border-color 0.16s, box-shadow 0.16s, background 0.16s;
+
+    &::placeholder {
+      color: var(--auth-ink-3);
+    }
+
+    &:hover:not(:disabled):not(:focus) {
+      border-color: var(--auth-ink-3);
+    }
+
+    &:focus {
+      border-color: var(--auth-amber);
+      background: var(--auth-surface);
+      box-shadow: 0 0 0 4px var(--auth-ring);
+    }
+
+    &:disabled {
+      background: var(--auth-surface-3);
+      color: var(--auth-ink-3);
+      cursor: not-allowed;
+    }
+
+    &.is-invalid {
+      border-color: var(--auth-bad);
+      background: var(--auth-bad-soft);
+
+      &:focus {
+        box-shadow: 0 0 0 4px rgba(212, 64, 42, .18);
+      }
+    }
+  }
+
+  .field-select {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239a9086' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+
+  .toggle-pw-btn {
+    position: absolute;
+    right: 6px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--auth-ink-3);
+    transition: background 0.14s, color 0.14s;
+
+    &:hover {
+      background: var(--auth-surface-3);
+      color: var(--auth-ink);
+    }
+
+    i {
+      font-size: 16px;
+      line-height: 1;
+    }
+  }
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12.75px;
+  font-weight: 550;
+  color: var(--auth-bad-ink);
+  animation: popTiny 0.24s var(--auth-ease) both;
+}
+
+.field-success {
+  font-size: 0.8rem;
+  color: var(--auth-ok);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--auth-ink-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+
+  .spinner-border {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-width: 2px;
+  }
+}
+
+// ============================================================
+// BUTTONS — auth.css .au-btn (chunky amber gradient, pressed-shadow)
+// / .au-btn--soft / .au-link / .au-back
+// ============================================================
+.submit-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 50px;
+  border: none;
+  border-radius: var(--auth-r-m);
+  background: linear-gradient(180deg, var(--auth-amber), var(--auth-amber-deep));
+  color: var(--auth-amber-ink);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  cursor: pointer;
+  box-shadow: var(--auth-sh-btn);
+  transition: transform 0.13s var(--auth-ease), box-shadow 0.16s, filter 0.16s;
+  margin-top: 4px;
+
+  i {
+    font-size: 16px;
+    transition: transform 0.18s var(--auth-ease);
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1.5px);
+    box-shadow: 0 3px 0 var(--auth-amber-press), 0 12px 24px -10px rgba(224, 135, 0, .6);
+
+    i { transform: translateX(3px); }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 var(--auth-amber-press);
+  }
+
+  &:disabled {
+    filter: saturate(.5) opacity(.6);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 50px;
+  padding: 0 24px;
+  border: 1.5px solid var(--auth-border-2);
+  border-radius: var(--auth-r-m);
+  background: var(--auth-surface);
+  color: var(--auth-ink);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: var(--auth-sh-1);
+  transition: background 0.14s, border-color 0.14s, transform 0.13s var(--auth-ease), box-shadow 0.16s;
+
+  &:hover {
+    background: var(--auth-surface-2);
+    border-color: var(--auth-ink-3);
+    box-shadow: var(--auth-sh-2);
+    transform: translateY(-1.5px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+// ============================================================
+// SWITCH AUTH / TEXT LINKS — auth.css .au-link / .au-foot
+// ============================================================
+.switch-auth {
+  text-align: center;
+  font-size: 14px;
+  color: var(--auth-ink-2);
+  margin: 24px 0 0;
+
+  .switch-link {
+    color: var(--auth-amber-text);
+    font-weight: 650;
+    text-decoration: none;
+    margin-left: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.text-link {
+  background: none;
+  border: none;
+  color: var(--auth-amber-text);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 650;
+  font-size: 13.5px;
+  transition: color 0.2s;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+// ============================================================
+// OTP INPUT — auth.css .au-otp (aspect-ratio boxes, equal-width via
+// flex-shrink, pop/shake states)
+// ============================================================
+.otp-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.otp-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.otp-shield-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--auth-butter);
+  border: 2px solid var(--auth-butter-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--auth-amber-text);
+  animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.otp-hint {
+  font-size: 13.5px;
+  color: var(--auth-ink-2);
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+}
+
+.otp-field-group {
+  width: 100%;
+  text-align: center;
+
+  .field-label {
+    text-align: center;
+    margin-bottom: 14px;
+    display: block;
+  }
+}
+
+.otp-boxes {
+  display: flex;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 6px 4px;
+
+  &.otp-error .otp-box {
+    border-color: var(--auth-bad);
+    background: var(--auth-bad-soft);
+    color: var(--auth-bad-ink);
+    animation: shake 0.42s cubic-bezier(.36, .07, .19, .97);
+  }
+}
+
+.otp-box {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1 / 1.14;
+  max-height: 64px;
+  padding: 0;
+  text-align: center;
+  font-family: $font-family-mono, monospace;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--auth-ink);
+  border: 1.5px solid var(--auth-border-2);
+  border-radius: var(--auth-r-m);
+  background: var(--auth-surface-2);
+  outline: none;
+  transition: border-color 0.16s, box-shadow 0.16s, background 0.16s, transform 0.18s var(--auth-ease);
+  caret-color: var(--auth-amber-deep);
+
+  @container auth (max-width: 359px) {
+    font-size: 20px;
+  }
+
+  &:hover:not(:focus) {
+    border-color: var(--auth-ink-3);
+  }
+
+  &:focus {
+    border-color: var(--auth-amber);
+    background: var(--auth-surface);
+    box-shadow: 0 0 0 4px var(--auth-ring);
+    transform: translateY(-2px);
+  }
+
+  &.filled {
+    background: var(--auth-butter);
+    border-color: var(--auth-amber);
+    animation: otpPop 0.2s var(--auth-ease);
+  }
+
+  &.is-invalid {
+    border-color: var(--auth-bad);
+    background: var(--auth-bad-soft);
+    color: var(--auth-bad-ink);
+
+    &:focus {
+      box-shadow: 0 0 0 4px rgba(212, 64, 42, .18);
+      transform: none;
+    }
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+.otp-error-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--auth-bad-ink);
+  padding: 10px 16px;
+  background: var(--auth-bad-soft);
+  border-radius: var(--auth-r-m);
+  border: 1px solid var(--auth-bad-line);
+  margin-top: 16px;
+  animation: popTiny 0.3s var(--auth-ease);
+
+  i {
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+}
+
+.otp-expire-note,
+.otp-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--auth-ink-3);
+  margin-top: 14px;
+  margin-bottom: 0;
+  text-align: center;
+  font-family: $font-family-mono, monospace;
+  font-variant-numeric: tabular-nums;
+
+  i {
+    font-size: 13px;
+  }
+
+  strong {
+    color: var(--auth-ink);
+    font-weight: 700;
+  }
+}
+
+// ============================================================
+// RESEND OTP — auth.css .au-otpmeta
+// ============================================================
+.resend-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--auth-r-s);
+  font-size: 13.5px;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--auth-amber-text);
+  transition: color 0.2s, opacity 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: var(--auth-ink-3);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+// ============================================================
+// DEV OTP CARD (non-production only)
+// ============================================================
+.dev-otp-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--auth-r-s);
+  background: var(--auth-lilac);
+  border: 1px dashed var(--auth-lilac-ink);
+
+  .dev-otp-label {
+    font-size: 0.8rem;
+    color: var(--auth-ink-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dev-otp-value {
+    font-family: $font-family-mono, monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--auth-lilac-ink);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ============================================================
+// INLINE ALERT BANNER — auth.css .au-alert
+// ============================================================
+.reg-alert,
+.fp-alert {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 11px;
+  align-items: start;
+  padding: 13px 15px;
+  margin-bottom: 20px;
+  border-radius: var(--auth-r-m);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  background: var(--auth-bad-soft);
+  color: var(--auth-bad-ink);
+  border: 1px solid var(--auth-bad-line);
+  animation: popTiny 0.3s var(--auth-ease);
+
+  i {
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  span {
+    flex: 1;
+  }
+
+  button {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    opacity: 0.7;
+    margin-left: auto;
+
+    &:hover { opacity: 1; }
+  }
+}
+
+// ============================================================
+// LOADING OVERLAY
+// ============================================================
+.reg-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeOverlay 0.2s ease-out;
+}
+
+.reg-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 56px;
+  border-radius: var(--auth-r-l);
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-border);
+  box-shadow: var(--auth-sh-3);
+  min-width: 220px;
+  text-align: center;
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reg-loading-spinner {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-width: 3px;
+  color: var(--auth-amber);
+}
+
+.reg-loading-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--auth-ink-2);
+  letter-spacing: 0.01em;
+}
+
+// ============================================================
+// SUCCESS MODAL — retinted toward auth.css .au-orb / .au-result
+// ============================================================
+.reg-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeOverlay 0.25s ease-out;
+}
+
+.reg-success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 56px 40px;
+  border-radius: var(--auth-r-xl);
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-border);
+  box-shadow: var(--auth-sh-3);
+  min-width: 300px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reg-success-icon {
+  font-size: 60px;
+  line-height: 1;
+  color: var(--auth-ok);
+  margin-bottom: 4px;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reg-success-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--auth-ink);
+  margin: 6px 0 0;
+  line-height: 1.3;
+}
+
+.reg-success-sub {
+  font-size: 14px;
+  color: var(--auth-ink-2);
+  margin: 4px 0 0;
+  line-height: 1.6;
+}
+
+.reg-success-progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--auth-border);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.reg-success-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--auth-ok);
+  animation: progressShrink 3s linear forwards;
+}
+
+// ============================================================
+// GOOGLE SIGN-IN — auth.css .au-or / .au-social
+// ============================================================
+.divider-row,
+.google-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--auth-ink-3);
+  font-size: 12px;
+  font-weight: 500;
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--auth-border);
+  }
+
+  .divider-text {
+    white-space: nowrap;
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--auth-border);
+  }
+}
+
+.google-btn-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  border-radius: var(--auth-r-m);
+  overflow: hidden;
+
+  // GSI's own button element only rounds itself by 4px, while this wrapper
+  // clips at var(--auth-r-m) — the mismatch made the button's own visible
+  // border (light theme's "outline" style) look broken/square exactly where
+  // the wrapper's larger-radius clip cut across the button's sharper corner.
+  // Match GSI's own radius to the wrapper's so the border curves smoothly
+  // all the way through instead of being clipped mid-corner. Applies in
+  // both themes — see the `::ng-deep` note below for why it's needed here.
+  & ::ng-deep .nsm7Bb-HzV7m-LgbsSe {
+    border-radius: var(--auth-r-m) !important;
+  }
+
+  // GSI's official dark ("filled_black") button keeps the multicolor G in a
+  // white chip that's square on the side facing the dark bar — Google's own
+  // dark-mode surfaces (Assistant, app icons) instead float the G with no
+  // background at all. renderButton() has no option for this, so this
+  // reaches into GSI's own (undocumented, but same-origin and stable in
+  // practice) button markup to reshape it. Purely cosmetic — if a future
+  // Google script build renames these classes, the selectors simply stop
+  // matching and the button falls back to its normal square-chip look.
+  //
+  // GSI injects this markup via raw innerHTML, completely outside Angular's
+  // template rendering, so it never receives Angular's `[_ngcontent]`
+  // scoping attribute — a plain scoped selector silently never matches it.
+  // `::ng-deep` is deprecated for general use, but reaching unscoped CSS
+  // into third-party-injected DOM like this is one of the few cases it's
+  // still the right tool for.
+  :host[data-theme='dark'] & ::ng-deep .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf {
+    border-radius: 50% !important;
+    background-color: transparent !important;
+  }
+
+  :host[data-theme='dark'] & ::ng-deep .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb {
+    border-radius: var(--auth-r-m) !important;
+  }
+}
+
+// ── Google username selection modal ──────────────────────────────────────────
+.google-username-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeOverlay 0.25s ease-out;
+}
+
+.google-username-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 44px 40px 36px;
+  border-radius: var(--auth-r-xl);
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-border);
+  box-shadow: var(--auth-sh-3);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @container auth (max-width: 559px) {
+    padding: 32px 24px 28px;
+  }
+}
+
+.google-username-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--auth-ink-3);
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: var(--auth-r-s);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover {
+    color: var(--auth-ink);
+    background: var(--auth-surface-3);
+  }
+}
+
+.google-username-icon {
+  font-size: 48px;
+  line-height: 1;
+  color: var(--auth-amber-text);
+  margin-bottom: 12px;
+  text-align: center;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.google-username-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--auth-ink);
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.google-username-desc {
+  font-size: 13.5px;
+  color: var(--auth-ink-2);
+  text-align: center;
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+// ============================================================
+// PASSWORD STRENGTH — auth.css .au-str / .au-bars / .au-rules
+// (4 discrete bar segments, 2-column criteria checklist)
+// ============================================================
+.pw-strength-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+
+  .pw-strength-fill {
+    height: 5px;
+    border-radius: var(--auth-r-f);
+    background: var(--auth-surface-3);
+    transition: background 0.32s var(--auth-ease);
+  }
+
+  // score N lights up the first N of the 4 segments — same convention
+  // as the reference's `.au-bars[data-score] i:nth-child(-n+N)`
+  &[data-score='1'] .pw-strength-fill:nth-child(-n+1) { background: var(--auth-s1); }
+  &[data-score='2'] .pw-strength-fill:nth-child(-n+2) { background: var(--auth-s2); }
+  &[data-score='3'] .pw-strength-fill:nth-child(-n+3) { background: var(--auth-s3); }
+  &[data-score='4'] .pw-strength-fill:nth-child(-n+4),
+  &[data-score='5'] .pw-strength-fill:nth-child(-n+4) { background: var(--auth-s4); }
+}
+
+.pw-criteria {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 12px;
+
+  @container auth (max-width: 359px) {
+    grid-template-columns: 1fr;
+  }
+
+  li {
+    font-size: 12.25px;
+    color: var(--auth-ink-3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: color 0.22s;
+
+    &.met {
+      color: var(--auth-ok);
+    }
+
+    .bi {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+// ============================================================
+// REDUCED MOTION
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  .step-brand-text.step-enter,
+  .step-form-enter,
+  .submit-btn:hover:not(:disabled),
+  .back-btn:hover,
+  .otp-box:focus {
+    animation: none;
+    transform: none;
+  }
+}
+
+// ============================================================
+// SHARED KEYFRAMES
+// ============================================================
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.8); }
+  50%  { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popTiny {
+  from { opacity: 0; transform: translateY(-5px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes otpPop {
+  0%   { transform: scale(.9); }
+  55%  { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+@keyframes progressShrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}

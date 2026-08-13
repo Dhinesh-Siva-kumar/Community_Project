@@ -677,7 +677,8 @@ body {
   font-size: 0.875rem;
   transition: background 0.12s;
 
-  &:hover {
+  &:hover,
+  &.ss-option-active {
     background: var(--th-option-hover);
   }
 
