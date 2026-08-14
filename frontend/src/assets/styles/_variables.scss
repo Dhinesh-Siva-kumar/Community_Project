@@ -161,12 +161,10 @@ $input-focus-shadow:    0 0 0 3px rgba(251, 191, 36, 0.18);
 // ============================================================
 // COMPONENT TOKENS — TABS
 // ============================================================
-$tab-height:            40px;
+// Only $tab-radius is actually consumed (by ProfileTabsComponent, the
+// app's one reusable tab pattern) — $tab-hover-bg is also defined (and
+// actively used) in _profile-tokens.scss for a separate sub-tab pattern.
 $tab-radius:            $radius-md;
-$tab-active-bg:         #1C1917;
-$tab-active-text:       #FFFFFF;
-$tab-inactive-text:     #78716C;
-$tab-hover-bg:          #F5F5F4;
 
 // ============================================================
 // SCROLLBAR STYLING

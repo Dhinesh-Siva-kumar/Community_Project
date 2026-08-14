@@ -9,7 +9,6 @@ import { UserService } from '../../../core/services/user.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
-import { EventService } from '../../../core/services/event.service';
 import { JobService } from '../../../core/services/job.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -19,13 +18,13 @@ import {
   Community,
   Post,
   Comment,
-  Event,
   Job,
   PaginatedResponse,
 } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
+import { EventCalendarComponent } from '../../../shared/components/event-calendar/event-calendar.component';
 import { environment } from '../../../../environments/environment';
 
 type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
@@ -46,12 +45,14 @@ interface AnimatedStat {
   iconColor: string;
   bgColor: string;
   accentColor: string;
+  route: string;
+  queryParams?: Record<string, string>;
 }
 
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent, EventCalendarComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -61,7 +62,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   notificationService = inject(NotificationService);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
-  private eventService = inject(EventService);
   private jobService = inject(JobService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
@@ -71,7 +71,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   loading = signal(true);
   loadingPosts = signal(true);
   loadingCommunities = signal(true);
-  loadingEvents = signal(true);
   loadingJobs = signal(true);
 
   // Core data
@@ -107,7 +106,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   // Communities, Events, Jobs
   joinedCommunities = signal<Community[]>([]);
-  upcomingEvents = signal<Event[]>([]);
   recentJobs = signal<Job[]>([]);
 
   // Computed
@@ -178,11 +176,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Events all in the amber family, which made the icons hard to tell
   // apart at a glance in a short list.
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A' },
-    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FEF3C7', accentColor: '#F59E0B' },
-    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: '#2563EB', bgColor: '#DBEAFE', accentColor: '#2563EB' },
-    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: '#7C3AED', bgColor: '#EDE9FE', accentColor: '#7C3AED' },
-    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: '#0D9488', bgColor: '#CCFBF1', accentColor: '#0D9488' },
+    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A', route: '/user/community' },
+    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FEF3C7', accentColor: '#F59E0B', route: '/user/profile', queryParams: { tab: 'posts' } },
+    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: '#2563EB', bgColor: '#DBEAFE', accentColor: '#2563EB', route: '/user/business' },
+    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: '#7C3AED', bgColor: '#EDE9FE', accentColor: '#7C3AED', route: '/user/events' },
+    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: '#0D9488', bgColor: '#CCFBF1', accentColor: '#0D9488', route: '/user/jobs' },
   ]);
 
   private animationFrameId: number | null = null;
@@ -220,7 +218,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboardStats();
     this.loadNotifications();
     this.loadJoinedCommunities();
-    this.loadUpcomingEvents();
     this.loadRecentJobs();
   }
 
@@ -312,22 +309,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.allPosts.set([]);
         this.loadingPosts.set(false);
       },
-    });
-  }
-
-  loadUpcomingEvents(): void {
-    this.loadingEvents.set(true);
-    this.eventService.getEvents().subscribe({
-      next: (res) => {
-        const now = new Date();
-        const upcoming = res.data
-          .filter((e) => new Date(e.eventDate) >= now)
-          .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-          .slice(0, 5);
-        this.upcomingEvents.set(upcoming);
-        this.loadingEvents.set(false);
-      },
-      error: () => this.loadingEvents.set(false),
     });
   }
 
@@ -902,16 +883,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
     return date.toLocaleDateString();
-  }
-
-  getEventTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  }
-
-  isEventSoon(dateString: string): boolean {
-    const diff = new Date(dateString).getTime() - Date.now();
-    return diff > 0 && diff < 3 * 24 * 60 * 60 * 1000; // within 3 days
   }
 
   getUserInitials(user?: User): string {

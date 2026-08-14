@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, OnChanges, SimpleChanges, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface ProfileTab {
@@ -21,12 +21,15 @@ export interface ProfileTab {
   templateUrl: './profile-tabs.component.html',
   styleUrls: ['./profile-tabs.component.scss'],
 })
-export class ProfileTabsComponent {
+export class ProfileTabsComponent implements OnChanges {
   @Input() tabs: ProfileTab[] = [];
   @Input() activeTab = '';
   /** Equal-width tabs filling one row, with a sliding active indicator. */
   @Input() fullWidth = false;
   @Output() tabChange = new EventEmitter<string>();
+
+  @ViewChildren('tabBtn') private tabButtons!: QueryList<ElementRef<HTMLButtonElement>>;
+  private focusOnNextChange = false;
 
   get activeIndex(): number {
     const idx = this.tabs.findIndex(t => t.id === this.activeTab);
@@ -47,9 +50,25 @@ export class ProfileTabsComponent {
     const enabled = this.tabs.filter(t => !t.disabled);
     const idx = enabled.findIndex(t => t.id === this.activeTab);
     if (e.key === 'ArrowRight' && idx < enabled.length - 1) {
+      this.focusOnNextChange = true;
       this.tabChange.emit(enabled[idx + 1].id);
     } else if (e.key === 'ArrowLeft' && idx > 0) {
+      this.focusOnNextChange = true;
       this.tabChange.emit(enabled[idx - 1].id);
+    }
+  }
+
+  // `activeTab` is parent-controlled, so an arrow-key change only reaches
+  // this component on its next input update — without this, the visually
+  // active tab and the actually-focused DOM element diverge for keyboard
+  // users because focus never follows the emitted selection.
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['activeTab'] && this.focusOnNextChange) {
+      this.focusOnNextChange = false;
+      queueMicrotask(() => {
+        const idx = this.tabs.findIndex(t => t.id === this.activeTab);
+        this.tabButtons?.get(idx)?.nativeElement.focus();
+      });
     }
   }
 }

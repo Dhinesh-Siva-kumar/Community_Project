@@ -1,0 +1,96 @@
+<div class="cal">
+  <div class="cal-header">
+    <button type="button" class="cal-nav" (click)="prevMonth()" aria-label="Previous month">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <span class="cal-month">{{ monthLabel() }}</span>
+    <button type="button" class="cal-nav" (click)="nextMonth()" aria-label="Next month">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+  @if (!isCurrentMonth()) {
+    <button type="button" class="cal-today-btn" (click)="goToday()">Today</button>
+  }
+
+  <div class="cal-weekdays" aria-hidden="true">
+    @for (w of weekdayLabels; track w) {
+      <span>{{ w }}</span>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="cal-grid cal-grid--skeleton">
+      @for (c of skeletonCells; track $index) {
+        <div class="cal-sk-cell"></div>
+      }
+    </div>
+  } @else {
+    <div class="cal-grid" role="grid" [attr.aria-label]="monthLabel() + ' calendar'">
+      @for (week of weeks(); track $index) {
+        <div class="cal-week" role="row">
+          @for (cell of week; track cell.key) {
+            <div
+              class="cal-day-wrap"
+              role="gridcell"
+              (mouseenter)="openDay(cell)"
+              (mouseleave)="closeDay()"
+            >
+              @if (cell.hasEvents) {
+                <button
+                  type="button"
+                  class="cal-day"
+                  [class.is-today]="cell.isToday"
+                  (click)="toggleDayPin(cell)"
+                  (focus)="openDay(cell)"
+                  aria-haspopup="true"
+                  [attr.aria-expanded]="activeDayKey() === cell.key"
+                  [attr.aria-label]="cell.ariaLabel"
+                >
+                  <span class="cal-day__num">{{ cell.day }}</span>
+                  <span class="cal-day__dot" [class.is-past]="cell.allPast"></span>
+                </button>
+              } @else {
+                <div
+                  class="cal-day cal-day--empty"
+                  [class.is-today]="cell.isToday"
+                  [class.is-out]="!cell.inMonth"
+                >
+                  <span class="cal-day__num">{{ cell.day }}</span>
+                </div>
+              }
+
+              @if (cell.hasEvents && activeDayKey() === cell.key) {
+                <div class="cal-popover" role="tooltip">
+                  <div class="cal-popover__title">{{ cell.date | date: 'EEEE, d MMM' }}</div>
+                  @for (item of cell.events.slice(0, 4); track item.event.id) {
+                    <a
+                      class="cal-popover__row"
+                      [routerLink]="['/user/events']"
+                      [queryParams]="{ eventId: item.event.id }"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <span class="cal-popover__dot" [class.is-past]="item.status.isPast"></span>
+                      <span class="cal-popover__info">
+                        <span class="cal-popover__ev-title">{{ item.event.title }}</span>
+                        <span class="cal-popover__meta">
+                          @if (fmtTimeRange(item.event)) {
+                            <span>{{ fmtTimeRange(item.event) }}</span>
+                          }
+                          <span class="cal-popover__status" [ngClass]="item.status.cls">{{ item.status.label }}</span>
+                        </span>
+                      </span>
+                    </a>
+                  }
+                  @if (cell.events.length > 4) {
+                    <div class="cal-popover__more">+{{ cell.events.length - 4 }} more</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

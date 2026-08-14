@@ -216,11 +216,11 @@
         <h3 class="rail-card__title">Your Activity</h3>
         <div class="rail-stats">
           @for (stat of animatedStats(); track stat.label) {
-            <div class="rail-stat" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
+            <a class="rail-stat" [routerLink]="stat.route" [queryParams]="stat.queryParams ?? null" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
               <span class="rail-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
               <span class="rail-stat__lbl">{{ stat.label }}</span>
               <span class="rail-stat__val">{{ stat.displayValue }}</span>
-            </div>
+            </a>
           }
         </div>
       </div>
@@ -242,47 +242,13 @@
         </div>
       }
 
-      <!-- Upcoming Events -->
+      <!-- Events calendar -->
       <div class="rail-card">
         <div class="rail-card__head">
-          <h3 class="rail-card__title">Upcoming Events</h3>
-          @if (upcomingEvents().length > 0) {
-            <span class="rail-card__count">{{ upcomingEvents().length }}</span>
-          }
+          <h3 class="rail-card__title">Your Events</h3>
+          <a routerLink="/user/events" class="rail-card__link">View all →</a>
         </div>
-        @if (loadingEvents()) {
-          <div class="sk-line w80"></div><div class="sk-line w60"></div>
-        } @else if (upcomingEvents().length === 0) {
-          <p class="rail-card__empty">No upcoming events.</p>
-        } @else {
-          <div class="upcoming-list">
-            @for (ev of upcomingEvents().slice(0,3); track ev.id) {
-              <a [routerLink]="['/user/events']" class="upcoming-item">
-                @if (ev.images?.length) {
-                  <img class="upcoming-thumb" [class.upcoming-thumb--soon]="isEventSoon(ev.eventDate)"
-                       [src]="ev.images[0] | imageUrl" appImageError alt="" />
-                } @else {
-                  <div class="upcoming-thumb upcoming-thumb--icon" [class.upcoming-thumb--soon]="isEventSoon(ev.eventDate)">
-                    <i class="bi bi-calendar-event-fill"></i>
-                  </div>
-                }
-                <div class="upcoming-info">
-                  <p class="upcoming-title">{{ ev.title }}</p>
-                  <div class="upcoming-meta">
-                    <span class="upcoming-time"><i class="bi bi-calendar3"></i> {{ getEventTime(ev.eventDate) }}</span>
-                    @if (ev.location) {
-                      <span class="upcoming-loc"><i class="bi bi-geo-alt-fill"></i> {{ ev.location }}</span>
-                    }
-                  </div>
-                </div>
-                @if (isEventSoon(ev.eventDate)) {
-                  <span class="upcoming-soon">Soon</span>
-                }
-              </a>
-            }
-          </div>
-        }
-        <a routerLink="/user/events" class="rail-card__link">See Calendar →</a>
+        <app-event-calendar></app-event-calendar>
       </div>
 
     </aside>

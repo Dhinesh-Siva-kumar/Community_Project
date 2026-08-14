@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessService } from '../../../core/services/business.service';
@@ -32,6 +33,7 @@ export class UserProfileComponent implements OnInit {
   private postService = inject(PostService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
   user = signal<User | null>(null);
   loading = signal(true);
@@ -100,6 +102,13 @@ export class UserProfileComponent implements OnInit {
     });
 
     this.loadProfile();
+
+    // Deep-link support — e.g. the dashboard's "Posts" activity stat links
+    // here with ?tab=posts to preselect the matching tab.
+    const requestedTab = this.route.snapshot.queryParams['tab'];
+    if (requestedTab && this.tabs.some(t => t.id === requestedTab)) {
+      this.setTab(requestedTab);
+    }
   }
 
   loadProfile(): void {

@@ -2,7 +2,6 @@
   @if (fullWidth && tabs.length > 0) {
     <span
       class="tab-indicator"
-      [style.width]="'calc((100% - 10px) / ' + tabs.length + ')'"
       [style.transform]="'translateX(calc(' + activeIndex + ' * 100%))'"
       [style.background]="activeTabBg"
       aria-hidden="true"
@@ -10,6 +9,7 @@
   }
   @for (tab of tabs; track tab.id) {
     <button
+      #tabBtn
       role="tab"
       class="profile-tab"
       [class.active]="tab.id === activeTab"

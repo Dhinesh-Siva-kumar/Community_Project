@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EventService, EventsQueryParams } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -52,6 +53,8 @@ export class UserEventsComponent implements OnInit {
   private authService  = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   events     = signal<AppEvent[]>([]);
   loading    = signal(true);
@@ -113,7 +116,31 @@ export class UserEventsComponent implements OnInit {
   imageViewerImages = signal<string[]>([]);
   imageViewerInitialIndex = signal(0);
 
-  ngOnInit(): void { this.initForm(); this.loadEvents(); }
+  ngOnInit(): void {
+    this.initForm();
+    this.loadEvents();
+    this.route.queryParams.subscribe(params => {
+      const eventId = params['eventId'];
+      if (eventId) this.openEventFromQueryParam(eventId);
+    });
+  }
+
+  // Deep-link support — the dashboard calendar navigates here with
+  // ?eventId=xxx to open a specific event's detail popup. The target event
+  // may not be on the currently loaded/sorted page, so it's fetched directly
+  // rather than looked up in `events()`.
+  private openEventFromQueryParam(id: string): void {
+    this.eventService.getEvent(id).subscribe({
+      next: evt => this.viewingEvent.set(evt),
+      error: () => this.toast.error('Event not found or no longer available'),
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { eventId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
 
   private initForm(): void {
     this.eventForm = this.fb.group({

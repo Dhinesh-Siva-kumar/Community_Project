@@ -597,16 +597,10 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &__head { display:flex; align-items:center; justify-content:space-between; }
   &__title { font-family:$font-family-header; font-size:13px; font-weight:700; color:$color-text-primary; margin:0; text-transform:uppercase; letter-spacing:.03em; }
   &__pct { font-family:$font-family-header; font-size:12px; font-weight:800; color:$color-primary-darker; }
-  &__count {
-    display:inline-flex; align-items:center; justify-content:center;
-    min-width:20px; height:20px; padding:0 6px; border-radius:999px;
-    background:$color-primary-light; color:$color-primary-darker;
-    font-family:$font-family-header; font-size:11px; font-weight:800;
-  }
   &__hint { font-size:12px; color:$color-text-muted; margin:0; }
   &__empty { font-size:12px; color:$color-text-muted; margin:0; }
   &__link {
-    font-size:12px; font-weight:700; color:$color-primary-darker; text-decoration:none; text-align:center;
+    font-size:12px; font-weight:700; color:$color-primary-darker; text-decoration:none;
     &:hover { text-decoration:underline; }
   }
 }
@@ -643,6 +637,16 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &__lbl { flex:1; font-size:12.5px; font-weight:600; color:$color-text-body; }
   &__val { font-family:$font-family-header; font-size:1rem; font-weight:800; color:$color-text-primary; font-variant-numeric:tabular-nums; }
 }
+a.rail-stat {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
 
 // Profile completion
 .rail-progress {
@@ -656,50 +660,5 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
     i { font-size:10px; color:$color-border-strong; }
     &:hover { color:$color-primary-darker; }
   }
-}
-
-// Upcoming events (rail)
-.upcoming-list { display:flex; flex-direction:column; gap:.5rem; }
-.upcoming-item {
-  position:relative;
-  display:flex; align-items:center; gap:.7rem; padding:.6rem;
-  border:1px solid transparent; border-radius:$_ri;
-  text-decoration:none; transition:background $_t, border-color $_t, transform $_t;
-
-  &:hover { background:$color-bg-light; border-color:$color-border; transform:translateX(2px); }
-}
-// Event thumbnail — the event's own photo when it has one; a plain icon
-// placeholder (not a broken-image icon) when it doesn't or the image
-// fails to load (see appImageError on the <img>).
-.upcoming-thumb {
-  width:42px; height:42px; border-radius:$_ri; flex-shrink:0;
-  object-fit:cover; border:1px solid $color-border; background:$color-bg-light;
-
-  &--icon {
-    display:flex; align-items:center; justify-content:center;
-    background:#eef2ff; color:$color-indigo-600; border-color:rgba($color-indigo-600,.22);
-    i { font-size:1.05rem; }
-  }
-
-  // Urgency is already communicated by the separate "Soon" tag — a ring
-  // around the thumbnail is enough, no need to recolor the photo itself.
-  &--soon {
-    border:2px solid $color-indigo-600;
-    box-shadow:0 3px 10px rgba($color-indigo-600,.28);
-  }
-}
-.upcoming-info { flex:1; min-width:0; }
-.upcoming-title { font-size:12.5px; font-weight:700; color:$color-text-primary; margin:0 0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.upcoming-meta { display:flex; flex-direction:column; gap:1px; }
-.upcoming-time, .upcoming-loc {
-  display:flex; align-items:center; gap:4px; font-size:10.5px; color:$color-text-muted; margin:0;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  i { font-size:9px; flex-shrink:0; }
-}
-.upcoming-soon {
-  flex-shrink:0; align-self:flex-start;
-  padding:2px 8px; border-radius:999px;
-  background:rgba($color-danger,.1); color:$color-danger;
-  font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
 }
 
