@@ -232,6 +232,7 @@ export interface CommunityAnalyticsCounts {
   global: number;
   private: number;
   default: number;
+  totalMembers: number;
 }
 
 export type PostType = 'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';

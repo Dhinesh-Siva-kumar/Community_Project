@@ -665,6 +665,11 @@ getCategoryAccent(icon?: string): string {
   }
 
   private applyHistoryState(state: BusinessNavState | null): void {
+    // Back/Forward steps between categories → list → detail same as a fresh
+    // click into any of them would — each should land at the top of that
+    // view, not wherever the previous view happened to be scrolled to.
+    this.scrollToTop();
+
     if (state?.view === 'detail' && state.business) {
       if (state.category) this.selectedCategory.set(state.category);
       this.selectedBusiness.set(state.business);
@@ -1119,6 +1124,11 @@ private initForms(): void {
     if (resetPage) this.currentPage.set(1);
     if (pushHistory) {
       history.pushState({ view: 'list', category } satisfies BusinessNavState, '');
+      // Only a genuine categories → list navigation (not an in-place filter/
+      // sort/pagination refresh, which also calls this method) should reset
+      // scroll — otherwise re-filtering while scrolled through results would
+      // yank the admin back to the top mid-browse.
+      this.scrollToTop();
     }
     this.loading.set(true);
 
@@ -1163,6 +1173,14 @@ private initForms(): void {
     this.activeImageIndex.set(0);
     this.currentView.set('detail');
     history.pushState({ view: 'detail', category: this.selectedCategory() ?? undefined, business } satisfies BusinessNavState, '');
+    // Without this, opening a business from further down the (possibly
+    // scrolled) list left the page at whatever scroll position the list was
+    // at, so the detail view could open already scrolled past its header.
+    this.scrollToTop();
+  }
+
+  private scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   applyFilters(): void {

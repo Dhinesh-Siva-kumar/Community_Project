@@ -36,7 +36,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
 export async function getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await communitiesService.getAnalytics({ skipActiveFilter });
+    const result = await communitiesService.getAnalytics({ skipActiveFilter, userId: req.user!.sub });
     res.json(result);
   } catch (err) { next(err); }
 }

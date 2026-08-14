@@ -216,9 +216,36 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   display: inline-block;
 }
 
-.uc-tabs { display: flex; gap: 3px; }
+.uc-tabs { display: flex; gap: 3px; position: relative; }
+
+// A single floating pill that slides/resizes under whichever tab is active
+// (position/width driven from JS via CSS custom transform/width bindings),
+// instead of each button popping its own background/shadow in and out —
+// that read as an abrupt cross-fade rather than a switch.
+.uc-tab-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 32px;
+  border-radius: $radius-sm;
+  background: $color-bg-card;
+  border: 1px solid rgba(100, 116, 139, 0.28);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.09), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1), width 320ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
+
+  &--ready { opacity: 1; }
+
+  &--all      { box-shadow: 0 2px 8px $_tab-all-shadow,    0 1px 0 rgba(255, 255, 255, .95) inset; }
+  &--joined   { box-shadow: 0 2px 8px $_tab-joined-shadow, 0 1px 0 rgba(255, 255, 255, .95) inset; }
+  &--trending { box-shadow: 0 2px 8px $_tab-trend-shadow,  0 1px 0 rgba(255, 255, 255, .95) inset; }
+}
 
 .uc-tab {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -232,23 +259,20 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   font-weight: $font-weight-semibold;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color $_transition, color $_transition, border-color $_transition, box-shadow $_transition;
+  transition: color $_transition;
 
-  i { font-size: 12px; }
+  i { font-size: 12px; transition: transform $_transition; }
 
-  &:hover { color: $color-text-primary; background: rgba(255, 255, 255, 0.7); }
+  &:hover:not(.active) { color: $color-text-primary; }
 
   &.active {
-    background: $color-bg-card;
     color: $color-text-primary;
     font-weight: $font-weight-bold;
-    border-color: rgba(100, 116, 139, 0.28);
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.09), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
   }
 
-  &--all.active   { color: $_tab-all-text;    box-shadow: 0 2px 8px $_tab-all-shadow,    0 1px 0 rgba(255, 255, 255, .95) inset; }
-  &--joined.active{ color: $_tab-joined-text; box-shadow: 0 2px 8px $_tab-joined-shadow, 0 1px 0 rgba(255, 255, 255, .95) inset; }
-  &--trending.active { color: $_tab-trend-text; box-shadow: 0 2px 8px $_tab-trend-shadow, 0 1px 0 rgba(255, 255, 255, .95) inset; }
+  &--all.active      { color: $_tab-all-text; }
+  &--joined.active   { color: $_tab-joined-text; }
+  &--trending.active { color: $_tab-trend-text; i { transform: scale(1.1); } }
 
   &--all.active .uc-tab-count    { background: $_tab-all-badge;    color: $_tab-all-text; }
   &--joined.active .uc-tab-count { background: $_tab-joined-badge; color: $_tab-joined-text; }
@@ -267,6 +291,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   color: $color-stone-600;
   font-size: 9.5px;
   font-weight: $font-weight-bold;
+  transition: background-color $_transition, color $_transition;
 }
 
 // ============================================================
@@ -309,17 +334,74 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   margin-left: 7px;
 }
 
+// Positions the two nav arrows over the rail's vertical center — the rail
+// itself keeps its own generous padding so the cards' hover lift + shadow
+// never get clipped by the rail's (unavoidable, see below) overflow box.
+.uc-spotlight-rail-wrap {
+  position: relative;
+}
+
 .uc-spotlight-rail {
   display: flex;
   gap: $spacing-lg;
   overflow-x: auto;
-  padding: 4px 4px 14px;
+  // Vertical padding is deliberately generous (not the old 4px/14px) —
+  // setting overflow-x also forces overflow-y to a clipping value per the
+  // CSS spec (there's no way to keep one axis auto and the other visible),
+  // so anything the hover state lifts or shadows outside a too-tight box
+  // gets silently cut off top/bottom. This padding is sized to the hover
+  // lift (8px) + the hover shadow's blur/spread so nothing is clipped.
+  // The matching negative margin only applies vertically (not left/right —
+  // that shifted the whole rail, and its first card, out past the page's
+  // own left margin instead of lining up under the "Spotlight" heading).
+  padding: 36px 0 52px;
+  margin: -36px 0 -52px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 
-  &::-webkit-scrollbar { height: 5px; }
-  &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+  // Navigation is via the prev/next arrow buttons, not a visible scrollbar —
+  // scrollLeft still works underneath for touch/trackpad gestures.
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+// Prev/Next arrow buttons — float over the rail's left/right edges.
+.uc-spotlight-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-white;
+  color: $color-stone-700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+  transition: transform $_transition, box-shadow $_transition, color $_transition, opacity $_transition;
+
+  &--prev { left: -4px; }
+  &--next { right: -4px; }
+
+  &:hover:not(:disabled) {
+    color: $color-primary-darker;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
+    transform: translateY(-50%) scale(1.06);
+  }
+
+  &:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (max-width: 700px) { display: none; }
 }
 
 .uc-spot-card {
@@ -332,15 +414,17 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
-  transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 28px rgba(15, 23, 42, 0.12);
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1), box-shadow .32s ease;
 
+  // Mild lift — was -8px with a much heavier shadow and a 1.08 image zoom,
+  // which read as an aggressive pop rather than a gentle hover.
   &:hover, &:focus-visible {
-    transform: translateY(-8px);
-    box-shadow: 0 28px 46px rgba(15, 23, 42, 0.22), 0 10px 24px rgba($color-primary, 0.22);
+    transform: translateY(-4px);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 14px 24px rgba(15, 23, 42, 0.14), 0 4px 10px rgba($color-primary, 0.14);
     outline: none;
 
-    .uc-spot-bg { transform: scale(1.08); }
+    .uc-spot-bg { transform: scale(1.03); }
   }
 
   &:focus-visible { box-shadow: $shadow-focus-ring-lg; }
@@ -350,7 +434,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   position: absolute;
   inset: 0;
   z-index: 0;
-  transition: transform .7s cubic-bezier(.2, .8, .2, 1);
+  transition: transform .5s cubic-bezier(.22, 1, .36, 1);
   object-fit: cover;
   width: 100%;
   height: 100%;
@@ -384,32 +468,6 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.1) 22%, rgba(0, 0, 0, 0.58) 62%, rgba(0, 0, 0, 0.88) 100%);
 }
 
-.uc-spot-top-badges {
-  position: absolute;
-  z-index: 3;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  gap: 6px;
-}
-
-.uc-spot-glass-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 11px;
-  border-radius: $radius-full;
-  font-size: 11px;
-  font-weight: $font-weight-extrabold;
-  background: rgba(255, 255, 255, 0.18);
-  color: $color-white;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-
-  i { font-size: 11px; }
-
-  &--joined { background: rgba($color-success, 0.55); border-color: rgba(255, 255, 255, 0.3); }
-}
 
 .uc-spot-content {
   position: absolute;
@@ -456,6 +514,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 }
 
 .uc-spot-category {
+  font-family: $font-family-body;
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.78);
   font-weight: $font-weight-semibold;
@@ -469,6 +528,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 }
 
 .uc-spot-glass-chip {
+  font-family: $font-family-body;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -484,44 +544,102 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   i { font-size: 11px; }
 }
 
+// Join CTA — same light glass-pill treatment as the Joined pill below
+// (translucent tint + soft border + blur), just in the app's amber/primary
+// tone instead of the Joined pill's green, so the two read as one
+// consistent button language instead of one being a heavy solid gradient
+// and the other a light glass pill.
 .uc-spot-cta {
+  font-family: $font-family-body;
   width: 100%;
-  height: 40px;
-  border-radius: $radius-md;
-  border: 1.5px solid transparent;
-  background: linear-gradient(135deg, $color-primary 0%, $color-primary-darker 100%);
-  color: $color-on-primary;
+  height: 42px;
+  border-radius: $radius-full;
+  border: 1.5px solid rgba($color-primary, 0.85);
+  background: rgba($color-primary-dark, 0.92);
+  color: $color-stone-900;
   font-weight: $font-weight-extrabold;
   font-size: 12.5px;
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
-  transition: transform $_transition, border-color $_transition, color $_transition;
+  backdrop-filter: blur(8px);
+  transition: transform $_transition, background $_transition, border-color $_transition;
 
   i { font-size: 13px; }
 
-  // Hover highlights via border + text only — background never changes.
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    border-color: rgba($color-on-primary, 0.5);
+    background: $color-primary-dark;
+    border-color: $color-primary;
   }
-  &:disabled { opacity: 0.7; cursor: not-allowed; }
+  &:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+}
 
-  &.is-joined {
-    background: rgba(255, 255, 255, 0.14);
-    color: $color-white;
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
-    box-shadow: none;
-    backdrop-filter: blur(8px);
+// Joined state — a non-interactive "Joined" pill on the left (status, not
+// an action) and a distinct Leave button on the right, instead of the old
+// single button that silently doubled as both a status label and a leave
+// trigger.
+// 8/12 : 4/12 split (Joined pill : Leave button) — flex-grow ratio 2:1 so the
+// 10px gap is subtracted from the available width first, then the remainder
+// is divided 2:1, rather than two hard percentages that would overflow once
+// the gap is added on top.
+.uc-spot-cta-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
 
-    &:hover:not(:disabled) {
-      border-color: $color-danger;
-      color: $color-danger;
-    }
+.uc-spot-joined-pill {
+  font-family: $font-family-body;
+  flex: 2 1 0%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: $radius-full;
+  background: rgba($color-success, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: $color-white;
+  font-weight: $font-weight-extrabold;
+  font-size: 12.5px;
+  backdrop-filter: blur(8px);
+
+  i { font-size: 13px; }
+}
+
+.uc-spot-leave-btn {
+  font-family: $font-family-body;
+  flex: 1 1 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  color: $color-white;
+  font-weight: $font-weight-bold;
+  font-size: 12.5px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: transform $_transition, border-color $_transition, background $_transition, color $_transition;
+
+  i { font-size: 13px; }
+
+  &:hover:not(:disabled) {
+    background: rgba($color-danger, 0.16);
+    border-color: $color-danger;
+    color: #fff;
+    transform: translateY(-2px);
   }
+  &:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 }
 
 // ============================================================
@@ -536,7 +654,38 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   @include media-lg-max { grid-template-columns: 1fr; }
 }
 
-.uc-main { min-width: 0; }
+.uc-main { min-width: 0; position: relative; }
+
+// Subsequent fetches (tab switch, pagination, search) dim the still-mounted
+// results instead of swapping the whole page for the big loading screen —
+// the previous content stays visible underneath so nothing blinks/reloads.
+.uc-main--loading {
+  > *:not(.uc-main-loading-overlay) {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: saturate(0.7);
+  }
+  transition: opacity $_transition;
+}
+
+.uc-main-loading-overlay {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.uc-main-loading-spinner {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(245, 158, 11, 0.18);
+  border-top-color: #F59E0B;
+  border-radius: $radius-full;
+  animation: uc-spin 0.65s linear infinite;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
 
 // ============================================================
 // EMPTY STATE
@@ -630,17 +779,20 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   padding: 5px 11px;
   border-radius: $radius-full;
   border: 1px solid transparent;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: $font-weight-bold;
   white-space: nowrap;
 
-  i { font-size: 11px; }
+  i { font-size: 12px; }
 
-  &--xs { padding: 2px 6px; font-size: 9px; font-weight: $font-weight-bold; gap: 3px; }
-  &--xs i { font-size: 8px; }
+  // Was 9px/10px — the single biggest source of "too small to read" on
+  // these cards. Bumped to a legible floor (11px/12px) instead of shrinking
+  // proportionally with the card size.
+  &--xs { padding: 4px 9px; font-size: 11px; font-weight: $font-weight-bold; gap: 4px; }
+  &--xs i { font-size: 10px; }
 
-  &--sm { padding: 3px 8px; font-size: 10px; font-weight: $font-weight-bold; }
-  &--sm i { font-size: 9px; }
+  &--sm { padding: 4px 10px; font-size: 12px; font-weight: $font-weight-bold; }
+  &--sm i { font-size: 11px; }
 
   &--members  { background: $_chip-members-bg;  color: $_chip-members-text;  border-color: $_chip-members-border; }
   &--posts    { background: $_chip-posts-bg;    color: $_chip-posts-text;    border-color: $_chip-posts-border; }
@@ -677,17 +829,22 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   overflow: hidden;
   background: $color-bg-card;
   border: 1px solid $color-border;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 14px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  // A touch more presence at rest (was almost invisible at 0.04/0.05 alpha).
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 18px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s ease, border-color .25s ease;
+  // A slightly longer, gentler ease so the lift reads as a smooth glide
+  // rather than a snap.
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, border-color .3s ease;
 
+  // Mild lift — was -5px with a heavy shadow, which felt more like a pop
+  // than a hover.
   &:hover, &:focus-visible {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 26px rgba(15, 23, 42, 0.13), 0 6px 14px rgba($color-primary, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 22px rgba(15, 23, 42, 0.12), 0 4px 10px rgba($color-primary, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6);
     border-color: $color-amber-200;
     outline: none;
 
-    .uc-g-cover-bg { transform: scale(1.07); }
+    .uc-g-cover-bg { transform: scale(1.04); }
   }
 
   &:focus-visible { box-shadow: $shadow-focus-ring; }
@@ -696,7 +853,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 .uc-g-cover { position: relative; height: 118px; overflow: hidden; }
 .uc-g-cover-bg {
   position: absolute; inset: 0;
-  transition: transform .5s cubic-bezier(.2, .8, .2, 1);
+  transition: transform .5s cubic-bezier(.22, 1, .36, 1);
   object-fit: cover; width: 100%; height: 100%;
 }
 .uc-g-cover-sheen { position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 34%); pointer-events: none; }
@@ -706,16 +863,16 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 .uc-g-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 7px;
+  gap: 4px;
+  padding: 4px 9px;
   border-radius: $radius-full;
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: $font-weight-extrabold;
   backdrop-filter: blur(8px);
   letter-spacing: 0.01em;
   white-space: nowrap;
 
-  i { font-size: 8px; }
+  i { font-size: 9.5px; }
 
   &--popular { background: rgba($color-primary, 0.94); color: $color-on-primary; }
 }
@@ -728,10 +885,10 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 // image, half on the card body — instead of sitting inline next to the name.
 .uc-g-avatar {
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: $radius-sm;
-  margin-top: -19px;
+  margin-top: -20px;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -739,14 +896,14 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   color: $color-white;
   font-family: $font-family-header;
   font-weight: $font-weight-extrabold;
-  font-size: 12.5px;
+  font-size: 14px;
   object-fit: cover;
   box-shadow: 0 0 0 2px $color-bg-card, 0 0 0 3.5px rgba($color-primary, 0.45);
 }
 
 .uc-g-name {
   font-family: $font-family-header;
-  font-size: 12.5px;
+  font-size: 15px;
   font-weight: $font-weight-bold;
   margin: 0;
   line-height: 1.3;
@@ -755,66 +912,76 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   text-overflow: ellipsis;
 }
 
-.uc-g-category { font-size: 9.5px; color: $color-text-muted; font-weight: $font-weight-semibold; }
-
-.uc-g-joined-check {
-  flex-shrink: 0;
-  width: 17px;
-  height: 17px;
-  border-radius: $radius-full;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba($color-success, 0.12);
-  color: $color-success;
-
-  i { font-size: 9px; }
-}
+.uc-g-category { font-size: 11.5px; color: $color-text-muted; font-weight: $font-weight-semibold; }
 
 .uc-g-desc {
-  font-size: 10.5px;
+  font-size: 12.5px;
   color: $color-text-muted;
-  line-height: 1.4;
-  margin: 5px 0 8px;
+  line-height: 1.5;
+  margin: 6px 0 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.uc-g-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; }
-.uc-g-stats { display: flex; gap: 5px; flex-wrap: wrap; min-width: 0; }
+.uc-g-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.uc-g-stats { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }
 
+// Joined state — a non-clickable status pill first, then the actual Leave
+// action, instead of one button silently doing double duty as both.
+.uc-g-cta-group { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+
+.uc-g-joined-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: $radius-full;
+  background: rgba($color-success, 0.12);
+  border: 1px solid rgba($color-success, 0.28);
+  color: $color-success;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+
+  i { font-size: 10.5px; }
+}
+
+// Pill-shaped ($radius-full) to match .uc-g-joined-pill it sits next to —
+// was a smaller-radius rectangle, the one shape in the pair that broke the
+// "rounded pill" language the rest of the card foot uses.
 .uc-g-cta {
   flex-shrink: 0;
-  height: 25px;
-  padding: 0 10px;
-  border-radius: $radius-sm;
-  border: none;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: $radius-full;
+  border: 1.5px solid transparent;
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-darker 100%);
   color: $color-on-primary;
   font-weight: $font-weight-extrabold;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba($color-primary, 0.3);
-  transition: transform $_transition, box-shadow $_transition;
+  box-shadow: 0 3px 10px rgba($color-primary, 0.35);
+  transition: transform $_transition, box-shadow $_transition, border-color $_transition;
 
-  i { font-size: 10px; }
+  i { font-size: 11px; }
 
-  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 14px rgba($color-primary, 0.4); }
+  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba($color-primary, 0.45); }
   &:disabled { opacity: 0.65; cursor: not-allowed; }
 
-  &.is-joined {
+  &--leave {
     background: transparent;
-    border: 1.5px solid rgba($color-danger, 0.35);
+    border-color: rgba($color-danger, 0.35);
     color: $color-danger;
     box-shadow: none;
 
-    &:hover:not(:disabled) { background: rgba($color-danger, 0.08); border-color: $color-danger; }
+    &:hover:not(:disabled) { background: rgba($color-danger, 0.08); border-color: $color-danger; transform: translateY(-1px); box-shadow: none; }
   }
 }
 
@@ -837,13 +1004,14 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   background: $color-bg-card;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 10px rgba(15, 23, 42, 0.04);
   cursor: pointer;
-  transition: transform $_transition, box-shadow $_transition, border-color $_transition;
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1), box-shadow .28s ease, border-color .28s ease;
 
+  // Mild lift — was -3px with a heavier shadow.
   &:hover, &:focus-visible {
     transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.1), 0 3px 10px rgba($color-primary, 0.12);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.09), 0 2px 8px rgba($color-primary, 0.1);
     border-color: $color-amber-200;
     outline: none;
   }
@@ -871,57 +1039,70 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 .uc-l-top-row { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; }
 .uc-l-name {
   font-family: $font-family-header;
-  font-size: 13.5px;
+  font-size: 15.5px;
   font-weight: $font-weight-bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .uc-l-desc {
-  font-size: 11.5px;
+  font-size: 13px;
   color: $color-text-muted;
+  line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
-.uc-l-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.uc-l-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+// Joined state — a non-clickable status pill first, then the actual Leave
+// action, instead of one button silently doing double duty as both.
+.uc-l-cta-group { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 
 .uc-l-joined-pill {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 8px;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 14px;
   border-radius: $radius-full;
   background: rgba($color-success, 0.12);
+  border: 1px solid rgba($color-success, 0.28);
   color: $color-success;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: $font-weight-bold;
 
-  i { font-size: 9px; }
+  i { font-size: 11px; }
 }
 
+// Pill-shaped ($radius-full) to match .uc-l-joined-pill it sits next to.
 .uc-l-btn {
   flex-shrink: 0;
-  padding: 8px 15px;
-  font-size: 11.5px;
-  border-radius: $radius-md;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 18px;
+  font-size: 13px;
+  border-radius: $radius-full;
+  border: 1.5px solid transparent;
   font-weight: $font-weight-bold;
   cursor: pointer;
   transition: background $_transition, color $_transition, border-color $_transition, box-shadow $_transition, transform $_transition;
 
   &--join {
-    border: none;
     background: linear-gradient(135deg, $color-primary 0%, $color-primary-darker 100%);
     color: $color-on-primary;
-    box-shadow: 0 3px 10px rgba($color-primary, 0.26);
+    box-shadow: 0 3px 10px rgba($color-primary, 0.32);
 
-    &:hover:not(:disabled) { transform: translateY(-1px); }
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba($color-primary, 0.4); }
   }
 
   &--leave {
-    border: 1px solid rgba($color-danger, 0.3);
+    border-color: rgba($color-danger, 0.3);
     background: transparent;
     color: $color-danger;
 
@@ -932,46 +1113,67 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 }
 
 // ============================================================
-// PAGINATION
+// INFINITE SCROLL STATUS + BACK-TO-TOP
 // ============================================================
-.uc-pagination {
+.uc-load-more {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 4px;
-  margin-top: $spacing-xl;
+  justify-content: center;
+  gap: 10px;
+  padding: $spacing-lg 0;
+  color: $color-text-muted;
+  font-size: 13px;
+  font-weight: $font-weight-medium;
 }
 
-.uc-pag-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 6px;
-  border-radius: $radius-sm;
-  border: 1px solid $color-border;
-  background: $color-bg-card;
+.uc-load-more-spinner {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(245, 158, 11, 0.2);
+  border-top-color: #F59E0B;
+  border-radius: $radius-full;
+  animation: uc-spin 0.65s linear infinite;
+}
+
+.uc-load-more-end {
+  text-align: center;
+  padding: $spacing-lg 0;
   color: $color-text-muted;
   font-size: 12.5px;
-  font-weight: $font-weight-semibold;
+  font-weight: $font-weight-medium;
+}
+
+// Appears once the user has scrolled down past the header — lets them jump
+// straight back up instead of scrolling all the way through an
+// infinite-scrolled list by hand.
+.uc-scroll-top {
+  position: fixed;
+  right: 24px;
+  bottom: 28px;
+  z-index: $z-fixed;
+  width: 46px;
+  height: 46px;
+  border-radius: $radius-full;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: $color-bg-card;
+  color: $color-primary-darker;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   cursor: pointer;
-  transition: background $_transition, color $_transition, border-color $_transition;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease, box-shadow $_transition, background $_transition, color $_transition;
 
-  &:hover:not(:disabled):not(.active) {
-    background: $color-primary-light;
-    color: $color-primary-darker;
-    border-color: $color-amber-200;
-  }
+  &:hover { background: $color-primary-light; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.22); }
 
-  &.active {
-    background: $color-text-primary;
-    color: $color-white;
-    border-color: $color-text-primary;
-    cursor: default;
-  }
+  &--visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 
-  &:disabled { opacity: 0.35; cursor: not-allowed; }
+  @include media-sm-max { right: 16px; bottom: 18px; width: 42px; height: 42px; font-size: 16px; }
 }
 
 // ============================================================
@@ -1009,39 +1211,27 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   i { font-size: 13px; color: $color-primary-darker; }
 }
 
-// ── Quick actions ──────────────────────────────────────────
-.uc-quick-row { display: flex; gap: 7px; }
-.uc-quick-btn {
-  flex: 1;
+// ── Popular posts — clickable rows (→ the post's community), larger fonts
+// (was 10–11.5px, unreadable), and an optional image thumbnail that opens
+// in the shared community-post lightbox. ──
+.uc-post-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 11px 4px;
+  gap: 11px;
+  padding: 12px 8px;
+  margin: 0 -8px;
   border-radius: $radius-md;
-  background: $color-bg-light;
-  border: 1px solid $color-border;
-  color: $color-text-body;
-  text-decoration: none;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  text-align: center;
-  transition: background $_transition, color $_transition, border-color $_transition;
+  cursor: pointer;
+  transition: background $_transition;
 
-  i { font-size: 17px; }
-
-  &:hover { background: $color-primary-light; color: $color-primary-darker; border-color: $color-amber-200; }
+  &:hover, &:focus-visible { background: $color-bg-light; outline: none; }
+  &:focus-visible { box-shadow: inset 0 0 0 1.5px $color-amber-200; }
 }
-
-// ── Popular posts ───────────────────────────────────────────
-.uc-post-row { display: flex; gap: 9px; padding: 10px 0; border-bottom: 1px solid $color-stone-100; }
-.uc-post-row:first-child { padding-top: 0; }
-.uc-post-row:last-child { border-bottom: none; padding-bottom: 0; }
+.uc-post-row + .uc-post-row { border-top: 1px solid $color-stone-100; }
 
 .uc-post-avatar {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: $radius-sm;
   display: flex;
   align-items: center;
@@ -1049,26 +1239,63 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   color: $color-white;
   font-family: $font-family-header;
   font-weight: $font-weight-extrabold;
-  font-size: 11px;
+  font-size: 13px;
+
+  &--img { object-fit: cover; border: 1px solid $color-border; }
 }
 
 .uc-post-info { flex: 1; min-width: 0; }
-.uc-post-community { display: block; font-size: 10px; font-weight: $font-weight-bold; color: $color-primary-darker; margin-bottom: 2px; }
+.uc-post-community { display: block; font-size: 11.5px; font-weight: $font-weight-bold; color: $color-primary-darker; margin-bottom: 3px; }
 .uc-post-excerpt {
-  font-size: 11.5px;
+  font-size: 13px;
   color: $color-text-body;
-  line-height: 1.4;
-  margin: 0 0 5px;
+  line-height: 1.5;
+  margin: 0 0 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.uc-post-meta { display: flex; gap: 10px; }
-.uc-post-meta span { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; color: $color-text-muted; font-weight: $font-weight-semibold; }
-.uc-post-meta i { font-size: 11px; }
 
-.uc-post-skeleton { display: flex; gap: 9px; padding: 10px 0; }
+.uc-post-img-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 160px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  cursor: zoom-in;
+  margin-bottom: 8px;
+  line-height: 0;
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+.uc-post-img { width: 100%; height: 84px; object-fit: cover; display: block; transition: transform $_transition; }
+.uc-post-img-btn:hover .uc-post-img { transform: scale(1.05); }
+
+.uc-post-img-count {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 2px 7px;
+  border-radius: $radius-full;
+  background: rgba(15, 23, 42, 0.65);
+  color: $color-white;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  backdrop-filter: blur(4px);
+}
+
+.uc-post-meta { display: flex; gap: 12px; }
+.uc-post-meta span { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: $color-text-muted; font-weight: $font-weight-semibold; }
+.uc-post-meta i { font-size: 12px; }
+
+.uc-post-skeleton { display: flex; gap: 11px; padding: 12px 0; }
+
+.uc-rail-card--empty { text-align: center; }
+.uc-post-empty { font-size: 12.5px; color: $color-text-muted; line-height: 1.6; margin: 0; }
 
 .uc-rail-action {
   display: flex;
@@ -1166,4 +1393,55 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   .uc-skeleton {
     animation: none !important;
   }
+}
+
+// ============================================================
+// POPULAR POST IMAGE LIGHTBOX — same .cd-lightbox used on the Community
+// Detail / Dashboard pages for viewing community post images, copied 1:1
+// so this reads and behaves identically rather than introducing a
+// different viewer for the same kind of content.
+// ============================================================
+.cd-lightbox {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, 0.84); backdrop-filter: blur(3px);
+  z-index: 1150; display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+
+.cd-lightbox-content {
+  position: relative; width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  border-radius: 16px; background: rgba(15, 23, 42, 0.48); border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5); padding: 46px 16px 44px;
+}
+
+.cd-lightbox-image { width: 100%; max-height: calc(100vh - 160px); object-fit: contain; display: block; border-radius: 12px; }
+
+.cd-lightbox-close,
+.cd-lightbox-nav {
+  border: 1px solid rgba(226, 232, 240, 0.35); background: rgba(15, 23, 42, 0.6); color: $color-white;
+  width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.18s ease, border-color 0.18s ease;
+  &:hover { background: rgba(30, 41, 59, 0.78); border-color: rgba(226, 232, 240, 0.48); }
+}
+
+.cd-lightbox-close { position: absolute; top: 10px; right: 10px; }
+
+.cd-lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  &.cd-lightbox-nav--prev { left: 10px; }
+  &.cd-lightbox-nav--next { right: 10px; }
+}
+
+.cd-lightbox-footer { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; }
+
+.cd-lightbox-counter {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 28px;
+  padding: 0 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(226, 232, 240, 0.28);
+  color: #f8fafc; font-size: 12px; font-weight: 700;
+}
+
+@include media-sm-max {
+  .cd-lightbox-content { width: min(94vw, 760px); padding: 42px 12px 40px; }
+  .cd-lightbox-image { max-height: calc(100vh - 190px); }
+  .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
+  .cd-lightbox-nav.cd-lightbox-nav--prev { left: 14px; }
+  .cd-lightbox-nav.cd-lightbox-nav--next { right: 14px; }
 }
