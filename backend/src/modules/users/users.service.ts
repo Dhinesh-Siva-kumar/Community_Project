@@ -5,6 +5,7 @@ import fs from 'fs';
 import { AppError } from '../../middleware/errorHandler';
 import { env } from '../../config/env';
 import { logAudit, listAuditLogs } from '../../services/audit.service';
+import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
 import type {
   UpdateUserDtoType,
   AdminCreateUserDtoType,
@@ -27,10 +28,17 @@ interface UserRow {
   role_level: number;
   country_id: number | null;
   country: string;
+  state_id: number | null;
+  state: string | null;
+  city_id: number | null;
   location: string | null;
   pincode: string | null;
   interests: string[];
   professional_category: string | null;
+  occupation: string | null;
+  company: string | null;
+  website: string | null;
+  linkedin_url: string | null;
   bio: string | null;
   is_trusted: boolean;
   is_blocked: boolean;
@@ -64,10 +72,17 @@ function toClientUser(user: UserRow) {
     roleLevel:            user.role_level,
     countryId:            user.country_id,
     country:              user.country,
+    stateId:              user.state_id,
+    state:                user.state,
+    cityId:               user.city_id,
     location:             user.location,
     pincode:              user.pincode,
     interests:            user.interests,
     professionalCategory: user.professional_category,
+    occupation:           user.occupation,
+    company:              user.company,
+    website:              user.website,
+    linkedinUrl:          user.linkedin_url,
     bio:                  user.bio,
     isTrusted:            user.is_trusted,
     isBlocked:            user.is_blocked,
@@ -109,7 +124,12 @@ export async function getProfile(userId: string) {
     community: { id: m['c_id'], name: m['c_name'], description: m['c_description'], image: m['c_image'] },
   }));
 
-  return { ...toClientUser(user), communities };
+  // Walks the selected division's parent chain (top-level -> leaf) so the
+  // Angular edit form can populate every division dropdown's options from
+  // the stored leaf id alone — mirrors business.service.ts's findOne().
+  const stateChain = user.state_id ? await getDivisionChain(user.state_id) : [];
+
+  return { ...toClientUser(user), stateChain, communities };
 }
 
 export async function updateProfile(userId: string, data: UpdateUserDtoType) {
@@ -133,13 +153,43 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
     if (taken) throw new AppError(409, 'Email address is already in use by another account');
     updateData['email'] = data.email;
   }
-  if (data.countryId !== undefined) updateData['country_id'] = data.countryId;
   if (data.bio !== undefined) updateData['bio'] = data.bio;
   if (data.location !== undefined) updateData['location'] = data.location;
   if (data.pincode !== undefined) updateData['pincode'] = data.pincode;
   if (data.interests !== undefined) updateData['interests'] = data.interests;
   if (data.professionalCategory !== undefined) updateData['professional_category'] = data.professionalCategory;
   if (data.avatar !== undefined) updateData['avatar'] = data.avatar;
+  if (data.occupation !== undefined) updateData['occupation'] = data.occupation;
+  if (data.company !== undefined) updateData['company'] = data.company;
+  if (data.website !== undefined) updateData['website'] = data.website;
+  if (data.linkedinUrl !== undefined) updateData['linkedin_url'] = data.linkedinUrl;
+
+  // Location — country/state/city are stored as both a real FK (validated
+  // against each other and against the postal-code format below) and a
+  // denormalized text mirror resolved server-side, exactly like Business.
+  if (data.countryId !== undefined || data.stateId !== undefined || data.cityId !== undefined) {
+    await validateAddressHierarchy({
+      countryId: data.countryId,
+      stateId: data.stateId,
+      cityId: data.cityId,
+      pincode: data.pincode,
+    });
+  }
+  if (data.countryId !== undefined) {
+    updateData['country_id'] = data.countryId;
+    const country = await db('master_countries').where({ id: data.countryId }).first('name') as { name: string } | undefined;
+    if (country) updateData['country'] = country.name;
+  }
+  if (data.stateId !== undefined) {
+    updateData['state_id'] = data.stateId;
+    const state = await db('master_states').where({ id: data.stateId }).first('name') as { name: string } | undefined;
+    updateData['state'] = state?.name ?? null;
+  }
+  if (data.cityId !== undefined) {
+    updateData['city_id'] = data.cityId;
+    const city = await db('master_cities').where({ id: data.cityId }).first('name') as { name: string } | undefined;
+    updateData['location'] = city?.name ?? (updateData['location'] as string | null | undefined) ?? null;
+  }
 
   if (Object.keys(updateData).length === 0) throw new AppError(400, 'No update fields provided');
 
@@ -207,7 +257,7 @@ export async function getUsers(options: GetUsersOptions) {
   const query = db('users').select(
     'id', 'email', 'user_name', 'display_name', 'phone_no', 'avatar',
     'role', 'role_level', 'country_id', 'country', 'location', 'pincode',
-    'interests', 'professional_category', 'bio', 'is_trusted', 'is_blocked',
+    'interests', 'professional_category', 'occupation', 'company', 'website', 'linkedin_url', 'bio', 'is_trusted', 'is_blocked',
     'is_active', 'profile_completion', 'created_at', 'updated_at',
   );
   applyFilters(query);

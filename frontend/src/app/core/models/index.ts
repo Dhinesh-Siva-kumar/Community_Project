@@ -98,10 +98,19 @@ export interface User {
   role: 'ADMIN' | 'USER';
   countryId?: number;
   country: string;
+  stateId?: number;
+  state?: string;
+  cityId?: number;
+  /** Selected division's parent chain (top-level -> leaf) — only present on getProfile(), used to populate the edit form's division dropdowns from the stored leaf id alone. */
+  stateChain?: Division[];
   location?: string;
   pincode?: string;
   interests: string[];
   professionalCategory?: string;
+  occupation?: string;
+  company?: string;
+  website?: string;
+  linkedinUrl?: string;
   bio?: string;
   isTrusted: boolean;
   isBlocked: boolean;

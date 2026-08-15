@@ -33,6 +33,10 @@ interface UserRow {
   pincode: string | null;
   interests: string[];
   professional_category: string | null;
+  occupation: string | null;
+  company: string | null;
+  website: string | null;
+  linkedin_url: string | null;
   bio: string | null;
   is_trusted: boolean;
   is_blocked: boolean;
@@ -76,6 +80,10 @@ function toClientUser(user: UserRow, roleLevel?: number): object {
     pincode:              user.pincode,
     interests:            user.interests,
     professionalCategory: user.professional_category,
+    occupation:           user.occupation,
+    company:              user.company,
+    website:              user.website,
+    linkedinUrl:          user.linkedin_url,
     bio:                  user.bio,
     isTrusted:            user.is_trusted,
     isBlocked:            user.is_blocked,

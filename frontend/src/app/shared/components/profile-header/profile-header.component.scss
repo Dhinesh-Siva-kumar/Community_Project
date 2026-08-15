@@ -7,43 +7,32 @@
   border-radius: $radius-lg;
   box-shadow: $shadow-2;
   overflow: hidden;
-  margin-bottom: $section-gap-v;
   transition: box-shadow 0.25s ease;
 
   &:hover { box-shadow: $shadow-4; }
 
-  // Gradient cover banner
+  // Plain cover strip — no color fill, just the height the avatar overlaps.
   .header-cover {
-    height: 96px;
-    background: $gradient-primary;
-    position: relative;
-
-    &::after {
-      // subtle decorative sheen
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 85% -20%, rgba(255, 255, 255, 0.35), transparent 45%),
-        radial-gradient(circle at 15% 120%, rgba(28, 25, 23, 0.12), transparent 50%);
-    }
+    height: 32px;
   }
 
   .header-body {
     display: flex;
-    align-items: flex-end;
-    gap: $profile-header-gap;
-    padding: 0 $spacing-lg $spacing-lg;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 0 $spacing-lg $spacing-sm;
     flex-wrap: wrap;
   }
 
-  // Avatar lifted up to overlap the banner
+  // Avatar lifted up to overlap the banner — kept well clear of 0 so the
+  // header-meta text block (which can be taller than the avatar once
+  // vertically centered) never gets clipped by this card's overflow:hidden.
   .avatar-slot {
-    margin-top: -48px;
+    margin-top: -20px;
     flex-shrink: 0;
 
     ::ng-deep .avatar-wrap {
-      border: 4px solid $color-bg-card;
+      border: 3px solid $color-bg-card;
       box-shadow: $shadow-3;
       background: $color-bg-card;
     }
@@ -52,7 +41,6 @@
   .header-meta {
     flex: 1;
     min-width: 0;
-    padding-top: $spacing-sm;
   }
 
   .name-row {
@@ -60,13 +48,13 @@
     align-items: center;
     gap: $spacing-sm;
     flex-wrap: wrap;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .user-name {
     font-family: $font-family-header;
     font-weight: $font-weight-bold;
-    font-size: $font-size-2xl;
+    font-size: $font-size-md;
     color: $color-text-primary;
     margin: 0;
     line-height: 1.1;
@@ -76,34 +64,18 @@
     display: flex;
     flex-wrap: wrap;
     gap: $spacing-md;
-    margin-bottom: $spacing-md;
 
     .meta-item {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: $font-size-sm;
+      font-size: $font-size-xs;
       color: $color-text-muted;
 
       i { color: $color-primary-dark; font-size: 0.9em; }
     }
   }
 
-  .completion-block {
-    max-width: 360px;
-
-    .completion-head {
-      margin-bottom: 5px;
-
-      .completion-label {
-        font-size: $font-size-xs;
-        font-weight: $font-weight-semibold;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: $color-text-muted;
-      }
-    }
-  }
 
   // Role / status badges
   .role-badge {
@@ -133,11 +105,9 @@
       padding-bottom: $spacing-md;
     }
 
-    .avatar-slot { margin-top: -52px; }
+    .avatar-slot { margin-top: -24px; }
 
     .name-row,
     .meta-line { justify-content: center; }
-
-    .completion-block { max-width: 100%; width: 100%; }
   }
 }
