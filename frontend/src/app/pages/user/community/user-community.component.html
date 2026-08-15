@@ -3,8 +3,11 @@
      + spotlight carousel + (grid/list) directory + sidebar
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ── Loading State ──────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── Loading State — only before the very first fetch ever resolves.
+     Later fetches (tab switch, pagination, search) keep the whole page
+     mounted and just dim the results area (see .uc-main--loading below)
+     instead of tearing the page down and rebuilding it. ──────────── -->
+@if (!pageReady()) {
   <div class="uc-loading" aria-live="polite" aria-label="Loading communities">
     <div class="uc-loading-inner">
       <div class="uc-loading-ring">
@@ -25,14 +28,22 @@
 <div class="uc-head">
   <div>
     <h1 class="uc-title">Communities</h1>
-    <p class="uc-subtitle">{{ totalItems() }} {{ totalItems() === 1 ? 'community' : 'communities' }} · {{ totalMembersCount() | number }} members</p>
+    <p class="uc-subtitle">{{ overallStats()?.total ?? 0 }} {{ overallStats()?.total === 1 ? 'community' : 'communities' }} · {{ (overallStats()?.totalMembers ?? 0) | number }} members</p>
   </div>
 
   <div class="uc-head-controls">
     <div class="uc-tabs-wrap">
       <div class="uc-tabs" role="tablist">
+        <span
+          class="uc-tab-indicator uc-tab-indicator--{{ activeTab() }}"
+          [class.uc-tab-indicator--ready]="tabIndicatorReady()"
+          [style.transform]="'translateX(' + tabIndicatorLeft() + 'px)'"
+          [style.width.px]="tabIndicatorWidth()"
+          aria-hidden="true"
+        ></span>
         @for (tab of pageTabs(); track tab.id) {
           <button
+            #tabBtn
             role="tab"
             type="button"
             class="uc-tab uc-tab--{{ tab.id }}"
@@ -87,6 +98,10 @@
         </button>
       }
     </div>
+
+    <button type="button" class="uc-add-btn" (click)="openAddCommunity()">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Community
+    </button>
   </div>
 </div>
 
@@ -98,91 +113,107 @@
       <h2>Spotlight<span class="uc-spotlight-sub">most popular, by members</span></h2>
     </div>
 
-    <div class="uc-spotlight-rail">
-      @for (community of featuredCommunities(); track community.id) {
-        <article
-          class="uc-spot-card"
-          (click)="navigateToCommunity(community.id)"
-          (keydown.enter)="navigateToCommunity(community.id)"
-          tabindex="0"
-          [attr.aria-label]="community.name"
-        >
-          @if (community.image) {
-            <img class="uc-spot-bg" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
-          } @else {
-            <div class="uc-spot-bg" [style.background]="getCoverGradient(community.name)" aria-hidden="true"></div>
-          }
-          <div class="uc-spot-noise" aria-hidden="true"></div>
-          <div class="uc-spot-glow" aria-hidden="true"></div>
-          <div class="uc-spot-scrim" aria-hidden="true"></div>
+    <div class="uc-spotlight-rail-wrap">
+      <button type="button" class="uc-spotlight-nav uc-spotlight-nav--prev"
+        (click)="scrollSpotlight('left')" [disabled]="!canScrollSpotlightLeft()" aria-label="Scroll spotlight left">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
 
-          @if (community.is_joined || isJoined(community.id)) {
-            <div class="uc-spot-top-badges">
-              <span class="uc-spot-glass-badge uc-spot-glass-badge--joined">
-                <i class="bi bi-check-lg" aria-hidden="true"></i>Joined
-              </span>
-            </div>
-          }
-
-          <div class="uc-spot-content">
-            <div class="uc-spot-id-row">
-              @if (community.image) {
-                <img class="uc-spot-avatar" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
-              } @else {
-                <div class="uc-spot-avatar" aria-hidden="true">{{ getInitials(community.name) }}</div>
-              }
-              <div class="uc-spot-name-group">
-                <h3 class="uc-spot-name">{{ community.name }}</h3>
-                <span class="uc-spot-category">
-                  {{ community.category_name || 'Community' }}
-                  @if (community.location) { · {{ community.location }} }
-                </span>
-              </div>
-            </div>
-
-            <div class="uc-spot-stats-row">
-              <span class="uc-spot-glass-chip">
-                <i class="bi bi-people-fill" aria-hidden="true"></i>{{ community._count?.members ?? 0 }} members
-              </span>
-              @if (community._count?.posts) {
-                <span class="uc-spot-glass-chip">
-                  <i class="bi bi-file-earmark-text-fill" aria-hidden="true"></i>{{ community._count?.posts }} posts
-                </span>
-              }
-            </div>
-
-            @if (community.is_joined || isJoined(community.id)) {
-              <button
-                class="uc-spot-cta is-joined"
-                type="button"
-                (click)="leaveCommunity($event, community.id)"
-                [disabled]="leavingId() === community.id"
-                [attr.aria-label]="'Leave ' + community.name"
-              >
-                @if (leavingId() === community.id) {
-                  <span class="uc-btn-spinner" aria-hidden="true"></span> Leaving…
-                } @else {
-                  <i class="bi bi-check-lg" aria-hidden="true"></i> Joined
-                }
-              </button>
+      <div class="uc-spotlight-rail" #spotlightRail (scroll)="onSpotlightScroll()">
+        @for (community of featuredCommunities(); track community.id) {
+          <article
+            class="uc-spot-card"
+            (click)="navigateToCommunity(community.id)"
+            (keydown.enter)="navigateToCommunity(community.id)"
+            tabindex="0"
+            [attr.aria-label]="community.name"
+          >
+            @if (community.image) {
+              <img class="uc-spot-bg" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
             } @else {
-              <button
-                class="uc-spot-cta"
-                type="button"
-                (click)="joinCommunity($event, community.id)"
-                [disabled]="joiningId() === community.id"
-                [attr.aria-label]="'Join ' + community.name"
-              >
-                @if (joiningId() === community.id) {
-                  <span class="uc-btn-spinner" aria-hidden="true"></span> Joining…
-                } @else {
-                  <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
-                }
-              </button>
+              <div class="uc-spot-bg" [style.background]="getCoverGradient(community.name)" aria-hidden="true"></div>
             }
-          </div>
-        </article>
-      }
+            <div class="uc-spot-noise" aria-hidden="true"></div>
+            <div class="uc-spot-glow" aria-hidden="true"></div>
+            <div class="uc-spot-scrim" aria-hidden="true"></div>
+
+            <div class="uc-spot-content">
+              <div class="uc-spot-id-row">
+                @if (community.image) {
+                  <img class="uc-spot-avatar" [src]="community.image | imageUrl" [alt]="community.name" loading="lazy" />
+                } @else {
+                  <div class="uc-spot-avatar" aria-hidden="true">{{ getInitials(community.name) }}</div>
+                }
+                <div class="uc-spot-name-group">
+                  <h3 class="uc-spot-name">{{ community.name }}</h3>
+                  <span class="uc-spot-category">
+                    {{ community.category_name || 'Community' }}
+                    @if (community.location) { · {{ community.location }} }
+                  </span>
+                </div>
+              </div>
+
+              <div class="uc-spot-stats-row">
+                <span class="uc-spot-glass-chip">
+                  <i class="bi bi-people-fill" aria-hidden="true"></i>{{ community._count?.members ?? 0 }} members
+                </span>
+                @if (community._count?.posts) {
+                  <span class="uc-spot-glass-chip">
+                    <i class="bi bi-file-earmark-text-fill" aria-hidden="true"></i>{{ community._count?.posts }} posts
+                  </span>
+                }
+                @if (isOwner(community)) {
+                  <span class="uc-spot-glass-chip uc-spot-glass-chip--owner">
+                    <i class="bi bi-person-check-fill" aria-hidden="true"></i> Your Community
+                  </span>
+                }
+              </div>
+
+              @if (!isOwner(community)) {
+                @if (community.is_joined || isJoined(community.id)) {
+                  <div class="uc-spot-cta-row">
+                    <span class="uc-spot-joined-pill">
+                      <i class="bi bi-check-lg" aria-hidden="true"></i> Joined
+                    </span>
+                    <button
+                      class="uc-spot-leave-btn"
+                      type="button"
+                      (click)="leaveCommunity($event, community.id)"
+                      [disabled]="leavingId() === community.id"
+                      [attr.aria-label]="'Leave ' + community.name"
+                    >
+                      @if (leavingId() === community.id) {
+                        <span class="uc-btn-spinner" aria-hidden="true"></span> Leaving…
+                      } @else {
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Leave
+                      }
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    class="uc-spot-cta"
+                    type="button"
+                    (click)="joinCommunity($event, community.id)"
+                    [disabled]="joiningId() === community.id"
+                    [attr.aria-label]="'Join ' + community.name"
+                  >
+                    @if (joiningId() === community.id) {
+                      <span class="uc-btn-spinner" aria-hidden="true"></span> Joining…
+                    } @else {
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
+                    }
+                  </button>
+                }
+              }
+            </div>
+          </article>
+        }
+      </div>
+
+      <button type="button" class="uc-spotlight-nav uc-spotlight-nav--next"
+        (click)="scrollSpotlight('right')" [disabled]="!canScrollSpotlightRight()" aria-label="Scroll spotlight right">
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
     </div>
   </section>
 }
@@ -190,7 +221,13 @@
 <!-- ── PAGE LAYOUT ──────────────────────────────────────────── -->
 <div class="uc-layout">
 
-  <div class="uc-main">
+  <div class="uc-main" [class.uc-main--loading]="loading()">
+
+    @if (loading()) {
+      <div class="uc-main-loading-overlay" aria-hidden="true">
+        <span class="uc-main-loading-spinner"></span>
+      </div>
+    }
 
     @if (filteredCommunities().length === 0) {
       <!-- ── Empty state ──────────────────────────── -->
@@ -261,12 +298,36 @@
               }
               <div class="uc-g-cover-sheen" aria-hidden="true"></div>
               <div class="uc-g-cover-scrim" aria-hidden="true"></div>
-              @if ((community._count?.members ?? 0) > 50) {
+              @if (((community._count?.members ?? 0) > 50) || isOwner(community)) {
                 <div class="uc-g-cover-badges">
-                  <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
+                  @if ((community._count?.members ?? 0) > 50) {
+                    <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
+                  }
+                  @if (isOwner(community)) {
+                    <span class="uc-g-badge uc-g-badge--owner"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Your Community</span>
+                  }
                 </div>
               }
             </div>
+
+            @if (isOwner(community)) {
+              <div class="uc-card-menu uc-card-menu--cover" [class.uc-card-menu--open]="openMenuId() === community.id" (click)="$event.stopPropagation()">
+                <button type="button" class="uc-card-menu-trigger uc-card-menu-trigger--on-image" [attr.aria-label]="'More actions for ' + community.name"
+                  [attr.aria-expanded]="openMenuId() === community.id" (click)="toggleActionMenu($event, community.id)">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                @if (openMenuId() === community.id) {
+                  <div class="uc-card-menu-panel">
+                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </button>
+                    <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </div>
+                }
+              </div>
+            }
 
             <div class="uc-g-body">
               @if (community.image) {
@@ -282,11 +343,6 @@
                   <h3 class="uc-g-name">{{ community.name }}</h3>
                   <span class="uc-g-category">{{ community.category_name || 'Community' }}</span>
                 </div>
-                @if (community.is_joined || isJoined(community.id)) {
-                  <span class="uc-g-joined-check" title="You're a member">
-                    <i class="bi bi-check-lg" aria-hidden="true"></i>
-                  </span>
-                }
               </div>
 
               <p class="uc-g-desc">{{ community.description }}</p>
@@ -307,34 +363,41 @@
                   }
                 </div>
 
-                @if (community.is_joined || isJoined(community.id)) {
-                  <button
-                    class="uc-g-cta is-joined"
-                    type="button"
-                    (click)="leaveCommunity($event, community.id)"
-                    [disabled]="leavingId() === community.id"
-                    [attr.aria-label]="'Leave ' + community.name"
-                  >
-                    @if (leavingId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span>
-                    } @else {
-                      Leave
-                    }
-                  </button>
-                } @else {
-                  <button
-                    class="uc-g-cta"
-                    type="button"
-                    (click)="joinCommunity($event, community.id)"
-                    [disabled]="joiningId() === community.id"
-                    [attr.aria-label]="'Join ' + community.name"
-                  >
-                    @if (joiningId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span>
-                    } @else {
-                      <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
-                    }
-                  </button>
+                @if (!isOwner(community)) {
+                  @if (community.is_joined || isJoined(community.id)) {
+                    <div class="uc-g-cta-group">
+                      <span class="uc-g-joined-pill" title="You're a member">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>Joined
+                      </span>
+                      <button
+                        class="uc-g-cta uc-g-cta--leave"
+                        type="button"
+                        (click)="leaveCommunity($event, community.id)"
+                        [disabled]="leavingId() === community.id"
+                        [attr.aria-label]="'Leave ' + community.name"
+                      >
+                        @if (leavingId() === community.id) {
+                          <span class="uc-btn-spinner" aria-hidden="true"></span>
+                        } @else {
+                          Leave
+                        }
+                      </button>
+                    </div>
+                  } @else {
+                    <button
+                      class="uc-g-cta"
+                      type="button"
+                      (click)="joinCommunity($event, community.id)"
+                      [disabled]="joiningId() === community.id"
+                      [attr.aria-label]="'Join ' + community.name"
+                    >
+                      @if (joiningId() === community.id) {
+                        <span class="uc-btn-spinner" aria-hidden="true"></span>
+                      } @else {
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
+                      }
+                    </button>
+                  }
                 }
               </div>
             </div>
@@ -364,8 +427,8 @@
             <div class="uc-l-info">
               <div class="uc-l-top-row">
                 <span class="uc-l-name">{{ community.name }}</span>
-                @if (community.is_joined || isJoined(community.id)) {
-                  <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>Joined</span>
+                @if (isOwner(community)) {
+                  <span class="uc-l-owner-badge"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Yours</span>
                 }
               </div>
               <div class="uc-l-desc">{{ community.description }}</div>
@@ -385,75 +448,70 @@
               </div>
             </div>
 
-            @if (community.is_joined || isJoined(community.id)) {
-              <button
-                class="uc-l-btn uc-l-btn--leave"
-                type="button"
-                (click)="leaveCommunity($event, community.id)"
-                [disabled]="leavingId() === community.id"
-                [attr.aria-label]="'Leave ' + community.name"
-              >
-                @if (leavingId() === community.id) {
-                  <span class="uc-btn-spinner" aria-hidden="true"></span>
-                } @else {
-                  Leave
+            @if (!isOwner(community)) {
+              @if (community.is_joined || isJoined(community.id)) {
+                <div class="uc-l-cta-group">
+                  <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>Joined</span>
+                  <button
+                    class="uc-l-btn uc-l-btn--leave"
+                    type="button"
+                    (click)="leaveCommunity($event, community.id)"
+                    [disabled]="leavingId() === community.id"
+                    [attr.aria-label]="'Leave ' + community.name"
+                  >
+                    @if (leavingId() === community.id) {
+                      <span class="uc-btn-spinner" aria-hidden="true"></span>
+                    } @else {
+                      Leave
+                    }
+                  </button>
+                </div>
+              } @else {
+                <button
+                  class="uc-l-btn uc-l-btn--join"
+                  type="button"
+                  (click)="joinCommunity($event, community.id)"
+                  [disabled]="joiningId() === community.id"
+                  [attr.aria-label]="'Join ' + community.name"
+                >
+                  @if (joiningId() === community.id) {
+                    <span class="uc-btn-spinner" aria-hidden="true"></span>
+                  } @else {
+                    Join
+                  }
+                </button>
+              }
+            }
+            @if (isOwner(community)) {
+              <div class="uc-card-menu" [class.uc-card-menu--open]="openMenuId() === community.id" (click)="$event.stopPropagation()">
+                <button type="button" class="uc-card-menu-trigger" [attr.aria-label]="'More actions for ' + community.name"
+                  [attr.aria-expanded]="openMenuId() === community.id" (click)="toggleActionMenu($event, community.id)">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                @if (openMenuId() === community.id) {
+                  <div class="uc-card-menu-panel">
+                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </button>
+                    <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </div>
                 }
-              </button>
-            } @else {
-              <button
-                class="uc-l-btn uc-l-btn--join"
-                type="button"
-                (click)="joinCommunity($event, community.id)"
-                [disabled]="joiningId() === community.id"
-                [attr.aria-label]="'Join ' + community.name"
-              >
-                @if (joiningId() === community.id) {
-                  <span class="uc-btn-spinner" aria-hidden="true"></span>
-                } @else {
-                  Join
-                }
-              </button>
+              </div>
             }
           </article>
         }
       </div>
 
-      <!-- ── Pagination ─────────────────────────── -->
-      @if (totalPages() > 1) {
-        <nav class="uc-pagination" aria-label="Pagination">
-          <button
-            class="uc-pag-btn"
-            (click)="goToPage(currentPage() - 1)"
-            [disabled]="currentPage() === 1"
-            type="button"
-            aria-label="Previous page"
-          >
-            <i class="bi bi-chevron-left" aria-hidden="true"></i>
-          </button>
-
-          @for (page of getPages(); track page) {
-            <button
-              class="uc-pag-btn"
-              [class.active]="page === currentPage()"
-              (click)="goToPage(page)"
-              type="button"
-              [attr.aria-current]="page === currentPage() ? 'page' : null"
-              [attr.aria-label]="'Page ' + page"
-            >
-              {{ page }}
-            </button>
-          }
-
-          <button
-            class="uc-pag-btn"
-            (click)="goToPage(currentPage() + 1)"
-            [disabled]="currentPage() === totalPages()"
-            type="button"
-            aria-label="Next page"
-          >
-            <i class="bi bi-chevron-right" aria-hidden="true"></i>
-          </button>
-        </nav>
+      <!-- ── Infinite scroll status ─────────────────────── -->
+      @if (loadingMore()) {
+        <div class="uc-load-more" aria-live="polite">
+          <span class="uc-load-more-spinner" aria-hidden="true"></span>
+          Loading more communities…
+        </div>
+      } @else if (!hasMore() && totalItems() > pageSize()) {
+        <p class="uc-load-more-end">You&rsquo;ve reached the end — {{ totalItems() }} communities total.</p>
       }
 
     } <!-- / filteredCommunities -->
@@ -463,34 +521,16 @@
   <!-- ── SIDEBAR ────────────────────────────────────────────── -->
   <aside class="uc-side" aria-label="Community sidebar">
 
-    <div class="uc-rail-card">
-      <div class="uc-rail-title"><i class="bi bi-lightning-fill" aria-hidden="true"></i>Quick actions</div>
-      <div class="uc-quick-row">
-        <a routerLink="/user/events" class="uc-quick-btn">
-          <i class="bi bi-calendar2-week" aria-hidden="true"></i>
-          Events
-        </a>
-        <a routerLink="/user/business" class="uc-quick-btn">
-          <i class="bi bi-shop" aria-hidden="true"></i>
-          Business
-        </a>
-        <a routerLink="/user/jobs" class="uc-quick-btn">
-          <i class="bi bi-briefcase" aria-hidden="true"></i>
-          Jobs
-        </a>
-      </div>
-    </div>
-
     @if (postsLoading()) {
       <div class="uc-rail-card">
         <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>Popular posts</div>
         @for (_ of [1,2,3]; track $index) {
           <div class="uc-post-skeleton">
-            <div class="uc-skeleton" style="width:32px;height:32px;border-radius:9px;flex-shrink:0;"></div>
+            <div class="uc-skeleton" style="width:38px;height:38px;border-radius:9px;flex-shrink:0;"></div>
             <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-              <div class="uc-skeleton" style="height:10px;width:60%;border-radius:4px;"></div>
-              <div class="uc-skeleton" style="height:11px;width:90%;border-radius:4px;"></div>
-              <div class="uc-skeleton" style="height:11px;width:75%;border-radius:4px;"></div>
+              <div class="uc-skeleton" style="height:11px;width:60%;border-radius:4px;"></div>
+              <div class="uc-skeleton" style="height:12px;width:90%;border-radius:4px;"></div>
+              <div class="uc-skeleton" style="height:12px;width:75%;border-radius:4px;"></div>
             </div>
           </div>
         }
@@ -502,25 +542,110 @@
         </div>
 
         @for (post of popularPosts(); track post.id) {
-          <div class="uc-post-row">
-            <div class="uc-post-avatar" [style.background]="getCoverGradient(post.community?.name || 'Community')" aria-hidden="true">
-              {{ getInitials(post.community?.name || 'Community') }}
-            </div>
+          <article
+            class="uc-post-row"
+            role="button"
+            tabindex="0"
+            (click)="navigateToCommunity(post.communityId)"
+            (keydown.enter)="navigateToCommunity(post.communityId)"
+            [attr.aria-label]="'Open ' + (post.community?.name || 'Community')"
+          >
+            @if (post.community?.image) {
+              <img class="uc-post-avatar uc-post-avatar--img" [src]="post.community!.image | imageUrl" [alt]="post.community?.name || 'Community'" loading="lazy" appImageError />
+            } @else {
+              <div class="uc-post-avatar" [style.background]="getCoverGradient(post.community?.name || 'Community')" aria-hidden="true">
+                {{ getInitials(post.community?.name || 'Community') }}
+              </div>
+            }
             <div class="uc-post-info">
               <span class="uc-post-community">{{ post.community?.name || 'Community' }}</span>
               <p class="uc-post-excerpt">{{ post.content }}</p>
+
+              @if (post.images && post.images.length > 0) {
+                <button
+                  type="button"
+                  class="uc-post-img-btn"
+                  (click)="openImagePreview($event, post.images, 0)"
+                  [attr.aria-label]="'View image from ' + (post.community?.name || 'this post')"
+                >
+                  <img class="uc-post-img" [src]="post.images[0] | imageUrl" alt="" loading="lazy" appImageError />
+                  @if (post.images.length > 1) {
+                    <span class="uc-post-img-count">+{{ post.images.length - 1 }}</span>
+                  }
+                </button>
+              }
+
               <div class="uc-post-meta">
                 <span><i class="bi bi-heart-fill" aria-hidden="true"></i>{{ post._count?.likes ?? 0 }}</span>
                 <span><i class="bi bi-chat-dots-fill" aria-hidden="true"></i>{{ post._count?.comments ?? 0 }}</span>
               </div>
             </div>
-          </div>
+          </article>
         }
+      </div>
+    } @else {
+      <div class="uc-rail-card uc-rail-card--empty">
+        <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>Popular posts</div>
+        <p class="uc-post-empty">No popular posts yet — check back once your communities get active.</p>
       </div>
     }
 
   </aside><!-- /uc-side -->
 
 </div><!-- /uc-layout -->
+
+<button
+  type="button"
+  class="uc-scroll-top"
+  [class.uc-scroll-top--visible]="showScrollTop()"
+  (click)="scrollToTop()"
+  aria-label="Back to top"
+  [tabindex]="showScrollTop() ? 0 : -1"
+>
+  <i class="bi bi-arrow-up" aria-hidden="true"></i>
+</button>
+
+@if (lightboxOpen()) {
+  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+    <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      @if (lightboxImages().length > 1) {
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      }
+
+      @if (getActivePreviewImage()) {
+        <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" appImageError />
+      }
+
+      <div class="cd-lightbox-footer">
+        <span class="cd-lightbox-counter">{{ activeImageIndex() + 1 }} / {{ lightboxImages().length }}</span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ==================== ADD / EDIT COMMUNITY MODAL ==================== -->
+<app-community-form-modal
+  [open]="showCommunityModal()"
+  [editCommunityId]="editCommunityId()"
+  (closed)="closeCommunityModal()"
+  (saved)="onCommunitySaved($event)">
+</app-community-form-modal>
+
+<!-- ==================== DELETE COMMUNITY CONFIRM ==================== -->
+<app-community-delete-modal
+  [open]="showDeleteModal()"
+  [community]="communityToDelete()"
+  (closed)="closeDeleteModal()"
+  (deleted)="onCommunityDeleted($event)">
+</app-community-delete-modal>
 
 } <!-- /loading -->

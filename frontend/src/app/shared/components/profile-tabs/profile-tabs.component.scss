@@ -19,16 +19,21 @@
   &::-webkit-scrollbar { display: none; }
 
   // ── Equal-width row variant ────────────────────────────────
-  // Rounded-rect radius (not the default pill) so this reads as one of the
-  // page's cards, matching .rail-card / .composer / .post — nested radius
-  // is $tab-radius (12px) on the inner tab/indicator against $radius-lg
-  // (16px) on the outer track, so the corners stay concentric.
+  // Rounded-rect card treatment matching community-detail's tab wrapper
+  // (.cd-tabs-wrap) — soft gradient + blur + shadow, rounded-rect buttons
+  // instead of pills, so the whole thing reads as a card of its own.
   &--full {
     display: flex;
     width: 100%;
-    gap: 0;
+    gap: 6px;
     overflow: visible;
+    padding: 8px;
     border-radius: $radius-lg;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 
     .tab-indicator { border-radius: $tab-radius; }
 
@@ -37,6 +42,7 @@
       z-index: 1;
       flex: 1 1 0;
       justify-content: center;
+      height: 39px;
       border-radius: $tab-radius;
 
       &.active {
@@ -56,6 +62,7 @@
     background: $color-bg-card;
     box-shadow: $shadow-2;
     transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1), background-color 220ms ease;
+    will-change: transform;
     pointer-events: none;
   }
 
@@ -110,5 +117,12 @@
       font-weight: $font-weight-bold;
       line-height: 1;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator,
+  .profile-tab {
+    transition: none;
   }
 }

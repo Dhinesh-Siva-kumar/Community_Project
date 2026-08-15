@@ -2,21 +2,18 @@ import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, Envir
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
-import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Community, CommunityMember, CommunityRequest, Country, Post, Comment, PostType, interests } from '../../../core/models';
+import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
-import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { DeletePostModalComponent } from '../../../shared/components/delete-post-modal/delete-post-modal.component';
-import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
-import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
+import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
+import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { environment } from '../../../../environments/environment';
 
 type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
@@ -25,7 +22,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, SearchableSelectComponent, CommunityRulesInputComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -34,20 +31,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
-  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
   private environmentInjector = inject(EnvironmentInjector);
-
-  countries: Country[] = [];
-  interests: interests[] = [];
-  // Signals (not plain fields): they're passed as an @Input to
-  // <app-searchable-select>, and under OnPush a plain field mutated from an
-  // HTTP subscribe callback wouldn't mark this component dirty.
-  countryOptions = signal<SelectOption[]>([]);
-  interestOptions = signal<SelectOption[]>([]);
 
   // Signals
   community = signal<Community | null>(null);
@@ -90,14 +78,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   joiningCommunity = signal(false);
   leavingCommunity = signal(false);
 
-  // Admin actions — delete modal
-  deleteModalOpen    = signal(false);
-  deletingCommunity  = signal(false);
+  // Add/Edit/Delete — the form lives in app-community-form-modal, the
+  // confirm popup in app-community-delete-modal; this component only opens/
+  // closes them and applies the result.
+  deleteModalOpen        = signal(false);
   editCommunityModalOpen = signal(false);
-  savingCommunityEdit = signal(false);
-  selectedCommunityImage = signal<File | null>(null);
-  communityImageResetCounter = signal(0);
-  communityFormSubmitAttempted = signal(false);
 
   // Post options menu (three-dot)
   postMenuOpenId = signal<string | null>(null);
@@ -156,15 +141,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   });
   editPostForm: FormGroup = this.fb.group({
     content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
-  });
-  communityEditForm: FormGroup = this.fb.group({
-    communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-    description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(500)]],
-    interests: [null, Validators.required],
-    countryId: [null, Validators.required],
-    visibility: ['', Validators.required],
-    isDefault: [false],
-    rules: [[] as string[]],
   });
   commentForms: Map<string, FormGroup> = new Map();
   private previousBodyOverflow: string | null = null;
@@ -225,6 +201,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     return c?.createdBy?.id || c?.createdById || '';
   });
 
+  isOwnerOfCommunity = computed(() => {
+    const uid = this.currentUserId();
+    return !!uid && uid === this.communityCreatorId();
+  });
+
   communityAuthor = computed(() => {
     const c = this.community();
     if (!c) return null;
@@ -271,8 +252,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForms();
-    this.loadCountries();
-    this.loadInterests();
 
     // Under OnPush, this component only re-renders when something it owns
     // actually changes — so relative timestamps ("5m ago") would otherwise
@@ -311,15 +290,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editPostForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
     });
-    this.communityEditForm = this.fb.group({
-      communityName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-      description: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(500)]],
-      interests: [null, Validators.required],
-      countryId: [null, Validators.required],
-      visibility: ['', Validators.required],
-      isDefault: [false],
-      rules: [[] as string[]],
-    });
   }
 
   ngOnDestroy(): void {
@@ -331,32 +301,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     }
     this.destroyDeletePostModal();
     this.unlockPageScroll();
-  }
-
-  loadCountries(): void {
-    this.authService.getCountries().subscribe({
-      next: (res) => {
-        this.countries = res.data;
-        this.countryOptions.set(this.countries.map((country) => {
-          const flag = country.flag_emoji || [...country.iso2.toUpperCase()].map((ch) => String.fromCodePoint(127397 + ch.charCodeAt(0))).join('');
-          return { value: country.id, label: `${flag} ${country.name}` };
-        }));
-      },
-      error: () => this.toast.error('Failed to load countries'),
-    });
-  }
-
-  loadInterests(): void {
-    this.authService.getInterests().subscribe({
-      next: (res) => {
-        this.interests = res.data;
-        this.interestOptions.set(this.interests.map((interest) => ({
-          value: interest.interest_id,
-          label: interest.interest_name,
-        })));
-      },
-      error: () => this.toast.error('Failed to load interests'),
-    });
   }
 
   getCommentForm(postId: string): FormGroup {
@@ -1163,75 +1107,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   closeDeleteModal(): void { this.deleteModalOpen.set(false); this.syncPageScrollLock(); }
 
   openEditCommunityModal(): void {
-    const current = this.community();
-    if (!current) return;
-
-    const visibility = current.is_private ? 'private' : current.is_global ? 'global' : 'default';
-    this.communityEditForm.patchValue({
-      communityName: current.name,
-      description: current.description ?? '',
-      interests: current.interest_id ?? null,
-      countryId: current.country_id ?? null,
-      visibility,
-      isDefault: current.is_default ?? false,
-      rules: current.rules ?? [],
-    });
-
-    this.selectedCommunityImage.set(null);
-    this.communityImageResetCounter.update((n) => n + 1);
-    this.communityFormSubmitAttempted.set(false);
     this.editCommunityModalOpen.set(true);
     this.syncPageScrollLock();
   }
 
   closeEditCommunityModal(): void {
     this.editCommunityModalOpen.set(false);
-    this.communityEditForm.reset();
-    this.selectedCommunityImage.set(null);
-    this.communityFormSubmitAttempted.set(false);
     this.syncPageScrollLock();
   }
 
-  onCommunityImageChange(files: File[]): void {
-    this.selectedCommunityImage.set(files[0] ?? null);
-  }
-
-  submitCommunityEdit(): void {
-    this.communityFormSubmitAttempted.set(true);
-    if (this.communityEditForm.invalid) {
-      this.communityEditForm.markAllAsTouched();
-      return;
-    }
-
-    const current = this.community();
-    if (!current) return;
-
-    this.savingCommunityEdit.set(true);
-    const file = this.selectedCommunityImage();
-
-    const upload$: Observable<{ path: string } | null> = file
-      ? this.apiService.postWithFile<{ path: string }>('/upload', { folder: 'communities' }, [{ field: FORM_DATA_FIELD_NAMES.FILE, file }])
-      : of(null);
-
-    upload$
-      .pipe(
-        switchMap((uploadResult) => {
-          const payload = this.mapCommunityEditPayload(uploadResult?.path ?? null);
-          return this.communityService.updateCommunity(current.id, payload);
-        })
-      )
-      .subscribe({
-        next: (updated) => {
-          this.community.set(updated);
-          this.toast.success('Community updated successfully');
-          this.savingCommunityEdit.set(false);
-          this.closeEditCommunityModal();
-        },
-        error: () => {
-          this.toast.error('Failed to update community');
-          this.savingCommunityEdit.set(false);
-        },
-      });
+  onCommunitySaved(updated: Community): void {
+    this.community.set(updated);
   }
 
   onJoinCommunity(): void {
@@ -1272,19 +1158,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  onDeleteCommunity(): void {
-    this.deletingCommunity.set(true);
-    this.communityService.deleteCommunity(this.communityId()).subscribe({
-      next: () => {
-        this.toast.success('Community deleted successfully');
-        this.router.navigate([this.backRoute()]);
-      },
-      error: () => {
-        this.toast.error('Failed to delete community');
-        this.deletingCommunity.set(false);
-        this.closeDeleteModal();
-      },
-    });
+  onCommunityDeleted(): void {
+    this.router.navigate([this.backRoute()]);
   }
 
   getDeletePostPreview(): string | null {
@@ -1421,10 +1296,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   // ── Utility ───────────────────────────────────────────────
 
-  get cf() {
-    return this.communityEditForm.controls;
-  }
-
   shouldTruncatePost(content: string | undefined | null): boolean {
     return (content?.length ?? 0) > this.postContentPreviewLimit;
   }
@@ -1474,32 +1345,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  }
-
-  private mapCommunityEditPayload(newImageUrl: string | null): CommunityRequest {
-    const form = this.communityEditForm.value;
-    const current = this.community();
-    const selectedCountry = this.countries.find((country) => country.id === form.countryId);
-
-    let image: string | undefined;
-    if (newImageUrl) {
-      image = newImageUrl;
-    } else {
-      image = current?.image ?? undefined;
-    }
-
-    return {
-      name: form.communityName,
-      description: form.description,
-      image,
-      interest_id: form.interests ?? undefined,
-      country_id: form.countryId ?? undefined,
-      country: selectedCountry?.name,
-      is_private: form.visibility === 'private',
-      is_global: form.visibility === 'global',
-      is_default: form.isDefault ?? false,
-      rules: form.rules ?? [],
-    };
   }
 
   getUserInitials(user?: { displayName?: string; userName?: string } | null): string {

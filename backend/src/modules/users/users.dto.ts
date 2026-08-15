@@ -2,16 +2,22 @@ import { z } from 'zod';
 
 export const UpdateUserDto = z.object({
   userName:             z.string().min(1).optional(),
-  displayName:          z.string().min(1).optional(),
-  phoneNo:              z.string().optional(),
+  displayName:          z.string().min(2).max(60).optional(),
+  phoneNo:              z.string().max(20).optional(),
   email:                z.string().email().optional(),
   countryId:            z.number().int().positive().optional(),
-  bio:                  z.string().optional(),
+  stateId:              z.coerce.number().int().positive().optional(),
+  cityId:               z.coerce.number().int().positive().optional(),
+  bio:                  z.string().max(300).optional(),
   location:             z.string().optional(),
-  pincode:              z.string().optional(),
+  pincode:              z.string().max(12).optional(),
   interests:            z.array(z.string()).optional(),
-  professionalCategory: z.string().optional(),
+  professionalCategory: z.string().max(60).optional(),
   avatar:               z.string().optional(),
+  occupation:           z.string().max(100).optional(),
+  company:              z.string().max(100).optional(),
+  website:              z.string().max(200).optional(),
+  linkedinUrl:          z.string().max(200).optional(),
 });
 
 export const ListUsersQueryDto = z.object({

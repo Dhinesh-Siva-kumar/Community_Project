@@ -2,6 +2,7 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../services/community-visibility.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
 // ---------------------------------------------------------------------------
@@ -39,6 +40,13 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   const existing = await db('communities').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Community with this name already exists');
 
+  if (data.is_global || data.is_default) {
+    const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+    if (!caller || caller['role'] !== 'ADMIN') {
+      throw new AppError(403, 'Only admins can create Global or Default communities');
+    }
+  }
+
   const [community] = await db('communities')
     .insert({ ...data, created_by_id: adminId })
     .returning('*');
@@ -75,6 +83,7 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
 
   return {
     ...(community as Record<string, unknown>),
+    createdById: (community as Record<string, unknown>)['created_by_id'],
     createdBy: creator,
     _count: {
       members: Number((counts as Record<string, unknown>)?.['member_count'] ?? 0),
@@ -99,13 +108,14 @@ export async function findAll(params: {
   to_date?: string;
   joined?: boolean;
   userId?: string;
+  createdById?: string;
   status?: 'active' | 'inactive';
   sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
 }) {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
-    community_mode, is_default, from_date, to_date, joined, userId,
+    community_mode, is_default, from_date, to_date, joined, userId, createdById,
     status, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
@@ -214,6 +224,27 @@ export async function findAll(params: {
     countQuery.whereIn('id', db('community_members').select('community_id').where('user_id', userId));
   }
 
+  // ── Created-by filter — restrict to communities the caller owns (used by
+  // the "My Communities" profile tab, via GET /communities/created) ────────
+  if (createdById) {
+    query.andWhere('c.created_by_id', createdById);
+    countQuery.andWhere('created_by_id', createdById);
+  }
+
+  // ── Non-admin browse restriction ────────────────────────────
+  // Regular users should only ever browse communities relevant to them —
+  // global ones, or private ones scoped to their own country — never
+  // someone else's country-private community (e.g. a UK-private community
+  // shown to a user in India). A community they already joined stays
+  // visible regardless (e.g. after relocating), so it can't silently vanish
+  // from their own Joined tab. Admins (skipActiveFilter=true) bypass this
+  // and see everything, same as the is_active bypass above.
+  if (!skipActiveFilter && userId) {
+    const userCountry = await getUserCountry(userId);
+    applyNonAdminVisibilityRestriction(query, 'c.', userId, userCountry);
+    applyNonAdminVisibilityRestriction(countQuery, '', userId, userCountry);
+  }
+
   // ── Sort — most fields map to a plain column; members/posts/visibility
   // need a raw expression since they're either aggregated or derived from
   // multiple boolean columns. sortDir is Zod-validated to 'asc'|'desc'
@@ -260,6 +291,7 @@ export async function findAll(params: {
 
   const data = (communities as Array<Record<string, unknown>>).map((c) => ({
     ...c,
+    createdById: c['created_by_id'],
     createdBy: {
       id: c['creator_id'],
       userName: c['creator_user_name'],
@@ -286,14 +318,24 @@ export async function getAnalytics(params: {
   page?: number;
   limit?: number;
   skipActiveFilter?: boolean;
+  userId?: string;
 }) {
-  const { skipActiveFilter } = params;
+  const { skipActiveFilter, userId } = params;
 
   const baseQuery = db('communities as c')
     .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id');
 
   if (!skipActiveFilter) {
     baseQuery.where('c.is_active', true);
+  }
+
+  // Same restriction as findAll()'s browse list, so a user's header counts
+  // (total communities, total members) reflect what they can actually see —
+  // not a platform-wide figure that includes communities from other
+  // countries they'd never be shown.
+  if (!skipActiveFilter && userId) {
+    const userCountry = await getUserCountry(userId);
+    applyNonAdminVisibilityRestriction(baseQuery, 'c.', userId, userCountry);
   }
 
   const grouped = await baseQuery
@@ -303,18 +345,21 @@ export async function getAnalytics(params: {
       db.raw('MAX(CASE WHEN c.is_global THEN 1 ELSE 0 END) as is_global_flag'),
       db.raw('MAX(CASE WHEN c.is_private THEN 1 ELSE 0 END) as is_private_flag'),
       db.raw('MAX(CASE WHEN c.is_default THEN 1 ELSE 0 END) as is_default_flag'),
+      db.raw('(SELECT COUNT(*) FROM community_members WHERE community_id = c.id) as member_count'),
     );
 
   const total = grouped.length;
   const global = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_global_flag'] ?? 0) > 0 ? 1 : 0), 0);
   const privateCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_private_flag'] ?? 0) > 0 ? 1 : 0), 0);
   const defaultCount = grouped.reduce((sum, row) => sum + (Number((row as Record<string, unknown>)['is_default_flag'] ?? 0) > 0 ? 1 : 0), 0);
+  const totalMembers = grouped.reduce((sum, row) => sum + Number((row as Record<string, unknown>)['member_count'] ?? 0), 0);
 
   return {
     total,
     global,
     private: privateCount,
     default: defaultCount,
+    totalMembers,
   };
 }
 
@@ -340,6 +385,7 @@ export async function findOne(id: string) {
 
   return {
     ...(community as Record<string, unknown>),
+    createdById: (community as Record<string, unknown>)['created_by_id'],
     createdBy: {
       id: (community as Record<string, unknown>)['creator_id'],
       userName: (community as Record<string, unknown>)['creator_user_name'],
@@ -357,18 +403,45 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   const before = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!before) throw new AppError(404, 'Community not found');
 
+  const byAdmin = before['created_by_id'] !== adminId;
+  const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+  const callerIsAdmin = !!caller && caller['role'] === 'ADMIN';
+  if (byAdmin && !callerIsAdmin) {
+    throw new AppError(403, 'You can only update your own community');
+  }
+  if (!callerIsAdmin && (data.is_global || data.is_default)) {
+    throw new AppError(403, 'Only admins can set a community to Global or Default');
+  }
+
   await db('communities').where({ id }).update(data);
 
   if (data.image !== undefined && before['image'] !== data.image) {
     deleteUploadedFile(before['image']);
   }
 
-  // If this edit turns is_default ON for the first time, backfill existing users.
   // Merge before + data so the effective is_global / is_private / country are correct
   // even when those fields are also changed in the same request.
+  const effective: Record<string, unknown> = { ...before, ...data, id };
+
+  // If this edit turns is_default ON for the first time, backfill existing users.
   if (data.is_default && !before['is_default']) {
-    const effective: Record<string, unknown> = { ...before, ...data, id };
     await autoJoinExistingUsers(effective);
+  }
+
+  // A community that is now Private + scoped to a specific country (and no
+  // longer Global) can end up with members who no longer belong — e.g. it
+  // was Global (auto-joining everyone) and got switched to "Private —
+  // Malaysia"; every non-Malaysian member who was auto-joined while it was
+  // Global would otherwise stay a silent member, which kept the community
+  // showing up in their own community list even though it's no longer
+  // theirs to see. Drop those members; the creator stays regardless of
+  // their own country.
+  if (!effective['is_global'] && effective['is_private'] && effective['country']) {
+    await db('community_members')
+      .where({ community_id: id })
+      .whereNot('user_id', before['created_by_id'] as string)
+      .whereNotIn('user_id', db('users').select('id').where({ country: effective['country'] as string }))
+      .delete();
   }
 
   await logAudit(adminId, 'COMMUNITY_UPDATED', { fields: Object.keys(data) }, 'communities', id);
@@ -379,6 +452,14 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
 export async function deleteCommunity(id: string, adminId: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found');
+
+  const byAdmin = community['created_by_id'] !== adminId;
+  if (byAdmin) {
+    const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+    if (!caller || caller['role'] !== 'ADMIN') {
+      throw new AppError(403, 'You can only delete your own community');
+    }
+  }
 
   await db('communities').where({ id }).delete();
   deleteUploadedFile(community['image']);

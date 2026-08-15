@@ -106,7 +106,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterStatus     = signal<'active' | 'inactive' | ''>('');
   activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
   showAdvancedFilters = signal(false);
-  communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0 });
+  communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0, totalMembers: 0 });
 
   readonly statusFilterOptions: SelectOption[] = [
     { value: '',         label: 'All Status' },
@@ -347,7 +347,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.communityService.getCommunityAnalytics().subscribe({
       next: (counts) => this.communityCounts.set(counts),
       error: () => {
-        this.communityCounts.set({ total: 0, global: 0, private: 0, default: 0 });
+        this.communityCounts.set({ total: 0, global: 0, private: 0, default: 0, totalMembers: 0 });
       },
     });
   }

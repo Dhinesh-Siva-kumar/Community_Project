@@ -44,8 +44,8 @@ export class UserLayoutComponent {
     { label: 'Dashboard', icon: 'bi-grid',           route: '/user/dashboard',  sectionLabel: 'MAIN'    },
     { label: 'Community', icon: 'bi-people',         route: '/user/community',  sectionLabel: 'EXPLORE' },
     { label: 'Business',  icon: 'bi-shop',           route: '/user/business'                            },
-    { label: 'Events',    icon: 'bi-calendar-event', route: '/user/events'                              },
     { label: 'Jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                },
+    { label: 'Events',    icon: 'bi-calendar-event', route: '/user/events'                              },
     { label: 'Profile',   icon: 'bi-person-circle',  route: '/user/profile',    sectionLabel: 'ACCOUNT' },
   ];
 

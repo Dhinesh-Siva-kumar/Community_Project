@@ -43,6 +43,16 @@ export class BusinessService {
     return this.api.get<Business>(`/business/${id}`);
   }
 
+  getMyBusinesses(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortDir?: string;
+  } = {}): Observable<PaginatedResponse<Business>> {
+    return this.api.get<PaginatedResponse<Business>>('/business/mine', params);
+  }
+
    createBusiness(data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {
      const files: Array<{ field: string; file: File }> = [];
      if (images && images.length > 0) {

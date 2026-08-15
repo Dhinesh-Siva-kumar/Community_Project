@@ -11,11 +11,13 @@
 } @else {
   @if (user(); as u) {
 
-    <!-- Profile Header -->
+    <div class="prf-layout">
+      <div class="prf-main">
+
+    <!-- Profile Header — reduced height, matches left column width -->
     <app-profile-header
       [user]="u"
       [editMode]="editMode()"
-      [profileCompletion]="profileCompletion()"
       (avatarChange)="onAvatarChange($event)"
     ></app-profile-header>
 
@@ -23,11 +25,13 @@
     <app-profile-tabs
       [tabs]="tabs"
       [activeTab]="activeTab()"
+      [fullWidth]="true"
       (tabChange)="setTab($event)"
     ></app-profile-tabs>
 
     <!-- ==================== PERSONAL INFO TAB ==================== -->
     @if (activeTab() === 'personal') {
+      <div class="tab-enter">
       <app-profile-info-card
         title="Personal Information"
         icon="bi-person"
@@ -38,124 +42,237 @@
         (cancel)="cancelEdit()"
       >
         <form [formGroup]="profileForm">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold" for="displayName">Display Name</label>
-              <input id="displayName" type="text" class="form-control" formControlName="displayName" [readonly]="!editMode()" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold" for="email">Email</label>
-              <input
-                id="email" type="email" class="form-control"
-                [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.dirty"
-                formControlName="email"
-                [readonly]="!editMode() || !!u.email"
-                [placeholder]="u.email ? '' : 'Add your email address'"
-                aria-describedby="email-hint"
-              />
-              @if (profileForm.get('email')?.hasError('email') && profileForm.get('email')?.dirty) {
-                <div class="invalid-feedback">Enter a valid email address.</div>
-              }
-              @if (editMode() && !u.email) {
-                <small id="email-hint" class="form-text text-muted">You can add an email to enable email login.</small>
-              }
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold" for="phoneNo">Phone</label>
-              <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" [readonly]="!editMode()" placeholder="Phone number" />
-            </div>
-            <div class="col-12">
-              <label class="form-label small fw-semibold" for="bio">Bio</label>
-              <textarea id="bio" class="form-control" formControlName="bio" rows="3" [readonly]="!editMode()" placeholder="Tell us about yourself"></textarea>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold" for="country">Country</label>
-              <input id="country" type="text" class="form-control" formControlName="country" [readonly]="!editMode()" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold" for="location">Location</label>
-              <input id="location" type="text" class="form-control" formControlName="location" [readonly]="!editMode()" placeholder="City or area" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold" for="pincode">Pincode</label>
-              <input id="pincode" type="text" class="form-control" formControlName="pincode" [readonly]="!editMode()" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold">Professional Category</label>
-              @if (editMode()) {
-                <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" placeholder="Select category"></app-searchable-select>
-              } @else {
-                <input type="text" class="form-control" [value]="u.professionalCategory || 'Not set'" readonly />
-              }
-            </div>
 
-            <!-- Interests -->
-            <div class="col-12">
-              <label class="form-label small fw-semibold">Interests</label>
-              <div class="d-flex flex-wrap gap-2 mb-2">
-                @for (interest of u.interests; track $index) {
-                  <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 py-2 px-3">
-                    {{ interest }}
-                    @if (editMode()) {
-                      <button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 0.5rem;" (click)="removeInterest($index)" [attr.aria-label]="'Remove ' + interest"></button>
-                    }
-                  </span>
-                }
-                @if (!u.interests.length) {
-                  <span class="text-muted small">No interests added yet</span>
+          <!-- ── Basic Information ── -->
+          <div class="prf-section">
+            <div class="prf-section-header">
+              <span class="prf-section-badge"><i class="bi bi-person-vcard"></i></span>
+              <span class="prf-section-title">Basic Information</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="prf-label-row">
+                  <label class="prf-label" for="displayName">Display Name</label>
+                  @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('displayName')?.value?.length || 0 }}/60</span> }
+                </div>
+                <input id="displayName" type="text" class="form-control" formControlName="displayName" maxlength="60" [readonly]="!editMode()" />
+                @if (profileForm.get('displayName')?.hasError('minlength') && profileForm.get('displayName')?.dirty) {
+                  <div class="invalid-feedback d-block">Display name must be at least 2 characters.</div>
                 }
               </div>
-              @if (editMode()) {
-                <div class="input-group input-group-sm" style="max-width: 300px;">
-                  <input type="text" class="form-control" placeholder="Add interest" [value]="newInterest()"
-                         (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" aria-label="New interest" />
-                  <button class="btn btn-outline-primary" type="button" (click)="addInterest()" aria-label="Add interest">
-                    <i class="bi bi-plus"></i>
-                  </button>
+              <div class="col-md-6">
+                <label class="prf-label" for="email">Email</label>
+                <input
+                  id="email" type="email" class="form-control"
+                  [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.dirty"
+                  formControlName="email"
+                  [readonly]="!editMode() || !!u.email"
+                  [placeholder]="u.email ? '' : 'Add your email address'"
+                  aria-describedby="email-hint"
+                />
+                @if (profileForm.get('email')?.hasError('email') && profileForm.get('email')?.dirty) {
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                }
+                @if (editMode() && !u.email) {
+                  <small id="email-hint" class="form-text text-muted">You can add an email to enable email login.</small>
+                }
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="phoneNo">Phone</label>
+                <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" placeholder="Phone number" />
+              </div>
+            </div>
+          </div>
+
+          <!-- ── About ── -->
+          <div class="prf-section">
+            <div class="prf-section-header">
+              <span class="prf-section-badge"><i class="bi bi-card-text"></i></span>
+              <span class="prf-section-title">About</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="prf-label-row">
+                  <label class="prf-label" for="bio">Bio</label>
+                  @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('bio')?.value?.length || 0 }}/300</span> }
+                </div>
+                <textarea id="bio" class="form-control" formControlName="bio" rows="3" maxlength="300" [readonly]="!editMode()" placeholder="Tell us about yourself"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label">Professional Category</label>
+                @if (editMode()) {
+                  <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" placeholder="Select category"></app-searchable-select>
+                } @else {
+                  <input type="text" class="form-control" [value]="u.professionalCategory || 'Not set'" readonly />
+                }
+              </div>
+
+              <!-- Interests -->
+              <div class="col-12">
+                <label class="prf-label">Interests</label>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  @for (interest of u.interests; track $index) {
+                    <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 py-2 px-3">
+                      {{ interest }}
+                      @if (editMode()) {
+                        <button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 0.5rem;" (click)="removeInterest($index)" [attr.aria-label]="'Remove ' + interest"></button>
+                      }
+                    </span>
+                  }
+                  @if (!u.interests.length) {
+                    <span class="text-muted small">No interests added yet</span>
+                  }
+                </div>
+                @if (editMode()) {
+                  <div class="input-group input-group-sm" style="max-width: 300px;">
+                    <input type="text" class="form-control" placeholder="Add interest" [value]="newInterest()"
+                           (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" aria-label="New interest" />
+                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()" aria-label="Add interest">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Location ── -->
+          <div class="prf-section">
+            <div class="prf-section-header">
+              <span class="prf-section-badge"><i class="bi bi-geo-alt"></i></span>
+              <span class="prf-section-title">Location</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="prf-label">Country</label>
+                @if (editMode()) {
+                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
+                    placeholder="Select country" searchPlaceholder="Search countries…"
+                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
+                } @else {
+                  <input type="text" class="form-control" [value]="u.country || 'Not set'" readonly />
+                }
+              </div>
+              @if (adminLevels().length >= 1) {
+                <div class="col-md-4">
+                  <label class="prf-label">{{ adminLevels()[0].label }}</label>
+                  @if (editMode()) {
+                    <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
+                      [placeholder]="division1Loading() ? 'Loading…' : ('Select ' + adminLevels()[0].label.toLowerCase())"
+                      (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
+                  } @else {
+                    <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
+                  }
                 </div>
               }
+              @if (adminLevels().length >= 2) {
+                <div class="col-md-4">
+                  <label class="prf-label">{{ adminLevels()[1].label }}</label>
+                  @if (editMode()) {
+                    <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
+                      [placeholder]="division2Loading() ? 'Loading…' : ('Select ' + adminLevels()[1].label.toLowerCase())"
+                      (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
+                  } @else {
+                    <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
+                  }
+                </div>
+              }
+              <div class="col-md-6">
+                <label class="prf-label">City</label>
+                @if (editMode()) {
+                  <app-searchable-select formControlName="cityId"
+                    [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
+                    [placeholder]="profileForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
+                    searchPlaceholder="Type to search cities…"
+                    (ngModelChange)="onCityChange($event)"></app-searchable-select>
+                } @else {
+                  <input type="text" class="form-control" [value]="u.location || 'Not set'" readonly />
+                }
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="pincode">Pincode</label>
+                <input id="pincode" type="text" class="form-control" formControlName="pincode" maxlength="12" [readonly]="!editMode()" [placeholder]="countryConfig()?.postalCode?.format || ''" />
+                @if (profileForm.get('pincode')?.hasError('postalFormat') && profileForm.get('pincode')?.dirty) {
+                  <div class="invalid-feedback d-block">Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}.</div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Professional & Links ── -->
+          <div class="prf-section prf-section-last">
+            <div class="prf-section-header">
+              <span class="prf-section-badge"><i class="bi bi-briefcase"></i></span>
+              <span class="prf-section-title">Professional &amp; Links</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="prf-label" for="occupation">Occupation</label>
+                <input id="occupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Software Engineer" />
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="company">Company</label>
+                <input id="company" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Acme Inc." />
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="website">Website</label>
+                <input id="website" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" placeholder="https://example.com" />
+              </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="linkedinUrl">LinkedIn</label>
+                <input id="linkedinUrl" type="url" class="form-control" formControlName="linkedinUrl" maxlength="200" [readonly]="!editMode()" placeholder="https://linkedin.com/in/username" />
+              </div>
             </div>
           </div>
         </form>
 
         <!-- Change Password -->
-        <hr class="my-4" />
-        <div class="d-flex justify-content-between align-items-center">
-          <h6 class="fw-bold mb-0">Change Password</h6>
-          <button class="btn btn-outline-secondary btn-sm" (click)="togglePasswordSection()">
-            @if (showPasswordSection()) { Cancel } @else { <i class="bi bi-key me-1"></i>Change }
-          </button>
+        <div class="prf-section prf-section-last">
+          <div class="prf-section-header">
+            <span class="prf-section-badge"><i class="bi bi-key"></i></span>
+            <span class="prf-section-title">Change Password</span>
+            <button class="btn btn-outline-secondary btn-sm ms-auto" (click)="togglePasswordSection()">
+              @if (showPasswordSection()) { Cancel } @else { <i class="bi bi-key me-1"></i>Change }
+            </button>
+          </div>
+          @if (showPasswordSection()) {
+            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+              <div class="row g-3" style="max-width: 400px;">
+                <div class="col-12">
+                  <label class="prf-label" for="currentPwd">Current Password</label>
+                  <input id="currentPwd" type="password" class="form-control" formControlName="currentPassword" />
+                </div>
+                <div class="col-12">
+                  <label class="prf-label" for="newPwd">New Password</label>
+                  <input id="newPwd" type="password" class="form-control" formControlName="newPassword" />
+                </div>
+                <div class="col-12">
+                  <label class="prf-label" for="confirmPwd">Confirm Password</label>
+                  <input id="confirmPwd" type="password" class="form-control" formControlName="confirmPassword" />
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()">
+                    @if (changingPassword()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Update Password
+                  </button>
+                </div>
+              </div>
+            </form>
+          }
         </div>
-        @if (showPasswordSection()) {
-          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="mt-3">
-            <div class="row g-3" style="max-width: 400px;">
-              <div class="col-12">
-                <label class="form-label small fw-semibold" for="currentPwd">Current Password</label>
-                <input id="currentPwd" type="password" class="form-control" formControlName="currentPassword" />
-              </div>
-              <div class="col-12">
-                <label class="form-label small fw-semibold" for="newPwd">New Password</label>
-                <input id="newPwd" type="password" class="form-control" formControlName="newPassword" />
-              </div>
-              <div class="col-12">
-                <label class="form-label small fw-semibold" for="confirmPwd">Confirm Password</label>
-                <input id="confirmPwd" type="password" class="form-control" formControlName="confirmPassword" />
-              </div>
-              <div class="col-12">
-                <button type="submit" class="btn btn-primary btn-sm" [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()">
-                  @if (changingPassword()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                  Update Password
-                </button>
-              </div>
-            </div>
-          </form>
-        }
       </app-profile-info-card>
+      </div>
     }
 
     <!-- ==================== MY BUSINESSES TAB ==================== -->
     @if (activeTab() === 'businesses') {
-      <app-profile-info-card title="My Businesses" icon="bi-shop">
+      <div class="tab-enter">
+      <app-profile-info-card title="My Businesses" icon="bi-shop" [showEdit]="false">
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn btn-primary btn-sm" (click)="openAddBusiness()">
+            <i class="bi bi-plus-lg me-1"></i> Add Business
+          </button>
+        </div>
         @if (loadingBusinesses()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -169,33 +286,106 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (biz of myBusinesses(); track biz.id) {
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
-                <div class="d-flex align-items-center gap-3">
-                  @if (biz.images.length) {
-                    <img [src]="biz.images[0]" class="rounded" width="50" height="50" style="object-fit:cover;" [alt]="biz.name" loading="lazy" fetchpriority="auto" />
+              <div class="prf-item">
+                <div class="prf-item__lead">
+                  @if (biz.logo) {
+                    <img [src]="biz.logo | imageUrl" class="prf-item__thumb" [alt]="biz.name" loading="lazy" fetchpriority="auto" />
                   } @else {
-                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
-                      <i class="bi bi-shop text-muted"></i>
+                    <div class="prf-item__thumb prf-item__thumb--placeholder">
+                      <i class="bi bi-shop"></i>
                     </div>
                   }
-                  <div>
-                    <h6 class="fw-semibold mb-0 small">{{ biz.name }}</h6>
-                    @if (biz.address) { <small class="text-muted">{{ biz.address }}</small> }
+                  <div class="prf-item__body">
+                    <div class="prf-item__title-row">
+                      <h6 class="prf-item__name">{{ biz.name }}</h6>
+                      @if (biz.isActive) {
+                        <span class="prf-badge prf-badge--active">Active</span>
+                      } @else {
+                        <span class="prf-badge prf-badge--inactive">Inactive</span>
+                      }
+                    </div>
+                    @if (biz.address) { <small class="prf-item__meta">{{ biz.address }}</small> }
                   </div>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" [disabled]="deletingBusinessId() === biz.id" (click)="deleteBusiness(biz.id)" aria-label="Delete business">
-                  @if (deletingBusinessId() === biz.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
-                </button>
+                <div class="prf-item__actions">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditBusiness(biz.id)" aria-label="Edit business">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteBusiness(biz)" aria-label="Delete business">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
             }
           </div>
         }
       </app-profile-info-card>
+      </div>
+    }
+
+    <!-- ==================== MY COMMUNITIES TAB ==================== -->
+    @if (activeTab() === 'communities') {
+      <div class="tab-enter">
+      <app-profile-info-card title="My Communities" icon="bi-people" [showEdit]="false">
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn btn-primary btn-sm" (click)="openAddCommunity()">
+            <i class="bi bi-plus-lg me-1"></i> Add Community
+          </button>
+        </div>
+        @if (loadingCommunities()) {
+          <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary"></div>
+            <p class="text-muted small mt-2">Loading communities...</p>
+          </div>
+        } @else if (!myCommunities().length) {
+          <div class="text-center py-4">
+            <i class="bi bi-people text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
+            <p class="text-muted small mt-2">You haven't created any communities yet.</p>
+          </div>
+        } @else {
+          <div class="d-flex flex-column gap-3">
+            @for (community of myCommunities(); track community.id) {
+              <div class="prf-item">
+                <div class="prf-item__lead">
+                  @if (community.image) {
+                    <img [src]="community.image | imageUrl" class="prf-item__thumb" [alt]="community.name" loading="lazy" fetchpriority="auto" />
+                  } @else {
+                    <div class="prf-item__thumb prf-item__thumb--placeholder">
+                      <i class="bi bi-people"></i>
+                    </div>
+                  }
+                  <div class="prf-item__body">
+                    <div class="prf-item__title-row">
+                      <h6 class="prf-item__name">{{ community.name }}</h6>
+                      @if (community.isActive ?? community.is_active) {
+                        <span class="prf-badge prf-badge--active">Active</span>
+                      } @else {
+                        <span class="prf-badge prf-badge--inactive">Inactive</span>
+                      }
+                    </div>
+                    <small class="prf-item__meta">{{ community._count?.members ?? 0 }} members</small>
+                  </div>
+                </div>
+                <div class="prf-item__actions">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditCommunity(community.id)" aria-label="Edit community">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteCommunity(community)" aria-label="Delete community">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </app-profile-info-card>
+      </div>
     }
 
     <!-- ==================== MY JOBS TAB ==================== -->
     @if (activeTab() === 'jobs') {
-      <app-profile-info-card title="My Jobs" icon="bi-briefcase">
+      <div class="tab-enter">
+      <app-profile-info-card title="My Jobs" icon="bi-briefcase" [showEdit]="false">
         @if (loadingJobs()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -209,27 +399,40 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (job of myJobs(); track job.id) {
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
-                <div>
-                  <div class="d-flex align-items-center gap-2">
-                    <h6 class="fw-semibold mb-0 small">{{ job.title }}</h6>
-                    @if (job.jobType) { <span class="badge bg-success bg-opacity-10 text-success small">{{ job.jobType }}</span> }
+              <div class="prf-item">
+                <div class="prf-item__lead">
+                  @if (job.images?.length) {
+                    <img [src]="job.images[0] | imageUrl" class="prf-item__thumb" [alt]="job.title" loading="lazy" fetchpriority="auto" />
+                  } @else {
+                    <div class="prf-item__thumb prf-item__thumb--placeholder">
+                      <i class="bi bi-briefcase"></i>
+                    </div>
+                  }
+                  <div class="prf-item__body">
+                    <div class="prf-item__title-row">
+                      <h6 class="prf-item__name">{{ job.title }}</h6>
+                      @if (job.jobType) { <span class="prf-badge prf-badge--neutral">{{ job.jobType }}</span> }
+                    </div>
+                    <small class="prf-item__meta">{{ job.location }} &middot; Posted {{ job.createdAt | date:'mediumDate' }}</small>
                   </div>
-                  <small class="text-muted">{{ job.location }} &middot; Posted {{ job.createdAt | date:'mediumDate' }}</small>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" aria-label="Delete job">
-                  @if (deletingJobId() === job.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
-                </button>
+                <div class="prf-item__actions">
+                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" aria-label="Delete job">
+                    @if (deletingJobId() === job.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
+                  </button>
+                </div>
               </div>
             }
           </div>
         }
       </app-profile-info-card>
+      </div>
     }
 
     <!-- ==================== MY POSTS TAB ==================== -->
     @if (activeTab() === 'posts') {
-      <app-profile-info-card title="My Posts" icon="bi-file-post">
+      <div class="tab-enter">
+      <app-profile-info-card title="My Posts" icon="bi-file-post" [showEdit]="false">
         @if (loadingPosts()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -248,33 +451,113 @@
           </div>
           <div class="d-flex flex-column gap-3">
             @for (post of myPosts(); track post.id) {
-              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
-                <div>
-                  <div class="d-flex align-items-center gap-2">
-                    <h6 class="fw-semibold mb-0 small">{{ post.community?.name }}</h6>
-                    @if (post.status === 'PENDING') {
-                      <span class="badge bg-warning bg-opacity-10 text-warning small">Pending approval</span>
-                    } @else if (post.status === 'APPROVED') {
-                      <span class="badge bg-success bg-opacity-10 text-success small">Approved</span>
-                    } @else if (post.status === 'REJECTED') {
-                      <span class="badge bg-danger bg-opacity-10 text-danger small">Rejected</span>
+              <div class="prf-item">
+                <div class="prf-item__lead">
+                  @if (post.images?.length) {
+                    <img [src]="post.images[0] | imageUrl" class="prf-item__thumb" alt="Post image" loading="lazy" fetchpriority="auto" />
+                  }
+                  <div class="prf-item__body">
+                    <div class="prf-item__title-row">
+                      <h6 class="prf-item__name">{{ post.community?.name }}</h6>
+                      @if (post.status === 'PENDING') {
+                        <span class="prf-badge prf-badge--pending">Pending approval</span>
+                      } @else if (post.status === 'APPROVED') {
+                        <span class="prf-badge prf-badge--active">Approved</span>
+                      } @else if (post.status === 'REJECTED') {
+                        <span class="prf-badge prf-badge--rejected">Rejected</span>
+                      }
+                    </div>
+                    <p class="prf-item__desc">{{ post.content }}</p>
+                    <small class="prf-item__meta">Posted {{ post.createdAt | date:'mediumDate' }}</small>
+                    @if (post.status === 'REJECTED' && post.rejectionReason) {
+                      <div class="small text-danger mt-1"><i class="bi bi-info-circle me-1"></i>Reason: {{ post.rejectionReason }}</div>
                     }
                   </div>
-                  <p class="text-muted small mb-1 text-truncate" style="max-width: 480px;">{{ post.content }}</p>
-                  <small class="text-muted">Posted {{ post.createdAt | date:'mediumDate' }}</small>
-                  @if (post.status === 'REJECTED' && post.rejectionReason) {
-                    <div class="small text-danger mt-1"><i class="bi bi-info-circle me-1"></i>Reason: {{ post.rejectionReason }}</div>
-                  }
                 </div>
-                <button class="btn btn-outline-danger btn-sm" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" aria-label="Delete post">
-                  @if (deletingPostId() === post.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
-                </button>
+                <div class="prf-item__actions">
+                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" aria-label="Delete post">
+                    @if (deletingPostId() === post.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
+                  </button>
+                </div>
               </div>
             }
           </div>
         }
       </app-profile-info-card>
+      </div>
     }
+
+      </div><!-- /prf-main -->
+
+      <aside class="prf-sidebar">
+        <app-profile-info-card title="Profile Completion" icon="bi-graph-up-arrow" [showEdit]="false">
+          <div class="prf-completion">
+            <div class="prf-completion__ring" [ngClass]="completionRingClass()">
+              <span class="prf-completion__percent">{{ profileCompletion() }}%</span>
+            </div>
+            <app-profile-progress [percentage]="profileCompletion()" [showLabel]="false"></app-profile-progress>
+            <p class="prf-completion__hint">
+              @if (profileCompletion() >= 100) {
+                Your profile is fully complete. Nice work!
+              } @else {
+                Fill in the missing details to help others find and trust you.
+              }
+            </p>
+
+            @if (completedItems().length) {
+              <div class="prf-completion__list">
+                <span class="prf-completion__list-title">Completed</span>
+                <ul>
+                  @for (item of completedItems(); track item.label) {
+                    <li class="is-done"><i class="bi bi-check-circle-fill"></i>{{ item.label }}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (pendingItems().length) {
+              <div class="prf-completion__list">
+                <span class="prf-completion__list-title">Pending</span>
+                <ul>
+                  @for (item of pendingItems(); track item.label) {
+                    <li class="is-pending"><i class="bi bi-circle"></i>{{ item.label }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </app-profile-info-card>
+      </aside>
+
+    </div><!-- /prf-layout -->
+
+    <app-business-form-modal
+      [open]="showBusinessModal()"
+      [editBusinessId]="editBusinessId()"
+      (closed)="closeBusinessModal()"
+      (saved)="onBusinessSaved($event)">
+    </app-business-form-modal>
+
+    <app-business-delete-modal
+      [open]="showDeleteBusinessModal()"
+      [business]="businessToDelete()"
+      (closed)="closeDeleteBusinessModal()"
+      (deleted)="onBusinessDeleted($event)">
+    </app-business-delete-modal>
+
+    <app-community-form-modal
+      [open]="showCommunityModal()"
+      [editCommunityId]="editCommunityId()"
+      (closed)="closeCommunityModal()"
+      (saved)="onCommunitySaved($event)">
+    </app-community-form-modal>
+
+    <app-community-delete-modal
+      [open]="showDeleteCommunityModal()"
+      [community]="communityToDelete()"
+      (closed)="closeDeleteCommunityModal()"
+      (deleted)="onCommunityDeleted($event)">
+    </app-community-delete-modal>
 
   }
 }

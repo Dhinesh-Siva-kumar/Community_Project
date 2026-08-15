@@ -1,0 +1,461 @@
+@use '../../../../assets/styles/index' as *;
+
+// ═══════════════════════════════════════════════════════════════
+// Modal chrome + form — identical to the Admin Community page's
+// Create/Edit modal (admin-community.component.scss).
+// ═══════════════════════════════════════════════════════════════
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+}
+
+.au-modal.cm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, calc(100vw - 32px));
+  max-height: 92dvh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__cover-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+
+  &--1 { width: 180px; height: 180px; background: $color-primary; top: -72px; right: 48px; }
+  &--2 { width: 88px; height: 88px; background: $white; bottom: -34px; right: 130px; }
+}
+
+.au-header__icon.cm-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  i { color: $color-primary; font-size: 1.1rem; }
+}
+
+.au-header__text.cm-modal-header-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.au-header__title.cm-modal-title {
+  font-family: $font-family-header;
+  font-size: $font-lg;
+  font-weight: $font-bold;
+  color: $white;
+  margin: 0;
+}
+
+.au-header__sub.cm-modal-subtitle {
+  font-size: $font-sm;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0;
+}
+
+.au-close.cm-close-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: $white; }
+}
+
+.au-body.cm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
+}
+
+// ── Form wrapper ──────────────────────────────────────────────
+.cm-form {
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Section blocks ────────────────────────────────────────────
+.cm-section {
+  padding: 20px 0 16px;
+  border-bottom: 1px solid $color-border;
+
+  &.cm-section-last {
+    border-bottom: none;
+    padding-bottom: 18px;
+  }
+}
+
+.cm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.cm-section-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: $amber-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid $color-amber-200;
+
+  i { font-size: 0.75rem; color: $primary; }
+}
+
+.cm-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-stone-500;
+}
+
+// ── Field layout ──────────────────────────────────────────────
+.cm-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @include media-sm-max {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cm-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.cm-label {
+  font-size: $font-sm;
+  font-weight: $font-semibold;
+  color: $color-text-body;
+}
+
+.cm-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cm-required {
+  color: $danger;
+  margin-left: 2px;
+}
+
+.cm-char-count {
+  font-size: $font-xs;
+  color: $color-text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Input wrap ────────────────────────────────────────────────
+.cm-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cm-input-icon {
+  position: absolute;
+  left: 13px;
+  font-size: 15px;
+  color: $muted;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 1;
+}
+
+.cm-textarea-wrap { align-items: flex-start; }
+.cm-textarea-icon { top: 13px; position: absolute; }
+
+.cm-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px 0 40px;
+  border: 1.5px solid $color-border;
+  border-radius: 10px;
+  font-size: $font-sm;
+  color: $color-text-body;
+  background: $color-bg-page;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &::placeholder { color: $color-text-secondary; }
+
+  &:focus {
+    border-color: $color-primary;
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  &.cm-input-error {
+    border-color: $danger;
+    &:focus { box-shadow: 0 0 0 3px rgba($danger, 0.1); }
+  }
+}
+
+.cm-textarea {
+  height: auto;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  resize: none;
+}
+
+.cm-error-msg {
+  font-size: $font-xs;
+  color: $color-danger;
+  font-weight: $font-semibold;
+  display: flex;
+  align-items: center;
+
+  i { font-size: 12px; }
+}
+
+// ── Toggle pills ──────────────────────────────────────────────
+.cm-toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+  border-radius: 12px;
+  padding: 2px;
+  transition: border 0.2s, background 0.2s;
+
+  &.cm-toggle-group--error {
+    border: 1.5px solid rgba($danger, 0.55);
+    background: rgba($danger, 0.03);
+    padding: 6px 8px;
+  }
+}
+
+.cm-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid $color-border;
+  font-size: 13px;
+  font-weight: 500;
+  color: $color-stone-500;
+  background: $color-bg-page;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary-dark;
+    background: $amber-50;
+  }
+
+  &.cm-toggle-active {
+    border-color: $primary-dark;
+    background: $primary;
+    color: $color-on-primary;
+    i { color: $color-on-primary; }
+  }
+
+  i { font-size: 12px; color: $muted; }
+}
+
+// ── Default community row ─────────────────────────────────────
+.cm-default-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid $color-border;
+  background: $color-bg-page;
+  margin-top: 12px;
+  transition: border-color 0.2s ease;
+
+  &:hover { border-color: $primary; }
+}
+
+.cm-default-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  i { font-size: 13px; color: $primary; flex-shrink: 0; }
+  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
+}
+
+.cm-default-hint {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: $muted !important;
+  width: 100%;
+  margin-top: 1px;
+}
+
+// ── Amber toggle switch ───────────────────────────────────────
+.cm-switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+
+  input { opacity: 0; width: 0; height: 0; position: absolute; }
+}
+
+.cm-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $color-stone-300;
+  border-radius: 24px;
+  transition: background 0.25s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: $white;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cm-switch input:checked + .cm-switch-slider { background: $primary; }
+.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba($primary, 0.25); }
+.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
+
+// ── Modal Footer ──────────────────────────────────────────────
+.au-footer.cm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  border-radius: 0 0 $radius-xl $radius-xl;
+}
+
+.au-btn.cm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &.au-btn--ghost {
+    background: transparent;
+    border-color: $color-border;
+    color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-primary-light; }
+  }
+}
+
+.au-btn.cm-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.au-btn--primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+}

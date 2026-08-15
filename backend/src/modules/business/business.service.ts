@@ -2,6 +2,7 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import { geocodeAddress } from '../../services/geocoding.service';
 import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
@@ -61,6 +62,18 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
     pincode: data.pincode,
   });
 
+  // Auto-geocode from the address when the client didn't send coordinates
+  // (the normal case — there's no map picker in the form). Best-effort:
+  // leaves latitude/longitude null if geocoding is unavailable or fails.
+  let latitude = data.latitude ?? null;
+  let longitude = data.longitude ?? null;
+  if (latitude === null && longitude === null) {
+    const geocoded = await geocodeAddress({
+      address: data.address, city: data.city, state: data.state, country: data.country, pincode: data.pincode,
+    });
+    if (geocoded) { latitude = geocoded.latitude; longitude = geocoded.longitude; }
+  }
+
   const [business] = await db('businesses')
     .insert({
       name: data.name,
@@ -72,8 +85,8 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       pincode: data.pincode ?? null,
       country: data.country ?? 'United Kingdom',
       location: data.location ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
+      latitude,
+      longitude,
       phone: data.phone ?? null,
       email: data.email ?? null,
       website: data.website ?? null,
@@ -93,13 +106,13 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name').first();
   await logAudit(userId, 'BUSINESS_CREATED', { name: data.name }, 'businesses', (business as Record<string, unknown>)['id'] as string);
-  return { ...(business as Record<string, unknown>), category, user };
+  return { ...(business as Record<string, unknown>), userId: (business as Record<string, unknown>)['user_id'], category, user };
 }
 
-export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean }) {
+export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
   const {
     categoryId, categoryIds, pincode, page, limit, search, country, openingHours,
-    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter,
+    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, userId,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -128,6 +141,7 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     countQuery.andWhere('is_active', isActive);
   }
 
+  if (userId) { query.andWhere('b.user_id', userId); countQuery.andWhere('user_id', userId); }
   if (categoryId) { query.andWhere('b.category_id', categoryId); countQuery.andWhere('category_id', categoryId); }
   if (categoryIds) {
     const ids = categoryIds.split(',').map(s => s.trim()).filter(Boolean);
@@ -192,6 +206,7 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
 
   const data = (businesses as Array<Record<string, unknown>>).map((b) => ({
     ...b,
+    userId:       b['user_id'],
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],
@@ -237,6 +252,7 @@ export async function findOne(id: string) {
 
   return {
     ...b,
+    userId:       b['user_id'],
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],
@@ -303,6 +319,27 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
     cityId: effectiveCityId,
     pincode: effectivePincode,
   });
+
+  // Re-geocode only when it's actually warranted: an address-related field
+  // changed, or the business has no coordinates yet — and only when the
+  // client didn't explicitly send latitude/longitude (an explicit value
+  // always wins). Avoids burning a paid API call on unrelated edits.
+  const addressFieldChanged = data.address !== undefined || data.city !== undefined
+    || data.state !== undefined || data.country !== undefined || data.pincode !== undefined;
+  if (data.latitude === undefined && data.longitude === undefined
+    && (addressFieldChanged || business['latitude'] == null)) {
+    const geocoded = await geocodeAddress({
+      address: data.address !== undefined ? data.address : (business['address'] as string | null),
+      city:    data.city    !== undefined ? data.city    : (business['city']    as string | null),
+      state:   data.state   !== undefined ? data.state   : (business['state']   as string | null),
+      country: data.country !== undefined ? data.country : (business['country'] as string | null),
+      pincode: effectivePincode,
+    });
+    if (geocoded) {
+      updateData['latitude'] = geocoded.latitude;
+      updateData['longitude'] = geocoded.longitude;
+    }
+  }
 
   await db('businesses').where({ id }).update(updateData);
 

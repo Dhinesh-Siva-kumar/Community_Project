@@ -16,6 +16,9 @@ export interface EventsQueryParams {
   status?:      'active' | 'inactive';
   dateFrom?:    string;
   dateTo?:      string;
+  /** Filters on event_date (when the event happens), unlike dateFrom/dateTo which filter created_at. */
+  eventDateFrom?: string;
+  eventDateTo?:   string;
   sortBy?:      'name' | 'eventDate' | 'joined' | 'near';
   sortDir?:     'asc' | 'desc';
 }

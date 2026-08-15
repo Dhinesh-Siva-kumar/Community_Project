@@ -36,7 +36,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
 export async function getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await communitiesService.getAnalytics({ skipActiveFilter });
+    const result = await communitiesService.getAnalytics({ skipActiveFilter, userId: req.user!.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -88,6 +88,18 @@ export async function getMembers(req: Request, res: Response, next: NextFunction
 export async function getMyCommunities(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await communitiesService.getMyCommunities(req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getMyCreatedCommunities(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListCommunitiesQueryDto.parse(req.query);
+    const result = await communitiesService.findAll({
+      ...query,
+      createdById: req.user!.sub,
+      skipActiveFilter: true,
+    });
     res.json(result);
   } catch (err) { next(err); }
 }

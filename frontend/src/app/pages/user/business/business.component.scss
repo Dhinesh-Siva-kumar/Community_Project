@@ -1,55 +1,57 @@
 @use '../../../../assets/styles/index' as *;
 
-// ─── Header (hero style) ──────────────────────────────────────────
-.biz-header {
-  position: relative;
-  background: linear-gradient(135deg, #FBBF24 0%, #F97316 55%, #D97706 100%);
-  border-radius: $radius-xl;
-  padding: 2rem 2.25rem;
-  margin-bottom: $spacing-lg;
-  overflow: hidden;
-  min-height: 130px;
-
-  &-bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
-
-  &-content {
-    position: relative;
-    z-index: 1;
-  }
-
-  &__left { min-width: 0; }
-  &__title { font-family: $font-family-header; font-size: clamp(1.1rem,2.5vw,1.5rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin: 0 0 3px; }
-  &__sub   { font-size: $font-size-sm; color: rgba(255,255,255,0.88); margin: 0 0 $spacing-sm; }
-  &__stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+// ─── Head — replicated from the User Community List page's .uc-head:
+// title/subtitle on the left, tabs + view toggle + search on the right,
+// in place of the old gradient hero card. ──────────────────────────
+.biz-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: $spacing-lg; flex-wrap: wrap; margin-bottom: $spacing-lg;
 }
 
-.biz-stat-pill {
-  display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px;
-  border-radius: $radius-full; background: rgba(255,255,255,0.90);
-  border: none; font-size: $font-size-xs; color: $color-primary-darker;
-  .bi { font-size: 0.8em; } strong { font-weight: $font-weight-bold; }
+.biz-title {
+  font-family: $font-family-header; font-size: $font-size-2xl; font-weight: $font-weight-bold;
+  margin: 0 0 6px; letter-spacing: -0.01em; color: $color-stone-900;
 }
 
-.hero-noise {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  opacity: 0.4;
+.biz-subtitle { margin: 0; color: $color-text-muted; font-size: 13.5px; }
+
+.biz-head-controls { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
+
+// ── Tabs (List / Category) — same floating-pill treatment as Community
+// List's .uc-tabs-wrap, simplified to a CSS-only 50/50 slide since there
+// are always exactly two equal-width options here (no JS width measuring
+// needed the way Community's variable-width/badged tabs required). ──
+.biz-tabs-wrap {
+  position: relative; flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.2); border-radius: $radius-md;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  padding: 4px; backdrop-filter: blur(10px); display: inline-block;
 }
 
-.hero-glow {
-  position: absolute;
-  right: -60px;
-  top: -60px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.22) 0%, transparent 70%);
-  border-radius: 50%;
+.biz-tabs { display: flex; gap: 3px; position: relative; }
+
+.biz-tab-indicator {
+  position: absolute; top: 0; left: 0; width: 50%; height: 32px;
+  border-radius: $radius-sm; background: #fff;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1);
+
+  &--categories { transform: translateX(100%); }
+}
+
+.biz-tab {
+  position: relative; z-index: 1; flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 14px; border-radius: $radius-sm; border: 1px solid transparent;
+  background: transparent; color: $color-stone-500; font-size: 12px; font-weight: $font-weight-semibold;
+  cursor: pointer; white-space: nowrap; @include transition-quick(color);
+
+  i { font-size: 12px; }
+
+  &:hover:not(.active) { color: $color-stone-800; }
+  &.active { color: $color-primary-darker; font-weight: $font-weight-bold; }
 }
 
 // ─── Toolbar ──────────────────────────────────────────────────
@@ -58,35 +60,25 @@
   &__right { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
 }
 
-.biz-search {
-  position: relative; flex: 1; min-width: 200px;
-  &__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
-  &__input {
-    width: 100%; height: 40px; padding: 0 36px; border: 1.5px solid $color-border;
-    border-radius: $radius-md; background: #fff; font-size: $font-size-sm; color: $color-stone-800; outline: none;
-    @include transition-short(all);
-    &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
-    &::-webkit-search-cancel-button { display: none; }
-  }
-  &__clear {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    width: 20px; height: 20px; border: none; background: $color-stone-200; border-radius: 50%;
-    color: $color-stone-600; font-size: 0.7rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    @include transition-quick(background-color);
-    &:hover { background: $color-stone-300; }
-  }
-}
-
-.biz-select {
-  height: 40px; padding: 0 10px; border: 1.5px solid $color-border; border-radius: $radius-md;
-  background: #fff; font-size: $font-size-sm; color: $color-stone-700; cursor: pointer; outline: none;
-  @include transition-quick(border-color);
-  &:focus { border-color: $color-primary; }
+// Sizing wrapper for the Category view's sort <app-searchable-select> —
+// same wrapper pattern as the Admin Business page's rows-per-page control.
+.jb-select-wrap {
+  width: 150px;
+  flex-shrink: 0;
+  &--sort { width: 170px; }
 }
 
 .biz-view-toggle { display: flex; border: 1.5px solid $color-border; border-radius: $radius-md; overflow: hidden; }
+.biz-add-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
+  border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
+  font-size: $font-size-sm; font-weight: $font-weight-bold; font-family: $font-family-body;
+  background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+  color: $color-on-primary; box-shadow: 0 3px 10px rgba(251,191,36,0.30);
+  @include transition-short(all);
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
+}
+
 .biz-view-btn {
   width: 36px; height: 36px; border: none; background: $color-bg-light; color: $color-stone-500;
   font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -166,6 +158,14 @@ $accents: (
   &__badge { height: 22px; width: 80px; border-radius: $radius-full; }
 }
 
+// Sentinel that reveals the next batch of lazily-rendered categories.
+.biz-load-more-sentinel {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: $spacing-lg; margin-top: $spacing-sm;
+  font-size: $font-size-xs; font-weight: $font-weight-medium; color: $color-stone-400;
+  .spinner-border { width: 1rem; height: 1rem; border-width: 2px; color: $color-primary; }
+}
+
 // Empty
 .biz-empty {
   display: flex; flex-direction: column; align-items: center; text-align: center; padding: $spacing-4xl $spacing-xl;
@@ -195,82 +195,185 @@ $accents: (
   @include transition-quick(color); &:hover { color: $color-primary-dark; }
 }
 
-.bl-toolbar { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; flex-wrap: wrap; .biz-search { flex: 1; min-width: 200px; } &__right { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; } }
+.bl-toolbar { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; flex-wrap: wrap; &__right { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; } }
 .bl-clear-btn { display: inline-flex; align-items: center; gap: 5px; height: 40px; padding: 0 14px; border: none; background: none; color: $color-danger; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer; border-radius: $radius-md; @include transition-quick(background-color); &:hover { background: $color-error-bg; } }
 
 .bl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: $spacing-lg; margin-bottom: $spacing-lg; }
 
+// List view — a fixed 3-per-row grid of uniformly-sized, FIXED-HEIGHT cards
+// (reuses the same .bl-card markup as Grid view), image on the left,
+// details on the right, Call/WhatsApp pinned to the bottom of the card —
+// paired with infinite-scroll loading instead of numbered pagination
+// (see .biz-load-more-sentinel + loadMoreBusinesses()).
 .bl-list-view {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-lg;
   margin-bottom: $spacing-lg;
 
   .bl-card {
-    display: flex;
-    flex-direction: row;
-    gap: $spacing-lg;
-    align-items: stretch;
-    max-width: 100%;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-template-rows: 1fr auto; // body fills whatever's left above the footer
+    column-gap: $spacing-md;
+    // A fixed card height (not content-driven) is what makes the row-
+    // spanning image below resolve to a definite size, and is what keeps
+    // every card in the row the same height.
+    height: 150px;
 
     &__img-wrap {
-      width: 160px;
-      min-width: 160px;
-      height: auto;
-      flex-shrink: 0;
+      grid-column: 1;
+      grid-row: 1 / 3; // spans the full fixed card height
+      width: 120px;
+      height: 100%;
     }
 
     &__body {
-      flex: 1;
-      padding: $spacing-md $spacing-lg $spacing-md 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      grid-column: 2;
+      grid-row: 1;
+      padding: $spacing-sm $spacing-md 0 0;
+      justify-content: center; // fills/centers within the space above the footer
+      overflow: hidden;
+    }
+
+    &__desc {
+      -webkit-line-clamp: 1;
     }
 
     &__footer {
-      flex-direction: column;
-      justify-content: center;
+      grid-column: 2;
+      grid-row: 2;
       border-top: none;
-      border-left: 1px solid $color-border;
-      padding: $spacing-md $spacing-lg;
       margin-top: 0;
-      min-width: 120px;
+      padding: $spacing-xs $spacing-md $spacing-sm 0;
+      gap: 6px;
     }
+  }
 
-    &__action-btn {
-      flex: none;
-    }
+  // Compact single meta line + owner/date hidden — keeps the body's
+  // content short enough to always fit the fixed card height above.
+  .bl-card__submeta,
+  .bl-card__meta-item:not(:first-child) {
+    display: none;
   }
 }
 
 .bl-card {
   display: flex; flex-direction: column; background: #fff; border: 1.5px solid $color-border;
-  border-radius: $radius-lg; overflow: hidden; cursor: pointer;
+  border-radius: $radius-lg; cursor: pointer;
   box-shadow: 0 1px 4px rgba(28,25,23,0.06);
   transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
   &:hover { transform: translateY(-4px); border-color: $color-primary; box-shadow: 0 12px 32px rgba(28,25,23,0.12); .bl-card__img { transform: scale(1.04); } }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  &__img-wrap { position: relative; height: 180px; overflow: hidden; background: $color-bg-page; flex-shrink: 0; }
+  // Rounds its own top corners (rather than relying on .bl-card's overflow
+  // to clip it) so the owner action menu's dropdown panel — an absolutely
+  // positioned descendant that needs to escape the footer's bounds — isn't
+  // itself clipped by an overflow:hidden ancestor.
+  &__img-wrap { position: relative; height: 180px; overflow: hidden; border-radius: $radius-lg $radius-lg 0 0; background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%); flex-shrink: 0; }
   &__img { width: 100%; height: 100%; object-fit: cover; transition: transform 350ms ease; }
-  &__img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.05)); font-size: 3rem; color: $color-primary-dark; }
-  &__cat-badge { position: absolute; top: 10px; left: 10px; padding: 3px 10px; border-radius: $radius-full; background: rgba(28,25,23,0.65); backdrop-filter: blur(6px); color: #fff; font-size: 11px; font-weight: $font-weight-semibold; }
+  &__img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: $color-primary-dark; }
+  &__cat-badge { position: absolute; top: 10px; left: 10px; z-index: 1; padding: 3px 10px; border-radius: $radius-full; background: rgba(28,25,23,0.65); backdrop-filter: blur(6px); color: #fff; font-size: 11px; font-weight: $font-weight-semibold; letter-spacing: 0.03em; box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+  &__owner-badge {
+    position: absolute; top: 10px; right: 10px; z-index: 1;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: $radius-full;
+    background: rgba(251,191,36,0.92); backdrop-filter: blur(6px);
+    color: $color-on-primary; font-size: 11px; font-weight: $font-weight-bold; letter-spacing: 0.02em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    .bi { font-size: 0.85em; }
+  }
   &__body { flex: 1; padding: $spacing-md $spacing-lg 0; display: flex; flex-direction: column; gap: 6px; }
   &__name { font-family: $font-family-header; font-size: 1.05rem; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0; line-height: 1.3; }
+  // Owner + created date — who added this business and when.
+  &__submeta { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-top: -2px; }
+  &__submeta-item {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: $color-stone-400; font-weight: $font-weight-medium;
+    .bi { font-size: 0.85em; }
+  }
   &__desc { font-size: $font-size-xs; color: $color-text-muted; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   &__meta { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 2px; }
   &__meta-item { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8em; color: $color-primary-dark; } &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
   &__footer { display: flex; gap: 8px; padding: $spacing-sm $spacing-lg $spacing-md; border-top: 1px solid $color-border; margin-top: $spacing-sm; }
 
-  // User-specific action buttons (Call / WhatsApp)
+  // User-specific action buttons (Call / WhatsApp / Location) — icon-only
+  // by default, one row of compact circular buttons; the label smoothly
+  // expands into view on hover/focus so the action is still discoverable
+  // without permanently taking up space or crowding out its neighbors
+  // regardless of how many buttons the footer has.
   &__action-btn {
-    flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-    border-radius: $radius-sm; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-    text-decoration: none; cursor: pointer; border: 1.5px solid transparent; @include transition-short(all);
-    &--call { background: rgba(22,163,74,0.10); border-color: rgba(22,163,74,0.28); color: #15803D; &:hover { background: rgba(22,163,74,0.18); border-color: #15803D; } }
-    &--wa   { background: rgba(37,211,102,0.10); border-color: rgba(37,211,102,0.28); color: #128C7E; &:hover { background: rgba(37,211,102,0.18); border-color: #128C7E; } }
+    flex: 0 0 auto; width: 28px; height: 28px; padding: 0; gap: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: $radius-full; overflow: hidden;
+    font-size: $font-size-xs; font-weight: $font-weight-semibold;
+    text-decoration: none; cursor: pointer; border: 1.5px solid transparent;
+    transition: width $duration-base $easing-standard, background-color $duration-short $easing-standard, border-color $duration-short $easing-standard;
+    &--call     { background: rgba(22,163,74,0.10);  border-color: rgba(22,163,74,0.28);  color: #15803D;  &:hover { background: rgba(22,163,74,0.18);  border-color: #15803D; } }
+    &--wa       { background: rgba(37,211,102,0.10); border-color: rgba(37,211,102,0.28); color: #128C7E;  &:hover { background: rgba(37,211,102,0.18); border-color: #128C7E; } }
+    &--location { background: rgba(249,115,22,0.10); border-color: rgba(249,115,22,0.28); color: #C2410C;  &:hover { background: rgba(249,115,22,0.18); border-color: #C2410C; } }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+    &:hover, &:focus-visible {
+      width: 108px;
+
+      .bl-card__action-label {
+        max-width: 80px;
+        margin-left: 6px;
+        opacity: 1;
+      }
+    }
   }
+}
+
+// ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown,
+// deliberately NOT styled like the Call/WhatsApp/Location icon buttons
+// (those are quick contact actions; this is a "manage this listing" menu). ──
+.bl-card__menu {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.bl-card__menu-trigger {
+  width: 28px; height: 28px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: $radius-full; border: 1.5px solid $color-border;
+  background: #fff; color: $color-stone-500; cursor: pointer;
+  @include transition-quick(all);
+  &:hover, &:focus-visible { background: $color-stone-100; color: $color-stone-800; border-color: $color-stone-300; }
+}
+.bl-card__menu--open .bl-card__menu-trigger { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
+
+.bl-card__menu-panel {
+  position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 20;
+  min-width: 140px; padding: 6px;
+  background: $color-bg-card; border: 1.5px solid $color-stone-200; border-radius: $radius-md;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: bizMenuIn 140ms ease;
+}
+@keyframes bizMenuIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.bl-card__menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 10px; border: none; border-radius: $radius-sm; background: transparent;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-700;
+  text-align: left; cursor: pointer; @include transition-quick(background-color);
+  .bi { font-size: 0.85em; color: $color-primary-dark; flex-shrink: 0; }
+  &:hover { background: $color-stone-100; }
+  &--danger {
+    color: $color-danger;
+    .bi { color: $color-danger; }
+    &:hover { background: $color-error-bg; }
+  }
+}
+
+.bl-card__action-label {
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width $duration-base $easing-standard, margin-left $duration-base $easing-standard, opacity $duration-short $easing-standard;
 }
 
 .bl-card-skeleton { border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden; &__img { height: 180px; } &__body { padding: $spacing-md $spacing-lg; display: flex; flex-direction: column; gap: 10px; } &__line { height: 14px; width: 80%; border-radius: $radius-sm; } &__line--short { width: 55%; } &__line--xs { width: 40%; height: 12px; } }
@@ -287,24 +390,51 @@ $accents: (
 }
 
 
-// ─── Business Detail View ─────────────────────────────────────
+// ─── Business Detail View — replicated verbatim from the Admin
+// Business page's .bd-hero / .bd-badge / .bd-action-btn design system. ──
 .bd-hero {
   border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
-  background: #fff; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg;
-  &__cover { height: 200px; overflow: hidden; background: $color-bg-page; flex-shrink: 0; }
-  &__cover-img { width: 100%; height: 100%; object-fit: cover; }
-  &__cover-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.05)); font-size: 4rem; color: $color-primary-dark; opacity: 0.5; }
-  &__profile { display: flex; align-items: flex-start; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
-  &__avatar { width: 64px; height: 64px; border-radius: $radius-full; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12)); border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25)); margin-top: -48px; box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+  background: #fff; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
+
+  // No cover banner — just the logo + business details, so the profile row
+  // sits flush at the top of the card.
+  &__profile { display: flex; align-items: center; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
+
+  &__avatar {
+    width: 72px; height: 72px; border-radius: $radius-full; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
+    color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12));
+    border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    padding: 0; cursor: default; overflow: hidden; @include transition-short(all);
+
+    // Same zoom-in affordance as the gallery thumbnails below, since both
+    // open the same lightbox.
+    &--clickable {
+      cursor: zoom-in;
+      &:hover { transform: scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.16); }
+      &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+    }
+    &:disabled { cursor: default; }
+  }
+
   &__info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
   &__name-row { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
   &__name { font-family: $font-family-header; font-size: clamp(1.15rem,3vw,1.6rem); font-weight: 800; color: $color-stone-900; margin: 0; letter-spacing: -0.02em; }
   &__category { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-primary-darker; font-weight: $font-weight-semibold; .bi { font-size: 0.8em; } }
-  &__location  { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-stone-500; .bi { color: #DC2626; font-size: 0.8em; } }
-  &__actions   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
+  &__location { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-stone-500; .bi { color: #DC2626; font-size: 0.8em; } }
+
+  &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
 }
 
-.bd-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.04em; &--active { background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } } }
+.bd-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
+  border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
+  &--owner    { background: rgba(251,191,36,0.20); border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker; .bi { font-size: 7px; } }
+}
 
 .bd-action-btn {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: $radius-md;
@@ -314,6 +444,8 @@ $accents: (
   &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; border: 1.5px solid rgba(37,211,102,0.28);  &:hover { background: rgba(37,211,102,0.18); } }
   &--blue     { background: rgba(14,165,233,0.10);  color: #0284C7; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
   &--orange   { background: rgba(249,115,22,0.10);  color: #C2410C; border: 1.5px solid rgba(249,115,22,0.28);  &:hover { background: rgba(249,115,22,0.18); } }
+  &--amber    { background: rgba(251,191,36,0.14);  color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.32); cursor: pointer; &:hover { background: rgba(251,191,36,0.22); } }
+  &--red      { background: rgba(220,38,38,0.10);   color: $color-danger;  border: 1.5px solid rgba(220,38,38,0.28); cursor: pointer; &:hover { background: rgba(220,38,38,0.18); } }
 }
 
 .bd-grid { display: grid; grid-template-columns: 1fr 300px; gap: $spacing-lg; align-items: start; }
@@ -332,14 +464,85 @@ $accents: (
   &__value { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; word-break: break-word; &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
 }
 
-.bd-maps-btn { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md; padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold; text-decoration: none; @include transition-short(all); background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; box-shadow: 0 3px 10px rgba(251,191,36,0.30); &:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(251,191,36,0.40); color: $color-on-primary; } &--secondary { background: rgba(251,191,36,0.10); color: $color-primary-darker; box-shadow: none; border: 1.5px solid rgba(251,191,36,0.30); &:hover { background: rgba(251,191,36,0.18); box-shadow: none; } } }
+// Soft tinted pill — same visual language as .bd-action-btn / .jb-pill-btn
+// used everywhere else, instead of a one-off solid gradient CTA.
+.bd-maps-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md;
+  padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  text-decoration: none; @include transition-short(all);
+  background: rgba(251,191,36,0.14); color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.35);
+  &:hover { background: rgba(251,191,36,0.22); border-color: $color-primary; transform: translateY(-1px); color: $color-primary-darker; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  &--secondary { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.24); &:hover { background: rgba(251,191,36,0.14); } }
+}
 
-.bd-days { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: $spacing-sm; }
-.bd-day { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 34px; border-radius: $radius-sm; font-size: $font-size-xs; font-weight: $font-weight-bold; background: $color-stone-100; color: $color-stone-400; border: 1.5px solid $color-border; &--active { background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; border-color: transparent; box-shadow: 0 2px 6px rgba(251,191,36,0.30); } }
+.bd-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: $spacing-sm; }
+.bd-day  {
+  display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
+  border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  background: rgba(255,255,255,0.7); color: $color-stone-500; border: 1.5px solid $color-border;
+  &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
+}
 .bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
 
 .bd-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; cursor: zoom-in; @include transition-short(all); &:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
+.bd-gallery__btn { padding: 0; border: none; background: none; cursor: zoom-in; border-radius: $radius-sm; line-height: 0; &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; } }
+.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; @include transition-short(all); .bd-gallery__btn:hover & { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
+
+@include media-sm-max {
+  .bd-hero__profile { flex-direction: column; align-items: center; text-align: center; }
+  .bd-hero__info { align-items: center; }
+  .bd-hero__actions { margin-left: 0; justify-content: center; }
+}
+
+// ── Image lightbox — copied 1:1 from the Admin Business page's
+// .cd-lightbox, itself copied 1:1 from community-detail.component's, so
+// the logo/gallery preview here looks and behaves exactly the same
+// everywhere it appears. ──
+.cd-lightbox {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, 0.84); backdrop-filter: blur(3px);
+  z-index: 1150; display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+
+.cd-lightbox-content {
+  position: relative; width: min(980px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  border-radius: 16px; background: rgba(15, 23, 42, 0.48); border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5); padding: 46px 16px 44px;
+}
+
+.cd-lightbox-image { width: 100%; max-height: calc(100vh - 160px); object-fit: contain; display: block; border-radius: 12px; }
+
+.cd-lightbox-close,
+.cd-lightbox-nav {
+  border: 1px solid rgba(226, 232, 240, 0.35); background: rgba(15, 23, 42, 0.6); color: $white;
+  width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.18s ease, border-color 0.18s ease;
+  &:hover { background: rgba(30, 41, 59, 0.78); border-color: rgba(226, 232, 240, 0.48); }
+}
+
+.cd-lightbox-close { position: absolute; top: 10px; right: 10px; }
+
+.cd-lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  &.cd-lightbox-nav--prev { left: 10px; }
+  &.cd-lightbox-nav--next { right: 10px; }
+}
+
+.cd-lightbox-footer { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; }
+
+.cd-lightbox-counter {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 28px;
+  padding: 0 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(226, 232, 240, 0.28);
+  color: #f8fafc; font-size: 12px; font-weight: 700;
+}
+
+@include media-sm-max {
+  .cd-lightbox-content { width: min(94vw, 760px); padding: 42px 12px 40px; }
+  .cd-lightbox-image { max-height: calc(100vh - 190px); }
+  .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
+  .cd-lightbox-nav.cd-lightbox-nav--prev { left: 14px; }
+  .cd-lightbox-nav.cd-lightbox-nav--next { right: 14px; }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // ADD BUSINESS MODAL STYLES (matching admin)
@@ -357,112 +560,102 @@ $accents: (
   &--sm { padding: 8px 16px; font-size: $font-size-xs; }
 }
 
-// ─── View Switcher ──────────────────────────────────────────────────────
-.biz-view-switcher {
-  display: flex;
-  gap: 2px;
-  margin-bottom: $spacing-lg;
-  background: $color-stone-100;
-  border-radius: $radius-md;
-  padding: 3px;
-  border: 1.5px solid $color-border;
-  width: fit-content;
+// ═══════════════════════════════════════════════════════════════
+// FILTER PANEL — replicated verbatim from the Admin Business list
+// page's .jb-filter-panel (search + collapsible Advanced Filters +
+// active-filter chips design system).
+// ═══════════════════════════════════════════════════════════════
 
-  &__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 18px;
-    border: none;
-    background: transparent;
-    border-radius: $radius-sm;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: $color-stone-600;
-    cursor: pointer;
-    @include transition-quick(all);
-
-    &:hover {
-      color: $color-primary-darker;
-      background: rgba(251,191,36,0.08);
-    }
-
-    &--active {
-      background: #fff;
-      color: $color-stone-900;
-      box-shadow: 0 1px 3px rgba(28,25,23,0.10);
-    }
-
-    .bi { font-size: 1rem; }
-  }
-}
-
-// ─── Filter Bar ─────────────────────────────────────────────────────────
-.biz-filter-bar {
-  background: #fff;
-  border: 1.5px solid $color-border;
+.jb-filter-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
   border-radius: $radius-lg;
   padding: $spacing-md $spacing-lg;
-  margin-bottom: $spacing-lg;
-  box-shadow: 0 1px 3px rgba(28,25,23,0.04);
+  margin-bottom: $spacing-md;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
-
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    flex-wrap: wrap;
-
-    &--filters {
-      padding-top: $spacing-sm;
-      border-top: 1px solid $color-border;
-    }
-  }
-
-  &__right {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    flex-shrink: 0;
-  }
+  gap: $spacing-md;
 }
 
-.biz-filter-group {
+.jb-filter-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: $spacing-sm;
-  flex-wrap: wrap;
-  width: 100%;
+
+  &--top   { gap: $spacing-sm; flex-wrap: wrap; }
+  &--split { flex-direction: row; align-items: flex-start; gap: $spacing-lg; flex-wrap: wrap; }
+  &--footer { padding-top: $spacing-sm; border-top: 1px solid $color-border; gap: $spacing-sm; }
 }
 
-.biz-filter-label {
+.jb-filter-group { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+.jb-filter-section-label {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
-  color: $color-stone-600;
+  font-weight: $font-weight-semibold;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.07em;
+  color: $color-stone-500;
   white-space: nowrap;
-  flex-shrink: 0;
-
-  .bi { font-size: 0.85rem; color: $color-primary-dark; }
+  .bi { color: $color-primary-dark; font-size: 0.8rem; }
 }
 
-.biz-filter-pills {
+.jb-search-wrap {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+
+  &__icon { position: absolute; left: 12px; color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
+
+  &__input {
+    width: 100%;
+    height: 40px;
+    padding: 0 36px;
+    border: 1.5px solid $color-border;
+    border-radius: $radius-md;
+    background: $color-bg-page;
+    font-size: $font-size-sm;
+    color: $color-stone-800;
+    outline: none;
+    transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+    &::placeholder { color: $color-stone-400; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__clear {
+    position: absolute;
+    right: 10px;
+    width: 22px; height: 22px;
+    border: none;
+    background: $color-stone-200;
+    border-radius: 50%;
+    color: $color-stone-600;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    @include transition-quick(background-color);
+    &:hover { background: $color-stone-300; }
+  }
 }
 
-.biz-filter-pill {
+.jb-sort-wrap { min-width: 155px; flex-shrink: 0; }
+
+.jb-chip-group { display: flex; flex-wrap: wrap; gap: 5px; &--sm { gap: 4px; } }
+
+.jb-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 14px;
+  gap: 4px;
+  padding: 5px 12px;
+  height: 30px;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
   background: $color-bg-light;
@@ -470,64 +663,404 @@ $accents: (
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   cursor: pointer;
-  @include transition-quick(all);
+  white-space: nowrap;
+  @include transition-short(all);
 
-  &:hover {
-    border-color: $color-primary;
-    background: rgba(251,191,36,0.08);
-    color: $color-primary-darker;
-  }
-
-  &--active {
-    background: linear-gradient(135deg, $color-primary, $color-saffron);
-    border-color: transparent;
-    color: $color-on-primary;
-    box-shadow: 0 2px 6px rgba(251,191,36,0.28);
-
-    &:hover {
-      background: linear-gradient(135deg, $color-primary, $color-saffron);
-      color: $color-on-primary;
-    }
-  }
-
-  .bi { font-size: 0.8rem; }
+  &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
+  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-white; }
+  &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 
-.biz-filter-chips {
+.jb-location-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  app-searchable-select, .jb-adv-input-wrap { flex: 1; min-width: 130px; }
 }
 
-.biz-filter-chip {
+.jb-adv-input-wrap--icon {
+  .jb-adv-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: $color-stone-400;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.jb-adv-input--icon-left { padding-left: 32px; }
+
+// ── Distance — an adjustable-radius control that sits in the "normal"
+// filter row alongside search, rather than tucked behind Advanced Filters. ──
+.jb-distance-control {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
+  gap: 6px;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-full;
+  background: $color-bg-light;
+  flex-shrink: 0;
+
+  &__icon { color: $color-primary-dark; font-size: 0.85rem; }
+}
+
+.jb-distance-step {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1.5px solid $color-border; border-radius: 50%;
+  background: #fff; color: $color-stone-600; font-size: 0.7rem; cursor: pointer;
+  @include transition-quick(all);
+  &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+
+.jb-distance-input {
+  width: 42px; height: 28px; padding: 0 2px; border: none; background: none;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-stone-800;
+  text-align: center; outline: none;
+  &::-webkit-inner-spin-button, &::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  -moz-appearance: textfield;
+  &:disabled { color: $color-stone-400; }
+}
+
+.jb-distance-unit { font-size: $font-size-xs; font-weight: $font-weight-medium; color: $color-stone-500; margin-right: 2px; }
+
+.jb-distance-all {
+  height: 28px; padding: 0 12px; border: 1.5px solid $color-border; border-radius: $radius-full;
+  background: #fff; color: $color-stone-600; font-size: 11px; font-weight: $font-weight-semibold; cursor: pointer;
+  @include transition-quick(all);
+  &:hover { border-color: $color-primary; color: $color-primary-darker; }
+  &--active { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-color: #d97706; color: #fff; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+
+.jb-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
   background: $color-bg-light;
-  color: $color-stone-600;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
+  color: $color-stone-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
+  @include transition-short(all);
+  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+}
+
+.jb-advanced-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
+}
+
+.jb-advanced-chevron {
+  font-size: 0.75rem;
+  transition: transform $duration-base $easing-standard;
+  &--open { transform: rotate(180deg); }
+}
+
+.jb-clear-all-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: none; padding: 6px 10px;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  color: $color-danger; cursor: pointer;
   @include transition-quick(all);
+  &:hover { background: $color-error-bg; }
+  &--inline { margin-left: auto; color: $color-stone-500; &:hover { color: $color-danger; background: none; } }
+}
+
+.jb-advanced-panel {
+  padding: $spacing-lg;
+  background: $color-bg-page;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
+}
+
+.jb-adv-section {
+  & + & {
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid $color-border;
+  }
+
+  > .jb-filter-section-label {
+    display: flex;
+    margin-bottom: 10px;
+  }
+}
+
+.jb-pill-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jb-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(255, 251, 235, 0.9);
+  color: $color-primary-darker;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+  .bi { font-size: 0.85rem; }
 
   &:hover {
-    border-color: $color-primary;
-    background: rgba(251,191,36,0.08);
-    color: $color-primary-darker;
+    background: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #78350f;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline-offset: 2px;
   }
 
   &--active {
-    background: $color-stone-900;
-    border-color: $color-stone-900;
-    color: #fff;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+  }
+}
 
-    .bi { color: $color-primary; }
+.jb-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: $spacing-md;
+
+  &--dates {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    margin-top: 2px;
+
+    @include media-sm-max {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.jb-adv-field {
+  display: flex; flex-direction: column; gap: 6px;
+  &--wide { grid-column: span 2; @include media-sm-max { grid-column: span 1; } }
+}
+
+.jb-adv-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: $color-stone-500; margin-bottom: 2px;
+  .bi { color: $color-primary-dark; font-size: 0.8rem; }
+}
+
+.jb-adv-input-wrap { position: relative; }
+
+.jb-adv-input-wrap--date {
+  .jb-adv-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    color: $color-stone-400;
+    pointer-events: none;
+    z-index: 1;
+    transition: color $duration-short $easing-standard;
+  }
+}
+
+.jb-adv-input {
+  width: 100%; height: 38px; padding: 0 $spacing-sm;
+  border: 1.5px solid $color-border; border-radius: $radius-md;
+  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800;
+  outline: none;
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); }
+
+  &--date {
+    height: 42px;
+    padding: 0 36px 0 36px;
+    font-weight: $font-weight-medium;
+    background: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%);
+
+    &::-webkit-calendar-picker-indicator {
+      opacity: 0.72;
+      cursor: pointer;
+      transition: opacity $duration-short $easing-standard;
+    }
+
+    &:hover {
+      border-color: $color-amber-300;
+      background: #fffefb;
+
+      &::-webkit-calendar-picker-indicator {
+        opacity: 1;
+      }
+    }
+
+    &:focus {
+      background: #ffffff;
+    }
+  }
+}
+
+.jb-adv-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 235, 0.45) 100%);
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.36);
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.1);
   }
 
-  .bi { font-size: 0.8rem; color: $color-stone-400; }
+  &:focus-within {
+    border-color: rgba(245, 158, 11, 0.48);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.14);
+
+    .jb-adv-input-icon {
+      color: $color-primary-dark;
+    }
+  }
+
+  &--filled {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.38) 100%);
+    border-color: rgba(245, 158, 11, 0.32);
+
+    .jb-adv-date-help {
+      color: $color-primary-darker;
+    }
+  }
+}
+
+.jb-adv-date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jb-adv-date-help {
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: $color-stone-400;
+}
+
+.jb-quick-date-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+
+  &__label {
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $color-stone-500;
+    margin-right: 2px;
+  }
+}
+
+.jb-quick-date-btn {
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(255, 251, 235, 0.9);
+  color: $color-primary-darker;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: $font-weight-semibold;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+  &:hover {
+    background: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #78350f;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+  }
+}
+
+.jb-adv-range {
+  display: flex; align-items: center; gap: $spacing-sm;
+  app-searchable-select { flex: 1; }
+  &__sep { color: $color-stone-300; font-weight: $font-weight-semibold; flex-shrink: 0; }
+}
+
+.jb-adv-salary-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: $spacing-sm;
+  .jb-adv-input-wrap { flex: 1; min-width: 100px; }
+}
+
+.jb-active-chips {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: $spacing-sm;
+  &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-400; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+}
+
+.jb-active-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: $radius-full;
+  border: 1px solid rgba(251, 191, 36, 0.40);
+  background: rgba(251, 191, 36, 0.10);
+  color: $color-primary-darker;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &__remove {
+    display: flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px;
+    border: none; background: rgba(180, 83, 9, 0.15); border-radius: 50%;
+    color: $color-primary-darker; font-size: 0.6rem; cursor: pointer; padding: 0;
+    @include transition-quick(background-color);
+    &:hover { background: rgba(180, 83, 9, 0.30); }
+  }
 }
 
 // ─── Geolocation Status ────────────────────────────────────────────────
@@ -559,6 +1092,7 @@ $accents: (
   position: absolute;
   bottom: 10px;
   right: 10px;
+  z-index: 1;
   padding: 3px 9px;
   border-radius: $radius-full;
   background: rgba(28,25,23,0.70);
@@ -569,246 +1103,28 @@ $accents: (
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 
   .bi { font-size: 0.7rem; color: $color-primary; }
 }
 
-.jb-modal-dialog { max-width: min(960px, 96vw); }
-
-.jb-modal {
-  border: none; border-radius: $radius-xl; overflow: hidden;
-  box-shadow: 0 20px 60px rgba(28,25,23,0.22), 0 0 0 1px rgba(251,191,36,0.12);
-
-  &__header {
-    display: flex; align-items: flex-start; gap: $spacing-md;
-    padding: $spacing-lg $spacing-xl;
-    background: linear-gradient(135deg, rgba(251,191,36,0.09) 0%, rgba(249,115,22,0.05) 100%);
-    border-bottom: 1px solid rgba(251,191,36,0.18);
-    position: sticky; top: 0; z-index: 10; flex-shrink: 0;
-  }
-
-  &__header-icon {
-    width: 42px; height: 42px; border-radius: $radius-md;
-    background: linear-gradient(135deg, $color-primary, $color-saffron);
-    display: flex; align-items: center; justify-content: center;
-    color: $color-on-primary; font-size: 1.1rem; flex-shrink: 0;
-    box-shadow: 0 3px 10px rgba(251,191,36,0.30);
-  }
-
-  &__header-text { flex: 1; min-width: 0; }
-  &__title    { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0 0 2px; }
-  &__subtitle { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
-
-  &__close {
-    width: 34px; height: 34px; border-radius: $radius-md;
-    border: 1.5px solid rgba(251,191,36,0.22); background: rgba(255,255,255,0.7);
-    color: $color-stone-600; font-size: 0.85rem; cursor: pointer; margin-left: auto;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    @include transition-short(all);
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.10); }
-  }
-
-  &__body {
-    padding: $spacing-lg $spacing-xl; background: $color-bg-page;
-    overflow-y: auto; max-height: calc(100vh - 220px);
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: $color-stone-200; border-radius: 4px; }
-  }
-
-  &__footer {
-    display: flex; justify-content: flex-end; gap: $spacing-sm;
-    padding: $spacing-md $spacing-xl; background: $color-bg-card;
-    border-top: 1px solid $color-border; position: sticky; bottom: 0; z-index: 10;
-  }
-}
-
-.jb-form-section {
-  margin-bottom: $spacing-xl; padding: $spacing-lg;
-  background: $color-bg-card; border: 1px solid $color-border;
-  border-radius: $radius-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
-
-  &__header { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; padding-bottom: $spacing-md; border-bottom: 1.5px solid rgba(251,191,36,0.18); }
-  &__badge  { width: 36px; height: 36px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.30); border-radius: $radius-sm; display: flex; align-items: center; justify-content: center; color: $color-primary-darker; font-size: 0.95rem; flex-shrink: 0; }
-  &__num    { font-size: $font-size-xs; font-weight: $font-weight-bold; color: $color-stone-400; letter-spacing: 0.08em; margin-right: 4px; }
-  &__name   { font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; }
-  &__optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
-}
-
-.jb-btn {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;
-  border-radius: $radius-md; font-family: $font-family-body; font-weight: $font-weight-bold;
-  font-size: $font-size-sm; cursor: pointer; border: none; text-decoration: none;
-  @include transition-short(all);
-
-  &--neon {
-    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
-    color: $color-on-primary; box-shadow: 0 4px 16px rgba(251,191,36,0.35);
-    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251,191,36,0.45); color: $color-on-primary; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-  }
-
-  &--ghost {
-    background: transparent; border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker;
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.08); }
-  }
-}
-
-.jb-label {
-  display: block; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body; margin-bottom: 6px;
-  &__loading { color: $color-primary-dark; font-size: $font-size-xs; margin-left: 6px; .bi { animation: bizSpin 0.8s linear infinite; } }
-}
-@keyframes bizSpin { to { transform: rotate(360deg); } }
-
-.jb-input {
-  width: 100%; height: 42px; padding: 0 $spacing-md;
-  border: 1.5px solid $color-border; border-radius: $radius-md;
-  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800; outline: none;
-  @include transition-short(all);
-  &::placeholder { color: $color-stone-400; }
-  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
-  &--error { border-color: $color-danger; }
-  &--textarea { height: auto; resize: vertical; padding: $spacing-sm $spacing-md; line-height: 1.65; }
-  &--icon-left { padding-left: 40px; }
-}
-
-.jb-input-group {
-  position: relative;
-  &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
-}
-
-.jb-field-error { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-danger; .bi { font-size: 0.8rem; flex-shrink: 0; } }
-
-.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.jb-day-toggle {
-  padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
-  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 4px;
-  @include transition-short(all);
-
-  // Hover on an UNselected day — neutral gray, deliberately a different hue
-  // family from --on's amber below, so hovering can never read as "selected".
-  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-
-  // Selected — the only state that uses amber, and stays amber regardless
-  // of hover, so it reads as "on" independent of mouse position.
-  &--on {
-    background: rgba(251,191,36,0.28);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    font-weight: $font-weight-bold;
-    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
-  }
-}
-
-.jb-logo-preview {
-  position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;
-  &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
-  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
-}
-
-// ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
-// Community Create/Edit popup's "Default Community" toggle. ──
-.cm-default-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 16px; border-radius: 12px;
-  border: 1.5px solid $color-border; background: $color-bg-page;
-  transition: border-color 0.2s ease;
-  &:hover { border-color: $color-primary; }
-}
-
-.cm-default-label {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  i { font-size: 13px; color: $color-primary; flex-shrink: 0; }
-  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
-}
-
-.cm-default-hint {
-  font-size: 11px !important; font-weight: 400 !important; color: $color-text-muted !important;
-  width: 100%; margin-top: 1px;
-}
-
-.cm-switch {
-  position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0;
-  input { opacity: 0; width: 0; height: 0; position: absolute; }
-}
-
-.cm-switch-slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background: $color-stone-300; border-radius: 24px; transition: background 0.25s ease;
-  &::before {
-    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
-    background: #fff; border-radius: 50%; transition: transform 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.cm-switch input:checked + .cm-switch-slider { background: $color-primary; }
-.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba(251,191,36,0.25); }
-.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
-
-.jb-optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
-
 // ─── Responsive ───────────────────────────────────────────────
 @include media-md-max {
-  .biz-header { padding: 1.5rem 1.25rem; }
-  .biz-view-switcher { width: 100%; &__btn { flex: 1; justify-content: center; } }
-  .biz-filter-bar { padding: $spacing-sm; }
-  .biz-filter-group { flex-direction: column; align-items: flex-start; }
+  .biz-head { flex-direction: column; align-items: stretch; }
+  .biz-head-controls { justify-content: space-between; }
+  .jb-filter-panel { padding: $spacing-sm; }
   .biz-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: $spacing-md; }
   .bl-header { flex-direction: column; align-items: flex-start; }
   .bl-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: $spacing-md; }
-.bl-list-view {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-
-  .bl-card {
-    display: flex;
-    flex-direction: row;
-    gap: $spacing-lg;
-    align-items: center;
-    max-width: 100%;
-
-    &__img-wrap {
-      width: 120px;
-      height: 120px;
-      flex-shrink: 0;
-    }
-
-    &__content {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: $spacing-xs;
-    }
-
-    .bl-card__title {
-      font-size: $font-size-md;
-      margin-bottom: 2px;
-    }
-
-    .bl-card__details {
-      display: flex;
-      flex-wrap: wrap;
-      gap: $spacing-sm;
-      font-size: $font-size-xs;
-    }
-  }
-}
+  .bl-list-view { grid-template-columns: repeat(2, 1fr); gap: $spacing-md; }
 
   .bd-grid { grid-template-columns: 1fr; }
   .bd-hero__profile { flex-wrap: wrap; }
   .bd-hero__actions { margin-left: 0; }
-  .jb-modal-dialog { max-width: 100%; }
-  .jb-modal__body, .jb-modal__header, .jb-modal__footer { padding: $spacing-md; }
-  .jb-form-section { padding: $spacing-md; }
 }
 @include media-sm-max {
   .biz-header { padding: 1.25rem 1rem; }
   .biz-toolbar, .bl-toolbar { flex-direction: column; align-items: stretch; }
   .biz-grid, .bl-grid { grid-template-columns: 1fr 1fr; gap: $spacing-sm; }
-  .bd-hero__avatar { margin-top: -40px; }
+  .bl-list-view { grid-template-columns: 1fr; gap: $spacing-sm; }
 }

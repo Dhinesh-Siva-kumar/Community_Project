@@ -17,6 +17,7 @@ export const UpdatePostBodyDto = CreatePostDto.omit({ communityId: true }).parti
 export const ListPostsQueryDto = z.object({
   communityId: z.string().uuid().optional(),
   type: z.enum(['GENERAL', 'HELP', 'EMERGENCY', 'ENQUIRY']).optional(),
+  joined: z.coerce.boolean().optional(), // true = only posts from communities the caller has joined
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

@@ -30,8 +30,25 @@ export class FileUploadComponent implements OnChanges {
   @Input() maxSizeMb = 5;
   @Input() maxFiles = 10;
   @Input() label = 'Drag & drop or click to browse';
-  @Input() existingPreview: string | null | undefined = null;
-  @Input() existingPreviews: string[] | undefined = undefined;
+
+  // Plain @Input() fields aren't tracked by computed() — a parent that
+  // populates these asynchronously (e.g. fetching the record being edited
+  // after this component has already rendered once) would silently keep
+  // showing the stale first-render value forever, since computed() only
+  // recomputes when a SIGNAL dependency changes, not a plain property
+  // mutation. Backing them with signals makes displayPreview/allPreviews
+  // properly reactive to late-arriving values.
+  private existingPreviewSig  = signal<string | null | undefined>(null);
+  private existingPreviewsSig = signal<string[] | undefined>(undefined);
+
+  @Input()
+  set existingPreview(value: string | null | undefined) { this.existingPreviewSig.set(value); }
+  get existingPreview(): string | null | undefined { return this.existingPreviewSig(); }
+
+  @Input()
+  set existingPreviews(value: string[] | undefined) { this.existingPreviewsSig.set(value); }
+  get existingPreviews(): string[] | undefined { return this.existingPreviewsSig(); }
+
   @Input() showError = false;
   @Input() errorMessage = 'This field is required.';
   @Input() resetCounter = 0;
@@ -48,13 +65,13 @@ export class FileUploadComponent implements OnChanges {
 
   /** New data-URL preview takes priority; falls back to existingPreview from parent. */
   readonly displayPreview = computed<string | null>(() =>
-    this.previews()[0] ?? this.existingPreview ?? null,
+    this.previews()[0] ?? this.existingPreviewSig() ?? null,
   );
 
   /** For multi-mode: combine newly uploaded and existing previews */
   readonly allPreviews = computed<string[]>(() => {
     const newPreviews = this.previews();
-    const existingPreviews = this.existingPreviews ?? [];
+    const existingPreviews = this.existingPreviewsSig() ?? [];
     return [...newPreviews, ...existingPreviews];
   });
 

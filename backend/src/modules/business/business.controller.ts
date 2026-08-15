@@ -92,6 +92,14 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   } catch (err) { next(err); }
 }
 
+export async function findMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListBusinessQueryDto.parse(req.query);
+    const result = await businessService.findAll({ ...query, userId: req.user!.sub, skipActiveFilter: true });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
 export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await businessService.findOne(req.params['id'] as string);

@@ -14,6 +14,7 @@ export class ProfileInfoCardComponent {
   @Input() icon?: string;
   @Input() editMode = false;
   @Input() loading = false;
+  @Input() showEdit = true;
   @Output() edit = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();

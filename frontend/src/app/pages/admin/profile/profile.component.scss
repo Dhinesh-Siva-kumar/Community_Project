@@ -1,23 +1,58 @@
 @use '../../../../assets/styles/index' as *;
 
-// ── Form labels ───────────────────────────────────────────
-.form-label.small {
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-size: $font-size-xs;
-  color: $color-text-muted;
+// ── Tab-switch entrance animation — a fresh element is rendered by @if
+// each time the active tab changes, so a plain CSS animation replays
+// automatically without any TS state tracking. ──────────────────────
+.tab-enter { animation: prfTabFadeSlideIn 0.3s ease forwards; }
+
+@keyframes prfTabFadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter { animation: none; }
+}
+
+// ── Form labels — matches community-form-modal's .cm-label ─
+.prf-label {
+  display: block;
+  font-size: $font-sm;
+  font-weight: $font-semibold;
+  color: $color-text-body;
   margin-bottom: 5px;
 }
 
-// ── Inputs ────────────────────────────────────────────────
+.prf-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .prf-label { margin-bottom: 5px; }
+}
+
+.cm-char-count {
+  font-size: $font-xs;
+  color: $color-text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Inputs — matches community-form-modal's .cm-input ──────
 .form-control {
-  border-radius: $radius-sm;
-  border-color: $color-border;
+  height: 48px;
+  border: 1.5px solid $color-border;
+  border-radius: 10px;
+  font-size: $font-sm;
+  color: $color-text-body;
+  background: $color-bg-page;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &::placeholder { color: $color-text-secondary; }
 
   &:focus {
     border-color: $color-primary;
-    box-shadow: $shadow-focus-ring;
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
   }
 
   &[readonly] {
@@ -28,35 +63,225 @@
 
     &:focus { box-shadow: none; border-color: transparent; }
   }
+
+  &.is-invalid {
+    border-color: $color-danger;
+    &:focus { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+}
+
+textarea.form-control {
+  height: auto;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  resize: none;
+}
+
+.input-group-sm .form-control {
+  height: 38px;
+  border-radius: $radius-sm;
 }
 
 textarea.form-control { border-radius: $radius-sm; }
 
-// ── Admin info items ──────────────────────────────────────
-.info-item {
-  background: $color-stone-50;
-  border-color: $color-border !important;
-  border-radius: $radius-md !important;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+// ── Dropdowns (app-searchable-select) — matches Add Community's
+// .cm-input treatment so the Country/State/City/Professional Category
+// dropdowns read exactly like the plain text inputs above. ─────────
+::ng-deep app-searchable-select {
+  display: block;
 
-  small {
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
+  .ss-host {
+    position: relative;
+    display: block;
   }
 
-  code {
-    color: $color-amber-700;
-    background: rgba($color-primary, 0.1);
-    padding: 2px 6px;
-    border-radius: $radius-xs;
+  .ss-trigger {
+    width: 100%;
+    height: 48px;
+    padding: 0 38px 0 14px;
+    border: 1.5px solid $color-border !important;
+    border-radius: 10px;
+    font-size: $font-sm;
+    color: $color-text-body;
+    background: $color-bg-page;
+    outline: none;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: none !important;
+
+    &:focus,
+    &:focus-visible {
+      border-color: $color-primary !important;
+      background: $color-bg-card;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1) !important;
+      outline: none;
+    }
+
+    &.ss-placeholder .ss-trigger-text {
+      color: $gray-400;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
   }
 
-  &:hover {
+  .ss-trigger-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    color: $dark;
+  }
+
+  .ss-caret {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: $muted;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+  }
+
+  .ss-caret-open {
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  .ss-panel {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 1060;
     background: $color-bg-card;
-    border-color: rgba($color-primary-dark, 0.35) !important;
-    box-shadow: $shadow-1;
+    border: 1.5px solid $color-stone-200;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .ss-search-wrap {
+    position: relative;
+    padding: 10px 10px;
+    border-bottom: 1px solid $color-stone-200;
+    display: flex;
+    align-items: center;
+  }
+
+  .ss-search-icon {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: $muted;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .ss-search {
+    width: 100%;
+    height: 36px;
+    padding: 0 32px 0 34px;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    font-size: 13px;
+    color: $dark;
+    background: $bg-neutral;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &::placeholder { color: $gray-400; }
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+      background: $white;
+    }
+  }
+
+  .ss-clear-search {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: $muted;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+
+    &:hover { color: $dark; }
+  }
+
+  .ss-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
+  }
+
+  .ss-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: $dark;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    list-style: none;
+
+    &:hover {
+      background: $amber-50;
+      color: $color-primary-darker;
+    }
+
+    &.ss-option-selected {
+      background: rgba($primary, 0.1);
+      color: $color-primary-darker;
+      font-weight: 600;
+    }
+  }
+
+  .ss-option-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ss-check {
+    color: $primary;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+
+  .ss-no-results {
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 13px;
+    color: $muted;
+    list-style: none;
   }
 }
 
@@ -72,7 +297,208 @@ textarea.form-control { border-radius: $radius-sm; }
   }
 }
 
-hr {
-  border-color: $color-border;
-  opacity: 1;
+// ═══════════════════════════════════════════════════════════════
+// Two-column split — left column holds the header, tabs and tab-content
+// cards at the same (correct) width; right column holds Profile
+// Completion (and any other cards added later).
+// ═══════════════════════════════════════════════════════════════
+.prf-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-lg;
+}
+
+.prf-main {
+  flex: 1;
+  min-width: 0;
+
+  app-profile-header {
+    display: block;
+    margin-bottom: $section-gap-v;
+  }
+}
+
+// Sticks while scrolling through the left column, clearing the layout's
+// own sticky top navbar; once the left column's content runs out it
+// scrolls away with the rest of the page instead of staying pinned.
+.prf-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  gap: $spacing-lg;
+  position: sticky;
+  top: $header-height + $spacing-xl;
+  z-index: $z-fixed - 1;
+  margin-bottom: $spacing-lg;
+}
+
+.prf-completion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+}
+
+.prf-completion__ring {
+  display: flex; align-items: center; justify-content: center;
+  width: 84px; height: 84px; border-radius: 50%;
+  background: rgba($color-primary, 0.12);
+  border: 3px solid rgba($color-primary, 0.35);
+  transition: background 0.3s ease, border-color 0.3s ease;
+
+  // Stepped colour scale — reflects completion at each 20% milestone,
+  // ending in green once the profile is fully complete.
+  &.ring--start    { background: rgba($color-danger, 0.1);       border-color: rgba($color-danger, 0.4); }
+  &.ring--low      { background: rgba($color-warning, 0.1);      border-color: rgba($color-warning, 0.4); }
+  &.ring--fair     { background: rgba($color-primary, 0.12);     border-color: rgba($color-primary-dark, 0.4); }
+  &.ring--good     { background: rgba($color-info, 0.1);         border-color: rgba($color-info, 0.4); }
+  &.ring--great    { background: rgba($color-emerald-600, 0.12); border-color: rgba($color-emerald-600, 0.45); }
+  &.ring--complete { background: rgba($color-success, 0.14);     border-color: rgba($color-success, 0.5); }
+}
+
+.prf-completion__percent {
+  font-family: $font-family-header;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary-darker;
+
+  .ring--start &    { color: $color-danger; }
+  .ring--low &      { color: $color-warning; }
+  .ring--fair &     { color: $color-primary-darker; }
+  .ring--good &     { color: $color-info; }
+  .ring--great &    { color: $color-emerald-600; }
+  .ring--complete & { color: $color-success; }
+}
+
+.prf-completion__hint {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  margin: 4px 0 0;
+}
+
+.prf-completion__list {
+  width: 100%;
+  text-align: left;
+  margin-top: $spacing-sm;
+
+  ul { list-style: none; margin: 0; padding: 0; }
+}
+
+.prf-completion__list-title {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+  margin-bottom: 6px;
+}
+
+.prf-completion__list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: $font-size-xs;
+  border-bottom: 1px solid $color-border;
+
+  &:last-child { border-bottom: none; }
+
+  i { font-size: 0.9em; flex-shrink: 0; }
+
+  &.is-done {
+    color: $color-text-body;
+    i { color: $color-success; }
+  }
+
+  &.is-pending {
+    color: $color-text-muted;
+    i { color: $color-stone-300; }
+  }
+}
+
+@include media-md-max {
+  .prf-layout { flex-direction: column; }
+  .prf-sidebar { position: static; width: 100%; margin-bottom: 0; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Personal Info / Admin Info sections — mirrors the same cm-section-style
+// sectioning used on the user profile page and the Business/Community
+// modals, so both profile surfaces read consistently.
+// ═══════════════════════════════════════════════════════════════
+.prf-section {
+  padding: 20px 0;
+  border-bottom: 1px solid $color-border;
+
+  &:first-child { padding-top: 0; }
+  &.prf-section-last { border-bottom: none; padding-bottom: 4px; }
+}
+
+.prf-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.prf-section-badge {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: $amber-50; border: 1px solid $color-amber-200;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  i { font-size: 0.75rem; color: $color-primary; }
+}
+
+.prf-section-title {
+  font-family: $font-family-header;
+  font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: $color-stone-500;
+}
+
+// ── Admin Info tiles — reuses the .prf-item shell but as a static
+// (non-interactive) info tile rather than a hoverable list row. ──
+.prf-item--static {
+  display: block;
+  padding: 14px 16px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-card;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: $color-amber-200;
+    box-shadow: 0 4px 14px rgba(28, 25, 23, 0.06);
+  }
+}
+
+.prf-item__meta {
+  display: block;
+  color: $color-text-muted;
+  font-size: $font-size-xs;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: $font-weight-semibold;
+}
+
+.prf-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: $radius-full;
+  font-size: 10px; font-weight: $font-weight-bold;
+  text-transform: uppercase; letter-spacing: 0.03em;
+
+  &--active   { background: rgba(22, 163, 74, 0.12); border: 1.5px solid rgba(22, 163, 74, 0.28); color: #15803D; }
+  &--inactive { background: rgba(120, 113, 108, 0.12); border: 1.5px solid rgba(120, 113, 108, 0.28); color: $color-stone-500; }
+  &--pending  { background: rgba(217, 119, 6, 0.12); border: 1.5px solid rgba(217, 119, 6, 0.28); color: #B45309; }
+}
+
+code {
+  color: $color-amber-700;
+  background: rgba($color-primary, 0.1);
+  padding: 2px 6px;
+  border-radius: $radius-xs;
 }

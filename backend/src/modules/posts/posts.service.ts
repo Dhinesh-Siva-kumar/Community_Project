@@ -2,14 +2,21 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../services/community-visibility.service';
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreatePostDtoType, ListPostsQueryDtoType, UpdatePostBodyDtoType } from './posts.dto';
 
 const POST_USER_SELECT = [
   'u.id as user_id', 'u.user_name', 'u.display_name', 'u.avatar', 'u.is_trusted', 'u.is_blocked',
 ];
+// Was previously `'c.id as community_id'` — a dead alias that would've
+// collided with `p.community_id` (already present via `p.*`), which is why
+// every call site below re-wrote these two columns inline instead of using
+// this constant. Fixed the alias so it's actually usable, and added the
+// community image so post cards (e.g. "Popular posts") can show the real
+// community logo instead of only an initials placeholder.
 const POST_COMMUNITY_SELECT = [
-  'c.id as community_id', 'c.name as community_name',
+  'c.id as c_community_id', 'c.name as community_name', 'c.image as community_image',
 ];
 
 function formatPost(row: Record<string, unknown>, commentCount: number, likeCount: number, isLiked = false, isSaved = false) {
@@ -28,7 +35,7 @@ function formatPost(row: Record<string, unknown>, commentCount: number, likeCoun
       id: row['user_id'], userName: row['user_name'], displayName: row['display_name'], avatar: row['avatar'],
       isTrusted: row['is_trusted'], isBlocked: row['is_blocked'],
     },
-    community: { id: row['c_community_id'] ?? row['community_id'], name: row['community_name'] },
+    community: { id: row['c_community_id'] ?? row['community_id'], name: row['community_name'], image: row['community_image'] ?? null },
     _count: { comments: commentCount, likes: likeCount },
     isLiked,
     isSaved,
@@ -79,7 +86,7 @@ export async function create(data: CreatePostDtoType, userId: string) {
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.id', (post as Record<string, unknown>)['id'] as string)
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT)
     .first() as Record<string, unknown>;
 
   if (status === 'PENDING') {
@@ -92,22 +99,44 @@ export async function create(data: CreatePostDtoType, userId: string) {
 }
 
 export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolean; currentUserId?: string }) {
-  const { communityId, type, page, limit, isAdmin, currentUserId } = params;
+  const { communityId, type, joined, page, limit, isAdmin, currentUserId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('posts as p')
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT);
 
-  const countQuery = db('posts as p');
+  // Needs the same communities JOIN as `query` so the visibility restriction
+  // below (and any future community-scoped filter) can apply to the count too.
+  const countQuery = db('posts as p')
+    .join('communities as c', 'p.community_id', 'c.id');
 
   if (!isAdmin) {
     query.where('p.status', 'APPROVED');
-    countQuery.where('status', 'APPROVED');
+    countQuery.where('p.status', 'APPROVED');
   }
-  if (communityId) { query.andWhere('p.community_id', communityId); countQuery.andWhere('community_id', communityId); }
-  if (type) { query.andWhere('p.type', type); countQuery.andWhere('type', type); }
+  if (communityId) { query.andWhere('p.community_id', communityId); countQuery.andWhere('p.community_id', communityId); }
+  if (type) { query.andWhere('p.type', type); countQuery.andWhere('p.type', type); }
+
+  // ── Joined filter — restrict to posts from communities the caller is a
+  // member of (e.g. the "Joined" tab's Popular posts, which should only
+  // surface activity from communities the user actually belongs to).
+  if (joined && currentUserId) {
+    query.andWhere('p.community_id', 'in', db('community_members').select('community_id').where('user_id', currentUserId));
+    countQuery.andWhere('p.community_id', 'in', db('community_members').select('community_id').where('user_id', currentUserId));
+  }
+
+  // ── Non-admin visibility restriction — same rule as the community browse
+  // list (communities.service.ts): a post only surfaces if its community is
+  // global, private-and-matching-the-caller's-own-country, or one they've
+  // already joined. Stops e.g. a "Popular posts" widget from leaking posts
+  // from a country-private community the user isn't part of.
+  if (!isAdmin && currentUserId) {
+    const userCountry = await getUserCountry(currentUserId);
+    applyNonAdminVisibilityRestriction(query, 'c.', currentUserId, userCountry);
+    applyNonAdminVisibilityRestriction(countQuery, 'c.', currentUserId, userCountry);
+  }
 
   const [posts, [{ total }]] = await Promise.all([
     query.orderBy('p.created_at', 'desc').limit(limit).offset(offset),
@@ -141,7 +170,7 @@ export async function findOne(postId: string, currentUserId?: string) {
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.id', postId)
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT)
     .first() as Record<string, unknown> | undefined;
   if (!row) throw new AppError(404, 'Post not found');
 
@@ -183,7 +212,7 @@ export async function findPendingOnly(options: FindPendingOnlyOptions) {
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.status', 'PENDING')
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT);
 
   const countQuery = db('posts as p')
     .join('users as u', 'p.user_id', 'u.id')
@@ -286,7 +315,7 @@ export async function findMine(userId: string, options: { page: number; limit: n
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.user_id', userId)
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name');
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT);
 
   const countQuery = db('posts as p').where('p.user_id', userId);
 
@@ -380,7 +409,7 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
     .join('users as u', 'p.user_id', 'u.id')
     .join('communities as c', 'p.community_id', 'c.id')
     .where('p.id', postId)
-    .select('p.*', ...POST_USER_SELECT, 'c.id as c_community_id', 'c.name as community_name')
+    .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT)
     .first() as Record<string, unknown>;
 
   const [{ total: commentCount }] = await db('comments').where({ post_id: postId }).count({ total: '*' });

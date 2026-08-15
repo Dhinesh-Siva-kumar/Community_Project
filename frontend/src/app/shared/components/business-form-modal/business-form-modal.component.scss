@@ -1,0 +1,742 @@
+@use '../../../../assets/styles/index' as *;
+
+// ═══════════════════════════════════════════════════════════════
+// Modal chrome — identical to the Admin Business page's Add/Edit
+// modal: .au-backdrop (blur) / .au-modal (radius, shadow) / .au-header
+// (gradient + icon badge) / .au-footer + .au-btn (buttons).
+// ═══════════════════════════════════════════════════════════════
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+}
+
+.au-modal.cm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, calc(100vw - 32px));
+  max-height: 92dvh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__cover-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+
+  &--1 { width: 180px; height: 180px; background: $color-primary; top: -72px; right: 48px; }
+  &--2 { width: 88px; height: 88px; background: $white; bottom: -34px; right: 130px; }
+}
+
+.au-header__icon.cm-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  i { color: $color-primary; font-size: 1.1rem; }
+}
+
+.au-header__text.cm-modal-header-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.au-header__title.cm-modal-title {
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $white;
+  margin: 0;
+}
+
+.au-header__sub.cm-modal-subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0;
+}
+
+.au-close.cm-close-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: $white; }
+}
+
+.au-body.cm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
+}
+
+.au-footer.cm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  border-radius: 0 0 $radius-xl $radius-xl;
+}
+
+.au-btn.cm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &.au-btn--ghost {
+    background: transparent;
+    border-color: $color-border;
+    color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-primary-light; }
+  }
+}
+
+.au-btn.cm-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.au-btn--primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: $shadow-primary-sm;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; }
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD / EDIT BUSINESS FORM STYLES
+// ═══════════════════════════════════════════════════════════════
+
+.jb-form-section {
+  margin-bottom: $spacing-xl; margin-top: $spacing-xl; padding: $spacing-lg;
+  background: $color-bg-card; border: 1px solid $color-border;
+  border-radius: $radius-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
+
+  &__header { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; padding-bottom: $spacing-md; border-bottom: 1.5px solid rgba(251,191,36,0.18); }
+  &__badge  { width: 36px; height: 36px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.30); border-radius: $radius-sm; display: flex; align-items: center; justify-content: center; color: $color-primary-darker; font-size: 0.95rem; flex-shrink: 0; }
+  &__num    { font-size: $font-size-xs; font-weight: $font-weight-bold; color: $color-stone-400; letter-spacing: 0.08em; margin-right: 4px; }
+  &__name   { font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; }
+  &__optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
+}
+
+.jb-label {
+  display: block; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body; margin-bottom: 6px;
+  &__loading { color: $color-primary-dark; font-size: $font-size-xs; margin-left: 6px; .bi { animation: bizFormSpin 0.8s linear infinite; } }
+}
+@keyframes bizFormSpin { to { transform: rotate(360deg); } }
+
+// Label row with a live character counter (e.g. category/description fields).
+.jb-label-row { display: flex; align-items: center; justify-content: space-between; }
+.jb-char-count { font-size: $font-size-xs; color: $color-text-muted; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+
+// Textarea wrapper with a live character counter pinned to the bottom-right
+// corner (e.g. "120/1000"), so it reads directly against the text being typed.
+.jb-textarea-wrap { position: relative; }
+.jb-char-count--overlay {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+// Input box + validation styling — mirrors .cm-input / .cm-error-msg on the
+// Community Create/Edit popup, so both modals' fields look and behave the same.
+.jb-input {
+  width: 100%; height: 48px; padding: 0 14px;
+  border: 1.5px solid $color-border; border-radius: 10px;
+  background: $color-bg-page; font-size: $font-size-sm; color: $color-text-body; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-primary; background: $color-bg-card; box-shadow: 0 0 0 3px rgba($color-primary, 0.1); }
+  &--error {
+    border-color: $color-danger;
+    &:focus { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+  &--textarea { height: auto; padding-top: 12px; padding-bottom: 12px; resize: none; }
+  &--icon-left { padding-left: 40px; }
+}
+
+.jb-input-group {
+  position: relative;
+  &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
+}
+
+// "Same as phone" style checkbox toggles that sit inline in a field row.
+// Custom-drawn box (native `appearance: none` + a CSS checkmark) instead of
+// the plain browser checkbox, so it matches the app's amber theme.
+.jb-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-body;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid $color-border;
+    border-radius: 4px;
+    background: $color-bg-page;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover { border-color: $color-primary; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+    &:checked {
+      background: $color-primary;
+      border-color: $color-primary;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid $color-on-primary;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--below { margin-top: 8px; }
+}
+
+.jb-field-error {
+  display: flex; align-items: center; gap: 4px; margin-top: 4px;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-danger;
+  .bi { font-size: 12px; flex-shrink: 0; }
+}
+
+.jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
+
+.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.jb-day-toggle {
+  padding: 6px 14px; border-radius: $radius-full;
+  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
+  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  @include transition-short(all);
+
+  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &--on {
+    background: rgba(251,191,36,0.28);
+    border-color: $color-primary;
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
+  }
+}
+
+.jb-logo-preview {
+  position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;
+  &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
+  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
+}
+
+// ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
+// Community Create/Edit popup's "Default Community" toggle. ──
+.cm-default-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-radius: 12px;
+  border: 1.5px solid $color-border; background: $color-bg-page;
+  transition: border-color 0.2s ease;
+  &:hover { border-color: $color-primary; }
+}
+
+.cm-default-label {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  i { font-size: 13px; color: $color-primary; flex-shrink: 0; }
+  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
+}
+
+.cm-default-hint {
+  font-size: 11px !important; font-weight: 400 !important; color: $color-text-muted !important;
+  width: 100%; margin-top: 1px;
+}
+
+.cm-switch {
+  position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0;
+  input { opacity: 0; width: 0; height: 0; position: absolute; }
+}
+
+.cm-switch-slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background: $color-stone-300; border-radius: 24px; transition: background 0.25s ease;
+  &::before {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
+    background: #fff; border-radius: 50%; transition: transform 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cm-switch input:checked + .cm-switch-slider { background: $color-primary; }
+.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba(251,191,36,0.25); }
+.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
+
+.jb-optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
+
+.biz-gallery-existing {
+  margin-top: $spacing-md;
+  &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; }
+  &__grid { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
+  &__item { position: relative; display: inline-flex; }
+  &__img { width: 80px; height: 60px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; }
+  &__remove {
+    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.6rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all);
+    &:hover { background: $color-error-bg; border-color: $color-danger; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; .bi { font-size: 0.75em; } }
+}
+
+@include media-md-max {
+  .jb-form-section { padding: $spacing-md; }
+}
+
+// ── Opening hours time picker separator ──────────────────────────
+.biz-hours-sep {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: $text-muted;
+}
+
+// ── Custom time dropdown — mirrors .ss-trigger / .ss-panel / .ss-option
+// on the searchable-select dropdowns, so it reads as just another dropdown
+// field even though it opens a custom time-slot list. ──
+.time-dropdown {
+  position: relative;
+  width: 100%;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1.5px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg-page;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    &:hover { border-color: $color-primary; }
+
+    &:focus-visible {
+      border-color: $color-primary;
+      background: $color-bg-card;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+  }
+
+  &__icon { font-size: 0.85rem; color: $color-stone-400; flex-shrink: 0; }
+
+  &__value {
+    flex: 1;
+    font-size: $font-size-sm;
+    color: $color-text-body;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__chevron {
+    font-size: 0.65rem;
+    color: $color-stone-400;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  &--open &__chevron { transform: rotate(180deg); }
+
+  &--open &__trigger {
+    border-color: $color-primary;
+    background: $color-bg-card;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  &--error &__trigger {
+    border-color: $color-danger;
+    &:focus-visible { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
+  }
+
+  &--error.time-dropdown--open &__trigger {
+    box-shadow: 0 0 0 3px rgba($color-danger, 0.1);
+  }
+
+  &__panel {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 1060;
+    background: $color-bg-card;
+    border: 1.5px solid $color-stone-200;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    animation: timeDropdownIn 180ms ease;
+  }
+
+  &__list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover { background: $amber-50; }
+    &:focus-visible { background: $amber-50; }
+
+    &--selected {
+      background: rgba($color-primary, 0.1);
+      font-weight: 600;
+    }
+  }
+
+  &__option-time { font-size: $font-size-sm; color: $color-text-body; }
+
+  &__option--selected &__option-time { color: $color-primary-darker; }
+}
+
+@keyframes timeDropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Dropdown (searchable-select) styling — mirrors the Community popup's
+// .cm-field-group override, so every dropdown in this modal (Category,
+// Country, State, City, Phone Country) matches the text-input look (48px,
+// 10px radius, same focus ring) instead of the component's bare default.
+// Scoped to the modal body so it applies to every dropdown without needing
+// a per-field wrapper class. ──
+.au-body.cm-modal-body {
+  ::ng-deep app-searchable-select {
+    display: block;
+
+    .ss-host {
+      position: relative;
+      display: block;
+    }
+
+    .ss-trigger {
+      width: 100%;
+      height: 48px;
+      padding: 0 38px 0 14px;
+      border: 1.5px solid $color-border !important;
+      border-radius: 10px;
+      font-size: $font-sm;
+      color: $color-text-body;
+      background: $color-bg-page;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      box-shadow: none !important;
+
+      &:focus,
+      &:focus-visible {
+        border-color: $color-primary !important;
+        background: $color-bg-card;
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.1) !important;
+        outline: none;
+      }
+
+      &.ss-placeholder .ss-trigger-text { color: $gray-400; }
+
+      &:disabled { opacity: 0.55; cursor: not-allowed; }
+    }
+
+    .ss-trigger-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      color: $dark;
+    }
+
+    .ss-caret {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: $muted;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .ss-caret-open { transform: translateY(-50%) rotate(180deg); }
+
+    .ss-panel {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      background: $color-bg-card;
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .ss-search-wrap {
+      position: relative;
+      padding: 10px 10px;
+      border-bottom: 1px solid $color-stone-200;
+      display: flex;
+      align-items: center;
+    }
+
+    .ss-search-icon {
+      position: absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: $muted;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ss-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 32px 0 34px;
+      border: 1.5px solid $border;
+      border-radius: 8px;
+      font-size: 13px;
+      color: $dark;
+      background: $bg-neutral;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder { color: $gray-400; }
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: $white;
+      }
+    }
+
+    .ss-clear-search {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $muted;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+
+      &:hover { color: $dark; }
+    }
+
+    .ss-list {
+      list-style: none;
+      margin: 0;
+      padding: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
+    }
+
+    .ss-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: $dark;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      list-style: none;
+
+      &:hover { background: $amber-50; color: $color-primary-darker; }
+
+      &.ss-option-selected {
+        background: rgba($primary, 0.1);
+        color: $color-primary-darker;
+        font-weight: 600;
+      }
+    }
+
+    .ss-option-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ss-check {
+      color: $primary;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .ss-no-results {
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 13px;
+      color: $muted;
+      list-style: none;
+    }
+  }
+}
+
+// Error state — toggled via [class.cm-field-group--error] on the field's
+// wrapper div, same as the Community popup's required dropdowns.
+.cm-field-group--error {
+  ::ng-deep app-searchable-select .ss-trigger {
+    border-color: $danger !important;
+
+    &:focus,
+    &:focus-visible {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1) !important;
+    }
+  }
+}

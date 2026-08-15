@@ -98,6 +98,7 @@ start              npm run start            # node dist/src/server.js
 migrate            npm run migrate          # knex migrate:latest
 migrate:rollback   npm run migrate:rollback # knex migrate:rollback
 seed               npm run seed             # knex seed:run
+backfill:business-latlng  npm run backfill:business-latlng # geocode existing businesses missing lat/lng
 ```
 
 ### Frontend (run from `frontend/`)
@@ -168,6 +169,11 @@ test      npm test           # ng test (Karma + Jasmine)
   `*.scss`); refactor with care.
 - `GOOGLE_MAPS_API_KEY` is a **frontend-only** value (set in `frontend/src/environments/`), not a
   backend env var. Google **OAuth** uses the backend `GOOGLE_CLIENT_ID`.
+- There are now **two separate** Google Maps API keys — don't conflate them: the frontend's
+  `GOOGLE_MAPS_API_KEY` above (Maps JavaScript API, HTTP-referrer-restricted, browser-only)
+  and the backend's `GOOGLE_MAPS_GEOCODING_API_KEY` (Geocoding API, IP-restricted,
+  server-only — used by `backend/src/services/geocoding.service.ts` to auto-fill a
+  business's `latitude`/`longitude` from its address on create/update).
 
 ## 10. Glossary / Domain Terms
 - **Community:** a group users join; the primary container for posts/events/members.

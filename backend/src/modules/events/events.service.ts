@@ -55,7 +55,7 @@ export async function create(data: CreateEventDtoType, userId: string) {
 export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean }) {
   const {
     pincode, nearPincode, eventMode, page, limit, search, country, status,
-    dateFrom, dateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
+    dateFrom, dateTo, eventDateFrom, eventDateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -95,6 +95,15 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     const toEnd = `${dateTo}T23:59:59.999Z`;
     query.andWhere('e.created_at', '<=', toEnd);
     countQuery.andWhere('created_at', '<=', toEnd);
+  }
+  if (eventDateFrom) {
+    query.andWhere('e.event_date', '>=', eventDateFrom);
+    countQuery.andWhere('event_date', '>=', eventDateFrom);
+  }
+  if (eventDateTo) {
+    const toEnd = `${eventDateTo}T23:59:59.999Z`;
+    query.andWhere('e.event_date', '<=', toEnd);
+    countQuery.andWhere('event_date', '<=', toEnd);
   }
 
   // 'near' sorts offline/hybrid events in nearPincode to the top (event date

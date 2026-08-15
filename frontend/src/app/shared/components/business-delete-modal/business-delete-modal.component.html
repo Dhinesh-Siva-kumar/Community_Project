@@ -1,0 +1,46 @@
+@if (open && business) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteBizModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-delete-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-delete-modal-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="deleteBizModalTitle">Delete Business</h5>
+        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [disabled]="deleting()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-delete-modal-body">
+      <p class="cm-delete-modal-text">
+        Are you sure you want to delete <strong>"{{ business.name }}"</strong>? This will permanently remove the business and all of its details from the platform.
+      </p>
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="requestClose()" [disabled]="deleting()">
+        Cancel
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--danger"
+        (click)="confirmDelete()" [disabled]="deleting()">
+        @if (deleting()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          Deleting...
+        } @else {
+          <i class="bi bi-trash3-fill"></i>
+          Delete Business
+        }
+      </button>
+    </div>
+
+  </div>
+}

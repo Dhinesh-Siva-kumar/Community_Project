@@ -31,6 +31,9 @@ export const ListEventsQueryDto = z.object({
   status: z.enum(['active', 'inactive']).optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
   dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  /** Filters on event_date (when the event happens), unlike dateFrom/dateTo which filter created_at. */
+  eventDateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDateFrom must be YYYY-MM-DD').optional(),
+  eventDateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDateTo must be YYYY-MM-DD').optional(),
   sortBy:   z.enum(['name', 'eventDate', 'joined', 'near']).default('eventDate'),
   sortDir:  z.enum(['asc', 'desc']).default('asc'),
 });
