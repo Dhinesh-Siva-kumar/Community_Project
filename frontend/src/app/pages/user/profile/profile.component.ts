@@ -13,6 +13,8 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 import { ProfileInfoCardComponent } from '../../../shared/components/profile-info-card/profile-info-card.component';
+import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
+import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -21,6 +23,7 @@ import { ProfileInfoCardComponent } from '../../../shared/components/profile-inf
     CommonModule, ReactiveFormsModule, DatePipe,
     SearchableSelectComponent,
     ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent,
+    BusinessFormModalComponent, BusinessDeleteModalComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -42,12 +45,15 @@ export class UserProfileComponent implements OnInit {
   editMode = signal(false);
 
   myBusinesses = signal<Business[]>([]);
+  showBusinessModal = signal(false);
+  editBusinessId    = signal<string | null>(null);
   myJobs = signal<Job[]>([]);
   myPosts = signal<Post[]>([]);
   loadingBusinesses = signal(false);
   loadingJobs = signal(false);
   loadingPosts = signal(false);
-  deletingBusinessId = signal<string | null>(null);
+  showDeleteBusinessModal = signal(false);
+  businessToDelete = signal<Business | null>(null);
   deletingJobId = signal<string | null>(null);
   deletingPostId = signal<string | null>(null);
 
@@ -197,19 +203,44 @@ export class UserProfileComponent implements OnInit {
 
   loadMyBusinesses(): void {
     this.loadingBusinesses.set(true);
-    this.businessService.getBusinesses({}).subscribe({
-      next: (r) => { this.myBusinesses.set(r.data.filter(b => b.userId === this.user()?.id)); this.loadingBusinesses.set(false); },
+    this.businessService.getMyBusinesses({ page: 1, limit: 50 }).subscribe({
+      next: (r) => { this.myBusinesses.set(r.data); this.loadingBusinesses.set(false); },
       error: () => this.loadingBusinesses.set(false),
     });
   }
 
-  deleteBusiness(id: string): void {
-    if (!confirm('Delete this business?')) return;
-    this.deletingBusinessId.set(id);
-    this.businessService.deleteBusiness(id).subscribe({
-      next: () => { this.myBusinesses.update(l => l.filter(b => b.id !== id)); this.toast.success('Business deleted'); this.deletingBusinessId.set(null); },
-      error: () => { this.toast.error('Failed to delete business'); this.deletingBusinessId.set(null); },
-    });
+  openDeleteBusiness(biz: Business): void {
+    this.businessToDelete.set(biz);
+    this.showDeleteBusinessModal.set(true);
+  }
+
+  closeDeleteBusinessModal(): void {
+    this.showDeleteBusinessModal.set(false);
+    this.businessToDelete.set(null);
+  }
+
+  onBusinessDeleted(id: string): void {
+    this.myBusinesses.update(l => l.filter(b => b.id !== id));
+  }
+
+  openAddBusiness(): void {
+    this.editBusinessId.set(null);
+    this.showBusinessModal.set(true);
+  }
+
+  openEditBusiness(id: string): void {
+    this.editBusinessId.set(id);
+    this.showBusinessModal.set(true);
+  }
+
+  closeBusinessModal(): void {
+    this.showBusinessModal.set(false);
+    this.editBusinessId.set(null);
+  }
+
+  onBusinessSaved(biz: Business): void {
+    const exists = this.myBusinesses().some(b => b.id === biz.id);
+    this.myBusinesses.update(list => exists ? list.map(b => b.id === biz.id ? biz : b) : [biz, ...list]);
   }
 
   loadMyJobs(): void {

@@ -156,6 +156,11 @@
     <!-- ==================== MY BUSINESSES TAB ==================== -->
     @if (activeTab() === 'businesses') {
       <app-profile-info-card title="My Businesses" icon="bi-shop">
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn btn-primary btn-sm" (click)="openAddBusiness()">
+            <i class="bi bi-plus-lg me-1"></i> Add Business
+          </button>
+        </div>
         @if (loadingBusinesses()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -179,13 +184,25 @@
                     </div>
                   }
                   <div>
-                    <h6 class="fw-semibold mb-0 small">{{ biz.name }}</h6>
+                    <div class="d-flex align-items-center gap-2">
+                      <h6 class="fw-semibold mb-0 small">{{ biz.name }}</h6>
+                      @if (biz.isActive) {
+                        <span class="badge bg-success-subtle text-success small">Active</span>
+                      } @else {
+                        <span class="badge bg-secondary-subtle text-secondary small">Inactive</span>
+                      }
+                    </div>
                     @if (biz.address) { <small class="text-muted">{{ biz.address }}</small> }
                   </div>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" [disabled]="deletingBusinessId() === biz.id" (click)="deleteBusiness(biz.id)" aria-label="Delete business">
-                  @if (deletingBusinessId() === biz.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditBusiness(biz.id)" aria-label="Edit business">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteBusiness(biz)" aria-label="Delete business">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
             }
           </div>
@@ -275,6 +292,20 @@
         }
       </app-profile-info-card>
     }
+
+    <app-business-form-modal
+      [open]="showBusinessModal()"
+      [editBusinessId]="editBusinessId()"
+      (closed)="closeBusinessModal()"
+      (saved)="onBusinessSaved($event)">
+    </app-business-form-modal>
+
+    <app-business-delete-modal
+      [open]="showDeleteBusinessModal()"
+      [business]="businessToDelete()"
+      (closed)="closeDeleteBusinessModal()"
+      (deleted)="onBusinessDeleted($event)">
+    </app-business-delete-modal>
 
   }
 }

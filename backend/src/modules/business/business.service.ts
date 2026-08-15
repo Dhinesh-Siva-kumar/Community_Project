@@ -106,13 +106,13 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name').first();
   await logAudit(userId, 'BUSINESS_CREATED', { name: data.name }, 'businesses', (business as Record<string, unknown>)['id'] as string);
-  return { ...(business as Record<string, unknown>), category, user };
+  return { ...(business as Record<string, unknown>), userId: (business as Record<string, unknown>)['user_id'], category, user };
 }
 
-export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean }) {
+export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
   const {
     categoryId, categoryIds, pincode, page, limit, search, country, openingHours,
-    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter,
+    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, userId,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -141,6 +141,7 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     countQuery.andWhere('is_active', isActive);
   }
 
+  if (userId) { query.andWhere('b.user_id', userId); countQuery.andWhere('user_id', userId); }
   if (categoryId) { query.andWhere('b.category_id', categoryId); countQuery.andWhere('category_id', categoryId); }
   if (categoryIds) {
     const ids = categoryIds.split(',').map(s => s.trim()).filter(Boolean);
@@ -205,6 +206,7 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
 
   const data = (businesses as Array<Record<string, unknown>>).map((b) => ({
     ...b,
+    userId:       b['user_id'],
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],
@@ -250,6 +252,7 @@ export async function findOne(id: string) {
 
   return {
     ...b,
+    userId:       b['user_id'],
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],

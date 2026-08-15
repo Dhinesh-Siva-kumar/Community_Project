@@ -69,6 +69,16 @@
 }
 
 .biz-view-toggle { display: flex; border: 1.5px solid $color-border; border-radius: $radius-md; overflow: hidden; }
+.biz-add-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
+  border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
+  font-size: $font-size-sm; font-weight: $font-weight-bold; font-family: $font-family-body;
+  background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+  color: $color-on-primary; box-shadow: 0 3px 10px rgba(251,191,36,0.30);
+  @include transition-short(all);
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
+}
+
 .biz-view-btn {
   width: 36px; height: 36px; border: none; background: $color-bg-light; color: $color-stone-500;
   font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -250,15 +260,28 @@ $accents: (
 
 .bl-card {
   display: flex; flex-direction: column; background: #fff; border: 1.5px solid $color-border;
-  border-radius: $radius-lg; overflow: hidden; cursor: pointer;
+  border-radius: $radius-lg; cursor: pointer;
   box-shadow: 0 1px 4px rgba(28,25,23,0.06);
   transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
   &:hover { transform: translateY(-4px); border-color: $color-primary; box-shadow: 0 12px 32px rgba(28,25,23,0.12); .bl-card__img { transform: scale(1.04); } }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  &__img-wrap { position: relative; height: 180px; overflow: hidden; background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%); flex-shrink: 0; }
+  // Rounds its own top corners (rather than relying on .bl-card's overflow
+  // to clip it) so the owner action menu's dropdown panel — an absolutely
+  // positioned descendant that needs to escape the footer's bounds — isn't
+  // itself clipped by an overflow:hidden ancestor.
+  &__img-wrap { position: relative; height: 180px; overflow: hidden; border-radius: $radius-lg $radius-lg 0 0; background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%); flex-shrink: 0; }
   &__img { width: 100%; height: 100%; object-fit: cover; transition: transform 350ms ease; }
   &__img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: $color-primary-dark; }
   &__cat-badge { position: absolute; top: 10px; left: 10px; z-index: 1; padding: 3px 10px; border-radius: $radius-full; background: rgba(28,25,23,0.65); backdrop-filter: blur(6px); color: #fff; font-size: 11px; font-weight: $font-weight-semibold; letter-spacing: 0.03em; box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+  &__owner-badge {
+    position: absolute; top: 10px; right: 10px; z-index: 1;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: $radius-full;
+    background: rgba(251,191,36,0.92); backdrop-filter: blur(6px);
+    color: $color-on-primary; font-size: 11px; font-weight: $font-weight-bold; letter-spacing: 0.02em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    .bi { font-size: 0.85em; }
+  }
   &__body { flex: 1; padding: $spacing-md $spacing-lg 0; display: flex; flex-direction: column; gap: 6px; }
   &__name { font-family: $font-family-header; font-size: 1.05rem; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0; line-height: 1.3; }
   // Owner + created date — who added this business and when.
@@ -298,6 +321,49 @@ $accents: (
         opacity: 1;
       }
     }
+  }
+}
+
+// ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown,
+// deliberately NOT styled like the Call/WhatsApp/Location icon buttons
+// (those are quick contact actions; this is a "manage this listing" menu). ──
+.bl-card__menu {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.bl-card__menu-trigger {
+  width: 28px; height: 28px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: $radius-full; border: 1.5px solid $color-border;
+  background: #fff; color: $color-stone-500; cursor: pointer;
+  @include transition-quick(all);
+  &:hover, &:focus-visible { background: $color-stone-100; color: $color-stone-800; border-color: $color-stone-300; }
+}
+.bl-card__menu--open .bl-card__menu-trigger { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
+
+.bl-card__menu-panel {
+  position: absolute; bottom: calc(100% + 6px); right: 0; z-index: 20;
+  min-width: 140px; padding: 6px;
+  background: $color-bg-card; border: 1.5px solid $color-stone-200; border-radius: $radius-md;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: bizMenuIn 140ms ease;
+}
+@keyframes bizMenuIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.bl-card__menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 10px; border: none; border-radius: $radius-sm; background: transparent;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-700;
+  text-align: left; cursor: pointer; @include transition-quick(background-color);
+  .bi { font-size: 0.85em; color: $color-primary-dark; flex-shrink: 0; }
+  &:hover { background: $color-stone-100; }
+  &--danger {
+    color: $color-danger;
+    .bi { color: $color-danger; }
+    &:hover { background: $color-error-bg; }
   }
 }
 
@@ -367,6 +433,7 @@ $accents: (
   text-transform: uppercase; letter-spacing: 0.04em;
   &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
   &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
+  &--owner    { background: rgba(251,191,36,0.20); border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker; .bi { font-size: 7px; } }
 }
 
 .bd-action-btn {
@@ -377,6 +444,8 @@ $accents: (
   &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; border: 1.5px solid rgba(37,211,102,0.28);  &:hover { background: rgba(37,211,102,0.18); } }
   &--blue     { background: rgba(14,165,233,0.10);  color: #0284C7; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
   &--orange   { background: rgba(249,115,22,0.10);  color: #C2410C; border: 1.5px solid rgba(249,115,22,0.28);  &:hover { background: rgba(249,115,22,0.18); } }
+  &--amber    { background: rgba(251,191,36,0.14);  color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.32); cursor: pointer; &:hover { background: rgba(251,191,36,0.22); } }
+  &--red      { background: rgba(220,38,38,0.10);   color: $color-danger;  border: 1.5px solid rgba(220,38,38,0.28); cursor: pointer; &:hover { background: rgba(220,38,38,0.18); } }
 }
 
 .bd-grid { display: grid; grid-template-columns: 1fr 300px; gap: $spacing-lg; align-items: start; }
@@ -1039,184 +1108,6 @@ $accents: (
   .bi { font-size: 0.7rem; color: $color-primary; }
 }
 
-.jb-modal-dialog { max-width: min(960px, 96vw); }
-
-.jb-modal {
-  border: none; border-radius: $radius-xl; overflow: hidden;
-  box-shadow: 0 20px 60px rgba(28,25,23,0.22), 0 0 0 1px rgba(251,191,36,0.12);
-
-  &__header {
-    display: flex; align-items: flex-start; gap: $spacing-md;
-    padding: $spacing-lg $spacing-xl;
-    background: linear-gradient(135deg, rgba(251,191,36,0.09) 0%, rgba(249,115,22,0.05) 100%);
-    border-bottom: 1px solid rgba(251,191,36,0.18);
-    position: sticky; top: 0; z-index: 10; flex-shrink: 0;
-  }
-
-  &__header-icon {
-    width: 42px; height: 42px; border-radius: $radius-md;
-    background: linear-gradient(135deg, $color-primary, $color-saffron);
-    display: flex; align-items: center; justify-content: center;
-    color: $color-on-primary; font-size: 1.1rem; flex-shrink: 0;
-    box-shadow: 0 3px 10px rgba(251,191,36,0.30);
-  }
-
-  &__header-text { flex: 1; min-width: 0; }
-  &__title    { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0 0 2px; }
-  &__subtitle { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
-
-  &__close {
-    width: 34px; height: 34px; border-radius: $radius-md;
-    border: 1.5px solid rgba(251,191,36,0.22); background: rgba(255,255,255,0.7);
-    color: $color-stone-600; font-size: 0.85rem; cursor: pointer; margin-left: auto;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    @include transition-short(all);
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.10); }
-  }
-
-  &__body {
-    padding: $spacing-lg $spacing-xl; background: $color-bg-page;
-    overflow-y: auto; max-height: calc(100vh - 220px);
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-thumb { background: $color-stone-200; border-radius: 4px; }
-  }
-
-  &__footer {
-    display: flex; justify-content: flex-end; gap: $spacing-sm;
-    padding: $spacing-md $spacing-xl; background: $color-bg-card;
-    border-top: 1px solid $color-border; position: sticky; bottom: 0; z-index: 10;
-  }
-}
-
-.jb-form-section {
-  margin-bottom: $spacing-xl; padding: $spacing-lg;
-  background: $color-bg-card; border: 1px solid $color-border;
-  border-radius: $radius-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
-
-  &__header { display: flex; align-items: center; gap: $spacing-sm; margin-bottom: $spacing-lg; padding-bottom: $spacing-md; border-bottom: 1.5px solid rgba(251,191,36,0.18); }
-  &__badge  { width: 36px; height: 36px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.30); border-radius: $radius-sm; display: flex; align-items: center; justify-content: center; color: $color-primary-darker; font-size: 0.95rem; flex-shrink: 0; }
-  &__num    { font-size: $font-size-xs; font-weight: $font-weight-bold; color: $color-stone-400; letter-spacing: 0.08em; margin-right: 4px; }
-  &__name   { font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; }
-  &__optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
-}
-
-.jb-btn {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;
-  border-radius: $radius-md; font-family: $font-family-body; font-weight: $font-weight-bold;
-  font-size: $font-size-sm; cursor: pointer; border: none; text-decoration: none;
-  @include transition-short(all);
-
-  &--neon {
-    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
-    color: $color-on-primary; box-shadow: 0 4px 16px rgba(251,191,36,0.35);
-    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251,191,36,0.45); color: $color-on-primary; }
-    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-  }
-
-  &--ghost {
-    background: transparent; border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker;
-    &:hover { border-color: $color-primary; background: rgba(251,191,36,0.08); }
-  }
-}
-
-.jb-label {
-  display: block; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body; margin-bottom: 6px;
-  &__loading { color: $color-primary-dark; font-size: $font-size-xs; margin-left: 6px; .bi { animation: bizSpin 0.8s linear infinite; } }
-}
-@keyframes bizSpin { to { transform: rotate(360deg); } }
-
-.jb-input {
-  width: 100%; height: 42px; padding: 0 $spacing-md;
-  border: 1.5px solid $color-border; border-radius: $radius-md;
-  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800; outline: none;
-  @include transition-short(all);
-  &::placeholder { color: $color-stone-400; }
-  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
-  &--error { border-color: $color-danger; }
-  &--textarea { height: auto; resize: vertical; padding: $spacing-sm $spacing-md; line-height: 1.65; }
-  &--icon-left { padding-left: 40px; }
-}
-
-.jb-input-group {
-  position: relative;
-  &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
-}
-
-.jb-field-error { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-danger; .bi { font-size: 0.8rem; flex-shrink: 0; } }
-
-.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.jb-day-toggle {
-  padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
-  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 4px;
-  @include transition-short(all);
-
-  // Hover on an UNselected day — neutral gray, deliberately a different hue
-  // family from --on's amber below, so hovering can never read as "selected".
-  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-
-  // Selected — the only state that uses amber, and stays amber regardless
-  // of hover, so it reads as "on" independent of mouse position.
-  &--on {
-    background: rgba(251,191,36,0.28);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    font-weight: $font-weight-bold;
-    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
-  }
-}
-
-.jb-logo-preview {
-  position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;
-  &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
-  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
-}
-
-// ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
-// Community Create/Edit popup's "Default Community" toggle. ──
-.cm-default-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 16px; border-radius: 12px;
-  border: 1.5px solid $color-border; background: $color-bg-page;
-  transition: border-color 0.2s ease;
-  &:hover { border-color: $color-primary; }
-}
-
-.cm-default-label {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  i { font-size: 13px; color: $color-primary; flex-shrink: 0; }
-  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
-}
-
-.cm-default-hint {
-  font-size: 11px !important; font-weight: 400 !important; color: $color-text-muted !important;
-  width: 100%; margin-top: 1px;
-}
-
-.cm-switch {
-  position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0;
-  input { opacity: 0; width: 0; height: 0; position: absolute; }
-}
-
-.cm-switch-slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background: $color-stone-300; border-radius: 24px; transition: background 0.25s ease;
-  &::before {
-    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
-    background: #fff; border-radius: 50%; transition: transform 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.cm-switch input:checked + .cm-switch-slider { background: $color-primary; }
-.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba(251,191,36,0.25); }
-.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
-
-.jb-optional { font-weight: $font-weight-normal; font-size: $font-size-xs; color: $color-text-muted; margin-left: 4px; }
-
 // ─── Responsive ───────────────────────────────────────────────
 @include media-md-max {
   .biz-head { flex-direction: column; align-items: stretch; }
@@ -1230,9 +1121,6 @@ $accents: (
   .bd-grid { grid-template-columns: 1fr; }
   .bd-hero__profile { flex-wrap: wrap; }
   .bd-hero__actions { margin-left: 0; }
-  .jb-modal-dialog { max-width: 100%; }
-  .jb-modal__body, .jb-modal__header, .jb-modal__footer { padding: $spacing-md; }
-  .jb-form-section { padding: $spacing-md; }
 }
 @include media-sm-max {
   .biz-header { padding: 1.25rem 1rem; }

@@ -1,33 +1,15 @@
 import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { Subject, takeUntil, Observable, map } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { GeographyService } from '../../../core/services/geography.service';
-import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
+import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
-
-function urlValidator(c: AbstractControl): ValidationErrors | null {
-  const v = c.value;
-  if (!v) return null;
-  try { const u = new URL(v); return (u.protocol === 'http:' || u.protocol === 'https:') ? null : { invalidUrl: true }; }
-  catch { return { invalidUrl: true }; }
-}
-
-/** Country-aware postal code validator — see admin business.component.ts for the fuller explanation. */
-function postalCodeValidator(regex: string | null): ValidatorFn {
-  return (c: AbstractControl): ValidationErrors | null => {
-    const v = ((c.value as string) ?? '').trim();
-    if (!v || !regex) return null;
-    try { return new RegExp(regex).test(v) ? null : { postalFormat: true }; }
-    catch { return null; }
-  };
-}
+import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
+import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -54,7 +36,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent, ImageUrlPipe, InfiniteScrollDirective],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
@@ -62,14 +44,11 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
-  private geographyService  = inject(GeographyService);
 
   // Body-scroll lock while the image lightbox is open — mirrors the Admin
   // Business page's implementation.
   private previousBodyOverflow: string | null = null;
   private previousHtmlOverflow: string | null = null;
-  private fb                = inject(FormBuilder);
-  private destroy$          = new Subject<void>();
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -89,6 +68,10 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   visibleBusinesses     = computed(() => this.allFilteredBusinesses().slice(0, this.visibleBusinessCount()));
   selectedCategory = signal<BusinessCategory | null>(null);
   selectedBusiness = signal<Business | null>(null);
+  showDeleteModal = signal(false);
+  businessToDelete = signal<Business | null>(null);
+  /** id of the card whose owner action menu (Edit/Delete) is currently open — only one at a time. */
+  openMenuId = signal<string | null>(null);
   loading          = signal(true);
   currentPage      = signal(1);
   totalPages       = signal(1);
@@ -207,74 +190,11 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
       Math.min(n + this.CATEGORY_BATCH_SIZE, this.filteredCategories().length));
   }
 
-  // ── Add Business Modal ──────────────────────────────────────
-  showAddBusinessModal = signal(false);
-  editingBusiness      = signal<Business | null>(null);
-  submitting           = signal(false);
-
-  // Image / Logo
-  selectedImages   = signal<File[]>([]);
-  fileUploadReset  = signal(0);
-  selectedLogo     = signal<File | null>(null);
-  logoPreview      = signal<string | null>(null);
-  logoUploadReset  = signal(0);
-
-  // ── Country-aware address hierarchy (Country → Division(s) → City → Postal) ──
-  // Mirrors the admin Business form's implementation — see
-  // pages/admin/business/business.component.ts for the fuller explanation.
-  geoCountries  = signal<GeoCountry[]>([]);
-  countryConfig = signal<CountryAddressConfig | null>(null);
-  adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
-
-  geoCountryOptions = computed<SelectOption[]>(() =>
-    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
-  );
-
-  division1Options = signal<Division[]>([]);
-  division2Options = signal<Division[]>([]);
-  division1Loading = signal(false);
-  division2Loading = signal(false);
-
-  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map(d => ({ value: d.id, label: d.name })));
-  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map(d => ({ value: d.id, label: d.name })));
-
-  selectedDivision1Name = signal<string | null>(null);
-  selectedDivision2Name = signal<string | null>(null);
-  selectedCityOption    = signal<SelectOption | null>(null);
-  selectedCityName      = signal<string | null>(null);
-
-  private cityNameCache = new Map<number, string>();
-
-  citySearchFn = (query: string): Observable<SelectOption[]> => {
-    const countryId = this.businessForm.get('countryId')?.value ? Number(this.businessForm.get('countryId')?.value) : undefined;
-    const divisionId = this.getLeafDivisionId() ?? undefined;
-    if (!countryId) return new Observable<SelectOption[]>(sub => { sub.next([]); sub.complete(); });
-    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
-      map(res => {
-        res.data.forEach(c => this.cityNameCache.set(c.id, c.name));
-        return res.data.map(c => ({ value: c.id, label: c.name }));
-      }),
-    );
-  };
-
-  // Opening days
-  readonly DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  selectedDays = signal<string[]>([]);
-  toggleDay(day: string): void {
-    this.selectedDays.update(d => d.includes(day) ? d.filter(x => x !== day) : [...d, day]);
-    const ctrl = this.businessForm.get('openingDays');
-    ctrl?.setValue(this.selectedDays().join(','));
-    ctrl?.markAsTouched();
-    ctrl?.updateValueAndValidity();
-  }
-
-  // Form
-  businessForm!: FormGroup;
-
-  // Category options for the form dropdown
-  categoryOptions = computed<SelectOption[]>(() =>
-    this.categories().map(c => ({ value: c.id, label: c.name }))
-  );
+  // ── Add/Edit Business modal — the form itself lives in the shared
+  // app-business-form-modal component; this page only tracks whether it's
+  // open and, for edit, which business it's editing. ──
+  showBusinessModal = signal(false);
+  editBusinessId    = signal<string | null>(null);
 
   private readonly ACCENT_MAP: Record<string, string> = {
     'bi-fork-knife':'orange','bi-cup-hot':'brown','bi-building':'purple',
@@ -328,9 +248,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     // applied (the constructor's effect() won't actually fetch until
     // geoLoading resolves, so there's no extra/duplicate request).
     this.filterCountry.set(this.getDefaultCountry());
-    this.initForm();
     this.loadCategories();
-    this.loadGeoCountries();
     this.loadCountries();
     this.requestGeolocation();
   }
@@ -341,8 +259,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.unlockPageScroll();
   }
 
@@ -398,150 +314,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     );
   }
 
-  private initForm(): void {
-    this.businessForm = this.fb.group({
-      name:         ['', [Validators.required, Validators.minLength(2)]],
-      description:  ['', Validators.required],
-      categoryId:   ['', Validators.required],
-      countryId:    [null, Validators.required],
-      // Division depth/labels and postal requirement are country-specific —
-      // set dynamically by applyDivisionValidators()/applyPincodeValidators()
-      // once a country is selected (see admin business.component.ts).
-      division1Id:  [null],
-      division2Id:  [null],
-      cityId:       [null, Validators.required],
-      address:      ['', Validators.required],
-      pincode:      ['', [postalCodeValidator(null)]],
-      phone:        ['', [Validators.required, Validators.pattern(/^\+?\d{7,15}$/)]],
-      openingDays:  ['', Validators.required],
-      openingHours: ['', Validators.required],
-      email:        ['', Validators.email],
-      website:      ['', urlValidator],
-      whatsapp:     ['', Validators.pattern(/^\+?\d{7,15}$/)],
-      mapsLink:     ['', urlValidator],
-      country:      [''],
-      latitude:     [''],
-      longitude:    [''],
-      // Settable by the owner — reset()'s default (below) is this literal
-      // `true`, matching the DB column's own default.
-      isActive:     [true],
-    });
-  }
-
-  loadGeoCountries(): void {
-    this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
-      next: data => this.geoCountries.set(data),
-      error: () => this.toast.error('Failed to load countries'),
-    });
-  }
-
-  private getLeafDivisionId(): number | null {
-    const levels = this.adminLevels().length;
-    if (levels >= 2) { const v = this.businessForm.get('division2Id')?.value; return v ? Number(v) : null; }
-    if (levels === 1) { const v = this.businessForm.get('division1Id')?.value; return v ? Number(v) : null; }
-    return null;
-  }
-
-  private getLeafDivisionName(): string | null {
-    const levels = this.adminLevels().length;
-    if (levels >= 2) return this.selectedDivision2Name();
-    if (levels === 1) return this.selectedDivision1Name();
-    return null;
-  }
-
-  private applyDivisionValidators(): void {
-    const levels = this.adminLevels().length;
-    const d1 = this.businessForm.get('division1Id');
-    const d2 = this.businessForm.get('division2Id');
-    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
-    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
-    d1?.updateValueAndValidity({ emitEvent: false });
-    d2?.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private applyPincodeValidators(): void {
-    const postal = this.countryConfig()?.postalCode;
-    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
-    if (postal?.required) validators.push(Validators.required);
-    const ctrl = this.businessForm.get('pincode');
-    ctrl?.setValidators(validators);
-    ctrl?.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private resetDivisionState(): void {
-    this.countryConfig.set(null);
-    this.division1Options.set([]);
-    this.division2Options.set([]);
-    this.selectedDivision1Name.set(null);
-    this.selectedDivision2Name.set(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-    // emitViewToModelChange:false too — see admin business.component.ts's
-    // resetDivisionState() for why a plain setValue() alone isn't enough.
-    const silent = { emitEvent: false, emitViewToModelChange: false };
-    this.businessForm.get('division1Id')?.setValue(null, silent);
-    this.businessForm.get('division2Id')?.setValue(null, silent);
-    this.businessForm.get('cityId')?.setValue(null, silent);
-  }
-
-  onCountryChange(countryId: any): void {
-    this.resetDivisionState();
-    const id = countryId ? Number(countryId) : null;
-    if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
-
-    this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (config) => {
-        this.countryConfig.set(config);
-        this.applyDivisionValidators();
-        this.applyPincodeValidators();
-        if (config.divisionLevels.length > 0) {
-          this.division1Loading.set(true);
-          this.geographyService.getDivisions(id).pipe(takeUntil(this.destroy$)).subscribe({
-            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
-            error: () => this.division1Loading.set(false),
-          });
-        }
-      },
-      error: () => this.toast.error('Failed to load country address details'),
-    });
-  }
-
-  onDivision1Change(divisionId: any): void {
-    this.businessForm.get('division2Id')?.setValue(null);
-    this.businessForm.get('cityId')?.setValue(null);
-    this.division2Options.set([]);
-    this.selectedDivision2Name.set(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-
-    const id = divisionId ? Number(divisionId) : null;
-    this.selectedDivision1Name.set(id ? (this.division1Options().find(d => d.id === id)?.name ?? null) : null);
-
-    const countryId = this.businessForm.get('countryId')?.value ? Number(this.businessForm.get('countryId')?.value) : null;
-    if (id && countryId && this.adminLevels().length >= 2) {
-      this.division2Loading.set(true);
-      this.geographyService.getDivisions(countryId, id).pipe(takeUntil(this.destroy$)).subscribe({
-        next: divisions => { this.division2Options.set(divisions); this.division2Loading.set(false); },
-        error: () => this.division2Loading.set(false),
-      });
-    }
-  }
-
-  onDivision2Change(divisionId: any): void {
-    this.businessForm.get('cityId')?.setValue(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-    const id = divisionId ? Number(divisionId) : null;
-    this.selectedDivision2Name.set(id ? (this.division2Options().find(d => d.id === id)?.name ?? null) : null);
-  }
-
-  onCityChange(cityId: any): void {
-    const id = cityId ? Number(cityId) : null;
-    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
-    this.selectedCityName.set(name);
-    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
-  }
-
   loadCountries(): void {
     this.authService.getCountries().subscribe({
       next: (res: any) => {
@@ -552,22 +324,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
       },
       error: () => {},
     });
-  }
-
-  onLogoChange(files: File[]): void {
-    const f = files[0] ?? null;
-    this.selectedLogo.set(f);
-    if (f) { const r = new FileReader(); r.onload = e => this.logoPreview.set(e.target?.result as string); r.readAsDataURL(f); }
-    else { this.logoPreview.set(null); }
-  }
-
-  clearLogo(): void {
-    this.selectedLogo.set(null); this.logoPreview.set(null);
-    this.logoUploadReset.update(v => v + 1);
-  }
-
-  onBusinessImagesChange(files: File[]): void {
-    this.selectedImages.set(files);
   }
 
   loadCategories(): void {
@@ -1012,79 +768,82 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     return [b.city, b.state, biz.country].filter((v: any) => !!v).join(', ');
   }
 
-  // ── Add Business Modal Logic ───────────────────────────────────
+  // ── Add/Edit Business modal — the form lives in app-business-form-modal;
+  // this page only opens/closes it and applies the result to its own lists. ──
   openAddBusiness(): void {
-    this.editingBusiness.set(null);
-    this.businessForm.reset();
-    this.selectedImages.set([]); this.selectedLogo.set(null); this.logoPreview.set(null);
-    this.selectedDays.set([]);
-    this.businessForm.get('openingDays')?.setValue('');
-    this.resetDivisionState();
-    this.applyDivisionValidators();
-    this.applyPincodeValidators();
-    this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
+    this.editBusinessId.set(null);
+    this.showBusinessModal.set(true);
+  }
 
-    const cat = this.selectedCategory();
-    if (cat) {
-      this.businessForm.get('categoryId')?.setValue(cat.id);
+  openEditBusiness(biz: Business): void {
+    this.editBusinessId.set(biz.id);
+    this.showBusinessModal.set(true);
+  }
+
+  closeBusinessModal(): void {
+    this.showBusinessModal.set(false);
+    this.editBusinessId.set(null);
+  }
+
+  onBusinessSaved(biz: Business): void {
+    const exists = this.businesses().some(b => b.id === biz.id);
+    if (exists) {
+      this.businesses.update(list => list.map(b => b.id === biz.id ? biz : b));
+      this.allFilteredBusinesses.update(list => list.map(b => b.id === biz.id ? biz : b));
+    } else {
+      this.businesses.update(list => [biz, ...list]);
+      this.allFilteredBusinesses.update(list => [biz, ...list]);
+      this.totalItems.update(v => v + 1);
     }
-
-    this.showAddBusinessModal.set(true);
+    if (this.selectedBusiness()?.id === biz.id) this.selectedBusiness.set(biz);
   }
 
-  closeAddBusiness(): void {
-    this.showAddBusinessModal.set(false);
-    this.editingBusiness.set(null);
+  /** Whether the signed-in user owns this business (or, for admins, always via server-side checks — this only gates the UI). */
+  isOwner(biz: Business): boolean {
+    return !!this.authService.currentUser() && this.authService.currentUser()?.id === biz.userId;
   }
 
-  submitBusiness(): void {
-    if (this.businessForm.invalid) { this.businessForm.markAllAsTouched(); return; }
-    this.submitting.set(true);
-    const raw: Record<string, any> = { ...this.businessForm.value };
+  // ── Card owner action menu (Edit/Delete, behind a three-dot trigger
+  // instead of the Call/WhatsApp/Location icon buttons) ──
+  toggleActionMenu(event: Event, id: string): void {
+    event.stopPropagation();
+    this.openMenuId.update(cur => cur === id ? null : id);
+  }
 
-    // Resolve country/state/city NAME strings for the backward-compat
-    // display columns, alongside the id-based countryId/cityId already in
-    // `raw` from the form (mirrors the admin Business form).
-    const foundCountry = this.geoCountries().find(c => String(c.id) === String(raw['countryId']));
-    if (foundCountry) raw['country'] = foundCountry.name;
+  onEditFromMenu(biz: Business): void {
+    this.openMenuId.set(null);
+    this.openEditBusiness(biz);
+  }
 
-    const leafDivisionId = this.getLeafDivisionId();
-    const leafDivisionName = this.getLeafDivisionName();
-    raw['stateId'] = leafDivisionId ?? undefined;
-    if (leafDivisionName) raw['state'] = leafDivisionName;
+  onDeleteFromMenu(biz: Business): void {
+    this.openMenuId.set(null);
+    this.openDeleteBusiness(biz);
+  }
 
-    if (this.selectedCityName()) raw['city'] = this.selectedCityName();
-    delete raw['division1Id'];
-    delete raw['division2Id'];
+  @HostListener('document:click')
+  closeActionMenu(): void {
+    this.openMenuId.set(null);
+  }
 
-    raw['openingDays'] = this.selectedDays().join(',');
+  // ── Delete Business — confirmation lives in app-business-delete-modal;
+  // this page only opens/closes it and applies the result to its own lists. ──
+  openDeleteBusiness(biz: Business): void {
+    this.businessToDelete.set(biz);
+    this.showDeleteModal.set(true);
+  }
 
-    ['email', 'website', 'mapsLink', 'whatsapp', 'latitude', 'longitude', 'logo'].forEach(key => {
-      if (raw[key] === '' || raw[key] === null || raw[key] === undefined) {
-        delete raw[key];
-      }
-    });
+  closeDeleteModal(): void {
+    this.showDeleteModal.set(false);
+    this.businessToDelete.set(null);
+  }
 
-    const images = this.selectedImages();
-    const logo = this.selectedLogo();
-    const req = this.svc.createBusiness(
-      raw, 
-      images.length > 0 ? images : undefined,
-      logo ?? undefined
-    );
-
-    req.subscribe({
-      next: (biz) => {
-        this.businesses.update(list => [biz, ...list]);
-        this.totalItems.update(v => v + 1);
-        this.toast.success('Business created successfully');
-        this.closeAddBusiness();
-        this.submitting.set(false);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Failed to create business');
-        this.submitting.set(false);
-      },
-    });
+  onBusinessDeleted(id: string): void {
+    this.businesses.update(list => list.filter(b => b.id !== id));
+    this.allFilteredBusinesses.update(list => list.filter(b => b.id !== id));
+    this.totalItems.update(v => Math.max(0, v - 1));
+    if (this.selectedBusiness()?.id === id) {
+      this.selectedBusiness.set(null);
+      this.currentView.set('list');
+    }
   }
 }
