@@ -66,6 +66,12 @@ const envSchema = z.object({
 
   // Google OAuth (optional)
   GOOGLE_CLIENT_ID: z.string().optional(),
+
+  // Google Maps Geocoding (optional) — a SEPARATE, server-side key from the
+  // frontend's GOOGLE_MAPS_API_KEY (that one is restricted by HTTP referrer
+  // for browser use and won't authenticate server-to-server calls). Enable
+  // the Geocoding API on this key and restrict it by server IP instead.
+  GOOGLE_MAPS_GEOCODING_API_KEY: z.string().optional(),
 });
 
 let env: z.infer<typeof envSchema>;

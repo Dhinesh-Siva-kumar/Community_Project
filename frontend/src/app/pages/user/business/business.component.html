@@ -1,99 +1,125 @@
-<!-- ==================== VIEW TOGGLE (always visible) ==================== -->
-<section class="biz-header" aria-label="Business directory overview">
-  <div class="biz-header-bg" aria-hidden="true">
-    <div class="hero-noise"></div>
-    <div class="hero-glow"></div>
-  </div>
+<!-- ==================== HEAD (replicated from the User Community List page's
+     header — title/subtitle left, tabs + view toggle + search right).
+     Hidden in Detail view — matching the Admin Business page, where the
+     detail view shows only the breadcrumb + business content, no page
+     header. ==================== -->
+@if (currentView() !== 'detail') {
+  <div class="biz-head">
+    <div>
+      <h1 class="biz-title">Business Directory</h1>
+      <p class="biz-subtitle">{{ totalBusinesses() }} {{ totalBusinesses() === 1 ? 'business' : 'businesses' }} · {{ totalCategoriesCount() }} {{ totalCategoriesCount() === 1 ? 'category' : 'categories' }}</p>
+    </div>
 
-  <div class="biz-header-content">
-    <div class="biz-header__left">
-      <h2 class="biz-header__title">Business Directory</h2>
-      <p class="biz-header__sub">Discover businesses near you.</p>
-      <div class="biz-header__stats">
-        <span class="biz-stat-pill"><i class="bi bi-grid"></i><strong>{{ totalCategoriesCount() }}</strong> Categories</span>
-        <span class="biz-stat-pill"><i class="bi bi-shop"></i><strong>{{ totalBusinesses() }}</strong> Businesses</span>
+    <div class="biz-head-controls">
+      <div class="biz-tabs-wrap">
+        <div class="biz-tabs" role="tablist">
+          <span class="biz-tab-indicator" [class.biz-tab-indicator--categories]="businessView() === 'categories'" aria-hidden="true"></span>
+          <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'list'"
+            [attr.aria-selected]="businessView() === 'list'" (click)="switchView('list')">
+            <i class="bi bi-list-ul" aria-hidden="true"></i> Business List
+          </button>
+          <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'categories'"
+            [attr.aria-selected]="businessView() === 'categories'" (click)="switchView('categories')">
+            <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i> Category View
+          </button>
+        </div>
+      </div>
+
+      <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
+        @if (businessView() === 'list') {
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'grid'" (click)="bizViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'list'" (click)="bizViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+        } @else {
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+        }
       </div>
     </div>
   </div>
-</section>
-
-<!-- View toggle -->
-<div class="biz-view-switcher">
-  <button class="biz-view-switcher__btn" [class.biz-view-switcher__btn--active]="businessView() === 'list'"
-    (click)="switchView('list')">
-    <i class="bi bi-list-ul"></i> Business List
-  </button>
-  <button class="biz-view-switcher__btn" [class.biz-view-switcher__btn--active]="businessView() === 'categories'"
-    (click)="switchView('categories')">
-    <i class="bi bi-grid-3x2-gap"></i> Category View
-  </button>
-</div>
+  <!-- Search now lives in the filter card below (matching the Admin Business
+       list page, where search is part of .jb-filter-panel, not the header). -->
+}
 
 <!-- ==================== BUSINESS LIST VIEW (default) ==================== -->
 @if (currentView() === 'list' && businessView() === 'list') {
 
-  <!-- Filter Toolbar -->
-  <div class="biz-filter-bar">
-    <!-- Search + Country + View Toggle row -->
-    <div class="biz-filter-bar__row">
-      <div class="biz-search">
-        <i class="bi bi-search biz-search__icon"></i>
-        <input type="search" class="biz-search__input" placeholder="Search businesses…"
+  <!-- ── FILTER PANEL — replicated from the Admin Business list page's
+       .jb-filter-panel (search + collapsible Advanced Filters + active
+       chips), with Status dropped and Distance + Category added since
+       those are specific to this consumer-facing page. ────────────── -->
+  <div class="jb-filter-panel">
+    <div class="jb-filter-row jb-filter-row--top">
+      <div class="jb-search-wrap">
+        <i class="bi bi-search jb-search-wrap__icon"></i>
+        <input type="search" class="jb-search-wrap__input" placeholder="Search businesses…"
           [ngModel]="filterSearch()" (ngModelChange)="filterSearch.set($event)"
-          autocomplete="off" aria-label="Search" />
+          autocomplete="off" aria-label="Search businesses" />
         @if (filterSearch()) {
-          <button class="biz-search__clear" (click)="filterSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+          <button class="jb-search-wrap__clear" (click)="filterSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
         }
       </div>
-      <div class="biz-filter-bar__right">
+
+      <!-- ── Distance — a "normal" filter alongside search (not tucked
+           behind Advanced Filters), with a user-adjustable radius in km. ── -->
+      <div class="jb-distance-control" role="group" aria-label="Filter by distance">
+        <i class="bi bi-geo-alt jb-distance-control__icon"></i>
+        <button type="button" class="jb-distance-step" (click)="adjustDistanceKm(-1)"
+          [disabled]="filterDistance() === null || filterDistanceKm()! <= DISTANCE_MIN_KM" aria-label="Decrease distance">
+          <i class="bi bi-dash"></i>
+        </button>
+        <input type="number" class="jb-distance-input" [min]="DISTANCE_MIN_KM" [max]="DISTANCE_MAX_KM" step="1"
+          [value]="filterDistanceKm()" (change)="onDistanceKmChange($event)"
+          [disabled]="filterDistance() === null" aria-label="Distance in kilometers" />
+        <span class="jb-distance-unit">km</span>
+        <button type="button" class="jb-distance-step" (click)="adjustDistanceKm(1)"
+          [disabled]="filterDistance() === null || filterDistanceKm()! >= DISTANCE_MAX_KM" aria-label="Increase distance">
+          <i class="bi bi-plus"></i>
+        </button>
+        <button type="button" class="jb-distance-all" [class.jb-distance-all--active]="filterDistance() === null"
+          (click)="toggleDistanceAll()">
+          All
+        </button>
+      </div>
+
+      <div class="jb-filter-row">
+        <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+          <i class="bi bi-sliders2"></i>
+          Advanced Filters
+          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
+          <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+        </button>
         @if (hasActiveFilters()) {
-          <button class="bl-clear-btn" (click)="clearFilters()">
-            <i class="bi bi-x-circle"></i> Clear
-          </button>
+          <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
         }
-        <div class="biz-view-toggle" role="group" aria-label="View mode">
-          <button class="biz-view-btn" [class.biz-view-btn--active]="bizViewMode() === 'grid'"
-            (click)="bizViewMode.set('grid')" aria-label="Grid"><i class="bi bi-grid-3x2-gap"></i></button>
-          <button class="biz-view-btn" [class.biz-view-btn--active]="bizViewMode() === 'list'"
-            (click)="bizViewMode.set('list')" aria-label="List"><i class="bi bi-list-ul"></i></button>
-        </div>
       </div>
     </div>
 
-    <!-- Distance Filter -->
-    <div class="biz-filter-bar__row biz-filter-bar__row--filters">
-      <div class="biz-filter-group">
-        <span class="biz-filter-label"><i class="bi bi-geo-alt"></i> Distance:</span>
-        <div class="biz-filter-pills">
-          <button class="biz-filter-pill"
-            [class.biz-filter-pill--active]="filterDistance() === 500"
-            (click)="setDistance(500)">
-            <i class="bi bi-geo-alt-fill"></i> Nearby (500M)
-          </button>
-          <button class="biz-filter-pill"
-            [class.biz-filter-pill--active]="filterDistance() === 1000"
-            (click)="setDistance(1000)">
-            <i class="bi bi-geo-alt-fill"></i> 1 KM
-          </button>
-          <button class="biz-filter-pill"
-            [class.biz-filter-pill--active]="filterDistance() === 5000"
-            (click)="setDistance(5000)">
-            <i class="bi bi-geo-alt-fill"></i> 5 KM
-          </button>
-          <button class="biz-filter-pill"
-            [class.biz-filter-pill--active]="filterDistance() === null"
-            (click)="setDistance(null)">
-            <i class="bi bi-globe"></i> All
-          </button>
-        </div>
-      </div>
-    </div>
+    @if (showAdvancedFilters()) {
+      <div class="jb-advanced-panel animate-slide-in-up">
 
-    <!-- Category Filter (dropdown) -->
-    <div class="biz-filter-bar__row biz-filter-bar__row--filters">
-      <div class="biz-filter-group">
-        <span class="biz-filter-label"><i class="bi bi-tags"></i> Category:</span>
-        <div class="biz-filter-select-wrap">
+        <!-- ── Location ─────────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
+          <div class="jb-filter-row jb-filter-row--split">
+            <div class="jb-location-row">
+              <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+                (ngModelChange)="filterCountry.set($event)"
+                placeholder="All Countries" searchPlaceholder="Search countries…">
+              </app-searchable-select>
+              <div class="jb-adv-input-wrap jb-adv-input-wrap--icon">
+                <i class="bi bi-mailbox2 jb-adv-input-icon"></i>
+                <input type="text" class="form-control jb-adv-input--icon-left" placeholder="Pincode" maxlength="12"
+                  [value]="filterPincode()"
+                  (change)="filterPincode.set($any($event.target).value)"
+                  aria-label="Filter by pincode" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Category ─────────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-tags"></i> Category</span>
           <app-searchable-select
             [options]="categorySelectOptions()"
             [ngModel]="filterCategoryId()"
@@ -101,9 +127,135 @@
             placeholder="All Categories">
           </app-searchable-select>
         </div>
+
+        <!-- ── Opening Hours ─────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-clock"></i> Opening Hours</span>
+          <div class="jb-pill-row" role="group" aria-label="Filter by opening hours">
+            <button type="button" class="jb-pill-btn"
+                    [class.jb-pill-btn--active]="filterOpeningHours() === null"
+                    (click)="onFilterOpeningHoursChange(null)">
+              All
+            </button>
+            @for (opt of filterOpeningHoursOptions; track opt.value) {
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
+                      (click)="onFilterOpeningHoursChange(opt.value + '')">
+                <i class="bi bi-clock-history"></i> {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- ── Date Added ───────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Added</span>
+          <div class="jb-advanced-grid jb-advanced-grid--dates">
+            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
+              <div class="jb-adv-date-head">
+                <label class="jb-adv-label" for="userBizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+                <span class="jb-adv-date-help">Start date</span>
+              </div>
+              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+                <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
+                <input id="userBizFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
+                  (change)="onFilterDateFromChange($event)"
+                  placeholder="From date" />
+              </div>
+            </div>
+
+            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
+              <div class="jb-adv-date-head">
+                <label class="jb-adv-label" for="userBizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+                <span class="jb-adv-date-help">End date</span>
+              </div>
+              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+                <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
+                <input id="userBizFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
+                  (change)="onFilterDateToChange($event)"
+                  placeholder="To date" />
+              </div>
+            </div>
+          </div>
+
+          <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
+            <span class="jb-quick-date-row__label">Quick range:</span>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
+              (click)="applyQuickDatePreset('today')">
+              Today
+            </button>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
+              (click)="applyQuickDatePreset('7d')">
+              Last 7 Days
+            </button>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
+              (click)="applyQuickDatePreset('30d')">
+              Last 30 Days
+            </button>
+          </div>
+        </div>
+
       </div>
-    </div>
+    }
   </div>
+
+  <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
+  @if (hasActiveFilters()) {
+    <div class="jb-active-chips">
+      <span class="jb-active-chips__label">Active filters:</span>
+      @if (filterSearch()) {
+        <span class="jb-active-chip">
+          Search: {{ filterSearch() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCountry() !== getDefaultCountry()) {
+        <span class="jb-active-chip">
+          Country: {{ filterCountry() || 'All Countries' }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterPincode()) {
+        <span class="jb-active-chip">
+          Pincode: {{ filterPincode() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('pincode')" aria-label="Remove pincode filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCategoryId()) {
+        <span class="jb-active-chip">
+          Category: {{ filterCategoryLabel() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('category')" aria-label="Remove category filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDistance() !== DISTANCE_DEFAULT_M) {
+        <span class="jb-active-chip">
+          Distance: {{ filterDistance() === null ? 'All' : filterDistanceKm() + ' km' }}
+          <button class="jb-active-chip__remove" (click)="setDistance(DISTANCE_DEFAULT_M)" aria-label="Reset distance filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterOpeningHours()) {
+        <span class="jb-active-chip">
+          Hours: {{ filterOpeningHours() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hours')" aria-label="Remove hours filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDateFrom()) {
+        <span class="jb-active-chip">
+          From: {{ filterDateFrom() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDateTo()) {
+        <span class="jb-active-chip">
+          To: {{ filterDateTo() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+    </div>
+  }
 
   <!-- Geolocation status -->
   @if (geoLoading()) {
@@ -136,7 +288,7 @@
       <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
       <h5 class="biz-empty__title">No businesses found</h5>
       <p class="biz-empty__sub">
-        @if (filterDistance() || filterCategoryId() || filterSearch()) {
+        @if (hasActiveFilters()) {
           Try adjusting your filters or increasing the distance.
         } @else {
           No businesses available yet.
@@ -145,14 +297,14 @@
     </div>
   } @else {
     <div [class]="bizViewMode() === 'grid' ? 'bl-grid' : 'bl-list-view'">
-      @for (biz of businesses(); track biz.id) {
+      @for (biz of (bizViewMode() === 'grid' ? businesses() : visibleBusinesses()); track biz.id) {
         <article class="bl-card" role="button" tabindex="0"
           (click)="loadBusinessDetail(biz)" (keydown.enter)="loadBusinessDetail(biz)"
           [attr.aria-label]="biz.name">
 
           <div class="bl-card__img-wrap">
-            @if (biz.images && biz.images.length > 0) {
-              <img [src]="biz.images[0] | imageUrl" [alt]="biz.name" class="bl-card__img" loading="lazy" fetchpriority="high" />
+            @if ($any(biz).logo) {
+              <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="bl-card__img" loading="lazy" fetchpriority="high" />
             } @else {
               <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
             }
@@ -166,34 +318,68 @@
 
           <div class="bl-card__body">
             <h3 class="bl-card__name">{{ biz.name }}</h3>
+            @if ($any(biz).user?.displayName || getCreatedAt(biz)) {
+              <div class="bl-card__submeta">
+                @if ($any(biz).user?.displayName) {
+                  <span class="bl-card__submeta-item"><i class="bi bi-person-circle"></i>{{ $any(biz).user.displayName }}</span>
+                }
+                @if (getCreatedAt(biz)) {
+                  <span class="bl-card__submeta-item"><i class="bi bi-calendar3"></i>Added {{ formatDate(getCreatedAt(biz)) }}</span>
+                }
+              </div>
+            }
             @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
             <div class="bl-card__meta">
               @if (biz.address || $any(biz).city || $any(biz).state) {
                 <span class="bl-card__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(biz) }}</span>
               }
               @if (biz.phone) { <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span> }
+              @if ($any(biz).whatsapp) { <span class="bl-card__meta-item"><i class="bi bi-whatsapp"></i>{{ $any(biz).whatsapp }}</span> }
+              @if (biz.openingHours) { <span class="bl-card__meta-item"><i class="bi bi-clock-fill"></i>{{ biz.openingHours }}</span> }
               @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bl-card__meta-item bl-card__meta-item--link" (click)="$event.stopPropagation()"><i class="bi bi-globe2"></i>Website</a> }
             </div>
           </div>
 
           <div class="bl-card__footer" (click)="$event.stopPropagation()">
-            @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bl-card__action-btn bl-card__action-btn--call" [attr.aria-label]="'Call ' + biz.name"><i class="bi bi-telephone-fill"></i> Call</a> }
-            @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--wa" [attr.aria-label]="'WhatsApp ' + biz.name"><i class="bi bi-whatsapp"></i> WhatsApp</a> }
+            @if (biz.phone) {
+              <a [href]="'tel:' + biz.phone" class="bl-card__action-btn bl-card__action-btn--call" [attr.aria-label]="'Call ' + biz.name">
+                <i class="bi bi-telephone-fill"></i><span class="bl-card__action-label">Call</span>
+              </a>
+            }
+            @if ($any(biz).whatsapp) {
+              <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--wa" [attr.aria-label]="'WhatsApp ' + biz.name">
+                <i class="bi bi-whatsapp"></i><span class="bl-card__action-label">WhatsApp</span>
+              </a>
+            }
+            @if (biz.address || $any(biz).mapsLink || (biz.latitude && biz.longitude)) {
+              <a [href]="getLocationUrl(biz)" target="_blank" rel="noopener" class="bl-card__action-btn bl-card__action-btn--location" [attr.aria-label]="'Get location for ' + biz.name">
+                <i class="bi bi-geo-alt-fill"></i><span class="bl-card__action-label">Location</span>
+              </a>
+            }
           </div>
         </article>
       }
     </div>
 
-    @if (totalPages() > 1) {
-      <nav class="bl-pagination" aria-label="Pages">
-        <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
-        @for (page of getPages(); track page) {
-          <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
-            [attr.aria-current]="page === currentPage() ? 'page' : null"
-            (click)="goToPage(page)">{{ page }}</button>
-        }
-        <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
-      </nav>
+    @if (bizViewMode() === 'grid') {
+      @if (totalPages() > 1) {
+        <nav class="bl-pagination" aria-label="Pages">
+          <button class="bl-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
+          @for (page of getPages(); track page) {
+            <button class="bl-page-btn" [class.bl-page-btn--active]="page === currentPage()"
+              [attr.aria-current]="page === currentPage() ? 'page' : null"
+              (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="bl-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
+        </nav>
+      }
+    } @else {
+      <!-- Lazily reveals the next batch of 10 businesses as this scrolls into view. -->
+      @if (visibleBusinessCount() < allFilteredBusinesses().length) {
+        <div class="biz-load-more-sentinel" appInfiniteScroll (nearEnd)="loadMoreBusinesses()">
+          <span class="spinner-border spinner-border-sm"></span> Loading more businesses…
+        </div>
+      }
     }
   }
 }
@@ -201,25 +387,25 @@
 <!-- ==================== CATEGORIES VIEW ==================== -->
 @if (currentView() === 'categories' && businessView() === 'categories') {
 
-  <div class="biz-toolbar">
-    <div class="biz-search">
-      <i class="bi bi-search biz-search__icon"></i>
-      <input type="search" class="biz-search__input" placeholder="Search categories…"
-        [value]="catSearch()" (input)="catSearch.set($any($event.target).value)"
-        autocomplete="off" aria-label="Search categories" />
-      @if (catSearch()) {
-        <button class="biz-search__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
-      }
-    </div>
-    <div class="biz-toolbar__right">
-      <select class="biz-select" [ngModel]="catSortBy()" (ngModelChange)="catSortBy.set($event)" aria-label="Sort">
-        <option value="name">Name A–Z</option>
-        <option value="count">Most Businesses</option>
-        <option value="newest">Newest First</option>
-      </select>
-      <div class="biz-view-toggle" role="group" aria-label="View mode">
-        <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid"><i class="bi bi-grid-3x2-gap"></i></button>
-        <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List"><i class="bi bi-list-ul"></i></button>
+  <!-- ── FILTER PANEL — replicated from the Admin Business page's
+       Category-view .jb-filter-panel (search + a control on the right);
+       the view toggle already lives in the shared .biz-head above, so
+       the existing sort dropdown fills that slot instead. ──────────── -->
+  <div class="jb-filter-panel">
+    <div class="jb-filter-row jb-filter-row--top">
+      <div class="jb-search-wrap">
+        <i class="bi bi-search jb-search-wrap__icon"></i>
+        <input type="search" class="jb-search-wrap__input" placeholder="Search categories…"
+          [ngModel]="catSearch()" (ngModelChange)="catSearch.set($event)"
+          autocomplete="off" aria-label="Search categories" />
+        @if (catSearch()) {
+          <button class="jb-search-wrap__clear" (click)="catSearch.set('')" aria-label="Clear"><i class="bi bi-x"></i></button>
+        }
+      </div>
+      <div class="jb-select-wrap jb-select-wrap--sort">
+        <app-searchable-select [options]="catSortOptions" [ngModel]="catSortBy()"
+          (ngModelChange)="catSortBy.set($event)" placeholder="Sort" aria-label="Sort">
+        </app-searchable-select>
       </div>
     </div>
   </div>
@@ -243,7 +429,7 @@
     </div>
   } @else {
     <div [class]="catViewMode() === 'grid' ? 'biz-grid' : 'biz-list-view'">
-      @for (cat of filteredCategories(); track cat.id) {
+      @for (cat of visibleCategories(); track cat.id) {
         <div class="biz-cat-card biz-cat-card--{{ getCategoryAccent(cat.icon) }}"
           role="button" tabindex="0"
           (click)="loadBusinessesByCategory(cat)" (keydown.enter)="loadBusinessesByCategory(cat)"
@@ -260,6 +446,13 @@
         </div>
       }
     </div>
+
+    <!-- Lazily reveals the next batch of 10 categories as this scrolls into view. -->
+    @if (visibleCategoryCount() < filteredCategories().length) {
+      <div class="biz-load-more-sentinel" appInfiniteScroll (nearEnd)="loadMoreCategories()">
+        <span class="spinner-border spinner-border-sm"></span> Loading more categories…
+      </div>
+    }
   }
 }
 
@@ -269,34 +462,41 @@
 
     <nav aria-label="breadcrumb">
       <ol class="bl-breadcrumb">
-        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
-        <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-        <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ biz.category?.name || 'Businesses' }}</button></li>
+        @if (selectedCategory()) {
+          <!-- Reached via the Categories tab drilling into a specific category. -->
+          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
+          <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ biz.category?.name || 'Businesses' }}</button></li>
+        } @else {
+          <!-- Reached via the flat Business List tab. -->
+          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()"><i class="bi bi-list-ul"></i> Business List</button></li>
+        }
         <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
         <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ biz.name }}</li>
       </ol>
     </nav>
 
     <div class="bd-hero">
-      <div class="bd-hero__cover">
-         @if (biz.images && biz.images.length > 0) {
-           <img [src]="biz.images[0] | imageUrl" [alt]="biz.name" class="bd-hero__cover-img" loading="eager" />
-         } @else {
-           <div class="bd-hero__cover-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
-         }
-      </div>
        <div class="bd-hero__profile">
-         <div class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}">
+         <button type="button" class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}"
+           [class.bd-hero__avatar--clickable]="!!$any(biz).logo"
+           [disabled]="!$any(biz).logo"
+           (click)="$any(biz).logo && openImagePreview([$any(biz).logo], 0)"
+           [attr.aria-label]="$any(biz).logo ? 'View ' + biz.name + ' logo' : biz.name + ' logo placeholder'">
            @if ($any(biz).logo) {
              <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="w-100 h-100 object-fit-cover rounded-circle" loading="eager" />
            } @else {
              <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
            }
-         </div>
+         </button>
          <div class="bd-hero__info">
           <div class="bd-hero__name-row">
             <h1 class="bd-hero__name">{{ biz.name }}</h1>
-            @if (biz.isActive) { <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span> }
+            @if (biz.isActive) {
+              <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span>
+            } @else {
+              <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> Inactive</span>
+            }
           </div>
           <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
           @if ($any(biz).city || $any(biz).state || biz.country) {
@@ -320,14 +520,6 @@
             <p class="bd-section__body">{{ biz.description }}</p>
           </div>
         }
-        @if ($any(biz).logo) {
-          <div class="bd-section">
-            <h3 class="bd-section__title"><i class="bi bi-building"></i> Logo</h3>
-            <div style="max-width: 200px;">
-              <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="img-fluid rounded" loading="lazy" />
-            </div>
-          </div>
-        }
         @if (biz.phone || biz.email || biz.website || $any(biz).whatsapp) {
           <div class="bd-section">
             <h3 class="bd-section__title"><i class="bi bi-telephone"></i> Contact</h3>
@@ -344,7 +536,9 @@
             <h3 class="bd-section__title"><i class="bi bi-images"></i> Gallery</h3>
             <div class="bd-gallery">
               @for (img of biz.images; track $index) {
-                <img [src]="img | imageUrl" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" fetchpriority="auto" (click)="setActiveImage($index)" />
+                <button type="button" class="bd-gallery__btn" (click)="openImagePreview(biz.images, $index)" [attr.aria-label]="'View ' + biz.name + ' image ' + ($index+1)">
+                  <img [src]="img | imageUrl" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" />
+                </button>
               }
             </div>
           </div>
@@ -371,7 +565,7 @@
         }
         @if ($any(biz).openingDays || biz.openingHours) {
           <div class="bd-card">
-            <h4 class="bd-card__title"><i class="bi bi-clock-fill"></i> Business Hours</h4>
+            <h4 class="bd-card__title"><i class="bi bi-clock-fill"></i> Business Days &amp; Hours</h4>
             @if ($any(biz).openingDays) {
               <div class="bd-days">
                 @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
@@ -385,6 +579,33 @@
       </aside>
     </div>
   }
+}
+
+@if (lightboxOpen()) {
+  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+    <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      @if (lightboxImages().length > 1) {
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      }
+
+      @if (getActivePreviewImage()) {
+        <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" />
+      }
+
+      <div class="cd-lightbox-footer">
+        <span class="cd-lightbox-counter">{{ activeImageIndex() + 1 }} / {{ lightboxImages().length }}</span>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- ==================== ADD BUSINESS MODAL ==================== -->
