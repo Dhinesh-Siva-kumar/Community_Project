@@ -8,6 +8,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Community, Post, PaginatedResponse, CommunityAnalyticsCounts } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
+import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 
 export type CommunityTab = 'all' | 'joined' | 'trending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -22,7 +24,7 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective],
+  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
@@ -81,6 +83,15 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // ── Action states ──────────────────────────────────────────
   joiningId  = signal<string | null>(null);
   leavingId  = signal<string | null>(null);
+
+  // ── Create/Edit/Delete — own communities only; the form lives in
+  // app-community-form-modal, the confirm popup in app-community-delete-modal. ──
+  showCommunityModal = signal(false);
+  editCommunityId    = signal<string | null>(null);
+  showDeleteModal    = signal(false);
+  communityToDelete  = signal<Community | null>(null);
+  /** id of the card whose owner action menu (Edit/Delete) is currently open — only one at a time. */
+  openMenuId         = signal<string | null>(null);
 
   // ── UI state ───────────────────────────────────────────────
   activeTab = signal<CommunityTab>('all');
@@ -556,5 +567,68 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     }
     this.canScrollSpotlightLeft.set(el.scrollLeft > 4);
     this.canScrollSpotlightRight.set(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  // ── Ownership + Add/Edit Community modal ────────────────────
+  isOwner(community: Community): boolean {
+    return !!this.authService.currentUser() && this.authService.currentUser()?.id === community.createdById;
+  }
+
+  openAddCommunity(): void {
+    this.editCommunityId.set(null);
+    this.showCommunityModal.set(true);
+  }
+
+  openEditCommunity(community: Community): void {
+    this.editCommunityId.set(community.id);
+    this.showCommunityModal.set(true);
+  }
+
+  closeCommunityModal(): void {
+    this.showCommunityModal.set(false);
+    this.editCommunityId.set(null);
+  }
+
+  onCommunitySaved(community: Community): void {
+    const exists = this.communities().some(c => c.id === community.id);
+    this.communities.update(list =>
+      exists ? list.map(c => c.id === community.id ? community : c) : [community, ...list]
+    );
+  }
+
+  // ── Delete Community ─────────────────────────────────────────
+  openDeleteCommunity(community: Community): void {
+    this.communityToDelete.set(community);
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal.set(false);
+    this.communityToDelete.set(null);
+  }
+
+  onCommunityDeleted(id: string): void {
+    this.communities.update(list => list.filter(c => c.id !== id));
+  }
+
+  // ── Card owner action menu (Edit/Delete, behind a three-dot trigger) ──
+  toggleActionMenu(event: Event, id: string): void {
+    event.stopPropagation();
+    this.openMenuId.update(cur => cur === id ? null : id);
+  }
+
+  onEditFromMenu(community: Community): void {
+    this.openMenuId.set(null);
+    this.openEditCommunity(community);
+  }
+
+  onDeleteFromMenu(community: Community): void {
+    this.openMenuId.set(null);
+    this.openDeleteCommunity(community);
+  }
+
+  @HostListener('document:click')
+  closeActionMenu(): void {
+    this.openMenuId.set(null);
   }
 }

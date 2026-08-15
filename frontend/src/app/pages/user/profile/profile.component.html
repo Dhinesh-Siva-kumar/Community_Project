@@ -210,6 +210,63 @@
       </app-profile-info-card>
     }
 
+    <!-- ==================== MY COMMUNITIES TAB ==================== -->
+    @if (activeTab() === 'communities') {
+      <app-profile-info-card title="My Communities" icon="bi-people">
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn btn-primary btn-sm" (click)="openAddCommunity()">
+            <i class="bi bi-plus-lg me-1"></i> Add Community
+          </button>
+        </div>
+        @if (loadingCommunities()) {
+          <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary"></div>
+            <p class="text-muted small mt-2">Loading communities...</p>
+          </div>
+        } @else if (!myCommunities().length) {
+          <div class="text-center py-4">
+            <i class="bi bi-people text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
+            <p class="text-muted small mt-2">You haven't created any communities yet.</p>
+          </div>
+        } @else {
+          <div class="d-flex flex-column gap-3">
+            @for (community of myCommunities(); track community.id) {
+              <div class="d-flex align-items-center justify-content-between p-3 border rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                  @if (community.image) {
+                    <img [src]="community.image" class="rounded" width="50" height="50" style="object-fit:cover;" [alt]="community.name" loading="lazy" fetchpriority="auto" />
+                  } @else {
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                      <i class="bi bi-people text-muted"></i>
+                    </div>
+                  }
+                  <div>
+                    <div class="d-flex align-items-center gap-2">
+                      <h6 class="fw-semibold mb-0 small">{{ community.name }}</h6>
+                      @if (community.isActive ?? community.is_active) {
+                        <span class="badge bg-success-subtle text-success small">Active</span>
+                      } @else {
+                        <span class="badge bg-secondary-subtle text-secondary small">Inactive</span>
+                      }
+                    </div>
+                    <small class="text-muted">{{ community._count?.members ?? 0 }} members</small>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditCommunity(community.id)" aria-label="Edit community">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteCommunity(community)" aria-label="Delete community">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </app-profile-info-card>
+    }
+
     <!-- ==================== MY JOBS TAB ==================== -->
     @if (activeTab() === 'jobs') {
       <app-profile-info-card title="My Jobs" icon="bi-briefcase">
@@ -306,6 +363,20 @@
       (closed)="closeDeleteBusinessModal()"
       (deleted)="onBusinessDeleted($event)">
     </app-business-delete-modal>
+
+    <app-community-form-modal
+      [open]="showCommunityModal()"
+      [editCommunityId]="editCommunityId()"
+      (closed)="closeCommunityModal()"
+      (saved)="onCommunitySaved($event)">
+    </app-community-form-modal>
+
+    <app-community-delete-modal
+      [open]="showDeleteCommunityModal()"
+      [community]="communityToDelete()"
+      (closed)="closeDeleteCommunityModal()"
+      (deleted)="onCommunityDeleted($event)">
+    </app-community-delete-modal>
 
   }
 }

@@ -21,6 +21,16 @@ export class CommunityService {
       .pipe(map(res => res.data));
   }
 
+  getMyCreatedCommunities(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortDir?: string;
+  } = {}): Observable<PaginatedResponse<Community>> {
+    return this.api.get<PaginatedResponse<Community>>('/communities/created', params);
+  }
+
   getCommunity(id: string): Observable<Community> {
     return this.api.get<Community>(`/communities/${id}`);
   }

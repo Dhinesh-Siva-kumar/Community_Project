@@ -826,7 +826,6 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   flex-direction: column;
   height: 100%;
   border-radius: $radius-lg;
-  overflow: hidden;
   background: $color-bg-card;
   border: 1px solid $color-border;
   // A touch more presence at rest (was almost invisible at 0.04/0.05 alpha).
@@ -850,7 +849,11 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   &:focus-visible { box-shadow: $shadow-focus-ring; }
 }
 
-.uc-g-cover { position: relative; height: 118px; overflow: hidden; }
+// Rounds its own top corners (rather than relying on .uc-g-card's overflow
+// to clip it) so the owner action menu's dropdown panel — an absolutely
+// positioned descendant that needs to escape the cover's bounds — isn't
+// itself clipped by an overflow:hidden ancestor.
+.uc-g-cover { position: relative; height: 118px; overflow: hidden; border-radius: $radius-lg $radius-lg 0 0; }
 .uc-g-cover-bg {
   position: absolute; inset: 0;
   transition: transform .5s cubic-bezier(.22, 1, .36, 1);
@@ -1444,4 +1447,96 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
   .cd-lightbox-nav.cd-lightbox-nav--prev { left: 14px; }
   .cd-lightbox-nav.cd-lightbox-nav--next { right: 14px; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Own-community affordances — "Add Community" header button, owner
+// badges on cards, and the three-dot owner action menu (Edit/Delete),
+// mirroring the equivalent additions on the Business list page.
+// ═══════════════════════════════════════════════════════════════
+
+.uc-add-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
+  border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
+  font-size: $font-size-sm; font-weight: $font-weight-bold; font-family: $font-family-body;
+  background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+  color: $color-on-primary; box-shadow: 0 3px 10px rgba(251,191,36,0.30);
+  transition: transform .18s ease, box-shadow .18s ease;
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
+}
+
+// Spotlight card — glass chip variant for "Your Community"
+.uc-spot-glass-chip--owner {
+  background: rgba(251, 191, 36, 0.28);
+  border: 1px solid rgba(251, 191, 36, 0.55);
+}
+
+// Grid card — cover-badge variant for "Your Community"
+.uc-g-badge--owner { background: rgba(28, 25, 23, 0.72); color: #fff; }
+
+// List card — small inline "Yours" badge next to the name
+.uc-l-owner-badge {
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  padding: 2px 8px; border-radius: $radius-full;
+  background: rgba(251, 191, 36, 0.18); border: 1px solid rgba(251, 191, 36, 0.40);
+  color: $color-primary-darker; font-size: 10px; font-weight: $font-weight-bold;
+  i { font-size: 9px; }
+}
+
+// ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown ──
+.uc-card-menu {
+  position: relative;
+  flex-shrink: 0;
+
+  // Grid card variant — floats over the top-right of the cover image
+  // instead of sitting inline in the flex row (list card default).
+  &--cover {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+  }
+}
+
+.uc-card-menu-trigger {
+  width: 28px; height: 28px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: $radius-full; border: 1.5px solid $color-border;
+  background: #fff; color: $color-text-muted; cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+  &:hover, &:focus-visible { background: $color-bg-page; color: $color-text-body; border-color: $color-amber-200; }
+
+  // On-image variant (grid cover) — needs contrast against an arbitrary photo.
+  &--on-image {
+    background: rgba(28, 25, 23, 0.55);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    &:hover, &:focus-visible { background: rgba(28, 25, 23, 0.75); border-color: #fff; color: #fff; }
+  }
+}
+.uc-card-menu--open .uc-card-menu-trigger { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
+
+.uc-card-menu-panel {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  min-width: 140px; padding: 6px;
+  background: $color-bg-card; border: 1.5px solid $color-stone-200; border-radius: $radius-md;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: ucMenuIn 140ms ease;
+}
+@keyframes ucMenuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+.uc-card-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 10px; border: none; border-radius: $radius-sm; background: transparent;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-700;
+  text-align: left; cursor: pointer; transition: background-color .15s ease;
+  .bi { font-size: 0.85em; color: $color-primary-dark; flex-shrink: 0; }
+  &:hover { background: $color-stone-100; }
+  &--danger {
+    color: $color-danger;
+    .bi { color: $color-danger; }
+    &:hover { background: $color-error-bg; }
+  }
 }

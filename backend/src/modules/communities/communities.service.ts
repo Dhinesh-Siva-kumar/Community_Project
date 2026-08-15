@@ -40,6 +40,13 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   const existing = await db('communities').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Community with this name already exists');
 
+  if (data.is_global || data.is_default) {
+    const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+    if (!caller || caller['role'] !== 'ADMIN') {
+      throw new AppError(403, 'Only admins can create Global or Default communities');
+    }
+  }
+
   const [community] = await db('communities')
     .insert({ ...data, created_by_id: adminId })
     .returning('*');
@@ -76,6 +83,7 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
 
   return {
     ...(community as Record<string, unknown>),
+    createdById: (community as Record<string, unknown>)['created_by_id'],
     createdBy: creator,
     _count: {
       members: Number((counts as Record<string, unknown>)?.['member_count'] ?? 0),
@@ -100,13 +108,14 @@ export async function findAll(params: {
   to_date?: string;
   joined?: boolean;
   userId?: string;
+  createdById?: string;
   status?: 'active' | 'inactive';
   sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
 }) {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
-    community_mode, is_default, from_date, to_date, joined, userId,
+    community_mode, is_default, from_date, to_date, joined, userId, createdById,
     status, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
@@ -215,6 +224,13 @@ export async function findAll(params: {
     countQuery.whereIn('id', db('community_members').select('community_id').where('user_id', userId));
   }
 
+  // ── Created-by filter — restrict to communities the caller owns (used by
+  // the "My Communities" profile tab, via GET /communities/created) ────────
+  if (createdById) {
+    query.andWhere('c.created_by_id', createdById);
+    countQuery.andWhere('created_by_id', createdById);
+  }
+
   // ── Non-admin browse restriction ────────────────────────────
   // Regular users should only ever browse communities relevant to them —
   // global ones, or private ones scoped to their own country — never
@@ -275,6 +291,7 @@ export async function findAll(params: {
 
   const data = (communities as Array<Record<string, unknown>>).map((c) => ({
     ...c,
+    createdById: c['created_by_id'],
     createdBy: {
       id: c['creator_id'],
       userName: c['creator_user_name'],
@@ -368,6 +385,7 @@ export async function findOne(id: string) {
 
   return {
     ...(community as Record<string, unknown>),
+    createdById: (community as Record<string, unknown>)['created_by_id'],
     createdBy: {
       id: (community as Record<string, unknown>)['creator_id'],
       userName: (community as Record<string, unknown>)['creator_user_name'],
@@ -384,6 +402,16 @@ export async function findOne(id: string) {
 export async function update(id: string, data: UpdateCommunityDtoType, adminId: string) {
   const before = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!before) throw new AppError(404, 'Community not found');
+
+  const byAdmin = before['created_by_id'] !== adminId;
+  const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+  const callerIsAdmin = !!caller && caller['role'] === 'ADMIN';
+  if (byAdmin && !callerIsAdmin) {
+    throw new AppError(403, 'You can only update your own community');
+  }
+  if (!callerIsAdmin && (data.is_global || data.is_default)) {
+    throw new AppError(403, 'Only admins can set a community to Global or Default');
+  }
 
   await db('communities').where({ id }).update(data);
 
@@ -424,6 +452,14 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
 export async function deleteCommunity(id: string, adminId: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found');
+
+  const byAdmin = community['created_by_id'] !== adminId;
+  if (byAdmin) {
+    const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+    if (!caller || caller['role'] !== 'ADMIN') {
+      throw new AppError(403, 'You can only delete your own community');
+    }
+  }
 
   await db('communities').where({ id }).delete();
   deleteUploadedFile(community['image']);

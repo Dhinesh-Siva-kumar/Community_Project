@@ -5,16 +5,19 @@ import { ActivatedRoute } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessService } from '../../../core/services/business.service';
+import { CommunityService } from '../../../core/services/community.service';
 import { JobService } from '../../../core/services/job.service';
 import { PostService } from '../../../core/services/post.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { User, Business, Job, Post } from '../../../core/models';
+import { User, Business, Community, Job, Post } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 import { ProfileInfoCardComponent } from '../../../shared/components/profile-info-card/profile-info-card.component';
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
+import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
+import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -24,6 +27,7 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
     SearchableSelectComponent,
     ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent,
     BusinessFormModalComponent, BusinessDeleteModalComponent,
+    CommunityFormModalComponent, CommunityDeleteModalComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -32,6 +36,7 @@ export class UserProfileComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private businessService = inject(BusinessService);
+  private communityService = inject(CommunityService);
   private jobService = inject(JobService);
   private postService = inject(PostService);
   private toast = inject(ToastService);
@@ -47,13 +52,19 @@ export class UserProfileComponent implements OnInit {
   myBusinesses = signal<Business[]>([]);
   showBusinessModal = signal(false);
   editBusinessId    = signal<string | null>(null);
+  myCommunities = signal<Community[]>([]);
+  showCommunityModal = signal(false);
+  editCommunityId    = signal<string | null>(null);
   myJobs = signal<Job[]>([]);
   myPosts = signal<Post[]>([]);
   loadingBusinesses = signal(false);
+  loadingCommunities = signal(false);
   loadingJobs = signal(false);
   loadingPosts = signal(false);
   showDeleteBusinessModal = signal(false);
   businessToDelete = signal<Business | null>(null);
+  showDeleteCommunityModal = signal(false);
+  communityToDelete = signal<Community | null>(null);
   deletingJobId = signal<string | null>(null);
   deletingPostId = signal<string | null>(null);
 
@@ -79,6 +90,7 @@ export class UserProfileComponent implements OnInit {
   tabs: ProfileTab[] = [
     { id: 'personal',    label: 'Personal Info',   icon: 'bi-person' },
     { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop' },
+    { id: 'communities', label: 'My Communities',  icon: 'bi-people' },
     { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase' },
     { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post' },
   ];
@@ -144,9 +156,10 @@ export class UserProfileComponent implements OnInit {
 
   setTab(id: string): void {
     this.activeTab.set(id);
-    if (id === 'businesses' && !this.myBusinesses().length) this.loadMyBusinesses();
-    if (id === 'jobs'       && !this.myJobs().length)       this.loadMyJobs();
-    if (id === 'posts'      && !this.myPosts().length)      this.loadMyPosts();
+    if (id === 'businesses'  && !this.myBusinesses().length)  this.loadMyBusinesses();
+    if (id === 'communities' && !this.myCommunities().length) this.loadMyCommunities();
+    if (id === 'jobs'        && !this.myJobs().length)        this.loadMyJobs();
+    if (id === 'posts'       && !this.myPosts().length)       this.loadMyPosts();
   }
 
   toggleEdit(): void {
@@ -241,6 +254,48 @@ export class UserProfileComponent implements OnInit {
   onBusinessSaved(biz: Business): void {
     const exists = this.myBusinesses().some(b => b.id === biz.id);
     this.myBusinesses.update(list => exists ? list.map(b => b.id === biz.id ? biz : b) : [biz, ...list]);
+  }
+
+  loadMyCommunities(): void {
+    this.loadingCommunities.set(true);
+    this.communityService.getMyCreatedCommunities({ page: 1, limit: 50 }).subscribe({
+      next: (r) => { this.myCommunities.set(r.data); this.loadingCommunities.set(false); },
+      error: () => this.loadingCommunities.set(false),
+    });
+  }
+
+  openDeleteCommunity(community: Community): void {
+    this.communityToDelete.set(community);
+    this.showDeleteCommunityModal.set(true);
+  }
+
+  closeDeleteCommunityModal(): void {
+    this.showDeleteCommunityModal.set(false);
+    this.communityToDelete.set(null);
+  }
+
+  onCommunityDeleted(id: string): void {
+    this.myCommunities.update(l => l.filter(c => c.id !== id));
+  }
+
+  openAddCommunity(): void {
+    this.editCommunityId.set(null);
+    this.showCommunityModal.set(true);
+  }
+
+  openEditCommunity(id: string): void {
+    this.editCommunityId.set(id);
+    this.showCommunityModal.set(true);
+  }
+
+  closeCommunityModal(): void {
+    this.showCommunityModal.set(false);
+    this.editCommunityId.set(null);
+  }
+
+  onCommunitySaved(community: Community): void {
+    const exists = this.myCommunities().some(c => c.id === community.id);
+    this.myCommunities.update(list => exists ? list.map(c => c.id === community.id ? community : c) : [community, ...list]);
   }
 
   loadMyJobs(): void {

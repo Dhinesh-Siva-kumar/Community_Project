@@ -1,0 +1,254 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle()" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [class.bi-people-fill]="!isEditing()" [class.bi-pencil-square]="isEditing()"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title">{{ modalTitle() }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">
+          {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
+        </p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="communityForm" (ngSubmit)="submitForm()" class="au-form cm-form">
+
+        <!-- ── SECTION 1: Basic Information ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-info-circle-fill"></i></span>
+            <span class="cm-section-title">Basic Information</span>
+          </div>
+
+          <div class="cm-field-row">
+            <!-- Community Name -->
+            <div class="cm-field-group">
+              <label class="cm-label">Community Name <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-people cm-input-icon"></i>
+                <input
+                  type="text"
+                  formControlName="communityName"
+                  maxlength="150"
+                  placeholder="e.g. Developers India"
+                  class="cm-input"
+                  [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
+                />
+              </div>
+              @if (f['communityName'].touched && f['communityName'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  @if (f['communityName'].errors?.['required'] || f['communityName'].errors?.['whitespace']) {
+                    Community Name is required.
+                  } @else if (f['communityName'].errors?.['minlengthTrimmed']) {
+                    Community Name must contain at least 3 characters.
+                  } @else if (f['communityName'].errors?.['maxlength']) {
+                    Maximum 150 characters allowed.
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Category -->
+            <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
+              <label class="cm-label">Category <span class="cm-required">*</span></label>
+              <app-searchable-select
+                formControlName="interests"
+                [options]="interestOptions"
+                placeholder="Select a category"
+              ></app-searchable-select>
+              @if (f['interests'].touched && f['interests'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="cm-field-group">
+            <div class="cm-label-row">
+              <label class="cm-label">Description <span class="cm-required">*</span></label>
+              <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/500</span>
+            </div>
+            <div class="cm-input-wrap cm-textarea-wrap">
+              <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+              <textarea
+                formControlName="description"
+                rows="3"
+                maxlength="500"
+                placeholder="Tell people what this community is about..."
+                class="cm-input cm-textarea"
+                [class.cm-input-error]="f['description'].touched && f['description'].invalid"
+              ></textarea>
+            </div>
+            @if (f['description'].touched && f['description'].invalid) {
+              <div class="cm-error-msg">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                @if (f['description'].errors?.['required'] || f['description'].errors?.['whitespace']) {
+                  Description is required.
+                } @else if (f['description'].errors?.['maxlength']) {
+                  Maximum 500 characters allowed.
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ── SECTION 2: Settings ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-gear-fill"></i></span>
+            <span class="cm-section-title">Settings</span>
+          </div>
+
+          <div class="cm-field-row">
+            <!-- Country -->
+            <div class="cm-field-group" [class.cm-field-group--error]="f['countryId'].touched && f['countryId'].invalid">
+              <label class="cm-label">Country <span class="cm-required">*</span></label>
+              <app-searchable-select
+                formControlName="countryId"
+                [options]="countryOptions"
+                placeholder="Select country"
+              ></app-searchable-select>
+              @if (f['countryId'].touched && f['countryId'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>Please select a country.
+                </div>
+              }
+            </div>
+
+            <!-- Visibility Toggles — non-admins only ever get Private -->
+            <div class="cm-field-group">
+              <label class="cm-label">Visibility <span class="cm-required">*</span></label>
+              <div class="cm-toggle-group"
+                   [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['visibility'].value">
+                <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'private'">
+                  <input type="radio" formControlName="visibility" value="private" hidden />
+                  <i class="bi bi-lock-fill me-1"></i> Private
+                </label>
+                @if (isAdminUser()) {
+                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'global'">
+                    <input type="radio" formControlName="visibility" value="global" hidden />
+                    <i class="bi bi-globe2 me-1"></i> Global
+                  </label>
+                }
+              </div>
+              @if (!isAdminUser()) {
+                <div class="cm-default-hint">Your communities are always Private, scoped to your own country.</div>
+              }
+              @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Community Mode -->
+          <div class="cm-field-group">
+            <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
+            <div class="cm-toggle-group">
+              <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
+                <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
+                <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency Assistance
+              </label>
+              <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
+                <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
+                <i class="bi bi-question-circle-fill me-1"></i> Enquire
+              </label>
+            </div>
+            <div class="cm-default-hint">
+              @if (f['communityMode'].value === 'ENQUIRE') {
+                Members can raise and track enquiries in a dedicated Enquire tab.
+              } @else {
+                Members can post Help and Emergency Assistance requests in dedicated tabs.
+              }
+            </div>
+          </div>
+
+          <!-- Default Community toggle — admin only, force-enrolls every user -->
+          @if (isAdminUser()) {
+            <div class="cm-default-row">
+              <div class="cm-default-label">
+                <i class="bi bi-star-fill"></i>
+                <span>Default Community</span>
+                <span class="cm-default-hint">Mark this as the default community for new users</span>
+              </div>
+              <label class="cm-switch">
+                <input type="checkbox" formControlName="isDefault" />
+                <span class="cm-switch-slider"></span>
+              </label>
+            </div>
+          }
+        </div>
+
+        <!-- ── SECTION 3: Rules ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-shield-check"></i></span>
+            <span class="cm-section-title">Community Rules</span>
+          </div>
+
+          <div class="cm-field-group">
+            <app-community-rules-input formControlName="rules"></app-community-rules-input>
+          </div>
+        </div>
+
+        <!-- ── SECTION 4: Media ── -->
+        <div class="cm-section cm-section-last">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
+            <span class="cm-section-title">Community Image</span>
+          </div>
+
+          <app-file-upload
+            mode="single"
+            accept="image/*"
+            [maxSizeMb]="5"
+            label="Community Image"
+            [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
+            [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
+            errorMessage="Community image is required."
+            (filesChange)="onCommunityImageChange($event)"
+          ></app-file-upload>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="au-btn au-btn--primary cm-btn-submit"
+        [disabled]="submitting()"
+        (click)="submitForm()"
+      >
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ isEditing() ? 'Updating...' : 'Creating...' }}
+        } @else {
+          <i class="bi me-1" [class.bi-check-lg]="isEditing()" [class.bi-plus-lg]="!isEditing()"></i>
+          {{ isEditing() ? 'Update Community' : 'Create Community' }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

@@ -91,3 +91,15 @@ export async function getMyCommunities(req: Request, res: Response, next: NextFu
     res.json(result);
   } catch (err) { next(err); }
 }
+
+export async function getMyCreatedCommunities(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListCommunitiesQueryDto.parse(req.query);
+    const result = await communitiesService.findAll({
+      ...query,
+      createdById: req.user!.sub,
+      skipActiveFilter: true,
+    });
+    res.json(result);
+  } catch (err) { next(err); }
+}

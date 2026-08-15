@@ -98,6 +98,10 @@
         </button>
       }
     </div>
+
+    <button type="button" class="uc-add-btn" (click)="openAddCommunity()">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Community
+    </button>
   </div>
 </div>
 
@@ -158,41 +162,48 @@
                     <i class="bi bi-file-earmark-text-fill" aria-hidden="true"></i>{{ community._count?.posts }} posts
                   </span>
                 }
+                @if (isOwner(community)) {
+                  <span class="uc-spot-glass-chip uc-spot-glass-chip--owner">
+                    <i class="bi bi-person-check-fill" aria-hidden="true"></i> Your Community
+                  </span>
+                }
               </div>
 
-              @if (community.is_joined || isJoined(community.id)) {
-                <div class="uc-spot-cta-row">
-                  <span class="uc-spot-joined-pill">
-                    <i class="bi bi-check-lg" aria-hidden="true"></i> Joined
-                  </span>
+              @if (!isOwner(community)) {
+                @if (community.is_joined || isJoined(community.id)) {
+                  <div class="uc-spot-cta-row">
+                    <span class="uc-spot-joined-pill">
+                      <i class="bi bi-check-lg" aria-hidden="true"></i> Joined
+                    </span>
+                    <button
+                      class="uc-spot-leave-btn"
+                      type="button"
+                      (click)="leaveCommunity($event, community.id)"
+                      [disabled]="leavingId() === community.id"
+                      [attr.aria-label]="'Leave ' + community.name"
+                    >
+                      @if (leavingId() === community.id) {
+                        <span class="uc-btn-spinner" aria-hidden="true"></span> Leaving…
+                      } @else {
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Leave
+                      }
+                    </button>
+                  </div>
+                } @else {
                   <button
-                    class="uc-spot-leave-btn"
+                    class="uc-spot-cta"
                     type="button"
-                    (click)="leaveCommunity($event, community.id)"
-                    [disabled]="leavingId() === community.id"
-                    [attr.aria-label]="'Leave ' + community.name"
+                    (click)="joinCommunity($event, community.id)"
+                    [disabled]="joiningId() === community.id"
+                    [attr.aria-label]="'Join ' + community.name"
                   >
-                    @if (leavingId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span> Leaving…
+                    @if (joiningId() === community.id) {
+                      <span class="uc-btn-spinner" aria-hidden="true"></span> Joining…
                     } @else {
-                      <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Leave
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
                     }
                   </button>
-                </div>
-              } @else {
-                <button
-                  class="uc-spot-cta"
-                  type="button"
-                  (click)="joinCommunity($event, community.id)"
-                  [disabled]="joiningId() === community.id"
-                  [attr.aria-label]="'Join ' + community.name"
-                >
-                  @if (joiningId() === community.id) {
-                    <span class="uc-btn-spinner" aria-hidden="true"></span> Joining…
-                  } @else {
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
-                  }
-                </button>
+                }
               }
             </div>
           </article>
@@ -287,12 +298,36 @@
               }
               <div class="uc-g-cover-sheen" aria-hidden="true"></div>
               <div class="uc-g-cover-scrim" aria-hidden="true"></div>
-              @if ((community._count?.members ?? 0) > 50) {
+              @if (((community._count?.members ?? 0) > 50) || isOwner(community)) {
                 <div class="uc-g-cover-badges">
-                  <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
+                  @if ((community._count?.members ?? 0) > 50) {
+                    <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
+                  }
+                  @if (isOwner(community)) {
+                    <span class="uc-g-badge uc-g-badge--owner"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Your Community</span>
+                  }
                 </div>
               }
             </div>
+
+            @if (isOwner(community)) {
+              <div class="uc-card-menu uc-card-menu--cover" [class.uc-card-menu--open]="openMenuId() === community.id" (click)="$event.stopPropagation()">
+                <button type="button" class="uc-card-menu-trigger uc-card-menu-trigger--on-image" [attr.aria-label]="'More actions for ' + community.name"
+                  [attr.aria-expanded]="openMenuId() === community.id" (click)="toggleActionMenu($event, community.id)">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                @if (openMenuId() === community.id) {
+                  <div class="uc-card-menu-panel">
+                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </button>
+                    <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </div>
+                }
+              </div>
+            }
 
             <div class="uc-g-body">
               @if (community.image) {
@@ -328,39 +363,41 @@
                   }
                 </div>
 
-                @if (community.is_joined || isJoined(community.id)) {
-                  <div class="uc-g-cta-group">
-                    <span class="uc-g-joined-pill" title="You're a member">
-                      <i class="bi bi-check-lg" aria-hidden="true"></i>Joined
-                    </span>
+                @if (!isOwner(community)) {
+                  @if (community.is_joined || isJoined(community.id)) {
+                    <div class="uc-g-cta-group">
+                      <span class="uc-g-joined-pill" title="You're a member">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>Joined
+                      </span>
+                      <button
+                        class="uc-g-cta uc-g-cta--leave"
+                        type="button"
+                        (click)="leaveCommunity($event, community.id)"
+                        [disabled]="leavingId() === community.id"
+                        [attr.aria-label]="'Leave ' + community.name"
+                      >
+                        @if (leavingId() === community.id) {
+                          <span class="uc-btn-spinner" aria-hidden="true"></span>
+                        } @else {
+                          Leave
+                        }
+                      </button>
+                    </div>
+                  } @else {
                     <button
-                      class="uc-g-cta uc-g-cta--leave"
+                      class="uc-g-cta"
                       type="button"
-                      (click)="leaveCommunity($event, community.id)"
-                      [disabled]="leavingId() === community.id"
-                      [attr.aria-label]="'Leave ' + community.name"
+                      (click)="joinCommunity($event, community.id)"
+                      [disabled]="joiningId() === community.id"
+                      [attr.aria-label]="'Join ' + community.name"
                     >
-                      @if (leavingId() === community.id) {
+                      @if (joiningId() === community.id) {
                         <span class="uc-btn-spinner" aria-hidden="true"></span>
                       } @else {
-                        Leave
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
                       }
                     </button>
-                  </div>
-                } @else {
-                  <button
-                    class="uc-g-cta"
-                    type="button"
-                    (click)="joinCommunity($event, community.id)"
-                    [disabled]="joiningId() === community.id"
-                    [attr.aria-label]="'Join ' + community.name"
-                  >
-                    @if (joiningId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span>
-                    } @else {
-                      <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
-                    }
-                  </button>
+                  }
                 }
               </div>
             </div>
@@ -390,6 +427,9 @@
             <div class="uc-l-info">
               <div class="uc-l-top-row">
                 <span class="uc-l-name">{{ community.name }}</span>
+                @if (isOwner(community)) {
+                  <span class="uc-l-owner-badge"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Yours</span>
+                }
               </div>
               <div class="uc-l-desc">{{ community.description }}</div>
               <div class="uc-l-chips">
@@ -408,37 +448,57 @@
               </div>
             </div>
 
-            @if (community.is_joined || isJoined(community.id)) {
-              <div class="uc-l-cta-group">
-                <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>Joined</span>
+            @if (!isOwner(community)) {
+              @if (community.is_joined || isJoined(community.id)) {
+                <div class="uc-l-cta-group">
+                  <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>Joined</span>
+                  <button
+                    class="uc-l-btn uc-l-btn--leave"
+                    type="button"
+                    (click)="leaveCommunity($event, community.id)"
+                    [disabled]="leavingId() === community.id"
+                    [attr.aria-label]="'Leave ' + community.name"
+                  >
+                    @if (leavingId() === community.id) {
+                      <span class="uc-btn-spinner" aria-hidden="true"></span>
+                    } @else {
+                      Leave
+                    }
+                  </button>
+                </div>
+              } @else {
                 <button
-                  class="uc-l-btn uc-l-btn--leave"
+                  class="uc-l-btn uc-l-btn--join"
                   type="button"
-                  (click)="leaveCommunity($event, community.id)"
-                  [disabled]="leavingId() === community.id"
-                  [attr.aria-label]="'Leave ' + community.name"
+                  (click)="joinCommunity($event, community.id)"
+                  [disabled]="joiningId() === community.id"
+                  [attr.aria-label]="'Join ' + community.name"
                 >
-                  @if (leavingId() === community.id) {
+                  @if (joiningId() === community.id) {
                     <span class="uc-btn-spinner" aria-hidden="true"></span>
                   } @else {
-                    Leave
+                    Join
                   }
                 </button>
-              </div>
-            } @else {
-              <button
-                class="uc-l-btn uc-l-btn--join"
-                type="button"
-                (click)="joinCommunity($event, community.id)"
-                [disabled]="joiningId() === community.id"
-                [attr.aria-label]="'Join ' + community.name"
-              >
-                @if (joiningId() === community.id) {
-                  <span class="uc-btn-spinner" aria-hidden="true"></span>
-                } @else {
-                  Join
+              }
+            }
+            @if (isOwner(community)) {
+              <div class="uc-card-menu" [class.uc-card-menu--open]="openMenuId() === community.id" (click)="$event.stopPropagation()">
+                <button type="button" class="uc-card-menu-trigger" [attr.aria-label]="'More actions for ' + community.name"
+                  [attr.aria-expanded]="openMenuId() === community.id" (click)="toggleActionMenu($event, community.id)">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                @if (openMenuId() === community.id) {
+                  <div class="uc-card-menu-panel">
+                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </button>
+                    <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </div>
                 }
-              </button>
+              </div>
             }
           </article>
         }
@@ -571,5 +631,21 @@
     </div>
   </div>
 }
+
+<!-- ==================== ADD / EDIT COMMUNITY MODAL ==================== -->
+<app-community-form-modal
+  [open]="showCommunityModal()"
+  [editCommunityId]="editCommunityId()"
+  (closed)="closeCommunityModal()"
+  (saved)="onCommunitySaved($event)">
+</app-community-form-modal>
+
+<!-- ==================== DELETE COMMUNITY CONFIRM ==================== -->
+<app-community-delete-modal
+  [open]="showDeleteModal()"
+  [community]="communityToDelete()"
+  (closed)="closeDeleteModal()"
+  (deleted)="onCommunityDeleted($event)">
+</app-community-delete-modal>
 
 } <!-- /loading -->
