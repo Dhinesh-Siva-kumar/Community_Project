@@ -1,8 +1,22 @@
 <div class="auth-page">
-  <!-- Theme toggle -->
-  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-    <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
-  </button>
+  <!-- Back to landing page -->
+  <a routerLink="/landing" class="home-toggle" [attr.aria-label]="t.backToHome">
+    <i class="bi bi-house-door-fill"></i>
+  </a>
+
+  <div class="auth-toggle-group">
+    <!-- Language toggle -->
+    <button class="lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? t.switchToTamil : t.switchToEnglish">
+      <span class="lang-toggle-seg" [class.active]="currentLang === 'en'">EN</span>
+      <span class="lang-toggle-divider"></span>
+      <span class="lang-toggle-seg" [class.active]="currentLang === 'ta'">தமிழ்</span>
+    </button>
+
+    <!-- Theme toggle -->
+    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? t.switchToLight : t.switchToDark">
+      <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
+    </button>
+  </div>
 
   <div class="auth-container">
 
@@ -10,25 +24,25 @@
     <div class="auth-branding">
       <div class="branding-content">
         <h1 class="brand-headline">
-          Welcome back!<br />
-          <span class="brand-headline-sub">We missed you.</span>
+          {{ t.headlinePre }}<br />
+          <span class="brand-headline-sub">{{ t.headlineSub }}</span>
         </h1>
         <p class="brand-desc">
-          Sign in to reconnect with your communities, catch up on discussions, and keep the conversation going.
+          {{ t.brandDesc }}
         </p>
 
         <ul class="feature-list">
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>10,000+ active members across the UK</span>
+            <span>{{ t.feature1 }}</span>
           </li>
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>500+ communities across every topic</span>
+            <span>{{ t.feature2 }}</span>
           </li>
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>Free forever — no credit card needed</span>
+            <span>{{ t.feature3 }}</span>
           </li>
         </ul>
 
@@ -39,7 +53,7 @@
             <div class="av av-3">C</div>
             <div class="av av-4">D</div>
           </div>
-          <span class="avatar-row-text">Join thousands already connected</span>
+          <span class="avatar-row-text">{{ t.avatarRowText }}</span>
         </div>
       </div>
     </div>
@@ -49,22 +63,22 @@
 
       <div class="auth-card">
         <div class="auth-card-header">
-          <h2>Welcome back</h2>
-          <p class="subtitle">Sign in to your account to continue</p>
+          <h2>{{ t.cardTitle }}</h2>
+          <p class="subtitle">{{ t.cardSubtitle }}</p>
         </div>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" autocomplete="on">
 
           <!-- Email -->
           <div class="field-group">
-            <label class="field-label" for="login-email">User Name</label>
+            <label class="field-label" for="login-email">{{ t.usernameLabel }}</label>
             <div class="field-input-wrap">
               <i class="bi bi-person field-icon"></i>
               <input
                 id="login-email"
                 type="text"
                 formControlName="identifier"
-                placeholder="User name or user@gmail.com"
+                [placeholder]="t.usernamePlaceholder"
                 autocomplete="username"
                 class="field-input"
                 [class.is-invalid]="f['identifier'].touched && f['identifier'].invalid"
@@ -75,9 +89,9 @@
             @if (f['identifier'].touched && f['identifier'].invalid) {
               <div class="field-error" id="login-identifier-error" role="alert">
                 @if (f['identifier'].errors?.['required']) {
-                  Username or email is required.
+                  {{ t.errIdentifierRequired }}
                 } @else if (f['identifier'].errors?.['invalidUsernameOrEmail']) {
-                  Please enter a valid username or email address.
+                  {{ t.errIdentifierInvalid }}
                 }
               </div>
             }
@@ -85,14 +99,14 @@
 
           <!-- Password -->
           <div class="field-group">
-            <label class="field-label" for="login-password">Password</label>
+            <label class="field-label" for="login-password">{{ t.passwordLabel }}</label>
             <div class="field-input-wrap">
               <i class="bi bi-lock field-icon"></i>
               <input
                 id="login-password"
                 [type]="showPassword() ? 'text' : 'password'"
                 formControlName="password"
-                placeholder="Enter your password"
+                [placeholder]="t.passwordPlaceholder"
                 autocomplete="current-password"
                 class="field-input"
                 [class.is-invalid]="f['password'].touched && f['password'].invalid"
@@ -104,7 +118,7 @@
                 class="toggle-pw-btn"
                 (click)="showPassword.set(!showPassword())"
                 tabindex="-1"
-                aria-label="Toggle password visibility"
+                [attr.aria-label]="t.togglePasswordVisibility"
               >
                 <i class="bi" [class.bi-eye-slash]="!showPassword()" [class.bi-eye]="showPassword()"></i>
               </button>
@@ -112,9 +126,9 @@
             @if (f['password'].touched && f['password'].invalid) {
               <div class="field-error" id="login-password-error" role="alert">
                 @if (f['password'].errors?.['required']) {
-                  Password is required.
+                  {{ t.errPasswordRequired }}
                 } @else if (f['password'].errors?.['minlength']) {
-                  Password must be at least 6 characters.
+                  {{ t.errPasswordMinlength }}
                 }
               </div>
             }
@@ -123,7 +137,7 @@
           <!-- Forgot Password Link -->
           <div class="forgot-password-link">
             <button type="button" class="text-link" (click)="forgotPassword()">
-              Forgot password?
+              {{ t.forgotPassword }}
             </button>
           </div>
 
@@ -131,10 +145,10 @@
           <button type="submit" class="submit-btn" [disabled]="loading()">
             @if (loading()) {
               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Signing in...
+              {{ t.signingIn }}
             } @else {
               <i class="bi bi-box-arrow-in-right"></i>
-              Sign In
+              {{ t.signIn }}
             }
           </button>
         </form>
@@ -142,7 +156,7 @@
         @if (googleConfigured) {
           <div class="divider-row">
             <span class="divider-line"></span>
-            <span class="divider-text">or continue with</span>
+            <span class="divider-text">{{ t.orContinueWith }}</span>
             <span class="divider-line"></span>
           </div>
 
@@ -154,8 +168,8 @@
         }
 
         <p class="switch-auth">
-          Don't have an account?
-          <a routerLink="/auth/register" class="switch-link">Create one free &rarr;</a>
+          {{ t.noAccount }}
+          <a routerLink="/auth/register" class="switch-link">{{ t.createOne }} &rarr;</a>
         </p>
 
         <!-- <p class="admin-link">
@@ -171,7 +185,7 @@
     <div class="reg-loading-overlay">
       <div class="reg-loading-card">
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
-        <p class="reg-loading-text">Signing in with Google...</p>
+        <p class="reg-loading-text">{{ t.googleSigningIn }}</p>
       </div>
     </div>
   }
@@ -180,19 +194,19 @@
   @if (googleNeedsUsername()) {
     <div class="google-username-overlay" (keydown.escape)="closeGoogleModal()">
       <div class="google-username-card" role="dialog" aria-modal="true" aria-labelledby="google-username-title" cdkTrapFocus cdkTrapFocusAutoCapture>
-        <button type="button" class="google-username-close" (click)="closeGoogleModal()" aria-label="Close">
+        <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="t.modalClose">
           <i class="bi bi-x-lg"></i>
         </button>
         <div class="google-username-icon">
           <i class="bi bi-person-check-fill"></i>
         </div>
-        <h3 class="google-username-title" id="google-username-title">Choose a Username</h3>
+        <h3 class="google-username-title" id="google-username-title">{{ t.modalTitle }}</h3>
         <p class="google-username-desc">
-          Your suggested username is already taken. Pick a unique username to complete sign-in.
+          {{ t.modalDesc }}
         </p>
 
         <div class="field-group">
-          <label class="field-label">Username</label>
+          <label class="field-label">{{ t.modalUsernameLabel }}</label>
           <div class="field-input-wrap">
             <i class="bi bi-person field-icon"></i>
             <input
@@ -209,14 +223,14 @@
           @if (usernameModalChecking()) {
             <div class="field-hint">
               <span class="spinner-border spinner-border-sm" role="status"></span>
-              Checking availability...
+              {{ t.checkingAvailability }}
             </div>
           } @else if (usernameModalTaken()) {
-            <div class="field-error">Username already taken. Please choose another.</div>
+            <div class="field-error">{{ t.usernameTaken }}</div>
           } @else if (usernameModalValue().length >= 3) {
             <div class="field-success">
               <i class="bi bi-check-circle-fill"></i>
-              Username is available
+              {{ t.usernameAvailable }}
             </div>
           }
         </div>
@@ -230,10 +244,10 @@
         >
           @if (googleLoading()) {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Creating account...
+            {{ t.creatingAccount }}
           } @else {
             <i class="bi bi-check2-circle"></i>
-            Confirm Username
+            {{ t.confirmUsername }}
           }
         </button>
       </div>

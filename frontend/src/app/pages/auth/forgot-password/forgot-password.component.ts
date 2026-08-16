@@ -41,9 +41,148 @@ function usernameOrEmailValidator(control: AbstractControl): ValidationErrors | 
   const value = control.value;
   if (!value) return null;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const usernameRegex = /^[a-zA-Z0-9._\-]{3,}$/;
+  const usernameRegex = /^[a-zA-Z0-9._\-஀-௿]{3,}$/;
   return emailRegex.test(value) || usernameRegex.test(value) ? null : { invalidUsernameOrEmail: true };
 }
+
+type Lang = 'en' | 'ta';
+
+const TRANSLATIONS = {
+  en: {
+    switchToTamil: 'Switch to Tamil',
+    switchToEnglish: 'Switch to English',
+    switchToLight: 'Switch to light mode',
+    switchToDark: 'Switch to dark mode',
+    formHeadlinePre: 'Reset your',
+    formHeadlineSub: 'password safely.',
+    formBrandDesc: 'Find your account, verify your phone, and set a new password. The whole process takes under a minute.',
+    formFeature1: 'Instant account lookup by username or email',
+    formFeature2: 'OTP sent to your registered phone',
+    formFeature3: 'Your account remains secure',
+    otpHeadlinePre: 'One last step!',
+    otpHeadlineSub: 'Verify your identity.',
+    otpBrandDesc: 'Enter the OTP we sent to your phone to confirm your password reset.',
+    otpFeature1: 'Check your SMS inbox',
+    otpFeature2: 'OTP is valid for 5 minutes only',
+    otpFeature3: 'Never share your OTP with anyone',
+    cardTitleForm: 'Reset password',
+    cardSubtitleForm: 'Find your account to get started',
+    cardTitleOtp: 'Verify OTP',
+    otpSentTo: 'OTP sent to',
+    tooManyAttempts: 'Too many failed attempts. Please start again.',
+    dismiss: 'Dismiss',
+    identifierLabel: 'Username or Email',
+    identifierPlaceholder: 'username or user@email.com',
+    errIdentifierRequired: 'Username or email is required.',
+    errIdentifierInvalid: 'Please enter a valid username or email address.',
+    accountFound: 'Account found',
+    accountNotFound: 'No account found with this username or email.',
+    phoneLabel: 'Phone Number',
+    phonePlaceholder: 'Enter local number',
+    phoneHintIdle: 'Enter your username or email above to unlock this field.',
+    phoneHintLoading: 'Looking up your account…',
+    errPhoneRequired: 'Phone number is required.',
+    newPasswordLabel: 'New Password',
+    newPasswordPlaceholder: 'At least 8 characters',
+    errPasswordRequired: 'Password is required.',
+    errPasswordMinlength: 'Password must be at least 8 characters.',
+    errPasswordUppercase: 'Add at least one uppercase letter.',
+    errPasswordLowercase: 'Add at least one lowercase letter.',
+    errPasswordNumber: 'Add at least one number.',
+    errPasswordSpecial: 'Add at least one special character.',
+    criteriaMinLength: 'At least 8 characters',
+    criteriaUppercase: 'Uppercase letter',
+    criteriaLowercase: 'Lowercase letter',
+    criteriaNumber: 'Number (0–9)',
+    criteriaSpecial: 'Special character',
+    confirmPasswordLabel: 'Confirm Password',
+    confirmPasswordPlaceholder: 'Confirm your new password',
+    errConfirmRequired: 'Please confirm your password.',
+    errPasswordMismatch: 'Passwords do not match.',
+    togglePasswordVisibility: 'Toggle password visibility',
+    sendingOtp: 'Sending OTP…',
+    sendOtp: 'Send OTP',
+    goBackTo: 'Go back to',
+    signIn: 'Sign in',
+    otpLabel: 'One-Time Password',
+    otpDigitAria: (n: number) => `Digit ${n} of 6`,
+    otpExpiresIn: 'OTP expires in',
+    devOtpLabel: 'Dev OTP',
+    otpIncorrect: 'OTP is incorrect. Please try again.',
+    verifying: 'Verifying…',
+    verifyAndReset: 'Verify & Reset Password',
+    resendOtpIn: (s: number) => `Resend OTP in ${s}s`,
+    resendOtp: 'Resend OTP',
+    toastPasswordReset: 'Password reset! Please sign in with your new password.',
+  },
+  ta: {
+    switchToTamil: 'தமிழுக்கு மாறவும்',
+    switchToEnglish: 'ஆங்கிலத்திற்கு மாறவும்',
+    switchToLight: 'லைட் மோடிற்கு மாறவும்',
+    switchToDark: 'டார்க் மோடிற்கு மாறவும்',
+    formHeadlinePre: 'உங்கள் கடவுச்சொல்லை',
+    formHeadlineSub: 'பாதுகாப்பாக மீட்டமைக்கவும்.',
+    formBrandDesc: 'உங்கள் கணக்கைக் கண்டறிந்து, உங்கள் தொலைபேசியை சரிபார்த்து, புதிய கடவுச்சொல்லை அமைக்கவும். இது ஒரு நிமிடத்திற்குள் முடியும்.',
+    formFeature1: 'பயனர் பெயர் அல்லது மின்னஞ்சல் மூலம் உடனடி கணக்கு தேடல்',
+    formFeature2: 'உங்கள் பதிவுசெய்யப்பட்ட தொலைபேசிக்கு OTP அனுப்பப்படும்',
+    formFeature3: 'உங்கள் கணக்கு பாதுகாப்பாக இருக்கும்',
+    otpHeadlinePre: 'கடைசி படி!',
+    otpHeadlineSub: 'உங்கள் அடையாளத்தை சரிபார்க்கவும்.',
+    otpBrandDesc: 'உங்கள் கடவுச்சொல் மீட்டமைப்பை உறுதிப்படுத்த உங்கள் தொலைபேசிக்கு அனுப்பிய OTP-ஐ உள்ளிடவும்.',
+    otpFeature1: 'உங்கள் SMS இன்பாக்ஸைச் சரிபார்க்கவும்',
+    otpFeature2: 'OTP 5 நிமிடங்களுக்கு மட்டுமே செல்லுபடியாகும்',
+    otpFeature3: 'உங்கள் OTP-ஐ யாருடனும் பகிர வேண்டாம்',
+    cardTitleForm: 'கடவுச்சொல்லை மீட்டமைக்கவும்',
+    cardSubtitleForm: 'தொடங்க உங்கள் கணக்கைக் கண்டறியவும்',
+    cardTitleOtp: 'OTP-ஐ சரிபார்க்கவும்',
+    otpSentTo: 'OTP அனுப்பப்பட்டது',
+    tooManyAttempts: 'பல தோல்வியுற்ற முயற்சிகள். மீண்டும் தொடங்கவும்.',
+    dismiss: 'நிராகரி',
+    identifierLabel: 'பயனர் பெயர் அல்லது மின்னஞ்சல்',
+    identifierPlaceholder: 'பயனர்பெயர் அல்லது user@email.com',
+    errIdentifierRequired: 'பயனர் பெயர் அல்லது மின்னஞ்சல் தேவை.',
+    errIdentifierInvalid: 'சரியான பயனர் பெயர் அல்லது மின்னஞ்சல் முகவரியை உள்ளிடவும்.',
+    accountFound: 'கணக்கு கிடைத்தது',
+    accountNotFound: 'இந்த பயனர் பெயர் அல்லது மின்னஞ்சலுடன் கணக்கு எதுவும் இல்லை.',
+    phoneLabel: 'தொலைபேசி எண்',
+    phonePlaceholder: 'உள்ளூர் எண்ணை உள்ளிடவும்',
+    phoneHintIdle: 'இந்த புலத்தைத் திறக்க மேலே உங்கள் பயனர் பெயர் அல்லது மின்னஞ்சலை உள்ளிடவும்.',
+    phoneHintLoading: 'உங்கள் கணக்கைத் தேடுகிறது…',
+    errPhoneRequired: 'தொலைபேசி எண் தேவை.',
+    newPasswordLabel: 'புதிய கடவுச்சொல்',
+    newPasswordPlaceholder: 'குறைந்தது 8 எழுத்துகள்',
+    errPasswordRequired: 'கடவுச்சொல் தேவை.',
+    errPasswordMinlength: 'கடவுச்சொல் குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்.',
+    errPasswordUppercase: 'குறைந்தது ஒரு பெரிய எழுத்தைச் சேர்க்கவும்.',
+    errPasswordLowercase: 'குறைந்தது ஒரு சிறிய எழுத்தைச் சேர்க்கவும்.',
+    errPasswordNumber: 'குறைந்தது ஒரு எண்ணைச் சேர்க்கவும்.',
+    errPasswordSpecial: 'குறைந்தது ஒரு சிறப்பு எழுத்தைச் சேர்க்கவும்.',
+    criteriaMinLength: 'குறைந்தது 8 எழுத்துகள்',
+    criteriaUppercase: 'பெரிய எழுத்து',
+    criteriaLowercase: 'சிறிய எழுத்து',
+    criteriaNumber: 'எண் (0–9)',
+    criteriaSpecial: 'சிறப்பு எழுத்து',
+    confirmPasswordLabel: 'கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+    confirmPasswordPlaceholder: 'உங்கள் புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+    errConfirmRequired: 'உங்கள் கடவுச்சொல்லை உறுதிப்படுத்தவும்.',
+    errPasswordMismatch: 'கடவுச்சொற்கள் பொருந்தவில்லை.',
+    togglePasswordVisibility: 'கடவுச்சொல் காட்சியை மாற்று',
+    sendingOtp: 'OTP அனுப்புகிறது…',
+    sendOtp: 'OTP அனுப்பு',
+    goBackTo: 'திரும்பிச் செல்லவும்',
+    signIn: 'உள்நுழைக',
+    otpLabel: 'ஒரு முறை கடவுச்சொல்',
+    otpDigitAria: (n: number) => `இலக்கம் ${n} / 6`,
+    otpExpiresIn: 'OTP காலாவதியாகும் நேரம்',
+    devOtpLabel: 'டெவ் OTP',
+    otpIncorrect: 'OTP தவறானது. மீண்டும் முயற்சிக்கவும்.',
+    verifying: 'சரிபார்க்கிறது…',
+    verifyAndReset: 'சரிபார்த்து கடவுச்சொல்லை மீட்டமைக்கவும்',
+    resendOtpIn: (s: number) => `${s} வினாடியில் OTP-ஐ மீண்டும் அனுப்பு`,
+    resendOtp: 'OTP-ஐ மீண்டும் அனுப்பு',
+    toastPasswordReset: 'கடவுச்சொல் மீட்டமைக்கப்பட்டது! உங்கள் புதிய கடவுச்சொல்லுடன் உள்நுழையவும்.',
+  },
+};
 
 @Component({
   selector: 'app-forgot-password',
@@ -114,9 +253,31 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Language ───────────────────────────────────────────────────────────────
+  currentLang: Lang = 'en';
+
+  get t() {
+    return this.currentLang === 'en' ? TRANSLATIONS.en : TRANSLATIONS.ta;
+  }
+
+  toggleLanguage(): void {
+    this.currentLang = this.currentLang === 'en' ? 'ta' : 'en';
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('landing-lang', this.currentLang);
+    }
+  }
+
+  private loadLanguage(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('landing-lang') as Lang | null;
+      if (saved === 'en' || saved === 'ta') this.currentLang = saved;
+    }
+  }
+
   // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadTheme();
+    this.loadLanguage();
     this.initForms();
     this.setupLookup();
 
@@ -170,11 +331,11 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       const value: string = control.value ?? '';
       if (!value) return null;
       const errors: ValidationErrors = {};
-      if (value.length < 8)             errors['minLength'] = true;
-      if (!/[A-Z]/.test(value))         errors['uppercase'] = true;
-      if (!/[a-z]/.test(value))         errors['lowercase'] = true;
-      if (!/[0-9]/.test(value))         errors['number']    = true;
-      if (!/[^A-Za-z0-9]/.test(value))  errors['special']   = true;
+      if (value.length < 8)                errors['minLength'] = true;
+      if (!/[A-Z஀-௿]/.test(value))         errors['uppercase'] = true;
+      if (!/[a-z஀-௿]/.test(value))         errors['lowercase'] = true;
+      if (!/[0-9]/.test(value))            errors['number']    = true;
+      if (!/[^A-Za-z0-9஀-௿]/.test(value))  errors['special']   = true;
       return Object.keys(errors).length ? errors : null;
     };
   }
@@ -309,7 +470,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.loading.set(false);
-        this.toastService.success('Password reset! Please sign in with your new password.');
+        this.toastService.success(this.t.toastPasswordReset);
         this.router.navigate(['/auth/login']);
       },
       error: (err: any) => {

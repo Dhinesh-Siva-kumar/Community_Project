@@ -146,13 +146,53 @@
 }
 
 // ============================================================
-// THEME TOGGLE BUTTON
+// TOGGLE GROUP — theme + language toggles, fixed top-right
 // ============================================================
-.theme-toggle {
+.auth-toggle-group {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// ============================================================
+// HOME LINK — back to the landing page, fixed top-left (mirrors
+// .auth-toggle-group's position on the opposite corner)
+// ============================================================
+.home-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--auth-border);
+  background: var(--auth-toggle-bg);
+  color: var(--auth-toggle-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+  backdrop-filter: blur(8px);
+
+  i {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  &:hover {
+    background: var(--auth-toggle-hover-bg);
+    transform: scale(1.08);
+  }
+}
+
+.theme-toggle {
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -175,6 +215,58 @@
     background: var(--auth-toggle-hover-bg);
     transform: scale(1.08);
   }
+}
+
+// ============================================================
+// LANGUAGE TOGGLE — EN / தமிழ் pill (mirrors landing page's
+// .lp-lang-toggle, restyled with the auth pages' own tokens)
+// ============================================================
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  border-radius: 100px;
+  background: var(--auth-toggle-bg);
+  border: 1.5px solid var(--auth-border);
+  padding: 3px;
+  gap: 0;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--auth-toggle-hover-bg);
+  }
+}
+
+.lang-toggle-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  height: 34px;
+  border-radius: 100px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--auth-toggle-color);
+  background: transparent;
+  transition: background .22s ease, color .22s ease;
+  white-space: nowrap;
+  line-height: 1;
+
+  &.active {
+    background: linear-gradient(180deg, var(--auth-amber), var(--auth-amber-deep));
+    color: var(--auth-amber-ink);
+  }
+}
+
+.lang-toggle-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--auth-border);
+  flex-shrink: 0;
 }
 
 // ============================================================
@@ -560,6 +652,23 @@
       font-size: 16px;
       line-height: 1;
     }
+  }
+}
+
+// In-field loading/status indicator (e.g. username/account availability
+// checks) — absolutely positioned inside a .field-input-wrap, right-aligned.
+.fp-lookup-indicator {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  .spinner-border-sm {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    color: var(--auth-muted);
   }
 }
 

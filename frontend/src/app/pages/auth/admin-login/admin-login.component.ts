@@ -5,6 +5,55 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 
+type Lang = 'en' | 'ta';
+
+const TRANSLATIONS = {
+  en: {
+    switchToTamil: 'Switch to Tamil',
+    switchToEnglish: 'Switch to English',
+    switchToLight: 'Switch to light mode',
+    switchToDark: 'Switch to dark mode',
+    portalTitle: 'Admin Portal',
+    portalSubtitle: 'Authorized personnel only',
+    emailLabel: 'Admin Email',
+    emailPlaceholder: 'admin@example.com',
+    errEmailRequired: 'Email is required.',
+    errEmailInvalid: 'Please enter a valid email address.',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Enter admin password',
+    errPasswordRequired: 'Password is required.',
+    errPasswordMinlength: 'Password must be at least 6 characters.',
+    togglePasswordVisibility: 'Toggle password visibility',
+    authenticating: 'Authenticating...',
+    signInAsAdmin: 'Sign In as Admin',
+    backToUserLogin: 'Back to User Login',
+    toastLoginSuccess: 'Admin login successful!',
+    toastLoginFailed: 'Admin login failed. Please check your credentials.',
+  },
+  ta: {
+    switchToTamil: 'தமிழுக்கு மாறவும்',
+    switchToEnglish: 'ஆங்கிலத்திற்கு மாறவும்',
+    switchToLight: 'லைட் மோடிற்கு மாறவும்',
+    switchToDark: 'டார்க் மோடிற்கு மாறவும்',
+    portalTitle: 'நிர்வாக போர்டல்',
+    portalSubtitle: 'அங்கீகரிக்கப்பட்ட நபர்களுக்கு மட்டும்',
+    emailLabel: 'நிர்வாக மின்னஞ்சல்',
+    emailPlaceholder: 'admin@example.com',
+    errEmailRequired: 'மின்னஞ்சல் தேவை.',
+    errEmailInvalid: 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.',
+    passwordLabel: 'கடவுச்சொல்',
+    passwordPlaceholder: 'நிர்வாக கடவுச்சொல்லை உள்ளிடவும்',
+    errPasswordRequired: 'கடவுச்சொல் தேவை.',
+    errPasswordMinlength: 'கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்.',
+    togglePasswordVisibility: 'கடவுச்சொல் காட்சியை மாற்று',
+    authenticating: 'சரிபார்க்கிறது...',
+    signInAsAdmin: 'நிர்வாகியாக உள்நுழைக',
+    backToUserLogin: 'பயனர் உள்நுழைவுக்குத் திரும்பு',
+    toastLoginSuccess: 'நிர்வாக உள்நுழைவு வெற்றி!',
+    toastLoginFailed: 'நிர்வாக உள்நுழைவு தோல்வியடைந்தது. உங்கள் விவரங்களைச் சரிபார்க்கவும்.',
+  },
+};
+
 @Component({
   selector: 'app-admin-login',
   standalone: true,
@@ -42,6 +91,27 @@ export class AdminLoginComponent {
     }
   }
 
+  // ── Language ───────────────────────────────────────────────────────────────
+  currentLang: Lang = 'en';
+
+  get t() {
+    return this.currentLang === 'en' ? TRANSLATIONS.en : TRANSLATIONS.ta;
+  }
+
+  toggleLanguage(): void {
+    this.currentLang = this.currentLang === 'en' ? 'ta' : 'en';
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('landing-lang', this.currentLang);
+    }
+  }
+
+  private loadLanguage(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('landing-lang') as Lang | null;
+      if (saved === 'en' || saved === 'ta') this.currentLang = saved;
+    }
+  }
+
   adminLoginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
@@ -49,6 +119,7 @@ export class AdminLoginComponent {
 
   ngOnInit(): void {
     this.loadTheme();
+    this.loadLanguage();
   }
 
   onSubmit(): void {
@@ -63,12 +134,12 @@ export class AdminLoginComponent {
     this.authService.adminLogin(email, password).subscribe({
       next: () => {
         this.loading.set(false);
-        this.toastService.success('Admin login successful!');
+        this.toastService.success(this.t.toastLoginSuccess);
         this.router.navigate(['/admin/dashboard']);
       },
       error: (err) => {
         this.loading.set(false);
-        this.toastService.error(err?.error?.message || 'Admin login failed. Please check your credentials.');
+        this.toastService.error(err?.error?.message || this.t.toastLoginFailed);
       },
     });
   }
