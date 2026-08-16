@@ -7,7 +7,6 @@ import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
-import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Business, BusinessCategory, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
@@ -53,7 +52,6 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   private toast             = inject(ToastService);
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
-  private scrollLock        = inject(ScrollLockService);
   private destroy$          = new Subject<void>();
 
   @Input() open = false;
@@ -239,19 +237,14 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']) {
-      if (this.open) {
-        this.loadCategoriesIfNeeded();
-        this.loadGeoCountriesIfNeeded();
-        this.loadPhoneCountriesIfNeeded();
-        if (this.editBusinessId) {
-          this.loadForEdit(this.editBusinessId);
-        } else {
-          this.resetForCreate();
-        }
-        this.scrollLock.lock();
+    if (changes['open'] && this.open) {
+      this.loadCategoriesIfNeeded();
+      this.loadGeoCountriesIfNeeded();
+      this.loadPhoneCountriesIfNeeded();
+      if (this.editBusinessId) {
+        this.loadForEdit(this.editBusinessId);
       } else {
-        this.scrollLock.unlock();
+        this.resetForCreate();
       }
     }
   }
@@ -259,7 +252,6 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    if (this.open) this.scrollLock.unlock();
   }
 
   private initForm(): void {

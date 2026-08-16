@@ -1,8 +1,7 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BusinessService } from '../../../core/services/business.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Business } from '../../../core/models';
 
 /**
@@ -19,10 +18,9 @@ import { Business } from '../../../core/models';
   templateUrl: './business-delete-modal.component.html',
   styleUrls: ['./business-delete-modal.component.scss'],
 })
-export class BusinessDeleteModalComponent implements OnChanges, OnDestroy {
+export class BusinessDeleteModalComponent {
   private svc   = inject(BusinessService);
   private toast = inject(ToastService);
-  private scrollLock = inject(ScrollLockService);
 
   @Input() open = false;
   @Input() business: Business | null = null;
@@ -32,17 +30,6 @@ export class BusinessDeleteModalComponent implements OnChanges, OnDestroy {
   @Output() deleted = new EventEmitter<string>();
 
   deleting = signal(false);
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']) {
-      if (this.open) this.scrollLock.lock();
-      else this.scrollLock.unlock();
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (this.open) this.scrollLock.unlock();
-  }
 
   requestClose(): void {
     if (this.deleting()) return;

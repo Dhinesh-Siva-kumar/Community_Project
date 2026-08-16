@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
@@ -6,7 +6,6 @@ import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community, CommunityRequest, Country, interests } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
@@ -50,13 +49,12 @@ function minLengthTrimmed(min: number) {
   templateUrl: './community-form-modal.component.html',
   styleUrls: ['./community-form-modal.component.scss'],
 })
-export class CommunityFormModalComponent implements OnChanges, OnDestroy {
+export class CommunityFormModalComponent implements OnChanges {
   private communityService = inject(CommunityService);
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-  private scrollLock = inject(ScrollLockService);
 
   @Input() open = false;
   @Input() editCommunityId: string | null = null;
@@ -92,24 +90,15 @@ export class CommunityFormModalComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']) {
-      if (this.open) {
-        this.loadCountriesIfNeeded();
-        this.loadInterestsIfNeeded();
-        if (this.editCommunityId) {
-          this.loadForEdit(this.editCommunityId);
-        } else {
-          this.resetForCreate();
-        }
-        this.scrollLock.lock();
+    if (changes['open'] && this.open) {
+      this.loadCountriesIfNeeded();
+      this.loadInterestsIfNeeded();
+      if (this.editCommunityId) {
+        this.loadForEdit(this.editCommunityId);
       } else {
-        this.scrollLock.unlock();
+        this.resetForCreate();
       }
     }
-  }
-
-  ngOnDestroy(): void {
-    if (this.open) this.scrollLock.unlock();
   }
 
   private initForm(): void {

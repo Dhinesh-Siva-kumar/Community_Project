@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
@@ -41,11 +40,10 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
-export class UserBusinessComponent implements OnInit, OnDestroy {
+export class UserBusinessComponent implements OnInit {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
-  private scrollLock        = inject(ScrollLockService);
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -253,10 +251,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   /** The signed-in user's own country — the default the country filter starts/resets to. */
   getDefaultCountry(): string | null {
     return this.authService.currentUser()?.country || null;
-  }
-
-  ngOnDestroy(): void {
-    if (this.lightboxOpen()) this.scrollLock.unlock();
   }
 
   private requestGeolocation(): void {
@@ -606,14 +600,12 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.scrollLock.lock();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.scrollLock.unlock();
   }
 
   nextPreviewImage(): void {

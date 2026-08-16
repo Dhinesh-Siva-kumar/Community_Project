@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -6,7 +6,6 @@ import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -52,7 +51,7 @@ function minLengthTrimmed(min: number) {
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
-export class AdminCommunityComponent implements OnInit, OnDestroy {
+export class AdminCommunityComponent implements OnInit {
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
@@ -60,7 +59,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
-  private scrollLock = inject(ScrollLockService);
 
   countries: Country[] = [];
   interests: interests[] = [];
@@ -226,10 +224,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       this.showCreateFab.set(window.scrollY >= 120);
       this.scrollTicking = false;
     });
-  }
-
-  ngOnDestroy(): void {
-    if (this.showModal() || this.communityToDelete()) this.scrollLock.unlock();
   }
 
   initForm(): void {
@@ -508,7 +502,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
-    this.scrollLock.lock();
     this.showModal.set(true);
   }
 
@@ -527,13 +520,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       rules:         c['rules'] ?? [],
     });
     this.selectedImage.set(null);
-    this.scrollLock.lock();
     this.showModal.set(true);
   }
 
   closeModal(): void {
     this.showModal.set(false);
-    this.scrollLock.unlock();
     this.editingCommunity.set(null);
     this.communityForm.reset();
     this.formSubmitAttempted.set(false);
@@ -610,12 +601,10 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   // ── Delete ────────────────────────────────────────────────────
   confirmDelete(community: Community): void {
     this.communityToDelete.set(community);
-    this.scrollLock.lock();
   }
 
   cancelDelete(): void {
     this.communityToDelete.set(null);
-    this.scrollLock.unlock();
   }
 
   deleteCommunity(): void {
@@ -627,7 +616,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.toast.success('Community deleted successfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
-        this.scrollLock.unlock();
         this.loadCommunities();
       },
       error: () => {
