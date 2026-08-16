@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../../core/services/community.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -18,7 +18,7 @@ import { Community } from '../../../core/models';
   templateUrl: './community-delete-modal.component.html',
   styleUrls: ['./community-delete-modal.component.scss'],
 })
-export class CommunityDeleteModalComponent implements OnChanges, OnDestroy {
+export class CommunityDeleteModalComponent {
   private svc   = inject(CommunityService);
   private toast = inject(ToastService);
 
@@ -30,38 +30,6 @@ export class CommunityDeleteModalComponent implements OnChanges, OnDestroy {
   @Output() deleted = new EventEmitter<string>();
 
   deleting = signal(false);
-
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']) {
-      if (this.open) this.lockPageScroll();
-      else this.unlockPageScroll();
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    if (this.previousBodyOverflow === null) this.previousBodyOverflow = body.style.overflow;
-    if (this.previousHtmlOverflow === null) this.previousHtmlOverflow = html.style.overflow;
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
-  }
 
   requestClose(): void {
     if (this.deleting()) return;

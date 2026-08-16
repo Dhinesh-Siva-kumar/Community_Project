@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
@@ -49,15 +49,12 @@ function minLengthTrimmed(min: number) {
   templateUrl: './community-form-modal.component.html',
   styleUrls: ['./community-form-modal.component.scss'],
 })
-export class CommunityFormModalComponent implements OnChanges, OnDestroy {
+export class CommunityFormModalComponent implements OnChanges {
   private communityService = inject(CommunityService);
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
 
   @Input() open = false;
   @Input() editCommunityId: string | null = null;
@@ -93,42 +90,15 @@ export class CommunityFormModalComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']) {
-      if (this.open) {
-        this.loadCountriesIfNeeded();
-        this.loadInterestsIfNeeded();
-        if (this.editCommunityId) {
-          this.loadForEdit(this.editCommunityId);
-        } else {
-          this.resetForCreate();
-        }
-        this.lockPageScroll();
+    if (changes['open'] && this.open) {
+      this.loadCountriesIfNeeded();
+      this.loadInterestsIfNeeded();
+      if (this.editCommunityId) {
+        this.loadForEdit(this.editCommunityId);
       } else {
-        this.unlockPageScroll();
+        this.resetForCreate();
       }
     }
-  }
-
-  ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    if (this.previousBodyOverflow === null) this.previousBodyOverflow = body.style.overflow;
-    if (this.previousHtmlOverflow === null) this.previousHtmlOverflow = html.style.overflow;
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
   }
 
   private initForm(): void {

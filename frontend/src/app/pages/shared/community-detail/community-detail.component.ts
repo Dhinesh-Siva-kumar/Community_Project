@@ -143,9 +143,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
   });
   commentForms: Map<string, FormGroup> = new Map();
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
-  private lockedScrollY: number | null = null;
   private deletePostModalRef: ComponentRef<DeletePostModalComponent> | null = null;
   private deletePostModalHost: HTMLElement | null = null;
 
@@ -300,7 +297,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       clearInterval(this.clockTickIntervalId);
     }
     this.destroyDeletePostModal();
-    this.unlockPageScroll();
   }
 
   getCommentForm(postId: string): FormGroup {
@@ -573,14 +569,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.syncPageScrollLock();
   }
 
   nextPreviewImage(): void {
@@ -762,7 +756,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.sharePopupBlocked.set(false);
     this.blockedShareUrl.set(null);
     this.shareModalOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeShareModal(): void {
@@ -770,7 +763,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.shareTargetPost.set(null);
     this.sharePopupBlocked.set(false);
     this.blockedShareUrl.set(null);
-    this.syncPageScrollLock();
   }
 
   shareVia(platform: 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest'): void {
@@ -1006,7 +998,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editImages.set([]);
     this.editImageResetCounter.update((n) => n + 1);
     this.editModalOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeEditModal(): void {
@@ -1014,7 +1005,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editingPost.set(null);
     this.editExistingImages.set([]);
     this.editPostForm.reset();
-    this.syncPageScrollLock();
   }
 
   setEditPostType(type: PostType): void { this.selectedEditType.set(type); }
@@ -1057,7 +1047,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.deletingPost.set(false);
     this.deletePostModalOpen.set(true);
     this.renderDeletePostModal();
-    this.syncPageScrollLock();
   }
 
   closeDeletePostModal(): void {
@@ -1065,7 +1054,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.deletePostTarget.set(null);
     this.deletingPost.set(false);
     this.destroyDeletePostModal();
-    this.syncPageScrollLock();
   }
 
   confirmDeletePost(): void {
@@ -1103,17 +1091,15 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   // ── Admin Actions ─────────────────────────────────────────
 
-  openDeleteModal():  void { this.deleteModalOpen.set(true); this.syncPageScrollLock(); }
-  closeDeleteModal(): void { this.deleteModalOpen.set(false); this.syncPageScrollLock(); }
+  openDeleteModal():  void { this.deleteModalOpen.set(true); }
+  closeDeleteModal(): void { this.deleteModalOpen.set(false); }
 
   openEditCommunityModal(): void {
     this.editCommunityModalOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeEditCommunityModal(): void {
     this.editCommunityModalOpen.set(false);
-    this.syncPageScrollLock();
   }
 
   onCommunitySaved(updated: Community): void {
@@ -1211,70 +1197,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       this.deletePostModalHost.remove();
       this.deletePostModalHost = null;
     }
-  }
-
-  private syncPageScrollLock(): void {
-    const hasOpenModal =
-      this.deleteModalOpen() ||
-      this.editModalOpen() ||
-      this.deletePostModalOpen() ||
-      this.editCommunityModalOpen() ||
-      this.lightboxOpen() ||
-      this.shareModalOpen();
-
-    if (hasOpenModal) {
-      this.lockPageScroll();
-      return;
-    }
-    this.unlockPageScroll();
-  }
-
-  private lockPageScroll(): void {
-    // Guard against re-entrant locking (e.g. two modal signals flipping in
-    // the same tick).
-    if (this.lockedScrollY !== null) return;
-
-    const body = document.body;
-    const html = document.documentElement;
-
-    this.previousBodyOverflow = body.style.overflow;
-    this.previousHtmlOverflow = html.style.overflow;
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    this.lockedScrollY = scrollY;
-
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-
-    // Inserting the popup's fixed-position content can nudge the browser
-    // back to the top of the page on the next paint; re-assert the scroll
-    // position a frame later so it opens over exactly what the user was
-    // looking at instead of jumping to the top.
-    requestAnimationFrame(() => {
-      if (this.lockedScrollY === scrollY) {
-        window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
-      }
-    });
-  }
-
-  private unlockPageScroll(): void {
-    if (this.lockedScrollY === null) return;
-
-    const body = document.body;
-    const html = document.documentElement;
-    const scrollY = this.lockedScrollY;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
-    this.lockedScrollY = null;
-
-    // Explicit behavior:'auto' forces an instant jump. The page has a global
-    // `scroll-behavior: smooth` (styles.scss); the old 2-arg scrollTo(x, y)
-    // form inherits that, so restoring here visibly animated the background
-    // back into place instead of snapping to it.
-    window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
   }
 
   getCommunityStatus(): { label: string; cls: string } {

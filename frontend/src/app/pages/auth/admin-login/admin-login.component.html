@@ -1,8 +1,17 @@
 <div class="auth-page admin-login-page">
-  <!-- Theme toggle -->
-  <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-    <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
-  </button>
+  <div class="auth-toggle-group">
+    <!-- Language toggle -->
+    <button class="lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? t.switchToTamil : t.switchToEnglish">
+      <span class="lang-toggle-seg" [class.active]="currentLang === 'en'">EN</span>
+      <span class="lang-toggle-divider"></span>
+      <span class="lang-toggle-seg" [class.active]="currentLang === 'ta'">தமிழ்</span>
+    </button>
+
+    <!-- Theme toggle -->
+    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? t.switchToLight : t.switchToDark">
+      <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
+    </button>
+  </div>
 
   <div class="admin-card-wrap">
     <div class="auth-card">
@@ -11,22 +20,22 @@
         <div class="admin-brand-icon">
           <i class="bi bi-shield-lock-fill"></i>
         </div>
-        <h2>Admin Portal</h2>
-        <p class="subtitle">Authorized personnel only</p>
+        <h2>{{ t.portalTitle }}</h2>
+        <p class="subtitle">{{ t.portalSubtitle }}</p>
       </div>
 
       <form [formGroup]="adminLoginForm" (ngSubmit)="onSubmit()" class="auth-form" autocomplete="on">
 
         <!-- Email -->
         <div class="field-group">
-          <label class="field-label" for="admin-email">Admin Email</label>
+          <label class="field-label" for="admin-email">{{ t.emailLabel }}</label>
           <div class="field-input-wrap">
             <i class="bi bi-envelope field-icon"></i>
             <input
               id="admin-email"
               type="email"
               formControlName="email"
-              placeholder="admin@example.com"
+              [placeholder]="t.emailPlaceholder"
               autocomplete="username"
               class="field-input"
               [class.is-invalid]="f['email'].touched && f['email'].invalid"
@@ -37,9 +46,9 @@
           @if (f['email'].touched && f['email'].invalid) {
             <div class="field-error" id="admin-email-error" role="alert">
               @if (f['email'].errors?.['required']) {
-                Email is required.
+                {{ t.errEmailRequired }}
               } @else if (f['email'].errors?.['email']) {
-                Please enter a valid email address.
+                {{ t.errEmailInvalid }}
               }
             </div>
           }
@@ -47,14 +56,14 @@
 
         <!-- Password -->
         <div class="field-group">
-          <label class="field-label" for="admin-password">Password</label>
+          <label class="field-label" for="admin-password">{{ t.passwordLabel }}</label>
           <div class="field-input-wrap">
             <i class="bi bi-lock field-icon"></i>
             <input
               id="admin-password"
               [type]="showPassword() ? 'text' : 'password'"
               formControlName="password"
-              placeholder="Enter admin password"
+              [placeholder]="t.passwordPlaceholder"
               autocomplete="current-password"
               class="field-input"
               [class.is-invalid]="f['password'].touched && f['password'].invalid"
@@ -66,7 +75,7 @@
               class="toggle-pw-btn"
               (click)="showPassword.set(!showPassword())"
               tabindex="-1"
-              aria-label="Toggle password visibility"
+              [attr.aria-label]="t.togglePasswordVisibility"
             >
               <i class="bi" [class.bi-eye-slash]="!showPassword()" [class.bi-eye]="showPassword()"></i>
             </button>
@@ -74,9 +83,9 @@
           @if (f['password'].touched && f['password'].invalid) {
             <div class="field-error" id="admin-password-error" role="alert">
               @if (f['password'].errors?.['required']) {
-                Password is required.
+                {{ t.errPasswordRequired }}
               } @else if (f['password'].errors?.['minlength']) {
-                Password must be at least 6 characters.
+                {{ t.errPasswordMinlength }}
               }
             </div>
           }
@@ -86,10 +95,10 @@
         <button type="submit" class="submit-btn" [disabled]="loading()">
           @if (loading()) {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Authenticating...
+            {{ t.authenticating }}
           } @else {
             <i class="bi bi-box-arrow-in-right"></i>
-            Sign In as Admin
+            {{ t.signInAsAdmin }}
           }
         </button>
       </form>
@@ -97,7 +106,7 @@
       <p class="switch-auth">
         <a routerLink="/auth/login" class="switch-link">
           <i class="bi bi-arrow-left me-1"></i>
-          Back to User Login
+          {{ t.backToUserLogin }}
         </a>
       </p>
     </div>

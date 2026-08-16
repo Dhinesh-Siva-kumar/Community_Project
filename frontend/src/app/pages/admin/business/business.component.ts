@@ -88,10 +88,6 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   showHeaderFab = signal(false);
   private scrollTicking = false;
 
-  // Body-scroll lock while any modal/confirm popup is open
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
-
   // Data
   categories = signal<BusinessCategory[]>([]);
   businesses = signal<Business[]>([]);
@@ -618,34 +614,6 @@ getCategoryAccent(icon?: string): string {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.unlockPageScroll();
-  }
-
-  /** Locks background scroll while a modal/confirm popup is open. */
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
   }
 
   @HostListener('window:scroll')
@@ -1104,21 +1072,29 @@ private initForms(): void {
       });
   }
 
-  loadCategories(): void {
-    this.loading.set(true);
+  /**
+   * `silent` skips the loading-skeleton flip — used when refreshing after a
+   * create/edit/delete whose modal already closed over an unchanged scroll
+   * position. Toggling `loading` there would unmount the whole
+   * grid/table/page behind it (this page's top-level `@if (loading())` gate
+   * hides everything) and collapse the page height, snapping the scroll
+   * back to the top.
+   */
+  loadCategories(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.businessService.getCategories().subscribe({
       next: (data) => {
         this.categories.set(data);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load categories');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false): void {
+  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false, silent = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
     if (resetPage) this.currentPage.set(1);
@@ -1130,7 +1106,7 @@ private initForms(): void {
       // yank the admin back to the top mid-browse.
       this.scrollToTop();
     }
-    this.loading.set(true);
+    if (!silent) this.loading.set(true);
 
     const params: Record<string, any> = {
       categoryId: category.id,
@@ -1153,17 +1129,17 @@ private initForms(): void {
         // page was deleted) — fall back to the last valid page.
         if (response.totalPages > 0 && this.currentPage() > response.totalPages) {
           this.currentPage.set(response.totalPages);
-          this.loadBusinesses(category);
+          this.loadBusinesses(category, false, false, silent);
           return;
         }
         this.businesses.set(response.data);
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load businesses');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
@@ -1313,7 +1289,6 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.reset({ name: '', icon: 'bi-shop', description: '' });
-    this.lockPageScroll();
     this.showAddCategoryModal.set(true);
   }
 
@@ -1323,7 +1298,6 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.patchValue({ name: cat.name, icon: cat.icon ?? 'bi-shop', description: (cat as any).description ?? '' });
-    this.lockPageScroll();
     this.showAddCategoryModal.set(true);
   }
 
@@ -1335,7 +1309,6 @@ private initForms(): void {
   closeAddCategory(): void {
     this.showAddCategoryModal.set(false);
     this.editingCategory.set(null);
-    this.unlockPageScroll();
   }
 
   submitCategory(): void {
@@ -1369,14 +1342,12 @@ private initForms(): void {
   openDeleteCategory(event: Event, cat: BusinessCategory): void {
     event.stopPropagation();
     this.categoryToDelete.set(cat);
-    this.lockPageScroll();
     this.showDeleteCategoryConfirm.set(true);
   }
 
   closeDeleteCategory(): void {
     this.showDeleteCategoryConfirm.set(false);
     this.categoryToDelete.set(null);
-    this.unlockPageScroll();
   }
 
   confirmDeleteCategory(): void {
@@ -1422,7 +1393,6 @@ private initForms(): void {
     this.applyPincodeValidators();
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
     this.openingHoursTouched.set(false);
-    this.lockPageScroll();
     this.showAddBusinessModal.set(true);
   }
 
@@ -1572,7 +1542,6 @@ private initForms(): void {
       if (biz.cityName) this.cityNameCache.set(biz.cityId, biz.cityName);
     }
 
-    this.lockPageScroll();
     this.showAddBusinessModal.set(true);
   }
 
@@ -1580,7 +1549,6 @@ private initForms(): void {
     this.showAddBusinessModal.set(false);
     this.editingBusiness.set(null);
     this.existingGalleryImages.set([]);
-    this.unlockPageScroll();
   }
 
   onBusinessImagesChange(files: File[]): void {
@@ -1681,9 +1649,9 @@ private initForms(): void {
         // sort order, and any active filters stale (e.g. creating in one
         // category then switching to another showed outdated counts/lists).
         const cat = this.selectedCategory();
-        if (cat) this.loadBusinesses(cat, !editing);
+        if (cat) this.loadBusinesses(cat, !editing, false, true);
         // Keeps each category card's business count fresh on the Categories view.
-        this.loadCategories();
+        this.loadCategories(true);
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? (editing ? 'Failed to update business' : 'Failed to create business'));
@@ -1695,14 +1663,12 @@ private initForms(): void {
   openDeleteBusiness(event: Event, biz: Business): void {
     event.stopPropagation();
     this.businessToDelete.set(biz);
-    this.lockPageScroll();
     this.showDeleteBusinessConfirm.set(true);
   }
 
   closeDeleteBusiness(): void {
     this.showDeleteBusinessConfirm.set(false);
     this.businessToDelete.set(null);
-    this.unlockPageScroll();
   }
 
   confirmDeleteBusiness(): void {
@@ -1722,9 +1688,9 @@ private initForms(): void {
           this.goToList();
         } else {
           const cat = this.selectedCategory();
-          if (cat) this.loadBusinesses(cat);
+          if (cat) this.loadBusinesses(cat, false, false, true);
         }
-        this.loadCategories();
+        this.loadCategories(true);
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? 'Failed to delete business');
@@ -1762,14 +1728,12 @@ private initForms(): void {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.lockPageScroll();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.unlockPageScroll();
   }
 
   nextPreviewImage(): void {

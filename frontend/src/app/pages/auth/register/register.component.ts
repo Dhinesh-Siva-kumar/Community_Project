@@ -44,6 +44,195 @@ import {
 } from '../../../shared/components/searchable-select/searchable-select.component';
 import { computePasswordStrength } from '../../../shared/utils/password-strength';
 
+type Lang = 'en' | 'ta';
+
+const TRANSLATIONS = {
+  en: {
+    switchToTamil: 'Switch to Tamil',
+    switchToEnglish: 'Switch to English',
+    switchToLight: 'Switch to light mode',
+    switchToDark: 'Switch to dark mode',
+    backToHome: 'Back to home',
+    formHeadlinePre: 'Start your journey',
+    formHeadlineSub: "today. It's free.",
+    formBrandDesc: 'Create your account in seconds and join thousands of passionate people building meaningful connections.',
+    formFeature1: '10,000+ active members across the UK',
+    formFeature2: '500+ communities across every topic',
+    formFeature3: 'Free forever — no credit card needed',
+    avatarRowText: 'Join thousands already connected',
+    otpHeadlinePre: 'One last step!',
+    otpHeadlineSub: 'Verify your identity.',
+    otpBrandDesc: 'Enter the OTP we sent to your phone number to confirm your identity.',
+    otpFeature1: 'Check your SMS inbox',
+    otpFeature2: 'OTP is valid for 5 minutes only',
+    otpFeature3: 'Never share your OTP with anyone',
+    cardTitleForm: 'Create your account',
+    cardSubtitleForm: 'Fill in your details to get started for free',
+    cardTitleOtp: 'Verify OTP',
+    cardSubtitleOtp: 'Last step to register',
+    tooManyAttempts: 'Too many incorrect attempts. Please register again to request a new code.',
+    usernameLabel: 'User Name',
+    usernamePlaceholder: 'username',
+    errUsernameRequired: 'Username is required.',
+    errUsernameMinlength: 'Minimum 3 characters.',
+    errUsernameMaxlength: 'Maximum 20 characters allowed.',
+    errUsernamePattern: 'Only letters, numbers, and underscores.',
+    errUsernameTaken: 'Username already taken.',
+    displayNameLabel: 'Display Name',
+    displayNamePlaceholder: 'Your display name',
+    errDisplayNameRequired: 'Display name is required.',
+    errDisplayNameMinlength: 'Minimum 3 characters.',
+    errDisplayNameMaxlength: 'Maximum 50 characters allowed.',
+    errDisplayNamePattern: 'Must start with a letter; letters, spaces, hyphens, apostrophes only.',
+    countryLabel: 'Country',
+    countryPlaceholder: 'Select country',
+    mobileLabel: 'Mobile Number',
+    mobilePlaceholder: 'Enter mobile number',
+    errMobileTaken: 'This mobile number is already registered with another account.',
+    errMobileRequired: 'Mobile number is required.',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'At least 8 characters',
+    errPasswordRequired: 'Password is required.',
+    criteriaMinLength: 'At least 8 characters',
+    criteriaUppercase: 'Uppercase letter',
+    criteriaLowercase: 'Lowercase letter',
+    criteriaNumber: 'Number (0–9)',
+    criteriaSpecial: 'Special character',
+    confirmPasswordLabel: 'Confirm Password',
+    confirmPasswordPlaceholder: 'Re-enter your password',
+    errConfirmRequired: 'Please confirm your password.',
+    errPasswordMismatch: 'Passwords do not match.',
+    togglePasswordVisibility: 'Toggle password visibility',
+    sendingOtp: 'Sending OTP...',
+    register: 'Register',
+    or: 'or',
+    otpHint: 'Enter the 6-digit code sent to your phone',
+    codeExpiresIn: 'Code expires in',
+    devOtpLabel: 'Dev OTP',
+    otpIncorrect: 'OTP is incorrect. Please try again.',
+    resendOtpIn: (s: number) => `Resend OTP in ${s}s`,
+    resendOtp: 'Resend OTP',
+    creatingAccount: 'Creating account...',
+    verifyingOtp: 'Verifying OTP...',
+    verifyOtp: 'Verify OTP',
+    alreadyHaveAccount: 'Already have an account?',
+    signIn: 'Sign in',
+    googleSigningIn: 'Signing in with Google...',
+    creatingYourAccount: 'Creating your account...',
+    successTitle: "You're Successfully Registered!",
+    successSub: 'Welcome to Community. Taking you to your dashboard…',
+    modalClose: 'Close',
+    modalTitle: 'Choose a Username',
+    modalDesc: 'Your suggested username is already taken. Pick a unique username to complete your registration.',
+    modalUsernameLabel: 'Username',
+    checkingAvailability: 'Checking availability...',
+    usernameTaken: 'Username already taken. Please choose another.',
+    usernameAvailable: 'Username is available',
+    confirmUsername: 'Confirm Username',
+    toastCountriesFailed: 'Failed to load countries',
+    toastOtpSent: 'OTP sent successfully',
+    toastOtpSendFailed: 'Failed to send OTP',
+    toastOtpResent: 'OTP resent successfully',
+    toastInvalidOtp: 'Invalid OTP',
+    toastRegistrationFailed: 'Registration failed',
+    toastGoogleAlreadyRegistered: 'This Google account is already registered. Please sign in instead.',
+    toastGoogleUnavailable: 'Google sign-in is currently unavailable. Please try the normal registration instead.',
+    toastGoogleSomethingWrong: 'Something went wrong. Please close this dialog and try again.',
+  },
+  ta: {
+    switchToTamil: 'தமிழுக்கு மாறவும்',
+    switchToEnglish: 'ஆங்கிலத்திற்கு மாறவும்',
+    switchToLight: 'லைட் மோடிற்கு மாறவும்',
+    switchToDark: 'டார்க் மோடிற்கு மாறவும்',
+    backToHome: 'முகப்புக்குச் செல்ல',
+    formHeadlinePre: 'உங்கள் பயணத்தைத்',
+    formHeadlineSub: 'தொடங்குங்கள். இது இலவசம்.',
+    formBrandDesc: 'சில வினாடிகளில் உங்கள் கணக்கை உருவாக்கி, அர்த்தமுள்ள தொடர்புகளை உருவாக்கும் ஆயிரக்கணக்கானோருடன் இணையுங்கள்.',
+    formFeature1: 'UK முழுவதும் 10,000+ செயலில் உள்ள உறுப்பினர்கள்',
+    formFeature2: 'ஒவ்வொரு தலைப்பிலும் 500+ சமூகங்கள்',
+    formFeature3: 'எப்போதும் இலவசம் — கிரெடிட் கார்டு தேவையில்லை',
+    avatarRowText: 'ஆயிரக்கணக்கானோர் ஏற்கனவே இணைந்துள்ளனர்',
+    otpHeadlinePre: 'கடைசி படி!',
+    otpHeadlineSub: 'உங்கள் அடையாளத்தை சரிபார்க்கவும்.',
+    otpBrandDesc: 'உங்கள் அடையாளத்தை உறுதிப்படுத்த உங்கள் தொலைபேசி எண்ணுக்கு அனுப்பிய OTP-ஐ உள்ளிடவும்.',
+    otpFeature1: 'உங்கள் SMS இன்பாக்ஸைச் சரிபார்க்கவும்',
+    otpFeature2: 'OTP 5 நிமிடங்களுக்கு மட்டுமே செல்லுபடியாகும்',
+    otpFeature3: 'உங்கள் OTP-ஐ யாருடனும் பகிர வேண்டாம்',
+    cardTitleForm: 'உங்கள் கணக்கை உருவாக்குங்கள்',
+    cardSubtitleForm: 'இலவசமாகத் தொடங்க உங்கள் விவரங்களை நிரப்பவும்',
+    cardTitleOtp: 'OTP-ஐ சரிபார்க்கவும்',
+    cardSubtitleOtp: 'பதிவு செய்ய கடைசி படி',
+    tooManyAttempts: 'பல தவறான முயற்சிகள். புதிய குறியீட்டைப் பெற மீண்டும் பதிவு செய்யவும்.',
+    usernameLabel: 'பயனர் பெயர்',
+    usernamePlaceholder: 'பயனர்பெயர்',
+    errUsernameRequired: 'பயனர் பெயர் தேவை.',
+    errUsernameMinlength: 'குறைந்தபட்சம் 3 எழுத்துகள்.',
+    errUsernameMaxlength: 'அதிகபட்சம் 20 எழுத்துகள் அனுமதிக்கப்படும்.',
+    errUsernamePattern: 'எழுத்துகள், எண்கள் மற்றும் அடிக்கோடு மட்டும்.',
+    errUsernameTaken: 'பயனர் பெயர் ஏற்கனவே உள்ளது.',
+    displayNameLabel: 'காட்சிப் பெயர்',
+    displayNamePlaceholder: 'உங்கள் காட்சிப் பெயர்',
+    errDisplayNameRequired: 'காட்சிப் பெயர் தேவை.',
+    errDisplayNameMinlength: 'குறைந்தபட்சம் 3 எழுத்துகள்.',
+    errDisplayNameMaxlength: 'அதிகபட்சம் 50 எழுத்துகள் அனுமதிக்கப்படும்.',
+    errDisplayNamePattern: 'ஒரு எழுத்துடன் தொடங்க வேண்டும்; எழுத்துகள், இடைவெளிகள், ஹைபன், அபாஸ்ட்ரபி மட்டும்.',
+    countryLabel: 'நாடு',
+    countryPlaceholder: 'நாட்டைத் தேர்ந்தெடுக்கவும்',
+    mobileLabel: 'மொபைல் எண்',
+    mobilePlaceholder: 'மொபைல் எண்ணை உள்ளிடவும்',
+    errMobileTaken: 'இந்த மொபைல் எண் ஏற்கனவே மற்றொரு கணக்குடன் பதிவு செய்யப்பட்டுள்ளது.',
+    errMobileRequired: 'மொபைல் எண் தேவை.',
+    passwordLabel: 'கடவுச்சொல்',
+    passwordPlaceholder: 'குறைந்தது 8 எழுத்துகள்',
+    errPasswordRequired: 'கடவுச்சொல் தேவை.',
+    criteriaMinLength: 'குறைந்தது 8 எழுத்துகள்',
+    criteriaUppercase: 'பெரிய எழுத்து',
+    criteriaLowercase: 'சிறிய எழுத்து',
+    criteriaNumber: 'எண் (0–9)',
+    criteriaSpecial: 'சிறப்பு எழுத்து',
+    confirmPasswordLabel: 'கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+    confirmPasswordPlaceholder: 'உங்கள் கடவுச்சொல்லை மீண்டும் உள்ளிடவும்',
+    errConfirmRequired: 'உங்கள் கடவுச்சொல்லை உறுதிப்படுத்தவும்.',
+    errPasswordMismatch: 'கடவுச்சொற்கள் பொருந்தவில்லை.',
+    togglePasswordVisibility: 'கடவுச்சொல் காட்சியை மாற்று',
+    sendingOtp: 'OTP அனுப்புகிறது...',
+    register: 'பதிவு செய்யவும்',
+    or: 'அல்லது',
+    otpHint: 'உங்கள் தொலைபேசிக்கு அனுப்பிய 6-இலக்க குறியீட்டை உள்ளிடவும்',
+    codeExpiresIn: 'குறியீடு காலாவதியாகும் நேரம்',
+    devOtpLabel: 'டெவ் OTP',
+    otpIncorrect: 'OTP தவறானது. மீண்டும் முயற்சிக்கவும்.',
+    resendOtpIn: (s: number) => `${s} வினாடியில் OTP-ஐ மீண்டும் அனுப்பு`,
+    resendOtp: 'OTP-ஐ மீண்டும் அனுப்பு',
+    creatingAccount: 'கணக்கு உருவாக்கப்படுகிறது...',
+    verifyingOtp: 'OTP சரிபார்க்கிறது...',
+    verifyOtp: 'OTP-ஐ சரிபார்க்கவும்',
+    alreadyHaveAccount: 'ஏற்கனவே கணக்கு உள்ளதா?',
+    signIn: 'உள்நுழைக',
+    googleSigningIn: 'Google மூலம் உள்நுழைகிறது...',
+    creatingYourAccount: 'உங்கள் கணக்கு உருவாக்கப்படுகிறது...',
+    successTitle: 'நீங்கள் வெற்றிகரமாக பதிவு செய்யப்பட்டீர்கள்!',
+    successSub: 'Community-க்கு வரவேற்கிறோம். உங்கள் டாஷ்போர்டுக்கு அழைத்துச் செல்கிறோம்…',
+    modalClose: 'மூடு',
+    modalTitle: 'பயனர் பெயரைத் தேர்ந்தெடுக்கவும்',
+    modalDesc: 'உங்கள் பரிந்துரைக்கப்பட்ட பயனர் பெயர் ஏற்கனவே எடுக்கப்பட்டுள்ளது. உங்கள் பதிவை முடிக்க தனித்துவமான பயனர் பெயரைத் தேர்ந்தெடுக்கவும்.',
+    modalUsernameLabel: 'பயனர் பெயர்',
+    checkingAvailability: 'கிடைக்கிறதா என சரிபார்க்கிறது...',
+    usernameTaken: 'பயனர் பெயர் ஏற்கனவே உள்ளது. வேறு ஒன்றைத் தேர்ந்தெடுக்கவும்.',
+    usernameAvailable: 'பயனர் பெயர் கிடைக்கிறது',
+    confirmUsername: 'பயனர் பெயரை உறுதிசெய்',
+    toastCountriesFailed: 'நாடுகளை ஏற்ற முடியவில்லை',
+    toastOtpSent: 'OTP வெற்றிகரமாக அனுப்பப்பட்டது',
+    toastOtpSendFailed: 'OTP அனுப்ப முடியவில்லை',
+    toastOtpResent: 'OTP மீண்டும் வெற்றிகரமாக அனுப்பப்பட்டது',
+    toastInvalidOtp: 'தவறான OTP',
+    toastRegistrationFailed: 'பதிவு தோல்வியடைந்தது',
+    toastGoogleAlreadyRegistered: 'இந்த Google கணக்கு ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது. உள்நுழையவும்.',
+    toastGoogleUnavailable: 'Google உள்நுழைவு தற்போது கிடைக்கவில்லை. வழக்கமான பதிவை முயற்சிக்கவும்.',
+    toastGoogleSomethingWrong: 'ஏதோ தவறு நடந்தது. இந்த சாளரத்தை மூடிவிட்டு மீண்டும் முயற்சிக்கவும்.',
+  },
+};
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -139,6 +328,27 @@ export class RegisterComponent {
     }
   }
 
+  // ── Language ───────────────────────────────────────────────────────────────
+  currentLang: Lang = 'en';
+
+  get t() {
+    return this.currentLang === 'en' ? TRANSLATIONS.en : TRANSLATIONS.ta;
+  }
+
+  toggleLanguage(): void {
+    this.currentLang = this.currentLang === 'en' ? 'ta' : 'en';
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('landing-lang', this.currentLang);
+    }
+  }
+
+  private loadLanguage(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('landing-lang') as Lang | null;
+      if (saved === 'en' || saved === 'ta') this.currentLang = saved;
+    }
+  }
+
   get selectedCountry(): Country | undefined {
     const id = this.registerForm?.getRawValue().countryID;
     return this.countries.find(c => c.id == id);
@@ -155,6 +365,7 @@ export class RegisterComponent {
 
   ngOnInit() {
     this.loadTheme();
+    this.loadLanguage();
     this.initializeForm();
     this.loadCountries();
 
@@ -175,7 +386,7 @@ export class RegisterComponent {
 
     // Async username availability check
     this.registerForm.get('userName')?.valueChanges.pipe(
-      map(value => (value ?? '').replace(/[^a-zA-Z0-9_]/g, '')),
+      map(value => (value ?? '').replace(/[^a-zA-Z0-9_஀-௿]/g, '')),
       tap(() => this.usernameChecking.set(false)),
       debounceTime(500),
       distinctUntilChanged(),
@@ -240,8 +451,8 @@ export class RegisterComponent {
   initializeForm() {
     this.registerForm = this.fb.group(
       {
-        userName:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
-        displayName:     ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-z][A-Za-z '\-]*$/)]],
+        userName:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20), Validators.pattern(/^[a-zA-Z0-9_஀-௿]+$/)]],
+        displayName:     ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-z஀-௿][A-Za-z஀-௿ '\-]*$/)]],
         countryID:       [null, Validators.required],
         mobile:          ['', [Validators.required, Validators.maxLength(15), this.mobileValidator()]],
         password:        ['', [Validators.required, Validators.minLength(8), Validators.maxLength(64), this.strongPasswordValidator()]],
@@ -262,11 +473,11 @@ export class RegisterComponent {
       const value: string = control.value ?? '';
       if (!value) return null;
       const errors: ValidationErrors = {};
-      if (value.length < 8)            errors['minLength'] = true;
-      if (!/[A-Z]/.test(value))        errors['uppercase'] = true;
-      if (!/[a-z]/.test(value))        errors['lowercase'] = true;
-      if (!/[0-9]/.test(value))        errors['number']    = true;
-      if (!/[^A-Za-z0-9]/.test(value)) errors['special']   = true;
+      if (value.length < 8)                errors['minLength'] = true;
+      if (!/[A-Z஀-௿]/.test(value))         errors['uppercase'] = true;
+      if (!/[a-z஀-௿]/.test(value))         errors['lowercase'] = true;
+      if (!/[0-9]/.test(value))            errors['number']    = true;
+      if (!/[^A-Za-z0-9஀-௿]/.test(value))  errors['special']   = true;
       return Object.keys(errors).length ? errors : null;
     };
   }
@@ -307,7 +518,12 @@ export class RegisterComponent {
   // ── Input helpers ──────────────────────────────────────────────────────────
 
   sanitizeUsername(event: any) {
-    const value = (event.target.value as string).replace(/[^a-zA-Z0-9_]/g, '');
+    // While an IME composition is in progress (e.g. typing Tamil via a
+    // transliteration keyboard), the browser owns the input's value —
+    // overwriting it mid-composition fights the IME and can freeze the page.
+    // Let composition finish; `compositionend` re-fires this to sanitize.
+    if (event.isComposing) return;
+    const value = (event.target.value as string).replace(/[^a-zA-Z0-9_஀-௿]/g, '');
     event.target.value = value;
     this.registerForm.get('userName')?.setValue(value, { emitEvent: false });
   }
@@ -347,7 +563,7 @@ export class RegisterComponent {
           this.registerForm.get('mobile')?.updateValueAndValidity();
         }
       },
-      error: () => this.toastService.error('Failed to load countries'),
+      error: () => this.toastService.error(this.t.toastCountriesFailed),
     });
   }
 
@@ -370,7 +586,7 @@ export class RegisterComponent {
     this.authService.sendOtp({ mobile }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
         this.loading.set(false);
-        this.toastService.success('OTP sent successfully');
+        this.toastService.success(this.t.toastOtpSent);
         if (res?.devOtp) this.devOtp.set(res.devOtp);
         this.step.set('otp');
         this.startCountdown();
@@ -386,7 +602,7 @@ export class RegisterComponent {
           this.registerForm.get('mobile')?.markAsTouched();
           this.mobileAlreadyExists.set(true);
         } else {
-          this.toastService.error(err?.error?.message || 'Failed to send OTP');
+          this.toastService.error(err?.error?.message || this.t.toastOtpSendFailed);
         }
       },
     });
@@ -418,7 +634,7 @@ export class RegisterComponent {
         if (!res?.success) {
           this.loading.set(false);
           this.otpError.set(true);
-          this.toastService.error(res?.message || 'Invalid OTP');
+          this.toastService.error(res?.message || this.t.toastInvalidOtp);
           return;
         }
         this.registerUser();
@@ -466,7 +682,7 @@ export class RegisterComponent {
       error: (err) => {
         this.loading.set(false);
         this.registeringStage.set('');
-        this.toastService.error(err?.error?.message || 'Registration failed');
+        this.toastService.error(err?.error?.message || this.t.toastRegistrationFailed);
       },
     });
   }
@@ -535,7 +751,7 @@ export class RegisterComponent {
     const mobile = this.getFullPhoneNumber();
     this.authService.sendOtp({ mobile }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
-        this.toastService.success('OTP resent successfully');
+        this.toastService.success(this.t.toastOtpResent);
         if (res?.devOtp) this.devOtp.set(res.devOtp);
         this.otpError.set(false);
         this.clearOtpBoxes();
@@ -711,7 +927,7 @@ export class RegisterComponent {
           this.googleNeedsUsername.set(true);
         } else if (!res.isNewUser) {
           // Account already exists — do NOT log them in from the register page
-          this.toastService.error('This Google account is already registered. Please sign in instead.');
+          this.toastService.error(this.t.toastGoogleAlreadyRegistered);
           setTimeout(() => this.router.navigate(['/auth/login']), 2000);
         } else {
           // Tokens already stored by authService tap — go to dashboard
@@ -723,7 +939,7 @@ export class RegisterComponent {
         this.googleLoading.set(false);
         // errorInterceptor handles 4xx toasts; show one manually for 5xx / network errors
         if (!err?.status || err.status >= 500) {
-          this.toastService.error('Google sign-in is currently unavailable. Please try the normal registration instead.');
+          this.toastService.error(this.t.toastGoogleUnavailable);
         }
       },
     });
@@ -753,7 +969,7 @@ export class RegisterComponent {
           this.googleLoading.set(false);
           this.googleNeedsUsername.set(false);
           if (!res.isNewUser) {
-            this.toastService.error('This Google account is already registered. Please sign in instead.');
+            this.toastService.error(this.t.toastGoogleAlreadyRegistered);
             setTimeout(() => this.router.navigate(['/auth/login']), 2000);
           } else {
             this.showSuccessModal.set(true);
@@ -768,7 +984,7 @@ export class RegisterComponent {
           }
           // errorInterceptor handles 4xx toasts; handle 5xx manually
           if (!err?.status || err.status >= 500) {
-            this.toastService.error('Something went wrong. Please close this dialog and try again.');
+            this.toastService.error(this.t.toastGoogleSomethingWrong);
           }
         },
       });

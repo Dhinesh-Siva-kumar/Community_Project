@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
@@ -40,15 +40,10 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
 })
-export class UserBusinessComponent implements OnInit, OnDestroy {
+export class UserBusinessComponent implements OnInit {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
-
-  // Body-scroll lock while the image lightbox is open — mirrors the Admin
-  // Business page's implementation.
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -256,37 +251,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   /** The signed-in user's own country — the default the country filter starts/resets to. */
   getDefaultCountry(): string | null {
     return this.authService.currentUser()?.country || null;
-  }
-
-  ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
-  /** Locks background scroll while the image lightbox is open. */
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
   }
 
   private requestGeolocation(): void {
@@ -636,14 +600,12 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.lockPageScroll();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.unlockPageScroll();
   }
 
   nextPreviewImage(): void {

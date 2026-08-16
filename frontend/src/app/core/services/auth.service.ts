@@ -45,7 +45,7 @@ export class AuthService {
   }
 
   checkUsername(username: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/auth/check-username/${username}`);
+    return this.http.get(`${this.baseUrl}/auth/check-username/${encodeURIComponent(username)}`);
   }
 
   sendOtp(data: { mobile: string }): Observable<any> {

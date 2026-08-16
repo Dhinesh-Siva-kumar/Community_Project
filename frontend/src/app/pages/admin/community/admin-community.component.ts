@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -51,7 +51,7 @@ function minLengthTrimmed(min: number) {
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
 })
-export class AdminCommunityComponent implements OnInit, OnDestroy {
+export class AdminCommunityComponent implements OnInit {
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
@@ -91,8 +91,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   showCreateFab      = signal(false);
   viewMode           = signal<'grid' | 'table'>('grid');
 
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
   private scrollTicking = false;
 
   // ── Filter signals ────────────────────────────────────────
@@ -228,10 +226,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
   initForm(): void {
     this.communityForm = this.fb.group({
       communityName: [
@@ -301,8 +295,16 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadCommunities(): void {
-    this.loading.set(true);
+  /**
+   * `silent` skips the loading-skeleton flip — used when refreshing the list
+   * after a create/edit/delete whose modal already closed over an
+   * unchanged scroll position. Toggling `loading` there would unmount the
+   * whole grid/table behind it and collapse the page height, snapping the
+   * scroll back to the top (the modal-popup equivalent of the scroll-lock
+   * bug, just triggered by the post-save refetch instead of the open).
+   */
+  loadCommunities(silent = false): void {
+    if (!silent) this.loading.set(true);
     const params: Record<string, any> = {
       user_id: this.authService.currentUser()?.id ?? 39,
       page: this.currentPage(),
@@ -328,17 +330,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         // The saved page may no longer exist (e.g. communities were deleted/filtered out) — fall back to the last valid page.
         if (response.totalPages > 0 && this.currentPage() > response.totalPages) {
           this.currentPage.set(response.totalPages);
-          this.loadCommunities();
+          this.loadCommunities(silent);
           return;
         }
         this.communities.set(response.data);
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load communities');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
@@ -508,7 +510,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
-    this.lockPageScroll();
     this.showModal.set(true);
   }
 
@@ -527,43 +528,15 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       rules:         c['rules'] ?? [],
     });
     this.selectedImage.set(null);
-    this.lockPageScroll();
     this.showModal.set(true);
   }
 
   closeModal(): void {
     this.showModal.set(false);
-    this.unlockPageScroll();
     this.editingCommunity.set(null);
     this.communityForm.reset();
     this.formSubmitAttempted.set(false);
     this.selectedImage.set(null);
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
   }
 
   // ── Image handling ────────────────────────────────────────────
@@ -611,7 +584,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
             this.isEditing() ? 'Community updated successfully' : 'Community created successfully',
           );
           this.closeModal();
-          this.loadCommunities();
+          this.loadCommunities(true);
           this.submitting.set(false);
         },
         error: () => {
@@ -636,12 +609,10 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   // ── Delete ────────────────────────────────────────────────────
   confirmDelete(community: Community): void {
     this.communityToDelete.set(community);
-    this.lockPageScroll();
   }
 
   cancelDelete(): void {
     this.communityToDelete.set(null);
-    this.unlockPageScroll();
   }
 
   deleteCommunity(): void {
@@ -653,8 +624,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.toast.success('Community deleted successfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
-        this.unlockPageScroll();
-        this.loadCommunities();
+        this.loadCommunities(true);
       },
       error: () => {
         this.toast.error('Failed to delete community');
