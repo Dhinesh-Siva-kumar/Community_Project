@@ -6,6 +6,7 @@ import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
@@ -36,6 +37,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
   private environmentInjector = inject(EnvironmentInjector);
+  private scrollLock = inject(ScrollLockService);
 
   // Signals
   community = signal<Community | null>(null);
@@ -143,9 +145,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     content: ['', [Validators.required, Validators.minLength(this.postContentMinLength), Validators.maxLength(this.postContentMaxLength)]],
   });
   commentForms: Map<string, FormGroup> = new Map();
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
-  private lockedScrollY: number | null = null;
+  private isScrollLocked = false;
   private deletePostModalRef: ComponentRef<DeletePostModalComponent> | null = null;
   private deletePostModalHost: HTMLElement | null = null;
 
@@ -1231,50 +1231,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   private lockPageScroll(): void {
     // Guard against re-entrant locking (e.g. two modal signals flipping in
-    // the same tick).
-    if (this.lockedScrollY !== null) return;
-
-    const body = document.body;
-    const html = document.documentElement;
-
-    this.previousBodyOverflow = body.style.overflow;
-    this.previousHtmlOverflow = html.style.overflow;
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    this.lockedScrollY = scrollY;
-
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
-
-    // Inserting the popup's fixed-position content can nudge the browser
-    // back to the top of the page on the next paint; re-assert the scroll
-    // position a frame later so it opens over exactly what the user was
-    // looking at instead of jumping to the top.
-    requestAnimationFrame(() => {
-      if (this.lockedScrollY === scrollY) {
-        window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
-      }
-    });
+    // the same tick) so this component only ever holds one ScrollLockService
+    // reference at a time.
+    if (this.isScrollLocked) return;
+    this.isScrollLocked = true;
+    this.scrollLock.lock();
   }
 
   private unlockPageScroll(): void {
-    if (this.lockedScrollY === null) return;
-
-    const body = document.body;
-    const html = document.documentElement;
-    const scrollY = this.lockedScrollY;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
-    this.lockedScrollY = null;
-
-    // Explicit behavior:'auto' forces an instant jump. The page has a global
-    // `scroll-behavior: smooth` (styles.scss); the old 2-arg scrollTo(x, y)
-    // form inherits that, so restoring here visibly animated the background
-    // back into place instead of snapping to it.
-    window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+    if (!this.isScrollLocked) return;
+    this.isScrollLocked = false;
+    this.scrollLock.unlock();
   }
 
   getCommunityStatus(): { label: string; cls: string } {

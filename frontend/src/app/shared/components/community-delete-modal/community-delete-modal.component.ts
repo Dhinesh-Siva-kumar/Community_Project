@@ -2,6 +2,7 @@ import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmi
 import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../../core/services/community.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community } from '../../../core/models';
 
 /**
@@ -21,6 +22,7 @@ import { Community } from '../../../core/models';
 export class CommunityDeleteModalComponent implements OnChanges, OnDestroy {
   private svc   = inject(CommunityService);
   private toast = inject(ToastService);
+  private scrollLock = inject(ScrollLockService);
 
   @Input() open = false;
   @Input() community: Community | null = null;
@@ -31,36 +33,15 @@ export class CommunityDeleteModalComponent implements OnChanges, OnDestroy {
 
   deleting = signal(false);
 
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open']) {
-      if (this.open) this.lockPageScroll();
-      else this.unlockPageScroll();
+      if (this.open) this.scrollLock.lock();
+      else this.scrollLock.unlock();
     }
   }
 
   ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    if (this.previousBodyOverflow === null) this.previousBodyOverflow = body.style.overflow;
-    if (this.previousHtmlOverflow === null) this.previousHtmlOverflow = html.style.overflow;
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
+    if (this.open) this.scrollLock.unlock();
   }
 
   requestClose(): void {

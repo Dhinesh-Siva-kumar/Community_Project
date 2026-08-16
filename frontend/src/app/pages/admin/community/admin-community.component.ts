@@ -6,6 +6,7 @@ import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -59,6 +60,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private scrollLock = inject(ScrollLockService);
 
   countries: Country[] = [];
   interests: interests[] = [];
@@ -91,8 +93,6 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   showCreateFab      = signal(false);
   viewMode           = signal<'grid' | 'table'>('grid');
 
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
   private scrollTicking = false;
 
   // ── Filter signals ────────────────────────────────────────
@@ -229,7 +229,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.unlockPageScroll();
+    if (this.showModal() || this.communityToDelete()) this.scrollLock.unlock();
   }
 
   initForm(): void {
@@ -508,7 +508,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
 
     this.selectedImage.set(null);
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showModal.set(true);
   }
 
@@ -527,43 +527,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       rules:         c['rules'] ?? [],
     });
     this.selectedImage.set(null);
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showModal.set(true);
   }
 
   closeModal(): void {
     this.showModal.set(false);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
     this.editingCommunity.set(null);
     this.communityForm.reset();
     this.formSubmitAttempted.set(false);
     this.selectedImage.set(null);
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
   }
 
   // ── Image handling ────────────────────────────────────────────
@@ -636,12 +610,12 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   // ── Delete ────────────────────────────────────────────────────
   confirmDelete(community: Community): void {
     this.communityToDelete.set(community);
-    this.lockPageScroll();
+    this.scrollLock.lock();
   }
 
   cancelDelete(): void {
     this.communityToDelete.set(null);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   deleteCommunity(): void {
@@ -653,7 +627,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.toast.success('Community deleted successfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
-        this.unlockPageScroll();
+        this.scrollLock.unlock();
         this.loadCommunities();
       },
       error: () => {

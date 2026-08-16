@@ -7,6 +7,7 @@ import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
@@ -72,6 +73,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   private toast             = inject(ToastService);
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
+  private scrollLock        = inject(ScrollLockService);
   private destroy$          = new Subject<void>();
 
   // ── Countries for filter dropdown ──────────────────────────
@@ -87,10 +89,6 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   // Floating header action (shows once scrolled past the page header)
   showHeaderFab = signal(false);
   private scrollTicking = false;
-
-  // Body-scroll lock while any modal/confirm popup is open
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
 
   // Data
   categories = signal<BusinessCategory[]>([]);
@@ -618,34 +616,16 @@ getCategoryAccent(icon?: string): string {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.unlockPageScroll();
-  }
-
-  /** Locks background scroll while a modal/confirm popup is open. */
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    if (this.previousBodyOverflow === null) {
-      this.previousBodyOverflow = body.style.overflow;
-    }
-    if (this.previousHtmlOverflow === null) {
-      this.previousHtmlOverflow = html.style.overflow;
-    }
-
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
+    // Release one lock per currently-open modal/popup, mirroring however
+    // many lock() calls are still outstanding for this component.
+    const openLocks = [
+      this.showAddCategoryModal(),
+      this.showDeleteCategoryConfirm(),
+      this.showAddBusinessModal(),
+      this.showDeleteBusinessConfirm(),
+      this.lightboxOpen(),
+    ].filter(Boolean).length;
+    for (let i = 0; i < openLocks; i++) this.scrollLock.unlock();
   }
 
   @HostListener('window:scroll')
@@ -1313,7 +1293,7 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.reset({ name: '', icon: 'bi-shop', description: '' });
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showAddCategoryModal.set(true);
   }
 
@@ -1323,7 +1303,7 @@ private initForms(): void {
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
     this.categoryForm.patchValue({ name: cat.name, icon: cat.icon ?? 'bi-shop', description: (cat as any).description ?? '' });
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showAddCategoryModal.set(true);
   }
 
@@ -1335,7 +1315,7 @@ private initForms(): void {
   closeAddCategory(): void {
     this.showAddCategoryModal.set(false);
     this.editingCategory.set(null);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   submitCategory(): void {
@@ -1369,14 +1349,14 @@ private initForms(): void {
   openDeleteCategory(event: Event, cat: BusinessCategory): void {
     event.stopPropagation();
     this.categoryToDelete.set(cat);
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showDeleteCategoryConfirm.set(true);
   }
 
   closeDeleteCategory(): void {
     this.showDeleteCategoryConfirm.set(false);
     this.categoryToDelete.set(null);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   confirmDeleteCategory(): void {
@@ -1422,7 +1402,7 @@ private initForms(): void {
     this.applyPincodeValidators();
     this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
     this.openingHoursTouched.set(false);
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showAddBusinessModal.set(true);
   }
 
@@ -1572,7 +1552,7 @@ private initForms(): void {
       if (biz.cityName) this.cityNameCache.set(biz.cityId, biz.cityName);
     }
 
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showAddBusinessModal.set(true);
   }
 
@@ -1580,7 +1560,7 @@ private initForms(): void {
     this.showAddBusinessModal.set(false);
     this.editingBusiness.set(null);
     this.existingGalleryImages.set([]);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   onBusinessImagesChange(files: File[]): void {
@@ -1695,14 +1675,14 @@ private initForms(): void {
   openDeleteBusiness(event: Event, biz: Business): void {
     event.stopPropagation();
     this.businessToDelete.set(biz);
-    this.lockPageScroll();
+    this.scrollLock.lock();
     this.showDeleteBusinessConfirm.set(true);
   }
 
   closeDeleteBusiness(): void {
     this.showDeleteBusinessConfirm.set(false);
     this.businessToDelete.set(null);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   confirmDeleteBusiness(): void {
@@ -1762,14 +1742,14 @@ private initForms(): void {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.lockPageScroll();
+    this.scrollLock.lock();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.unlockPageScroll();
+    this.scrollLock.unlock();
   }
 
   nextPreviewImage(): void {

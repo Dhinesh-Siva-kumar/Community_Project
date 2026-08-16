@@ -6,6 +6,7 @@ import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ScrollLockService } from '../../../core/services/scroll-lock.service';
 import { Community, CommunityRequest, Country, interests } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
@@ -55,9 +56,7 @@ export class CommunityFormModalComponent implements OnChanges, OnDestroy {
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-
-  private previousBodyOverflow: string | null = null;
-  private previousHtmlOverflow: string | null = null;
+  private scrollLock = inject(ScrollLockService);
 
   @Input() open = false;
   @Input() editCommunityId: string | null = null;
@@ -102,33 +101,15 @@ export class CommunityFormModalComponent implements OnChanges, OnDestroy {
         } else {
           this.resetForCreate();
         }
-        this.lockPageScroll();
+        this.scrollLock.lock();
       } else {
-        this.unlockPageScroll();
+        this.scrollLock.unlock();
       }
     }
   }
 
   ngOnDestroy(): void {
-    this.unlockPageScroll();
-  }
-
-  private lockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    if (this.previousBodyOverflow === null) this.previousBodyOverflow = body.style.overflow;
-    if (this.previousHtmlOverflow === null) this.previousHtmlOverflow = html.style.overflow;
-    body.style.overflow = 'hidden';
-    html.style.overflow = 'hidden';
-  }
-
-  private unlockPageScroll(): void {
-    const body = document.body;
-    const html = document.documentElement;
-    body.style.overflow = this.previousBodyOverflow ?? '';
-    html.style.overflow = this.previousHtmlOverflow ?? '';
-    this.previousBodyOverflow = null;
-    this.previousHtmlOverflow = null;
+    if (this.open) this.scrollLock.unlock();
   }
 
   private initForm(): void {
