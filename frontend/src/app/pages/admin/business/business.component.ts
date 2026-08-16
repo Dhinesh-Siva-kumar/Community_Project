@@ -1072,21 +1072,29 @@ private initForms(): void {
       });
   }
 
-  loadCategories(): void {
-    this.loading.set(true);
+  /**
+   * `silent` skips the loading-skeleton flip — used when refreshing after a
+   * create/edit/delete whose modal already closed over an unchanged scroll
+   * position. Toggling `loading` there would unmount the whole
+   * grid/table/page behind it (this page's top-level `@if (loading())` gate
+   * hides everything) and collapse the page height, snapping the scroll
+   * back to the top.
+   */
+  loadCategories(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.businessService.getCategories().subscribe({
       next: (data) => {
         this.categories.set(data);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load categories');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false): void {
+  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false, silent = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
     if (resetPage) this.currentPage.set(1);
@@ -1098,7 +1106,7 @@ private initForms(): void {
       // yank the admin back to the top mid-browse.
       this.scrollToTop();
     }
-    this.loading.set(true);
+    if (!silent) this.loading.set(true);
 
     const params: Record<string, any> = {
       categoryId: category.id,
@@ -1121,17 +1129,17 @@ private initForms(): void {
         // page was deleted) — fall back to the last valid page.
         if (response.totalPages > 0 && this.currentPage() > response.totalPages) {
           this.currentPage.set(response.totalPages);
-          this.loadBusinesses(category);
+          this.loadBusinesses(category, false, false, silent);
           return;
         }
         this.businesses.set(response.data);
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load businesses');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
@@ -1641,9 +1649,9 @@ private initForms(): void {
         // sort order, and any active filters stale (e.g. creating in one
         // category then switching to another showed outdated counts/lists).
         const cat = this.selectedCategory();
-        if (cat) this.loadBusinesses(cat, !editing);
+        if (cat) this.loadBusinesses(cat, !editing, false, true);
         // Keeps each category card's business count fresh on the Categories view.
-        this.loadCategories();
+        this.loadCategories(true);
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? (editing ? 'Failed to update business' : 'Failed to create business'));
@@ -1680,9 +1688,9 @@ private initForms(): void {
           this.goToList();
         } else {
           const cat = this.selectedCategory();
-          if (cat) this.loadBusinesses(cat);
+          if (cat) this.loadBusinesses(cat, false, false, true);
         }
-        this.loadCategories();
+        this.loadCategories(true);
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? 'Failed to delete business');

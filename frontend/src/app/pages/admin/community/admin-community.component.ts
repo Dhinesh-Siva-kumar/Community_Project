@@ -295,8 +295,16 @@ export class AdminCommunityComponent implements OnInit {
     });
   }
 
-  loadCommunities(): void {
-    this.loading.set(true);
+  /**
+   * `silent` skips the loading-skeleton flip — used when refreshing the list
+   * after a create/edit/delete whose modal already closed over an
+   * unchanged scroll position. Toggling `loading` there would unmount the
+   * whole grid/table behind it and collapse the page height, snapping the
+   * scroll back to the top (the modal-popup equivalent of the scroll-lock
+   * bug, just triggered by the post-save refetch instead of the open).
+   */
+  loadCommunities(silent = false): void {
+    if (!silent) this.loading.set(true);
     const params: Record<string, any> = {
       user_id: this.authService.currentUser()?.id ?? 39,
       page: this.currentPage(),
@@ -322,17 +330,17 @@ export class AdminCommunityComponent implements OnInit {
         // The saved page may no longer exist (e.g. communities were deleted/filtered out) — fall back to the last valid page.
         if (response.totalPages > 0 && this.currentPage() > response.totalPages) {
           this.currentPage.set(response.totalPages);
-          this.loadCommunities();
+          this.loadCommunities(silent);
           return;
         }
         this.communities.set(response.data);
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
       error: () => {
         this.toast.error('Failed to load communities');
-        this.loading.set(false);
+        if (!silent) this.loading.set(false);
       },
     });
   }
@@ -576,7 +584,7 @@ export class AdminCommunityComponent implements OnInit {
             this.isEditing() ? 'Community updated successfully' : 'Community created successfully',
           );
           this.closeModal();
-          this.loadCommunities();
+          this.loadCommunities(true);
           this.submitting.set(false);
         },
         error: () => {
@@ -616,7 +624,7 @@ export class AdminCommunityComponent implements OnInit {
         this.toast.success('Community deleted successfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
-        this.loadCommunities();
+        this.loadCommunities(true);
       },
       error: () => {
         this.toast.error('Failed to delete community');
