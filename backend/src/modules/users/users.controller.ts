@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import {
   UpdateUserDto, ListUsersQueryDto,
-  AdminCreateUserDto, AdminChangeRoleDto, AdminResetPasswordDto,
+  AdminCreateUserDto, AdminResetPasswordDto,
   AuditLogQueryDto, BroadcastNotificationDto, ChartDataQueryDto,
 } from './users.dto';
 import * as usersService from './users.service';
@@ -56,13 +56,6 @@ export async function adminCreateUser(req: Request, res: Response, next: NextFun
 
 export async function softDeleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try { res.json(await usersService.softDeleteUser(req.user!.sub, req.params['id'] as string)); } catch (e) { next(e); }
-}
-
-export async function changeUserRole(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const dto = AdminChangeRoleDto.parse(req.body);
-    res.json(await usersService.changeUserRole(req.user!.sub, req.params['id'] as string, dto));
-  } catch (e) { next(e); }
 }
 
 export async function adminResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {

@@ -14,7 +14,6 @@ export interface AdminCreateUserPayload {
   email?:      string;
   phoneNo?:    string;
   password:    string;
-  role:        'ADMIN' | 'USER';
   countryId?:  number;
 }
 
@@ -87,10 +86,6 @@ export class UserService {
 
   softDeleteUser(id: string): Observable<{ success: boolean; message: string }> {
     return this.api.delete<{ success: boolean; message: string }>(`/users/${id}`);
-  }
-
-  changeUserRole(id: string, role: 'ADMIN' | 'USER'): Observable<User> {
-    return this.api.put<User>(`/users/${id}/role`, { role });
   }
 
   adminResetPassword(id: string, newPassword: string): Observable<{ success: boolean }> {

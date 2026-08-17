@@ -38,12 +38,7 @@ export const AdminCreateUserDto = z.object({
   email:       z.string().email().optional(),
   phoneNo:     z.string().optional(),
   password:    z.string().min(8),
-  role:        z.enum(['ADMIN', 'USER']).default('USER'),
   countryId:   z.number().int().positive().optional(),
-});
-
-export const AdminChangeRoleDto = z.object({
-  role: z.enum(['ADMIN', 'USER']),
 });
 
 export const AdminResetPasswordDto = z.object({
@@ -77,7 +72,6 @@ export const BroadcastNotificationDto = z.object({
 export type UpdateUserDtoType            = z.infer<typeof UpdateUserDto>;
 export type ListUsersQueryDtoType        = z.infer<typeof ListUsersQueryDto>;
 export type AdminCreateUserDtoType       = z.infer<typeof AdminCreateUserDto>;
-export type AdminChangeRoleDtoType       = z.infer<typeof AdminChangeRoleDto>;
 export type AdminResetPasswordDtoType    = z.infer<typeof AdminResetPasswordDto>;
 export type AuditLogQueryDtoType         = z.infer<typeof AuditLogQueryDto>;
 export type BroadcastNotificationDtoType = z.infer<typeof BroadcastNotificationDto>;

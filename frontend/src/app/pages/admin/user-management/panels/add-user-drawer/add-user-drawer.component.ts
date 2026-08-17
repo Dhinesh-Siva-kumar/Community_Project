@@ -45,7 +45,6 @@ export class AddUserDrawerComponent implements OnInit {
       phoneNo:     [''],
       password:    ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required],
-      role:        ['USER', Validators.required],
       countryId:   [null],
     }, { validators: this.passwordsMatch });
 
@@ -104,7 +103,6 @@ export class AddUserDrawerComponent implements OnInit {
       userName:    v.userName,
       displayName: v.displayName,
       password:    v.password,
-      role:        v.role,
       email:       v.email || undefined,
       phoneNo:     v.phoneNo || undefined,
       countryId:   v.countryId || undefined,

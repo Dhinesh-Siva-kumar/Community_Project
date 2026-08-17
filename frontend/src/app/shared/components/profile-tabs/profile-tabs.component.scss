@@ -12,7 +12,7 @@
   padding: 5px;
   background: $color-bg-light;
   border: 1px solid $profile-card-border;
-  border-radius: $radius-full;
+  border-radius: $radius-sm;
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
@@ -23,11 +23,18 @@
   // (.cd-tabs-wrap) — soft gradient + blur + shadow, rounded-rect buttons
   // instead of pills, so the whole thing reads as a card of its own.
   &--full {
+    // Concentric corners: the inner (active-tab) radius is the outer card
+    // radius minus the container's own padding, so the active tab's curve
+    // traces the same corner as the card around it instead of a mismatched
+    // tighter radius.
+    $full-tab-radius: $radius-lg - 8px;
+    $full-tab-padding: 8px;
+
     display: flex;
     width: 100%;
     gap: 6px;
     overflow: visible;
-    padding: 8px;
+    padding: $full-tab-padding;
     border-radius: $radius-lg;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
     border-color: rgba(148, 163, 184, 0.2);
@@ -35,7 +42,7 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 
-    .tab-indicator { border-radius: $tab-radius; }
+    .tab-indicator { border-radius: $full-tab-radius; }
 
     .profile-tab {
       position: relative;
@@ -43,7 +50,7 @@
       flex: 1 1 0;
       justify-content: center;
       height: 39px;
-      border-radius: $tab-radius;
+      border-radius: $full-tab-radius;
 
       &.active {
         background: transparent;
