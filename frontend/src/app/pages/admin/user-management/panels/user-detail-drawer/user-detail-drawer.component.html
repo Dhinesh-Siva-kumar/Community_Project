@@ -350,37 +350,6 @@
           </button>
         </div>
 
-        <!-- Change Role -->
-        <div class="ud-action-card">
-          <div class="ud-action-card__left">
-            <div class="ud-action-card__icon" style="--c:#6366f1;--bg:#eef2ff">
-              <i class="bi bi-person-gear"></i>
-            </div>
-            <div>
-              <p class="ud-action-card__title">Change Role</p>
-              <p class="ud-action-card__desc">
-                Current role: <strong>{{ u.role }}</strong>
-              </p>
-            </div>
-          </div>
-          <div class="ud-action-card__row">
-            <select class="ud-action-select"
-              [(ngModel)]="newRole" [ngModelOptions]="{standalone: true}">
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
-            <button class="ud-btn ud-btn--primary"
-              [disabled]="newRole() === u.role || working() === 'role'"
-              (click)="saveRole()">
-              @if (working() === 'role') {
-                <span class="spinner-border spinner-border-sm"></span>
-              } @else {
-                <i class="bi bi-check-lg"></i> Save
-              }
-            </button>
-          </div>
-        </div>
-
         <!-- Reset Password -->
         <div class="ud-action-card">
           <div class="ud-action-card__left">

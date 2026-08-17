@@ -5,30 +5,31 @@
   background: $profile-card-bg;
   border: 1px solid $profile-card-border;
   border-radius: $radius-lg;
-  box-shadow: $shadow-2;
+  box-shadow: $shadow-3;
   overflow: hidden;
-  transition: box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 
-  &:hover { box-shadow: $shadow-4; }
-
-  // Plain cover strip — no color fill, just the height the avatar overlaps.
-  .header-cover {
-    height: 32px;
+  &:hover {
+    box-shadow: $shadow-4;
+    transform: translateY(-2px);
+    border-color: $color-amber-200;
   }
 
   .header-body {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: 0 $spacing-lg $spacing-sm;
+    gap: $spacing-md;
+    padding: $spacing-lg;
     flex-wrap: wrap;
   }
 
-  // Avatar lifted up to overlap the banner — kept well clear of 0 so the
-  // header-meta text block (which can be taller than the avatar once
-  // vertically centered) never gets clipped by this card's overflow:hidden.
+  // No manual vertical offset here on purpose — any negative margin or
+  // transform on this sibling throws off `align-items: center`'s reading
+  // of the row (it either shrinks the measured row height, or visually
+  // moves the avatar without moving the centering calculation), leaving it
+  // off-line from the header-meta text beside it. Plain flex centering is
+  // what keeps the two reliably on the same line.
   .avatar-slot {
-    margin-top: -20px;
     flex-shrink: 0;
 
     ::ng-deep .avatar-wrap {
@@ -104,8 +105,6 @@
       text-align: center;
       padding-bottom: $spacing-md;
     }
-
-    .avatar-slot { margin-top: -24px; }
 
     .name-row,
     .meta-line { justify-content: center; }

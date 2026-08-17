@@ -174,29 +174,6 @@
       <p class="au-section__label">Account Setup</p>
       <div class="au-fields">
 
-        <!-- Role -->
-        <div class="au-field">
-          <label class="au-label">Role <span class="au-req">*</span></label>
-          <div class="au-role-grid">
-            <label class="au-role" [class.au-role--active]="form.get('role')?.value === 'USER'">
-              <input type="radio" [formControl]="$any(form.get('role'))" value="USER" />
-              <i class="bi bi-person-fill"></i>
-              <div>
-                <span class="au-role__name">User</span>
-                <span class="au-role__desc">Standard access</span>
-              </div>
-            </label>
-            <label class="au-role" [class.au-role--active]="form.get('role')?.value === 'ADMIN'">
-              <input type="radio" [formControl]="$any(form.get('role'))" value="ADMIN" />
-              <i class="bi bi-shield-fill-check"></i>
-              <div>
-                <span class="au-role__name">Admin</span>
-                <span class="au-role__desc">Full control</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
         <!-- Country — SearchableSelect needs to NOT be inside overflow:hidden/auto -->
         <div class="au-field">
           <label class="au-label">Country</label>

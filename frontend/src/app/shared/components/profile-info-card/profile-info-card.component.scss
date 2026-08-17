@@ -4,12 +4,16 @@
   background: $profile-card-bg;
   border: 1px solid $profile-card-border;
   border-radius: $radius-lg;
-  box-shadow: $shadow-2;
+  box-shadow: $shadow-3;
   overflow: hidden;
   margin-bottom: $section-gap-v;
-  transition: box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 
-  &:hover { box-shadow: $shadow-3; }
+  &:hover {
+    box-shadow: $shadow-4;
+    transform: translateY(-2px);
+    border-color: $color-amber-200;
+  }
 
   .info-card-header {
     display: flex;

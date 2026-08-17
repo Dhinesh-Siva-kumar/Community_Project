@@ -9,7 +9,6 @@ import { validateAddressHierarchy, getDivisionChain } from '../geography/geograp
 import type {
   UpdateUserDtoType,
   AdminCreateUserDtoType,
-  AdminChangeRoleDtoType,
   AdminResetPasswordDtoType,
   BroadcastNotificationDtoType,
 } from './users.dto';
@@ -340,14 +339,14 @@ export async function adminCreateUser(adminId: string, data: AdminCreateUserDtoT
     email:        data.email ?? null,
     phone_no:     data.phoneNo ?? null,
     password:     hashedPassword,
-    role:         data.role,
-    role_level:   data.role === 'ADMIN' ? 100 : 1,
+    role:         'USER',
+    role_level:   1,
     country_id:   data.countryId ?? null,
     country:      countryName,
     is_active:    true,
   }).returning('*');
 
-  await logAudit(adminId, 'USER_CREATED', { createdUser: data.userName, role: data.role }, 'users', (user as UserRow).id);
+  await logAudit(adminId, 'USER_CREATED', { createdUser: data.userName, role: 'USER' }, 'users', (user as UserRow).id);
 
   return toClientUser(user as UserRow);
 }
@@ -364,21 +363,6 @@ export async function softDeleteUser(adminId: string, userId: string) {
   await logAudit(adminId, 'USER_DELETED', { deletedUser: user.user_name }, 'users', userId);
 
   return { success: true, message: 'User deactivated' };
-}
-
-// ---------------------------------------------------------------------------
-// Admin — change role
-// ---------------------------------------------------------------------------
-export async function changeUserRole(adminId: string, userId: string, data: AdminChangeRoleDtoType) {
-  const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
-
-  const roleLevel = data.role === 'ADMIN' ? 100 : 1;
-  await db('users').where({ id: userId }).update({ role: data.role, role_level: roleLevel });
-  await logAudit(adminId, 'ROLE_CHANGED', { user: user.user_name, from: user.role, to: data.role }, 'users', userId);
-
-  const updated = await db('users').where({ id: userId }).first() as UserRow;
-  return toClientUser(updated);
 }
 
 // ---------------------------------------------------------------------------

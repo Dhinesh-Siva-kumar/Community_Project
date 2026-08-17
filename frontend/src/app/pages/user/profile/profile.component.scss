@@ -332,7 +332,10 @@ textarea.form-control { border-radius: $radius-sm; }
   align-self: flex-start;
   gap: $spacing-lg;
   position: sticky;
-  top: $header-height + $spacing-xl;
+  // Matches user-layout's .main-content padding-top (1.5rem = $spacing-lg)
+  // exactly, so this card's top edge lines up with the left column's
+  // first card instead of sitting lower than it.
+  top: $header-height + $spacing-lg;
   z-index: $z-fixed - 1;
   margin-bottom: $spacing-lg;
 }

@@ -44,8 +44,6 @@ export class UserDetailDrawerComponent implements OnInit {
   activeTab = signal<DrawerTab>('overview');
   working   = signal<string | null>(null);
 
-  // Role change
-  newRole   = signal<'ADMIN' | 'USER'>('USER');
   newPassword = signal('');
   showResetPw = signal(false);
 
@@ -102,7 +100,7 @@ export class UserDetailDrawerComponent implements OnInit {
   loadUser(): void {
     this.loading.set(true);
     this.userService.getUserById(this.userId).subscribe({
-      next: (u) => { this.user.set(u); this.newRole.set(u.role); this.loading.set(false); },
+      next: (u) => { this.user.set(u); this.loading.set(false); },
       error: () => { this.toast.error('Failed to load user'); this.loading.set(false); },
     });
   }
@@ -138,21 +136,6 @@ export class UserDetailDrawerComponent implements OnInit {
         this.working.set(null);
       },
       error: () => { this.toast.error('Action failed'); this.working.set(null); },
-    });
-  }
-
-  saveRole(): void {
-    const u = this.user();
-    if (!u || this.newRole() === u.role) return;
-    this.working.set('role');
-    this.userService.changeUserRole(u.id, this.newRole()).subscribe({
-      next: (updated) => {
-        this.user.set({ ...u, role: updated.role, roleLevel: updated.roleLevel });
-        this.userUpdated.emit(updated);
-        this.toast.success('Role updated');
-        this.working.set(null);
-      },
-      error: (err) => { this.toast.error(err?.error?.message || 'Failed to update role'); this.working.set(null); },
     });
   }
 

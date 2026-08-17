@@ -23,7 +23,6 @@ router.post('/broadcast',   authorize('ADMIN'), usersController.broadcastNotific
 router.get('/:id',                    authorize('ADMIN'), usersController.getUserById);
 router.post('/',                      authorize('ADMIN'), usersController.adminCreateUser);
 router.delete('/:id',                 authorize('ADMIN'), usersController.softDeleteUser);
-router.put('/:id/role',               authorize('ADMIN'), usersController.changeUserRole);
 router.post('/:id/reset-password',    authorize('ADMIN'), usersController.adminResetPassword);
 router.put('/:id/block',              authorize('ADMIN'), usersController.blockUser);
 router.put('/:id/unblock',            authorize('ADMIN'), usersController.unblockUser);

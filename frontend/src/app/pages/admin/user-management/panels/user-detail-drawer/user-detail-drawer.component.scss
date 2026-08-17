@@ -708,18 +708,6 @@
   &:focus { border-color: $color-primary; box-shadow: $shadow-focus-ring; }
 }
 
-.ud-action-select {
-  padding: 7px 10px;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-md;
-  font-size: $font-sm;
-  background: $color-bg-card;
-  cursor: pointer;
-  outline: none;
-  min-width: 90px;
-  &:focus { border-color: $color-primary; }
-}
-
 // ─────────────────────────────────────────────────────────────
 // Action buttons
 // ─────────────────────────────────────────────────────────────
