@@ -37,7 +37,9 @@ export interface JobsQueryParams {
   postedWithin?: number;
   dateFrom?: string;
   dateTo?:   string;
-  sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az';
+  sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az'
+    | 'title_az' | 'title_za' | 'location_az' | 'location_za'
+    | 'type_az' | 'type_za' | 'status_active' | 'status_inactive';
 
   // ── Status (admin only) ───────────────────────────────────────
   status?: 'active' | 'inactive';
@@ -67,6 +69,9 @@ export class JobService {
     if (query.salaryMax != null)    params['salaryMax']     = query.salaryMax;
     if (query.salaryHidden != null) params['salaryHidden']  = query.salaryHidden;
     if (query.postedWithin != null) params['postedWithin']  = query.postedWithin;
+    if (query.status)                params['status']       = query.status;
+    if (query.dateFrom)              params['dateFrom']     = query.dateFrom;
+    if (query.dateTo)                params['dateTo']       = query.dateTo;
     if (query.sortBy && query.sortBy !== 'newest') params['sortBy'] = query.sortBy;
 
     return this.api.get<PaginatedResponse<Job>>('/jobs', params);

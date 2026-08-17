@@ -4,19 +4,22 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   ReactiveFormsModule, FormsModule, FormBuilder, FormGroup,
-  Validators, AbstractControl, ValidationErrors
+  Validators, AbstractControl, ValidationErrors, ValidatorFn
 } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable, map } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
-import { Country, Job, PaginatedResponse } from '../../../core/models';
+import { GeographyService } from '../../../core/services/geography.service';
+import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
+import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 
@@ -53,6 +56,16 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+/** Country-aware postal code validator — see business-form-modal.component.ts for the fuller explanation. */
+function postalCodeValidator(regex: string | null): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = ((c.value as string) ?? '').trim();
+    if (!v || !regex) return null;
+    try { return new RegExp(regex).test(v) ? null : { postalFormat: true }; }
+    catch { return null; }
+  };
+}
+
 // ─── Active filter chip model ────────────────────────────────
 export interface FilterChip {
   key:   string;
@@ -60,12 +73,21 @@ export interface FilterChip {
   value: any;
 }
 
+/**
+ * How long a Save/Delete popup stays open (with its submit button disabled
+ * and showing its spinner) after a successful action, before auto-closing —
+ * long enough for the success toast to be clearly visible above the popup
+ * rather than the popup vanishing the instant the toast appears.
+ */
+const CONFIRM_CLOSE_DELAY_MS = 900;
+
 @Component({
   selector: 'app-user-jobs',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
     SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
+    ImageErrorHandlerDirective, InfiniteScrollDirective,
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
@@ -75,6 +97,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
+  private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
@@ -91,22 +114,23 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   // ─── Accordion ───────────────────────────────────────────────
   activeJobId = signal<string | null>(null);
-  // Tracks which job descriptions are "show more" expanded
-  expandedDescIds = signal<Set<string>>(new Set());
+  // Show-more/less for job description sub-fields — keyed by `${jobId}:${field}`
+  // so Description/Responsibilities/Qualifications/Requirements/Benefits each
+  // expand independently.
+  expandedTextFields = signal<Set<string>>(new Set());
 
-  isDescExpanded(jobId: string): boolean { return this.expandedDescIds().has(jobId); }
-  toggleDescription(jobId: string, event: Event): void {
+  isFieldExpanded(jobId: string, field: string): boolean { return this.expandedTextFields().has(`${jobId}:${field}`); }
+  toggleTextField(jobId: string, field: string, event: Event): void {
     event.stopPropagation();
-    this.expandedDescIds.update(s => {
+    const key = `${jobId}:${field}`;
+    this.expandedTextFields.update(s => {
       const n = new Set(s);
-      n.has(jobId) ? n.delete(jobId) : n.add(jobId);
+      n.has(key) ? n.delete(key) : n.add(key);
       return n;
     });
   }
-
-  /** Description is long if > 400 chars */
-  isDescLong(job: Job): boolean { return (this.getDescription(job)?.length ?? 0) > 400; }
-  getShortDescription(job: Job): string { return this.getDescription(job).substring(0, 400) + '…'; }
+  isTextLong(text: string | null | undefined): boolean { return (text?.length ?? 0) > 400; }
+  getShortText(text: string): string { return text.substring(0, 400) + '…'; }
 
   // ─── Image Viewer ────────────────────────────────────────────
   imageViewerOpen = signal(false);
@@ -152,12 +176,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     return this.isAdmin() || job.userId === this.currentUserId();
   }
 
-  // ─── Master data for cascades ────────────────────────────────
+  // ─── Master data (dial-code picker + advanced filter only — the form's
+  // own Location section below uses GeographyService instead) ─────────
   countries     = signal<Country[]>([]);
-  states        = signal<MasterState[]>([]);
-  cities        = signal<MasterCity[]>([]);
-  statesLoading = signal(false);
-  citiesLoading = signal(false);
 
   // Filter location cascade (separate from form cascade)
   filterStates  = signal<MasterState[]>([]);
@@ -168,12 +189,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   countryOptions = computed<SelectOption[]>(() =>
     this.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
-  stateOptions = computed<SelectOption[]>(() =>
-    this.states().map(s => ({ value: s.id, label: s.name }))
-  );
-  cityOptions = computed<SelectOption[]>(() =>
-    this.cities().map(c => ({ value: c.id, label: c.name }))
-  );
   filterStateOptions = computed<SelectOption[]>(() =>
     this.filterStates().map(s => ({ value: s.name, label: s.name }))
   );
@@ -183,6 +198,45 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   dialCodeOptions = computed<SelectOption[]>(() =>
     this.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}` }))
   );
+
+  // ─── Location — Country → Division(s) → City → Postal cascade (form) ──
+  // Mirrors business-form-modal.component.ts; Jobs has no stored location
+  // ids (only plain city/state/country strings), so on submit the leaf
+  // division/city NAME is resolved and written into those string columns.
+  geoCountries  = signal<GeoCountry[]>([]);
+  countryConfig = signal<CountryAddressConfig | null>(null);
+  adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
+
+  geoCountryOptions = computed<SelectOption[]>(() =>
+    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
+  );
+
+  division1Options = signal<Division[]>([]);
+  division2Options = signal<Division[]>([]);
+  division1Loading = signal(false);
+  division2Loading = signal(false);
+
+  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map(d => ({ value: d.id, label: d.name })));
+  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map(d => ({ value: d.id, label: d.name })));
+
+  selectedDivision1Name = signal<string | null>(null);
+  selectedDivision2Name = signal<string | null>(null);
+  selectedCityOption    = signal<SelectOption | null>(null);
+  selectedCityName      = signal<string | null>(null);
+
+  private cityNameCache = new Map<number, string>();
+
+  citySearchFn = (query: string): Observable<SelectOption[]> => {
+    const countryId  = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : undefined;
+    const divisionId = this.getLeafDivisionId() ?? undefined;
+    if (!countryId) return new Observable<SelectOption[]>(sub => { sub.next([]); sub.complete(); });
+    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
+      map(res => {
+        res.data.forEach(c => this.cityNameCache.set(c.id, c.name));
+        return res.data.map(c => ({ value: c.id, label: c.name }));
+      }),
+    );
+  };
 
   // ─── User Context ────────────────────────────────────────────
   userPincode = computed(() => this.authService.currentUser()?.pincode ?? '');
@@ -258,12 +312,16 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   readonly currencyOptions: SelectOption[] = getCurrencySelectOptions();
 
   readonly educationOptions: SelectOption[] = [
-    { value: 'Any',         label: 'Any Graduate'      },
-    { value: 'High School', label: 'High School'       },
-    { value: 'Diploma',     label: 'Diploma'           },
-    { value: "Bachelor's",  label: "Bachelor's Degree" },
-    { value: "Master's",    label: "Master's Degree"   },
-    { value: 'PhD',         label: 'PhD'               },
+    { value: 'None',       label: 'No education needed' },
+    { value: '8th',        label: '8th'                  },
+    { value: '10th',       label: '10th'                 },
+    { value: '12th',       label: '12th'                 },
+    { value: 'Diploma',    label: 'Diploma'              },
+    { value: 'ITI',        label: 'ITI'                  },
+    { value: 'Any',        label: 'Any Graduate'         },
+    { value: "Bachelor's", label: "Bachelor's Degree"    },
+    { value: "Master's",   label: "Master's Degree"      },
+    { value: 'PhD',        label: 'PhD'                  },
   ];
 
   readonly expOptions: SelectOption[] = [
@@ -308,6 +366,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.initForm();
     this.loadJobs(1);
     this.loadCountries();
+    this.loadGeoCountries();
     this.subscribeToSalaryHidden();
   }
 
@@ -341,28 +400,175 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Form cascade (modal) ────────────────────────────────────
+  // ─── Location cascade (modal form) ────────────────────────────
+  private getLeafDivisionId(): number | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) { const v = this.jobForm.get('division2Id')?.value; return v ? Number(v) : null; }
+    if (levels === 1) { const v = this.jobForm.get('division1Id')?.value; return v ? Number(v) : null; }
+    return null;
+  }
+
+  private getLeafDivisionName(): string | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) return this.selectedDivision2Name();
+    if (levels === 1) return this.selectedDivision1Name();
+    return null;
+  }
+
+  private applyDivisionValidators(): void {
+    const levels = this.adminLevels().length;
+    const d1 = this.jobForm.get('division1Id');
+    const d2 = this.jobForm.get('division2Id');
+    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
+    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
+    d1?.updateValueAndValidity({ emitEvent: false });
+    d2?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyPincodeValidators(): void {
+    const postal = this.countryConfig()?.postalCode;
+    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
+    if (postal?.required) validators.push(Validators.required);
+    const ctrl = this.jobForm.get('pincode');
+    ctrl?.setValidators(validators);
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private resetDivisionState(): void {
+    this.countryConfig.set(null);
+    this.division1Options.set([]);
+    this.division2Options.set([]);
+    this.selectedDivision1Name.set(null);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.jobForm.get('division1Id')?.setValue(null, silent);
+    this.jobForm.get('division2Id')?.setValue(null, silent);
+    this.jobForm.get('cityId')?.setValue(null, silent);
+  }
+
   onCountryChange(countryId: any): void {
-    this.jobForm.get('stateId')?.setValue(null);
+    this.resetDivisionState();
+    const id = countryId ? Number(countryId) : null;
+    if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+
+    this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+        if (config.divisionLevels.length > 0) {
+          this.division1Loading.set(true);
+          this.geographyService.getDivisions(id).pipe(takeUntil(this.destroy$)).subscribe({
+            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
+            error: () => this.division1Loading.set(false),
+          });
+        }
+      },
+      error: () => this.toast.error('Failed to load country address details'),
+    });
+  }
+
+  onDivision1Change(divisionId: any): void {
+    this.jobForm.get('division2Id')?.setValue(null);
     this.jobForm.get('cityId')?.setValue(null);
-    this.states.set([]); this.cities.set([]);
-    if (countryId) {
-      this.statesLoading.set(true);
-      this.masterDataService.getStates(Number(countryId))
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({ next: s => { this.states.set(s); this.statesLoading.set(false); }, error: () => this.statesLoading.set(false) });
+    this.division2Options.set([]);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision1Name.set(id ? (this.division1Options().find(d => d.id === id)?.name ?? null) : null);
+
+    const countryId = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : null;
+    if (id && countryId && this.adminLevels().length >= 2) {
+      this.division2Loading.set(true);
+      this.geographyService.getDivisions(countryId, id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: divisions => { this.division2Options.set(divisions); this.division2Loading.set(false); },
+        error: () => this.division2Loading.set(false),
+      });
     }
   }
 
-  onStateChange(stateId: any): void {
+  onDivision2Change(divisionId: any): void {
     this.jobForm.get('cityId')?.setValue(null);
-    this.cities.set([]);
-    if (stateId) {
-      this.citiesLoading.set(true);
-      this.masterDataService.getCities(Number(stateId))
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({ next: c => { this.cities.set(c); this.citiesLoading.set(false); }, error: () => this.citiesLoading.set(false) });
-    }
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision2Name.set(id ? (this.division2Options().find(d => d.id === id)?.name ?? null) : null);
+  }
+
+  onCityChange(cityId: any): void {
+    const id = cityId ? Number(cityId) : null;
+    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
+    this.selectedCityName.set(name);
+    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
+  }
+
+  private loadGeoCountries(): void {
+    this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
+      next: data => this.geoCountries.set(data),
+      error: () => {},
+    });
+  }
+
+  /**
+   * Best-effort edit-mode resurrection: Jobs stores only plain city/state/
+   * country strings (no ids), so the previously-picked division/city can't
+   * be looked up directly — instead we fetch the country's division list
+   * and match the stored name case-insensitively. If no match is found
+   * (e.g. a 2-level country whose stored name was the leaf/district rather
+   * than the top-level division) the field is simply left blank for the
+   * user to re-pick, same graceful fallback the page already had before.
+   */
+  private resurrectJobLocation(job: Job): void {
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.resetDivisionState();
+    const country = job.country ? this.geoCountries().find(c => c.name.toLowerCase() === job.country!.toLowerCase()) : null;
+    if (!country) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+
+    this.jobForm.get('countryId')?.setValue(country.id, silent);
+    this.geographyService.getCountryConfig(country.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+        if (config.divisionLevels.length === 0 || !job.state) return;
+
+        this.division1Loading.set(true);
+        this.geographyService.getDivisions(country.id).pipe(takeUntil(this.destroy$)).subscribe({
+          next: (divisions) => {
+            this.division1Options.set(divisions);
+            this.division1Loading.set(false);
+            const match = divisions.find(d => d.name.toLowerCase() === job.state!.toLowerCase());
+            if (!match) return;
+            this.jobForm.get('division1Id')?.setValue(match.id, silent);
+            this.selectedDivision1Name.set(match.name);
+            if (job.city) this.resurrectJobCity(match.id, job.city);
+          },
+          error: () => this.division1Loading.set(false),
+        });
+      },
+      error: () => {},
+    });
+  }
+
+  private resurrectJobCity(divisionId: number, cityName: string): void {
+    this.geographyService.searchCities({ divisionId, countryId: undefined, search: cityName, page: 1, limit: 20 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const match = cityName ? res.data.find(c => c.name.toLowerCase() === cityName.toLowerCase()) : null;
+          if (!match) return;
+          const silent = { emitEvent: false, emitViewToModelChange: false };
+          this.jobForm.get('cityId')?.setValue(match.id, silent);
+          this.selectedCityName.set(match.name);
+          this.selectedCityOption.set({ value: match.id, label: match.name });
+          this.cityNameCache.set(match.id, match.name);
+        },
+        error: () => {},
+      });
   }
 
   // ─── Filter cascade (filter panel — uses name not ID) ────────
@@ -406,13 +612,13 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.triggerFilteredLoad();
   }
 
-  // ─── Data Loading ────────────────────────────────────────────
-  loadJobs(page = 1): void {
-    this.loading.set(true);
-    this.currentPage.set(page);
-    this.activeJobId.set(null);
+  // ─── Data Loading — true incremental server paging ────────────
+  readonly PAGE_SIZE = 10;
+  hasMore     = computed(() => this.jobs().length < this.totalItems());
+  loadingMore = signal(false);
 
-    const query: JobsQueryParams = { page };
+  private buildQuery(page: number): JobsQueryParams {
+    const query: JobsQueryParams = { page, limit: this.PAGE_SIZE };
 
     if (!this.showAllJobs() && this.userPincode()) query.pincode  = this.userPincode();
     if (this.searchQuery().trim())    query.search      = this.searchQuery().trim();
@@ -431,8 +637,16 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (this.filterSalaryHidden() != null) query.salaryHidden = this.filterSalaryHidden()!;
     if (this.filterPostedWithin() != null) query.postedWithin = this.filterPostedWithin()!;
     if (this.sortBy() && this.sortBy() !== 'newest') query.sortBy = this.sortBy() as any;
+    return query;
+  }
 
-    this.jobService.getJobs(query).subscribe({
+  /** Replace path — used on init, and whenever search/filter/sort changes. Always starts fresh at page 1. */
+  loadJobs(page = 1): void {
+    this.loading.set(true);
+    this.currentPage.set(page);
+    this.activeJobId.set(null);
+
+    this.jobService.getJobs(this.buildQuery(page)).subscribe({
       next: (response: PaginatedResponse<Job>) => {
         this.jobs.set(response.data);
         this.totalPages.set(response.totalPages);
@@ -440,6 +654,24 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: () => { this.toast.error('Failed to load jobs'); this.loading.set(false); },
+    });
+  }
+
+  /** Append path — fired by the infinite-scroll sentinel. Never used for a fresh/replace load. */
+  loadMoreJobs(): void {
+    if (this.loadingMore() || this.loading() || !this.hasMore()) return;
+    const nextPage = this.currentPage() + 1;
+    this.loadingMore.set(true);
+
+    this.jobService.getJobs(this.buildQuery(nextPage)).subscribe({
+      next: (response: PaginatedResponse<Job>) => {
+        this.jobs.update(list => [...list, ...response.data]);
+        this.currentPage.set(nextPage);
+        this.totalPages.set(response.totalPages);
+        this.totalItems.set(response.total);
+        this.loadingMore.set(false);
+      },
+      error: () => { this.toast.error('Failed to load more jobs'); this.loadingMore.set(false); },
     });
   }
 
@@ -544,7 +776,32 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   // ─── Accordion ───────────────────────────────────────────────
   toggleAccordion(id: string, event?: Event): void {
     if (event) event.stopPropagation();
+    const opening = this.activeJobId() !== id;
     this.activeJobId.update(cur => cur === id ? null : id);
+    if (opening) {
+      // Bring the newly-expanded card's top into view — scoped to this one
+      // card element only (never document.body/document.documentElement),
+      // so opening a card lower on a long list doesn't require manually
+      // scrolling to see its detail.
+      setTimeout(() => this.scrollCardIntoView(id), 0);
+    }
+  }
+
+  /**
+   * Scrolls the given card to just below the app's sticky top header
+   * (`.top-header`, see user-layout.component.scss) instead of flush to
+   * the very top of the viewport — plain `scrollIntoView({block:'start'})`
+   * lands the card's top edge at y=0, which the sticky header then
+   * overlaps, hiding the first ~64px of the card and reading as an
+   * over-scroll to the page top.
+   */
+  private scrollCardIntoView(id: string): void {
+    const cardEl = document.getElementById('job-card-' + id);
+    if (!cardEl) return;
+    const headerEl = document.querySelector('.top-header');
+    const headerOffset = (headerEl?.getBoundingClientRect().height ?? 0) + 16;
+    const cardTop = cardEl.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: cardTop - headerOffset, behavior: 'smooth' });
   }
 
   // ─── Working Days (modal form) ───────────────────────────────
@@ -588,7 +845,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       salaryCurrency: 'GBP', shiftType: 'Day', openings: 1,
       isRemote: false, salaryHidden: false, workingDays: [], skills: [],
     });
-    this.states.set([]); this.cities.set([]);
+    this.resetDivisionState();
+    this.applyDivisionValidators();
+    this.applyPincodeValidators();
     this.selectedImages.set([]);
     this.selectedLogo.set(null);
     this.logoPreview.set(null);
@@ -601,7 +860,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   openEditModal(job: Job, event: Event): void {
     event.stopPropagation();
     this.editingJob.set(job);
-    this.states.set([]); this.cities.set([]);
     this.selectedImages.set([]);
     this.selectedLogo.set(null);
     this.logoPreview.set(job.companyLogo ?? null);
@@ -636,13 +894,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       applicationUrl:  job.applicationUrl ?? '',
       skills:          job.skills         ?? [],
       description:     job.description    ?? '',
+      responsibilities: job.responsibilities ?? '',
+      qualifications:   job.qualifications   ?? '',
+      requirements:     job.requirements     ?? '',
+      benefits:         job.benefits         ?? '',
     });
-    // For location: keep country/state/city as free-text using the stored names
-    // We set them as strings directly — the payload builder will use them as-is
-    this.jobForm.get('countryId')?.setValue(null);   // clear cascade IDs
-    this.jobForm.get('stateId')?.setValue(null);
-    this.jobForm.get('cityId')?.setValue(null);
-
+    this.resurrectJobLocation(job);
     this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
     this.showAddModal.set(true);
@@ -677,8 +934,10 @@ export class UserJobsComponent implements OnInit, OnDestroy {
           this.jobs.update(list => [job, ...list]);
           this.totalItems.update(v => v + 1);
           this.toast.success('Job posted successfully!');
-          this.closeAddModal();
-          this.submitting.set(false);
+          // Keep the popup (and its disabled/spinner button, so it can't be
+          // double-submitted) up just long enough for the confirmation toast
+          // to be visible above it, then close.
+          setTimeout(() => { this.closeAddModal(); this.submitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
         error: () => { this.toast.error('Failed to post job. Please try again.'); this.submitting.set(false); },
       });
@@ -696,8 +955,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         next: (updated) => {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
           this.toast.success('Job updated successfully!');
-          this.closeAddModal();
-          this.editSubmitting.set(false);
+          setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
         error: () => { this.toast.error('Failed to update job. Please try again.'); this.editSubmitting.set(false); },
       });
@@ -726,32 +984,31 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.totalItems.update(v => v - 1);
         if (this.activeJobId() === job.id) this.activeJobId.set(null);
         this.toast.success('Job deleted successfully');
-        this.closeDeleteConfirm();
-        this.deleting.set(false);
+        setTimeout(() => { this.closeDeleteConfirm(); this.deleting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
       },
       error: () => { this.toast.error('Failed to delete job'); this.deleting.set(false); },
     });
   }
 
   private buildJobPayload(raw: Record<string, any>): Record<string, any> {
-    const country = this.countries().find(c => c.id === raw['countryId']);
-    const state   = this.states().find(s => s.id === raw['stateId']);
-    const city    = this.cities().find(c => c.id === raw['cityId']);
+    const country = this.geoCountries().find(c => c.id === raw['countryId']);
+    const leafDivisionName = this.getLeafDivisionName();
+    const cityName = this.selectedCityName();
     const phone   = (raw['contactDialCode'] && raw['contactPhone'])
       ? `${raw['contactDialCode']}${raw['contactPhone']}`
       : (raw['contactPhone'] ?? '');
 
     const payload: Record<string, any> = {};
     for (const [key, val] of Object.entries(raw)) {
-      if (['countryId', 'stateId', 'cityId', 'contactDialCode'].includes(key)) continue;
+      if (['countryId', 'division1Id', 'division2Id', 'cityId', 'contactDialCode'].includes(key)) continue;
       if (val === null || val === undefined || val === '') continue;
       if (Array.isArray(val) && val.length === 0) continue;
       payload[key] = val;
     }
-    if (country) payload['country'] = country.name;
-    if (state)   payload['state']   = state.name;
-    if (city)    payload['city']    = city.name;
-    if (phone)   payload['contactPhone'] = phone;
+    if (country)          payload['country'] = country.name;
+    if (leafDivisionName) payload['state']   = leafDivisionName;
+    if (cityName)         payload['city']    = cityName;
+    if (phone)            payload['contactPhone'] = phone;
     return payload;
   }
 
@@ -763,23 +1020,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (!payload['state']   && original.state)   payload['state']   = original.state;
     if (!payload['city']    && original.city)     payload['city']    = original.city;
     return payload;
-  }
-
-  // ─── Pagination ──────────────────────────────────────────────
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages() || page === this.currentPage()) return;
-    this.loadJobs(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  getPages(): number[] {
-    const total = this.totalPages(), current = this.currentPage(), maxVis = 5;
-    let start = Math.max(1, current - Math.floor(maxVis / 2));
-    let end   = Math.min(total, start + maxVis - 1);
-    start     = Math.max(1, end - maxVis + 1);
-    const pages: number[] = [];
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
   }
 
   // ─── Phone validation ─────────────────────────────────────────
@@ -828,12 +1068,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   hasDescription(job: Job): boolean {
     return !!(job.description || job.responsibilities || job.qualifications || job.requirements || job.benefits);
-  }
-
-  getDescription(job: Job): string {
-    return job.description
-      ?? [job.responsibilities, job.qualifications, job.requirements, job.benefits]
-         .filter(Boolean).join('\n\n');
   }
 
   getFirstSkills(job: Job, max = 3): string[] {
@@ -914,7 +1148,8 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       salaryHidden:   [false],
       isRemote:       [false],
       countryId:      [null],
-      stateId:        [null],
+      division1Id:    [null],
+      division2Id:    [null],
       cityId:         [null],
       pincode:        [''],
       fullAddress:    [''],
@@ -929,6 +1164,10 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       applicationUrl: ['', urlValidator],
       skills:         [[]],
       description:    [''],
+      responsibilities: [''],
+      qualifications:   [''],
+      requirements:     [''],
+      benefits:         [''],
     }, {
       validators: [salaryRangeValidator, expRangeValidator],
     });

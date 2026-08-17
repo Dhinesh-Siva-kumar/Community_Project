@@ -52,6 +52,10 @@ function mapNewFields(data: Partial<CreateJobDtoType>): Record<string, unknown> 
   // Content
   if (data.skills          !== undefined) m['skills']      = data.skills ?? [];
   if (data.description     !== undefined) m['description'] = data.description ?? null;
+  if (data.responsibilities !== undefined) m['responsibilities'] = data.responsibilities ?? null;
+  if (data.qualifications   !== undefined) m['qualifications']   = data.qualifications   ?? null;
+  if (data.requirements     !== undefined) m['requirements']     = data.requirements     ?? null;
+  if (data.benefits         !== undefined) m['benefits']         = data.benefits         ?? null;
 
   return m;
 }
@@ -116,6 +120,10 @@ function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
     // Content
     skills: j['skills'],
     // description is already mapped above in the legacy block
+    responsibilities: j['responsibilities'],
+    qualifications:   j['qualifications'],
+    requirements:     j['requirements'],
+    benefits:         j['benefits'],
 
     user,
   };
@@ -340,11 +348,19 @@ export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?
 
   // ── Sorting ──────────────────────────────────────────────────
   switch (sortBy) {
-    case 'oldest':      query.orderBy('j.created_at',   'asc');  break;
-    case 'salary_high': query.orderBy('j.salary_max',   'desc'); break;
-    case 'salary_low':  query.orderBy('j.salary_min',   'asc');  break;
-    case 'company_az':  query.orderBy('j.company_name', 'asc');  break;
-    default:            query.orderBy('j.created_at',   'desc'); // newest first
+    case 'oldest':          query.orderBy('j.created_at',   'asc');  break;
+    case 'salary_high':     query.orderBy('j.salary_max',   'desc'); break;
+    case 'salary_low':      query.orderBy('j.salary_min',   'asc');  break;
+    case 'company_az':      query.orderBy('j.company_name', 'asc');  break;
+    case 'title_az':        query.orderBy('j.title',        'asc');  break;
+    case 'title_za':        query.orderBy('j.title',        'desc'); break;
+    case 'location_az':     query.orderBy('j.city', 'asc').orderBy('j.country', 'asc'); break;
+    case 'location_za':     query.orderBy('j.city', 'desc').orderBy('j.country', 'desc'); break;
+    case 'type_az':         query.orderBy('j.job_type',     'asc');  break;
+    case 'type_za':         query.orderBy('j.job_type',     'desc'); break;
+    case 'status_active':   query.orderBy('j.is_active',    'desc'); break; // active jobs first
+    case 'status_inactive': query.orderBy('j.is_active',    'asc');  break; // inactive jobs first
+    default:                query.orderBy('j.created_at',   'desc'); // newest first
   }
 
   const [jobs, [{ total }]] = await Promise.all([

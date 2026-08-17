@@ -65,7 +65,11 @@ export const CreateJobDto = z.object({
   // ── Content ──────────────────────────────────────────────────
   skills: z.array(z.string()).optional(),
   // Note: description is declared above in the legacy fields block —
-  // it now serves as the unified job description field.
+  // it now serves as the general/summary job description field.
+  responsibilities: z.string().optional(),
+  qualifications:   z.string().optional(),
+  requirements:     z.string().optional(),
+  benefits:         z.string().optional(),
 });
 
 export const UpdateJobDto = CreateJobDto.partial();
@@ -115,6 +119,10 @@ export const ListJobsQueryDto = z.object({
     'newest', 'oldest',
     'salary_high', 'salary_low',
     'company_az',
+    'title_az', 'title_za',
+    'location_az', 'location_za',
+    'type_az', 'type_za',
+    'status_active', 'status_inactive',
   ]).optional(),
 });
 
