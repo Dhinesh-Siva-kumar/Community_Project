@@ -405,10 +405,11 @@
 
 // ── Advanced filter panel ─────────────────────────────────────
 .jb-advanced-panel {
-  padding: $spacing-md;
+  padding: $spacing-lg;
   background: $color-bg-page;
   border: 1px solid $color-border;
   border-radius: $radius-md;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
 }
 
 .jb-advanced-grid {
@@ -923,6 +924,24 @@
   &--remote     { background: #E0F2FE; color: #0284C7; }
   &--hybrid     { background: #EDE9FE; color: #7C3AED; }
   &--onsite     { background: $color-stone-100; color: $color-stone-700; }
+  &--pending    { background: rgba(245, 158, 11, 0.94); color: #fff; }
+  &--rejected   { background: rgba(220, 38, 38, 0.94); color: #fff; }
+}
+
+.jb-card__rejection-reason {
+  display: flex; align-items: flex-start; gap: 5px;
+  font-size: 11.5px; color: #dc2626; background: rgba(220, 38, 38, 0.08);
+  border-radius: $radius-sm; padding: 6px 8px; margin: 4px 0 0;
+  .bi { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+}
+
+.jb-page-tabs { display: inline-flex; gap: 8px; margin-right: 8px; }
+
+.jb-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-extrabold; margin-left: 4px;
 }
 
 
@@ -1680,106 +1699,210 @@
 // POST JOB MODAL — Sticky header/footer, 10-section form
 // ═══════════════════════════════════════════════════════════════
 
-.jb-modal-dialog { max-width: min(1100px, 96vw); }
+// ── Popup positioning — same fixed-centered blur-backdrop mechanism used
+// by Community/Business (`.au-backdrop` / `.au-modal`), with Jobs' own
+// header/body/footer chrome (`.jb-modal__*` / `.jb-delete-modal__*` below)
+// layered on top instead of duplicating Community's gradient/colors.
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+}
+
+.au-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-card;
+}
 
 .jb-modal {
+  width: min(1100px, 96vw);
+  max-height: 92dvh;
   border: none;
   border-radius: $radius-xl;
   overflow: hidden;
   box-shadow: 0 25px 60px rgba(28, 25, 23, 0.25),
               0 0 0 1px rgba(251, 191, 36, 0.15);
+}
 
-  // ── Sticky header ──────────────────────────────────────────────
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    gap: $spacing-md;
-    padding: $spacing-lg $spacing-xl;
-    background: linear-gradient(135deg,
-      rgba(251, 191, 36, 0.10) 0%,
-      rgba(249, 115, 22, 0.06) 100%);
-    border-bottom: 1px solid rgba(251, 191, 36, 0.20);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    flex-shrink: 0;
+// ── Modal chrome — identical to the Community/Business admin popups
+// (admin-community.component.scss) so every popup in the app shares the
+// same header gradient/icon/close-button and footer button styling,
+// rather than each feature inventing its own modal look.
+.au-header.cm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__cover-shapes { position: absolute; inset: 0; pointer-events: none; }
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+  &--1 { width: 180px; height: 180px; background: $color-primary; top: -72px; right: 48px; }
+  &--2 { width: 88px; height: 88px; background: $white; bottom: -34px; right: 130px; }
+}
+
+.au-header__icon.cm-modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  i { color: $color-primary; font-size: 1.1rem; }
+}
+
+.au-header__text.cm-modal-header-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.au-header__title.cm-modal-title {
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $white;
+  margin: 0;
+}
+
+.au-header__sub.cm-modal-subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.66);
+  margin: 0;
+}
+
+.au-close.cm-close-btn {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: $white; }
+}
+
+.au-body.cm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg $spacing-xl;
+  background: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-stone-200; border-radius: 4px; }
+}
+
+.au-footer.cm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  border-radius: 0 0 $radius-xl $radius-xl;
+}
+
+.au-btn.cm-btn-cancel {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 44px; padding: 0 20px; border-radius: 10px; border: 1.5px solid transparent;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold; cursor: pointer;
+  transition: all 0.15s ease;
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &.au-btn--ghost {
+    background: transparent; border-color: $color-border; color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-primary; color: $color-primary-dark; background: rgba(251,191,36,0.08); }
   }
+}
 
-  &__header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: $radius-md;
-    background: linear-gradient(135deg, $color-primary, $color-saffron);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $color-on-primary;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35);
+.au-btn.cm-btn-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 44px; padding: 0 22px; border-radius: 10px; border: 1.5px solid transparent;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold; cursor: pointer;
+  transition: all 0.15s ease;
+  &.au-btn--primary {
+    background: $color-primary; border-color: $color-primary; color: $color-on-primary;
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.3);
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; }
   }
-
-  &__header-text { flex: 1; min-width: 0; }
-
-  &__title {
-    font-family: $font-family-header;
-    font-size: $font-size-xl;
-    font-weight: $font-weight-bold;
-    color: $color-stone-900;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
+  &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  &.au-btn--danger {
+    background: $color-danger; border-color: $color-danger; color: $white;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+    &:not(:disabled):hover { background: #b91c1c; border-color: #b91c1c; box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35); }
   }
+}
 
-  &__subtitle {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
-    line-height: 1.5;
-  }
+// ── Delete-confirmation popup — same tokens, red-themed header ──
+.au-header.cm-delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 55%, #b91c1c 130%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
 
-  &__close {
-    width: 36px;
-    height: 36px;
-    border-radius: $radius-md;
-    border: 1.5px solid rgba(251, 191, 36, 0.25);
-    background: rgba(255, 255, 255, 0.7);
-    color: $color-stone-600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    @include transition-short(all);
-    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.10); }
-  }
+.au-header__icon.cm-delete-modal-icon {
+  width: 44px; height: 44px; border-radius: $radius-md;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  color: #fca5a5; font-size: 1.15rem; flex-shrink: 0;
+  position: relative; z-index: 1;
+  i { color: #fca5a5; font-size: 1.1rem; }
+}
 
-  // ── Scrollable body ────────────────────────────────────────────
-  &__body {
-    padding: $spacing-lg $spacing-xl;
-    overflow-y: auto;
-    max-height: calc(100vh - 200px);
-    background: $color-bg-page;
+.au-body.cm-delete-modal-body { padding: 20px 24px 4px; }
 
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: $color-stone-200; border-radius: 4px; }
-  }
-
-  // ── Sticky footer ──────────────────────────────────────────────
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-md $spacing-xl;
-    background: $color-bg-card;
-    border-top: 1px solid $color-border;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
-    flex-shrink: 0;
-  }
+.cm-delete-modal-text {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  line-height: 1.6;
+  margin: 0 0 4px;
+  strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
 }
 
 
@@ -2088,16 +2211,18 @@
 
 // ── RESPONSIVE: modal form ────────────────────────────────────────
 @include media-md-max {
-  .jb-modal-dialog  { max-width: 100%; }
-  .jb-modal__body   { padding: $spacing-md; max-height: calc(100vh - 180px); }
-  .jb-modal__header { padding: $spacing-md; }
-  .jb-modal__footer { padding: $spacing-sm $spacing-md; }
+  .jb-modal            { width: calc(100vw - 24px); }
+  .au-body.cm-modal-body   { padding: $spacing-md; }
+  .cm-modal-header         { padding: $spacing-md; }
+  .au-footer.cm-modal-footer { padding: $spacing-sm $spacing-md; }
   .jb-form-section  { padding: $spacing-md; }
   .jb-phone-field   { flex-direction: column; &__dial { flex: none; } }
 }
 
 
 // ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
+// Same .um-iab icon-button style as the Community/Business admin pages,
+// including its CSS-only tooltip (via the `data-tip` attribute).
 
 .jb-card__quick-actions {
   display: flex;
@@ -2106,7 +2231,8 @@
   flex-shrink: 0;
 }
 
-.jb-card__qa-btn {
+.um-iab {
+  position: relative;
   width: 32px;
   height: 32px;
   display: inline-flex;
@@ -2114,33 +2240,70 @@
   justify-content: center;
   border-radius: $radius-sm;
   border: 1.5px solid transparent;
-  font-size: 0.8rem;
   cursor: pointer;
-  @include transition-short(all);
+  font-size: 0.82rem;
+  background: none;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+  &[data-tip]::before,
+  &[data-tip]::after {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: $z-tooltip;
+  }
+
+  &[data-tip]::before {
+    content: attr(data-tip);
+    background: $color-text-primary;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: $radius-xs;
+    letter-spacing: 0.2px;
+    box-shadow: $shadow-3;
+  }
+
+  &[data-tip]::after {
+    content: '';
+    top: calc(100% + 2px);
+    border: 4px solid transparent;
+    border-bottom-color: $color-text-primary;
+    border-top: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  &:hover[data-tip]::before,
+  &:hover[data-tip]::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 
   &--edit {
-    background: rgba(14, 165, 233, 0.08);
-    border-color: rgba(14, 165, 233, 0.28);
+    background: rgba(2,132,199,0.08);
+    border-color: rgba(2,132,199,0.22);
     color: #0284C7;
-
-    &:hover {
-      background: rgba(14, 165, 233, 0.18);
-      border-color: #0284C7;
-      transform: translateY(-1px);
-    }
+    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {
-    background: rgba(220, 38, 38, 0.07);
-    border-color: rgba(220, 38, 38, 0.25);
+    background: rgba(220,38,38,0.06);
+    border-color: rgba(220,38,38,0.2);
     color: $color-danger;
-
-    &:hover {
-      background: rgba(220, 38, 38, 0.15);
-      border-color: $color-danger;
-      transform: translateY(-1px);
-    }
+    &:hover { background: $color-danger; border-color: $color-danger; color: #fff; box-shadow: 0 4px 10px rgba(220,38,38,0.3); }
   }
+
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
 
 
@@ -2148,102 +2311,86 @@
 // DELETE CONFIRMATION MODAL
 // ═══════════════════════════════════════════════════════════════
 
-.jb-delete-modal-dialog {
-  max-width: 460px;
-}
-
 .jb-delete-modal {
+  width: min(460px, calc(100vw - 32px));
   border: none;
   border-radius: $radius-xl;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(28, 25, 23, 0.28),
               0 0 0 1px rgba(220, 38, 38, 0.15);
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    padding: $spacing-lg $spacing-xl $spacing-md;
-    background: linear-gradient(135deg,
-      rgba(220, 38, 38, 0.06) 0%,
-      rgba(220, 38, 38, 0.02) 100%);
-    border-bottom: 1px solid rgba(220, 38, 38, 0.15);
-  }
-
-  &__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: $radius-md;
-    background: rgba(220, 38, 38, 0.10);
-    border: 1.5px solid rgba(220, 38, 38, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $color-danger;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  &__title {
-    font-family: $font-family-header;
-    font-size: $font-size-lg;
-    font-weight: $font-weight-bold;
-    color: $color-stone-900;
-    margin: 0 0 2px;
-  }
-
-  &__subtitle {
-    font-size: $font-size-xs;
-    color: $color-text-muted;
-    margin: 0;
-  }
-
-  &__body {
-    padding: $spacing-lg $spacing-xl;
-    background: $color-bg-card;
-  }
-
-  &__message {
-    font-size: $font-size-sm;
-    color: $color-stone-700;
-    line-height: 1.6;
-    margin-bottom: $spacing-md;
-
-    strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
-  }
-
-  &__warning {
-    display: flex;
-    align-items: flex-start;
-    gap: $spacing-sm;
-    padding: 10px $spacing-md;
-    background: rgba(220, 38, 38, 0.05);
-    border: 1px solid rgba(220, 38, 38, 0.18);
-    border-radius: $radius-md;
-    font-size: $font-size-xs;
-    color: $color-danger;
-    margin: 0;
-    line-height: 1.5;
-
-    .bi { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-md $spacing-xl;
-    background: $color-bg-page;
-    border-top: 1px solid $color-border;
-  }
 }
 
 @include media-sm-max {
-  .jb-delete-modal-dialog { max-width: calc(100vw - 32px); }
-  .jb-delete-modal__header { padding: $spacing-md; }
-  .jb-delete-modal__body   { padding: $spacing-md; }
-  .jb-delete-modal__footer { padding: $spacing-sm $spacing-md; }
+  .cm-delete-modal-header, .au-body.cm-delete-modal-body { padding: $spacing-md; }
+  .au-footer.cm-modal-footer { padding: $spacing-sm $spacing-md; }
   .jb-acc-audit { margin-left: 0; }
   .jb-acc-owner-actions { flex-wrap: wrap; }
+}
+
+// ── Working Schedule form section — clearer grouping than a bare grid ──
+.jb-schedule-block {
+  margin-bottom: $spacing-lg;
+  &:last-child { margin-bottom: 0; }
+}
+
+.jb-time-range {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  max-width: 420px;
+
+  &__field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1.5px solid $color-border;
+    border-radius: $radius-md;
+    background: $color-bg-card;
+
+    i { color: $color-primary; font-size: 0.95rem; }
+    .jb-input { border: none; padding-left: 0; background: transparent; }
+  }
+
+  &__sep { color: $color-stone-300; flex-shrink: 0; }
+
+  @include media-sm-max {
+    flex-direction: column;
+    align-items: stretch;
+    &__sep { transform: rotate(90deg); align-self: center; }
+  }
+}
+
+// ── Structured description sub-sections (Responsibilities/Qualifications/
+// Requirements/Benefits) rendered under the general Description text ──
+.jbd-description-block {
+  margin-bottom: $spacing-md;
+  &:last-child { margin-bottom: 0; }
+
+  &--sub {
+    padding-left: $spacing-md;
+    border-left: 2px solid rgba(251, 191, 36, 0.3);
+  }
+
+  &__title {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-stone-700;
+    margin: 0 0 4px;
+    display: flex; align-items: center; gap: 6px;
+    i { color: $color-primary; }
+  }
+}
+
+// ── Lazy-load sentinel (true incremental server paging) ──
+.jb-load-more-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: $spacing-lg;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  min-height: 40px;
 }

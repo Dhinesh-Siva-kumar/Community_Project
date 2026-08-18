@@ -13,6 +13,17 @@
     <p class="jb-page-header__sub">Discover opportunities and connect with employers in your community.</p>
   </div>
   <div class="jb-page-header__actions">
+    <div class="jb-page-tabs" role="tablist">
+      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'all'"
+        [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
+        <i class="bi bi-grid-3x3-gap"></i> All
+      </button>
+      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'pending'"
+        [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+        <i class="bi bi-hourglass-split"></i> Pending Approval
+        @if (myPendingJobsCount()) { <span class="jb-tab-count">{{ myPendingJobsCount() }}</span> }
+      </button>
+    </div>
     <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i> Post a Job
     </button>
@@ -20,8 +31,10 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     FILTER PANEL
+     FILTER PANEL — only for the public "All" browse; the
+     "Pending Approval" tab is just the caller's own submissions.
      ═══════════════════════════════════════════════════════════ -->
+@if (pageTab() === 'all') {
 <div class="jb-filter-panel">
 
   <!-- Row 1: Search + Near Me toggle + Sort + Post -->
@@ -245,6 +258,7 @@
     </button>
   </div>
 }
+}
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
 @if (!loading()) {
@@ -283,7 +297,10 @@
       <div class="jb-empty__icon" aria-hidden="true">
         <i class="bi bi-briefcase"></i>
       </div>
-      @if (activeFilterCount() > 0) {
+      @if (pageTab() === 'pending') {
+        <h5 class="jb-empty__title">No submissions yet</h5>
+        <p class="jb-empty__text">Jobs you post will show up here with their approval status.</p>
+      } @else if (activeFilterCount() > 0) {
         <h5 class="jb-empty__title">No jobs match your filters</h5>
         <p class="jb-empty__text">Try adjusting or clearing some filters to see more results.</p>
         <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearAllFilters()">
@@ -309,7 +326,7 @@
   } @else {
     <div class="jb-list" role="list">
       @for (job of jobs(); track job.id) {
-        <article class="jb-card animate-slide-in-up"
+        <article class="jb-card animate-slide-in-up" [id]="'job-card-' + job.id"
           [class.jb-card--active]="activeJobId() === job.id"
           role="listitem"
           [attr.aria-expanded]="activeJobId() === job.id"
@@ -322,7 +339,7 @@
             <div class="jb-card__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
               @if (getCompanyLogoSrc(job)) {
                 <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
-                  class="jb-card__logo-img" loading="lazy" fetchpriority="high" />
+                  class="jb-card__logo-img" loading="lazy" fetchpriority="high" appImageError />
               } @else {
                 <span class="jb-card__logo-initials">{{ getPosterInitials(job) }}</span>
               }
@@ -341,6 +358,11 @@
               <div class="jb-card__title-row">
                 <h3 class="jb-card__title">{{ job.title }}</h3>
                 <div class="jb-card__badges">
+                  @if (job.status === 'PENDING') {
+                    <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                  } @else if (job.status === 'REJECTED') {
+                    <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                  }
                   @if (job.jobType) {
                     <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span>
                   }
@@ -349,6 +371,9 @@
                   }
                 </div>
               </div>
+              @if (job.status === 'REJECTED' && job.rejectionReason) {
+                <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+              }
 
               <!-- Meta chips row -->
               <div class="jb-card__meta">
@@ -402,15 +427,13 @@
             <!-- Owner / Admin quick-actions on the card header -->
             @if (canEditJob(job)) {
               <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
-                <button class="jb-card__qa-btn jb-card__qa-btn--edit"
+                <button class="um-iab um-iab--edit" data-tip="Edit"
                   (click)="openEditModal(job, $event)"
-                  title="Edit job"
                   type="button">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button class="jb-card__qa-btn jb-card__qa-btn--delete"
+                <button class="um-iab um-iab--delete" data-tip="Delete"
                   (click)="openDeleteConfirm(job, $event)"
-                  title="Delete job"
                   type="button">
                   <i class="bi bi-trash3"></i>
                 </button>
@@ -439,7 +462,7 @@
                   <div class="jbd-company-header__logo-wrap">
                     @if (getCompanyLogoSrc(job)) {
                       <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? 'Company'"
-                        class="jbd-company-header__logo-img" />
+                        class="jbd-company-header__logo-img" appImageError />
                     } @else {
                       <div class="jbd-company-header__logo-ph" [style.background-color]="getAvatarColor(job)">
                         {{ getPosterInitials(job) }}
@@ -711,21 +734,47 @@
                     <i class="bi bi-file-earmark-text-fill"></i>
                     <span>Job Description</span>
                   </div>
-                  <div class="jbd-description" [class.jbd-description--expanded]="isDescExpanded(job.id)">
-                    @if (isDescLong(job) && !isDescExpanded(job.id)) {
-                      <p class="jbd-description__text">{{ getShortDescription(job) }}</p>
-                    } @else {
-                      <p class="jbd-description__text">{{ getDescription(job) }}</p>
-                    }
-                  </div>
-                  @if (isDescLong(job)) {
-                    <button class="jbd-show-more-btn" (click)="toggleDescription(job.id, $event)">
-                      @if (isDescExpanded(job.id)) {
-                        <i class="bi bi-chevron-up"></i> Show Less
-                      } @else {
-                        <i class="bi bi-chevron-down"></i> Show More
+
+                  @if (job.description) {
+                    <div class="jbd-description-block">
+                      <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, 'description')">
+                        @if (isTextLong(job.description) && !isFieldExpanded(job.id, 'description')) {
+                          <p class="jbd-description__text">{{ getShortText(job.description) }}</p>
+                        } @else {
+                          <p class="jbd-description__text">{{ job.description }}</p>
+                        }
+                      </div>
+                      @if (isTextLong(job.description)) {
+                        <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, 'description', $event)">
+                          @if (isFieldExpanded(job.id, 'description')) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
+                        </button>
                       }
-                    </button>
+                    </div>
+                  }
+
+                  @for (field of [
+                    { key: 'responsibilities', label: 'Responsibilities', icon: 'bi-list-check', text: job.responsibilities },
+                    { key: 'qualifications',   label: 'Qualifications',   icon: 'bi-mortarboard', text: job.qualifications },
+                    { key: 'requirements',     label: 'Requirements',     icon: 'bi-clipboard-check', text: job.requirements },
+                    { key: 'benefits',         label: 'Benefits',         icon: 'bi-gift', text: job.benefits },
+                  ]; track field.key) {
+                    @if (field.text) {
+                      <div class="jbd-description-block jbd-description-block--sub">
+                        <h6 class="jbd-description-block__title"><i class="bi {{ field.icon }}"></i> {{ field.label }}</h6>
+                        <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, field.key)">
+                          @if (isTextLong(field.text) && !isFieldExpanded(job.id, field.key)) {
+                            <p class="jbd-description__text">{{ getShortText(field.text) }}</p>
+                          } @else {
+                            <p class="jbd-description__text">{{ field.text }}</p>
+                          }
+                        </div>
+                        @if (isTextLong(field.text)) {
+                          <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, field.key, $event)">
+                            @if (isFieldExpanded(job.id, field.key)) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
+                          </button>
+                        }
+                      </div>
+                    }
                   }
                 </div>
               }
@@ -837,20 +886,13 @@
       }
     </div>
 
-    <!-- ── PAGINATION ─────────────────────────────────────────── -->
-    @if (totalPages() > 1) {
-      <nav class="jb-pagination" aria-label="Pages">
-        <button class="jb-pagination__btn" [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)"><i class="bi bi-chevron-left"></i></button>
-        @for (page of getPages(); track page) {
-          <button class="jb-pagination__btn"
-            [class.jb-pagination__btn--active]="page === currentPage()"
-            (click)="goToPage(page)">{{ page }}</button>
+    <!-- ── LAZY LOAD — true incremental server paging, 10 jobs at a time ── -->
+    @if (hasMore()) {
+      <div class="jb-load-more-sentinel" appInfiniteScroll rootMargin="300px" (nearEnd)="loadMoreJobs()">
+        @if (loadingMore()) {
+          <span class="spinner-border spinner-border-sm"></span> Loading more jobs…
         }
-        <button class="jb-pagination__btn" [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)"><i class="bi bi-chevron-right"></i></button>
-        <span class="jb-pagination__info">Page {{ currentPage() }} of {{ totalPages() }}</span>
-      </nav>
+      </div>
     }
   }
 }
@@ -859,30 +901,29 @@
      POST A JOB MODAL
      ═══════════════════════════════════════════════════════════ -->
 @if (showAddModal()) {
-  <div class="modal-backdrop fade show"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="jbModalTitle">
-    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable jb-modal-dialog">
-      <div class="modal-content jb-modal">
+  <div class="au-backdrop" (click)="closeAddModal()"></div>
+  <div class="au-modal jb-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="jbModalTitle" (click)="$event.stopPropagation()">
 
-        <div class="jb-modal__header">
-          <div class="jb-modal__header-icon">
+        <div class="au-header cm-modal-header">
+          <div class="au-header__cover-shapes"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
+          <div class="au-header__icon cm-modal-icon">
             <i class="bi" [ngClass]="editingJob() ? 'bi-pencil-fill' : 'bi-briefcase-fill'"></i>
           </div>
-          <div class="jb-modal__header-text">
-            <h4 class="jb-modal__title" id="jbModalTitle">
+          <div class="au-header__text cm-modal-header-inner">
+            <h4 class="au-header__title cm-modal-title" id="jbModalTitle">
               {{ editingJob() ? 'Edit Job Posting' : 'Post a New Job' }}
             </h4>
-            <p class="jb-modal__subtitle">
+            <p class="au-header__sub cm-modal-subtitle">
               {{ editingJob()
                 ? 'Update the details of this job posting.'
                 : 'Create a professional job posting.' }}
               Fields marked <span class="text-danger">*</span> are required.
             </p>
           </div>
-          <button type="button" class="jb-modal__close" (click)="closeAddModal()"><i class="bi bi-x-lg"></i></button>
+          <button type="button" class="au-close cm-close-btn" (click)="closeAddModal()"><i class="bi bi-x-lg"></i></button>
         </div>
 
-        <div class="jb-modal__body">
+        <div class="au-body cm-modal-body">
           <form [formGroup]="jobForm" novalidate>
 
             <!-- S1: Company -->
@@ -918,7 +959,7 @@
                   <label class="jb-label">Logo <span class="jb-label__optional">(optional)</span></label>
                   @if (logoPreview()) {
                     <div class="jb-logo-preview">
-                      <img [src]="logoPreview()! | imageUrl" alt="Logo preview" class="jb-logo-preview__img" />
+                      <img [src]="logoPreview()! | imageUrl" alt="Logo preview" class="jb-logo-preview__img" appImageError />
                       <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                     </div>
                   } @else {
@@ -1025,15 +1066,23 @@
                     <label class="jb-label" for="salaryMin">Minimum Salary</label>
                     <div class="jb-input-group">
                       <span class="jb-input-group__prefix">{{ getCurrencySymbol(jobForm.get('salaryCurrency')?.value) }}</span>
-                      <input id="salaryMin" type="number" class="jb-input jb-input--prefix" formControlName="salaryMin" min="0" placeholder="30,000" />
+                      <input id="salaryMin" type="number" class="jb-input jb-input--prefix" formControlName="salaryMin" min="0" placeholder="30,000"
+                        [class.jb-input--error]="jobForm.get('salaryMin')?.invalid && jobForm.get('salaryMin')?.touched" />
                     </div>
+                    @if (jobForm.get('salaryMin')?.errors?.['min'] && jobForm.get('salaryMin')?.touched) {
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Salary can't be negative</span>
+                    }
                   </div>
                   <div class="col-md-4">
                     <label class="jb-label" for="salaryMax">Maximum Salary</label>
                     <div class="jb-input-group">
                       <span class="jb-input-group__prefix">{{ getCurrencySymbol(jobForm.get('salaryCurrency')?.value) }}</span>
-                      <input id="salaryMax" type="number" class="jb-input jb-input--prefix" formControlName="salaryMax" min="0" placeholder="60,000" />
+                      <input id="salaryMax" type="number" class="jb-input jb-input--prefix" formControlName="salaryMax" min="0" placeholder="60,000"
+                        [class.jb-input--error]="jobForm.get('salaryMax')?.invalid && jobForm.get('salaryMax')?.touched" />
                     </div>
+                    @if (jobForm.get('salaryMax')?.errors?.['min'] && jobForm.get('salaryMax')?.touched) {
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Salary can't be negative</span>
+                    }
                   </div>
                   @if (jobForm.errors?.['salaryRange']) {
                     <div class="col-12"><span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum salary must be ≥ minimum</span></div>
@@ -1058,28 +1107,51 @@
                 @if (!isRemoteCtrl) {
                   <div class="col-md-4">
                     <label class="jb-label">Country</label>
-                    <app-searchable-select formControlName="countryId" [options]="countryOptions()"
+                    <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
                       placeholder="Select country" searchPlaceholder="Search countries…"
                       (ngModelChange)="onCountryChange($event)"></app-searchable-select>
                   </div>
+                  @if (adminLevels().length >= 1) {
+                    <div class="col-md-4">
+                      <label class="jb-label">
+                        {{ adminLevels()[0].label }}
+                        @if (division1Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
+                      </label>
+                      <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
+                        placeholder="{{ division1Options().length ? 'Select ' + adminLevels()[0].label : 'Select country first' }}"
+                        searchPlaceholder="Search…"
+                        (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
+                    </div>
+                  }
+                  @if (adminLevels().length >= 2) {
+                    <div class="col-md-4">
+                      <label class="jb-label">
+                        {{ adminLevels()[1].label }}
+                        @if (division2Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
+                      </label>
+                      <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
+                        placeholder="{{ division2Options().length ? 'Select ' + adminLevels()[1].label : 'Select ' + adminLevels()[0].label + ' first' }}"
+                        searchPlaceholder="Search…"
+                        (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
+                    </div>
+                  }
                   <div class="col-md-4">
-                    <label class="jb-label">State / Region
-                      @if (statesLoading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
-                    </label>
-                    <app-searchable-select formControlName="stateId" [options]="stateOptions()"
-                      [placeholder]="states().length ? 'Select state' : 'Select country first'"
-                      (ngModelChange)="onStateChange($event)"></app-searchable-select>
+                    <label class="jb-label">City</label>
+                    <app-searchable-select formControlName="cityId" [remoteSearchFn]="citySearchFn"
+                      [selectedOption]="selectedCityOption()" placeholder="Search for a city…"
+                      (ngModelChange)="onCityChange($event)"></app-searchable-select>
                   </div>
                   <div class="col-md-4">
-                    <label class="jb-label">City
-                      @if (citiesLoading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
+                    <label class="jb-label" for="pincode">
+                      Pincode
+                      @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
                     </label>
-                    <app-searchable-select formControlName="cityId" [options]="cityOptions()"
-                      [placeholder]="cities().length ? 'Select city' : 'Select state first'"></app-searchable-select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="jb-label" for="pincode">Pincode</label>
-                    <input id="pincode" type="text" class="jb-input" formControlName="pincode" placeholder="e.g. SW1A 1AA" />
+                    <input id="pincode" type="text" class="jb-input" formControlName="pincode"
+                      [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'"
+                      [class.jb-input--error]="jobForm.get('pincode')?.invalid && jobForm.get('pincode')?.touched" />
+                    @if (jobForm.get('pincode')?.errors?.['postalFormat'] && jobForm.get('pincode')?.touched) {
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Doesn't match the expected format for this country</span>
+                    }
                   </div>
                   <div class="col-md-8">
                     <label class="jb-label" for="fullAddress">Full Address <span class="jb-label__optional">(optional)</span></label>
@@ -1095,32 +1167,38 @@
                 <div class="jb-form-section__badge"><i class="bi bi-clock"></i></div>
                 <div><span class="jb-form-section__num">06</span><span class="jb-form-section__name">Schedule &amp; Hours</span></div>
               </div>
-              <div class="row g-3">
-                <div class="col-12">
-                  <label class="jb-label">Shift Type</label>
-                  <div class="jb-mode-chips">
-                    @for (shift of shiftTypes; track shift) {
-                      <label class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('shiftType')?.value === shift">
-                        <input type="radio" formControlName="shiftType" [value]="shift" class="visually-hidden" />{{ shift }}
-                      </label>
-                    }
+              <div class="jb-schedule-block">
+                <label class="jb-label">Shift Type</label>
+                <div class="jb-mode-chips">
+                  @for (shift of shiftTypes; track shift) {
+                    <label class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('shiftType')?.value === shift">
+                      <input type="radio" formControlName="shiftType" [value]="shift" class="visually-hidden" />{{ shift }}
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <div class="jb-schedule-block">
+                <label class="jb-label">Working Hours</label>
+                <div class="jb-time-range">
+                  <div class="jb-time-range__field">
+                    <i class="bi bi-sunrise"></i>
+                    <input id="workStart" type="time" class="jb-input" formControlName="workStartTime" aria-label="Start time" />
+                  </div>
+                  <i class="bi bi-arrow-right jb-time-range__sep"></i>
+                  <div class="jb-time-range__field">
+                    <i class="bi bi-sunset"></i>
+                    <input id="workEnd" type="time" class="jb-input" formControlName="workEndTime" aria-label="End time" />
                   </div>
                 </div>
-                <div class="col-md-5">
-                  <label class="jb-label" for="workStart">Start Time</label>
-                  <input id="workStart" type="time" class="jb-input" formControlName="workStartTime" />
-                </div>
-                <div class="col-md-5">
-                  <label class="jb-label" for="workEnd">End Time</label>
-                  <input id="workEnd" type="time" class="jb-input" formControlName="workEndTime" />
-                </div>
-                <div class="col-12">
-                  <label class="jb-label">Working Days</label>
-                  <div class="jb-day-toggles">
-                    @for (day of workDays; track day) {
-                      <button type="button" class="jb-day-toggle" [class.jb-day-toggle--on]="isWorkingDay(day)" (click)="toggleWorkingDay(day)">{{ day }}</button>
-                    }
-                  </div>
+              </div>
+
+              <div class="jb-schedule-block">
+                <label class="jb-label">Working Days</label>
+                <div class="jb-day-toggles">
+                  @for (day of workDays; track day) {
+                    <button type="button" class="jb-day-toggle" [class.jb-day-toggle--on]="isWorkingDay(day)" (click)="toggleWorkingDay(day)">{{ day }}</button>
+                  }
                 </div>
               </div>
             </div>
@@ -1186,10 +1264,34 @@
                 <div class="jb-form-section__badge"><i class="bi bi-file-earmark-text"></i></div>
                 <div><span class="jb-form-section__num">09</span><span class="jb-form-section__name">Job Description</span></div>
               </div>
-              <label class="jb-label" for="description">Description <span class="jb-label__optional">(optional)</span></label>
-              <p class="jb-helper-text">Describe the role, responsibilities, qualifications, and benefits.</p>
-              <textarea id="description" class="jb-input jb-input--textarea" formControlName="description" rows="6"
-                placeholder="Describe the full role details…"></textarea>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="jb-label" for="description">Description <span class="jb-label__optional">(optional)</span></label>
+                  <p class="jb-helper-text">A general summary of the role.</p>
+                  <textarea id="description" class="jb-input jb-input--textarea" formControlName="description" rows="5"
+                    placeholder="Describe the role…"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="responsibilities">Responsibilities <span class="jb-label__optional">(optional)</span></label>
+                  <textarea id="responsibilities" class="jb-input jb-input--textarea" formControlName="responsibilities" rows="4"
+                    placeholder="Key day-to-day responsibilities…"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="qualifications">Qualifications <span class="jb-label__optional">(optional)</span></label>
+                  <textarea id="qualifications" class="jb-input jb-input--textarea" formControlName="qualifications" rows="4"
+                    placeholder="Degrees, certifications…"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="requirements">Requirements <span class="jb-label__optional">(optional)</span></label>
+                  <textarea id="requirements" class="jb-input jb-input--textarea" formControlName="requirements" rows="4"
+                    placeholder="Must-have skills, experience…"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="jb-label" for="benefits">Benefits <span class="jb-label__optional">(optional)</span></label>
+                  <textarea id="benefits" class="jb-input jb-input--textarea" formControlName="benefits" rows="4"
+                    placeholder="Perks, insurance, bonuses…"></textarea>
+                </div>
+              </div>
             </div>
 
             <!-- S10: Images -->
@@ -1207,9 +1309,9 @@
           </form>
         </div>
 
-        <div class="jb-modal__footer">
-          <button type="button" class="jb-btn jb-btn--ghost" (click)="closeAddModal()">Cancel</button>
-          <button type="button" class="jb-btn jb-btn--neon"
+        <div class="au-footer cm-modal-footer">
+          <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" [disabled]="submitting() || editSubmitting()" (click)="closeAddModal()">Cancel</button>
+          <button type="button" class="au-btn cm-btn-submit au-btn--primary"
             [disabled]="jobForm.invalid || submitting() || editSubmitting()" (click)="submitJob()">
             @if (submitting() || editSubmitting()) {
               <span class="spinner-border spinner-border-sm me-2"></span>
@@ -1222,8 +1324,6 @@
           </button>
         </div>
 
-      </div>
-    </div>
   </div>
 }
 
@@ -1231,42 +1331,36 @@
      DELETE CONFIRMATION MODAL
      ═══════════════════════════════════════════════════════════ -->
 @if (showDeleteConfirm() && jobToDelete()) {
-  <div class="modal-backdrop fade show" style="z-index:1060"></div>
-  <div class="modal fade show d-block" tabindex="-1" role="alertdialog" aria-modal="true"
-    aria-labelledby="jbDeleteTitle" style="z-index:1070">
-    <div class="modal-dialog modal-dialog-centered jb-delete-modal-dialog">
-      <div class="modal-content jb-delete-modal">
+  <div class="au-backdrop" (click)="closeDeleteConfirm()"></div>
+  <div class="au-modal jb-delete-modal cm-delete-modal" role="alertdialog" aria-modal="true"
+    aria-labelledby="jbDeleteTitle" (click)="$event.stopPropagation()">
 
-        <div class="jb-delete-modal__header">
-          <div class="jb-delete-modal__icon">
-            <i class="bi bi-trash3-fill"></i>
+        <div class="au-header cm-delete-modal-header">
+          <div class="au-header__cover-shapes" aria-hidden="true"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
+          <div class="au-header__icon cm-delete-modal-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
           </div>
-          <div>
-            <h5 class="jb-delete-modal__title" id="jbDeleteTitle">Delete Job Posting</h5>
-            <p class="jb-delete-modal__subtitle">This action cannot be undone.</p>
+          <div class="au-header__text cm-modal-header-inner">
+            <h5 class="au-header__title cm-modal-title" id="jbDeleteTitle">Delete Job Posting</h5>
+            <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
           </div>
+          <button type="button" class="au-close cm-close-btn" (click)="closeDeleteConfirm()" [disabled]="deleting()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
 
-        <div class="jb-delete-modal__body">
-          <p class="jb-delete-modal__message">
-            Are you sure you want to delete
-            <strong>{{ jobToDelete()!.title }}</strong>
-            @if (jobToDelete()!.companyName) {
-              at <strong>{{ jobToDelete()!.companyName }}</strong>
-            }?
-          </p>
-          <p class="jb-delete-modal__warning">
-            <i class="bi bi-exclamation-triangle"></i>
-            This will permanently remove the job posting and cannot be recovered.
+        <div class="au-body cm-delete-modal-body">
+          <p class="cm-delete-modal-text">
+            Are you sure you want to delete <strong>"{{ jobToDelete()!.title }}"</strong>? This will permanently remove the job posting and cannot be recovered.
           </p>
         </div>
 
-        <div class="jb-delete-modal__footer">
-          <button type="button" class="jb-btn jb-btn--ghost" (click)="closeDeleteConfirm()"
+        <div class="au-footer cm-modal-footer">
+          <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="closeDeleteConfirm()"
             [disabled]="deleting()">
             Cancel
           </button>
-          <button type="button" class="jb-btn jb-btn--danger-solid" (click)="confirmDeleteJob()"
+          <button type="button" class="au-btn cm-btn-submit au-btn--danger" (click)="confirmDeleteJob()"
             [disabled]="deleting()">
             @if (deleting()) {
               <span class="spinner-border spinner-border-sm me-2"></span> Deleting…
@@ -1276,7 +1370,5 @@
           </button>
         </div>
 
-      </div>
-    </div>
   </div>
 }

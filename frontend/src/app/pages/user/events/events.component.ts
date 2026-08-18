@@ -61,6 +61,10 @@ export class UserEventsComponent implements OnInit {
   submitting = signal(false);
   skeletons  = Array(8);
 
+  // ── Page tab — 'all' = public browse, 'pending' = the caller's own submissions ──
+  pageTab              = signal<'all' | 'pending'>('all');
+  myPendingEventsCount = signal(0);
+
   readonly pageSize = 8;
   currentPage = signal(1);
   totalPages  = signal(1);
@@ -122,6 +126,43 @@ export class UserEventsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const eventId = params['eventId'];
       if (eventId) this.openEventFromQueryParam(eventId);
+    });
+    this.loadMyPendingEventsCount();
+  }
+
+  setPageTab(tab: 'all' | 'pending'): void {
+    if (this.pageTab() === tab) return;
+    this.pageTab.set(tab);
+    if (tab === 'pending') {
+      this.loadMyEvents();
+    } else {
+      this.currentPage.set(1);
+      this.loadEvents();
+    }
+  }
+
+  /** "Pending Approval" tab — the caller's own events across every status (Pending/Approved/Rejected). */
+  loadMyEvents(): void {
+    this.loading.set(true);
+    this.currentPage.set(1);
+    this.eventService.getMyEvents({ page: 1, limit: 100 }).subscribe({
+      next: (res: PaginatedResponse<AppEvent>) => {
+        this.events.set(res.data);
+        this.totalItems.set(res.total);
+        this.totalPages.set(1);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load your events');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  loadMyPendingEventsCount(): void {
+    this.eventService.getMyEvents({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+      next: (res: PaginatedResponse<AppEvent>) => this.myPendingEventsCount.set(res.total),
+      error: () => {},
     });
   }
 
@@ -339,10 +380,20 @@ export class UserEventsComponent implements OnInit {
     const images = this.selectedImage() ? [this.selectedImage()!] : undefined;
     const id = this.editingId();
 
+    const editingBefore = id ? this.events().find(e => e.id === id) : undefined;
     const req$ = id ? this.eventService.updateEvent(id, data, images) : this.eventService.createEvent(data, images);
     req$.subscribe({
       next: (evt) => {
-        if (id) {
+        if (evt.status === 'PENDING' && (!id || editingBefore?.status === 'REJECTED')) {
+          this.loadMyPendingEventsCount();
+          this.toast.success(id ? 'Event resubmitted for admin approval' : 'Event submitted for admin approval');
+          if (id) {
+            this.events.update(list => list.map(e => e.id === id ? evt : e));
+          } else if (this.pageTab() === 'pending') {
+            this.events.update(list => [evt, ...list]);
+            this.totalItems.update(v => v + 1);
+          }
+        } else if (id) {
           this.events.update(list => list.map(e => e.id === id ? evt : e));
           this.toast.success('Event updated');
         } else {

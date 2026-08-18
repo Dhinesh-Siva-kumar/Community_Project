@@ -1,0 +1,471 @@
+<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
+<div class="jb-page-header">
+  <div class="jb-page-header__left">
+    <h2 class="jb-page-header__title">Approval</h2>
+    <p class="jb-page-header__sub">Review and approve pending Posts, Community, Business, Jobs and Events submissions.</p>
+  </div>
+</div>
+
+<!-- ── ENTITY TABS ──────────────────────────────────────────── -->
+<div class="ap-tabs" role="tablist">
+  @for (tab of entityTabs; track tab.id) {
+    <button role="tab" type="button" class="ap-tab" [class.active]="activeEntity() === tab.id"
+      [attr.aria-selected]="activeEntity() === tab.id" (click)="switchEntity(tab.id)">
+      <i class="bi {{ tab.icon }}"></i> {{ tab.label }}
+      @if (pendingCounts()[tab.id]) {
+        <span class="ap-tab-count">{{ pendingCounts()[tab.id] }}</span>
+      }
+    </button>
+  }
+</div>
+
+<!-- ── FILTER PANEL ─────────────────────────────────────────── -->
+<div class="jb-filter-panel">
+  <div class="jb-filter-row jb-filter-row--top">
+    <div class="jb-search-wrap">
+      <i class="bi bi-search jb-search-wrap__icon"></i>
+      <input type="search" class="jb-search-wrap__input" [placeholder]="'Search ' + currentTab().label.toLowerCase() + ' submissions…'"
+        [value]="filterSearch()" (input)="onSearchInput($any($event.target).value)" autocomplete="off" />
+      @if (filterSearch()) {
+        <button class="jb-search-wrap__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
+      }
+    </div>
+
+    <div class="jb-select-wrap">
+      <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+        (ngModelChange)="filterCountry.set($event); applyFilters()" placeholder="All Countries" aria-label="Filter by country">
+      </app-searchable-select>
+    </div>
+
+    <div class="jb-filter-group">
+      <input type="date" class="jb-adv-input" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" aria-label="From date" />
+    </div>
+    <div class="jb-filter-group">
+      <input type="date" class="jb-adv-input" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" aria-label="To date" />
+    </div>
+
+    @if (hasActiveFilters()) {
+      <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+    }
+  </div>
+</div>
+
+<!-- ── BULK ACTIONS ─────────────────────────────────────────── -->
+@if (selectedCount() > 0) {
+  <div class="ap-bulk-bar">
+    <span class="ap-bulk-bar__count">{{ selectedCount() }} selected</span>
+    <div class="ap-bulk-bar__actions">
+      <button class="ap-bulk-btn ap-bulk-btn--approve" [disabled]="bulkProcessing()" (click)="requestBulkApprove()">
+        @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i> }
+        Approve
+      </button>
+      <button class="ap-bulk-btn ap-bulk-btn--reject" [disabled]="bulkProcessing()" (click)="requestBulkReject()">
+        <i class="bi bi-x-lg"></i> Reject
+      </button>
+    </div>
+  </div>
+}
+
+<!-- ── LOADING ──────────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="ap-loading" aria-live="polite">
+    <span class="spinner-border spinner-border-sm"></span> Loading…
+  </div>
+} @else if (items().length === 0) {
+  <!-- ── EMPTY STATE ────────────────────────────────────────── -->
+  <div class="jb-empty">
+    <div class="jb-empty__icon" aria-hidden="true"><i class="bi bi-check2-circle" style="font-size:2.4rem;color:#d6d3d1"></i></div>
+    <h5 class="jb-empty__title">
+      {{ hasActiveFilters() ? 'No matching submissions' : 'Nothing pending' }}
+    </h5>
+    <p class="jb-empty__text">
+      @if (hasActiveFilters()) {
+        Try adjusting or clearing some filters.
+      } @else {
+        All {{ currentTab().label.toLowerCase() }} submissions have been reviewed.
+      }
+    </p>
+  </div>
+} @else {
+  <!-- ── TABLE — mirrors the Community admin table's markup exactly
+       (sortable headers, actions column, nested pagination). ────── -->
+  <div class="um-table-card mb-3">
+    <div class="table-responsive">
+      <table class="um-table">
+        <thead>
+          <tr>
+            <th class="um-th" style="width:36px">
+              <input type="checkbox" class="form-check-input" [checked]="selectAll()" (change)="toggleSelectAll()" aria-label="Select all" />
+            </th>
+            <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'name'" (click)="toggleSort('name')" role="button" tabindex="0" (keydown.enter)="toggleSort('name')">
+              {{ currentTab().singular }}
+              <i class="bi um-th__sort-icon"
+                [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
+                [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
+                [class.bi-arrow-down-up]="sortBy() !== 'name'"
+              ></i>
+            </th>
+            <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'submitter'" (click)="toggleSort('submitter')" role="button" tabindex="0" (keydown.enter)="toggleSort('submitter')">
+              Submitted By
+              <i class="bi um-th__sort-icon"
+                [class.bi-arrow-up]="sortBy() === 'submitter' && sortDir() === 'asc'"
+                [class.bi-arrow-down]="sortBy() === 'submitter' && sortDir() === 'desc'"
+                [class.bi-arrow-down-up]="sortBy() !== 'submitter'"
+              ></i>
+            </th>
+            <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'meta'" (click)="toggleSort('meta')" role="button" tabindex="0" (keydown.enter)="toggleSort('meta')">
+              {{ itemMetaLabel() }}
+              <i class="bi um-th__sort-icon"
+                [class.bi-arrow-up]="sortBy() === 'meta' && sortDir() === 'asc'"
+                [class.bi-arrow-down]="sortBy() === 'meta' && sortDir() === 'desc'"
+                [class.bi-arrow-down-up]="sortBy() !== 'meta'"
+              ></i>
+            </th>
+            <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
+              Submitted
+              <i class="bi um-th__sort-icon"
+                [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
+                [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
+                [class.bi-arrow-down-up]="sortBy() !== 'joined'"
+              ></i>
+            </th>
+            <th class="um-th um-th--actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr class="um-row" role="button" tabindex="0"
+              (click)="viewItem(item)" (keydown.enter)="viewItem(item)"
+              [attr.aria-label]="'View ' + itemName(item)">
+              <td class="um-td" (click)="$event.stopPropagation()">
+                <input type="checkbox" class="form-check-input" [checked]="isSelected(item.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(item.id)" />
+              </td>
+              <td class="um-td">
+                <div class="um-user-cell">
+                  @if (itemThumb(item)) {
+                    <img [src]="itemThumb(item) | imageUrl" class="um-avatar" alt="" />
+                  } @else {
+                    <div class="um-avatar um-avatar--initials"><i class="bi {{ currentTab().icon }}"></i></div>
+                  }
+                  <div class="um-user-info">
+                    <span class="um-user-name">{{ itemName(item) }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="um-td"><span class="um-td-text">{{ itemSubmitter(item)?.displayName ?? itemSubmitter(item)?.userName ?? '—' }}</span></td>
+              <td class="um-td"><span class="um-td-text">{{ itemMeta(item) }}</span></td>
+              <td class="um-td"><span class="um-td-text">{{ item['createdAt'] | date:'d MMM, h:mm a' }}</span></td>
+              <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
+                <div class="um-actions-row">
+                  <button class="um-iab um-iab--view um-iab--tip-top" data-tip="View Details" (click)="viewItem(item)">
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                  @if (approvingId() === item.id || rejectingId() === item.id) {
+                    <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
+                  } @else {
+                    <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" [disabled]="bulkProcessing()" (click)="requestApprove(item)">
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" [disabled]="bulkProcessing()" (click)="requestReject(item)">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Pagination — nested inside the table card, mirrors the Community admin table ── -->
+    <div class="um-pagination um-pagination--nested">
+      <div class="um-pagination__left">
+        <span class="um-pagination__info">
+          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong> of <strong>{{ totalItems() }}</strong>
+        </span>
+        <div class="um-pg-divider"></div>
+        <div class="um-pagination__size">
+          <span>Rows per page</span>
+          <div class="jb-select-wrap jb-select-wrap--xs">
+            <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''" aria-label="Rows per page">
+            </app-searchable-select>
+          </div>
+        </div>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="um-pagination__pages">
+          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(1)" title="First page"><i class="bi bi-chevron-double-left"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" title="Previous page"><i class="bi bi-chevron-left"></i></button>
+          @for (page of getPages(); track page) {
+            <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" title="Next page"><i class="bi bi-chevron-right"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())" title="Last page"><i class="bi bi-chevron-double-right"></i></button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ── Floating refresh button ──────────────────────────────── -->
+<button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
+  (click)="loadPending()" aria-label="Refresh pending list" title="Refresh">
+  <i class="bi bi-arrow-clockwise"></i>
+</button>
+
+<!-- ── APPROVE CONFIRM (single) — same chrome as the View Detail popup,
+     recolored green for the approve action. ───────────────────────── -->
+@if (confirmApproveTarget(); as item) {
+  <div class="pa-confirm-backdrop" (click)="cancelApproveConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--approve" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">Approve {{ currentTab().singular }}</h5>
+        <button type="button" class="pa-confirm-close" (click)="cancelApproveConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">
+          Are you sure you want to approve <strong>{{ itemName(item) }}</strong>? It will become visible to everyone.
+        </p>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" (click)="cancelApproveConfirm()">Cancel</button>
+        <button class="um-btn um-btn--success" (click)="confirmApproveExecute()"><i class="bi bi-check-lg"></i> Approve</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── REJECT CONFIRM (single) — same chrome, recolored red. ────────── -->
+@if (confirmRejectTarget(); as item) {
+  <div class="pa-confirm-backdrop" (click)="cancelRejectConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--reject" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">Reject {{ currentTab().singular }}</h5>
+        <button type="button" class="pa-confirm-close" (click)="cancelRejectConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">
+          Are you sure you want to reject <strong>{{ itemName(item) }}</strong>? The submitter will be notified.
+        </p>
+        <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to the submitter"
+          [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" (click)="cancelRejectConfirm()">Cancel</button>
+        <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> Reject</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── BULK APPROVE CONFIRM ──────────────────────────────────── -->
+@if (confirmBulkApprove()) {
+  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--approve" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">Approve {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">These will become visible to everyone.</p>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">Cancel</button>
+        <button class="um-btn um-btn--success" [disabled]="bulkProcessing()" (click)="confirmBulkApproveExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i> Approve All }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── BULK REJECT CONFIRM ───────────────────────────────────── -->
+@if (confirmBulkReject()) {
+  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--reject" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">Reject {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">Submitters will be notified.</p>
+        <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to every submitter"
+          [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">Cancel</button>
+        <button class="um-btn um-btn--danger" [disabled]="bulkProcessing()" (click)="confirmBulkRejectExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-x-lg"></i> Reject All }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── VIEW DETAIL POPUP — same chrome as the Community Add/Edit modal
+     (dark gradient header w/ decorative shapes, sectioned body with badge
+     icons, light footer bar). ──────────────────────────────────────── -->
+@if (viewingItem(); as vi) {
+  <div class="pa-view-backdrop" (click)="closeViewItem()">
+    <div class="pa-view-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+
+      <div class="pa-view-header">
+        <div class="pa-view-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-view-header__icon"><i class="bi {{ currentTab().icon }}"></i></div>
+        <div class="pa-view-header__text">
+          <h5 class="pa-view-header__title">{{ currentTab().singular }} Approval</h5>
+          <span class="pa-view-status-badge" [class]="'is-' + (vi['status'] ?? 'pending').toLowerCase()">{{ vi['status'] ?? 'PENDING' }}</span>
+        </div>
+        <button type="button" class="pa-view-close" (click)="closeViewItem()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="pa-view-body">
+        <!-- ── Item identity — name/thumbnail/submitter ─────────────── -->
+        <div class="pa-view-section">
+          <div class="pa-view-identity">
+            @if (itemThumb(vi)) {
+              <img [src]="itemThumb(vi) | imageUrl" class="pa-view-avatar" alt="" />
+            } @else {
+              <div class="pa-view-avatar pa-view-avatar--initials"><i class="bi {{ currentTab().icon }}"></i></div>
+            }
+            <div class="flex-grow-1">
+              <p class="pa-view-item-name">{{ itemName(vi) }}</p>
+              <p class="pa-view-item-meta">
+                by {{ itemSubmitter(vi)?.displayName ?? itemSubmitter(vi)?.userName ?? 'Unknown' }}
+                · {{ vi['createdAt'] | date:'medium' }}
+              </p>
+            </div>
+          </div>
+
+          @if (vi['status'] === 'REJECTED' && vi['rejectionReason']) {
+            <div class="pa-view-rejection">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span><strong>Rejected</strong> — {{ vi['rejectionReason'] }}</span>
+            </div>
+          }
+        </div>
+
+        @if (itemDescription(vi)) {
+          <div class="pa-view-section">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi bi-file-text"></i></span>
+              <span class="pa-view-section-title">Description</span>
+            </div>
+            <p class="pa-view-content">{{ itemDescription(vi) }}</p>
+          </div>
+        }
+
+        @for (section of itemDetailSections(vi); track section.title) {
+          <div class="pa-view-section">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi {{ section.icon }}"></i></span>
+              <span class="pa-view-section-title">{{ section.title }}</span>
+            </div>
+            <div class="pa-view-grid">
+              @for (f of section.fields; track f.label) {
+                <div class="pa-view-field">
+                  <span class="pa-view-field__label">{{ f.label }}</span>
+                  <span class="pa-view-field__value">{{ f.value }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (itemLogo(vi); as logo) {
+          <div class="pa-view-section" [class.pa-view-section--last]="itemImages(vi).length === 0">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi {{ activeEntity() === 'jobs' ? 'bi-building' : 'bi-shop' }}"></i></span>
+              <span class="pa-view-section-title">{{ itemLogoLabel() }}</span>
+            </div>
+            <div class="pa-view-images">
+              <button class="pa-view-image-btn" (click)="openImagePreview([logo], 0)">
+                <img [src]="logo | imageUrl" alt="" />
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (itemImages(vi).length > 0) {
+          <div class="pa-view-section pa-view-section--last">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi {{ activeEntity() === 'community' ? 'bi-image' : 'bi-paperclip' }}"></i></span>
+              <span class="pa-view-section-title">{{ activeEntity() === 'community' ? 'Community Icon' : 'Images (' + itemImages(vi).length + ')' }}</span>
+            </div>
+            <div class="pa-view-images">
+              @for (img of itemImages(vi); track img; let i = $index) {
+                <button class="pa-view-image-btn" (click)="openImagePreview(itemImages(vi), i)">
+                  <img [src]="img | imageUrl" alt="" />
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="pa-view-footer">
+        @if (approvingId() === vi.id || rejectingId() === vi.id) {
+          <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
+        } @else {
+          <button class="um-btn um-btn--success" (click)="closeViewItem(); requestApprove(vi)"><i class="bi bi-check-lg"></i> Approve</button>
+          <button class="um-btn um-btn--danger" (click)="closeViewItem(); requestReject(vi)"><i class="bi bi-x-lg"></i> Reject</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── IMAGE LIGHTBOX — same cd-lightbox used for post images on the
+     Community Detail page, not the generic <app-image-viewer>. ────── -->
+@if (lightboxOpen()) {
+  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+    <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
+      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      @if (lightboxImages().length > 1) {
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      }
+
+      @if (getActivePreviewImage()) {
+        <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" appImageError />
+      }
+
+      <div class="cd-lightbox-footer">
+        <span class="cd-lightbox-counter">{{ activeImageIndex() + 1 }} / {{ lightboxImages().length }}</span>
+      </div>
+    </div>
+  </div>
+}

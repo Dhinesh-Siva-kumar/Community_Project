@@ -845,7 +845,11 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
 
     req.subscribe({
       next: (biz) => {
-        this.toast.success(editing ? 'Business updated successfully' : 'Business created successfully');
+        if (biz.status === 'PENDING') {
+          this.toast.success(editing ? 'Business resubmitted for admin approval' : 'Business submitted for admin approval');
+        } else {
+          this.toast.success(editing ? 'Business updated successfully' : 'Business created successfully');
+        }
         this.submitting.set(false);
         this.saved.emit(biz);
         this.closed.emit();

@@ -68,7 +68,7 @@ export async function create(data: CreatePostDtoType, userId: string) {
   const community = await db('communities').where({ id: data.communityId }).first();
   if (!community) throw new AppError(404, 'Community not found');
 
-  const isAutoApproved = user['role'] === 'ADMIN' || (user['is_trusted'] && !user['is_blocked']);
+  const isAutoApproved = user['role'] === 'ADMIN';
   const status = isAutoApproved ? 'APPROVED' : 'PENDING';
 
   const [post] = await db('posts')
@@ -199,7 +199,7 @@ export interface FindPendingOnlyOptions {
   type?:    'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
   dateFrom?: string;
   dateTo?:   string;
-  sortBy?:  'joined' | 'community';
+  sortBy?:  'joined' | 'community' | 'submitter';
   sortDir?: 'asc' | 'desc';
   authorStatus?: 'trusted' | 'untrusted';
 }
@@ -250,7 +250,9 @@ export async function findPendingOnly(options: FindPendingOnlyOptions) {
     countQuery.andWhere('p.created_at', '<=', toEnd);
   }
 
-  const sortColumn = sortBy === 'community' ? 'c.name' : 'p.created_at';
+  const sortColumn = sortBy === 'community' ? 'c.name'
+    : sortBy === 'submitter' ? 'u.display_name'
+    : 'p.created_at';
   const [posts, [{ total }]] = await Promise.all([
     query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
     countQuery.count({ total: '*' }),
@@ -384,7 +386,7 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   // re-enters the approval gate exactly like a brand-new post, instead of
   // silently staying REJECTED after the edit.
   if (isOwner && editor && post['status'] === 'REJECTED') {
-    const isAutoApproved = editor['role'] === 'ADMIN' || (editor['is_trusted'] && !editor['is_blocked']);
+    const isAutoApproved = editor['role'] === 'ADMIN';
     updateFields['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
     updateFields['rejection_reason'] = null;
   }

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto } from './business.dto';
+import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto, ListPendingBusinessQueryDto, RejectBusinessDto } from './business.dto';
 import * as businessService from './business.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -96,6 +96,36 @@ export async function findMine(req: Request, res: Response, next: NextFunction):
   try {
     const query = ListBusinessQueryDto.parse(req.query);
     const result = await businessService.findAll({ ...query, userId: req.user!.sub, skipActiveFilter: true });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListPendingBusinessQueryDto.parse(req.query);
+    const result = await businessService.findPendingOnly(query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPendingCount(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await businessService.countPending();
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function approve(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await businessService.approve(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RejectBusinessDto.parse(req.body ?? {});
+    const result = await businessService.reject(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

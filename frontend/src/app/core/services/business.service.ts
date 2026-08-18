@@ -1,8 +1,19 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Business, BusinessCategory, PaginatedResponse } from '../models';
+import { ApprovalStatus, Business, BusinessCategory, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
+
+export interface PendingBusinessQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'name';
+  sortDir?:  'asc' | 'desc';
+}
 
 @Injectable({ providedIn: 'root' })
 export class BusinessService {
@@ -49,8 +60,31 @@ export class BusinessService {
     search?: string;
     sortBy?: string;
     sortDir?: string;
+    approvalStatus?: ApprovalStatus;
   } = {}): Observable<PaginatedResponse<Business>> {
     return this.api.get<PaginatedResponse<Business>>('/business/mine', params);
+  }
+
+  approveBusiness(id: string): Observable<Business> {
+    return this.api.put<Business>(`/business/${id}/approve`);
+  }
+
+  rejectBusiness(id: string, reason?: string): Observable<Business> {
+    return this.api.put<Business>(`/business/${id}/reject`, reason ? { reason } : {});
+  }
+
+  getPendingBusinesses(params?: PendingBusinessQueryParams): Observable<PaginatedResponse<Business>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Business>>('/business/pending', clean);
+  }
+
+  getPendingBusinessesCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/business/pending-count');
   }
 
    createBusiness(data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {

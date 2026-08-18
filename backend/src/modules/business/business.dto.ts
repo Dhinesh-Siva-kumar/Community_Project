@@ -11,6 +11,15 @@ const activeBool = z.preprocess(
   z.boolean(),
 ).optional();
 
+// An untouched email field submits as "" (both via FormData on create and
+// the plain JSON body on update-without-new-files) — treat that the same as
+// "not provided" instead of failing .email() format validation on a blank
+// optional field.
+const optionalEmail = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.string().email().optional(),
+);
+
 export const CreateBusinessCategoryDto = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters').max(100, 'Category name must be at most 100 characters'),
   icon: z.string().optional(),
@@ -32,7 +41,7 @@ export const CreateBusinessDto = z.object({
   latitude: z.coerce.number().optional(),
   longitude: z.coerce.number().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional(),
+  email: optionalEmail,
   website: z.string().optional(),
   openingHours: z.string().optional(),
   // New fields
@@ -72,11 +81,30 @@ export const ListBusinessQueryDto = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   status: z.enum(['active', 'inactive']).optional(),
+  // Moderation status — distinct from `status` above (which means active/inactive).
+  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
   sortBy: z.enum(['name', 'joined']).default('joined'),
   sortDir: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const ListPendingBusinessQueryDto = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  limit:    z.coerce.number().int().min(1).max(100).default(20),
+  search:   z.string().optional(),
+  country:  z.string().optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['joined', 'name', 'submitter', 'country']).default('joined'),
+  sortDir:  z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const RejectBusinessDto = z.object({
+  reason: z.string().trim().max(500).optional(),
 });
 
 export type CreateBusinessDtoType = z.infer<typeof CreateBusinessDto>;
 export type UpdateBusinessDtoType = z.infer<typeof UpdateBusinessDto>;
 export type CreateBusinessCategoryDtoType = z.infer<typeof CreateBusinessCategoryDto>;
 export type ListBusinessQueryDtoType = z.infer<typeof ListBusinessQueryDto>;
+export type ListPendingBusinessQueryDtoType = z.infer<typeof ListPendingBusinessQueryDto>;
+export type RejectBusinessDtoType = z.infer<typeof RejectBusinessDto>;

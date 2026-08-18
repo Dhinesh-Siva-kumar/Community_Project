@@ -49,6 +49,9 @@ export class UserBusinessComponent implements OnInit {
   currentView      = signal<ViewState>('list');
   /** 'list' = Business List view, 'categories' = Category browse view */
   businessView     = signal<'list' | 'categories'>('list');
+  /** 'all' = public browse (List/Categories toggle above), 'pending' = the caller's own submissions across every status */
+  pageTab          = signal<'all' | 'pending'>('all');
+  myPendingBusinessCount = signal(0);
 
   // ── Master data ─────────────────────────────────────────────
   categories       = signal<BusinessCategory[]>([]);
@@ -221,7 +224,11 @@ export class UserBusinessComponent implements OnInit {
       const _dist = this.filterDistance();
       const _catId = this.filterCategoryId();
       const _page = this.currentPage();
-      if (this.currentView() === 'list' && !this.geoLoading()) {
+      // Guard on pageTab() too — otherwise returning from a business's detail
+      // view (which flips currentView back to 'list' via popstate) silently
+      // overwrote the "Pending Approval" tab's list with the full "All"
+      // businesses fetch, since this effect fires on any currentView change.
+      if (this.currentView() === 'list' && this.pageTab() === 'all' && !this.geoLoading()) {
         this.loadNearbyBusinesses();
       }
     });
@@ -246,6 +253,7 @@ export class UserBusinessComponent implements OnInit {
     this.loadCategories();
     this.loadCountries();
     this.requestGeolocation();
+    this.loadMyPendingBusinessCount();
   }
 
   /** The signed-in user's own country — the default the country filter starts/resets to. */
@@ -434,6 +442,45 @@ export class UserBusinessComponent implements OnInit {
   }
 
   /** Switch view between Business List and Category View */
+  setPageTab(tab: 'all' | 'pending'): void {
+    if (this.pageTab() === tab) return;
+    this.pageTab.set(tab);
+    this.currentPage.set(1);
+    if (tab === 'pending') {
+      this.loadMyBusinesses();
+    } else {
+      this.switchView(this.businessView());
+    }
+  }
+
+  /** "Pending Approval" tab — the caller's own businesses across every status (Pending/Approved/Rejected). */
+  loadMyBusinesses(): void {
+    this.currentView.set('list');
+    this.businessView.set('list');
+    this.loading.set(true);
+    this.svc.getMyBusinesses({ page: 1, limit: 100 }).subscribe({
+      next: (res: PaginatedResponse<Business>) => {
+        this.businesses.set(res.data);
+        this.allFilteredBusinesses.set(res.data);
+        this.visibleBusinessCount.set(this.BUSINESS_BATCH_SIZE);
+        this.totalItems.set(res.total);
+        this.totalPages.set(1);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load your businesses');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  loadMyPendingBusinessCount(): void {
+    this.svc.getMyBusinesses({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+      next: (res: PaginatedResponse<Business>) => this.myPendingBusinessCount.set(res.total),
+      error: () => {},
+    });
+  }
+
   switchView(view: 'list' | 'categories'): void {
     this.businessView.set(view);
     this.currentView.set(view === 'categories' ? 'categories' : 'list');
@@ -748,6 +795,13 @@ export class UserBusinessComponent implements OnInit {
   }
 
   onBusinessSaved(biz: Business): void {
+    if (biz.status === 'PENDING') {
+      // Not visible in the public list until approved — only reflect it
+      // locally when the user is already looking at their Pending Approval
+      // tab; refresh the badge count either way.
+      this.loadMyPendingBusinessCount();
+      if (this.pageTab() !== 'pending') return;
+    }
     const exists = this.businesses().some(b => b.id === biz.id);
     if (exists) {
       this.businesses.update(list => list.map(b => b.id === biz.id ? biz : b));

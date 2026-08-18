@@ -4,13 +4,14 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   ReactiveFormsModule, FormsModule, FormBuilder, FormGroup,
-  Validators, AbstractControl, ValidationErrors
+  Validators, AbstractControl, ValidationErrors, ValidatorFn
 } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable, map } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
-import { Country, Job, PaginatedResponse } from '../../../core/models';
+import { GeographyService } from '../../../core/services/geography.service';
+import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
@@ -22,6 +23,16 @@ import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 
 export interface FilterChip { key: string; label: string; value: any; }
+
+const VIEW_STORAGE_KEY = 'admin-jobs:viewMode';
+
+/**
+ * How long a Save/Delete popup stays open (with its submit button disabled
+ * and showing its spinner) after a successful action, before auto-closing —
+ * long enough for the success toast to be clearly visible above the popup
+ * rather than the popup vanishing the instant the toast appears.
+ */
+const CONFIRM_CLOSE_DELAY_MS = 900;
 
 function urlValidator(control: AbstractControl): ValidationErrors | null {
   const v = control.value;
@@ -55,6 +66,16 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+/** Country-aware postal code validator — see business-form-modal.component.ts for the fuller explanation. */
+function postalCodeValidator(regex: string | null): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = ((c.value as string) ?? '').trim();
+    if (!v || !regex) return null;
+    try { return new RegExp(regex).test(v) ? null : { postalFormat: true }; }
+    catch { return null; }
+  };
+}
+
 @Component({
   selector: 'app-admin-jobs',
   standalone: true,
@@ -70,6 +91,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   private jobService        = inject(JobService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
+  private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
@@ -123,31 +145,65 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   ];
   pageSize = signal(20);
 
-  // ── Sort-bar — column-click-sort equivalent for this card layout.
+  // ── Sort — column-click-sort equivalent, shared by the sort-bar (List
+  // view, date/salary only) and every sortable Table-view column header.
   // Jobs' backend sort is a single combined enum (newest/oldest/salary_high/
-  // salary_low/company_az), so the generic {field, dir} from the sort-bar
-  // is translated to/from that enum here; "company" only has one backend
-  // direction (company_az) so it's left off the bar and stays in the
-  // existing sort dropdown below.
+  // salary_low/company_az/title_az/…), so the generic {field, dir} used by
+  // the UI is translated to/from that enum here in one place.
+  //
+  // Table columns cycle through THREE states per click — ascending →
+  // descending → normal (no icon, default sort) — rather than just
+  // toggling asc/desc forever, so a column can be explicitly "un-sorted"
+  // again. `activeSortField`/`activeSortDir` track this UI-level state
+  // directly instead of being derived from the raw `sortBy` enum value,
+  // because the "normal" state and "Date, descending" both map to the same
+  // backend value ('newest' is the default sort) — deriving purely from
+  // the enum couldn't tell those two apart.
   readonly sortFields: SortField[] = [
     { key: 'date',   label: 'Date' },
     { key: 'salary', label: 'Salary' },
   ];
-  sortBarField = computed<string>(() => {
-    const s = this.sortBy();
-    if (s === 'newest' || s === 'oldest') return 'date';
-    if (s === 'salary_high' || s === 'salary_low') return 'salary';
-    return '';
-  });
-  sortBarDir = computed<SortDir>(() => {
-    const s = this.sortBy();
-    return (s === 'oldest' || s === 'salary_low') ? 'asc' : 'desc';
-  });
 
-  onSortBarChange(change: SortChange): void {
-    if (change.sortBy === 'date') this.sortBy.set(change.sortDir === 'asc' ? 'oldest' : 'newest');
-    else if (change.sortBy === 'salary') this.sortBy.set(change.sortDir === 'asc' ? 'salary_low' : 'salary_high');
+  private readonly sortFieldMap: Record<string, { asc: string; desc: string }> = {
+    date:     { asc: 'oldest',          desc: 'newest' },
+    salary:   { asc: 'salary_low',      desc: 'salary_high' },
+    title:    { asc: 'title_az',        desc: 'title_za' },
+    location: { asc: 'location_az',     desc: 'location_za' },
+    type:     { asc: 'type_az',         desc: 'type_za' },
+    status:   { asc: 'status_inactive', desc: 'status_active' },
+  };
+
+  activeSortField = signal<string | null>(null);
+  activeSortDir   = signal<SortDir>('asc');
+
+  sortBarField = computed<string>(() => this.activeSortField() ?? '');
+  sortBarDir   = computed<SortDir>(() => this.activeSortDir());
+
+  private applyActiveSort(): void {
+    const field = this.activeSortField();
+    const map = field ? this.sortFieldMap[field] : null;
+    this.sortBy.set(map ? (this.activeSortDir() === 'asc' ? map.asc : map.desc) : 'newest');
     this.loadJobs(1);
+  }
+
+  /** Sort-bar widget (List view) — its own 2-state asc/desc toggle. */
+  onSortBarChange(change: SortChange): void {
+    this.activeSortField.set(change.sortBy);
+    this.activeSortDir.set(change.sortDir);
+    this.applyActiveSort();
+  }
+
+  /** Table-view column header click — 3-click cycle: ascending → descending → normal. */
+  toggleColumnSort(field: string): void {
+    if (this.activeSortField() !== field) {
+      this.activeSortField.set(field);
+      this.activeSortDir.set('asc');
+    } else if (this.activeSortDir() === 'asc') {
+      this.activeSortDir.set('desc');
+    } else {
+      this.activeSortField.set(null);
+    }
+    this.applyActiveSort();
   }
 
   // Filter location cascade
@@ -193,31 +249,30 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   activeFilterCount = computed(() => this.activeFilterChips().length);
 
-  // ─── Delete (inline confirm — admin keeps its quick delete for the card header)
-  deletingId      = signal<string | null>(null);
-  confirmDeleteId = signal<string | null>(null);
-
   // ─── Accordion ───────────────────────────────────────────────
   activeJobId = signal<string | null>(null);
-  // Show-more/less for job descriptions
-  expandedDescIds = signal<Set<string>>(new Set());
+  // Show-more/less for job description sub-fields — keyed by `${jobId}:${field}`
+  // so Description/Responsibilities/Qualifications/Requirements/Benefits each
+  // expand independently.
+  expandedTextFields = signal<Set<string>>(new Set());
 
   // ─── Image Viewer ────────────────────────────────────────────
   imageViewerOpen = signal(false);
   imageViewerImages = signal<string[]>([]);
   imageViewerInitialIndex = signal(0);
 
-  isDescExpanded(jobId: string): boolean { return this.expandedDescIds().has(jobId); }
-  toggleDescription(jobId: string, event: Event): void {
+  isFieldExpanded(jobId: string, field: string): boolean { return this.expandedTextFields().has(`${jobId}:${field}`); }
+  toggleTextField(jobId: string, field: string, event: Event): void {
     event.stopPropagation();
-    this.expandedDescIds.update(s => {
+    const key = `${jobId}:${field}`;
+    this.expandedTextFields.update(s => {
       const n = new Set(s);
-      n.has(jobId) ? n.delete(jobId) : n.add(jobId);
+      n.has(key) ? n.delete(key) : n.add(key);
       return n;
     });
   }
-  isDescLong(job: Job): boolean { return (this.getDescription(job)?.length ?? 0) > 400; }
-  getShortDescription(job: Job): string { return this.getDescription(job).substring(0, 400) + '…'; }
+  isTextLong(text: string | null | undefined): boolean { return (text?.length ?? 0) > 400; }
+  getShortText(text: string): string { return text.substring(0, 400) + '…'; }
 
   // ─── Image Viewer ────────────────────────────────────────────
   openImageViewer(images: string[], index: number = 0, event: Event): void {
@@ -249,6 +304,33 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   jobToDelete       = signal<Job | null>(null);
   deleting          = signal(false);
 
+  // ─── List / Table view toggle ────────────────────────────────
+  viewMode = signal<'list' | 'table'>('list');
+
+  setViewMode(mode: 'list' | 'table'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
+
+  // ─── Table-row detail popup ──────────────────────────────────
+  detailJob = signal<Job | null>(null);
+
+  openDetail(job: Job): void { this.detailJob.set(job); }
+  closeDetail(): void { this.detailJob.set(null); }
+
+  editFromDetail(job: Job, event: Event): void {
+    this.closeDetail();
+    this.openEditModal(job, event);
+  }
+
+  deleteFromDetail(job: Job, event: Event): void {
+    // Keep the detail popup open underneath — the delete confirmation
+    // stacks on top of it (see .jb-delete-modal-backdrop / .jb-delete-modal
+    // z-index in the stylesheet) rather than replacing it, so cancelling
+    // returns the admin to exactly where they were.
+    this.openDeleteConfirm(job, event);
+  }
+
   // ─── Floating header action (shows once scrolled past the page header) ───
   showHeaderFab = signal(false);
   private scrollTicking = false;
@@ -256,25 +338,55 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // Admin always has permission — helper kept for HTML symmetry
   canEditJob(_job: Job): boolean { return true; }
 
-  // ─── Master data ─────────────────────────────────────────────
+  // ─── Master data (dial-code picker only — location section below uses
+  // GeographyService instead) ─────────────────────────────────────
   countries      = signal<Country[]>([]);
-  states         = signal<MasterState[]>([]);
-  cities         = signal<MasterCity[]>([]);
-  statesLoading  = signal(false);
-  citiesLoading  = signal(false);
-
   countryOptions = computed<SelectOption[]>(() =>
     this.countries().map(c => ({ value: c.id, label: `${c.flag_emoji} ${c.name}` }))
-  );
-  stateOptions = computed<SelectOption[]>(() =>
-    this.states().map(s => ({ value: s.id, label: s.name }))
-  );
-  cityOptions = computed<SelectOption[]>(() =>
-    this.cities().map(c => ({ value: c.id, label: c.name }))
   );
   dialCodeOptions = computed<SelectOption[]>(() =>
     this.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}` }))
   );
+
+  // ─── Location — Country → Division(s) → City → Postal cascade ──────
+  // Mirrors business-form-modal.component.ts's implementation; Jobs has no
+  // stored location ids (only plain city/state/country strings), so on
+  // submit the leaf division/city NAME is resolved and written into those
+  // string columns exactly as Business does for its own legacy fields.
+  geoCountries  = signal<GeoCountry[]>([]);
+  countryConfig = signal<CountryAddressConfig | null>(null);
+  adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
+
+  geoCountryOptions = computed<SelectOption[]>(() =>
+    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
+  );
+
+  division1Options = signal<Division[]>([]);
+  division2Options = signal<Division[]>([]);
+  division1Loading = signal(false);
+  division2Loading = signal(false);
+
+  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map(d => ({ value: d.id, label: d.name })));
+  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map(d => ({ value: d.id, label: d.name })));
+
+  selectedDivision1Name = signal<string | null>(null);
+  selectedDivision2Name = signal<string | null>(null);
+  selectedCityOption    = signal<SelectOption | null>(null);
+  selectedCityName      = signal<string | null>(null);
+
+  private cityNameCache = new Map<number, string>();
+
+  citySearchFn = (query: string): Observable<SelectOption[]> => {
+    const countryId  = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : undefined;
+    const divisionId = this.getLeafDivisionId() ?? undefined;
+    if (!countryId) return new Observable<SelectOption[]>(sub => { sub.next([]); sub.complete(); });
+    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
+      map(res => {
+        res.data.forEach(c => this.cityNameCache.set(c.id, c.name));
+        return res.data.map(c => ({ value: c.id, label: c.name }));
+      }),
+    );
+  };
 
   // ─── Static Options ─────────────────────────────────────────
   readonly jobTypes    = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'];
@@ -286,12 +398,16 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   readonly currencyOptions: SelectOption[] = getCurrencySelectOptions();
 
   readonly educationOptions: SelectOption[] = [
-    { value: 'Any',         label: 'Any Graduate'      },
-    { value: 'High School', label: 'High School'       },
-    { value: 'Diploma',     label: 'Diploma'           },
-    { value: "Bachelor's",  label: "Bachelor's Degree" },
-    { value: "Master's",    label: "Master's Degree"   },
-    { value: 'PhD',         label: 'PhD'               },
+    { value: 'None',       label: 'No education needed' },
+    { value: '8th',        label: '8th'                  },
+    { value: '10th',       label: '10th'                 },
+    { value: '12th',       label: '12th'                 },
+    { value: 'Diploma',    label: 'Diploma'              },
+    { value: 'ITI',        label: 'ITI'                  },
+    { value: 'Any',        label: 'Any Graduate'         },
+    { value: "Bachelor's", label: "Bachelor's Degree"    },
+    { value: "Master's",   label: "Master's Degree"      },
+    { value: 'PhD',        label: 'PhD'                  },
   ];
 
   readonly expOptions: SelectOption[] = [
@@ -340,9 +456,16 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
     this.initForm();
+    this.restoreSavedViewMode();
     this.loadJobs(1);
     this.loadCountries();
+    this.loadGeoCountries();
     this.subscribeToSalaryHidden();
+  }
+
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'list' || saved === 'table') this.viewMode.set(saved);
   }
 
   ngOnDestroy(): void {
@@ -382,42 +505,182 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Cascade ─────────────────────────────────────────────────
+  // ─── Location cascade ────────────────────────────────────────
+  private getLeafDivisionId(): number | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) { const v = this.jobForm.get('division2Id')?.value; return v ? Number(v) : null; }
+    if (levels === 1) { const v = this.jobForm.get('division1Id')?.value; return v ? Number(v) : null; }
+    return null;
+  }
+
+  private getLeafDivisionName(): string | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) return this.selectedDivision2Name();
+    if (levels === 1) return this.selectedDivision1Name();
+    return null;
+  }
+
+  private applyDivisionValidators(): void {
+    const levels = this.adminLevels().length;
+    const d1 = this.jobForm.get('division1Id');
+    const d2 = this.jobForm.get('division2Id');
+    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
+    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
+    d1?.updateValueAndValidity({ emitEvent: false });
+    d2?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyPincodeValidators(): void {
+    const postal = this.countryConfig()?.postalCode;
+    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
+    if (postal?.required) validators.push(Validators.required);
+    const ctrl = this.jobForm.get('pincode');
+    ctrl?.setValidators(validators);
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private resetDivisionState(): void {
+    this.countryConfig.set(null);
+    this.division1Options.set([]);
+    this.division2Options.set([]);
+    this.selectedDivision1Name.set(null);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.jobForm.get('division1Id')?.setValue(null, silent);
+    this.jobForm.get('division2Id')?.setValue(null, silent);
+    this.jobForm.get('cityId')?.setValue(null, silent);
+  }
+
   onCountryChange(countryId: any): void {
-    this.jobForm.get('stateId')?.setValue(null);
+    this.resetDivisionState();
+    const id = countryId ? Number(countryId) : null;
+    if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+
+    this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+        if (config.divisionLevels.length > 0) {
+          this.division1Loading.set(true);
+          this.geographyService.getDivisions(id).pipe(takeUntil(this.destroy$)).subscribe({
+            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
+            error: () => this.division1Loading.set(false),
+          });
+        }
+      },
+      error: () => this.toast.error('Failed to load country address details'),
+    });
+  }
+
+  onDivision1Change(divisionId: any): void {
+    this.jobForm.get('division2Id')?.setValue(null);
     this.jobForm.get('cityId')?.setValue(null);
-    this.states.set([]);
-    this.cities.set([]);
-    if (countryId) {
-      this.statesLoading.set(true);
-      this.masterDataService.getStates(Number(countryId))
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: s => { this.states.set(s); this.statesLoading.set(false); },
-          error: () => this.statesLoading.set(false),
-        });
+    this.division2Options.set([]);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision1Name.set(id ? (this.division1Options().find(d => d.id === id)?.name ?? null) : null);
+
+    const countryId = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : null;
+    if (id && countryId && this.adminLevels().length >= 2) {
+      this.division2Loading.set(true);
+      this.geographyService.getDivisions(countryId, id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: divisions => { this.division2Options.set(divisions); this.division2Loading.set(false); },
+        error: () => this.division2Loading.set(false),
+      });
     }
   }
 
-  onStateChange(stateId: any): void {
+  onDivision2Change(divisionId: any): void {
     this.jobForm.get('cityId')?.setValue(null);
-    this.cities.set([]);
-    if (stateId) {
-      this.citiesLoading.set(true);
-      this.masterDataService.getCities(Number(stateId))
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: c => { this.cities.set(c); this.citiesLoading.set(false); },
-          error: () => this.citiesLoading.set(false),
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    const id = divisionId ? Number(divisionId) : null;
+    this.selectedDivision2Name.set(id ? (this.division2Options().find(d => d.id === id)?.name ?? null) : null);
+  }
+
+  onCityChange(cityId: any): void {
+    const id = cityId ? Number(cityId) : null;
+    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
+    this.selectedCityName.set(name);
+    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
+  }
+
+  private loadGeoCountries(): void {
+    this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
+      next: data => this.geoCountries.set(data),
+      error: () => {},
+    });
+  }
+
+  /**
+   * Best-effort edit-mode resurrection: unlike Business, Jobs stores only
+   * plain city/state/country strings (no ids), so the previously-picked
+   * division/city can't be looked up directly — instead we fetch the
+   * country's division list and match the stored name case-insensitively.
+   * If no match is found (e.g. a 2-level country whose stored name was the
+   * leaf/district rather than the top-level division) the field is simply
+   * left blank for the admin to re-pick, same graceful fallback the page
+   * already had before this rework.
+   */
+  private resurrectJobLocation(job: Job): void {
+    const silent = { emitEvent: false, emitViewToModelChange: false };
+    this.resetDivisionState();
+    const country = job.country ? this.geoCountries().find(c => c.name.toLowerCase() === job.country!.toLowerCase()) : null;
+    if (!country) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+
+    this.jobForm.get('countryId')?.setValue(country.id, silent);
+    this.geographyService.getCountryConfig(country.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+        if (config.divisionLevels.length === 0 || !job.state) return;
+
+        this.division1Loading.set(true);
+        this.geographyService.getDivisions(country.id).pipe(takeUntil(this.destroy$)).subscribe({
+          next: (divisions) => {
+            this.division1Options.set(divisions);
+            this.division1Loading.set(false);
+            const match = divisions.find(d => d.name.toLowerCase() === job.state!.toLowerCase());
+            if (!match) return;
+            this.jobForm.get('division1Id')?.setValue(match.id, silent);
+            this.selectedDivision1Name.set(match.name);
+            if (job.city) this.resurrectJobCity(match.id, job.city);
+          },
+          error: () => this.division1Loading.set(false),
         });
-    }
+      },
+      error: () => {},
+    });
+  }
+
+  private resurrectJobCity(divisionId: number, cityName: string): void {
+    this.geographyService.searchCities({ divisionId, countryId: undefined, search: cityName, page: 1, limit: 20 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const match = cityName ? res.data.find(c => c.name.toLowerCase() === cityName.toLowerCase()) : null;
+          if (!match) return;
+          const silent = { emitEvent: false, emitViewToModelChange: false };
+          this.jobForm.get('cityId')?.setValue(match.id, silent);
+          this.selectedCityName.set(match.name);
+          this.selectedCityOption.set({ value: match.id, label: match.name });
+          this.cityNameCache.set(match.id, match.name);
+        },
+        error: () => {},
+      });
   }
 
   // ─── Data Loading ────────────────────────────────────────────
   loadJobs(page = 1): void {
     this.loading.set(true);
     this.currentPage.set(page);
-    this.confirmDeleteId.set(null);
     this.activeJobId.set(null);
 
     const query: JobsQueryParams = { page, limit: this.pageSize() };
@@ -454,8 +717,32 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // ─── Accordion ───────────────────────────────────────────────
   toggleAccordion(id: string, event?: Event): void {
     if (event) event.stopPropagation();
-    if (this.confirmDeleteId() !== null) this.confirmDeleteId.set(null);
+    const opening = this.activeJobId() !== id;
     this.activeJobId.update(cur => cur === id ? null : id);
+    if (opening) {
+      // Bring the newly-expanded card's top into view — scoped to this one
+      // card element only (never document.body/document.documentElement),
+      // so opening a card lower on a long list doesn't require the admin
+      // to manually scroll to see its detail.
+      setTimeout(() => this.scrollCardIntoView(id), 0);
+    }
+  }
+
+  /**
+   * Scrolls the given card to just below the app's sticky top header
+   * (`.top-header`, see admin-layout.component.scss) instead of flush to
+   * the very top of the viewport — plain `scrollIntoView({block:'start'})`
+   * lands the card's top edge at y=0, which the sticky header then
+   * overlaps, hiding the first ~64px of the card and reading as an
+   * over-scroll to the page top.
+   */
+  private scrollCardIntoView(id: string): void {
+    const cardEl = document.getElementById('job-card-' + id);
+    if (!cardEl) return;
+    const headerEl = document.querySelector('.top-header');
+    const headerOffset = (headerEl?.getBoundingClientRect().height ?? 0) + 16;
+    const cardTop = cardEl.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: cardTop - headerOffset, behavior: 'smooth' });
   }
 
   // ─── Search & Filter methods (mirror user component) ─────────
@@ -484,7 +771,22 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.triggerFilteredLoad();
   }
 
-  setSortBy(value: any): void { this.sortBy.set(value ?? 'newest'); this.loadJobs(1); }
+  setSortBy(value: any): void {
+    const v = value ?? 'newest';
+    this.sortBy.set(v);
+    // Keep the table-column/sort-bar active-state in sync with whichever
+    // value the plain dropdown picked, so switching to Table view still
+    // shows the right column as sorted (or none, for "Newest First").
+    const found = Object.entries(this.sortFieldMap).find(([, map]) => map.asc === v || map.desc === v);
+    if (found) {
+      const [field, map] = found;
+      this.activeSortField.set(field);
+      this.activeSortDir.set(map.asc === v ? 'asc' : 'desc');
+    } else {
+      this.activeSortField.set(null);
+    }
+    this.loadJobs(1);
+  }
 
   setAdvancedFilter(sig: any, value: any): void { sig.set(value ?? null); this.triggerFilteredLoad(); }
 
@@ -586,39 +888,12 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.filterStatus.set(''); this.filterDateFrom.set(''); this.filterDateTo.set('');
     this.filterStates.set([]); this.filterCities.set([]);
     this.sortBy.set('newest');
+    this.activeSortField.set(null);
     this.loadJobs(1);
   }
 
   // filteredJobs (all jobs are already server-filtered)
   filteredJobs = computed(() => this.jobs());
-
-  // ─── Delete ──────────────────────────────────────────────────
-  requestDeleteConfirm(id: string, event: Event): void {
-    event.stopPropagation();
-    this.confirmDeleteId.set(id);
-  }
-
-  cancelDelete(event: Event): void {
-    event.stopPropagation();
-    this.confirmDeleteId.set(null);
-  }
-
-  confirmDelete(id: string, event: Event): void {
-    event.stopPropagation();
-    this.deletingId.set(id);
-    this.confirmDeleteId.set(null);
-
-    this.jobService.deleteJob(id).subscribe({
-      next: () => {
-        if (this.activeJobId() === id) this.activeJobId.set(null);
-        this.jobs.update(list => list.filter(j => j.id !== id));
-        this.totalItems.update(v => v - 1);
-        this.toast.success('Job deleted successfully');
-        this.deletingId.set(null);
-      },
-      error: () => { this.toast.error('Failed to delete job'); this.deletingId.set(null); },
-    });
-  }
 
   // ─── Working Days ────────────────────────────────────────────
   isWorkingDay(day: string): boolean {
@@ -661,8 +936,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       salaryCurrency: 'GBP', shiftType: 'Day', openings: 1,
       isRemote: false, salaryHidden: false, workingDays: [], skills: [],
     });
-    this.states.set([]);
-    this.cities.set([]);
+    this.resetDivisionState();
+    this.applyDivisionValidators();
+    this.applyPincodeValidators();
     this.selectedImages.set([]);
     this.selectedLogo.set(null);
     this.logoPreview.set(null);
@@ -674,7 +950,6 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   openEditModal(job: Job, event: Event): void {
     event.stopPropagation();
     this.editingJob.set(job);
-    this.states.set([]); this.cities.set([]);
     this.selectedImages.set([]);
     this.selectedLogo.set(null);
     this.logoPreview.set(job.companyLogo ?? null);
@@ -707,10 +982,12 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       applicationUrl:  job.applicationUrl ?? '',
       skills:          job.skills         ?? [],
       description:     job.description    ?? '',
+      responsibilities: job.responsibilities ?? '',
+      qualifications:   job.qualifications   ?? '',
+      requirements:     job.requirements     ?? '',
+      benefits:         job.benefits         ?? '',
     });
-    this.jobForm.get('countryId')?.setValue(null);
-    this.jobForm.get('stateId')?.setValue(null);
-    this.jobForm.get('cityId')?.setValue(null);
+    this.resurrectJobLocation(job);
     this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
     this.showAddModal.set(true);
@@ -742,8 +1019,10 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
           this.jobs.update(list => [job, ...list]);
           this.totalItems.update(v => v + 1);
           this.toast.success('Job posted successfully!');
-          this.closeAddModal();
-          this.submitting.set(false);
+          // Keep the popup (and its disabled/spinner button, so it can't be
+          // double-submitted) up just long enough for the confirmation toast
+          // to be visible above it, then close.
+          setTimeout(() => { this.closeAddModal(); this.submitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
         error: () => { this.toast.error('Failed to post job. Please try again.'); this.submitting.set(false); },
       });
@@ -761,8 +1040,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         next: (updated) => {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
           this.toast.success('Job updated successfully!');
-          this.closeAddModal();
-          this.editSubmitting.set(false);
+          setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
         error: () => { this.toast.error('Failed to update job.'); this.editSubmitting.set(false); },
       });
@@ -791,32 +1069,38 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         this.totalItems.update(v => v - 1);
         if (this.activeJobId() === job.id) this.activeJobId.set(null);
         this.toast.success('Job deleted successfully');
-        this.closeDeleteConfirm();
-        this.deleting.set(false);
+        setTimeout(() => {
+          this.closeDeleteConfirm();
+          // If this delete was confirmed from within the still-open detail
+          // popup (stacked on top of it), close that too — nothing left to
+          // show details for.
+          if (this.detailJob()?.id === job.id) this.closeDetail();
+          this.deleting.set(false);
+        }, CONFIRM_CLOSE_DELAY_MS);
       },
       error: () => { this.toast.error('Failed to delete job'); this.deleting.set(false); },
     });
   }
 
   private buildJobPayload(raw: Record<string, any>): Record<string, any> {
-    const country = this.countries().find(c => c.id === raw['countryId']);
-    const state   = this.states().find(s => s.id === raw['stateId']);
-    const city    = this.cities().find(c => c.id === raw['cityId']);
+    const country = this.geoCountries().find(c => c.id === raw['countryId']);
+    const leafDivisionName = this.getLeafDivisionName();
+    const cityName = this.selectedCityName();
     const phone   = (raw['contactDialCode'] && raw['contactPhone'])
       ? `${raw['contactDialCode']}${raw['contactPhone']}`
       : (raw['contactPhone'] ?? '');
 
     const payload: Record<string, any> = {};
     for (const [key, val] of Object.entries(raw)) {
-      if (['countryId', 'stateId', 'cityId', 'contactDialCode'].includes(key)) continue;
+      if (['countryId', 'division1Id', 'division2Id', 'cityId', 'contactDialCode'].includes(key)) continue;
       if (val === null || val === undefined || val === '') continue;
       if (Array.isArray(val) && val.length === 0) continue;
       payload[key] = val;
     }
-    if (country) payload['country'] = country.name;
-    if (state)   payload['state']   = state.name;
-    if (city)    payload['city']    = city.name;
-    if (phone)   payload['contactPhone'] = phone;
+    if (country)         payload['country'] = country.name;
+    if (leafDivisionName) payload['state']  = leafDivisionName;
+    if (cityName)        payload['city']    = cityName;
+    if (phone)            payload['contactPhone'] = phone;
     return payload;
   }
 
@@ -834,6 +1118,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.loadJobs(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  showingFrom(): number { return this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1; }
+  showingTo():   number { return Math.min(this.currentPage() * this.pageSize(), this.totalItems()); }
 
   getPages(): number[] {
     const total = this.totalPages(), current = this.currentPage(), maxVis = 5;
@@ -894,12 +1181,6 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   hasDescription(job: Job): boolean {
     return !!(job.description || job.responsibilities || job.qualifications || job.requirements || job.benefits);
-  }
-
-  getDescription(job: Job): string {
-    return job.description
-      ?? [job.responsibilities, job.qualifications, job.requirements, job.benefits]
-         .filter(Boolean).join('\n\n');
   }
 
   shareJob(job: Job, event: Event): void {
@@ -980,7 +1261,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       salaryHidden:    [false],
       isRemote:        [false],
       countryId:       [null],
-      stateId:         [null],
+      division1Id:     [null],
+      division2Id:     [null],
       cityId:          [null],
       pincode:         [''],
       fullAddress:     [''],
@@ -995,6 +1277,10 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       applicationUrl:  ['', urlValidator],
       skills:          [[]],
       description:     [''],
+      responsibilities: [''],
+      qualifications:   [''],
+      requirements:     [''],
+      benefits:         [''],
     }, {
       validators: [salaryRangeValidator, expRangeValidator],
     });

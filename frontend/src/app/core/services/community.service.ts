@@ -2,7 +2,18 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Community, CommunityAnalyticsCounts, CommunityMember, CommunityRequest, PaginatedResponse } from '../models';
+import { ApprovalStatus, Community, CommunityAnalyticsCounts, CommunityMember, CommunityRequest, PaginatedResponse } from '../models';
+
+export interface PendingCommunitiesQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'name';
+  sortDir?:  'asc' | 'desc';
+}
 
 @Injectable({ providedIn: 'root' })
 export class CommunityService {
@@ -27,8 +38,31 @@ export class CommunityService {
     search?: string;
     sortBy?: string;
     sortDir?: string;
+    approvalStatus?: ApprovalStatus;
   } = {}): Observable<PaginatedResponse<Community>> {
     return this.api.get<PaginatedResponse<Community>>('/communities/created', params);
+  }
+
+  approveCommunity(id: string): Observable<Community> {
+    return this.api.put<Community>(`/communities/${id}/approve`);
+  }
+
+  rejectCommunity(id: string, reason?: string): Observable<Community> {
+    return this.api.put<Community>(`/communities/${id}/reject`, reason ? { reason } : {});
+  }
+
+  getPendingCommunities(params?: PendingCommunitiesQueryParams): Observable<PaginatedResponse<Community>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Community>>('/communities/pending', clean);
+  }
+
+  getPendingCommunitiesCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/communities/pending-count');
   }
 
   getCommunity(id: string): Observable<Community> {

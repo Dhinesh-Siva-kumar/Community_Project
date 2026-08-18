@@ -30,7 +30,7 @@ export const ListPendingPostsQueryDto = z.object({
   type:     z.enum(['GENERAL', 'HELP', 'EMERGENCY', 'ENQUIRY']).optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
   dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
-  sortBy:   z.enum(['joined', 'community']).default('joined'),
+  sortBy:   z.enum(['joined', 'community', 'submitter']).default('joined'),
   sortDir:  z.enum(['asc', 'desc']).default('desc'),
   authorStatus: z.enum(['trusted', 'untrusted']).optional(),
 });

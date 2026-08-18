@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateJobDto, UpdateJobDto, ListJobsQueryDto } from './jobs.dto';
+import { CreateJobDto, UpdateJobDto, ListJobsQueryDto, ListPendingJobsQueryDto, RejectJobDto } from './jobs.dto';
 import * as jobsService from './jobs.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -61,6 +61,44 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
     const query = ListJobsQueryDto.parse(req.query);
     const skipActiveFilter = req.user!.role === 'ADMIN';
     const result = await jobsService.findAll({ ...query, skipActiveFilter });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListJobsQueryDto.parse(req.query);
+    const result = await jobsService.findAll({ ...query, userId: req.user!.sub, skipActiveFilter: true });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListPendingJobsQueryDto.parse(req.query);
+    const result = await jobsService.findPendingOnly(query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPendingCount(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await jobsService.countPending();
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function approve(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await jobsService.approve(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RejectJobDto.parse(req.body ?? {});
+    const result = await jobsService.reject(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

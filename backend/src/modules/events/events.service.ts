@@ -2,9 +2,25 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type { CreateEventDtoType, UpdateEventDtoType, ListEventsQueryDtoType } from './events.dto';
 
+async function notifyAdminsOfPendingEvent(eventId: string, title: string): Promise<void> {
+  const admins = await db('users').where({ role: 'ADMIN' }).select('id');
+  if (!admins.length) return;
+  const message = `New event "${title}" pending approval.`;
+  await Promise.all(
+    (admins as Array<Record<string, unknown>>).map((admin) =>
+      notificationsService.create(admin['id'] as string, 'EVENT_PENDING', message, eventId),
+    ),
+  );
+}
+
 export async function create(data: CreateEventDtoType, userId: string) {
+  const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+  const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+  const status = isAutoApproved ? 'APPROVED' : 'PENDING';
+
   const [event] = await db('events')
     .insert({
       title: data.title,
@@ -22,12 +38,18 @@ export async function create(data: CreateEventDtoType, userId: string) {
       location: data.location ?? null,
       country: data.country ?? 'United Kingdom',
       user_id: userId,
+      status,
     })
     .returning('*');
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first();
   const e = event as Record<string, unknown>;
-  await logAudit(userId, 'EVENT_CREATED', { title: data.title }, 'events', e['id'] as string);
+
+  if (status === 'PENDING') {
+    await notifyAdminsOfPendingEvent(e['id'] as string, data.title);
+  }
+
+  await logAudit(userId, 'EVENT_CREATED', { title: data.title, status }, 'events', e['id'] as string);
   return {
     id: e['id'],
     title: e['title'],
@@ -46,16 +68,18 @@ export async function create(data: CreateEventDtoType, userId: string) {
     country: e['country'],
     userId: e['user_id'],
     isActive: e['is_active'],
+    status: e['status'],
+    rejectionReason: e['rejection_reason'] ?? null,
     createdAt: e['created_at'],
     updatedAt: e['updated_at'],
     user: { id: user?.id, userName: user?.user_name, displayName: user?.display_name, avatar: user?.avatar },
   };
 }
 
-export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean }) {
+export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
   const {
-    pincode, nearPincode, eventMode, page, limit, search, country, status,
-    dateFrom, dateTo, eventDateFrom, eventDateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter,
+    pincode, nearPincode, eventMode, page, limit, search, country, status, approvalStatus,
+    dateFrom, dateTo, eventDateFrom, eventDateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter, userId,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -76,6 +100,20 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     query.andWhere('e.is_active', isActive);
     countQuery.andWhere('is_active', isActive);
   }
+
+  // ── Moderation status — non-owner/non-admin callers only ever see
+  // APPROVED events; skipActiveFilter=true (admin browse, or the caller's
+  // own "mine" list) bypasses this the same way it already bypasses the
+  // is_active filter above.
+  if (!skipActiveFilter) {
+    query.where('e.status', 'APPROVED');
+    countQuery.where('status', 'APPROVED');
+  }
+  if (approvalStatus) {
+    query.andWhere('e.status', approvalStatus);
+    countQuery.andWhere('status', approvalStatus);
+  }
+  if (userId) { query.andWhere('e.user_id', userId); countQuery.andWhere('user_id', userId); }
 
   if (pincode) { query.andWhere('e.pincode', pincode); countQuery.andWhere({ pincode }); }
   if (eventMode) { query.andWhere('e.event_mode', eventMode); countQuery.andWhere({ event_mode: eventMode }); }
@@ -140,6 +178,8 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     country: e['country'],
     userId: e['user_id'],
     isActive: e['is_active'],
+    status: e['status'],
+    rejectionReason: e['rejection_reason'] ?? null,
     createdAt: e['created_at'],
     updatedAt: e['updated_at'],
     user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], avatar: e['avatar'] },
@@ -176,10 +216,117 @@ export async function findOne(id: string) {
     country: e['country'],
     userId: e['user_id'],
     isActive: e['is_active'],
+    status: e['status'],
+    rejectionReason: e['rejection_reason'] ?? null,
     createdAt: e['created_at'],
     updatedAt: e['updated_at'],
     user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], email: e['user_email'], avatar: e['avatar'] },
   };
+}
+
+export async function countPending() {
+  const [{ count }] = await db('events').where({ status: 'PENDING' }).count({ count: '*' });
+  return { count: Number(count) };
+}
+
+export interface FindPendingEventsOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  country?: string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:  'joined' | 'name' | 'submitter' | 'country';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function findPendingOnly(options: FindPendingEventsOptions) {
+  const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const offset = (page - 1) * limit;
+
+  const query = db('events as e')
+    .join('users as u', 'e.user_id', 'u.id')
+    .where('e.status', 'PENDING')
+    .select('e.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
+
+  const countQuery = db('events').where({ status: 'PENDING' });
+
+  if (search) {
+    query.andWhere(function () { this.whereILike('e.title', `%${search}%`).orWhereILike('e.description', `%${search}%`); });
+    countQuery.andWhere(function () { this.whereILike('title', `%${search}%`).orWhereILike('description', `%${search}%`); });
+  }
+  if (country) {
+    query.andWhereILike('e.country', `%${country}%`);
+    countQuery.andWhereILike('country', `%${country}%`);
+  }
+  if (dateFrom) {
+    query.andWhere('e.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('e.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
+  }
+
+  const sortColumn = sortBy === 'name' ? 'e.title'
+    : sortBy === 'submitter' ? 'u.display_name'
+    : sortBy === 'country' ? 'e.country'
+    : 'e.created_at';
+  const [events, [{ total }]] = await Promise.all([
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
+  ]);
+
+  const data = (events as Array<Record<string, unknown>>).map((e) => ({
+    id: e['id'],
+    title: e['title'],
+    description: e['description'],
+    images: e['images'],
+    eventDate: e['event_date'],
+    eventTime: e['event_time'],
+    eventEndTime: e['event_end_time'],
+    eventCategory: e['event_category'],
+    timezone: e['timezone'],
+    eventMode: e['event_mode'],
+    locationLink: e['location_link'],
+    address: e['address'],
+    pincode: e['pincode'],
+    location: e['location'],
+    country: e['country'],
+    userId: e['user_id'],
+    status: e['status'],
+    rejectionReason: e['rejection_reason'] ?? null,
+    createdAt: e['created_at'],
+    user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], avatar: e['avatar'] },
+  }));
+
+  return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+export async function approve(id: string, adminId: string) {
+  const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!event) throw new AppError(404, 'Event not found');
+
+  if (event['status'] === 'APPROVED') return findOne(id);
+
+  await db('events').where({ id }).update({ status: 'APPROVED' });
+  await notificationsService.create(event['user_id'] as string, 'EVENT_APPROVED', `Your event "${event['title']}" has been approved.`, id);
+  await logAudit(adminId, 'EVENT_APPROVED', { previousStatus: event['status'], title: event['title'] }, 'events', id);
+  return findOne(id);
+}
+
+export async function reject(id: string, adminId: string, reason?: string) {
+  const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!event) throw new AppError(404, 'Event not found');
+
+  if (event['status'] === 'REJECTED') return findOne(id);
+
+  await db('events').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
+  const message = `Your event "${event['title']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(event['user_id'] as string, 'EVENT_REJECTED', message, id);
+  await logAudit(adminId, 'EVENT_REJECTED', { previousStatus: event['status'], reason: reason ?? null, title: event['title'] }, 'events', id);
+  return findOne(id);
 }
 
 export async function update(id: string, data: UpdateEventDtoType, userId: string) {
@@ -208,7 +355,23 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   if (data.location !== undefined) updateData['location'] = data.location;
   if (data.country !== undefined) updateData['country'] = data.country;
 
+  // Resubmitting a rejected event: the owner editing their own rejected
+  // event re-enters the approval gate exactly like a brand-new one, instead
+  // of silently staying REJECTED after the edit.
+  let reenteredPending = false;
+  if (!byAdmin && event['status'] === 'REJECTED') {
+    const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+    const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+    updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
+    updateData['rejection_reason'] = null;
+    reenteredPending = !isAutoApproved;
+  }
+
   await db('events').where({ id }).update(updateData);
+
+  if (reenteredPending) {
+    await notifyAdminsOfPendingEvent(id, (data.title as string | undefined) ?? (event['title'] as string));
+  }
 
   if (data.images !== undefined) {
     const oldImages = Array.isArray(event['images']) ? (event['images'] as unknown[]) : [];

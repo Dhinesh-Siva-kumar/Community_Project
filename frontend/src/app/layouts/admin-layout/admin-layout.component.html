@@ -40,7 +40,7 @@
       >
         <span class="nav-icon-wrap">
           <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
-          @if (item.route === '/admin/post-approval' && hasPendingApprovals()) {
+          @if (item.route === '/admin/approval' && hasPendingApprovals()) {
             <span class="nav-icon-dot" aria-label="Pending approvals"></span>
           }
         </span>

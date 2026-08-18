@@ -4,7 +4,19 @@ import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-s
 import { logAudit } from '../../services/audit.service';
 import { geocodeAddress } from '../../services/geocoding.service';
 import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
+
+async function notifyAdminsOfPendingBusiness(businessId: string, name: string): Promise<void> {
+  const admins = await db('users').where({ role: 'ADMIN' }).select('id');
+  if (!admins.length) return;
+  const message = `New business "${name}" pending approval.`;
+  await Promise.all(
+    (admins as Array<Record<string, unknown>>).map((admin) =>
+      notificationsService.create(admin['id'] as string, 'BUSINESS_PENDING', message, businessId),
+    ),
+  );
+}
 
 export async function createCategory(data: CreateBusinessCategoryDtoType, adminId: string) {
   const existing = await db('business_categories').where({ name: data.name }).first();
@@ -55,6 +67,10 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
   const category = await db('business_categories').where({ id: data.categoryId }).first();
   if (!category) throw new AppError(404, 'Business category not found');
 
+  const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+  const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+  const status = isAutoApproved ? 'APPROVED' : 'PENDING';
+
   await validateAddressHierarchy({
     countryId: data.countryId,
     stateId: data.stateId,
@@ -100,19 +116,31 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       state_id:      data.stateId      ?? null,
       city_id:       data.cityId       ?? null,
       is_active:     data.isActive     ?? true,
+      status,
       user_id: userId,
     })
     .returning('*');
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name').first();
-  await logAudit(userId, 'BUSINESS_CREATED', { name: data.name }, 'businesses', (business as Record<string, unknown>)['id'] as string);
-  return { ...(business as Record<string, unknown>), userId: (business as Record<string, unknown>)['user_id'], category, user };
+
+  if (status === 'PENDING') {
+    await notifyAdminsOfPendingBusiness((business as Record<string, unknown>)['id'] as string, data.name);
+  }
+
+  await logAudit(userId, 'BUSINESS_CREATED', { name: data.name, status }, 'businesses', (business as Record<string, unknown>)['id'] as string);
+  return {
+    ...(business as Record<string, unknown>),
+    userId: (business as Record<string, unknown>)['user_id'],
+    createdAt: (business as Record<string, unknown>)['created_at'],
+    category,
+    user,
+  };
 }
 
 export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
   const {
     categoryId, categoryIds, pincode, page, limit, search, country, openingHours,
-    dateFrom, dateTo, status, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, userId,
+    dateFrom, dateTo, status, approvalStatus, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, userId,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -139,6 +167,19 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     const isActive = status === 'active';
     query.andWhere('b.is_active', isActive);
     countQuery.andWhere('is_active', isActive);
+  }
+
+  // ── Moderation status — non-owner/non-admin callers only ever see
+  // APPROVED businesses; skipActiveFilter=true (admin browse, or the
+  // caller's own "mine" list) bypasses this the same way it already
+  // bypasses the is_active filter above.
+  if (!skipActiveFilter) {
+    query.where('b.status', 'APPROVED');
+    countQuery.where('status', 'APPROVED');
+  }
+  if (approvalStatus) {
+    query.andWhere('b.status', approvalStatus);
+    countQuery.andWhere('status', approvalStatus);
   }
 
   if (userId) { query.andWhere('b.user_id', userId); countQuery.andWhere('user_id', userId); }
@@ -213,6 +254,8 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
     isRemote:     b['is_remote'],
+    rejectionReason: b['rejection_reason'] ?? null,
+    createdAt:    b['created_at'],
     countryId:    b['country_id'],
     stateId:      b['state_id'],
     cityId:       b['city_id'],
@@ -258,6 +301,8 @@ export async function findOne(id: string) {
     openingDays:  b['opening_days'],
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
+    rejectionReason: b['rejection_reason'] ?? null,
+    createdAt:    b['created_at'],
     countryId:    b['country_id'],
     stateId:      b['state_id'],
     cityId:       b['city_id'],
@@ -268,6 +313,99 @@ export async function findOne(id: string) {
     user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'], email: b['user_email'], avatar: b['avatar'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   };
+}
+
+export async function countPending() {
+  const [{ count }] = await db('businesses').where({ status: 'PENDING' }).count({ count: '*' });
+  return { count: Number(count) };
+}
+
+export interface FindPendingBusinessOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  country?: string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:  'joined' | 'name' | 'submitter' | 'country';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function findPendingOnly(options: FindPendingBusinessOptions) {
+  const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const offset = (page - 1) * limit;
+
+  const query = db('businesses as b')
+    .join('users as u', 'b.user_id', 'u.id')
+    .join('business_categories as bc', 'b.category_id', 'bc.id')
+    .where('b.status', 'PENDING')
+    .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon');
+
+  const countQuery = db('businesses').where({ status: 'PENDING' });
+
+  if (search) {
+    query.andWhere(function () { this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`); });
+    countQuery.andWhere(function () { this.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`); });
+  }
+  if (country) {
+    query.andWhereILike('b.country', `%${country}%`);
+    countQuery.andWhereILike('country', `%${country}%`);
+  }
+  if (dateFrom) {
+    query.andWhere('b.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('b.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
+  }
+
+  const sortColumn = sortBy === 'name' ? 'b.name'
+    : sortBy === 'submitter' ? 'u.display_name'
+    : sortBy === 'country' ? 'b.country'
+    : 'b.created_at';
+  const [businesses, [{ total }]] = await Promise.all([
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
+  ]);
+
+  const data = (businesses as Array<Record<string, unknown>>).map((b) => ({
+    ...b,
+    userId: b['user_id'],
+    categoryId: b['category_id'],
+    rejectionReason: b['rejection_reason'] ?? null,
+    createdAt: b['created_at'],
+    user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'] },
+    category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
+  }));
+
+  return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+export async function approve(id: string, adminId: string) {
+  const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!business) throw new AppError(404, 'Business not found');
+
+  if (business['status'] === 'APPROVED') return findOne(id);
+
+  await db('businesses').where({ id }).update({ status: 'APPROVED' });
+  await notificationsService.create(business['user_id'] as string, 'BUSINESS_APPROVED', `Your business "${business['name']}" has been approved.`, id);
+  await logAudit(adminId, 'BUSINESS_APPROVED', { previousStatus: business['status'], name: business['name'] }, 'businesses', id);
+  return findOne(id);
+}
+
+export async function reject(id: string, adminId: string, reason?: string) {
+  const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!business) throw new AppError(404, 'Business not found');
+
+  if (business['status'] === 'REJECTED') return findOne(id);
+
+  await db('businesses').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
+  const message = `Your business "${business['name']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(business['user_id'] as string, 'BUSINESS_REJECTED', message, id);
+  await logAudit(adminId, 'BUSINESS_REJECTED', { previousStatus: business['status'], reason: reason ?? null, name: business['name'] }, 'businesses', id);
+  return findOne(id);
 }
 
 export async function update(id: string, data: UpdateBusinessDtoType, userId: string) {
@@ -306,6 +444,18 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.cityId !== undefined) updateData['city_id'] = data.cityId;
    if (data.isActive !== undefined) updateData['is_active'] = data.isActive;
 
+  // Resubmitting a rejected business: the owner editing their own rejected
+  // business re-enters the approval gate exactly like a brand-new one,
+  // instead of silently staying REJECTED after the edit.
+  let reenteredPending = false;
+  if (!byAdmin && business['status'] === 'REJECTED') {
+    const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+    const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+    updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
+    updateData['rejection_reason'] = null;
+    reenteredPending = !isAutoApproved;
+  }
+
   // Validate the hierarchy using whichever id is being set now, falling
   // back to the business's existing stored id for any field left unchanged
   // by this partial update.
@@ -342,6 +492,10 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
   }
 
   await db('businesses').where({ id }).update(updateData);
+
+  if (reenteredPending) {
+    await notifyAdminsOfPendingBusiness(id, (data.name as string | undefined) ?? (business['name'] as string));
+  }
 
   if (data.images !== undefined) {
     const oldImages = Array.isArray(business['images']) ? (business['images'] as unknown[]) : [];

@@ -31,6 +31,8 @@ export type AuditAction =
   | 'COMMUNITY_DELETED'
   | 'COMMUNITY_JOINED'
   | 'COMMUNITY_LEFT'
+  | 'COMMUNITY_APPROVED'
+  | 'COMMUNITY_REJECTED'
   // Business
   | 'BUSINESS_CATEGORY_CREATED'
   | 'BUSINESS_CATEGORY_UPDATED'
@@ -38,14 +40,20 @@ export type AuditAction =
   | 'BUSINESS_CREATED'
   | 'BUSINESS_UPDATED'
   | 'BUSINESS_DELETED'
+  | 'BUSINESS_APPROVED'
+  | 'BUSINESS_REJECTED'
   // Events
   | 'EVENT_CREATED'
   | 'EVENT_UPDATED'
   | 'EVENT_DELETED'
+  | 'EVENT_APPROVED'
+  | 'EVENT_REJECTED'
   // Jobs
   | 'JOB_CREATED'
   | 'JOB_UPDATED'
   | 'JOB_DELETED'
+  | 'JOB_APPROVED'
+  | 'JOB_REJECTED'
   | string;
 
 export async function logAudit(

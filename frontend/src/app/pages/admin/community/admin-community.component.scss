@@ -829,6 +829,28 @@
     color: $color-stone-500;
     border: 1px solid rgba($color-stone-300, 0.6);
   }
+
+  &.cc-status-tag--pending {
+    background: rgba(217, 119, 6, 0.7);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { filter: brightness(0.95); text-decoration: none; }
+  }
+
+  &.cc-status-tag--rejected {
+    background: rgba($color-danger, 0.7);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { filter: brightness(0.95); text-decoration: none; }
+  }
 }
 
 // Avatar — overlaps head/body seam via negative top margin.
@@ -1009,6 +1031,40 @@
     background: $amber-50;
     color: $color-primary-darker;
     border: 1px solid $color-amber-200;
+  }
+}
+
+.cc-approval-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+
+  i { font-size: 10px; }
+
+  &:hover {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+
+  &--pending {
+    background: $amber-50;
+    color: #92400e;
+    border: 1px solid $color-amber-200;
+  }
+
+  &--rejected {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+    border: 1px solid rgba($color-danger, 0.25);
   }
 }
 

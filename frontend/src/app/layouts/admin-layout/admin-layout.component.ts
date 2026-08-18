@@ -2,9 +2,14 @@ import { Component, inject, signal, computed, HostListener } from '@angular/core
 import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PostService } from '../../core/services/post.service';
+import { CommunityService } from '../../core/services/community.service';
+import { BusinessService } from '../../core/services/business.service';
+import { JobService } from '../../core/services/job.service';
+import { EventService } from '../../core/services/event.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 
 interface NavItem {
@@ -21,7 +26,7 @@ const ROUTE_TITLES: Record<string, string> = {
   jobs:              'Jobs',
   events:            'Events',
   'user-management': 'User Management',
-  'post-approval':   'Post Approval',
+  approval:          'Approval',
   analytics:         'Analytics',
   'audit-log':       'Audit Log',
   profile:           'Profile',
@@ -37,7 +42,11 @@ const ROUTE_TITLES: Record<string, string> = {
 export class AdminLayoutComponent {
   authService = inject(AuthService);
   notificationService = inject(NotificationService);
-  private postService = inject(PostService);
+  private postService      = inject(PostService);
+  private communityService = inject(CommunityService);
+  private businessService  = inject(BusinessService);
+  private jobService        = inject(JobService);
+  private eventService      = inject(EventService);
   private router = inject(Router);
 
   sidebarCollapsed = signal(false);
@@ -46,6 +55,9 @@ export class AdminLayoutComponent {
   isMobile = signal(false);
   pageTitle = signal('Dashboard');
 
+  // Post Approval no longer has its own nav entry/page — it's a tab on the
+  // unified Approval page now, so its pending count folds into this single
+  // badge alongside Community/Business/Jobs/Events.
   pendingApprovalsCount = signal(0);
   hasPendingApprovals = computed(() => this.pendingApprovalsCount() > 0);
 
@@ -56,7 +68,7 @@ export class AdminLayoutComponent {
     { label: 'Jobs',            icon: 'bi-briefcase',         route: '/admin/jobs'                                          },
     { label: 'Events',          icon: 'bi-calendar-event',    route: '/admin/events'                                        },
     { label: 'User Management', icon: 'bi-person-gear',       route: '/admin/user-management', sectionLabel: 'ADMIN'       },
-    { label: 'Post Approval',   icon: 'bi-check-circle',      route: '/admin/post-approval'                                 },
+    { label: 'Approval',        icon: 'bi-patch-check',       route: '/admin/approval'                                      },
     { label: 'Analytics',       icon: 'bi-graph-up',          route: '/admin/analytics'                                     },
     { label: 'Audit Log',       icon: 'bi-clock-history',     route: '/admin/audit-log'                                     },
     { label: 'Profile',         icon: 'bi-person-circle',     route: '/admin/profile',         sectionLabel: 'ACCOUNT'    },
@@ -75,8 +87,16 @@ export class AdminLayoutComponent {
   }
 
   private loadPendingApprovalsCount(): void {
-    this.postService.getPendingCount().subscribe({
-      next: (res) => this.pendingApprovalsCount.set(res.count),
+    forkJoin({
+      posts:     this.postService.getPendingCount(),
+      community: this.communityService.getPendingCommunitiesCount(),
+      business:  this.businessService.getPendingBusinessesCount(),
+      jobs:       this.jobService.getPendingJobsCount(),
+      events:     this.eventService.getPendingEventsCount(),
+    }).subscribe({
+      next: (res) => this.pendingApprovalsCount.set(
+        res.posts.count + res.community.count + res.business.count + res.jobs.count + res.events.count
+      ),
       error: () => {},
     });
   }

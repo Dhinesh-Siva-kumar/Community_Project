@@ -235,6 +235,8 @@
         <div class="uc-empty-icon" aria-hidden="true">
           @if (activeTab() === 'joined') {
             <i class="bi bi-person-plus"></i>
+          } @else if (activeTab() === 'pending') {
+            <i class="bi bi-hourglass-split"></i>
           } @else {
             <i class="bi bi-search"></i>
           }
@@ -244,6 +246,8 @@
             No results for &ldquo;{{ searchTerm() }}&rdquo;
           } @else if (activeTab() === 'joined') {
             You haven't joined any communities yet
+          } @else if (activeTab() === 'pending') {
+            No submissions yet
           } @else {
             No communities found
           }
@@ -255,6 +259,8 @@
           } @else if (activeTab() === 'joined') {
             Explore the <button class="uc-empty-link" (click)="setTab('all')" type="button">All tab</button>
             and join communities that interest you.
+          } @else if (activeTab() === 'pending') {
+            Communities you create will show up here with their approval status.
           } @else {
             Communities will appear here once they are created.
           }
@@ -269,6 +275,8 @@
             Your communities
           } @else if (activeTab() === 'trending') {
             Trending
+          } @else if (activeTab() === 'pending') {
+            Your submissions
           } @else {
             All communities
           }
@@ -298,8 +306,13 @@
               }
               <div class="uc-g-cover-sheen" aria-hidden="true"></div>
               <div class="uc-g-cover-scrim" aria-hidden="true"></div>
-              @if (((community._count?.members ?? 0) > 50) || isOwner(community)) {
+              @if (((community._count?.members ?? 0) > 50) || isOwner(community) || community.status !== 'APPROVED') {
                 <div class="uc-g-cover-badges">
+                  @if (community.status === 'PENDING') {
+                    <span class="uc-g-badge uc-g-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Pending Approval</span>
+                  } @else if (community.status === 'REJECTED') {
+                    <span class="uc-g-badge uc-g-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>Rejected</span>
+                  }
                   @if ((community._count?.members ?? 0) > 50) {
                     <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
                   }
@@ -346,6 +359,10 @@
               </div>
 
               <p class="uc-g-desc">{{ community.description }}</p>
+
+              @if (community.status === 'REJECTED' && community.rejectionReason) {
+                <p class="uc-g-rejection-reason"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> {{ community.rejectionReason }}</p>
+              }
 
               <div class="uc-g-foot">
                 <div class="uc-g-stats">
@@ -430,8 +447,16 @@
                 @if (isOwner(community)) {
                   <span class="uc-l-owner-badge"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Yours</span>
                 }
+                @if (community.status === 'PENDING') {
+                  <span class="uc-l-owner-badge uc-l-owner-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Pending Approval</span>
+                } @else if (community.status === 'REJECTED') {
+                  <span class="uc-l-owner-badge uc-l-owner-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>Rejected</span>
+                }
               </div>
               <div class="uc-l-desc">{{ community.description }}</div>
+              @if (community.status === 'REJECTED' && community.rejectionReason) {
+                <p class="uc-g-rejection-reason">{{ community.rejectionReason }}</p>
+              }
               <div class="uc-l-chips">
                 <span class="uc-chip uc-chip--sm uc-chip--members">
                   <i class="bi bi-people-fill" aria-hidden="true"></i>{{ community._count?.members ?? 0 }}

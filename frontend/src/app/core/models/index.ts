@@ -191,6 +191,9 @@ export interface CommunityRequest {
 
 export type CommunityMode = 'HELP_EMERGENCY' | 'ENQUIRE';
 
+/** Admin moderation status — same shape as PostStatus, now shared by Community/Business/Job/Event. */
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface Community {
   id: string;
   name: string;
@@ -199,6 +202,8 @@ export interface Community {
   location?: string;
   pincode?: string;
   isActive: boolean;
+  status: ApprovalStatus;
+  rejectionReason?: string | null;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -324,6 +329,8 @@ export interface Business {
   category?: BusinessCategory;
   user?: User;
   isActive: boolean;
+  status: ApprovalStatus;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   // Country-aware address hierarchy — additive alongside the free-text
@@ -359,6 +366,8 @@ export interface Event {
   userId: string;
   user?: User;
   isActive: boolean;
+  status: ApprovalStatus;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -380,6 +389,8 @@ export interface Job {
   userId: string;
   user?: User;
   isActive: boolean;
+  status: ApprovalStatus;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
 

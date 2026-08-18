@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto } from './communities.dto';
+import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto, ListPendingCommunitiesQueryDto, RejectCommunityDto } from './communities.dto';
 import * as communitiesService from './communities.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -100,6 +100,36 @@ export async function getMyCreatedCommunities(req: Request, res: Response, next:
       createdById: req.user!.sub,
       skipActiveFilter: true,
     });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListPendingCommunitiesQueryDto.parse(req.query);
+    const result = await communitiesService.findPendingOnly(query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPendingCount(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await communitiesService.countPending();
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function approve(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await communitiesService.approve(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RejectCommunityDto.parse(req.body ?? {});
+    const result = await communitiesService.reject(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

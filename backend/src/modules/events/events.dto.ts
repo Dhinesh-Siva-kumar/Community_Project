@@ -29,6 +29,8 @@ export const ListEventsQueryDto = z.object({
   search: z.string().optional(),
   country: z.string().optional(),
   status: z.enum(['active', 'inactive']).optional(),
+  // Moderation status — distinct from `status` above (which means active/inactive).
+  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
   dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
   /** Filters on event_date (when the event happens), unlike dateFrom/dateTo which filter created_at. */
@@ -38,6 +40,23 @@ export const ListEventsQueryDto = z.object({
   sortDir:  z.enum(['asc', 'desc']).default('asc'),
 });
 
+export const ListPendingEventsQueryDto = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  limit:    z.coerce.number().int().min(1).max(100).default(20),
+  search:   z.string().optional(),
+  country:  z.string().optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['joined', 'name', 'submitter', 'country']).default('joined'),
+  sortDir:  z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const RejectEventDto = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+
 export type CreateEventDtoType = z.infer<typeof CreateEventDto>;
 export type UpdateEventDtoType = z.infer<typeof UpdateEventDto>;
 export type ListEventsQueryDtoType = z.infer<typeof ListEventsQueryDto>;
+export type ListPendingEventsQueryDtoType = z.infer<typeof ListPendingEventsQueryDto>;
+export type RejectEventDtoType = z.infer<typeof RejectEventDto>;

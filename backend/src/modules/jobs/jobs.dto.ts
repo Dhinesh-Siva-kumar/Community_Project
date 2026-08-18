@@ -65,7 +65,11 @@ export const CreateJobDto = z.object({
   // ── Content ──────────────────────────────────────────────────
   skills: z.array(z.string()).optional(),
   // Note: description is declared above in the legacy fields block —
-  // it now serves as the unified job description field.
+  // it now serves as the general/summary job description field.
+  responsibilities: z.string().optional(),
+  qualifications:   z.string().optional(),
+  requirements:     z.string().optional(),
+  benefits:         z.string().optional(),
 });
 
 export const UpdateJobDto = CreateJobDto.partial();
@@ -109,15 +113,38 @@ export const ListJobsQueryDto = z.object({
 
   // ── Status (admin only — public job listing always shows active) ──
   status: z.enum(['active', 'inactive']).optional(),
+  // Moderation status — distinct from `status` above (which means active/inactive).
+  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
 
   // ── Sorting ──────────────────────────────────────────────────
   sortBy: z.enum([
     'newest', 'oldest',
     'salary_high', 'salary_low',
     'company_az',
+    'title_az', 'title_za',
+    'location_az', 'location_za',
+    'type_az', 'type_za',
+    'status_active', 'status_inactive',
   ]).optional(),
+});
+
+export const ListPendingJobsQueryDto = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  limit:    z.coerce.number().int().min(1).max(100).default(20),
+  search:   z.string().optional(),
+  country:  z.string().optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['joined', 'name', 'submitter', 'country']).default('joined'),
+  sortDir:  z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const RejectJobDto = z.object({
+  reason: z.string().trim().max(500).optional(),
 });
 
 export type CreateJobDtoType     = z.infer<typeof CreateJobDto>;
 export type UpdateJobDtoType     = z.infer<typeof UpdateJobDto>;
 export type ListJobsQueryDtoType = z.infer<typeof ListJobsQueryDto>;
+export type ListPendingJobsQueryDtoType = z.infer<typeof ListPendingJobsQueryDto>;
+export type RejectJobDtoType     = z.infer<typeof RejectJobDto>;

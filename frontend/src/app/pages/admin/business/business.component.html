@@ -633,12 +633,22 @@
                   <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
                 </div>
               }
-              <span class="bl-card__status-badge"
-                    [class.bl-card__status-badge--active]="biz.isActive"
-                    [class.bl-card__status-badge--inactive]="!biz.isActive">
-                <i class="bi" [class.bi-check-circle-fill]="biz.isActive" [class.bi-dash-circle-fill]="!biz.isActive"></i>
-                {{ biz.isActive ? 'Active' : 'Inactive' }}
-              </span>
+              @if (biz.status === 'PENDING') {
+                <span class="bl-card__status-badge bl-card__status-badge--pending">
+                  <i class="bi bi-hourglass-split"></i> Pending Approval
+                </span>
+              } @else if (biz.status === 'REJECTED') {
+                <span class="bl-card__status-badge bl-card__status-badge--rejected" [title]="biz.rejectionReason || 'Rejected'">
+                  <i class="bi bi-x-circle-fill"></i> Rejected
+                </span>
+              } @else {
+                <span class="bl-card__status-badge"
+                      [class.bl-card__status-badge--active]="biz.isActive"
+                      [class.bl-card__status-badge--inactive]="!biz.isActive">
+                  <i class="bi" [class.bi-check-circle-fill]="biz.isActive" [class.bi-dash-circle-fill]="!biz.isActive"></i>
+                  {{ biz.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              }
             </div>
 
             <div class="bl-card__body">
@@ -786,9 +796,15 @@
                   <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ getLocation(biz) || '—' }}</span></td>
                   <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ biz.phone || '—' }}</span></td>
                   <td class="um-td">
-                    <span class="um-badge" [class.um-badge--trusted]="biz.isActive" [class.um-badge--blocked]="!biz.isActive">
-                      {{ biz.isActive ? 'Active' : 'Inactive' }}
-                    </span>
+                    @if (biz.status === 'PENDING') {
+                      <span class="um-badge um-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                    } @else if (biz.status === 'REJECTED') {
+                      <span class="um-badge um-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                    } @else {
+                      <span class="um-badge" [class.um-badge--trusted]="biz.isActive" [class.um-badge--blocked]="!biz.isActive">
+                        {{ biz.isActive ? 'Active' : 'Inactive' }}
+                      </span>
+                    }
                   </td>
                   <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ formatDate(getCreatedAt(biz)) }}</span></td>
                   <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
@@ -889,7 +905,11 @@
            <div class="bd-hero__info">
             <div class="bd-hero__name-row">
               <h1 class="bd-hero__name">{{ biz.name }}</h1>
-              @if (biz.isActive) {
+              @if (biz.status === 'PENDING') {
+                <span class="bd-badge bd-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+              } @else if (biz.status === 'REJECTED') {
+                <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+              } @else if (biz.isActive) {
                 <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span>
               } @else {
                 <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> Inactive</span>
@@ -898,6 +918,9 @@
             <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ selectedCategory()?.name }}</span>
             @if ($any(biz).city || $any(biz).state || biz.country) {
               <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getLocation(biz) }}</span>
+            }
+            @if (biz.status === 'REJECTED' && biz.rejectionReason) {
+              <p class="bd-rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
             }
           </div>
           <div class="bd-hero__actions">

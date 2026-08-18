@@ -1,8 +1,27 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Job, PaginatedResponse } from '../models';
+import { ApprovalStatus, Job, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
+
+export interface MyJobsQueryParams {
+  page?:  number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  approvalStatus?: ApprovalStatus;
+}
+
+export interface PendingJobsQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'name';
+  sortDir?:  'asc' | 'desc';
+}
 
 export interface JobsQueryParams {
   // ── Pagination ───────────────────────────────────────────────
@@ -37,7 +56,9 @@ export interface JobsQueryParams {
   postedWithin?: number;
   dateFrom?: string;
   dateTo?:   string;
-  sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az';
+  sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az'
+    | 'title_az' | 'title_za' | 'location_az' | 'location_za'
+    | 'type_az' | 'type_za' | 'status_active' | 'status_inactive';
 
   // ── Status (admin only) ───────────────────────────────────────
   status?: 'active' | 'inactive';
@@ -67,6 +88,9 @@ export class JobService {
     if (query.salaryMax != null)    params['salaryMax']     = query.salaryMax;
     if (query.salaryHidden != null) params['salaryHidden']  = query.salaryHidden;
     if (query.postedWithin != null) params['postedWithin']  = query.postedWithin;
+    if (query.status)                params['status']       = query.status;
+    if (query.dateFrom)              params['dateFrom']     = query.dateFrom;
+    if (query.dateTo)                params['dateTo']       = query.dateTo;
     if (query.sortBy && query.sortBy !== 'newest') params['sortBy'] = query.sortBy;
 
     return this.api.get<PaginatedResponse<Job>>('/jobs', params);
@@ -94,5 +118,35 @@ export class JobService {
 
   deleteJob(id: string): Observable<void> {
     return this.api.delete<void>(`/jobs/${id}`);
+  }
+
+  getMyJobs(params: MyJobsQueryParams = {}): Observable<PaginatedResponse<Job>> {
+    const clean: Record<string, any> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') clean[k] = v;
+    });
+    return this.api.get<PaginatedResponse<Job>>('/jobs/mine', clean);
+  }
+
+  approveJob(id: string): Observable<Job> {
+    return this.api.put<Job>(`/jobs/${id}/approve`);
+  }
+
+  rejectJob(id: string, reason?: string): Observable<Job> {
+    return this.api.put<Job>(`/jobs/${id}/reject`, reason ? { reason } : {});
+  }
+
+  getPendingJobs(params?: PendingJobsQueryParams): Observable<PaginatedResponse<Job>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Job>>('/jobs/pending', clean);
+  }
+
+  getPendingJobsCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/jobs/pending-count');
   }
 }

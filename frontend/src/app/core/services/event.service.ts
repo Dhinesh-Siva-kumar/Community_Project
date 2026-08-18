@@ -1,8 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Event, PaginatedResponse } from '../models';
+import { ApprovalStatus, Event, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
+
+export interface MyEventsQueryParams {
+  page?:  number;
+  limit?: number;
+  search?: string;
+  approvalStatus?: ApprovalStatus;
+}
+
+export interface PendingEventsQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'name';
+  sortDir?:  'asc' | 'desc';
+}
 
 export interface EventsQueryParams {
   pincode?:     string;
@@ -57,5 +75,35 @@ export class EventService {
 
   deleteEvent(id: string): Observable<void> {
     return this.api.delete<void>(`/events/${id}`);
+  }
+
+  getMyEvents(params: MyEventsQueryParams = {}): Observable<PaginatedResponse<Event>> {
+    const clean: Record<string, any> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') clean[k] = v;
+    });
+    return this.api.get<PaginatedResponse<Event>>('/events/mine', clean);
+  }
+
+  approveEvent(id: string): Observable<Event> {
+    return this.api.put<Event>(`/events/${id}/approve`);
+  }
+
+  rejectEvent(id: string, reason?: string): Observable<Event> {
+    return this.api.put<Event>(`/events/${id}/reject`, reason ? { reason } : {});
+  }
+
+  getPendingEvents(params?: PendingEventsQueryParams): Observable<PaginatedResponse<Event>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Event>>('/events/pending', clean);
+  }
+
+  getPendingEventsCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/events/pending-count');
   }
 }

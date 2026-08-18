@@ -303,14 +303,24 @@
             <div class="cc-head"
                  [class.cc-head--img]="!!community.image"
                  [style.backgroundImage]="community.image ? 'url(' + (community.image | imageUrl) + ')' : null">
-              <span class="cc-status-tag"
-                    [class.cc-status-tag--active]="community.is_active"
-                    [class.cc-status-tag--inactive]="!community.is_active">
-                <i class="bi"
-                   [class.bi-check-circle-fill]="community.is_active"
-                   [class.bi-dash-circle-fill]="!community.is_active"></i>
-                {{ community.is_active ? 'Active' : 'Inactive' }}
-              </span>
+              @if (community.status === 'PENDING') {
+                <a class="cc-status-tag cc-status-tag--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
+                  <i class="bi bi-hourglass-split"></i> Pending Approval
+                </a>
+              } @else if (community.status === 'REJECTED') {
+                <a class="cc-status-tag cc-status-tag--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
+                  <i class="bi bi-x-circle-fill"></i> Rejected
+                </a>
+              } @else {
+                <span class="cc-status-tag"
+                      [class.cc-status-tag--active]="community.is_active"
+                      [class.cc-status-tag--inactive]="!community.is_active">
+                  <i class="bi"
+                     [class.bi-check-circle-fill]="community.is_active"
+                     [class.bi-dash-circle-fill]="!community.is_active"></i>
+                  {{ community.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              }
             </div>
 
             <!-- Body -->
@@ -560,9 +570,19 @@
                 <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ community?._count?.members ?? 0 }}</span></td>
                 <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ community?._count?.posts ?? 0 }}</span></td>
                 <td class="um-td">
-                  <span class="um-badge" [class.um-badge--trusted]="community.is_active" [class.um-badge--blocked]="!community.is_active">
-                    {{ community.is_active ? 'Active' : 'Inactive' }}
-                  </span>
+                  @if (community.status === 'PENDING') {
+                    <a class="cc-approval-chip cc-approval-chip--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
+                      <i class="bi bi-hourglass-split"></i> Pending Approval
+                    </a>
+                  } @else if (community.status === 'REJECTED') {
+                    <a class="cc-approval-chip cc-approval-chip--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
+                      <i class="bi bi-x-circle-fill"></i> Rejected
+                    </a>
+                  } @else {
+                    <span class="um-badge" [class.um-badge--trusted]="community.is_active" [class.um-badge--blocked]="!community.is_active">
+                      {{ community.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  }
                 </td>
                 <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ formatDate(community.created_at) }}</span></td>
                 <td class="um-td um-td--actions" (click)="$event.stopPropagation()">

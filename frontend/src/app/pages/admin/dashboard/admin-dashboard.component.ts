@@ -214,13 +214,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Every entry routes to a real, currently-reachable admin page (no dead
-  // links to unwired features) — "Review Pending Posts" in particular
-  // replaces the dashboard's old inline approval queue with a direct
-  // shortcut to /admin/post-approval, so that moderation task is still
-  // one click away.
+  // links to unwired features) — "Review Pending Posts" in particular is a
+  // direct shortcut to /admin/approval (Posts is its default tab), so that
+  // moderation task is still one click away now that Post Approval no
+  // longer has its own standalone page.
   quickActions = [
     { label: 'Create Community',      icon: 'bi-plus-circle',     bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
-    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: '#fdecea', color: '#ba1a1a', route: '/admin/post-approval'   },
+    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: '#fdecea', color: '#ba1a1a', route: '/admin/approval'        },
     { label: 'Manage Users',          icon: 'bi-person-gear',     bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
     { label: 'Business Listings',     icon: 'bi-building',        bg: '#e8f0ff', color: '#005ac2', route: '/admin/business'        },
   ];
