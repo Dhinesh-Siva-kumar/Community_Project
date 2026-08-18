@@ -96,10 +96,10 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'post-approval',
+        path: 'approval',
         loadComponent: () =>
-          import('./pages/admin/post-approval/post-approval.component').then(
-            (m) => m.PostApprovalComponent
+          import('./pages/admin/approval/approval.component').then(
+            (m) => m.ApprovalComponent
           ),
       },
       {

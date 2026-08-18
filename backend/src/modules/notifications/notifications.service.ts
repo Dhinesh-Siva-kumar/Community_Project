@@ -13,7 +13,19 @@ export type NotificationType =
   | 'USER_UNBLOCKED'
   | 'TRUST_GRANTED'
   | 'EVENT_CREATED'
-  | 'JOB_POSTED';
+  | 'JOB_POSTED'
+  | 'COMMUNITY_PENDING'
+  | 'COMMUNITY_APPROVED'
+  | 'COMMUNITY_REJECTED'
+  | 'BUSINESS_PENDING'
+  | 'BUSINESS_APPROVED'
+  | 'BUSINESS_REJECTED'
+  | 'JOB_PENDING'
+  | 'JOB_APPROVED'
+  | 'JOB_REJECTED'
+  | 'EVENT_PENDING'
+  | 'EVENT_APPROVED'
+  | 'EVENT_REJECTED';
 
 export async function create(
   userId: string,

@@ -3,7 +3,19 @@ import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
 import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../services/community-visibility.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
+
+async function notifyAdminsOfPendingCommunity(communityId: string, name: string): Promise<void> {
+  const admins = await db('users').where({ role: 'ADMIN' }).select('id');
+  if (!admins.length) return;
+  const message = `New community "${name}" pending approval.`;
+  await Promise.all(
+    (admins as Array<Record<string, unknown>>).map((admin) =>
+      notificationsService.create(admin['id'] as string, 'COMMUNITY_PENDING', message, communityId),
+    ),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Private helper — bulk-enroll existing active users into a newly-created
@@ -40,15 +52,19 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   const existing = await db('communities').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Community with this name already exists');
 
+  const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
+
   if (data.is_global || data.is_default) {
-    const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
     if (!caller || caller['role'] !== 'ADMIN') {
       throw new AppError(403, 'Only admins can create Global or Default communities');
     }
   }
 
+  const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+  const status = isAutoApproved ? 'APPROVED' : 'PENDING';
+
   const [community] = await db('communities')
-    .insert({ ...data, created_by_id: adminId })
+    .insert({ ...data, created_by_id: adminId, status })
     .returning('*');
 
   // The creator is always a member of their own community, so they show up
@@ -64,7 +80,11 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
     await autoJoinExistingUsers(community as Record<string, unknown>);
   }
 
-  await logAudit(adminId, 'COMMUNITY_CREATED', { name: data.name }, 'communities', (community as Record<string, unknown>)['id'] as string);
+  if (status === 'PENDING') {
+    await notifyAdminsOfPendingCommunity((community as Record<string, unknown>)['id'] as string, data.name);
+  }
+
+  await logAudit(adminId, 'COMMUNITY_CREATED', { name: data.name, status }, 'communities', (community as Record<string, unknown>)['id'] as string);
 
   const creator = await db('users')
     .where({ id: adminId })
@@ -84,6 +104,8 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   return {
     ...(community as Record<string, unknown>),
     createdById: (community as Record<string, unknown>)['created_by_id'],
+    rejectionReason: (community as Record<string, unknown>)['rejection_reason'] ?? null,
+    createdAt: (community as Record<string, unknown>)['created_at'],
     createdBy: creator,
     _count: {
       members: Number((counts as Record<string, unknown>)?.['member_count'] ?? 0),
@@ -110,13 +132,14 @@ export async function findAll(params: {
   userId?: string;
   createdById?: string;
   status?: 'active' | 'inactive';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
 }) {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
     community_mode, is_default, from_date, to_date, joined, userId, createdById,
-    status, sortBy = 'joined', sortDir = 'desc',
+    status, approvalStatus, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
 
@@ -148,6 +171,19 @@ export async function findAll(params: {
     const isActive = status === 'active';
     query.where('c.is_active', isActive);
     countQuery.where('is_active', isActive);
+  }
+
+  // ── Moderation status — non-admin/non-owner callers only ever see
+  // APPROVED communities; skipActiveFilter=true (admin browse, or the
+  // caller's own "created" list) bypasses this the same way it already
+  // bypasses the is_active filter above.
+  if (!skipActiveFilter) {
+    query.where('c.status', 'APPROVED');
+    countQuery.where('status', 'APPROVED');
+  }
+  if (approvalStatus) {
+    query.andWhere('c.status', approvalStatus);
+    countQuery.andWhere('status', approvalStatus);
   }
 
   if (search) {
@@ -292,6 +328,8 @@ export async function findAll(params: {
   const data = (communities as Array<Record<string, unknown>>).map((c) => ({
     ...c,
     createdById: c['created_by_id'],
+    rejectionReason: c['rejection_reason'] ?? null,
+    createdAt: c['created_at'],
     createdBy: {
       id: c['creator_id'],
       userName: c['creator_user_name'],
@@ -386,6 +424,8 @@ export async function findOne(id: string) {
   return {
     ...(community as Record<string, unknown>),
     createdById: (community as Record<string, unknown>)['created_by_id'],
+    rejectionReason: (community as Record<string, unknown>)['rejection_reason'] ?? null,
+    createdAt: (community as Record<string, unknown>)['created_at'],
     createdBy: {
       id: (community as Record<string, unknown>)['creator_id'],
       userName: (community as Record<string, unknown>)['creator_user_name'],
@@ -397,6 +437,101 @@ export async function findOne(id: string) {
       posts: Number((postCounts as Record<string, unknown>)?.['total'] ?? 0),
     },
   };
+}
+
+export async function countPending() {
+  const [{ count }] = await db('communities').where({ status: 'PENDING' }).count({ count: '*' });
+  return { count: Number(count) };
+}
+
+export interface FindPendingCommunitiesOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  country?: string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:  'joined' | 'name' | 'submitter' | 'country';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function findPendingOnly(options: FindPendingCommunitiesOptions) {
+  const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const offset = (page - 1) * limit;
+
+  const query = db('communities as c')
+    .leftJoin('users as u', 'c.created_by_id', 'u.id')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
+    .where('c.status', 'PENDING')
+    .select('c.*', 'u.id as creator_id', 'u.user_name as creator_user_name', 'u.display_name as creator_display_name', 'im.interest_name as category_name');
+
+  const countQuery = db('communities').where({ status: 'PENDING' });
+
+  if (search) {
+    query.andWhere(function () { this.whereILike('c.name', `%${search}%`).orWhereILike('c.description', `%${search}%`); });
+    countQuery.andWhere(function () { this.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`); });
+  }
+  if (country) {
+    query.andWhere('c.country', country);
+    countQuery.andWhere('country', country);
+  }
+  if (dateFrom) {
+    query.andWhere('c.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('c.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
+  }
+
+  const sortColumn = sortBy === 'name' ? 'c.name'
+    : sortBy === 'submitter' ? 'u.display_name'
+    : sortBy === 'country' ? 'c.country'
+    : 'c.created_at';
+  const [communities, [{ total }]] = await Promise.all([
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
+  ]);
+
+  const data = (communities as Array<Record<string, unknown>>).map((c) => ({
+    ...c,
+    createdById: c['created_by_id'],
+    rejectionReason: c['rejection_reason'] ?? null,
+    createdAt: c['created_at'],
+    createdBy: {
+      id: c['creator_id'],
+      userName: c['creator_user_name'],
+      displayName: c['creator_display_name'],
+    },
+  }));
+
+  return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+export async function approve(id: string, adminId: string) {
+  const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!community) throw new AppError(404, 'Community not found');
+
+  if (community['status'] === 'APPROVED') return findOne(id);
+
+  await db('communities').where({ id }).update({ status: 'APPROVED' });
+  await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_APPROVED', `Your community "${community['name']}" has been approved.`, id);
+  await logAudit(adminId, 'COMMUNITY_APPROVED', { previousStatus: community['status'], name: community['name'] }, 'communities', id);
+  return findOne(id);
+}
+
+export async function reject(id: string, adminId: string, reason?: string) {
+  const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!community) throw new AppError(404, 'Community not found');
+
+  if (community['status'] === 'REJECTED') return findOne(id);
+
+  await db('communities').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
+  const message = `Your community "${community['name']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_REJECTED', message, id);
+  await logAudit(adminId, 'COMMUNITY_REJECTED', { previousStatus: community['status'], reason: reason ?? null, name: community['name'] }, 'communities', id);
+  return findOne(id);
 }
 
 export async function update(id: string, data: UpdateCommunityDtoType, adminId: string) {
@@ -413,7 +548,24 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
     throw new AppError(403, 'Only admins can set a community to Global or Default');
   }
 
-  await db('communities').where({ id }).update(data);
+  const updateData: Record<string, unknown> = { ...data };
+
+  // Resubmitting a rejected community: the owner editing their own rejected
+  // community re-enters the approval gate exactly like a brand-new one,
+  // instead of silently staying REJECTED after the edit.
+  let reenteredPending = false;
+  if (!byAdmin && caller && before['status'] === 'REJECTED') {
+    const isAutoApproved = caller['role'] === 'ADMIN';
+    updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
+    updateData['rejection_reason'] = null;
+    reenteredPending = !isAutoApproved;
+  }
+
+  await db('communities').where({ id }).update(updateData);
+
+  if (reenteredPending) {
+    await notifyAdminsOfPendingCommunity(id, (data.name as string | undefined) ?? (before['name'] as string));
+  }
 
   if (data.image !== undefined && before['image'] !== data.image) {
     deleteUploadedFile(before['image']);

@@ -107,6 +107,10 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   submitting    = signal(false);
   skeletonItems = Array(5);
 
+  // ─── Page tab — 'all' = public browse, 'pending' = the caller's own submissions ──
+  pageTab             = signal<'all' | 'pending'>('all');
+  myPendingJobsCount  = signal(0);
+
   // ─── Pagination ─────────────────────────────────────────────
   currentPage = signal(1);
   totalPages  = signal(1);
@@ -368,6 +372,43 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.loadGeoCountries();
     this.subscribeToSalaryHidden();
+    this.loadMyPendingJobsCount();
+  }
+
+  setPageTab(tab: 'all' | 'pending'): void {
+    if (this.pageTab() === tab) return;
+    this.pageTab.set(tab);
+    if (tab === 'pending') {
+      this.loadMyJobs();
+    } else {
+      this.loadJobs(1);
+    }
+  }
+
+  /** "Pending Approval" tab — the caller's own jobs across every status (Pending/Approved/Rejected). */
+  loadMyJobs(): void {
+    this.loading.set(true);
+    this.currentPage.set(1);
+    this.activeJobId.set(null);
+    this.jobService.getMyJobs({ page: 1, limit: 100 }).subscribe({
+      next: (res: PaginatedResponse<Job>) => {
+        this.jobs.set(res.data);
+        this.totalItems.set(res.total);
+        this.totalPages.set(1);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load your jobs');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  loadMyPendingJobsCount(): void {
+    this.jobService.getMyJobs({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+      next: (res: PaginatedResponse<Job>) => this.myPendingJobsCount.set(res.total),
+      error: () => {},
+    });
   }
 
   ngOnDestroy(): void {
@@ -931,9 +972,18 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.jobService.createJob(data, images.length > 0 ? images : undefined, logo ?? undefined)
       .subscribe({
         next: (job) => {
-          this.jobs.update(list => [job, ...list]);
-          this.totalItems.update(v => v + 1);
-          this.toast.success('Job posted successfully!');
+          if (job.status === 'PENDING') {
+            this.loadMyPendingJobsCount();
+            this.toast.success('Job submitted for admin approval');
+            if (this.pageTab() === 'pending') {
+              this.jobs.update(list => [job, ...list]);
+              this.totalItems.update(v => v + 1);
+            }
+          } else {
+            this.jobs.update(list => [job, ...list]);
+            this.totalItems.update(v => v + 1);
+            this.toast.success('Job posted successfully!');
+          }
           // Keep the popup (and its disabled/spinner button, so it can't be
           // double-submitted) up just long enough for the confirmation toast
           // to be visible above it, then close.
@@ -954,7 +1004,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (updated) => {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
-          this.toast.success('Job updated successfully!');
+          if (updated.status === 'PENDING' && job.status === 'REJECTED') {
+            this.loadMyPendingJobsCount();
+            this.toast.success('Job resubmitted for admin approval');
+          } else {
+            this.toast.success('Job updated successfully!');
+          }
           setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
         error: () => { this.toast.error('Failed to update job. Please try again.'); this.editSubmitting.set(false); },

@@ -313,6 +313,26 @@
     border: 1px solid $color-stone-200;
     .cd-status-dot { background: $color-stone-400; }
   }
+
+  &.cd-status-pending {
+    background: $amber-50;
+    color: #92400e;
+    border: 1px solid $color-amber-200;
+  }
+
+  &.cd-status-rejected {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+    border: 1px solid rgba($color-danger, 0.25);
+  }
+
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+
+    &:hover { filter: brightness(0.95); transform: translateY(-1px); text-decoration: none; }
+  }
 }
 
 // Inline status (About tab info rows)
@@ -342,6 +362,24 @@
     background: $color-stone-100;
     color: $color-stone-500;
     .cd-status-dot { background: $color-stone-400; }
+  }
+
+  &.cd-status-pending {
+    background: $amber-50;
+    color: #92400e;
+  }
+
+  &.cd-status-rejected {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+  }
+
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+
+    &:hover { filter: brightness(0.95); text-decoration: none; }
   }
 }
 
@@ -1262,6 +1300,55 @@
   }
 }
 
+// Shown instead of the compose card while the community itself is awaiting
+// approval (or was rejected) — posting is disabled until an admin approves it.
+.cd-compose-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 28px 22px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.92) 0%, rgba(255, 255, 255, 0.96) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+
+  &--rejected {
+    background: linear-gradient(180deg, rgba(254, 242, 242, 0.92) 0%, rgba(255, 255, 255, 0.96) 100%);
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+}
+
+.cd-compose-locked__icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  background: $amber-50;
+  color: #92400e;
+  margin-bottom: 4px;
+
+  .cd-compose-locked--rejected & {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+  }
+}
+
+.cd-compose-locked__title {
+  font-weight: $font-weight-bold;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.cd-compose-locked__text {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .cd-compose-upload {
   margin: 0 0 0.45rem;
 }
@@ -1880,6 +1967,14 @@
     background: #fef2f2;
     color: #b91c1c;
     border-color: rgba(239, 68, 68, 0.34);
+  }
+
+  &.post-status-chip--link {
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+
+    &:hover { filter: brightness(0.95); transform: translateY(-1px); text-decoration: none; }
   }
 }
 

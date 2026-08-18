@@ -877,7 +877,9 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 
   i { font-size: 9.5px; }
 
-  &--popular { background: rgba($color-primary, 0.94); color: $color-on-primary; }
+  &--popular  { background: rgba($color-primary, 0.94); color: $color-on-primary; }
+  &--pending  { background: rgba(245, 158, 11, 0.94); color: #fff; }
+  &--rejected { background: rgba(220, 38, 38, 0.94); color: #fff; }
 }
 
 .uc-g-body { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 12px 11px; }
@@ -916,6 +918,21 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 }
 
 .uc-g-category { font-size: 11.5px; color: $color-text-muted; font-weight: $font-weight-semibold; }
+
+.uc-g-rejection-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: $radius-sm;
+  padding: 6px 8px;
+  margin: 0 0 10px;
+  line-height: 1.4;
+
+  i { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+}
 
 .uc-g-desc {
   font-size: 12.5px;
@@ -1481,6 +1498,9 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   background: rgba(251, 191, 36, 0.18); border: 1px solid rgba(251, 191, 36, 0.40);
   color: $color-primary-darker; font-size: 10px; font-weight: $font-weight-bold;
   i { font-size: 9px; }
+
+  &--pending  { background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); color: #b45309; }
+  &--rejected { background: rgba(220, 38, 38, 0.12);  border-color: rgba(220, 38, 38, 0.40);  color: #dc2626; }
 }
 
 // ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown ──

@@ -8,31 +8,46 @@
   <button class="ev-add-btn" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Add Event</button>
 </div>
 
+<!-- ── PAGE TABS ──────────────────────────────────────────── -->
+<div class="ev-page-tabs" role="tablist">
+  <button role="tab" type="button" class="ev-mode-chip" [class.is-active]="pageTab() === 'all'"
+    [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
+    <i class="bi bi-grid-3x3-gap"></i> All
+  </button>
+  <button role="tab" type="button" class="ev-mode-chip" [class.is-active]="pageTab() === 'pending'"
+    [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+    <i class="bi bi-hourglass-split"></i> Pending Approval
+    @if (myPendingEventsCount()) { <span class="ev-tab-count">{{ myPendingEventsCount() }}</span> }
+  </button>
+</div>
+
 <!-- ── TOOLBAR ────────────────────────────────────────────── -->
 <div class="ev-toolbar">
-  <div class="ev-search">
-    <i class="bi bi-search ev-search__icon"></i>
-    <input type="search" class="ev-search__input" placeholder="Search events by title or description…"
-      [value]="searchQuery()" (input)="onSearchInput($any($event.target).value)"
-      autocomplete="off" aria-label="Search events" />
-    @if (searchQuery()) { <button class="ev-search__clear" (click)="clearSearch()" aria-label="Clear"><i class="bi bi-x"></i></button> }
-  </div>
+  @if (pageTab() === 'all') {
+    <div class="ev-search">
+      <i class="bi bi-search ev-search__icon"></i>
+      <input type="search" class="ev-search__input" placeholder="Search events by title or description…"
+        [value]="searchQuery()" (input)="onSearchInput($any($event.target).value)"
+        autocomplete="off" aria-label="Search events" />
+      @if (searchQuery()) { <button class="ev-search__clear" (click)="clearSearch()" aria-label="Clear"><i class="bi bi-x"></i></button> }
+    </div>
 
-  <div class="ev-mode-filter" role="group" aria-label="Filter by mode">
-    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'all'" (click)="setModeFilter('all')">All</button>
-    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Offline'" (click)="setModeFilter('Offline')">Offline</button>
-    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Online'" (click)="setModeFilter('Online')">Online</button>
-    <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Hybrid'" (click)="setModeFilter('Hybrid')">Hybrid</button>
-  </div>
+    <div class="ev-mode-filter" role="group" aria-label="Filter by mode">
+      <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'all'" (click)="setModeFilter('all')">All</button>
+      <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Offline'" (click)="setModeFilter('Offline')">Offline</button>
+      <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Online'" (click)="setModeFilter('Online')">Online</button>
+      <button class="ev-mode-chip" [class.is-active]="modeFilter() === 'Hybrid'" (click)="setModeFilter('Hybrid')">Hybrid</button>
+    </div>
 
-  <div class="ev-sort">
-    Sort
-    <select [ngModel]="sortOption()" (ngModelChange)="setSortOption($event)" aria-label="Sort events">
-      <option value="near">Near you first</option>
-      <option value="soonest">Soonest first</option>
-      <option value="latest">Latest first</option>
-    </select>
-  </div>
+    <div class="ev-sort">
+      Sort
+      <select [ngModel]="sortOption()" (ngModelChange)="setSortOption($event)" aria-label="Sort events">
+        <option value="near">Near you first</option>
+        <option value="soonest">Soonest first</option>
+        <option value="latest">Latest first</option>
+      </select>
+    </div>
+  }
 
   <button class="ev-select-toggle" [class.is-active]="selectionMode()" (click)="toggleSelectionMode()">
     <i class="bi" [ngClass]="selectionMode() ? 'bi-check-square-fill' : 'bi-check-square'"></i>
@@ -73,10 +88,16 @@
   </div>
 } @else if (events().length === 0) {
   <div class="ev-empty">
-    <div class="ev-empty__icon"><i class="bi bi-calendar-x"></i></div>
-    <h5 class="ev-empty__title">{{ searchQuery() || modeFilter() !== 'all' ? 'No matching events' : 'No Events Yet' }}</h5>
-    <p class="ev-empty__sub">{{ searchQuery() || modeFilter() !== 'all' ? 'Try a different search term or filter.' : 'Be the first to create a community event!' }}</p>
-    @if (!searchQuery() && modeFilter() === 'all') { <button class="ev-add-btn ev-add-btn--sm" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Create Event</button> }
+    <div class="ev-empty__icon"><i class="bi {{ pageTab() === 'pending' ? 'bi-hourglass-split' : 'bi-calendar-x' }}"></i></div>
+    <h5 class="ev-empty__title">
+      @if (pageTab() === 'pending') { No submissions yet }
+      @else { {{ searchQuery() || modeFilter() !== 'all' ? 'No matching events' : 'No Events Yet' }} }
+    </h5>
+    <p class="ev-empty__sub">
+      @if (pageTab() === 'pending') { Events you create will show up here with their approval status. }
+      @else { {{ searchQuery() || modeFilter() !== 'all' ? 'Try a different search term or filter.' : 'Be the first to create a community event!' }} }
+    </p>
+    @if (pageTab() === 'all' && !searchQuery() && modeFilter() === 'all') { <button class="ev-add-btn ev-add-btn--sm" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Create Event</button> }
   </div>
 } @else {
   <div class="ev-grid">
@@ -98,6 +119,11 @@
             <div class="ev-ticket__mon">{{ evt.eventDate | date:'MMM' }}</div>
           </div>
           <div class="ev-card__tags">
+            @if (evt.status === 'PENDING') {
+              <span class="ev-near-badge ev-near-badge--pending"><i class="bi bi-hourglass-split"></i>Pending Approval</span>
+            } @else if (evt.status === 'REJECTED') {
+              <span class="ev-near-badge ev-near-badge--rejected" [title]="evt.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i>Rejected</span>
+            }
             @if (near) { <span class="ev-near-badge"><i class="bi bi-house-fill"></i>Near you</span> }
             <span class="ev-mode-tag" [ngClass]="'m-' + evt.eventMode?.toLowerCase()">{{ evt.eventMode }}</span>
           </div>
@@ -116,6 +142,9 @@
           </div>
           <h3 class="ev-card__title">{{ evt.title }}</h3>
           @if (evt.description) { <p class="ev-card__desc">{{ evt.description }}</p> }
+          @if (evt.status === 'REJECTED' && evt.rejectionReason) {
+            <p class="ev-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ evt.rejectionReason }}</p>
+          }
 
           <div class="ev-card__meta">
             @if (evt.eventTime) { <div class="ev-meta-row"><i class="bi bi-clock"></i><span>{{ fmtTimeRange(evt) }}</span></div> }

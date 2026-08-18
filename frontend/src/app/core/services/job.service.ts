@@ -1,8 +1,27 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Job, PaginatedResponse } from '../models';
+import { ApprovalStatus, Job, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
+
+export interface MyJobsQueryParams {
+  page?:  number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  approvalStatus?: ApprovalStatus;
+}
+
+export interface PendingJobsQueryParams {
+  page?:     number;
+  limit?:    number;
+  search?:   string;
+  country?:  string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:   'joined' | 'name';
+  sortDir?:  'asc' | 'desc';
+}
 
 export interface JobsQueryParams {
   // ── Pagination ───────────────────────────────────────────────
@@ -99,5 +118,35 @@ export class JobService {
 
   deleteJob(id: string): Observable<void> {
     return this.api.delete<void>(`/jobs/${id}`);
+  }
+
+  getMyJobs(params: MyJobsQueryParams = {}): Observable<PaginatedResponse<Job>> {
+    const clean: Record<string, any> = {};
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== null && v !== undefined && v !== '') clean[k] = v;
+    });
+    return this.api.get<PaginatedResponse<Job>>('/jobs/mine', clean);
+  }
+
+  approveJob(id: string): Observable<Job> {
+    return this.api.put<Job>(`/jobs/${id}/approve`);
+  }
+
+  rejectJob(id: string, reason?: string): Observable<Job> {
+    return this.api.put<Job>(`/jobs/${id}/reject`, reason ? { reason } : {});
+  }
+
+  getPendingJobs(params?: PendingJobsQueryParams): Observable<PaginatedResponse<Job>> {
+    const clean: Record<string, any> = {};
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') clean[k] = v;
+      });
+    }
+    return this.api.get<PaginatedResponse<Job>>('/jobs/pending', clean);
+  }
+
+  getPendingJobsCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/jobs/pending-count');
   }
 }

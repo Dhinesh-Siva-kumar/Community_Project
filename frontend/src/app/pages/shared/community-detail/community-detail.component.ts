@@ -172,7 +172,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   filteredPosts = computed(() => {
     const tab = this.activeTab();
-    const allPosts = this.posts();
+    // Rejected posts are only ever relevant to their owner (surfaced under
+    // "My Posts" with the rejection reason + resubmit action) — admins
+    // browsing the community feed don't need already-rejected posts cluttering it.
+    const allPosts = this.posts().filter((p) => p.status !== 'REJECTED');
     switch (tab) {
       case 'help':      return allPosts.filter((p) => p.type === 'HELP');
       case 'emergency': return allPosts.filter((p) => p.type === 'EMERGENCY');
@@ -183,9 +186,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   memberCount    = computed(() => this.community()?._count?.members ?? 0);
   postCount      = computed(() => this.community()?._count?.posts ?? 0);
-  helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP').length);
-  emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY').length);
-  enquiryCount   = computed(() => this.posts().filter((p) => p.type === 'ENQUIRY').length);
+  helpCount      = computed(() => this.posts().filter((p) => p.type === 'HELP' && p.status !== 'REJECTED').length);
+  emergencyCount = computed(() => this.posts().filter((p) => p.type === 'EMERGENCY' && p.status !== 'REJECTED').length);
+  enquiryCount   = computed(() => this.posts().filter((p) => p.type === 'ENQUIRY' && p.status !== 'REJECTED').length);
 
   filteredMyPosts = computed(() => {
     const type = this.myPostsFilterType();
@@ -1206,6 +1209,18 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     return active
       ? { label: 'Active',   cls: 'cd-status-active'   }
       : { label: 'Inactive', cls: 'cd-status-inactive' };
+  }
+
+  getApprovalStatus(): { label: string; cls: string; icon: string } | null {
+    const c = this.community();
+    if (!c) return null;
+    if (c.status === 'PENDING')  return { label: 'Pending Approval', cls: 'cd-status-pending',  icon: 'bi-hourglass-split' };
+    if (c.status === 'REJECTED') return { label: 'Rejected',         cls: 'cd-status-rejected', icon: 'bi-x-circle-fill' };
+    return null;
+  }
+
+  canPostInCommunity(): boolean {
+    return this.community()?.status === 'APPROVED';
   }
 
   getVisibilityInfo(): { label: string; icon: string; cls: string } {

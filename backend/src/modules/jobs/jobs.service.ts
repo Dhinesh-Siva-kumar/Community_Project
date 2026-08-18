@@ -2,7 +2,19 @@ import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type { CreateJobDtoType, UpdateJobDtoType, ListJobsQueryDtoType } from './jobs.dto';
+
+async function notifyAdminsOfPendingJob(jobId: string, title: string): Promise<void> {
+  const admins = await db('users').where({ role: 'ADMIN' }).select('id');
+  if (!admins.length) return;
+  const message = `New job "${title}" pending approval.`;
+  await Promise.all(
+    (admins as Array<Record<string, unknown>>).map((admin) =>
+      notificationsService.create(admin['id'] as string, 'JOB_PENDING', message, jobId),
+    ),
+  );
+}
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -76,6 +88,8 @@ function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
     jobType:       j['job_type'],
     timing:        j['timing'],
     isActive:      j['is_active'],
+    status:        j['status'],
+    rejectionReason: j['rejection_reason'] ?? null,
     createdAt:     j['created_at'],
     updatedAt:     j['updated_at'],
     userId:        j['user_id'],
@@ -133,6 +147,10 @@ function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
 // create
 // ─────────────────────────────────────────────────────────────
 export async function create(data: CreateJobDtoType, userId: string) {
+  const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+  const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+  const status = isAutoApproved ? 'APPROVED' : 'PENDING';
+
   const [job] = await db('jobs')
     .insert({
       title:        data.title,
@@ -147,6 +165,7 @@ export async function create(data: CreateJobDtoType, userId: string) {
       job_type:      data.jobType        ?? null,
       timing:        data.timing         ?? null,
       user_id:       userId,
+      status,
       ...mapNewFields(data),
     })
     .returning('*');
@@ -154,7 +173,11 @@ export async function create(data: CreateJobDtoType, userId: string) {
   const user = await db('users').where({ id: userId })
     .select('id', 'user_name', 'display_name', 'avatar').first() as Record<string, unknown>;
 
-  await logAudit(userId, 'JOB_CREATED', { title: data.title }, 'jobs', (job as Record<string, unknown>)['id'] as string);
+  if (status === 'PENDING') {
+    await notifyAdminsOfPendingJob((job as Record<string, unknown>)['id'] as string, data.title);
+  }
+
+  await logAudit(userId, 'JOB_CREATED', { title: data.title, status }, 'jobs', (job as Record<string, unknown>)['id'] as string);
 
   return shapeJob(job as Record<string, unknown>, {
     id: user['id'], userName: user['user_name'],
@@ -165,14 +188,14 @@ export async function create(data: CreateJobDtoType, userId: string) {
 // ─────────────────────────────────────────────────────────────
 // findAll
 // ─────────────────────────────────────────────────────────────
-export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?: boolean }) {
+export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
   const {
     pincode, page, limit, search,
     country, state, city,
     jobType, workMode, shiftType, education,
     expMin, expMax,
     salaryMin, salaryMax, salaryHidden,
-    postedWithin, dateFrom, dateTo, status, sortBy, skipActiveFilter,
+    postedWithin, dateFrom, dateTo, status, approvalStatus, sortBy, skipActiveFilter, userId,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -193,6 +216,20 @@ export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?
     query.andWhere('j.is_active', isActive);
     countQuery.andWhere('is_active', isActive);
   }
+
+  // ── Moderation status — non-owner/non-admin callers only ever see
+  // APPROVED jobs; skipActiveFilter=true (admin browse, or the caller's own
+  // "mine" list) bypasses this the same way it already bypasses the
+  // is_active filter above.
+  if (!skipActiveFilter) {
+    query.where('j.status', 'APPROVED');
+    countQuery.where('status', 'APPROVED');
+  }
+  if (approvalStatus) {
+    query.andWhere('j.status', approvalStatus);
+    countQuery.andWhere('status', approvalStatus);
+  }
+  if (userId) { query.andWhere('j.user_id', userId); countQuery.andWhere('user_id', userId); }
 
   // ── Helper to apply the same condition to both queries ──────
   const addFilter = (queryFn: (q: typeof query) => void, countFn: (q: typeof countQuery) => void) => {
@@ -398,6 +435,96 @@ export async function findOne(id: string) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Moderation — pending queue / approve / reject
+// ─────────────────────────────────────────────────────────────
+export async function countPending() {
+  const [{ count }] = await db('jobs').where({ status: 'PENDING' }).count({ count: '*' });
+  return { count: Number(count) };
+}
+
+export interface FindPendingJobsOptions {
+  page:     number;
+  limit:    number;
+  search?:  string;
+  country?: string;
+  dateFrom?: string;
+  dateTo?:   string;
+  sortBy?:  'joined' | 'name' | 'submitter' | 'country';
+  sortDir?: 'asc' | 'desc';
+}
+
+export async function findPendingOnly(options: FindPendingJobsOptions) {
+  const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const offset = (page - 1) * limit;
+
+  const query = db('jobs as j')
+    .join('users as u', 'j.user_id', 'u.id')
+    .where('j.status', 'PENDING')
+    .select('j.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
+
+  const countQuery = db('jobs').where({ status: 'PENDING' });
+
+  if (search) {
+    const term = `%${search}%`;
+    query.andWhere(function () { this.whereILike('j.title', term).orWhereILike('j.company_name', term); });
+    countQuery.andWhere(function () { this.whereILike('title', term).orWhereILike('company_name', term); });
+  }
+  if (country) {
+    query.andWhereILike('j.country', `%${country}%`);
+    countQuery.andWhereILike('country', `%${country}%`);
+  }
+  if (dateFrom) {
+    query.andWhere('j.created_at', '>=', dateFrom);
+    countQuery.andWhere('created_at', '>=', dateFrom);
+  }
+  if (dateTo) {
+    const toEnd = `${dateTo}T23:59:59.999Z`;
+    query.andWhere('j.created_at', '<=', toEnd);
+    countQuery.andWhere('created_at', '<=', toEnd);
+  }
+
+  const sortColumn = sortBy === 'name' ? 'j.title'
+    : sortBy === 'submitter' ? 'u.display_name'
+    : sortBy === 'country' ? 'j.country'
+    : 'j.created_at';
+  const [jobs, [{ total }]] = await Promise.all([
+    query.orderBy(sortColumn, sortDir).limit(limit).offset(offset),
+    countQuery.count({ total: '*' }),
+  ]);
+
+  const data = (jobs as Array<Record<string, unknown>>).map((j) =>
+    shapeJob(j, { id: j['uid'], userName: j['user_name'], displayName: j['display_name'], avatar: j['avatar'] })
+  );
+
+  return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+export async function approve(id: string, adminId: string) {
+  const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!job) throw new AppError(404, 'Job not found');
+
+  if (job['status'] === 'APPROVED') return findOne(id);
+
+  await db('jobs').where({ id }).update({ status: 'APPROVED' });
+  await notificationsService.create(job['user_id'] as string, 'JOB_APPROVED', `Your job "${job['title']}" has been approved.`, id);
+  await logAudit(adminId, 'JOB_APPROVED', { previousStatus: job['status'], title: job['title'] }, 'jobs', id);
+  return findOne(id);
+}
+
+export async function reject(id: string, adminId: string, reason?: string) {
+  const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!job) throw new AppError(404, 'Job not found');
+
+  if (job['status'] === 'REJECTED') return findOne(id);
+
+  await db('jobs').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
+  const message = `Your job "${job['title']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(job['user_id'] as string, 'JOB_REJECTED', message, id);
+  await logAudit(adminId, 'JOB_REJECTED', { previousStatus: job['status'], reason: reason ?? null, title: job['title'] }, 'jobs', id);
+  return findOne(id);
+}
+
+// ─────────────────────────────────────────────────────────────
 // update
 // ─────────────────────────────────────────────────────────────
 export async function update(id: string, data: UpdateJobDtoType, userId: string) {
@@ -428,7 +555,23 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
   // New fields
   Object.assign(updateData, mapNewFields(data));
 
+  // Resubmitting a rejected job: the owner editing their own rejected job
+  // re-enters the approval gate exactly like a brand-new one, instead of
+  // silently staying REJECTED after the edit.
+  let reenteredPending = false;
+  if (!byAdmin && job['status'] === 'REJECTED') {
+    const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
+    const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
+    updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
+    updateData['rejection_reason'] = null;
+    reenteredPending = !isAutoApproved;
+  }
+
   await db('jobs').where({ id }).update(updateData);
+
+  if (reenteredPending) {
+    await notifyAdminsOfPendingJob(id, (data.title as string | undefined) ?? (job['title'] as string));
+  }
 
   if (data.images !== undefined) {
     const oldImages = Array.isArray(job['images']) ? (job['images'] as unknown[]) : [];

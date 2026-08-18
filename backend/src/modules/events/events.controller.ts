@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateEventDto, UpdateEventDto, ListEventsQueryDto } from './events.dto';
+import { CreateEventDto, UpdateEventDto, ListEventsQueryDto, ListPendingEventsQueryDto, RejectEventDto } from './events.dto';
 import * as eventsService from './events.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -47,6 +47,44 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
     const query = ListEventsQueryDto.parse(req.query);
     const skipActiveFilter = req.user!.role === 'ADMIN';
     const result = await eventsService.findAll({ ...query, skipActiveFilter });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListEventsQueryDto.parse(req.query);
+    const result = await eventsService.findAll({ ...query, userId: req.user!.sub, skipActiveFilter: true });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findPending(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const query = ListPendingEventsQueryDto.parse(req.query);
+    const result = await eventsService.findPendingOnly(query);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPendingCount(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await eventsService.countPending();
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function approve(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await eventsService.approve(req.params['id'] as string, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function reject(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RejectEventDto.parse(req.body ?? {});
+    const result = await eventsService.reject(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

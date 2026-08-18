@@ -1,0 +1,1264 @@
+@use '../../../../assets/styles/index' as *;
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN APPROVAL — Community / Business / Jobs / Events pending queue
+// (reuses the Post Approval / Jobs component's shared style language)
+// ═══════════════════════════════════════════════════════════════
+
+// ── PAGE HEADER ──────────────────────────────────────────────
+.jb-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-xl;
+  background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+
+  &__left { min-width: 0; }
+}
+
+.jb-page-header__title {
+  font-family: $font-family-header;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 800;
+  color: $color-stone-900;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
+
+// ── ENTITY TABS ──────────────────────────────────────────────
+.ap-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: $spacing-md;
+}
+
+.ap-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-card;
+  color: $color-stone-600;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  @include transition-short(all);
+
+  &:hover:not(.active) { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  // Same soft gradient + border as .jb-page-header above, so the active
+  // tab visually matches the page header card instead of standing apart.
+  &.active {
+    background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(249,115,22,0.05) 100%);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+
+    .ap-tab-count { background: $color-primary; color: $color-on-primary; }
+  }
+}
+
+.ap-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: $radius-full;
+  background: $color-primary-light; color: $color-primary-darker;
+  font-size: 10.5px; font-weight: $font-weight-extrabold;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ap-loading {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: $spacing-4xl 0;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+}
+
+// ── BUTTONS (from jobs.component.scss) ───────────────────────
+.jb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: $radius-md;
+  font-family: $font-family-body;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  @include transition-short(all);
+
+  &--neon {
+    background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+    color: $color-on-primary;
+    box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45); color: $color-on-primary; }
+    &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 1.5px solid rgba(251, 191, 36, 0.40);
+    color: $color-primary-darker;
+    &:hover { border-color: $color-primary; background: rgba(251, 191, 36, 0.08); }
+  }
+
+  &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+}
+
+// ── FLOATING HEADER ACTION ────────────────────────────────────
+.admin-page-fab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: $z-fixed;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffbeb;
+  color: $color-primary-darker;
+  box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px) scale(0.9);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+
+  i { font-size: 1.2rem; }
+
+  &:hover {
+    background: #fef3c7;
+    border-color: rgba(217, 119, 6, 0.6);
+    color: #78350f;
+    box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
+  }
+
+  &--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.55);
+    outline-offset: 2px;
+  }
+
+  @include media-sm-max {
+    right: 18px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+// ── FILTER PANEL (from jobs.component.scss) ──────────────────
+.jb-filter-panel {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.jb-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &--top   { gap: $spacing-sm; flex-wrap: wrap; }
+  &--footer { padding-top: $spacing-sm; border-top: 1px solid $color-border; gap: $spacing-sm; }
+}
+
+.jb-filter-group { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+.jb-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+
+  &__icon { position: absolute; left: 12px; color: $color-stone-400; font-size: 0.85rem; pointer-events: none; }
+
+  &__input {
+    width: 100%;
+    height: 40px;
+    padding: 0 36px;
+    border: 1.5px solid $color-border;
+    border-radius: $radius-md;
+    background: $color-bg-page;
+    font-size: $font-size-sm;
+    color: $color-stone-800;
+    outline: none;
+    transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+
+    &::placeholder { color: $color-stone-400; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__clear {
+    position: absolute;
+    right: 10px;
+    width: 22px; height: 22px;
+    border: none;
+    background: $color-stone-200;
+    border-radius: 50%;
+    color: $color-stone-600;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    @include transition-quick(background-color);
+    &:hover { background: $color-stone-300; }
+  }
+}
+
+.jb-adv-input {
+  width: 100%; height: 38px; padding: 0 $spacing-sm;
+  border: 1.5px solid $color-border; border-radius: $radius-md;
+  background: $color-bg-card; font-size: $font-size-sm; color: $color-stone-800;
+  outline: none;
+  transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); }
+}
+
+.jb-clear-all-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: none; padding: 6px 10px;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold;
+  color: $color-danger; cursor: pointer;
+  @include transition-quick(all);
+  &:hover { background: $color-error-bg; }
+}
+
+// Sizing wrapper for <app-searchable-select>
+.jb-select-wrap {
+  width: 180px;
+  flex-shrink: 0;
+  &--xs { width: 88px; }
+}
+
+// ── EMPTY STATE (icon-based) ──────────────────────────────────
+.jb-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: $spacing-4xl $spacing-xl;
+
+  &__title { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-800; margin-bottom: $spacing-sm; }
+  &__text  { font-size: $font-size-sm; color: $color-text-muted; max-width: 360px; line-height: 1.6; margin-bottom: $spacing-lg; }
+}
+
+// ── BULK ACTIONS BAR ──────────────────────────────────────────
+// Plain inline row (no card) — a divider line is enough to set the
+// selection controls apart from the table below.
+.ap-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  padding: 4px 4px 12px;
+  margin-bottom: $spacing-sm;
+  border-bottom: 1px solid $color-border;
+}
+
+.ap-bulk-bar__count {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-muted;
+}
+
+.ap-bulk-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ap-bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: $radius-full;
+  border: 1.5px solid transparent;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  @include transition-short(all);
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  // Same semantic colors as the table's action icons and the detail popup.
+  &--approve {
+    background: $color-success-light;
+    border-color: rgba($color-success, 0.35);
+    color: $color-success;
+    &:not(:disabled):hover { background: $color-success; border-color: $color-success; color: #fff; }
+  }
+
+  &--reject {
+    background: rgba($color-danger, 0.10);
+    border-color: rgba($color-danger, 0.35);
+    color: $color-danger;
+    &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
+  }
+}
+
+// Checkbox
+// Brand-amber checkbox — Bootstrap's default is indigo, which clashed with
+// the rest of this page's amber theme.
+.form-check-input {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid $color-border-strong;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled):not(:checked) { border-color: $color-primary; }
+
+  // Bootstrap's own .form-check-input:focus rule sets a blue border +
+  // box-shadow — override both explicitly (and on :focus, not just
+  // :focus-visible, since clicking a checkbox triggers :focus but not
+  // :focus-visible in Chromium, which would otherwise leave the blue ring).
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.28);
+  }
+
+  &:checked {
+    background-color: $color-primary;
+    border-color: $color-primary;
+
+    &:focus { border-color: $color-primary; }
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── ICON ACTION BUTTONS ───────────────────────────────────────
+.um-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.um-iab {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  background: none;
+  transition: background 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+
+  &[data-tip]::before,
+  &[data-tip]::after {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: $z-tooltip;
+  }
+
+  &[data-tip]::before {
+    content: attr(data-tip);
+    background: $color-text-primary;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: $radius-xs;
+    letter-spacing: 0.2px;
+    box-shadow: $shadow-3;
+  }
+
+  &[data-tip]::after {
+    content: '';
+    top: calc(100% + 2px);
+    border: 4px solid transparent;
+    border-bottom-color: $color-text-primary;
+    border-top: none;
+    width: 0;
+    height: 0;
+    padding: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  &:hover[data-tip]::before,
+  &:hover[data-tip]::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  // Semantic colors — approve/reject/view previously all leaned amber and
+  // were hard to tell apart at a glance; green/red/blue read instantly.
+  &--approve {
+    background: $color-success-light;
+    border-color: rgba($color-success, 0.35);
+    color: $color-success;
+    &:hover { background: $color-success; border-color: $color-success; color: #fff; box-shadow: 0 4px 10px rgba($color-success, 0.35); }
+  }
+
+  &--reject {
+    background: rgba($color-danger, 0.10);
+    border-color: rgba($color-danger, 0.35);
+    color: $color-danger;
+    &:hover { background: $color-danger; border-color: $color-danger; color: #fff; box-shadow: 0 4px 10px rgba($color-danger, 0.35); }
+  }
+
+  &--view {
+    background: rgba($color-info, 0.10);
+    border-color: rgba($color-info, 0.35);
+    color: $color-info;
+    &:hover { background: $color-info; border-color: $color-info; color: #fff; box-shadow: 0 4px 10px rgba($color-info, 0.35); }
+  }
+
+  &--tip-top {
+    &[data-tip]::before, &[data-tip]::after {
+      top: auto;
+      bottom: calc(100% + 6px);
+      transform: translateX(-50%) translateY(4px);
+    }
+    &[data-tip]::after {
+      bottom: calc(100% + 2px);
+      border-bottom-color: transparent;
+      border-top-color: $color-text-primary;
+    }
+    &:hover[data-tip]::before, &:hover[data-tip]::after {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}
+
+// ── CONFIRM DIALOG — same chrome as the View Detail popup
+// (.pa-view-*), recolored per action: green for approve, red for reject. ──
+.pa-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pa-confirm-dialog {
+  position: relative;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  width: min(460px, calc(100vw - 32px));
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+  overflow: hidden;
+}
+
+.pa-confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .pa-confirm-header__cover-shapes { position: absolute; inset: 0; pointer-events: none; }
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+
+    &--1 { width: 160px; height: 160px; top: -64px; right: 40px; }
+    &--2 { width: 78px; height: 78px; background: #fff; bottom: -30px; right: 120px; }
+  }
+}
+
+.pa-confirm-header__icon {
+  width: 44px; height: 44px;
+  border-radius: $radius-md;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.pa-confirm-header__title {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  margin: 0;
+}
+
+.pa-confirm-close {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: #fff; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Approve — dark stone header fading into green.
+.pa-confirm-dialog--approve {
+  .pa-confirm-header {
+    background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #14532d 80%, #22c55e 160%);
+  }
+  .shape--1 { background: $color-success; }
+  .pa-confirm-header__icon {
+    background: rgba($color-success, 0.2);
+    border: 1.5px solid rgba($color-success, 0.35);
+    color: #86efac;
+  }
+}
+
+// Reject — dark stone header fading into red.
+.pa-confirm-dialog--reject {
+  .pa-confirm-header {
+    background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #7f1d1d 80%, #ef4444 160%);
+  }
+  .shape--1 { background: $color-danger; }
+  .pa-confirm-header__icon {
+    background: rgba($color-danger, 0.2);
+    border: 1.5px solid rgba($color-danger, 0.35);
+    color: #fca5a5;
+  }
+}
+
+.pa-confirm-body {
+  padding: 20px 24px 4px;
+}
+
+.pa-confirm-desc {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pa-confirm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+  margin-top: 16px;
+
+  .um-btn { height: 44px; padding: 0 22px; border-radius: 10px; }
+
+  // Same semantic colors as the table's action icons (.um-iab--approve/--reject)
+  // and the View popup footer (.pa-view-footer).
+  .um-btn--success {
+    background: $color-success-light;
+    border-color: rgba($color-success, 0.35);
+    color: $color-success;
+    &:not(:disabled):hover { background: $color-success; border-color: $color-success; color: #fff; }
+  }
+
+  .um-btn--danger {
+    background: rgba($color-danger, 0.10);
+    border-color: rgba($color-danger, 0.35);
+    color: $color-danger;
+    &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
+  }
+}
+
+.pa-reason-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-card;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  color: $color-stone-800;
+  outline: none;
+  resize: vertical;
+  text-align: left;
+  margin-top: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder { color: $color-stone-400; }
+  &:focus { border-color: $color-danger; box-shadow: 0 0 0 3px rgba($color-danger, 0.15); }
+}
+
+.um-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: $radius-md;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &--sm { padding: 6px 14px; font-size: $font-size-xs; }
+
+  &--ghost {
+    background: transparent;
+    border-color: $color-border;
+    color: $color-text-muted;
+    &:not(:disabled):hover { border-color: $color-border-strong; background: $color-bg-page; }
+  }
+
+  &--success {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; }
+  }
+
+  &--danger {
+    background: rgba($color-saffron, 0.12);
+    border-color: rgba($color-saffron, 0.35);
+    color: #c2410c;
+    &:not(:disabled):hover { background: $color-saffron; border-color: $color-saffron; color: $color-on-primary; }
+  }
+}
+
+// ── VIEW DETAIL POPUP — same chrome as the Community Add/Edit modal
+// (community-form-modal.component.scss: .au-modal/.au-header/.au-body/.au-footer). ──
+.pa-view-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal-backdrop;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pa-view-dialog {
+  position: relative;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  width: min(720px, calc(100vw - 32px));
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+  overflow: hidden;
+}
+
+.pa-view-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #3d2400 80%, #fbbf24 160%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pa-view-header__cover-shapes { position: absolute; inset: 0; pointer-events: none; }
+.pa-view-header .shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+
+  &--1 { width: 180px; height: 180px; background: $color-primary; top: -72px; right: 48px; }
+  &--2 { width: 88px; height: 88px; background: #fff; bottom: -34px; right: 130px; }
+}
+
+.pa-view-header__icon {
+  width: 44px; height: 44px;
+  border-radius: $radius-md;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  color: $color-primary;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.pa-view-header__text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.pa-view-header__title {
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  margin: 0;
+}
+
+.pa-view-close {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: all 0.15s ease;
+
+  &:hover { background: rgba(220, 38, 38, 0.7); border-color: transparent; color: #fff; }
+}
+
+.pa-view-status-badge {
+  display: inline-flex; align-items: center;
+  width: fit-content;
+  padding: 2px 10px; border-radius: $radius-full;
+  font-size: 10.5px; font-weight: $font-weight-extrabold;
+  text-transform: uppercase; letter-spacing: 0.04em;
+
+  &.is-pending  { background: rgba(251, 191, 36, 0.22); color: #fde68a; }
+  &.is-approved { background: rgba(22, 163, 74, 0.25); color: #86efac; }
+  &.is-rejected { background: rgba(220, 38, 38, 0.28); color: #fca5a5; }
+}
+
+.pa-view-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px;
+  min-height: 0;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: $color-border; border-radius: 4px; }
+}
+
+// Divided blocks — mirrors .cm-section in the Community modal.
+.pa-view-section {
+  padding: 20px 0 16px;
+  border-bottom: 1px solid $color-border;
+
+  &--last { border-bottom: none; padding-bottom: 18px; }
+}
+
+.pa-view-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.pa-view-section-badge {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: $color-primary-light;
+  border: 1px solid $color-amber-200;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+
+  i { font-size: 0.75rem; color: $color-primary-dark; }
+}
+
+.pa-view-section-title {
+  font-size: 0.78rem;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-stone-500;
+}
+
+.pa-view-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pa-view-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--initials {
+    background: linear-gradient(135deg, $purple-gradient-start, $purple-gradient-end);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+  }
+}
+
+.pa-view-item-name {
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+  word-break: break-word;
+}
+
+.pa-view-item-meta {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  margin: 2px 0 0;
+}
+
+.pa-view-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: $color-stone-800;
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pa-view-rejection {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: $radius-md;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+  font-size: $font-size-sm;
+  line-height: 1.5;
+  margin-top: 12px;
+
+  .bi { flex-shrink: 0; margin-top: 2px; }
+  strong { color: #b91c1c; }
+}
+
+// Key-value grid for a detail section's fields — two per row on wider
+// popups, collapsing to one column on narrow viewports.
+.pa-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+
+  @include media-sm-max { grid-template-columns: 1fr; }
+}
+
+.pa-view-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &__label {
+    font-size: 10.5px;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-stone-400;
+  }
+
+  &__value {
+    font-size: $font-size-sm;
+    color: $color-stone-800;
+    word-break: break-word;
+  }
+}
+
+.pa-view-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.pa-view-image-btn {
+  padding: 0;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  aspect-ratio: 1 / 1;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.2s ease; }
+  &:hover img { transform: scale(1.06); }
+}
+
+.pa-view-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid $color-border;
+  background: $color-bg-page;
+  flex-shrink: 0;
+
+  .um-btn { height: 44px; padding: 0 22px; border-radius: 10px; }
+
+  // Same semantic colors as the table's action icons (.um-iab--approve/--reject).
+  .um-btn--success {
+    background: $color-success-light;
+    border-color: rgba($color-success, 0.35);
+    color: $color-success;
+    &:not(:disabled):hover { background: $color-success; border-color: $color-success; color: #fff; }
+  }
+
+  .um-btn--danger {
+    background: rgba($color-danger, 0.10);
+    border-color: rgba($color-danger, 0.35);
+    color: $color-danger;
+    &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
+  }
+}
+
+// ── TABLE ────────────────────────────────────────────────────
+.um-table-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
+}
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr:first-child th:first-child { border-top-left-radius: $radius-lg; }
+  thead tr:first-child th:last-child  { border-top-right-radius: $radius-lg; }
+  tbody tr:last-child td:first-child  { border-bottom-left-radius: $radius-lg; }
+  tbody tr:last-child td:last-child   { border-bottom-right-radius: $radius-lg; }
+}
+
+.um-th {
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $color-text-muted;
+  background: $color-bg-page;
+  border-bottom: 1px solid $color-border;
+  white-space: nowrap;
+
+  &--actions { text-align: right; padding-right: 16px; }
+
+  &--sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+
+    &:hover { color: $color-primary-darker; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+  }
+
+  &--active {
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.um-th__sort-icon {
+  margin-left: 4px;
+  font-size: 0.65rem;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
+  .um-th--active & { opacity: 1; color: $color-primary-darker; }
+}
+
+.um-row {
+  cursor: pointer;
+  transition: background 0.2s ease;
+  &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
+  &:hover { background: rgba(254, 243, 199, 0.35); }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
+.um-td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  &--actions { padding-right: 12px; }
+}
+
+.um-td-text { font-size: $font-size-sm; color: $color-text-muted; }
+
+.um-user-cell { display: flex; align-items: center; gap: 10px; }
+
+.um-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--initials {
+    background: linear-gradient(135deg, $purple-gradient-start, $purple-gradient-end);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.um-user-info { display: flex; flex-direction: column; gap: 2px; }
+
+.um-user-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+// ── PAGINATION ─────────────────────────────────────────────────
+.um-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: $spacing-lg;
+  padding: 14px 20px;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-page;
+
+  // Nested inside .um-table-card — shares the card's border/shadow instead
+  // of drawing its own, mirrors the Community admin table's pagination.
+  &--nested {
+    margin-top: 0;
+    border: none;
+    border-top: 1px solid $color-border;
+    border-radius: 0 0 $radius-lg $radius-lg;
+  }
+
+  &__left  { display: flex; align-items: center; gap: 10px; }
+  &__pages { display: flex; align-items: center; gap: 3px; }
+
+  &__size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+  }
+
+  &__info {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    white-space: nowrap;
+
+    strong { color: $color-text-primary; font-weight: $font-weight-semibold; }
+  }
+}
+
+.um-pg-divider {
+  width: 1px;
+  height: 20px;
+  background: $color-border;
+  flex-shrink: 0;
+}
+
+.um-pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border-radius: $radius-md;
+  border: 1.5px solid $color-border;
+  background: $color-bg-card;
+  color: $color-text-muted;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+
+  i { font-size: 0.7rem; }
+
+  &:not(:disabled):hover { border-color: $color-primary; background: $color-primary-light; color: $color-primary-dark; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 1px; }
+
+  &--num { min-width: 34px; font-variant-numeric: tabular-nums; }
+
+  &--active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    font-weight: $font-weight-bold;
+    box-shadow: $shadow-primary-sm;
+    &:hover { background: $color-primary-dark; border-color: $color-primary-dark; color: $color-on-primary; }
+  }
+}
+
+// ── IMAGE LIGHTBOX — copied from community-detail.component.scss's
+// .cd-lightbox* (the Community post image viewer), so both look and behave
+// identically instead of using the generic <app-image-viewer>. ──────────
+.cd-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.84);
+  backdrop-filter: blur(3px);
+  z-index: $z-modal + 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cd-lightbox-content {
+  position: relative;
+  width: min(980px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.48);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+  padding: 46px 16px 44px;
+}
+
+.cd-lightbox-image {
+  width: 100%;
+  max-height: calc(100vh - 160px);
+  object-fit: contain;
+  display: block;
+  border-radius: 12px;
+}
+
+.cd-lightbox-close,
+.cd-lightbox-nav {
+  border: 1px solid rgba(226, 232, 240, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.78);
+    border-color: rgba(226, 232, 240, 0.48);
+  }
+}
+
+.cd-lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.cd-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  &.cd-lightbox-nav--prev { left: 10px; }
+  &.cd-lightbox-nav--next { right: 10px; }
+}
+
+.cd-lightbox-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.cd-lightbox-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.28);
+  color: #fff;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+// ── RESPONSIVE ───────────────────────────────────────────────────
+@include media-md-max {
+  .jb-page-header { flex-direction: column; align-items: flex-start; padding: $spacing-lg; }
+  .jb-filter-panel { padding: $spacing-md; }
+  .jb-filter-row--top { .jb-search-wrap { min-width: 100%; flex: 0 0 100%; } }
+  .ap-bulk-bar { flex-direction: column; align-items: flex-start; }
+
+  .cd-lightbox-content { width: min(94vw, 760px); padding: 42px 12px 40px; }
+  .cd-lightbox-image { max-height: calc(100vh - 190px); }
+  .cd-lightbox-nav { top: auto; bottom: 44px; transform: none; }
+}
+
+@include media-sm-max {
+  .um-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    &__left  { justify-content: center; flex-wrap: wrap; }
+    &__pages { justify-content: center; }
+  }
+}

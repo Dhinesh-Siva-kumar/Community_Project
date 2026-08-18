@@ -13,6 +13,17 @@
     <p class="jb-page-header__sub">Discover opportunities and connect with employers in your community.</p>
   </div>
   <div class="jb-page-header__actions">
+    <div class="jb-page-tabs" role="tablist">
+      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'all'"
+        [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
+        <i class="bi bi-grid-3x3-gap"></i> All
+      </button>
+      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'pending'"
+        [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+        <i class="bi bi-hourglass-split"></i> Pending Approval
+        @if (myPendingJobsCount()) { <span class="jb-tab-count">{{ myPendingJobsCount() }}</span> }
+      </button>
+    </div>
     <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i> Post a Job
     </button>
@@ -20,8 +31,10 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     FILTER PANEL
+     FILTER PANEL — only for the public "All" browse; the
+     "Pending Approval" tab is just the caller's own submissions.
      ═══════════════════════════════════════════════════════════ -->
+@if (pageTab() === 'all') {
 <div class="jb-filter-panel">
 
   <!-- Row 1: Search + Near Me toggle + Sort + Post -->
@@ -245,6 +258,7 @@
     </button>
   </div>
 }
+}
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
 @if (!loading()) {
@@ -283,7 +297,10 @@
       <div class="jb-empty__icon" aria-hidden="true">
         <i class="bi bi-briefcase"></i>
       </div>
-      @if (activeFilterCount() > 0) {
+      @if (pageTab() === 'pending') {
+        <h5 class="jb-empty__title">No submissions yet</h5>
+        <p class="jb-empty__text">Jobs you post will show up here with their approval status.</p>
+      } @else if (activeFilterCount() > 0) {
         <h5 class="jb-empty__title">No jobs match your filters</h5>
         <p class="jb-empty__text">Try adjusting or clearing some filters to see more results.</p>
         <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearAllFilters()">
@@ -341,6 +358,11 @@
               <div class="jb-card__title-row">
                 <h3 class="jb-card__title">{{ job.title }}</h3>
                 <div class="jb-card__badges">
+                  @if (job.status === 'PENDING') {
+                    <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                  } @else if (job.status === 'REJECTED') {
+                    <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                  }
                   @if (job.jobType) {
                     <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span>
                   }
@@ -349,6 +371,9 @@
                   }
                 </div>
               </div>
+              @if (job.status === 'REJECTED' && job.rejectionReason) {
+                <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+              }
 
               <!-- Meta chips row -->
               <div class="jb-card__meta">

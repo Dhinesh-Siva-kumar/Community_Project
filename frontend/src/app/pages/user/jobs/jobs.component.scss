@@ -924,6 +924,24 @@
   &--remote     { background: #E0F2FE; color: #0284C7; }
   &--hybrid     { background: #EDE9FE; color: #7C3AED; }
   &--onsite     { background: $color-stone-100; color: $color-stone-700; }
+  &--pending    { background: rgba(245, 158, 11, 0.94); color: #fff; }
+  &--rejected   { background: rgba(220, 38, 38, 0.94); color: #fff; }
+}
+
+.jb-card__rejection-reason {
+  display: flex; align-items: flex-start; gap: 5px;
+  font-size: 11.5px; color: #dc2626; background: rgba(220, 38, 38, 0.08);
+  border-radius: $radius-sm; padding: 6px 8px; margin: 4px 0 0;
+  .bi { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+}
+
+.jb-page-tabs { display: inline-flex; gap: 8px; margin-right: 8px; }
+
+.jb-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-extrabold; margin-left: 4px;
 }
 
 

@@ -90,6 +90,8 @@ export const ListCommunitiesQueryDto = z.object({
   to_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to_date must be YYYY-MM-DD').optional(),
   joined:     z.coerce.boolean().optional(),   // true = return only communities the caller has joined
   status:     z.enum(['active', 'inactive']).optional(),
+  // Moderation status — distinct from `status` above (which means active/inactive).
+  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
   sortBy:     z.enum(['name', 'joined', 'category', 'country', 'visibility', 'members', 'posts', 'status']).default('joined'),
   sortDir:    z.enum(['asc', 'desc']).default('desc'),
 });
@@ -99,6 +101,23 @@ export const PaginationQueryDto = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const ListPendingCommunitiesQueryDto = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  limit:    z.coerce.number().int().min(1).max(100).default(20),
+  search:   z.string().optional(),
+  country:  z.string().optional(),
+  dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
+  dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  sortBy:   z.enum(['joined', 'name', 'submitter', 'country']).default('joined'),
+  sortDir:  z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const RejectCommunityDto = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+
 export type CreateCommunityDtoType = z.infer<typeof CreateCommunityDto>;
 export type UpdateCommunityDtoType = z.infer<typeof UpdateCommunityDto>;
 export type ListCommunitiesQueryDtoType = z.infer<typeof ListCommunitiesQueryDto>;
+export type ListPendingCommunitiesQueryDtoType = z.infer<typeof ListPendingCommunitiesQueryDto>;
+export type RejectCommunityDtoType = z.infer<typeof RejectCommunityDto>;

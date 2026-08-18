@@ -224,7 +224,11 @@ export class CommunityFormModalComponent implements OnChanges {
       .subscribe({
         next: (community) => {
           const editing = this.editingCommunity();
-          this.toast.success(editing ? 'Community updated successfully' : 'Community created successfully');
+          if (community.status === 'PENDING') {
+            this.toast.success(editing ? 'Community resubmitted for admin approval' : 'Community submitted for admin approval');
+          } else {
+            this.toast.success(editing ? 'Community updated successfully' : 'Community created successfully');
+          }
           this.submitting.set(false);
           this.saved.emit(community);
           this.closed.emit();

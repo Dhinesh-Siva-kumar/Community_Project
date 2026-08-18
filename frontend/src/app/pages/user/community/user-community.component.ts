@@ -11,7 +11,7 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 
-export type CommunityTab = 'all' | 'joined' | 'trending';
+export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
 
 interface FilterTab {
@@ -102,12 +102,14 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // regress to "current page only" the way the old client-side counts did.
   overallStats     = signal<CommunityAnalyticsCounts | null>(null);
   joinedTotalCount = signal(0);
+  myPendingCount   = signal(0);
 
   // ── Filter-tab definitions (segmented control) ──────────────
   pageTabs = computed<FilterTab[]>(() => [
     { id: 'all',      label: 'All',      icon: 'bi-grid-3x3-gap', badge: this.overallStats()?.total || undefined },
     { id: 'joined',   label: 'Joined',   icon: 'bi-person-check', badge: this.joinedTotalCount() || undefined },
     { id: 'trending', label: 'Trending', icon: 'bi-lightning-fill' },
+    { id: 'pending',  label: 'Pending Approval', icon: 'bi-hourglass-split', badge: this.myPendingCount() || undefined },
   ]);
 
   // ── Joined community ID tracker ───────────────────────────
@@ -246,6 +248,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     this.loadPopularPosts();
     this.loadOverallStats();
     this.loadJoinedTotalCount();
+    this.loadMyPendingCount();
   }
 
   ngOnDestroy(): void {
@@ -267,12 +270,20 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     return params;
   }
 
+  /** "Pending Approval" tab — the caller's own communities across every status (Pending/Approved/Rejected). */
+  private fetchCommunitiesForCurrentTab(page: number) {
+    if (this.activeTab() === 'pending') {
+      return this.communityService.getMyCreatedCommunities({ page, limit: this.pageSize() });
+    }
+    return this.communityService.getCommunities(this.buildCommunitiesParams(page));
+  }
+
   /** Fresh page-1 fetch — replaces whatever's currently loaded (tab switch, initial load). */
   loadCommunities(): void {
     this.loading.set(true);
     this.currentPage.set(1);
 
-    this.communityService.getCommunities(this.buildCommunitiesParams(1)).subscribe({
+    this.fetchCommunitiesForCurrentTab(1).subscribe({
       next: (response: PaginatedResponse<Community>) => {
         this.communities.set(response.data);
         this.totalPages.set(response.totalPages);
@@ -295,7 +306,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     const nextPage = this.currentPage() + 1;
     this.loadingMore.set(true);
 
-    this.communityService.getCommunities(this.buildCommunitiesParams(nextPage)).subscribe({
+    this.fetchCommunitiesForCurrentTab(nextPage).subscribe({
       next: (response: PaginatedResponse<Community>) => {
         this.communities.update(list => [...list, ...response.data]);
         this.currentPage.set(nextPage);
@@ -323,6 +334,13 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   loadJoinedTotalCount(): void {
     this.communityService.getCommunities({ joined: true, page: 1, limit: 1 }).subscribe({
       next: (response: PaginatedResponse<Community>) => this.joinedTotalCount.set(response.total),
+      error: () => {},
+    });
+  }
+
+  loadMyPendingCount(): void {
+    this.communityService.getMyCreatedCommunities({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+      next: (response: PaginatedResponse<Community>) => this.myPendingCount.set(response.total),
       error: () => {},
     });
   }
@@ -590,6 +608,13 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   }
 
   onCommunitySaved(community: Community): void {
+    if (community.status === 'PENDING') {
+      // Not visible in the public list until approved — only reflect it
+      // locally when the user is already looking at their Pending Approval
+      // tab; refresh the badge count either way.
+      this.loadMyPendingCount();
+      if (this.activeTab() !== 'pending') return;
+    }
     const exists = this.communities().some(c => c.id === community.id);
     this.communities.update(list =>
       exists ? list.map(c => c.id === community.id ? community : c) : [community, ...list]

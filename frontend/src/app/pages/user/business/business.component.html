@@ -13,27 +13,46 @@
     <div class="biz-head-controls">
       <div class="biz-tabs-wrap">
         <div class="biz-tabs" role="tablist">
-          <span class="biz-tab-indicator" [class.biz-tab-indicator--categories]="businessView() === 'categories'" aria-hidden="true"></span>
-          <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'list'"
-            [attr.aria-selected]="businessView() === 'list'" (click)="switchView('list')">
-            <i class="bi bi-list-ul" aria-hidden="true"></i> Business List
+          <span class="biz-tab-indicator" [class.biz-tab-indicator--pending]="pageTab() === 'pending'" aria-hidden="true"></span>
+          <button role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'all'"
+            [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
+            <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> All
           </button>
-          <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'categories'"
-            [attr.aria-selected]="businessView() === 'categories'" (click)="switchView('categories')">
-            <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i> Category View
+          <button role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
+            [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+            <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
+            @if (myPendingBusinessCount()) {
+              <span class="biz-tab-count">{{ myPendingBusinessCount() }}</span>
+            }
           </button>
         </div>
       </div>
 
-      <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
-        @if (businessView() === 'list') {
-          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'grid'" (click)="bizViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
-          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'list'" (click)="bizViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
-        } @else {
-          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
-          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
-        }
-      </div>
+      @if (pageTab() === 'all') {
+        <div class="biz-tabs-wrap">
+          <div class="biz-tabs" role="tablist">
+            <span class="biz-tab-indicator" [class.biz-tab-indicator--categories]="businessView() === 'categories'" aria-hidden="true"></span>
+            <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'list'"
+              [attr.aria-selected]="businessView() === 'list'" (click)="switchView('list')">
+              <i class="bi bi-list-ul" aria-hidden="true"></i> Business List
+            </button>
+            <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'categories'"
+              [attr.aria-selected]="businessView() === 'categories'" (click)="switchView('categories')">
+              <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i> Category View
+            </button>
+          </div>
+        </div>
+
+        <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
+          @if (businessView() === 'list') {
+            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'grid'" (click)="bizViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'list'" (click)="bizViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+          } @else {
+            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+          }
+        </div>
+      }
 
       <button type="button" class="biz-add-btn" (click)="openAddBusiness()">
         <i class="bi bi-plus-lg"></i> Add Business
@@ -47,6 +66,9 @@
 <!-- ==================== BUSINESS LIST VIEW (default) ==================== -->
 @if (currentView() === 'list' && businessView() === 'list') {
 
+  <!-- Filters/distance/geolocation only apply to the public "All" browse —
+       the "Pending Approval" tab is just the caller's own submissions. ── -->
+  @if (pageTab() === 'all') {
   <!-- ── FILTER PANEL — replicated from the Admin Business list page's
        .jb-filter-panel (search + collapsible Advanced Filters + active
        chips), with Status dropped and Distance + Category added since
@@ -272,6 +294,7 @@
       <i class="bi bi-info-circle"></i> Location access denied. Showing all businesses (no distance filter).
     </div>
   }
+  }
 
   <!-- Loading skeleton -->
   @if (loading()) {
@@ -289,10 +312,12 @@
     </div>
   } @else if (businesses().length === 0) {
     <div class="biz-empty">
-      <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
-      <h5 class="biz-empty__title">No businesses found</h5>
+      <div class="biz-empty__icon"><i class="bi {{ pageTab() === 'pending' ? 'bi-hourglass-split' : 'bi-shop-window' }}"></i></div>
+      <h5 class="biz-empty__title">{{ pageTab() === 'pending' ? 'No submissions yet' : 'No businesses found' }}</h5>
       <p class="biz-empty__sub">
-        @if (hasActiveFilters()) {
+        @if (pageTab() === 'pending') {
+          Businesses you create will show up here with their approval status.
+        } @else if (hasActiveFilters()) {
           Try adjusting your filters or increasing the distance.
         } @else {
           No businesses available yet.
@@ -313,8 +338,13 @@
               <div class="bl-card__img-placeholder"><i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i></div>
             }
             <span class="bl-card__cat-badge">{{ biz.category?.name || 'Business' }}</span>
-            @if (isOwner(biz)) {
+            @if (isOwner(biz) && biz.status === 'APPROVED') {
               <span class="bl-card__owner-badge"><i class="bi bi-person-check-fill"></i> Your Business</span>
+            }
+            @if (biz.status === 'PENDING') {
+              <span class="bl-card__owner-badge bl-card__owner-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+            } @else if (biz.status === 'REJECTED') {
+              <span class="bl-card__owner-badge bl-card__owner-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
             }
             @if ($any(biz)._distanceKm != null) {
               <span class="bl-card__dist-badge">
@@ -336,6 +366,9 @@
               </div>
             }
             @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
+            @if (biz.status === 'REJECTED' && biz.rejectionReason) {
+              <p class="bl-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
+            }
             <div class="bl-card__meta">
               @if (biz.address || $any(biz).city || $any(biz).state) {
                 <span class="bl-card__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(biz) }}</span>
@@ -517,7 +550,11 @@
          <div class="bd-hero__info">
           <div class="bd-hero__name-row">
             <h1 class="bd-hero__name">{{ biz.name }}</h1>
-            @if (biz.isActive) {
+            @if (biz.status === 'PENDING') {
+              <span class="bd-badge bd-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+            } @else if (biz.status === 'REJECTED') {
+              <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+            } @else if (biz.isActive) {
               <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> Active</span>
             } @else {
               <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> Inactive</span>
@@ -529,6 +566,9 @@
           <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
           @if ($any(biz).city || $any(biz).state || biz.country) {
             <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getFullLocation(biz) }}</span>
+          }
+          @if (biz.status === 'REJECTED' && biz.rejectionReason) {
+            <p class="bd-rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
           }
         </div>
         <div class="bd-hero__actions">

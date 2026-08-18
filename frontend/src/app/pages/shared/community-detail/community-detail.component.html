@@ -252,10 +252,25 @@
         <div class="cd-hero-info">
           <div class="cd-hero-title-row">
             <h4 class="cd-community-name">{{ community()!.name }}</h4>
-            <span class="cd-status-badge {{ getCommunityStatus().cls }}">
-              <span class="cd-status-dot"></span>
-              {{ getCommunityStatus().label }}
-            </span>
+            @if (community()!.status !== 'REJECTED') {
+              <span class="cd-status-badge {{ getCommunityStatus().cls }}">
+                <span class="cd-status-dot"></span>
+                {{ getCommunityStatus().label }}
+              </span>
+            }
+            @if (getApprovalStatus(); as approval) {
+              @if (isAdmin()) {
+                <a class="cd-status-badge cd-status-badge--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" title="Go to Approval page">
+                  <i class="bi {{ approval.icon }}"></i>
+                  {{ approval.label }}
+                </a>
+              } @else if (isOwnerOfCommunity()) {
+                <span class="cd-status-badge {{ approval.cls }}">
+                  <i class="bi {{ approval.icon }}"></i>
+                  {{ approval.label }}
+                </span>
+              }
+            }
             <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
               <i class="bi {{ getVisibilityInfo().icon }}"></i>
               {{ getVisibilityInfo().label }}
@@ -469,6 +484,17 @@
                       [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
                     </span>
+                    @if (isAdmin() && post.status !== 'APPROVED') {
+                      <a class="post-status-chip post-status-chip--link"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'"
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else { Rejected }
+                      </a>
+                    }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
@@ -637,6 +663,7 @@
               <div class="cd-sidebar-sticky">
 
                 <!-- ── Compose Card ─────────────────────────────── -->
+                @if (canPostInCommunity()) {
                 <div class="cd-compose-card"
                   [class.cd-compose-card--general]="selectedPostType() === 'GENERAL'"
                   [class.cd-compose-card--help]="selectedPostType() === 'HELP'"
@@ -760,6 +787,24 @@
                     </div>
                   </form>
                 </div>
+                } @else {
+                <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
+                  <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
+                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__text">
+                    @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
+                      This community was rejected by an admin. Posting is disabled.
+                    } @else {
+                      This community is awaiting your approval. You'll be able to post once it's approved.
+                    }
+                  </p>
+                  @if (getApprovalStatus()?.cls === 'cd-status-rejected' && community()!.rejectionReason) {
+                    <div class="mp-reason">
+                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                    </div>
+                  }
+                </div>
+                }
 
               </div>
             </div>
@@ -808,6 +853,17 @@
                     <span class="post-type-chip post-type-chip--help">
                       <i class="bi bi-life-preserver"></i>Help
                     </span>
+                    @if (isAdmin() && post.status !== 'APPROVED') {
+                      <a class="post-status-chip post-status-chip--link"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'"
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else { Rejected }
+                      </a>
+                    }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
@@ -940,6 +996,7 @@
             <!-- ── Sidebar Column ──────────────────────────────── -->
             <div class="cd-sidebar-col">
               <div class="cd-sidebar-sticky">
+                @if (canPostInCommunity()) {
                 <div class="cd-compose-card cd-compose-card--help">
                   <div class="cd-compose-card-label cd-compose-card-label--help">
                     <i class="bi bi-life-preserver"></i>
@@ -995,6 +1052,24 @@
                     </div>
                   </form>
                 </div>
+                } @else {
+                <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
+                  <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
+                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__text">
+                    @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
+                      This community was rejected by an admin. Posting is disabled.
+                    } @else {
+                      This community is awaiting your approval. You'll be able to post once it's approved.
+                    }
+                  </p>
+                  @if (getApprovalStatus()?.cls === 'cd-status-rejected' && community()!.rejectionReason) {
+                    <div class="mp-reason">
+                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                    </div>
+                  }
+                </div>
+                }
               </div>
             </div>
 
@@ -1042,6 +1117,17 @@
                     <span class="post-type-chip post-type-chip--emergency">
                       <i class="bi bi-exclamation-triangle-fill"></i>Emergency Assistance
                     </span>
+                    @if (isAdmin() && post.status !== 'APPROVED') {
+                      <a class="post-status-chip post-status-chip--link"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'"
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else { Rejected }
+                      </a>
+                    }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
@@ -1174,6 +1260,7 @@
             <!-- ── Sidebar Column ──────────────────────────────── -->
             <div class="cd-sidebar-col">
               <div class="cd-sidebar-sticky">
+                @if (canPostInCommunity()) {
                 <div class="cd-compose-card cd-compose-card--emergency">
                   <div class="cd-compose-card-label cd-compose-card-label--emergency">
                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -1229,6 +1316,24 @@
                     </div>
                   </form>
                 </div>
+                } @else {
+                <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
+                  <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
+                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__text">
+                    @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
+                      This community was rejected by an admin. Posting is disabled.
+                    } @else {
+                      This community is awaiting your approval. You'll be able to post once it's approved.
+                    }
+                  </p>
+                  @if (getApprovalStatus()?.cls === 'cd-status-rejected' && community()!.rejectionReason) {
+                    <div class="mp-reason">
+                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                    </div>
+                  }
+                </div>
+                }
               </div>
             </div>
 
@@ -1276,6 +1381,17 @@
                     <span class="post-type-chip post-type-chip--enquire">
                       <i class="bi bi-question-circle-fill"></i>Enquire
                     </span>
+                    @if (isAdmin() && post.status !== 'APPROVED') {
+                      <a class="post-status-chip post-status-chip--link"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'"
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else { Rejected }
+                      </a>
+                    }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
                         <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
@@ -1420,6 +1536,7 @@
             <!-- ── Sidebar Column ──────────────────────────────── -->
             <div class="cd-sidebar-col">
               <div class="cd-sidebar-sticky">
+                @if (canPostInCommunity()) {
                 <div class="cd-compose-card cd-compose-card--enquire">
                   <div class="cd-compose-card-label cd-compose-card-label--enquire">
                     <i class="bi bi-question-circle-fill"></i>
@@ -1475,6 +1592,24 @@
                     </div>
                   </form>
                 </div>
+                } @else {
+                <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
+                  <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
+                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__text">
+                    @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
+                      This community was rejected by an admin. Posting is disabled.
+                    } @else {
+                      This community is awaiting your approval. You'll be able to post once it's approved.
+                    }
+                  </p>
+                  @if (getApprovalStatus()?.cls === 'cd-status-rejected' && community()!.rejectionReason) {
+                    <div class="mp-reason">
+                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                    </div>
+                  }
+                </div>
+                }
               </div>
             </div>
 
@@ -1732,18 +1867,46 @@
                   </div>
                 </div>
 
-                <!-- Status -->
-                <div class="cd-info-row cd-info-row--status info-item-animate" style="animation-delay:60ms">
-                  <div class="cd-info-icon"><i class="bi bi-shield-fill-check"></i></div>
-                  <div class="cd-info-content">
-                    <span class="cd-info-label">Status</span>
+                <!-- Status (not relevant once a community has been rejected) -->
+                @if (community()!.status !== 'REJECTED') {
+                  <div class="cd-info-row cd-info-row--status info-item-animate" style="animation-delay:60ms">
+                    <div class="cd-info-icon"><i class="bi bi-shield-fill-check"></i></div>
+                    <div class="cd-info-content">
+                      <span class="cd-info-label">Status</span>
 
-                    <span class="cd-inline-status {{ getCommunityStatus().cls }}">
-                      <i class="bi" [class.bi-check-circle-fill]="getCommunityStatus().cls === 'cd-status-active'" [class.bi-pause-circle-fill]="getCommunityStatus().cls === 'cd-status-inactive'"></i>
-                      {{ getCommunityStatus().label }}
-                    </span>
+                      <span class="cd-inline-status {{ getCommunityStatus().cls }}">
+                        <i class="bi" [class.bi-check-circle-fill]="getCommunityStatus().cls === 'cd-status-active'" [class.bi-pause-circle-fill]="getCommunityStatus().cls === 'cd-status-inactive'"></i>
+                        {{ getCommunityStatus().label }}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                }
+
+                <!-- Approval (shown to admins + the community owner when it isn't approved yet) -->
+                @if ((isAdmin() || isOwnerOfCommunity()) && getApprovalStatus(); as approval) {
+                  <div class="cd-info-row cd-info-row--approval info-item-animate" style="animation-delay:65ms">
+                    <div class="cd-info-icon"><i class="bi bi-patch-check-fill"></i></div>
+                    <div class="cd-info-content">
+                      <span class="cd-info-label">Approval</span>
+                      @if (isAdmin()) {
+                        <a class="cd-inline-status cd-inline-status--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" title="Go to Approval page">
+                          <i class="bi {{ approval.icon }}"></i>
+                          {{ approval.label }}
+                        </a>
+                      } @else {
+                        <span class="cd-inline-status {{ approval.cls }}">
+                          <i class="bi {{ approval.icon }}"></i>
+                          {{ approval.label }}
+                        </span>
+                      }
+                      @if (approval.cls === 'cd-status-rejected' && community()!.rejectionReason) {
+                        <div class="mp-reason mt-2">
+                          <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
 
                 <!-- Visibility -->
                 <div class="cd-info-row cd-info-row--visibility info-item-animate" style="animation-delay:70ms">
@@ -1908,16 +2071,28 @@
                       [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
                       <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
                     </span>
-                    <span class="post-status-chip"
-                      [class.post-status-chip--pending]="post.status === 'PENDING'"
-                      [class.post-status-chip--approved]="post.status === 'APPROVED'"
-                      [class.post-status-chip--rejected]="post.status === 'REJECTED'">
-                      <i class="bi"
-                        [class.bi-hourglass-split]="post.status === 'PENDING'"
-                        [class.bi-check-circle-fill]="post.status === 'APPROVED'"
-                        [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
-                      @if (post.status === 'PENDING') { Pending Approval } @else if (post.status === 'APPROVED') { Approved } @else { Rejected }
-                    </span>
+                    @if (isAdmin() && post.status !== 'APPROVED') {
+                      <a class="post-status-chip post-status-chip--link"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'"
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else { Rejected }
+                      </a>
+                    } @else {
+                      <span class="post-status-chip"
+                        [class.post-status-chip--pending]="post.status === 'PENDING'"
+                        [class.post-status-chip--approved]="post.status === 'APPROVED'"
+                        [class.post-status-chip--rejected]="post.status === 'REJECTED'">
+                        <i class="bi"
+                          [class.bi-hourglass-split]="post.status === 'PENDING'"
+                          [class.bi-check-circle-fill]="post.status === 'APPROVED'"
+                          [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
+                        @if (post.status === 'PENDING') { Pending Approval } @else if (post.status === 'APPROVED') { Approved } @else { Rejected }
+                      </span>
+                    }
                     <small class="text-muted ms-auto">{{ getTimeAgo(post.createdAt) }}</small>
                   </div>
 
