@@ -6,7 +6,6 @@ import {
   HostListener,
   signal,
   computed,
-  OnInit,
   OnDestroy,
   effect,
   input,
@@ -21,7 +20,7 @@ import { ImageUrlPipe } from '../../pipes/image-url.pipe';
   templateUrl: './image-viewer.component.html',
   styleUrls: ['./image-viewer.component.scss'],
 })
-export class ImageViewerComponent implements OnInit, OnDestroy {
+export class ImageViewerComponent implements OnDestroy {
   images = input<string[]>([]);
   isOpen = input(false);
   initialIndex = input(0);
@@ -47,14 +46,12 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     return `${idx + 1} of ${total}`;
   });
 
-  ngOnInit(): void {
-    // Set initial index when component initializes or initialIndex changes
-    effect(() => {
-      if (this.isOpen()) {
-        this.currentIndex.set(this.initialIndex());
-      }
-    });
-  }
+  // Set initial index whenever the viewer opens or initialIndex changes
+  private readonly syncInitialIndex = effect(() => {
+    if (this.isOpen()) {
+      this.currentIndex.set(this.initialIndex());
+    }
+  });
 
   ngOnDestroy(): void {
     // Ensure cleanup

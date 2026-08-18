@@ -327,45 +327,35 @@
     </div>
   }
 
-  <!-- S3: Compensation -->
-  @if (job.salaryHidden || getSalaryDisplay(job)) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-cash-coin"></i><span>Compensation</span></div>
-      <div class="jbd-salary-card">
-        @if (job.salaryHidden) {
-          <div class="jbd-salary-card__not-disclosed">
-            <i class="bi bi-eye-slash-fill"></i>
-            <div><p class="jbd-salary-card__label">Salary</p><p class="jbd-salary-card__amount jbd-salary-card__amount--hidden">Not Disclosed</p></div>
-          </div>
-        } @else {
-          <div class="jbd-salary-card__disclosed">
-            <i class="bi bi-currency-exchange jbd-salary-card__coin-icon"></i>
-            <div>
-              <p class="jbd-salary-card__label">Salary Package</p>
+  <!-- S3+S4: Compensation + Location, side by side -->
+  @if ((job.salaryHidden || getSalaryDisplay(job)) || (getLocationDisplay(job) || job.fullAddress)) {
+    <div class="jbd-two-col">
+      @if (job.salaryHidden || getSalaryDisplay(job)) {
+        <div class="jbd-section">
+          <div class="jbd-section__header"><i class="bi bi-cash-coin"></i><span>Compensation</span></div>
+          <div class="jbd-salary-card">
+            @if (job.salaryHidden) {
+              <p class="jbd-salary-card__amount jbd-salary-card__amount--hidden">Not Disclosed</p>
+              <p class="jbd-salary-card__sub">Salary not shared for this role.</p>
+            } @else {
               <p class="jbd-salary-card__amount">{{ getSalaryDisplay(job) }}</p>
-              @if (job.salaryType) { <span class="jbd-salary-card__type-badge">{{ job.salaryType }}</span> }
-            </div>
+              @if (job.salaryType) { <p class="jbd-salary-card__sub">Paid {{ job.salaryType | lowercase }}.</p> }
+            }
           </div>
-        }
-      </div>
-    </div>
-  }
-
-  <!-- S4: Location -->
-  @if (getLocationDisplay(job) || job.fullAddress) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-geo-alt-fill"></i><span>Location</span></div>
-      @if (job.isRemote) {
-        <div class="jbd-remote-badge"><i class="bi bi-house-door-fill"></i> Remote Position</div>
-      } @else {
-        <div class="jbd-location-grid">
-          @if (job.country) { <div class="jbd-loc-item"><span class="jbd-loc-item__label">Country</span><span class="jbd-loc-item__value">{{ job.country }}</span></div> }
-          @if (job.state)   { <div class="jbd-loc-item"><span class="jbd-loc-item__label">State</span><span class="jbd-loc-item__value">{{ job.state }}</span></div> }
-          @if (job.city)    { <div class="jbd-loc-item"><span class="jbd-loc-item__label">City</span><span class="jbd-loc-item__value">{{ job.city }}</span></div> }
-          @if (job.pincode) { <div class="jbd-loc-item"><span class="jbd-loc-item__label">Postcode</span><span class="jbd-loc-item__value">{{ job.pincode }}</span></div> }
         </div>
-        @if (job.fullAddress) { <p class="jbd-full-address"><i class="bi bi-map"></i> {{ job.fullAddress }}</p> }
-        @if (!job.city && !job.state && !job.country && job.location) { <p class="jbd-full-address"><i class="bi bi-geo-alt"></i> {{ job.location }}</p> }
+      }
+
+      @if (getLocationDisplay(job) || job.fullAddress) {
+        <div class="jbd-section">
+          <div class="jbd-section__header"><i class="bi bi-geo-alt-fill"></i><span>Location</span></div>
+          <div class="jbd-location-card">
+            <div class="jbd-location-card__text">
+              <p class="jbd-location-card__headline">{{ getLocationDisplay(job) || (job.isRemote ? 'Remote' : job.location) }}</p>
+              @if (getLocationSubtext(job)) { <p class="jbd-location-card__sub">{{ getLocationSubtext(job) }}</p> }
+            </div>
+            <div class="jbd-location-card__icon"><i class="bi" [class.bi-house-door-fill]="job.isRemote" [class.bi-globe-americas]="!job.isRemote"></i></div>
+          </div>
+        </div>
       }
     </div>
   }
@@ -374,117 +364,128 @@
   @if (job.workStartTime || job.workEndTime || (job.workingDays && job.workingDays.length)) {
     <div class="jbd-section">
       <div class="jbd-section__header"><i class="bi bi-calendar-week-fill"></i><span>Working Schedule</span></div>
-      @if (job.workStartTime && job.workEndTime) {
-        <div class="jbd-schedule-hours">
-          <div class="jbd-schedule-time"><i class="bi bi-sunrise"></i><span class="jbd-schedule-time__label">Start</span><span class="jbd-schedule-time__val">{{ job.workStartTime }}</span></div>
-          <div class="jbd-schedule-arrow"><i class="bi bi-arrow-right"></i></div>
-          <div class="jbd-schedule-time"><i class="bi bi-sunset"></i><span class="jbd-schedule-time__label">End</span><span class="jbd-schedule-time__val">{{ job.workEndTime }}</span></div>
-        </div>
-      }
-      @if (job.workingDays && job.workingDays.length) {
-        <div class="jbd-days-row">
-          @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
-            <span class="jbd-day-chip" [class.jbd-day-chip--active]="job.workingDays!.includes(d)">{{ d }}</span>
-          }
-        </div>
-      }
-    </div>
-  }
-
-  <!-- S6: Skills -->
-  @if (job.skills && job.skills.length) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-tags-fill"></i><span>Skills Required</span></div>
-      <div class="jbd-skills-wrap">
-        @for (skill of job.skills; track skill) { <span class="jbd-skill-tag">{{ skill }}</span> }
+      <div class="jbd-schedule-card">
+        @if (job.workStartTime && job.workEndTime) {
+          <div class="jbd-schedule-hours">
+            <div class="jbd-schedule-time"><i class="bi bi-sunrise"></i><span class="jbd-schedule-time__val">{{ job.workStartTime }}</span></div>
+            <i class="bi bi-arrow-right jbd-schedule-arrow"></i>
+            <div class="jbd-schedule-time"><i class="bi bi-sunset"></i><span class="jbd-schedule-time__val">{{ job.workEndTime }}</span></div>
+          </div>
+        }
+        @if (job.workStartTime && job.workEndTime && job.workingDays && job.workingDays.length) {
+          <span class="jbd-schedule-divider"></span>
+        }
+        @if (job.workingDays && job.workingDays.length) {
+          <div class="jbd-days-row">
+            @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
+              <span class="jbd-day-chip" [class.jbd-day-chip--active]="job.workingDays!.includes(d)">{{ d.slice(0, 2) }}</span>
+            }
+          </div>
+        }
       </div>
     </div>
   }
 
-  <!-- S7: Job Description -->
-  @if (hasDescription(job)) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-file-earmark-text-fill"></i><span>Job Description</span></div>
+  <!-- S6+S7+S8+S9: Description (main) / Skills + Hiring Manager + Gallery (side) -->
+  @if (hasDescription(job) || (job.skills && job.skills.length) || job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo || (job.images && job.images.length)) {
+    <div class="jbd-content-split">
+      <div class="jbd-content-split__main">
+        @if (hasDescription(job)) {
+          <div class="jbd-section">
+            <div class="jbd-section__header"><i class="bi bi-file-earmark-text-fill"></i><span>Job Description</span></div>
 
-      @if (job.description) {
-        <div class="jbd-description-block">
-          <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, 'description')">
-            @if (isTextLong(job.description) && !isFieldExpanded(job.id, 'description')) {
-              <p class="jbd-description__text">{{ getShortText(job.description) }}</p>
-            } @else {
-              <p class="jbd-description__text">{{ job.description }}</p>
+            @if (job.description) {
+              <div class="jbd-description-block">
+                <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, 'description')">
+                  @if (isTextLong(job.description) && !isFieldExpanded(job.id, 'description')) {
+                    <p class="jbd-description__text">{{ getShortText(job.description) }}</p>
+                  } @else {
+                    <p class="jbd-description__text">{{ job.description }}</p>
+                  }
+                </div>
+                @if (isTextLong(job.description)) {
+                  <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, 'description', $event)">
+                    @if (isFieldExpanded(job.id, 'description')) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
+                  </button>
+                }
+              </div>
+            }
+
+            @for (field of [
+              { key: 'responsibilities', label: 'Responsibilities', icon: 'bi-list-check', text: job.responsibilities },
+              { key: 'qualifications',   label: 'Qualifications',   icon: 'bi-mortarboard', text: job.qualifications },
+              { key: 'requirements',     label: 'Requirements',     icon: 'bi-clipboard-check', text: job.requirements },
+              { key: 'benefits',         label: 'Benefits',         icon: 'bi-gift', text: job.benefits },
+            ]; track field.key) {
+              @if (field.text) {
+                <div class="jbd-description-block jbd-description-block--sub">
+                  <h6 class="jbd-description-block__title"><i class="bi {{ field.icon }}"></i> {{ field.label }}</h6>
+                  <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, field.key)">
+                    @if (isTextLong(field.text) && !isFieldExpanded(job.id, field.key)) {
+                      <p class="jbd-description__text">{{ getShortText(field.text) }}</p>
+                    } @else {
+                      <p class="jbd-description__text">{{ field.text }}</p>
+                    }
+                  </div>
+                  @if (isTextLong(field.text)) {
+                    <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, field.key, $event)">
+                      @if (isFieldExpanded(job.id, field.key)) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
+                    </button>
+                  }
+                </div>
+              }
             }
           </div>
-          @if (isTextLong(job.description)) {
-            <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, 'description', $event)">
-              @if (isFieldExpanded(job.id, 'description')) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
-            </button>
-          }
-        </div>
-      }
+        }
+      </div>
 
-      @for (field of [
-        { key: 'responsibilities', label: 'Responsibilities', icon: 'bi-list-check', text: job.responsibilities },
-        { key: 'qualifications',   label: 'Qualifications',   icon: 'bi-mortarboard', text: job.qualifications },
-        { key: 'requirements',     label: 'Requirements',     icon: 'bi-clipboard-check', text: job.requirements },
-        { key: 'benefits',         label: 'Benefits',         icon: 'bi-gift', text: job.benefits },
-      ]; track field.key) {
-        @if (field.text) {
-          <div class="jbd-description-block jbd-description-block--sub">
-            <h6 class="jbd-description-block__title"><i class="bi {{ field.icon }}"></i> {{ field.label }}</h6>
-            <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, field.key)">
-              @if (isTextLong(field.text) && !isFieldExpanded(job.id, field.key)) {
-                <p class="jbd-description__text">{{ getShortText(field.text) }}</p>
-              } @else {
-                <p class="jbd-description__text">{{ field.text }}</p>
+      <div class="jbd-content-split__side">
+        @if (job.skills && job.skills.length) {
+          <div class="jbd-section">
+            <div class="jbd-section__header"><i class="bi bi-tags-fill"></i><span>Skills Required</span></div>
+            <div class="jbd-skills-wrap">
+              @for (skill of job.skills; track skill) { <span class="jbd-skill-tag">{{ skill }}</span> }
+            </div>
+          </div>
+        }
+
+        @if (job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo) {
+          <div class="jbd-section">
+            <div class="jbd-section__header"><i class="bi bi-person-lines-fill"></i><span>Hiring Manager</span></div>
+            <div class="jbd-hiring-card">
+              <div class="jbd-hiring-card__avatar" [style.background-color]="getAvatarColor(job)">{{ getContactInitials(job) }}</div>
+              <div class="jbd-hiring-card__body">
+                <p class="jbd-hiring-card__name">{{ job.contactPerson || job.companyName || 'Hiring Team' }}</p>
+                @if (job.contactEmail) {
+                  <a [href]="'mailto:' + job.contactEmail" class="jbd-hiring-card__link" (click)="$event.stopPropagation()">{{ job.contactEmail }}</a>
+                }
+                @if (job.contactPhone) {
+                  <a [href]="'tel:' + job.contactPhone" class="jbd-hiring-card__link" (click)="$event.stopPropagation()">{{ job.contactPhone }}</a>
+                }
+                @if (!job.contactEmail && !job.contactPhone && job.contactInfo) {
+                  <p class="jbd-hiring-card__link">{{ job.contactInfo }}</p>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (job.images && job.images.length) {
+          <div class="jbd-section">
+            <div class="jbd-section__header"><i class="bi bi-images"></i><span>Gallery</span></div>
+            <div class="jbd-gallery jbd-gallery--collage">
+              @for (img of job.images; track $index) {
+                <button
+                  type="button"
+                  class="jbd-gallery__btn"
+                  [title]="'View image ' + ($index + 1)"
+                  (click)="openImageViewer(job.images, $index, $event)"
+                  [attr.aria-label]="'View image ' + ($index + 1) + ' of ' + job.images.length">
+                  <img [src]="img | imageUrl" [alt]="job.title + ' image ' + ($index + 1)" class="jbd-gallery__img" loading="lazy" />
+                </button>
               }
             </div>
-            @if (isTextLong(field.text)) {
-              <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, field.key, $event)">
-                @if (isFieldExpanded(job.id, field.key)) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
-              </button>
-            }
           </div>
-        }
-      }
-    </div>
-  }
-
-  <!-- S8: Contact -->
-  @if (job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-person-lines-fill"></i><span>Contact Information</span></div>
-      <div class="jbd-contact-card">
-        @if (job.contactPerson) {
-          <div class="jbd-contact-row"><div class="jbd-contact-row__icon jbd-contact-row__icon--person"><i class="bi bi-person-fill"></i></div><div><span class="jbd-contact-row__label">Contact Person</span><span class="jbd-contact-row__value">{{ job.contactPerson }}</span></div></div>
-        }
-        @if (job.contactEmail) {
-          <div class="jbd-contact-row"><div class="jbd-contact-row__icon jbd-contact-row__icon--email"><i class="bi bi-envelope-fill"></i></div><div><span class="jbd-contact-row__label">Email</span><a [href]="'mailto:' + job.contactEmail" class="jbd-contact-row__link" (click)="$event.stopPropagation()">{{ job.contactEmail }}</a></div></div>
-        }
-        @if (job.contactPhone) {
-          <div class="jbd-contact-row"><div class="jbd-contact-row__icon jbd-contact-row__icon--phone"><i class="bi bi-telephone-fill"></i></div><div><span class="jbd-contact-row__label">Phone</span><a [href]="'tel:' + job.contactPhone" class="jbd-contact-row__link" (click)="$event.stopPropagation()">{{ job.contactPhone }}</a></div></div>
-        }
-        @if (!job.contactEmail && !job.contactPhone && job.contactInfo) {
-          <div class="jbd-contact-row"><div class="jbd-contact-row__icon"><i class="bi bi-info-circle-fill"></i></div><div><span class="jbd-contact-row__value">{{ job.contactInfo }}</span></div></div>
-        }
-      </div>
-    </div>
-  }
-
-  <!-- S9: Gallery -->
-  @if (job.images && job.images.length) {
-    <div class="jbd-section">
-      <div class="jbd-section__header"><i class="bi bi-images"></i><span>Gallery</span></div>
-      <div class="jbd-gallery">
-        @for (img of job.images; track $index) {
-          <button
-            type="button"
-            class="jbd-gallery__btn"
-            [title]="'View image ' + ($index + 1)"
-            (click)="openImageViewer(job.images, $index, $event)"
-            [attr.aria-label]="'View image ' + ($index + 1) + ' of ' + job.images.length">
-            <img [src]="img | imageUrl" [alt]="job.title + ' image ' + ($index + 1)" class="jbd-gallery__img" loading="lazy" />
-          </button>
         }
       </div>
     </div>
@@ -564,6 +565,9 @@
               }
               <div class="jb-card__title-row">
                 <h3 class="jb-card__title">{{ job.title }}</h3>
+                <span class="jbd-status-badge" [class.jbd-status-badge--active]="job.isActive" [class.jbd-status-badge--closed]="!job.isActive">
+                  <i class="bi bi-circle-fill"></i>{{ job.isActive ? 'Active' : 'Inactive' }}
+                </span>
                 <div class="jb-card__badges">
                   @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
                   @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
@@ -613,6 +617,8 @@
                 <i class="bi bi-trash3"></i>
               </button>
           </div>
+
+            <span class="jb-card__actions-divider" aria-hidden="true"></span>
 
             <!-- Chevron toggle -->
             <button class="jb-card__toggle" [class.jb-card__toggle--open]="activeJobId() === job.id"
@@ -877,9 +883,8 @@
                   <label class="jb-label">Work Mode</label>
                   <div class="jb-mode-chips">
                     @for (mode of workModes; track mode) {
-                      <label class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('workMode')?.value === mode">
-                        <input type="radio" formControlName="workMode" [value]="mode" class="visually-hidden" />{{ mode }}
-                      </label>
+                      <button type="button" class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('workMode')?.value === mode"
+                        (click)="jobForm.get('workMode')?.setValue(mode)">{{ mode }}</button>
                     }
                   </div>
                 </div>
@@ -936,9 +941,8 @@
                     <label class="jb-label">Salary Type</label>
                     <div class="jb-mode-chips">
                       @for (type of salaryTypes; track type) {
-                        <label class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('salaryType')?.value === type">
-                          <input type="radio" formControlName="salaryType" [value]="type" class="visually-hidden" />{{ type }}
-                        </label>
+                        <button type="button" class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('salaryType')?.value === type"
+                          (click)="jobForm.get('salaryType')?.setValue(type)">{{ type }}</button>
                       }
                     </div>
                   </div>
@@ -1057,9 +1061,8 @@
                 <label class="jb-label">Shift Type</label>
                 <div class="jb-mode-chips">
                   @for (shift of shiftTypes; track shift) {
-                    <label class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('shiftType')?.value === shift">
-                      <input type="radio" formControlName="shiftType" [value]="shift" class="visually-hidden" />{{ shift }}
-                    </label>
+                    <button type="button" class="jb-mode-chip" [class.jb-mode-chip--active]="jobForm.get('shiftType')?.value === shift"
+                      (click)="jobForm.get('shiftType')?.setValue(shift)">{{ shift }}</button>
                   }
                 </div>
               </div>
