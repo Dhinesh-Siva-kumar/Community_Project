@@ -92,6 +92,10 @@ export const ListCommunitiesQueryDto = z.object({
   status:     z.enum(['active', 'inactive']).optional(),
   // Moderation status — distinct from `status` above (which means active/inactive).
   approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  // Admin community-management list: rejected communities aren't relevant there
+  // (they belong on the Approval page's Community tab) — hide them without
+  // narrowing down to a single approvalStatus.
+  excludeRejected: z.coerce.boolean().optional(),
   sortBy:     z.enum(['name', 'joined', 'category', 'country', 'visibility', 'members', 'posts', 'status']).default('joined'),
   sortDir:    z.enum(['asc', 'desc']).default('desc'),
 });

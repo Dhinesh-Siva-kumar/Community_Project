@@ -133,13 +133,14 @@ export async function findAll(params: {
   createdById?: string;
   status?: 'active' | 'inactive';
   approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  excludeRejected?: boolean;
   sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
 }) {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
     community_mode, is_default, from_date, to_date, joined, userId, createdById,
-    status, approvalStatus, sortBy = 'joined', sortDir = 'desc',
+    status, approvalStatus, excludeRejected, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
 
@@ -184,6 +185,9 @@ export async function findAll(params: {
   if (approvalStatus) {
     query.andWhere('c.status', approvalStatus);
     countQuery.andWhere('status', approvalStatus);
+  } else if (excludeRejected) {
+    query.andWhereNot('c.status', 'REJECTED');
+    countQuery.andWhereNot('status', 'REJECTED');
   }
 
   if (search) {

@@ -309,6 +309,9 @@ export class AdminCommunityComponent implements OnInit {
       user_id: this.authService.currentUser()?.id ?? 39,
       page: this.currentPage(),
       limit: this.pageSize(),
+      // Rejected communities belong on the Approval page's Community tab,
+      // not this management list.
+      excludeRejected: true,
     };
     // Only append filter params when they carry a non-empty value.
     if (this.searchTerm())       params['search']     = this.searchTerm();
