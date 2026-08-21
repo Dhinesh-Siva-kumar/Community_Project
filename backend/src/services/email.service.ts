@@ -60,3 +60,27 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
     text: `Your OTP is: ${otp}. It expires in ${env.OTP_EXPIRES_MINUTES} minutes.`,
   });
 }
+
+export async function sendDigestEmail(
+  to: string,
+  displayName: string,
+  items: { message: string; createdAt: Date }[],
+): Promise<void> {
+  const notificationsUrl = `${env.FRONTEND_URL}/user/notifications`;
+  const rows = items
+    .map((i) => `<li style="margin-bottom:6px;">${i.message} <span style="color:#78716C;font-size:12px;">(${new Date(i.createdAt).toLocaleString()})</span></li>`)
+    .join('');
+
+  await sendEmail({
+    to,
+    subject: `Your notification summary (${items.length} update${items.length === 1 ? '' : 's'})`,
+    html: `
+      <p>Hi ${displayName},</p>
+      <p>Here's what happened since your last summary:</p>
+      <ul>${rows}</ul>
+      <p><a href="${notificationsUrl}">View all notifications</a></p>
+      <p style="color:#78716C;font-size:12px;">You're receiving this because you opted in to email digests. You can turn this off in your notification preferences.</p>
+    `,
+    text: `Hi ${displayName},\n\nHere's what happened since your last summary:\n${items.map((i) => `- ${i.message}`).join('\n')}\n\nView all: ${notificationsUrl}`,
+  });
+}

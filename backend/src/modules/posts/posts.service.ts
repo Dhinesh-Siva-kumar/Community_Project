@@ -56,6 +56,25 @@ async function notifyAdminsOfPendingPost(postId: string, communityId: string): P
   );
 }
 
+// Opt-in ("new post in a joined community") — COMMUNITY_POST defaults to
+// muted for everyone (see migration 20240029), so create() silently skips
+// every member who hasn't explicitly un-muted it. Safe to call unconditionally.
+async function notifyCommunityMembersOfNewPost(postId: string, communityId: string, posterId: string): Promise<void> {
+  const community = await db('communities').where({ id: communityId }).select('name').first() as Record<string, unknown> | undefined;
+  const members = await db('community_members')
+    .where({ community_id: communityId })
+    .whereNot({ user_id: posterId })
+    .select('user_id');
+  if (!members.length) return;
+
+  const message = `New post in ${(community?.['name'] as string) ?? 'your community'}.`;
+  await Promise.all(
+    (members as Array<Record<string, unknown>>).map((m) =>
+      notificationsService.create(m['user_id'] as string, 'COMMUNITY_POST', message, postId),
+    ),
+  );
+}
+
 export async function countPending() {
   const [{ count }] = await db('posts').where({ status: 'PENDING' }).count({ count: '*' });
   return { count: Number(count) };
@@ -89,11 +108,14 @@ export async function create(data: CreatePostDtoType, userId: string) {
     .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT)
     .first() as Record<string, unknown>;
 
+  const newPostId = (post as Record<string, unknown>)['id'] as string;
   if (status === 'PENDING') {
-    await notifyAdminsOfPendingPost((post as Record<string, unknown>)['id'] as string, data.communityId);
+    await notifyAdminsOfPendingPost(newPostId, data.communityId);
+  } else {
+    await notifyCommunityMembersOfNewPost(newPostId, data.communityId, userId);
   }
 
-  await logAudit(userId, 'POST_CREATED', { communityId: data.communityId, type: data.type ?? 'GENERAL', status }, 'posts', (post as Record<string, unknown>)['id'] as string);
+  await logAudit(userId, 'POST_CREATED', { communityId: data.communityId, type: data.type ?? 'GENERAL', status }, 'posts', newPostId);
 
   return formatPost(row, 0, 0);
 }
@@ -285,6 +307,7 @@ export async function approve(postId: string, adminId: string) {
   const updatedRow = updated as Record<string, unknown>;
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
   await notificationsService.create(updatedRow['user_id'] as string, 'POST_APPROVED', 'Your post has been approved.', postId);
+  await notifyCommunityMembersOfNewPost(postId, updatedRow['community_id'] as string, updatedRow['user_id'] as string);
   await logAudit(adminId, 'POST_APPROVED', { previousStatus: post['status'], author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
   return { ...updatedRow, user };
 }
@@ -363,6 +386,9 @@ export async function deletePost(postId: string, userId: string) {
 
   const byAdmin = post['user_id'] !== userId;
   await logAudit(userId, 'POST_DELETED', { byAdmin, communityId: post['community_id'] }, 'posts', postId);
+  if (byAdmin) {
+    await notificationsService.create(post['user_id'] as string, 'POST_REMOVED', 'Your post was removed by an administrator.');
+  }
 
   return { message: 'Post deleted successfully' };
 }
@@ -421,7 +447,7 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
 }
 
 export async function like(postId: string, userId: string) {
-  const post = await db('posts').where({ id: postId }).first();
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
   const existing = await db('likes').where({ post_id: postId, user_id: userId }).first();
@@ -429,6 +455,18 @@ export async function like(postId: string, userId: string) {
 
   await db('likes').insert({ post_id: postId, user_id: userId });
   const [{ total: likeCount }] = await db('likes').where({ post_id: postId }).count({ total: '*' });
+
+  const ownerId = post['user_id'] as string;
+  if (ownerId !== userId) {
+    const actor = await db('users').where({ id: userId }).select('display_name', 'user_name').first() as
+      { display_name: string; user_name: string } | undefined;
+    const actorName = actor?.display_name || actor?.user_name || 'Someone';
+    await notificationsService.create(
+      ownerId, 'NEW_LIKE', `${actorName} liked your post`, postId,
+      { actorName, aggregateLabel: 'liked your post' },
+    );
+  }
+
   return { message: 'Post liked successfully', likeCount: Number(likeCount) };
 }
 
@@ -488,7 +526,7 @@ export async function getComments(postId: string, page: number, limit: number) {
 }
 
 export async function addComment(postId: string, userId: string, content: string) {
-  const post = await db('posts').where({ id: postId }).first();
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found');
 
   const [comment] = await db('comments')
@@ -497,6 +535,15 @@ export async function addComment(postId: string, userId: string, content: string
 
   const user = await db('users').where({ id: userId }).select('id', 'user_name', 'display_name', 'avatar').first() as Record<string, unknown> | undefined;
   const commentRow = comment as Record<string, unknown>;
+
+  const ownerId = post['user_id'] as string;
+  if (ownerId !== userId) {
+    const actorName = (user?.['display_name'] as string) || (user?.['user_name'] as string) || 'Someone';
+    await notificationsService.create(
+      ownerId, 'NEW_COMMENT', `${actorName} commented on your post`, postId,
+      { actorName, aggregateLabel: 'commented on your post' },
+    );
+  }
 
   return {
     id: commentRow['id'],

@@ -151,6 +151,13 @@ export const routes: Routes = [
             (m) => m.AdminProfileComponent
           ),
       },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./pages/shared/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent
+          ),
+      },
     ],
   },
 
@@ -215,6 +222,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/user/profile/profile.component').then(
             (m) => m.UserProfileComponent
+          ),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./pages/shared/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent
           ),
       },
     ],

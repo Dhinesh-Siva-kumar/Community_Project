@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto, ListPendingCommunitiesQueryDto, RejectCommunityDto } from './communities.dto';
+import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto, ListPendingCommunitiesQueryDto, RejectCommunityDto, SuggestedCommunitiesQueryDto } from './communities.dto';
 import * as communitiesService from './communities.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -37,6 +37,14 @@ export async function getAnalytics(req: Request, res: Response, next: NextFuncti
   try {
     const skipActiveFilter = req.user!.role === 'ADMIN';
     const result = await communitiesService.getAnalytics({ skipActiveFilter, userId: req.user!.sub });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getSuggested(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { limit } = SuggestedCommunitiesQueryDto.parse(req.query);
+    const result = await communitiesService.getSuggested(req.user!.sub, limit);
     res.json(result);
   } catch (err) { next(err); }
 }

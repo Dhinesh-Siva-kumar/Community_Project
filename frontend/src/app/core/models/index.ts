@@ -94,6 +94,7 @@ export interface User {
   userRole?: string;
   roleLevel: number;
   phoneNo?: string;
+  whatsappNo?: string;
   avatar?: string;
   role: 'ADMIN' | 'USER';
   countryId?: number;
@@ -111,6 +112,10 @@ export interface User {
   company?: string;
   website?: string;
   linkedinUrl?: string;
+  occupationType?: 'PROFESSIONAL' | 'STUDENT';
+  institution?: string;
+  course?: string;
+  graduationYear?: number;
   bio?: string;
   isTrusted: boolean;
   isBlocked: boolean;
@@ -168,10 +173,42 @@ export interface AuditLogResponse {
   totalPages: number;
 }
 
+// Kept in sync with NotificationType in backend/src/modules/notifications/notifications.service.ts
 export type NotificationType =
-  | 'POST_APPROVED' | 'POST_REJECTED' | 'NEW_COMMENT' | 'NEW_LIKE'
-  | 'COMMUNITY_POST' | 'USER_BLOCKED' | 'USER_UNBLOCKED' | 'TRUST_GRANTED'
-  | 'EVENT_CREATED' | 'JOB_POSTED';
+  | 'POST_APPROVED' | 'POST_REJECTED' | 'POST_PENDING'
+  | 'NEW_COMMENT' | 'NEW_LIKE' | 'COMMUNITY_POST'
+  | 'USER_BLOCKED' | 'USER_UNBLOCKED' | 'TRUST_GRANTED'
+  | 'EVENT_CREATED' | 'JOB_POSTED'
+  | 'COMMUNITY_PENDING' | 'COMMUNITY_APPROVED' | 'COMMUNITY_REJECTED'
+  | 'BUSINESS_PENDING' | 'BUSINESS_APPROVED' | 'BUSINESS_REJECTED'
+  | 'JOB_PENDING' | 'JOB_APPROVED' | 'JOB_REJECTED'
+  | 'EVENT_PENDING' | 'EVENT_APPROVED' | 'EVENT_REJECTED'
+  // Phase 2: account/moderation transparency
+  | 'TRUST_REVOKED' | 'ACCOUNT_DEACTIVATED' | 'PASSWORD_RESET_BY_ADMIN'
+  | 'POST_REMOVED' | 'COMMUNITY_REMOVED' | 'BUSINESS_REMOVED' | 'EVENT_REMOVED' | 'JOB_REMOVED'
+  // Phase 3: engagement
+  | 'COMMUNITY_MEMBER_JOINED'
+  // Phase 4
+  | 'WELCOME';
+
+export const ALL_NOTIFICATION_TYPES: NotificationType[] = [
+  'POST_APPROVED', 'POST_REJECTED', 'POST_PENDING',
+  'NEW_COMMENT', 'NEW_LIKE', 'COMMUNITY_POST',
+  'USER_BLOCKED', 'USER_UNBLOCKED', 'TRUST_GRANTED',
+  'EVENT_CREATED', 'JOB_POSTED',
+  'COMMUNITY_PENDING', 'COMMUNITY_APPROVED', 'COMMUNITY_REJECTED',
+  'BUSINESS_PENDING', 'BUSINESS_APPROVED', 'BUSINESS_REJECTED',
+  'JOB_PENDING', 'JOB_APPROVED', 'JOB_REJECTED',
+  'EVENT_PENDING', 'EVENT_APPROVED', 'EVENT_REJECTED',
+  'TRUST_REVOKED', 'ACCOUNT_DEACTIVATED', 'PASSWORD_RESET_BY_ADMIN',
+  'POST_REMOVED', 'COMMUNITY_REMOVED', 'BUSINESS_REMOVED', 'EVENT_REMOVED', 'JOB_REMOVED',
+  'COMMUNITY_MEMBER_JOINED', 'WELCOME',
+];
+
+export interface NotificationPreferences {
+  mutedTypes: NotificationType[];
+  emailDigestEnabled: boolean;
+}
 
 export interface CommunityRequest {
   name: string;
@@ -230,6 +267,10 @@ export interface Community {
   community_mode?: CommunityMode;
   // Added in migration 20240011.
   rules?: string[];
+  // Only populated by GET /communities/suggested — whether this suggestion
+  // matches the requesting user's country / one of their interests.
+  matchesCountry?: boolean;
+  matchesInterest?: boolean;
 }
 
 export interface CommunityMember {
@@ -446,9 +487,11 @@ export interface Job {
 
 export interface Notification {
   id: string;
-  type: string;
+  type: NotificationType;
   message: string;
   isRead: boolean;
+  /** Repeat-event aggregation count (likes/comments) — see notifications.service.ts create(). */
+  count?: number;
   relatedEntityId?: string;
   userId: string;
   createdAt: string;

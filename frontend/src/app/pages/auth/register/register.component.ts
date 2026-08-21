@@ -24,6 +24,7 @@ import { RouterLink, Router } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { OnboardingService } from '../../../core/services/onboarding.service';
 import { Country, UserRegister } from '../../../core/models';
 import { environment } from '../../../../environments/environment';
 import { getPhoneRule } from '../../../shared/utils/phone';
@@ -357,10 +358,11 @@ export class RegisterComponent {
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   constructor(
-    private fb:           FormBuilder,
-    private authService:  AuthService,
-    private toastService: ToastService,
-    private router:       Router,
+    private fb:               FormBuilder,
+    private authService:      AuthService,
+    private toastService:     ToastService,
+    private onboardingService: OnboardingService,
+    private router:           Router,
   ) {}
 
   ngOnInit() {
@@ -677,6 +679,7 @@ export class RegisterComponent {
         this.loading.set(false);
         this.registeringStage.set('');
         this.showSuccessModal.set(true);
+        this.markWelcomeBannerPending();
         setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
       },
       error: (err) => {
@@ -685,6 +688,12 @@ export class RegisterComponent {
         this.toastService.error(err?.error?.message || this.t.toastRegistrationFailed);
       },
     });
+  }
+
+  /** Flags the one-time dashboard welcome banner to show on the next visit. */
+  private markWelcomeBannerPending(): void {
+    const userId = this.authService.currentUser()?.id;
+    if (userId != null) this.onboardingService.markWelcomePending(userId);
   }
 
   private mapToPayload(raw: any): UserRegister {
@@ -932,6 +941,7 @@ export class RegisterComponent {
         } else {
           // Tokens already stored by authService tap — go to dashboard
           this.showSuccessModal.set(true);
+          this.markWelcomeBannerPending();
           setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
         }
       },
@@ -973,6 +983,7 @@ export class RegisterComponent {
             setTimeout(() => this.router.navigate(['/auth/login']), 2000);
           } else {
             this.showSuccessModal.set(true);
+            this.markWelcomeBannerPending();
             setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
           }
         },

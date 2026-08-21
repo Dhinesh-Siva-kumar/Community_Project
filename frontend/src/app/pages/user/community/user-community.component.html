@@ -105,12 +105,12 @@
   </div>
 </div>
 
-<!-- ── SPOTLIGHT ────────────────────────────────────────────── -->
-@if (activeTab() === 'all' && !searchTerm() && featuredCommunities().length > 1) {
-  <section class="uc-spotlight" aria-label="Most popular communities">
+<!-- ── SUGGESTED FOR YOU ────────────────────────────────────── -->
+@if (activeTab() === 'all' && !searchTerm() && suggestedCommunities().length > 1) {
+  <section class="uc-spotlight" aria-label="Suggested communities for you">
     <div class="uc-spotlight-head">
-      <span class="uc-spotlight-icon"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
-      <h2>Spotlight<span class="uc-spotlight-sub">most popular, by members</span></h2>
+      <span class="uc-spotlight-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+      <h2>Suggested for You<span class="uc-spotlight-sub">matched to your country, interests &amp; popularity</span></h2>
     </div>
 
     <div class="uc-spotlight-rail-wrap">
@@ -120,7 +120,7 @@
       </button>
 
       <div class="uc-spotlight-rail" #spotlightRail (scroll)="onSpotlightScroll()">
-        @for (community of featuredCommunities(); track community.id) {
+        @for (community of suggestedCommunities(); track community.id) {
           <article
             class="uc-spot-card"
             (click)="navigateToCommunity(community.id)"
@@ -160,6 +160,16 @@
                 @if (community._count?.posts) {
                   <span class="uc-spot-glass-chip">
                     <i class="bi bi-file-earmark-text-fill" aria-hidden="true"></i>{{ community._count?.posts }} posts
+                  </span>
+                }
+                @if (community.matchesCountry) {
+                  <span class="uc-spot-glass-chip">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Your country
+                  </span>
+                }
+                @if (community.matchesInterest) {
+                  <span class="uc-spot-glass-chip">
+                    <i class="bi bi-heart-fill" aria-hidden="true"></i> Your interest
                   </span>
                 }
                 @if (isOwner(community)) {

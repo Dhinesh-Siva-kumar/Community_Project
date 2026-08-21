@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { PaginationQueryDto } from './notifications.dto';
+import { PaginationQueryDto, UpdatePreferencesDto } from './notifications.dto';
 import * as notificationsService from './notifications.service';
+import type { NotificationType } from './notifications.service';
 
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -27,6 +28,24 @@ export async function markAllAsRead(req: Request, res: Response, next: NextFunct
 export async function getUnreadCount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await notificationsService.getUnreadCount(req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getPreferences(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await notificationsService.getPreferences(req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function updatePreferences(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const dto = UpdatePreferencesDto.parse(req.body);
+    const result = await notificationsService.updatePreferences(req.user!.sub, {
+      mutedTypes: dto.mutedTypes as NotificationType[] | undefined,
+      emailDigestEnabled: dto.emailDigestEnabled,
+    });
     res.json(result);
   } catch (err) { next(err); }
 }

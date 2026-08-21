@@ -4,6 +4,7 @@ export const UpdateUserDto = z.object({
   userName:             z.string().min(1).optional(),
   displayName:          z.string().min(2).max(60).optional(),
   phoneNo:              z.string().max(20).optional(),
+  whatsappNo:           z.string().max(20).optional(),
   email:                z.string().email().optional(),
   countryId:            z.number().int().positive().optional(),
   stateId:              z.coerce.number().int().positive().optional(),
@@ -18,6 +19,10 @@ export const UpdateUserDto = z.object({
   company:              z.string().max(100).optional(),
   website:              z.string().max(200).optional(),
   linkedinUrl:          z.string().max(200).optional(),
+  occupationType:       z.enum(['PROFESSIONAL', 'STUDENT']).optional(),
+  institution:          z.string().max(150).optional(),
+  course:               z.string().max(150).optional(),
+  graduationYear:       z.coerce.number().int().min(1950).max(2100).optional(),
 });
 
 export const ListUsersQueryDto = z.object({
@@ -58,10 +63,19 @@ export const ChartDataQueryDto = z.object({
 });
 
 export const BroadcastNotificationDto = z.object({
+  // Kept in sync with NotificationType in notifications.service.ts — the
+  // full set of DB-enum values, not just the original 10.
   type:        z.enum([
-    'POST_APPROVED', 'POST_REJECTED', 'NEW_COMMENT', 'NEW_LIKE',
+    'POST_APPROVED', 'POST_REJECTED', 'POST_PENDING', 'NEW_COMMENT', 'NEW_LIKE',
     'COMMUNITY_POST', 'USER_BLOCKED', 'USER_UNBLOCKED', 'TRUST_GRANTED',
     'EVENT_CREATED', 'JOB_POSTED',
+    'COMMUNITY_PENDING', 'COMMUNITY_APPROVED', 'COMMUNITY_REJECTED',
+    'BUSINESS_PENDING', 'BUSINESS_APPROVED', 'BUSINESS_REJECTED',
+    'JOB_PENDING', 'JOB_APPROVED', 'JOB_REJECTED',
+    'EVENT_PENDING', 'EVENT_APPROVED', 'EVENT_REJECTED',
+    'TRUST_REVOKED', 'ACCOUNT_DEACTIVATED', 'PASSWORD_RESET_BY_ADMIN',
+    'POST_REMOVED', 'COMMUNITY_REMOVED', 'BUSINESS_REMOVED', 'EVENT_REMOVED', 'JOB_REMOVED',
+    'COMMUNITY_MEMBER_JOINED', 'WELCOME',
   ]),
   message:     z.string().min(1).max(500),
   recipient:   z.enum(['all', 'role', 'user']),

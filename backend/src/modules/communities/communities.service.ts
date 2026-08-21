@@ -356,6 +356,89 @@ export async function findAll(params: {
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
+// ---------------------------------------------------------------------------
+// Suggested communities — combines country match + interest match + live
+// popularity into one ranked list, replacing the old client-side "top 4 by
+// member count" spotlight. Country and interest matches are worth more than
+// raw popularity so a smaller, highly-relevant community still outranks a
+// big community that shares neither signal with this user; popularity is
+// log-scaled so one very large community can't dominate every slot.
+// Already-joined communities are excluded — nothing to "suggest" there.
+// ---------------------------------------------------------------------------
+export async function getSuggested(userId: string, limit: number) {
+  const user = await db('users').where({ id: userId }).select('country', 'interests').first() as
+    { country: string | null; interests: string[] | null } | undefined;
+  const userCountry = user?.country ?? null;
+  const userInterests = new Set(
+    (user?.interests ?? []).map((i) => i.toLowerCase().trim()).filter(Boolean),
+  );
+
+  const query = db('communities as c')
+    .leftJoin('users as u', 'c.created_by_id', 'u.id')
+    .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
+    .where('c.is_active', true)
+    .where('c.status', 'APPROVED')
+    .whereNotIn('c.id', db('community_members').select('community_id').where('user_id', userId))
+    .select(
+      'c.*',
+      'u.id as creator_id',
+      'u.user_name as creator_user_name',
+      'u.display_name as creator_display_name',
+      'im.interest_name as category_name',
+    )
+    // Scoring happens in JS below, so this bounds the candidate set on
+    // platforms with an unusually large number of communities; in practice
+    // this comfortably covers the whole approved/visible set.
+    .limit(300);
+
+  applyNonAdminVisibilityRestriction(query, 'c.', userId, userCountry);
+
+  const candidates = await query as Array<Record<string, unknown>>;
+  const ids = candidates.map((c) => c['id'] as string);
+
+  const counts = ids.length
+    ? await db('communities as c')
+        .leftJoin('community_members as cm', 'c.id', 'cm.community_id')
+        .leftJoin('posts as p', 'c.id', 'p.community_id')
+        .whereIn('c.id', ids)
+        .groupBy('c.id')
+        .select('c.id', db.raw('COUNT(DISTINCT cm.id) as member_count'), db.raw('COUNT(DISTINCT p.id) as post_count'))
+    : [];
+  const countMap = new Map(
+    (counts as Array<Record<string, unknown>>).map((r) => [
+      r['id'],
+      { members: Number(r['member_count']), posts: Number(r['post_count']) },
+    ]),
+  );
+
+  const scored = candidates.map((c) => {
+    const memberCount = countMap.get(c['id'] as string)?.members ?? 0;
+    const matchesCountry  = !!userCountry && c['country'] === userCountry;
+    const matchesInterest = !!c['category_name'] && userInterests.has(String(c['category_name']).toLowerCase());
+    const popularityScore = Math.min(25, Math.log2(memberCount + 1) * 5);
+    const score = (matchesCountry ? 40 : 0) + (matchesInterest ? 35 : 0) + popularityScore;
+    return { c, memberCount, matchesCountry, matchesInterest, score };
+  });
+
+  scored.sort((a, b) => (b.score - a.score) || (b.memberCount - a.memberCount));
+
+  return scored.slice(0, limit).map(({ c, matchesCountry, matchesInterest }) => ({
+    ...c,
+    createdById: c['created_by_id'],
+    rejectionReason: c['rejection_reason'] ?? null,
+    createdAt: c['created_at'],
+    createdBy: {
+      id: c['creator_id'],
+      userName: c['creator_user_name'],
+      displayName: c['creator_display_name'],
+    },
+    _count: countMap.get(c['id'] as string) ?? { members: 0, posts: 0 },
+    is_joined: false,
+    matchesCountry,
+    matchesInterest,
+  }));
+}
+
 export async function getAnalytics(params: {
   page?: number;
   limit?: number;
@@ -620,11 +703,17 @@ export async function deleteCommunity(id: string, adminId: string) {
   await db('communities').where({ id }).delete();
   deleteUploadedFile(community['image']);
   await logAudit(adminId, 'COMMUNITY_DELETED', { name: community['name'] }, 'communities', id);
+  if (byAdmin) {
+    await notificationsService.create(
+      community['created_by_id'] as string, 'COMMUNITY_REMOVED',
+      `Your community "${community['name']}" was removed by an administrator.`,
+    );
+  }
   return { message: 'Community deleted successfully' };
 }
 
 export async function join(communityId: string, userId: string) {
-  const community = await db('communities').where({ id: communityId }).first();
+  const community = await db('communities').where({ id: communityId }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found');
 
   const existing = await db('community_members').where({ user_id: userId, community_id: communityId }).first();
@@ -632,6 +721,19 @@ export async function join(communityId: string, userId: string) {
 
   await db('community_members').insert({ user_id: userId, community_id: communityId });
   await logAudit(userId, 'COMMUNITY_JOINED', undefined, 'communities', communityId);
+
+  const ownerId = community['created_by_id'] as string;
+  if (ownerId !== userId) {
+    const actor = await db('users').where({ id: userId }).select('display_name', 'user_name').first() as
+      { display_name: string; user_name: string } | undefined;
+    const actorName = actor?.display_name || actor?.user_name || 'Someone';
+    const communityName = community['name'] as string;
+    await notificationsService.create(
+      ownerId, 'COMMUNITY_MEMBER_JOINED', `${actorName} joined your community "${communityName}"`, communityId,
+      { actorName, aggregateLabel: `joined your community "${communityName}"` },
+    );
+  }
+
   return { message: 'Successfully joined the community' };
 }
 

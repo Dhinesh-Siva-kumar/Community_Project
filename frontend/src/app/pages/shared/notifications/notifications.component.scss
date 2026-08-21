@@ -1,0 +1,173 @@
+@use '../../../../assets/styles/index' as *;
+
+:host { display: block; }
+
+.ntf-page {
+  max-width: 720px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 1.25rem;
+  font-family: $font-family-body;
+}
+
+.ntf-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ntf-title {
+  font-family: $font-family-header;
+  font-size: 1.6rem; font-weight: 800; margin: 0 0 4px;
+  color: $color-text-primary;
+}
+
+.ntf-subtitle { font-size: 13.5px; color: $color-text-muted; margin: 0; }
+
+.ntf-header-actions { display: flex; align-items: center; gap: 8px; }
+
+.ntf-mark-all {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: $color-bg-card; border: 1px solid $color-border;
+  border-radius: $radius-sm; padding: 8px 14px;
+  font-size: 13px; font-weight: $font-weight-semibold; color: $color-primary-dark;
+  cursor: pointer; transition: background $transition-fast ease;
+  &:hover { background: $color-bg-hover; }
+}
+
+.ntf-icon-btn {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: $color-bg-card; border: 1px solid $color-border;
+  border-radius: $radius-sm; color: $color-text-muted;
+  cursor: pointer; transition: background $transition-fast ease, color $transition-fast ease;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+  &.ntf-icon-btn-active { background: $color-primary-light; color: $color-primary-dark; border-color: transparent; }
+}
+
+// ── Preferences panel ────────────────────────────────────────
+.ntf-prefs {
+  background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-lg;
+  padding: 1rem 1.1rem;
+  display: flex; flex-direction: column; gap: 0.9rem;
+}
+
+.ntf-prefs-digest {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding-bottom: 0.9rem; border-bottom: 1px solid $color-border;
+}
+
+.ntf-prefs-digest-title { display: block; font-size: 13.5px; font-weight: $font-weight-semibold; color: $color-text-primary; }
+.ntf-prefs-digest-sub { display: block; font-size: 12px; color: $color-text-muted; margin-top: 2px; }
+
+.ntf-prefs-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 320px; overflow-y: auto;
+}
+
+.ntf-prefs-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 7px 2px;
+  font-size: 13px; color: $color-text-primary;
+  cursor: pointer;
+}
+
+// ── Toggle switch ─────────────────────────────────────────────
+.ntf-switch {
+  position: relative; display: inline-flex; flex-shrink: 0; cursor: pointer;
+
+  input { position: absolute; opacity: 0; width: 0; height: 0; }
+}
+
+.ntf-switch-track {
+  width: 36px; height: 20px; border-radius: $radius-full;
+  background: $color-border-strong;
+  display: inline-flex; align-items: center;
+  transition: background $transition-fast ease;
+  padding: 2px;
+}
+
+.ntf-switch-thumb {
+  width: 16px; height: 16px; border-radius: $radius-full;
+  background: $color-white;
+  box-shadow: $shadow-1;
+  transition: transform $transition-fast ease;
+}
+
+.ntf-switch input:checked + .ntf-switch-track {
+  background: $color-primary;
+}
+.ntf-switch input:checked + .ntf-switch-track .ntf-switch-thumb {
+  transform: translateX(16px);
+}
+.ntf-switch input:focus-visible + .ntf-switch-track {
+  box-shadow: $shadow-focus-ring;
+}
+
+.ntf-filters {
+  display: flex; gap: 8px;
+  border-bottom: 1px solid $color-border;
+}
+
+.ntf-filter {
+  background: none; border: none; cursor: pointer;
+  padding: 8px 4px; margin-bottom: -1px;
+  font-size: 13.5px; font-weight: $font-weight-semibold; color: $color-text-muted;
+  border-bottom: 2px solid transparent;
+  transition: color $transition-fast ease, border-color $transition-fast ease;
+
+  &.ntf-filter-active { color: $color-primary-dark; border-bottom-color: $color-primary; }
+}
+
+.ntf-loading { display: flex; justify-content: center; padding: 3rem 0; }
+
+.ntf-list {
+  background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.ntf-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer;
+  padding: 14px 16px;
+  border-bottom: 1px solid $color-bg-light;
+  transition: background $transition-fast ease;
+
+  &:hover { background: $color-bg-hover; }
+  &:last-child { border-bottom: none; }
+  &.ntf-item-unread { background: rgba($color-primary-rgb..., 0.05); }
+}
+
+.ntf-item-icon {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: $radius-full;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+
+.ntf-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+
+.ntf-item-message { font-size: 14px; font-weight: $font-weight-medium; color: $color-text-primary; line-height: 1.45; }
+
+.ntf-item-time { font-size: 12px; color: $color-text-muted; }
+
+.ntf-item-dot {
+  flex-shrink: 0; margin-top: 6px;
+  width: 8px; height: 8px; border-radius: $radius-full;
+  background: $color-primary;
+}
+
+.ntf-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 4rem 1rem; color: $color-text-muted; font-size: 14px;
+  .bi { font-size: 2rem; opacity: 0.5; }
+}
+
+.ntf-load-more-wrap { display: flex; justify-content: center; }
+
+.ntf-load-more {
+  background: $color-bg-card; border: 1px solid $color-border;
+  border-radius: $radius-sm; padding: 9px 20px;
+  font-size: 13.5px; font-weight: $font-weight-semibold; color: $color-text-primary;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: background $transition-fast ease;
+  &:hover:not(:disabled) { background: $color-bg-hover; }
+  &:disabled { opacity: 0.7; cursor: default; }
+}

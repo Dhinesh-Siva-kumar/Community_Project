@@ -1,0 +1,54 @@
+<div class="np-host">
+  <button
+    type="button"
+    class="np-trigger"
+    [class.np-has-unread]="notificationService.unreadCount() > 0"
+    (click)="toggle()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="true"
+    [title]="notificationService.unreadCount() > 0 ? notificationService.unreadCount() + ' unread notifications' : 'Notifications'"
+    aria-label="Notifications"
+  >
+    <i class="bi bi-bell" aria-hidden="true"></i>
+    @if (notificationService.unreadCount() > 0) {
+      <span class="np-badge" [attr.aria-label]="notificationService.unreadCount() + ' unread'">
+        {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
+      </span>
+    }
+  </button>
+
+  @if (isOpen()) {
+    <div class="np-panel" role="menu">
+      <div class="np-panel-header">
+        <span class="np-panel-title">Notifications</span>
+        @if (notificationService.unreadCount() > 0) {
+          <button type="button" class="np-mark-all" (click)="markAllRead($event)">Mark all as read</button>
+        }
+      </div>
+
+      <div class="np-list">
+        @for (n of notificationService.notifications().slice(0, 8); track n.id) {
+          <button type="button" class="np-item" [class.np-item-unread]="!n.isRead" (click)="open(n)">
+            <span class="np-item-icon" [style.background]="color(n) + '1F'" [style.color]="color(n)">
+              <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
+            </span>
+            <span class="np-item-body">
+              <span class="np-item-message">{{ n.message }}</span>
+              <span class="np-item-time">{{ relativeTime(n) }}</span>
+            </span>
+            @if (!n.isRead) {
+              <span class="np-item-dot" aria-hidden="true"></span>
+            }
+          </button>
+        } @empty {
+          <div class="np-empty">
+            <i class="bi bi-bell-slash" aria-hidden="true"></i>
+            <span>You're all caught up</span>
+          </div>
+        }
+      </div>
+
+      <button type="button" class="np-view-all" (click)="viewAll()">View all notifications</button>
+    </div>
+  }
+</div>

@@ -604,5 +604,11 @@ export async function deleteJob(id: string, userId: string) {
   deleteUploadedFiles(job['images']);
   deleteUploadedFile(job['company_logo']);
   await logAudit(userId, 'JOB_DELETED', { byAdmin, title: job['title'] }, 'jobs', id);
+  if (byAdmin) {
+    await notificationsService.create(
+      job['user_id'] as string, 'JOB_REMOVED',
+      `Your job "${job['title']}" was removed by an administrator.`,
+    );
+  }
   return { message: 'Job deleted successfully' };
 }

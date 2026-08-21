@@ -120,8 +120,13 @@ export const RejectCommunityDto = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+export const SuggestedCommunitiesQueryDto = z.object({
+  limit: z.coerce.number().int().min(1).max(20).default(8),
+});
+
 export type CreateCommunityDtoType = z.infer<typeof CreateCommunityDto>;
 export type UpdateCommunityDtoType = z.infer<typeof UpdateCommunityDto>;
 export type ListCommunitiesQueryDtoType = z.infer<typeof ListCommunitiesQueryDto>;
 export type ListPendingCommunitiesQueryDtoType = z.infer<typeof ListPendingCommunitiesQueryDto>;
 export type RejectCommunityDtoType = z.infer<typeof RejectCommunityDto>;
+export type SuggestedCommunitiesQueryDtoType = z.infer<typeof SuggestedCommunitiesQueryDto>;

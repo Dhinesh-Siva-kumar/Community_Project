@@ -10,6 +10,7 @@ router.post('/', ctrl.create);
 router.get('/my', ctrl.getMyCommunities);
 router.get('/created', ctrl.getMyCreatedCommunities);
 router.get('/analytics', ctrl.getAnalytics);
+router.get('/suggested', ctrl.getSuggested);
 router.get('/pending', authorize('ADMIN'), ctrl.findPending);
 router.get('/pending-count', authorize('ADMIN'), ctrl.getPendingCount);
 router.get('/', ctrl.findAll);

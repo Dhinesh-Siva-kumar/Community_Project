@@ -214,6 +214,7 @@ export class AuthService {
       displayName:         raw.displayName || raw.display_name || '',
       roleLevel:           raw.roleLevel  ?? raw.role_level  ?? 1,
       phoneNo:             raw.phoneNo    || raw.phone_no,
+      whatsappNo:          raw.whatsappNo || raw.whatsapp_no,
       avatar:              raw.avatar     || undefined,
       role:                raw.role       || 'USER',
       countryId:           raw.countryId  ?? raw.country_id,

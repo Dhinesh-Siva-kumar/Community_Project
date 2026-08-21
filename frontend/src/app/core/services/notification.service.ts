@@ -3,25 +3,37 @@ import { Observable, tap, map } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
-import { Notification } from '../models';
+import { ToastService } from './toast.service';
+import { Notification, NotificationPreferences, PaginatedResponse } from '../models';
 import { environment } from '../../../environments/environment';
+
+function normalize(n: any): Notification {
+  return { ...n, isRead: n.isRead ?? n.is_read ?? false };
+}
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService implements OnDestroy {
   private api = inject(ApiService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private socket: Socket | null = null;
 
+  /** Latest page of notifications — enough to back the bell dropdown panel. */
   notifications = signal<Notification[]>([]);
+  /** Authoritative unread count — sourced from GET /notifications/unread-count, not derived from `notifications` (which is only ever one page). */
   unreadCount = signal<number>(0);
 
   constructor() {
     this.authService.authStateChanges$.subscribe((user) => {
       if (user) {
         this.connect();
+        this.getNotifications().subscribe({ error: () => {} });
+        this.refreshUnreadCount().subscribe({ error: () => {} });
       } else {
         this.disconnect();
+        this.notifications.set([]);
+        this.unreadCount.set(0);
       }
     });
   }
@@ -31,27 +43,41 @@ export class NotificationService implements OnDestroy {
       return;
     }
 
-    const token = this.authService.getAccessToken();
-    if (!token) {
-      return;
-    }
-
     this.socket = io(environment.wsUrl, {
-      auth: { token },
+      // A function (not a plain object) so every reconnect attempt re-reads
+      // the current token from storage instead of replaying a possibly
+      // rotated/expired one captured at the first connect.
+      auth: (cb) => cb({ token: this.authService.getAccessToken() }),
       transports: ['websocket', 'polling'],
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('Notification socket connected');
     });
 
-    this.socket.on('notification', (notification: Notification) => {
-      this.notifications.update((current) => [notification, ...current]);
-      this.unreadCount.update((count) => count + 1);
+    this.socket.on('notification', (notification: any) => {
+      const n = normalize(notification);
+      this.notifications.update((current) => {
+        // Aggregated updates (likes/comments) arrive with the same id as an
+        // existing row — replace it in place instead of duplicating.
+        const idx = current.findIndex((c) => c.id === n.id);
+        if (idx !== -1) {
+          const next = [...current];
+          next[idx] = n;
+          return next;
+        }
+        return [n, ...current];
+      });
+      this.refreshUnreadCount().subscribe({ error: () => {} });
+      this.toastService.info(n.message);
+    });
+
+    this.socket.on('connect_error', (err: Error) => {
+      console.warn('Notification socket connect error:', err.message);
     });
 
     this.socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+      console.log('Notification socket disconnected');
     });
   }
 
@@ -62,13 +88,24 @@ export class NotificationService implements OnDestroy {
     }
   }
 
+  /** Populates the shared `notifications` signal (bell panel content) — first page only. */
   getNotifications(): Observable<Notification[]> {
     return this.api.get<{ data: any[] }>('/notifications').pipe(
-      map((res) => (res.data ?? []).map((n: any) => ({ ...n, isRead: n.isRead ?? n.is_read ?? false }))),
-      tap((list) => {
-        this.notifications.set(list);
-        this.unreadCount.set(list.filter((n) => !n.isRead).length);
-      })
+      map((res) => (res.data ?? []).map(normalize)),
+      tap((list) => this.notifications.set(list)),
+    );
+  }
+
+  /** Full paginated fetch for the dedicated notifications page — does not touch the shared signals. */
+  getNotificationsPage(page: number, limit: number): Observable<PaginatedResponse<Notification>> {
+    return this.api.get<PaginatedResponse<any>>('/notifications', { page, limit }).pipe(
+      map((res) => ({ ...res, data: (res.data ?? []).map(normalize) })),
+    );
+  }
+
+  refreshUnreadCount(): Observable<{ count: number }> {
+    return this.api.get<{ count: number }>('/notifications/unread-count').pipe(
+      tap((res) => this.unreadCount.set(res.count)),
     );
   }
 
@@ -92,6 +129,14 @@ export class NotificationService implements OnDestroy {
         this.unreadCount.set(0);
       })
     );
+  }
+
+  getPreferences(): Observable<NotificationPreferences> {
+    return this.api.get<NotificationPreferences>('/notifications/preferences');
+  }
+
+  updatePreferences(data: Partial<NotificationPreferences>): Observable<NotificationPreferences> {
+    return this.api.put<NotificationPreferences>('/notifications/preferences', data);
   }
 
   ngOnDestroy(): void {

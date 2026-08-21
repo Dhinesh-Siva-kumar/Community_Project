@@ -27,6 +27,11 @@ export class CommunityService {
     return this.api.get<CommunityAnalyticsCounts>('/communities/analytics', params);
   }
 
+  /** Ranked by country match + interest match + popularity — see communities.service.ts getSuggested(). */
+  getSuggestedCommunities(limit = 8): Observable<Community[]> {
+    return this.api.get<Community[]>('/communities/suggested', { limit });
+  }
+
   getJoinedCommunities(): Observable<Community[]> {
     return this.api.get<{ data: Community[] }>('/communities', { joined: true, limit: 100 })
       .pipe(map(res => res.data));
