@@ -167,151 +167,151 @@ const interests = [
   { interest_name: 'Youth & Students' },
 ];
 
-const jobs = [
-  {
-    title: 'Frontend Developer (Angular)',
-    description: 'We are looking for a motivated Frontend Developer to join our growing product team and help build our customer-facing web app.',
-    responsibilities: 'Build and maintain Angular components; collaborate with design and backend teams; write unit tests; participate in code reviews.',
-    qualifications: 'Bachelor\'s degree in Computer Science or related field, or equivalent practical experience.',
-    requirements: '2+ years with Angular or a similar framework; strong TypeScript and CSS fundamentals; familiarity with REST APIs.',
-    benefits: 'Health insurance, flexible working hours, annual learning budget.',
-    company_name: 'Nimbus Softworks', company_website: 'https://nimbussoftworks.example.com',
-    city: 'Chennai', state: 'Tamil Nadu', country: 'India', pincode: '600001', location: 'Chennai, Tamil Nadu',
-    is_remote: false, work_mode: 'Hybrid',
-    exp_min: 2, exp_max: 5, education: '12th', openings: 2, job_type: 'Full-time', shift_type: 'Day',
-    salary_min: 600000, salary_max: 1000000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '09:30', work_end_time: '18:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    contact_person: 'Priya Raman', contact_email: 'careers@nimbussoftworks.example.com', contact_phone: '+91 9840012345',
-    application_url: 'https://nimbussoftworks.example.com/careers/frontend-developer',
-    skills: ['Angular', 'TypeScript', 'RxJS', 'CSS'],
-  },
-  {
-    title: 'Backend Engineer (Node.js)',
-    description: 'Join our backend team building scalable APIs that power our community platform.',
-    responsibilities: 'Design and implement REST APIs; own database schema changes; monitor and improve performance.',
-    qualifications: null, requirements: '3+ years Node.js/Express experience; solid SQL skills.', benefits: null,
-    company_name: 'BlueOrbit Technologies', company_website: 'https://blueorbit.example.com',
-    city: 'Bengaluru', state: 'Karnataka', country: 'India', pincode: '560001', location: 'Bengaluru, Karnataka',
-    is_remote: false, work_mode: 'On-site',
-    exp_min: 3, exp_max: 7, education: 'Any Graduate', openings: 1, job_type: 'Full-time', shift_type: 'Day',
-    salary_min: 900000, salary_max: 1500000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '10:00', work_end_time: '19:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    contact_person: 'Arjun Mehta', contact_email: 'hr@blueorbit.example.com', contact_phone: '+91 9900011122',
-    application_url: null, skills: ['Node.js', 'Express', 'PostgreSQL', 'Knex'],
-  },
-  {
-    title: 'Remote Customer Support Executive',
-    description: 'Support our customers over chat and email, fully remote role with flexible hours.',
-    responsibilities: null, qualifications: null, requirements: null, benefits: 'Work from home, performance bonus.',
-    company_name: 'HelpDesk Global', company_website: null,
-    city: null, state: null, country: 'India', pincode: null, location: null,
-    is_remote: true, work_mode: 'Remote',
-    exp_min: 0, exp_max: 2, education: '10th', openings: 5, job_type: 'Part-time', shift_type: 'Flexible',
-    salary_min: 15000, salary_max: 25000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: null, work_end_time: null, working_days: [],
-    contact_person: 'Support Hiring Team', contact_email: 'jobs@helpdeskglobal.example.com', contact_phone: null,
-    application_url: null, skills: ['Communication', 'Customer Service'],
-  },
-  {
-    title: 'Warehouse Associate',
-    description: 'Pack and dispatch orders at our regional fulfilment centre.',
-    responsibilities: 'Pick and pack orders; maintain inventory accuracy; operate warehouse scanning equipment.',
-    qualifications: null, requirements: 'Ability to lift up to 20kg; punctual and reliable.', benefits: 'Overtime pay, transport allowance.',
-    company_name: 'Swift Logistics', company_website: null,
-    city: 'Coimbatore', state: 'Tamil Nadu', country: 'India', pincode: '641001', location: 'Coimbatore, Tamil Nadu',
-    is_remote: false, work_mode: 'On-site',
-    exp_min: 0, exp_max: 1, education: 'No education needed', openings: 10, job_type: 'Full-time', shift_type: 'Rotational',
-    salary_min: 12000, salary_max: 16000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '08:00', work_end_time: '17:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    contact_person: 'Warehouse Hiring Desk', contact_email: 'hiring@swiftlogistics.example.com', contact_phone: '+91 9843300112',
-    application_url: null, skills: ['Physical Stamina', 'Teamwork'],
-  },
-  {
-    title: 'Senior Product Manager',
-    description: 'Lead product strategy for our flagship community engagement product.',
-    responsibilities: 'Define roadmap; work with engineering/design; run discovery interviews; own KPIs.',
-    qualifications: 'MBA or equivalent experience preferred.', requirements: '6+ years product management, B2C SaaS background.',
-    benefits: 'ESOPs, premium health cover, annual offsite.',
-    company_name: 'Orbit Community Labs', company_website: 'https://orbitlabs.example.com',
-    city: 'London', state: null, country: 'United Kingdom', pincode: 'EC1A 1BB', location: 'London, UK',
-    is_remote: false, work_mode: 'Hybrid',
-    exp_min: 6, exp_max: 12, education: 'Any Graduate', openings: 1, job_type: 'Full-time', shift_type: 'Day',
-    salary_min: 70000, salary_max: 95000, salary_type: 'Annual', salary_currency: 'GBP', salary_hidden: false,
-    work_start_time: '09:00', work_end_time: '17:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    contact_person: 'Talent Team', contact_email: 'talent@orbitlabs.example.com', contact_phone: null,
-    application_url: 'https://orbitlabs.example.com/careers/senior-pm', skills: ['Product Strategy', 'Roadmapping', 'Analytics'],
-  },
-  {
-    title: 'Graphic Design Intern',
-    description: 'Great opportunity for a design student to build a real-world portfolio with our marketing team.',
-    responsibilities: 'Design social media creatives; support brand guideline updates.', qualifications: null,
-    requirements: 'Currently pursuing a design degree/diploma; proficient in Figma or Adobe tools.', benefits: 'Certificate, stipend, mentorship.',
-    company_name: 'Kaleidoscope Studio', company_website: null,
-    city: 'Pune', state: 'Maharashtra', country: 'India', pincode: '411001', location: 'Pune, Maharashtra',
-    is_remote: false, work_mode: 'On-site',
-    exp_min: 0, exp_max: 0, education: 'Diploma', openings: 3, job_type: 'Internship', shift_type: 'Day',
-    salary_min: 8000, salary_max: 12000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '10:00', work_end_time: '18:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    contact_person: 'Design Team Lead', contact_email: 'internships@kaleidoscope.example.com', contact_phone: null,
-    application_url: null, skills: ['Figma', 'Adobe Photoshop', 'Illustration'],
-  },
-  {
-    title: 'Data Analyst (Salary Not Disclosed)',
-    description: 'Analyse product usage data and build dashboards for leadership.',
-    responsibilities: 'Build and maintain BI dashboards; run ad-hoc analyses; partner with product teams.',
-    qualifications: null, requirements: 'Strong SQL; experience with a BI tool (Metabase/PowerBI/Looker).', benefits: null,
-    company_name: 'DataForge Analytics', company_website: 'https://dataforge.example.com',
-    city: 'Hyderabad', state: 'Telangana', country: 'India', pincode: '500001', location: 'Hyderabad, Telangana',
-    is_remote: false, work_mode: 'Hybrid',
-    exp_min: 1, exp_max: 4, education: 'Any Graduate', openings: 2, job_type: 'Full-time', shift_type: 'Day',
-    salary_min: null, salary_max: null, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: true,
-    work_start_time: '09:30', work_end_time: '18:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    contact_person: 'Recruiting', contact_email: 'jobs@dataforge.example.com', contact_phone: null,
-    application_url: null, skills: ['SQL', 'Metabase', 'Data Visualization'],
-  },
-  {
-    title: 'Night Shift Security Guard',
-    description: 'Provide security coverage for our commercial premises during night hours.',
-    responsibilities: null, qualifications: null, requirements: 'Valid security license preferred; alert and dependable.', benefits: 'Night shift allowance.',
-    company_name: 'Guardian Facility Services', company_website: null,
-    city: 'Chennai', state: 'Tamil Nadu', country: 'India', pincode: '600020', location: 'Chennai, Tamil Nadu',
-    is_remote: false, work_mode: 'On-site',
-    exp_min: 0, exp_max: 3, education: '8th', openings: 4, job_type: 'Full-time', shift_type: 'Night',
-    salary_min: 14000, salary_max: 18000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '21:00', work_end_time: '06:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    contact_person: 'Ops Manager', contact_email: 'ops@guardianfs.example.com', contact_phone: '+91 9876500011',
-    application_url: null, skills: ['Vigilance', 'Discipline'],
-  },
-  {
-    title: 'Freelance Content Writer',
-    description: 'Write blog posts and website copy for a range of clients, on a contract basis.',
-    responsibilities: 'Research and write SEO-friendly articles; revise based on editor feedback.',
-    qualifications: null, requirements: 'Excellent written English; portfolio of published work.', benefits: 'Flexible schedule, per-article pay.',
-    company_name: 'WordCraft Media', company_website: 'https://wordcraft.example.com',
-    city: null, state: null, country: 'United States', pincode: null, location: null,
-    is_remote: true, work_mode: 'Remote',
-    exp_min: 1, exp_max: 5, education: 'Any Graduate', openings: 3, job_type: 'Contract', shift_type: 'Flexible',
-    salary_min: 20, salary_max: 60, salary_type: 'Hourly', salary_currency: 'USD', salary_hidden: false,
-    work_start_time: null, work_end_time: null, working_days: [],
-    contact_person: 'Editorial Team', contact_email: 'write@wordcraft.example.com', contact_phone: null,
-    application_url: 'https://wordcraft.example.com/write-for-us', skills: ['Writing', 'SEO', 'Editing'],
-  },
-  {
-    title: 'Retail Store Manager',
-    description: 'Manage day-to-day operations of our flagship retail outlet, including staff and inventory.',
-    responsibilities: 'Supervise store staff; manage inventory and stock counts; ensure customer satisfaction; handle daily sales reporting.',
-    qualifications: 'Diploma or degree in retail/business management preferred.', requirements: '4+ years retail experience, 1+ years in a supervisory role.',
-    benefits: 'Store performance bonus, staff discount.',
-    company_name: 'Meridian Retail Group', company_website: null,
-    city: 'Madurai', state: 'Tamil Nadu', country: 'India', pincode: '625001', location: 'Madurai, Tamil Nadu',
-    is_remote: false, work_mode: 'On-site',
-    exp_min: 4, exp_max: 10, education: 'Diploma', openings: 1, job_type: 'Full-time', shift_type: 'Rotational',
-    salary_min: 350000, salary_max: 550000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
-    work_start_time: '10:00', work_end_time: '20:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    contact_person: 'Regional HR', contact_email: 'careers@meridianretail.example.com', contact_phone: '+91 9843211009',
-    application_url: null, skills: ['Retail Operations', 'Team Leadership', 'Inventory Management'],
-  },
-];
+// const jobs = [
+//   {
+//     title: 'Frontend Developer (Angular)',
+//     description: 'We are looking for a motivated Frontend Developer to join our growing product team and help build our customer-facing web app.',
+//     responsibilities: 'Build and maintain Angular components; collaborate with design and backend teams; write unit tests; participate in code reviews.',
+//     qualifications: 'Bachelor\'s degree in Computer Science or related field, or equivalent practical experience.',
+//     requirements: '2+ years with Angular or a similar framework; strong TypeScript and CSS fundamentals; familiarity with REST APIs.',
+//     benefits: 'Health insurance, flexible working hours, annual learning budget.',
+//     company_name: 'Nimbus Softworks', company_website: 'https://nimbussoftworks.example.com',
+//     city: 'Chennai', state: 'Tamil Nadu', country: 'India', pincode: '600001', location: 'Chennai, Tamil Nadu',
+//     is_remote: false, work_mode: 'Hybrid',
+//     exp_min: 2, exp_max: 5, education: '12th', openings: 2, job_type: 'Full-time', shift_type: 'Day',
+//     salary_min: 600000, salary_max: 1000000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '09:30', work_end_time: '18:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     contact_person: 'Priya Raman', contact_email: 'careers@nimbussoftworks.example.com', contact_phone: '+91 9840012345',
+//     application_url: 'https://nimbussoftworks.example.com/careers/frontend-developer',
+//     skills: ['Angular', 'TypeScript', 'RxJS', 'CSS'],
+//   },
+//   {
+//     title: 'Backend Engineer (Node.js)',
+//     description: 'Join our backend team building scalable APIs that power our community platform.',
+//     responsibilities: 'Design and implement REST APIs; own database schema changes; monitor and improve performance.',
+//     qualifications: null, requirements: '3+ years Node.js/Express experience; solid SQL skills.', benefits: null,
+//     company_name: 'BlueOrbit Technologies', company_website: 'https://blueorbit.example.com',
+//     city: 'Bengaluru', state: 'Karnataka', country: 'India', pincode: '560001', location: 'Bengaluru, Karnataka',
+//     is_remote: false, work_mode: 'On-site',
+//     exp_min: 3, exp_max: 7, education: 'Any Graduate', openings: 1, job_type: 'Full-time', shift_type: 'Day',
+//     salary_min: 900000, salary_max: 1500000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '10:00', work_end_time: '19:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     contact_person: 'Arjun Mehta', contact_email: 'hr@blueorbit.example.com', contact_phone: '+91 9900011122',
+//     application_url: null, skills: ['Node.js', 'Express', 'PostgreSQL', 'Knex'],
+//   },
+//   {
+//     title: 'Remote Customer Support Executive',
+//     description: 'Support our customers over chat and email, fully remote role with flexible hours.',
+//     responsibilities: null, qualifications: null, requirements: null, benefits: 'Work from home, performance bonus.',
+//     company_name: 'HelpDesk Global', company_website: null,
+//     city: null, state: null, country: 'India', pincode: null, location: null,
+//     is_remote: true, work_mode: 'Remote',
+//     exp_min: 0, exp_max: 2, education: '10th', openings: 5, job_type: 'Part-time', shift_type: 'Flexible',
+//     salary_min: 15000, salary_max: 25000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: null, work_end_time: null, working_days: [],
+//     contact_person: 'Support Hiring Team', contact_email: 'jobs@helpdeskglobal.example.com', contact_phone: null,
+//     application_url: null, skills: ['Communication', 'Customer Service'],
+//   },
+//   {
+//     title: 'Warehouse Associate',
+//     description: 'Pack and dispatch orders at our regional fulfilment centre.',
+//     responsibilities: 'Pick and pack orders; maintain inventory accuracy; operate warehouse scanning equipment.',
+//     qualifications: null, requirements: 'Ability to lift up to 20kg; punctual and reliable.', benefits: 'Overtime pay, transport allowance.',
+//     company_name: 'Swift Logistics', company_website: null,
+//     city: 'Coimbatore', state: 'Tamil Nadu', country: 'India', pincode: '641001', location: 'Coimbatore, Tamil Nadu',
+//     is_remote: false, work_mode: 'On-site',
+//     exp_min: 0, exp_max: 1, education: 'No education needed', openings: 10, job_type: 'Full-time', shift_type: 'Rotational',
+//     salary_min: 12000, salary_max: 16000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '08:00', work_end_time: '17:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//     contact_person: 'Warehouse Hiring Desk', contact_email: 'hiring@swiftlogistics.example.com', contact_phone: '+91 9843300112',
+//     application_url: null, skills: ['Physical Stamina', 'Teamwork'],
+//   },
+//   {
+//     title: 'Senior Product Manager',
+//     description: 'Lead product strategy for our flagship community engagement product.',
+//     responsibilities: 'Define roadmap; work with engineering/design; run discovery interviews; own KPIs.',
+//     qualifications: 'MBA or equivalent experience preferred.', requirements: '6+ years product management, B2C SaaS background.',
+//     benefits: 'ESOPs, premium health cover, annual offsite.',
+//     company_name: 'Orbit Community Labs', company_website: 'https://orbitlabs.example.com',
+//     city: 'London', state: null, country: 'United Kingdom', pincode: 'EC1A 1BB', location: 'London, UK',
+//     is_remote: false, work_mode: 'Hybrid',
+//     exp_min: 6, exp_max: 12, education: 'Any Graduate', openings: 1, job_type: 'Full-time', shift_type: 'Day',
+//     salary_min: 70000, salary_max: 95000, salary_type: 'Annual', salary_currency: 'GBP', salary_hidden: false,
+//     work_start_time: '09:00', work_end_time: '17:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     contact_person: 'Talent Team', contact_email: 'talent@orbitlabs.example.com', contact_phone: null,
+//     application_url: 'https://orbitlabs.example.com/careers/senior-pm', skills: ['Product Strategy', 'Roadmapping', 'Analytics'],
+//   },
+//   {
+//     title: 'Graphic Design Intern',
+//     description: 'Great opportunity for a design student to build a real-world portfolio with our marketing team.',
+//     responsibilities: 'Design social media creatives; support brand guideline updates.', qualifications: null,
+//     requirements: 'Currently pursuing a design degree/diploma; proficient in Figma or Adobe tools.', benefits: 'Certificate, stipend, mentorship.',
+//     company_name: 'Kaleidoscope Studio', company_website: null,
+//     city: 'Pune', state: 'Maharashtra', country: 'India', pincode: '411001', location: 'Pune, Maharashtra',
+//     is_remote: false, work_mode: 'On-site',
+//     exp_min: 0, exp_max: 0, education: 'Diploma', openings: 3, job_type: 'Internship', shift_type: 'Day',
+//     salary_min: 8000, salary_max: 12000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '10:00', work_end_time: '18:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     contact_person: 'Design Team Lead', contact_email: 'internships@kaleidoscope.example.com', contact_phone: null,
+//     application_url: null, skills: ['Figma', 'Adobe Photoshop', 'Illustration'],
+//   },
+//   {
+//     title: 'Data Analyst (Salary Not Disclosed)',
+//     description: 'Analyse product usage data and build dashboards for leadership.',
+//     responsibilities: 'Build and maintain BI dashboards; run ad-hoc analyses; partner with product teams.',
+//     qualifications: null, requirements: 'Strong SQL; experience with a BI tool (Metabase/PowerBI/Looker).', benefits: null,
+//     company_name: 'DataForge Analytics', company_website: 'https://dataforge.example.com',
+//     city: 'Hyderabad', state: 'Telangana', country: 'India', pincode: '500001', location: 'Hyderabad, Telangana',
+//     is_remote: false, work_mode: 'Hybrid',
+//     exp_min: 1, exp_max: 4, education: 'Any Graduate', openings: 2, job_type: 'Full-time', shift_type: 'Day',
+//     salary_min: null, salary_max: null, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: true,
+//     work_start_time: '09:30', work_end_time: '18:30', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+//     contact_person: 'Recruiting', contact_email: 'jobs@dataforge.example.com', contact_phone: null,
+//     application_url: null, skills: ['SQL', 'Metabase', 'Data Visualization'],
+//   },
+//   {
+//     title: 'Night Shift Security Guard',
+//     description: 'Provide security coverage for our commercial premises during night hours.',
+//     responsibilities: null, qualifications: null, requirements: 'Valid security license preferred; alert and dependable.', benefits: 'Night shift allowance.',
+//     company_name: 'Guardian Facility Services', company_website: null,
+//     city: 'Chennai', state: 'Tamil Nadu', country: 'India', pincode: '600020', location: 'Chennai, Tamil Nadu',
+//     is_remote: false, work_mode: 'On-site',
+//     exp_min: 0, exp_max: 3, education: '8th', openings: 4, job_type: 'Full-time', shift_type: 'Night',
+//     salary_min: 14000, salary_max: 18000, salary_type: 'Monthly', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '21:00', work_end_time: '06:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+//     contact_person: 'Ops Manager', contact_email: 'ops@guardianfs.example.com', contact_phone: '+91 9876500011',
+//     application_url: null, skills: ['Vigilance', 'Discipline'],
+//   },
+//   {
+//     title: 'Freelance Content Writer',
+//     description: 'Write blog posts and website copy for a range of clients, on a contract basis.',
+//     responsibilities: 'Research and write SEO-friendly articles; revise based on editor feedback.',
+//     qualifications: null, requirements: 'Excellent written English; portfolio of published work.', benefits: 'Flexible schedule, per-article pay.',
+//     company_name: 'WordCraft Media', company_website: 'https://wordcraft.example.com',
+//     city: null, state: null, country: 'United States', pincode: null, location: null,
+//     is_remote: true, work_mode: 'Remote',
+//     exp_min: 1, exp_max: 5, education: 'Any Graduate', openings: 3, job_type: 'Contract', shift_type: 'Flexible',
+//     salary_min: 20, salary_max: 60, salary_type: 'Hourly', salary_currency: 'USD', salary_hidden: false,
+//     work_start_time: null, work_end_time: null, working_days: [],
+//     contact_person: 'Editorial Team', contact_email: 'write@wordcraft.example.com', contact_phone: null,
+//     application_url: 'https://wordcraft.example.com/write-for-us', skills: ['Writing', 'SEO', 'Editing'],
+//   },
+//   {
+//     title: 'Retail Store Manager',
+//     description: 'Manage day-to-day operations of our flagship retail outlet, including staff and inventory.',
+//     responsibilities: 'Supervise store staff; manage inventory and stock counts; ensure customer satisfaction; handle daily sales reporting.',
+//     qualifications: 'Diploma or degree in retail/business management preferred.', requirements: '4+ years retail experience, 1+ years in a supervisory role.',
+//     benefits: 'Store performance bonus, staff discount.',
+//     company_name: 'Meridian Retail Group', company_website: null,
+//     city: 'Madurai', state: 'Tamil Nadu', country: 'India', pincode: '625001', location: 'Madurai, Tamil Nadu',
+//     is_remote: false, work_mode: 'On-site',
+//     exp_min: 4, exp_max: 10, education: 'Diploma', openings: 1, job_type: 'Full-time', shift_type: 'Rotational',
+//     salary_min: 350000, salary_max: 550000, salary_type: 'Annual', salary_currency: 'INR', salary_hidden: false,
+//     work_start_time: '10:00', work_end_time: '20:00', working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+//     contact_person: 'Regional HR', contact_email: 'careers@meridianretail.example.com', contact_phone: '+91 9843211009',
+//     application_url: null, skills: ['Retail Operations', 'Team Leadership', 'Inventory Management'],
+//   },
+// ];
 
 const businessCategories = [
   { name: 'Restaurant',        icon: 'bi-fork-knife',       description: 'Dine-in and takeaway restaurants' },
@@ -415,24 +415,24 @@ export async function seed(knex: Knex): Promise<void> {
   }
   console.log(`Seeded ${businessCategories.length} business categories.`);
 
-  // ------------------------------------------------------------------
-  // Jobs (sample listings — skipped if any jobs already exist, so this
-  // stays idempotent across repeated `knex seed:run` calls without
-  // needing a unique constraint on job title)
-  // ------------------------------------------------------------------
-  const existingJobCount = await knex('jobs').count<{ count: string }[]>('id as count').first();
-  if (!existingJobCount || Number(existingJobCount.count) === 0) {
-    console.log('Seeding jobs...');
-    const adminRow = await knex('users').where({ user_name: 'admin' }).first();
-    const adminId: string | undefined = adminRow ? (adminRow as { id: string }).id : undefined;
+  // // ------------------------------------------------------------------
+  // // Jobs (sample listings — skipped if any jobs already exist, so this
+  // // stays idempotent across repeated `knex seed:run` calls without
+  // // needing a unique constraint on job title)
+  // // ------------------------------------------------------------------
+  // const existingJobCount = await knex('jobs').count<{ count: string }[]>('id as count').first();
+  // if (!existingJobCount || Number(existingJobCount.count) === 0) {
+  //   console.log('Seeding jobs...');
+  //   const adminRow = await knex('users').where({ user_name: 'admin' }).first();
+  //   const adminId: string | undefined = adminRow ? (adminRow as { id: string }).id : undefined;
 
-    if (adminId) {
-      await knex('jobs').insert(jobs.map((j) => ({ ...j, user_id: adminId })));
-      console.log(`Seeded ${jobs.length} jobs.`);
-    } else {
-      console.log('Skipped job seeding: admin user not found.');
-    }
-  } else {
-    console.log('Skipped job seeding: jobs already exist.');
-  }
+  //   if (adminId) {
+  //     await knex('jobs').insert(jobs.map((j) => ({ ...j, user_id: adminId })));
+  //     console.log(`Seeded ${jobs.length} jobs.`);
+  //   } else {
+  //     console.log('Skipped job seeding: admin user not found.');
+  //   }
+  // } else {
+  //   console.log('Skipped job seeding: jobs already exist.');
+  // }
 }
