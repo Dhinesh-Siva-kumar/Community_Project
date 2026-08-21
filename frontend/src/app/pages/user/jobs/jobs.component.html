@@ -2,29 +2,16 @@
      USER JOBS PAGE — Premium Filter + Enhanced Cards
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- ── PAGE HEADER ──────────────────────────────────────────── -->
-<div class="jb-page-header">
-  <div class="jb-page-header__inner">
-    <div class="jb-eyebrow-pill">
-      <span class="jb-eyebrow-dot"></span>
-      {{ showAllJobs() ? 'All Available Jobs' : ('Local Opportunities · ' + (userPincode() || 'Your Area')) }}
-    </div>
-    <h2 class="jb-page-header__title">Job Board</h2>
-    <p class="jb-page-header__sub">Discover opportunities and connect with employers in your community.</p>
+<!-- ── PAGE HEADER — matches the User Community/Business List pages'
+     header: title/subtitle left, add button right. No tabs. ────── -->
+<div class="jb-head">
+  <div>
+    <h1 class="jb-title">Job Board</h1>
+    <p class="jb-subtitle">{{ totalItems() }} {{ totalItems() === 1 ? 'job' : 'jobs' }} · Discover opportunities and connect with employers in your community.</p>
   </div>
-  <div class="jb-page-header__actions">
-    <div class="jb-page-tabs" role="tablist">
-      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'all'"
-        [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
-        <i class="bi bi-grid-3x3-gap"></i> All
-      </button>
-      <button role="tab" type="button" class="jb-btn jb-btn--ghost jb-btn--sm" [class.jb-btn--active]="pageTab() === 'pending'"
-        [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
-        <i class="bi bi-hourglass-split"></i> Pending Approval
-        @if (myPendingJobsCount()) { <span class="jb-tab-count">{{ myPendingJobsCount() }}</span> }
-      </button>
-    </div>
-    <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
+
+  <div class="jb-head-controls">
+    <button type="button" class="jb-add-btn" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i> Post a Job
     </button>
   </div>

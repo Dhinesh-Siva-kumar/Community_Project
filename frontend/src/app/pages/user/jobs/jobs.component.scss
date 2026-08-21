@@ -6,77 +6,31 @@
 //             .lp-hero-eyebrow, $shadow-primary-*, $radius-*
 // ═══════════════════════════════════════════════════════════════
 
-// ── PAGE HEADER ─────────────────────────────────────────────────
-.jb-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: $spacing-lg;
-  margin-bottom: $spacing-xl;
-  padding: $spacing-xl $spacing-xl $spacing-lg;
-  background: linear-gradient(135deg,
-    rgba(251, 191, 36, 0.08) 0%,
-    rgba(249, 115, 22, 0.05) 100%);
-  border: 1px solid rgba(251, 191, 36, 0.18);
-  border-radius: $radius-xl;
-
-  &__inner { flex: 1; min-width: 0; }
+// ── PAGE HEADER — matches the User Community/Business List pages'
+// .uc-head / .biz-head: title/subtitle left, add button right,
+// no gradient hero card, no tabs. ─────────────────────────────────
+.jb-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: $spacing-lg; flex-wrap: wrap; margin-bottom: $spacing-lg;
 }
 
-// Eyebrow pill — from landing .lp-hero-eyebrow
-.jb-eyebrow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  font-weight: $font-weight-semibold;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #92400E;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  padding: 5px 14px;
-  border-radius: 50px;
-  margin-bottom: $spacing-sm;
+.jb-title {
+  font-family: $font-family-header; font-size: $font-size-2xl; font-weight: $font-weight-bold;
+  margin: 0 0 6px; letter-spacing: -0.01em; color: $color-stone-900;
 }
 
-.jb-eyebrow-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
-  animation: eyebrowPulse 2.2s ease-in-out infinite;
-  flex-shrink: 0;
-}
+.jb-subtitle { margin: 0; color: $color-text-muted; font-size: 13.5px; }
 
-@keyframes eyebrowPulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
-  50%       { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.08); }
-}
+.jb-head-controls { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
 
-.jb-page-header__title {
-  font-family: $font-family-header;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  font-weight: 900;
-  color: $color-stone-900;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
-}
-
-.jb-page-header__sub {
-  font-size: $font-size-sm;
-  color: $color-text-muted;
-  margin: 0;
-  line-height: 1.6;
-}
-
-.jb-page-header__actions {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  flex-shrink: 0;
+.jb-add-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
+  border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
+  font-size: $font-size-sm; font-weight: $font-weight-bold; font-family: $font-family-body;
+  background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+  color: $color-on-primary; box-shadow: 0 3px 10px rgba(251,191,36,0.30);
+  @include transition-short(all);
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
 }
 
 
@@ -674,7 +628,9 @@
   .jb-active-chips { flex-wrap: wrap; }
   .jb-sort-wrap { min-width: 130px; }
   .jb-card__title { max-width: 180px; font-size: $font-size-md; }
-  .jb-page-header__title { font-size: 1.5rem; }
+  .jb-title { font-size: 1.5rem; }
+  .jb-head { flex-direction: column; align-items: stretch; }
+  .jb-head-controls { justify-content: space-between; }
 }
 
 
@@ -934,16 +890,6 @@
   border-radius: $radius-sm; padding: 6px 8px; margin: 4px 0 0;
   .bi { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
 }
-
-.jb-page-tabs { display: inline-flex; gap: 8px; margin-right: 8px; }
-
-.jb-tab-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 16px; height: 16px; padding: 0 4px; border-radius: $radius-full;
-  background: $color-primary; color: $color-on-primary;
-  font-size: 10px; font-weight: $font-weight-extrabold; margin-left: 4px;
-}
-
 
 // ── ACCORDION BODY ────────────────────────────────────────────────
 .jb-accordion {
