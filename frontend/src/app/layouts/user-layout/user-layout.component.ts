@@ -1,10 +1,11 @@
 import { Component, inject, signal, computed, HostListener } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
-import { NotificationService } from '../../core/services/notification.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
+import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
 
 interface NavItem {
   label: string;
@@ -25,13 +26,12 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
 })
 export class UserLayoutComponent {
   authService = inject(AuthService);
-  notificationService = inject(NotificationService);
   private router = inject(Router);
 
   sidebarCollapsed = signal(false);
@@ -53,7 +53,10 @@ export class UserLayoutComponent {
     this.checkScreenSize();
     this.updatePageTitle(this.router.url);
     this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
       .subscribe((e) => this.updatePageTitle(e.urlAfterRedirects));
   }
 

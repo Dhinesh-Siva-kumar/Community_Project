@@ -1,8 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, AuthResponse, UserRegister } from '../models';
+import { SKIP_AUTH_REDIRECT } from '../interceptors/http-context-tokens';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -136,7 +137,9 @@ export class AuthService {
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/auth/me`).pipe(
+    return this.http.get<User>(`${this.baseUrl}/auth/me`, {
+      context: new HttpContext().set(SKIP_AUTH_REDIRECT, true),
+    }).pipe(
       tap((user) => {
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
@@ -211,6 +214,7 @@ export class AuthService {
       displayName:         raw.displayName || raw.display_name || '',
       roleLevel:           raw.roleLevel  ?? raw.role_level  ?? 1,
       phoneNo:             raw.phoneNo    || raw.phone_no,
+      whatsappNo:          raw.whatsappNo || raw.whatsapp_no,
       avatar:              raw.avatar     || undefined,
       role:                raw.role       || 'USER',
       countryId:           raw.countryId  ?? raw.country_id,

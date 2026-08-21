@@ -114,6 +114,150 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   }
 }
 
+// ── Welcome banner (post-registration, one-time) ────────────
+// Reuses the app's own tokens: hero-style corner glow + top accent bar
+// echo .hero's decorative treatment above; step icon colors mirror the
+// exact accentColor values already used for the Communities/Posts stat
+// cards below (see dashboardStats in user-dashboard.component.ts), so the
+// checklist visually previews the areas of the app it links to.
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
+  background: $gradient-card-amber;
+  border: 1px solid rgba(217,119,6,.28);
+  border-radius: $_r;
+  padding: 1.75rem 2rem 1.5rem;
+  box-shadow: $shadow-primary-ambient;
+  animation: slideInDown $duration-long $easing-standard;
+
+  &::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: $gradient-primary;
+  }
+
+  &::after {
+    content: ''; position: absolute; top: -70px; right: -50px;
+    width: 190px; height: 190px; border-radius: 50%;
+    background: rgba(255,255,255,0.32); pointer-events: none;
+  }
+
+  &__close {
+    position: absolute; z-index: 1; top: 12px; right: 12px;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.55); border: none; color: #78350f;
+    font-size: 13px; cursor: pointer;
+    transition: background $duration-short $easing-standard,
+                color $duration-short $easing-standard,
+                transform $duration-short $easing-standard;
+
+    &:hover { background: #fff; color: #92400e; transform: rotate(90deg); }
+    &:focus-visible { outline: none; box-shadow: $shadow-focus-ring; }
+  }
+
+  &__header {
+    position: relative; z-index: 1;
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 1.25rem; padding-right: 2.25rem;
+  }
+
+  &__icon {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.6); color: #b45309; font-size: 1.25rem;
+    animation: welcomeIconPulse 2.4s ease-out 600ms infinite;
+  }
+
+  &__heading { min-width: 0; }
+
+  &__title {
+    font-family: $font-family-header;
+    font-size: 1.4rem; font-weight: 800; margin: 0 0 4px; color: #78350f;
+    line-height: 1.25;
+    @media(max-width:640px){ font-size: 1.15rem; }
+  }
+
+  &__subtitle {
+    font-size: 13.5px; font-weight: 600; margin: 0; color: #92400e;
+    line-height: 1.4;
+  }
+
+  &__steps {
+    position: relative; z-index: 1;
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  &__steps a {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(217,119,6,.2);
+    border-radius: $_ri; padding: 11px 14px;
+    text-decoration: none; color: #78350f;
+    transition: background $duration-short $easing-standard,
+                transform $duration-short $easing-standard,
+                box-shadow $duration-short $easing-standard;
+
+    &:hover, &:focus-visible {
+      background: #fff;
+      transform: translateX(3px);
+      box-shadow: $shadow-2;
+    }
+    &:focus-visible { outline: none; box-shadow: $shadow-focus-ring; }
+
+    &:hover .welcome-banner__step-icon,
+    &:focus-visible .welcome-banner__step-icon { transform: scale(1.08); }
+
+    &:hover .welcome-banner__step-arrow,
+    &:focus-visible .welcome-banner__step-arrow { opacity: 1; transform: translateX(2px); }
+  }
+
+  &__step-icon {
+    position: relative; flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; transition: transform $duration-short $easing-standard;
+
+    // Matches dashboardStats accentColor: Businesses blue / Communities green / Posts amber
+    &--profile   { background: rgba(37,99,235,.14);  color: #2563EB; }
+    &--community { background: rgba(22,163,74,.14);  color: #16A34A; }
+    &--post      { background: rgba(245,158,11,.18); color: #B45309; }
+  }
+
+  &__step-badge {
+    position: absolute; top: -6px; left: -6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; border: 1.5px solid currentColor;
+    font-size: 10px; font-weight: 800; color: inherit;
+  }
+
+  &__step-text { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+
+  &__step-arrow {
+    flex-shrink: 0; font-size: 12px; opacity: .55;
+    transition: opacity $duration-short $easing-standard,
+                transform $duration-short $easing-standard;
+  }
+
+  @media(max-width:640px) {
+    padding: 1.4rem 1.25rem 1.25rem;
+
+    &__header { padding-right: 1.75rem; }
+    &__icon { width: 40px; height: 40px; font-size: 1.05rem; }
+  }
+
+  @media(max-width:380px) {
+    &__steps a { padding: 10px 12px; gap: 10px; }
+    &__step-text { font-size: 12.5px; }
+  }
+}
+
+@keyframes welcomeIconPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(217,119,6,.35); }
+  70%  { box-shadow: 0 0 0 10px rgba(217,119,6,0); }
+  100% { box-shadow: 0 0 0 0 rgba(217,119,6,0); }
+}
+
 // ── Social layout: main feed + right rail ───────────────────
 .db-layout {
   display: grid;
@@ -178,6 +322,34 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   p  { font-size:13px; color:$color-text-muted; margin:0 0 16px; }
   &__btn { display:inline-flex; align-items:center; gap:6px; background:$gradient-primary; color:$color-on-primary;
            padding:8px 20px; border-radius:20px; font-size:13px; font-weight:700; text-decoration:none; }
+}
+
+// Quick Actions — shown inside the empty feed state for a new/inactive
+// user, same icon-chip language as .rail-stat (colored circle + label).
+.quick-actions {
+  display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.75rem;
+  max-width:420px; margin:0 auto;
+
+  @media(max-width:480px) { grid-template-columns:1fr; }
+}
+
+.quick-action {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:1rem .75rem; border-radius:$_ri;
+  border:1px solid $color-border; background:$color-bg-page;
+  text-decoration:none; color:$color-text-primary;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+
+  &:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(15,23,42,.08); border-color:rgba(148,163,184,.4); }
+
+  &__icon {
+    width:40px; height:40px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--qbg, $color-bg-light);
+    i { color:var(--qc, $color-primary-dark); font-size:17px; }
+  }
+
+  &__label { font-size:12.5px; font-weight:700; text-align:center; }
 }
 
 // ── Post card ────────────────────────────────────────────────
@@ -602,6 +774,18 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &__link {
     font-size:12px; font-weight:700; color:$color-primary-darker; text-decoration:none;
     &:hover { text-decoration:underline; }
+  }
+}
+
+// Rail-card empty state — same visual language as .feed-empty, scaled down
+// for the narrower sidebar column.
+.rail-empty {
+  text-align:center; padding:1.5rem .75rem;
+  i  { font-size:1.75rem; color:$color-primary-dark; display:block; margin-bottom:8px; }
+  p  { font-size:12.5px; color:$color-text-muted; margin:0 0 12px; }
+  &__btn {
+    display:inline-flex; align-items:center; gap:6px; background:$gradient-primary; color:$color-on-primary;
+    padding:7px 16px; border-radius:20px; font-size:12.5px; font-weight:700; text-decoration:none;
   }
 }
 

@@ -6,15 +6,15 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
-import { NotificationService } from '../../../core/services/notification.service';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { JobService } from '../../../core/services/job.service';
+import { EventService } from '../../../core/services/event.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { OnboardingService } from '../../../core/services/onboarding.service';
 import {
   User,
   DashboardStats,
-  Notification,
   Community,
   Post,
   Comment,
@@ -30,6 +30,31 @@ import { environment } from '../../../../environments/environment';
 type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
 type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
+
+type WelcomeLang = 'en' | 'ta';
+
+// Mirrors the en/ta convention used by the landing and register pages
+// (see landing.component.ts / register.component.ts), reading the same
+// 'landing-lang' preference so the banner matches whatever language the
+// user was already browsing in.
+const WELCOME_BANNER_TEXT: Record<WelcomeLang, { subtitle: string; steps: [string, string, string] }> = {
+  en: {
+    subtitle: 'Get started in 3 simple steps:',
+    steps: [
+      'Complete your profile',
+      "Join your country's Tamil community",
+      'Make your first post',
+    ],
+  },
+  ta: {
+    subtitle: 'தொடங்க 3 எளிய படிகள்:',
+    steps: [
+      'உங்கள் சுயவிவரத்தை முழுமைப்படுத்துங்கள்',
+      'உங்கள் நாட்டு தமிழ் சமூகத்தில் இணையுங்கள்',
+      'உங்கள் முதல் பதிவை பகிருங்கள்',
+    ],
+  },
+};
 
 interface ProfileItem {
   label: string;
@@ -59,19 +84,24 @@ interface AnimatedStat {
 export class UserDashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userService = inject(UserService);
-  notificationService = inject(NotificationService);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
   private jobService = inject(JobService);
+  private eventService = inject(EventService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private platformId = inject(PLATFORM_ID);
+  private onboardingService = inject(OnboardingService);
 
   // Loading states
   loading = signal(true);
   loadingPosts = signal(true);
   loadingCommunities = signal(true);
   loadingJobs = signal(true);
+  loadingUpcomingEvents = signal(true);
+
+  // null while loading; true/false once the "any upcoming events in my area" check resolves.
+  hasUpcomingEvents = signal<boolean | null>(null);
 
   // Core data
   user = signal<User | null>(null);
@@ -115,9 +145,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   greeting = computed(() => {
     const hour = this.today().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   });
 
   // Time-of-day icon for the hero — deliberately not another copy of the
@@ -130,6 +160,14 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (hour < 17) return 'bi-sun';
     return 'bi-moon-stars';
   });
+
+  // ── Post-registration welcome banner ──────────────────────
+  // Shown once, right after the user's first registration (flagged by
+  // OnboardingService), then dismissed for good — see markWelcomeBanner-
+  // Pending() in register.component.ts and dismissWelcomeBanner() below.
+  showWelcomeBanner = signal(false);
+  private welcomeLang: WelcomeLang = 'en';
+  welcomeBannerText = computed(() => WELCOME_BANNER_TEXT[this.welcomeLang]);
 
   profileStrength = computed(() => {
     const pct = this.profileCompletion();
@@ -185,25 +223,23 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   private animationFrameId: number | null = null;
 
+  // Kept in sync with the backend's calculateProfileCompletion()
+  // (backend/src/modules/users/users.service.ts) — same 6 fields, same order.
   profileItems = computed<ProfileItem[]>(() => {
     const u = this.user();
     if (!u) return [];
     return [
-      { label: 'Add phone number', completed: !!u.phoneNo, route: '/user/profile' },
-      { label: 'Upload avatar', completed: !!u.avatar, route: '/user/profile' },
-      { label: 'Set interests', completed: u.interests?.length > 0, route: '/user/profile' },
-      { label: 'Add bio', completed: !!u.bio, route: '/user/profile' },
-      { label: 'Set location', completed: !!u.location, route: '/user/profile' },
-      { label: 'Add professional category', completed: !!u.professionalCategory, route: '/user/profile' },
+      { label: 'Profile photo', completed: !!u.avatar, route: '/user/profile' },
+      { label: 'Country', completed: !!u.countryId, route: '/user/profile' },
+      { label: 'City', completed: !!u.cityId, route: '/user/profile' },
+      { label: 'Profession / Student status', completed: !!u.occupationType, route: '/user/profile' },
+      { label: 'Interests', completed: u.interests?.length > 0, route: '/user/profile' },
+      { label: 'Bio', completed: !!u.bio, route: '/user/profile' },
     ];
   });
 
   completedItems = computed(() => this.profileItems().filter((item) => item.completed));
   incompleteItems = computed(() => this.profileItems().filter((item) => !item.completed));
-
-  latestNotifications = computed(() => {
-    return this.notificationService.notifications().slice(0, 5);
-  });
 
   tabs: ProfileTab[] = [
     { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: '#E0F2FE' },
@@ -216,9 +252,10 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadUserData();
     this.loadDashboardStats();
-    this.loadNotifications();
     this.loadJoinedCommunities();
     this.loadRecentJobs();
+    this.loadUpcomingEventsCheck();
+    this.initWelcomeBanner();
   }
 
   ngOnDestroy(): void {
@@ -226,6 +263,26 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
       cancelAnimationFrame(this.animationFrameId);
     }
     if (isPlatformBrowser(this.platformId)) document.body.style.overflow = '';
+  }
+
+  // ── Welcome banner ────────────────────────────────────────
+
+  private initWelcomeBanner(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem('landing-lang');
+      if (saved === 'en' || saved === 'ta') this.welcomeLang = saved;
+    }
+
+    const userId = this.authService.currentUser()?.id;
+    if (userId != null && this.onboardingService.shouldShowWelcome(userId)) {
+      this.showWelcomeBanner.set(true);
+    }
+  }
+
+  dismissWelcomeBanner(): void {
+    this.showWelcomeBanner.set(false);
+    const userId = this.authService.currentUser()?.id;
+    if (userId != null) this.onboardingService.dismissWelcome(userId);
   }
 
   // ── Data Loading ──────────────────────────────────────────
@@ -250,13 +307,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.startCounterAnimation(data);
       },
       error: () => this.loading.set(false),
-    });
-  }
-
-  loadNotifications(): void {
-    this.notificationService.getNotifications().subscribe({
-      next: () => {},
-      error: () => {},
     });
   }
 
@@ -323,6 +373,27 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.loadingJobs.set(false);
       },
       error: () => this.loadingJobs.set(false),
+    });
+  }
+
+  /** Drives the "Your Events" rail card's empty state — is there anything upcoming in the user's own country? */
+  loadUpcomingEventsCheck(): void {
+    this.loadingUpcomingEvents.set(true);
+    const todayStr = this.today().toISOString().slice(0, 10);
+    this.eventService.getEvents({
+      eventDateFrom: todayStr,
+      country: this.authService.currentUser()?.country,
+      limit: 1,
+    }).subscribe({
+      next: (res) => {
+        this.hasUpcomingEvents.set(res.total > 0);
+        this.loadingUpcomingEvents.set(false);
+      },
+      error: () => {
+        // Fail open — show the calendar rather than a false "no events" empty state on a network hiccup.
+        this.hasUpcomingEvents.set(true);
+        this.loadingUpcomingEvents.set(false);
+      },
     });
   }
 
@@ -689,16 +760,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     }
 
     return window.location.origin.replace(/\/$/, '');
-  }
-
-  // ── Notifications ─────────────────────────────────────────
-
-  markNotificationRead(id: string): void {
-    this.notificationService.markAsRead(id).subscribe({ next: () => {}, error: () => {} });
-  }
-
-  markAllNotificationsRead(): void {
-    this.notificationService.markAllAsRead().subscribe({ next: () => {}, error: () => {} });
   }
 
   // ── Counter Animation ─────────────────────────────────────

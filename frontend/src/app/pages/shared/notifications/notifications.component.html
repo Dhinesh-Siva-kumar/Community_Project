@@ -1,0 +1,98 @@
+<div class="ntf-page">
+  <div class="ntf-header">
+    <div>
+      <h1 class="ntf-title">Notifications</h1>
+      <p class="ntf-subtitle">Everything that needs your attention, in one place.</p>
+    </div>
+    <div class="ntf-header-actions">
+      <button type="button" class="ntf-icon-btn" [class.ntf-icon-btn-active]="showPreferences()" (click)="togglePreferencesPanel()" title="Notification preferences" aria-label="Notification preferences">
+        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="ntf-mark-all" (click)="markAllRead()">
+        <i class="bi bi-check2-all" aria-hidden="true"></i> Mark all as read
+      </button>
+    </div>
+  </div>
+
+  @if (showPreferences()) {
+    <div class="ntf-prefs">
+      @if (preferencesLoading()) {
+        <div class="ntf-loading"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+      } @else {
+        <div class="ntf-prefs-digest">
+          <label class="ntf-switch">
+            <input type="checkbox" [checked]="emailDigestEnabled()" (change)="toggleEmailDigest()" />
+            <span class="ntf-switch-track"><span class="ntf-switch-thumb"></span></span>
+          </label>
+          <div>
+            <span class="ntf-prefs-digest-title">Email me a daily summary</span>
+            <span class="ntf-prefs-digest-sub">Get a once-a-day email of anything you missed.</span>
+          </div>
+        </div>
+
+        <div class="ntf-prefs-list">
+          @for (t of allTypes; track t) {
+            <label class="ntf-prefs-row">
+              <span>{{ typeLabel(t) }}</span>
+              <span class="ntf-switch">
+                <input type="checkbox" [checked]="isTypeEnabled(t)" (change)="toggleType(t)" />
+                <span class="ntf-switch-track"><span class="ntf-switch-thumb"></span></span>
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="ntf-filters" role="tablist">
+    <button type="button" class="ntf-filter" [class.ntf-filter-active]="filter() === 'all'" (click)="setFilter('all')">
+      All
+    </button>
+    <button type="button" class="ntf-filter" [class.ntf-filter-active]="filter() === 'unread'" (click)="setFilter('unread')">
+      Unread
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="ntf-loading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else {
+    <div class="ntf-list">
+      @for (n of filteredItems(); track n.id) {
+        <button type="button" class="ntf-item" [class.ntf-item-unread]="!n.isRead" (click)="open(n)">
+          <span class="ntf-item-icon" [style.background]="color(n) + '1F'" [style.color]="color(n)">
+            <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
+          </span>
+          <span class="ntf-item-body">
+            <span class="ntf-item-message">{{ n.message }}</span>
+            <span class="ntf-item-time">{{ relativeTime(n) }}</span>
+          </span>
+          @if (!n.isRead) {
+            <span class="ntf-item-dot" aria-hidden="true"></span>
+          }
+        </button>
+      } @empty {
+        <div class="ntf-empty">
+          <i class="bi bi-bell-slash" aria-hidden="true"></i>
+          <span>{{ filter() === 'unread' ? "You're all caught up" : 'No notifications yet' }}</span>
+        </div>
+      }
+    </div>
+
+    @if (hasMore() && filter() === 'all') {
+      <div class="ntf-load-more-wrap">
+        <button type="button" class="ntf-load-more" (click)="loadMore()" [disabled]="loadingMore()">
+          @if (loadingMore()) {
+            <span class="spinner-border spinner-border-sm" role="status"></span> Loading…
+          } @else {
+            Load more
+          }
+        </button>
+      </div>
+    }
+  }
+</div>

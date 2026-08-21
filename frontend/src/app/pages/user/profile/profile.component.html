@@ -81,6 +81,10 @@
                 <label class="prf-label" for="phoneNo">Phone</label>
                 <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" placeholder="Phone number" />
               </div>
+              <div class="col-md-6">
+                <label class="prf-label" for="whatsappNo"><i class="bi bi-whatsapp me-1"></i>WhatsApp</label>
+                <input id="whatsappNo" type="text" class="form-control" formControlName="whatsappNo" maxlength="20" [readonly]="!editMode()" placeholder="WhatsApp number" />
+              </div>
             </div>
           </div>
 
@@ -206,14 +210,39 @@
               <span class="prf-section-title">Professional &amp; Links</span>
             </div>
             <div class="row g-3">
-              <div class="col-md-6">
-                <label class="prf-label" for="occupation">Occupation</label>
-                <input id="occupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Software Engineer" />
+              <div class="col-12">
+                <label class="prf-label">Profession / Student Status</label>
+                @if (editMode()) {
+                  <app-searchable-select formControlName="occupationType" [options]="occupationTypeOptions" placeholder="Select status"></app-searchable-select>
+                } @else {
+                  <input type="text" class="form-control" [value]="occupationType() === 'STUDENT' ? 'Student' : 'Professional'" readonly />
+                }
               </div>
-              <div class="col-md-6">
-                <label class="prf-label" for="company">Company</label>
-                <input id="company" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Acme Inc." />
-              </div>
+
+              @if (occupationType() !== 'STUDENT') {
+                <div class="col-md-6">
+                  <label class="prf-label" for="occupation">Occupation</label>
+                  <input id="occupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Software Engineer" />
+                </div>
+                <div class="col-md-6">
+                  <label class="prf-label" for="company">Company</label>
+                  <input id="company" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Acme Inc." />
+                </div>
+              } @else {
+                <div class="col-md-6">
+                  <label class="prf-label" for="institution">Institution</label>
+                  <input id="institution" type="text" class="form-control" formControlName="institution" maxlength="150" [readonly]="!editMode()" placeholder="e.g. Anna University" />
+                </div>
+                <div class="col-md-6">
+                  <label class="prf-label" for="course">Course / Major</label>
+                  <input id="course" type="text" class="form-control" formControlName="course" maxlength="150" [readonly]="!editMode()" placeholder="e.g. B.Tech Computer Science" />
+                </div>
+                <div class="col-md-6">
+                  <label class="prf-label" for="graduationYear">Graduation Year</label>
+                  <input id="graduationYear" type="number" class="form-control" formControlName="graduationYear" min="1950" max="2100" [readonly]="!editMode()" placeholder="e.g. 2027" />
+                </div>
+              }
+
               <div class="col-md-6">
                 <label class="prf-label" for="website">Website</label>
                 <input id="website" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" placeholder="https://example.com" />

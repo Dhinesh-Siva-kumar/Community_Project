@@ -1,16 +1,17 @@
 import { Component, inject, signal, computed, HostListener } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
-import { NotificationService } from '../../core/services/notification.service';
 import { PostService } from '../../core/services/post.service';
 import { CommunityService } from '../../core/services/community.service';
 import { BusinessService } from '../../core/services/business.service';
 import { JobService } from '../../core/services/job.service';
 import { EventService } from '../../core/services/event.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
+import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
 
 interface NavItem {
   label: string;
@@ -35,13 +36,12 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
 })
 export class AdminLayoutComponent {
   authService = inject(AuthService);
-  notificationService = inject(NotificationService);
   private postService      = inject(PostService);
   private communityService = inject(CommunityService);
   private businessService  = inject(BusinessService);
@@ -79,7 +79,10 @@ export class AdminLayoutComponent {
     this.updatePageTitle(this.router.url);
     this.loadPendingApprovalsCount();
     this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
       .subscribe((e) => {
         this.updatePageTitle(e.urlAfterRedirects);
         this.loadPendingApprovalsCount();

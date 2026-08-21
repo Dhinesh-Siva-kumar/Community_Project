@@ -1117,6 +1117,13 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     return parts.join(', ') || job.location || '';
   }
 
+  getLocationSubtext(job: Job): string {
+    if (job.isRemote) return job.country ? `${job.country} applicants only` : '';
+    if (job.fullAddress) return job.fullAddress;
+    if (job.pincode) return `Postcode ${job.pincode}`;
+    return '';
+  }
+
   getCompanyLogoSrc(job: Job): string | null {
     return job.companyLogo ?? (job.images?.length ? job.images[0] : null);
   }
@@ -1164,6 +1171,11 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   getPosterInitials(job: Job): string {
     const name = job.companyName ?? job.user?.displayName ?? job.user?.userName ?? '?';
+    return name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
+  }
+
+  getContactInitials(job: Job): string {
+    const name = job.contactPerson ?? job.companyName ?? '?';
     return name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   }
 

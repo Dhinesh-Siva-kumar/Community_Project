@@ -525,5 +525,11 @@ export async function deleteBusiness(id: string, userId: string) {
   deleteUploadedFiles(business['images']);
   deleteUploadedFile(business['logo']);
   await logAudit(userId, 'BUSINESS_DELETED', { byAdmin, name: business['name'] }, 'businesses', id);
+  if (byAdmin) {
+    await notificationsService.create(
+      business['user_id'] as string, 'BUSINESS_REMOVED',
+      `Your business "${business['name']}" was removed by an administrator.`,
+    );
+  }
   return { message: 'Business deleted successfully' };
 }

@@ -5,6 +5,7 @@ import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
 import { sendOtp, deliverOtp, verifyOtp, getUserIdByPhone } from '../../services/otp.service';
 import { logAudit } from '../../services/audit.service';
+import * as notificationsService from '../notifications/notifications.service';
 import { env } from '../../config/env';
 import type {
   RegisterDtoType,
@@ -146,6 +147,10 @@ export async function register(dto: RegisterDtoType) {
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
   await logAudit((user as UserRow).id, 'USER_REGISTER', undefined, 'users', (user as UserRow).id);
+  await notificationsService.create(
+    (user as UserRow).id, 'WELCOME',
+    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+  );
 
   return {
     ...tokens,
@@ -502,6 +507,10 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
   await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
+  await notificationsService.create(
+    (user as UserRow).id, 'WELCOME',
+    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+  );
 
   return {
     needsUsername: false as const,
@@ -567,6 +576,10 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
 
   await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
+  await notificationsService.create(
+    (user as UserRow).id, 'WELCOME',
+    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+  );
 
   return {
     isNewUser: true as const,

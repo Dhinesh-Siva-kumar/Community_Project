@@ -128,6 +128,9 @@ export class UserProfileComponent implements OnInit {
 
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
+
+  /** Mirrors profileForm's occupationType control — drives which field group (Professional vs Student) the template renders. */
+  occupationType = signal<'PROFESSIONAL' | 'STUDENT'>('PROFESSIONAL');
   showPasswordSection = signal(false);
   changingPassword = signal(false);
 
@@ -186,11 +189,17 @@ export class UserProfileComponent implements OnInit {
     'Hospitality', 'Retail', 'Real Estate', 'Other',
   ].map(c => ({ value: c, label: c }));
 
+  occupationTypeOptions: SelectOption[] = [
+    { value: 'PROFESSIONAL', label: 'Professional' },
+    { value: 'STUDENT',      label: 'Student' },
+  ];
+
   ngOnInit(): void {
     this.profileForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60)]],
       email: ['', [Validators.email]],
       phoneNo: ['', [Validators.maxLength(20)]],
+      whatsappNo: ['', [Validators.maxLength(20)]],
       bio: ['', [Validators.maxLength(300)]],
       countryId: [null],
       division1Id: [null],
@@ -202,6 +211,14 @@ export class UserProfileComponent implements OnInit {
       company: ['', [Validators.maxLength(100)]],
       website: ['', [Validators.maxLength(200)]],
       linkedinUrl: ['', [Validators.maxLength(200)]],
+      occupationType: ['PROFESSIONAL'],
+      institution: ['', [Validators.maxLength(150)]],
+      course: ['', [Validators.maxLength(150)]],
+      graduationYear: ['', [Validators.min(1950), Validators.max(2100)]],
+    });
+
+    this.profileForm.get('occupationType')?.valueChanges.subscribe((value) => {
+      this.occupationType.set(value === 'STUDENT' ? 'STUDENT' : 'PROFESSIONAL');
     });
 
     this.passwordForm = this.fb.group({
@@ -238,6 +255,7 @@ export class UserProfileComponent implements OnInit {
       displayName: u.displayName,
       email: u.email,
       phoneNo: u.phoneNo || '',
+      whatsappNo: u.whatsappNo || '',
       bio: u.bio || '',
       pincode: u.pincode || '',
       professionalCategory: u.professionalCategory || '',
@@ -245,6 +263,10 @@ export class UserProfileComponent implements OnInit {
       company: u.company || '',
       website: u.website || '',
       linkedinUrl: u.linkedinUrl || '',
+      occupationType: u.occupationType || 'PROFESSIONAL',
+      institution: u.institution || '',
+      course: u.course || '',
+      graduationYear: u.graduationYear ?? '',
     });
     this.patchLocation(u);
   }

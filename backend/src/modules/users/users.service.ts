@@ -6,6 +6,7 @@ import { AppError } from '../../middleware/errorHandler';
 import { env } from '../../config/env';
 import { logAudit, listAuditLogs } from '../../services/audit.service';
 import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
+import * as notificationsService from '../notifications/notifications.service';
 import type {
   UpdateUserDtoType,
   AdminCreateUserDtoType,
@@ -22,6 +23,7 @@ interface UserRow {
   user_name: string;
   display_name: string;
   phone_no: string | null;
+  whatsapp_no: string | null;
   avatar: string | null;
   role: string;
   role_level: number;
@@ -38,6 +40,10 @@ interface UserRow {
   company: string | null;
   website: string | null;
   linkedin_url: string | null;
+  occupation_type: string | null;
+  institution: string | null;
+  course: string | null;
+  graduation_year: number | null;
   bio: string | null;
   is_trusted: boolean;
   is_blocked: boolean;
@@ -66,6 +72,7 @@ function toClientUser(user: UserRow) {
     userName:             user.user_name,
     displayName:          user.display_name,
     phoneNo:              user.phone_no,
+    whatsappNo:           user.whatsapp_no,
     avatar:               user.avatar,
     role:                 user.role,
     roleLevel:            user.role_level,
@@ -82,6 +89,10 @@ function toClientUser(user: UserRow) {
     company:              user.company,
     website:              user.website,
     linkedinUrl:          user.linkedin_url,
+    occupationType:       user.occupation_type,
+    institution:          user.institution,
+    course:               user.course,
+    graduationYear:       user.graduation_year,
     bio:                  user.bio,
     isTrusted:            user.is_trusted,
     isBlocked:            user.is_blocked,
@@ -92,12 +103,17 @@ function toClientUser(user: UserRow) {
   };
 }
 
+// Kept in sync with the dashboard's "Complete Your Profile" checklist
+// (user-dashboard.component.ts profileItems) — profile photo, country,
+// city, profession/student status, interests, bio.
 function calculateProfileCompletion(user: UserRow): number {
   const fields = [
-    user.user_name, user.display_name, user.email, user.phone_no,
-    user.avatar, user.bio, user.location, user.pincode,
+    user.avatar,
+    user.country_id,
+    user.city_id,
+    user.occupation_type,
     user.interests && user.interests.length > 0 ? 'filled' : null,
-    user.professional_category,
+    user.bio,
   ];
   const filled = fields.filter((f) => f !== null && f !== undefined && f !== '').length;
   return Math.round((filled / fields.length) * 100);
@@ -145,6 +161,7 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   if (data.userName !== undefined) updateData['user_name'] = data.userName;
   if (data.displayName !== undefined) updateData['display_name'] = data.displayName;
   if (data.phoneNo !== undefined) updateData['phone_no'] = data.phoneNo;
+  if (data.whatsappNo !== undefined) updateData['whatsapp_no'] = data.whatsappNo;
   if (data.email !== undefined) {
     const currentUser = await db('users').where({ id: userId }).first() as UserRow;
     if (currentUser.email) throw new AppError(400, 'Email address cannot be changed once set');
@@ -162,6 +179,10 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   if (data.company !== undefined) updateData['company'] = data.company;
   if (data.website !== undefined) updateData['website'] = data.website;
   if (data.linkedinUrl !== undefined) updateData['linkedin_url'] = data.linkedinUrl;
+  if (data.occupationType !== undefined) updateData['occupation_type'] = data.occupationType;
+  if (data.institution !== undefined) updateData['institution'] = data.institution;
+  if (data.course !== undefined) updateData['course'] = data.course;
+  if (data.graduationYear !== undefined) updateData['graduation_year'] = data.graduationYear;
 
   // Location — country/state/city are stored as both a real FK (validated
   // against each other and against the postal-code format below) and a
@@ -361,6 +382,7 @@ export async function softDeleteUser(adminId: string, userId: string) {
 
   await db('users').where({ id: userId }).update({ is_active: false, is_blocked: true });
   await logAudit(adminId, 'USER_DELETED', { deletedUser: user.user_name }, 'users', userId);
+  await notificationsService.create(userId, 'ACCOUNT_DEACTIVATED', 'Your account has been deactivated by an administrator.');
 
   return { success: true, message: 'User deactivated' };
 }
@@ -375,6 +397,10 @@ export async function adminResetPassword(adminId: string, userId: string, data: 
   const hashed = await bcrypt.hash(data.newPassword, 10);
   await db('users').where({ id: userId }).update({ password: hashed });
   await logAudit(adminId, 'PASSWORD_RESET', { targetUser: user.user_name }, 'users', userId);
+  await notificationsService.create(
+    userId, 'PASSWORD_RESET_BY_ADMIN',
+    "Your password was reset by an administrator. If you didn't expect this, contact support.",
+  );
 
   return { success: true, message: 'Password reset successfully' };
 }
@@ -404,14 +430,12 @@ export async function broadcastNotification(adminId: string, data: BroadcastNoti
 
   if (userIds.length === 0) throw new AppError(400, 'No recipients found');
 
-  const notifications = userIds.map((uid) => ({
-    user_id: uid,
-    type:    data.type,
-    message: data.message,
-    is_read: false,
-  }));
-
-  await db('notifications').insert(notifications);
+  // Routed through notificationsService.create() (not a raw bulk insert) so
+  // each recipient also gets the real-time Socket.IO push, same as every
+  // other notification in the app.
+  await Promise.all(
+    userIds.map((uid) => notificationsService.create(uid, data.type, data.message)),
+  );
   await logAudit(adminId, 'NOTIFICATION_SENT', {
     recipient: data.recipient, count: userIds.length, type: data.type,
   }, 'notifications');
@@ -430,6 +454,7 @@ export async function blockUser(userId: string, adminId?: string) {
     .returning(['id', 'email', 'user_name', 'display_name', 'is_blocked']);
 
   if (adminId) await logAudit(adminId, 'USER_BLOCKED', { targetUser: user.user_name }, 'users', userId);
+  await notificationsService.create(userId, 'USER_BLOCKED', 'Your account has been blocked by an administrator.');
 
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isBlocked: updated.is_blocked };
 }
@@ -442,6 +467,7 @@ export async function unblockUser(userId: string, adminId?: string) {
     .returning(['id', 'email', 'user_name', 'display_name', 'is_blocked']);
 
   if (adminId) await logAudit(adminId, 'USER_UNBLOCKED', { targetUser: user.user_name }, 'users', userId);
+  await notificationsService.create(userId, 'USER_UNBLOCKED', 'Your account has been unblocked. Welcome back!');
 
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isBlocked: updated.is_blocked };
 }
@@ -454,6 +480,7 @@ export async function trustUser(userId: string, adminId?: string) {
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
 
   if (adminId) await logAudit(adminId, 'TRUST_GRANTED', { targetUser: updated.user_name }, 'users', userId);
+  await notificationsService.create(userId, 'TRUST_GRANTED', "You've been granted trusted status!");
 
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isTrusted: updated.is_trusted };
 }
@@ -466,6 +493,7 @@ export async function untrustUser(userId: string, adminId?: string) {
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
 
   if (adminId) await logAudit(adminId, 'TRUST_REVOKED', { targetUser: updated.user_name }, 'users', userId);
+  await notificationsService.create(userId, 'TRUST_REVOKED', 'Your trusted status has been revoked.');
 
   return { id: updated.id, email: updated.email, userName: updated.user_name, displayName: updated.display_name, isTrusted: updated.is_trusted };
 }

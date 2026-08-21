@@ -397,5 +397,11 @@ export async function deleteEvent(id: string, userId: string) {
   await db('events').where({ id }).delete();
   deleteUploadedFiles(event['images']);
   await logAudit(userId, 'EVENT_DELETED', { byAdmin, title: event['title'] }, 'events', id);
+  if (byAdmin) {
+    await notificationsService.create(
+      event['user_id'] as string, 'EVENT_REMOVED',
+      `Your event "${event['title']}" was removed by an administrator.`,
+    );
+  }
   return { message: 'Event deleted successfully' };
 }

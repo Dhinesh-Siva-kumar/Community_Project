@@ -5,6 +5,7 @@ import db from './config/db';
 import { env } from './config/env';
 import { createSocketIOServer, initNotificationsGateway } from './services/notifications.gateway';
 import { ensureUploadDirs } from './services/upload-storage.service';
+import { startDigestScheduler } from './services/digest.service';
 
 async function bootstrap(): Promise<void> {
   // ------------------------------------------------------------------
@@ -31,7 +32,12 @@ async function bootstrap(): Promise<void> {
   initNotificationsGateway(io);
 
   // ------------------------------------------------------------------
-  // 4. Start listening
+  // 4. Start the email digest scheduler
+  // ------------------------------------------------------------------
+  startDigestScheduler();
+
+  // ------------------------------------------------------------------
+  // 5. Start listening
   // ------------------------------------------------------------------
   httpServer.listen(env.PORT, () => {
     console.log(`[Server] Running on port ${env.PORT} in ${env.NODE_ENV} mode`);

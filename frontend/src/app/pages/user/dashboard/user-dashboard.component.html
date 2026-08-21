@@ -44,6 +44,63 @@
     <!-- ══════════════ Main column: composer + feed ══════════════ -->
     <div class="db-main">
 
+      <!-- Post-registration welcome banner — confined to the main column,
+           left-aligned with the composer below (not full-width under the
+           right rail's Your Activity / Complete Your Profile / Your Events). -->
+      @if (showWelcomeBanner()) {
+        <section class="welcome-banner" role="status">
+          <button
+            type="button"
+            class="welcome-banner__close"
+            (click)="dismissWelcomeBanner()"
+            aria-label="Dismiss welcome message"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+
+          <div class="welcome-banner__header">
+            <span class="welcome-banner__icon"><i class="bi bi-stars"></i></span>
+            <div class="welcome-banner__heading">
+              <h2 class="welcome-banner__title">Welcome to TamilConnect, {{ firstName() }}!</h2>
+              <p class="welcome-banner__subtitle">{{ welcomeBannerText().subtitle }}</p>
+            </div>
+          </div>
+
+          <ol class="welcome-banner__steps">
+            <li>
+              <a routerLink="/user/profile">
+                <span class="welcome-banner__step-icon welcome-banner__step-icon--profile">
+                  <i class="bi bi-person-check-fill"></i>
+                  <span class="welcome-banner__step-badge">1</span>
+                </span>
+                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[0] }}</span>
+                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/user/community">
+                <span class="welcome-banner__step-icon welcome-banner__step-icon--community">
+                  <i class="bi bi-people-fill"></i>
+                  <span class="welcome-banner__step-badge">2</span>
+                </span>
+                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[1] }}</span>
+                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/user/community">
+                <span class="welcome-banner__step-icon welcome-banner__step-icon--post">
+                  <i class="bi bi-pencil-square"></i>
+                  <span class="welcome-banner__step-badge">3</span>
+                </span>
+                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[2] }}</span>
+                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+              </a>
+            </li>
+          </ol>
+        </section>
+      }
+
       <!-- Composer -->
       <a routerLink="/user/community" class="composer">
         <div class="composer-av">
@@ -53,7 +110,7 @@
             <span>{{ getUserInitials(user() ?? undefined) }}</span>
           }
         </div>
-        <span class="composer-input">What's on your mind, {{ firstName() }}?</span>
+        <span class="composer-input">Share a job opportunity, ask for help, or connect with the Tamil community...</span>
       </a>
 
       <!-- Feed filter tabs -->
@@ -73,8 +130,30 @@
         <div class="feed-empty">
           <i class="bi bi-inbox-fill"></i>
           <h4>No posts yet</h4>
-          <p>Join communities to see their posts here.</p>
-          <a routerLink="/user/community" class="feed-empty__btn">Find Communities</a>
+          <p>Join communities to see their posts here. Here are a few places to start:</p>
+
+          <div class="quick-actions">
+            <a routerLink="/user/community" class="quick-action">
+              <span class="quick-action__icon" style="--qc:#16A34A;--qbg:#DCFCE7;"><i class="bi bi-people-fill"></i></span>
+              <span class="quick-action__label">Explore Communities</span>
+            </a>
+            <a routerLink="/user/jobs" class="quick-action">
+              <span class="quick-action__icon" style="--qc:#0D9488;--qbg:#CCFBF1;"><i class="bi bi-briefcase-fill"></i></span>
+              <span class="quick-action__label">Browse Jobs</span>
+            </a>
+            <a routerLink="/user/events" class="quick-action">
+              <span class="quick-action__icon" style="--qc:#7C3AED;--qbg:#EDE9FE;"><i class="bi bi-calendar-event-fill"></i></span>
+              <span class="quick-action__label">Explore Events</span>
+            </a>
+            <!-- Help Requests are a post type created within a community — the app has no
+                 standalone help/support page, so this lands on the same community browse
+                 page as "Explore Communities" (that's where a help request actually gets
+                 posted), just framed for a different intent. -->
+            <a routerLink="/user/community" class="quick-action">
+              <span class="quick-action__icon" style="--qc:#CA8A04;--qbg:#FEF9C3;"><i class="bi bi-question-circle-fill"></i></span>
+              <span class="quick-action__label">Get Help</span>
+            </a>
+          </div>
         </div>
       } @else {
         @for (post of filteredPosts(); track post.id; let i = $index) {
@@ -248,7 +327,15 @@
           <h3 class="rail-card__title">Your Events</h3>
           <a routerLink="/user/events" class="rail-card__link">View all →</a>
         </div>
-        <app-event-calendar></app-event-calendar>
+        @if (!loadingUpcomingEvents() && hasUpcomingEvents() === false) {
+          <div class="rail-empty">
+            <i class="bi bi-calendar-x"></i>
+            <p>No upcoming events in your area.</p>
+            <a routerLink="/user/events" class="rail-empty__btn">Browse All Events</a>
+          </div>
+        } @else {
+          <app-event-calendar></app-event-calendar>
+        }
       </div>
 
     </aside>

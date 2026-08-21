@@ -148,12 +148,12 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  // ── Computed: spotlight communities (top 4 by member count) ─
-  featuredCommunities = computed(() =>
-    [...this.communities()]
-      .sort((a, b) => (b._count?.members ?? 0) - (a._count?.members ?? 0))
-      .slice(0, 4)
-  );
+  // ── Suggested communities — ranked server-side by country match +
+  // interest match + popularity (see CommunityService.getSuggestedCommunities /
+  // communities.service.ts getSuggested()). Replaces the old client-side
+  // "top 4 by member count" spotlight, which only ever considered whatever
+  // page of the general list happened to already be loaded.
+  suggestedCommunities = signal<Community[]>([]);
 
   // ── Popular posts (sidebar) ─────────────────────────────────
   popularPosts  = signal<Post[]>([]);
@@ -176,7 +176,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     // element itself for plain window/layout resizes.
     effect((onCleanup) => {
       const ref = this.spotlightRailEl();
-      this.featuredCommunities(); // re-run this effect when the card count changes too
+      this.suggestedCommunities(); // re-run this effect when the card count changes too
       this.spotlightResizeObserver?.disconnect();
       this.spotlightResizeObserver = undefined;
 
@@ -245,10 +245,19 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadCommunities();
+    this.loadSuggestedCommunities();
     this.loadPopularPosts();
     this.loadOverallStats();
     this.loadJoinedTotalCount();
     this.loadMyPendingCount();
+  }
+
+  /** Country + interests + popularity ranked list — see suggestedCommunities above. */
+  loadSuggestedCommunities(): void {
+    this.communityService.getSuggestedCommunities(8).subscribe({
+      next: (communities) => this.suggestedCommunities.set(communities),
+      error: () => {},
+    });
   }
 
   ngOnDestroy(): void {
@@ -347,8 +356,8 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
   // ── Load popular posts (sidebar) ───────────────────────────
   // Fetches recent posts and ranks them client-side by engagement (likes +
-  // comments) — same pattern as featuredCommunities above, using real
-  // _count fields rather than a dedicated "popular" endpoint. On the
+  // comments), using real _count fields rather than a dedicated "popular"
+  // endpoint (unlike suggestedCommunities above, which is server-ranked). On the
   // "Joined" tab this is scoped to only the caller's joined communities
   // (via the same `joined` filter used for the communities list itself),
   // so the sidebar never shows posts from communities they haven't joined
