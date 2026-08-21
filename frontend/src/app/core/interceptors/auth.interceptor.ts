@@ -3,6 +3,7 @@ import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn } from
 import { Router } from '@angular/router';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { SKIP_AUTH_REDIRECT } from './http-context-tokens';
 
 const AUTH_ENDPOINTS = [
   '/auth/login',
@@ -68,7 +69,9 @@ function handle401Error(
       catchError((error) => {
         isRefreshing = false;
         authService.logout();
-        router.navigate(['/auth/login']);
+        if (!req.context.get(SKIP_AUTH_REDIRECT)) {
+          router.navigate(['/auth/login']);
+        }
         return throwError(() => error);
       })
     );

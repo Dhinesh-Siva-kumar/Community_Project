@@ -115,9 +115,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   greeting = computed(() => {
     const hour = this.today().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   });
 
   // Time-of-day icon for the hero — deliberately not another copy of the
