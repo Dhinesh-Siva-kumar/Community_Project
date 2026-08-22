@@ -172,6 +172,20 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   editingJob      = signal<Job | null>(null);   // null = create mode, set = edit mode
   editSubmitting  = signal(false);
 
+  // ─── Job details popup — List/Grid view's eye icon opens the full
+  // job data here instead of expanding it inline (Card view keeps
+  // the inline accordion via activeJobId). ─────────────────────
+  viewingJob = signal<Job | null>(null);
+
+  openJobDetailsModal(job: Job, event: Event): void {
+    event.stopPropagation();
+    this.viewingJob.set(job);
+  }
+
+  closeJobDetailsModal(): void {
+    this.viewingJob.set(null);
+  }
+
   // ─── Delete confirmation modal ───────────────────────────────
   showDeleteConfirm  = signal(false);
   jobToDelete        = signal<Job | null>(null);
@@ -248,25 +262,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     );
   };
 
-  // ─── User Context ────────────────────────────────────────────
-  userPincode = computed(() => this.authService.currentUser()?.pincode ?? '');
-
-  /** "City, State, Country" built from the caller's own profile — shown as a
-   * read-only hint under the Near Me pill (u.location holds the city name,
-   * see profile.component.ts's patchLocation for the same convention). */
-  userLocationLabel = computed(() => {
-    const u = this.authService.currentUser();
-    if (!u) return '';
-    return [u.location, u.state, u.country].filter(v => !!v).join(', ');
-  });
-
   // ═══════════════════════════════════════════════════════════
   // FILTER STATE
   // ═══════════════════════════════════════════════════════════
 
   // Basic filters
   searchQuery     = signal('');
-  showAllJobs     = signal(false);
   filterJobType   = signal('');
   filterWorkMode  = signal('');
   filterCountry   = signal('');
@@ -277,10 +278,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   /** Card = the full detailed listing (default); List = a dense single-line row. */
   jobViewMode = signal<'card' | 'list'>('card');
   setJobViewMode(mode: 'card' | 'list'): void { this.jobViewMode.set(mode); }
-
-  /** Compact "City, State, Country" summary shown on the collapsed location pill once a manual location is chosen. */
-  manualLocationLabel = computed(() =>
-    [this.filterCity(), this.filterState(), this.filterCountry()].filter(v => v).join(', '));
 
   // Advanced filter panel visibility
   showAdvancedFilters = signal(false);
@@ -307,11 +304,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (this.searchQuery())           add('search',       `"${this.searchQuery()}"`, this.searchQuery());
     if (this.filterJobType())         add('jobType',      this.filterJobType(), this.filterJobType());
     if (this.filterWorkMode())        add('workMode',     this.filterWorkMode(), this.filterWorkMode());
-    // Only counted as "active" while manual location mode is actually
-    // applying them (see buildQuery) — Near Me hides but keeps them.
-    if (this.showAllJobs() && this.filterCountry()) add('country', this.filterCountry(), this.filterCountry());
-    if (this.showAllJobs() && this.filterState())   add('state',   this.filterState(), this.filterState());
-    if (this.showAllJobs() && this.filterCity())    add('city',    this.filterCity(), this.filterCity());
+    if (this.filterCountry())         add('country',      this.filterCountry(), this.filterCountry());
+    if (this.filterState())           add('state',        this.filterState(), this.filterState());
+    if (this.filterCity())            add('city',         this.filterCity(), this.filterCity());
     if (this.filterCompanyName())     add('companyName',  this.filterCompanyName(), this.filterCompanyName());
     if (this.filterShiftType())       add('shiftType',    this.filterShiftType(), this.filterShiftType());
     if (this.filterEducation())       add('education',    this.filterEducation(), this.filterEducation());
@@ -687,18 +682,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   private buildQuery(page: number): JobsQueryParams {
     const query: JobsQueryParams = { page, limit: this.PAGE_SIZE };
 
-    if (!this.showAllJobs() && this.userPincode()) query.pincode  = this.userPincode();
     if (this.searchQuery().trim())    query.search      = this.searchQuery().trim();
     if (this.filterJobType())         query.jobType     = this.filterJobType();
     if (this.filterWorkMode())        query.workMode    = this.filterWorkMode();
-    // Country/State/City stay set (for the pill's remembered label) even
-    // while Near Me is active, but only actually apply to the query in
-    // manual mode — Near Me already narrows by pincode.
-    if (this.showAllJobs()) {
-      if (this.filterCountry())       query.country     = this.filterCountry();
-      if (this.filterState())         query.state       = this.filterState();
-      if (this.filterCity())          query.city        = this.filterCity();
-    }
+    if (this.filterCountry())         query.country     = this.filterCountry();
+    if (this.filterState())           query.state       = this.filterState();
+    if (this.filterCity())            query.city        = this.filterCity();
     if (this.filterShiftType())       query.shiftType   = this.filterShiftType();
     if (this.filterEducation())       query.education   = this.filterEducation();
     if (this.filterCompanyName())     query.search      = (query.search ? query.search + ' ' : '') + this.filterCompanyName();
@@ -790,15 +779,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   setSalaryHiddenFilter(val: boolean | null): void {
     this.filterSalaryHidden.set(this.filterSalaryHidden() === val ? null : val);
     this.triggerFilteredLoad();
-  }
-
-  toggleShowAllJobs(): void {
-    // Toggling never clears the manually chosen country/state/city — it's
-    // just hidden (and excluded from the query, see buildQuery) while Near
-    // Me is active, and reappears — still filled in — if the user switches
-    // back. Only Clear All / removing the chip actually discards it.
-    this.showAllJobs.update(v => !v);
-    this.loadJobs(1);
   }
 
   /** Advanced Filters lives in a right-side drawer — while it's open, the

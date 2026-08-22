@@ -24,9 +24,7 @@
 @if (pageTab() === 'all') {
 <div class="jb-filter-panel">
 
-  <!-- Row 1: Search + Near Me + Sort — one line. Location collapses to a
-       single pill here; clicking it swaps to a manual Country/State/City
-       accordion below, whose summary (once chosen) becomes the pill label. -->
+  <!-- Row 1: Search + Advanced Filters + Sort — one line. -->
   <div class="jb-filter-row jb-filter-row--top">
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
@@ -37,15 +35,6 @@
         <button class="jb-search-wrap__clear" (click)="clearSearch()"><i class="bi bi-x"></i></button>
       }
     </div>
-    <button type="button" class="jb-location-pill"
-      [class.jb-location-pill--active]="!showAllJobs()"
-      [attr.data-tooltip]="!showAllJobs() ? (userLocationLabel() || 'Add your city, state & country in your profile for accurate results') : null"
-      [attr.aria-label]="!showAllJobs() ? ('Near Me — ' + (userLocationLabel() || 'no location set in profile')) : 'All Locations'"
-      (click)="toggleShowAllJobs()">
-      <i class="bi" [ngClass]="!showAllJobs() ? 'bi-geo-alt-fill' : 'bi-geo-alt'"></i>
-      <span>{{ !showAllJobs() ? 'Near Me' : (manualLocationLabel() || 'All Locations — tap to choose') }}</span>
-      <i class="bi bi-chevron-down jb-location-pill__chevron" [class.jb-location-pill__chevron--open]="showAllJobs()"></i>
-    </button>
     <button type="button" class="jb-adv-icon-btn"
       [class.jb-adv-icon-btn--active]="showAdvancedFilters()"
       data-tooltip="Advanced Filters"
@@ -65,31 +54,6 @@
       </app-searchable-select>
     </div>
   </div>
-  @if (showAllJobs()) {
-    <div class="jb-filter-row jb-location-expanded animate-slide-in-up">
-      <div class="jb-location-row">
-        <app-searchable-select
-          [options]="countryOptions()"
-          [ngModel]="filterCountry()"
-          (ngModelChange)="onFilterCountryChange($event)"
-          placeholder="Country"
-          searchPlaceholder="Search countries…">
-        </app-searchable-select>
-        <app-searchable-select
-          [options]="filterStateOptions()"
-          [ngModel]="filterState()"
-          (ngModelChange)="onFilterStateChange($event)"
-          [placeholder]="filterStates().length ? 'State / Region' : 'Select country first'">
-        </app-searchable-select>
-        <app-searchable-select
-          [options]="filterCityOptions()"
-          [ngModel]="filterCity()"
-          (ngModelChange)="onFilterCityChange($event)"
-          [placeholder]="filterCities().length ? 'City' : 'Select state first'">
-        </app-searchable-select>
-      </div>
-    </div>
-  }
 
   <!-- Row 3: Type + Mode — one line on wide screens, split by a vertical
        divider; the divider turns horizontal and the groups stack once
@@ -172,6 +136,32 @@
 
     <div class="jb-adv-drawer__body">
       <div class="jb-advanced-grid">
+
+        <!-- Location: Country / State / City -->
+        <div class="jb-adv-field jb-adv-field--wide">
+          <label class="jb-adv-label"><i class="bi bi-geo-alt"></i> Location</label>
+          <div class="jb-location-row">
+            <app-searchable-select
+              [options]="countryOptions()"
+              [ngModel]="filterCountry()"
+              (ngModelChange)="onFilterCountryChange($event)"
+              placeholder="Country"
+              searchPlaceholder="Search countries…">
+            </app-searchable-select>
+            <app-searchable-select
+              [options]="filterStateOptions()"
+              [ngModel]="filterState()"
+              (ngModelChange)="onFilterStateChange($event)"
+              [placeholder]="filterStates().length ? 'State / Region' : 'Select country first'">
+            </app-searchable-select>
+            <app-searchable-select
+              [options]="filterCityOptions()"
+              [ngModel]="filterCity()"
+              (ngModelChange)="onFilterCityChange($event)"
+              [placeholder]="filterCities().length ? 'City' : 'Select state first'">
+            </app-searchable-select>
+          </div>
+        </div>
 
         <!-- Company Name -->
         <div class="jb-adv-field">
@@ -285,286 +275,102 @@
   [initialIndex]="imageViewerInitialIndex()"
   (close)="closeImageViewer()"></app-image-viewer>
 
-<!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
-  <div class="jb-meta">
-    <span class="jb-meta__count">
-      <strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'job' : 'jobs' }} found
-      @if (activeFilterCount() > 0) {
-        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
-      }
-    </span>
-
-    <div class="jb-view-toggle" role="group" aria-label="Switch view">
-      <button type="button" class="jb-view-toggle__btn"
-        [class.jb-view-toggle__btn--active]="jobViewMode() === 'card'"
-        data-tooltip="Card view"
-        (click)="setJobViewMode('card')">
-        <i class="bi bi-grid-3x2-gap"></i>
-      </button>
-      <button type="button" class="jb-view-toggle__btn"
-        [class.jb-view-toggle__btn--active]="jobViewMode() === 'list'"
-        data-tooltip="List view"
-        (click)="setJobViewMode('list')">
-        <i class="bi bi-list-ul"></i>
-      </button>
-    </div>
-  </div>
-}
-
-<!-- ── SKELETON ──────────────────────────────────────────────── -->
-@if (loading()) {
-  <div class="jb-list" aria-busy="true">
-    @for (_ of skeletonItems; track $index) {
-      <div class="jb-skeleton">
-        <div class="jb-skeleton__avatar skeleton-pulse"></div>
-        <div class="jb-skeleton__body">
-          <div class="jb-skeleton__line jb-skeleton__line--company skeleton-pulse"></div>
-          <div class="jb-skeleton__line jb-skeleton__line--title skeleton-pulse"></div>
-          <div class="jb-skeleton__line jb-skeleton__line--meta skeleton-pulse"></div>
-          <div class="jb-skeleton__line jb-skeleton__line--short skeleton-pulse"></div>
-        </div>
-        <div class="jb-skeleton__toggle skeleton-pulse"></div>
-      </div>
+<!-- ── Shared templates — the header info and full detail sections are
+     each defined once and reused both inline (List/Grid views' accordion)
+     and inside the Job Details popup (Card view's eye icon), so nothing
+     is duplicated between the two presentations. ── -->
+<ng-template #jobHeaderTpl let-job="job">
+  <!-- Logo / Avatar -->
+  <div class="jb-card__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
+    @if (getCompanyLogoSrc(job)) {
+      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
+        class="jb-card__logo-img" loading="lazy" fetchpriority="high" appImageError />
+    } @else {
+      <span class="jb-card__logo-initials">{{ getPosterInitials(job) }}</span>
     }
   </div>
-}
 
-<!-- ── JOB LIST ──────────────────────────────────────────────── -->
-@if (!loading()) {
-  @if (jobs().length === 0) {
-    <div class="jb-empty">
-      <div class="jb-empty__icon" aria-hidden="true">
-        <i class="bi bi-briefcase"></i>
+  <!-- Text content -->
+  <div class="jb-card__info">
+    <!-- Company name — row above title -->
+    @if (job.companyName) {
+      <p class="jb-card__company">
+        <i class="bi bi-building"></i>{{ job.companyName }}
+      </p>
+    }
+
+    <!-- Title + type badges -->
+    <div class="jb-card__title-row">
+      <h3 class="jb-card__title">{{ job.title }}</h3>
+      <div class="jb-card__badges">
+        @if (job.status === 'PENDING') {
+          <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+        } @else if (job.status === 'REJECTED') {
+          <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+        }
+        @if (job.jobType) {
+          <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span>
+        }
+        @if (job.workMode) {
+          <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span>
+        }
       </div>
-      @if (pageTab() === 'pending') {
-        <h5 class="jb-empty__title">No submissions yet</h5>
-        <p class="jb-empty__text">Jobs you post will show up here with their approval status.</p>
-      } @else if (activeFilterCount() > 0) {
-        <h5 class="jb-empty__title">No jobs match your filters</h5>
-        <p class="jb-empty__text">Try adjusting or clearing some filters to see more results.</p>
-        <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearAllFilters()">
-          <i class="bi bi-arrow-counterclockwise me-1"></i> Clear All Filters
-        </button>
-      } @else {
-        <h5 class="jb-empty__title">No jobs in your area yet</h5>
-        <p class="jb-empty__text">Be the first to post a job listing
-          @if (!showAllJobs()) { near <strong>{{ userPincode() || 'your area' }}</strong> }
-        </p>
-        <div class="d-flex gap-2 justify-content-center flex-wrap">
-          <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
-            <i class="bi bi-plus-lg me-1"></i> Post a Job
-          </button>
-          @if (!showAllJobs()) {
-            <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="toggleShowAllJobs()">
-              <i class="bi bi-globe2 me-1"></i> Browse All
-            </button>
+    </div>
+    @if (job.status === 'REJECTED' && job.rejectionReason) {
+      <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+    }
+
+    <!-- Meta chips row -->
+    <div class="jb-card__meta">
+      @if (getLocationDisplay(job)) {
+        <span class="jb-card__meta-item jb-card__meta-item--loc">
+          <i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(job) }}
+        </span>
+      }
+      @if (getSalaryDisplay(job)) {
+        <span class="jb-card__meta-item jb-card__meta-item--salary">
+          <i class="bi bi-cash-stack"></i>{{ getSalaryDisplay(job) }}
+        </span>
+      }
+      @if (getExperienceLabel(job)) {
+        <span class="jb-card__meta-item jb-card__meta-item--exp">
+          <i class="bi bi-briefcase"></i>{{ getExperienceLabel(job) }}
+        </span>
+      }
+      @if (job.education) {
+        <span class="jb-card__meta-item jb-card__meta-item--edu">
+          <i class="bi bi-mortarboard"></i>{{ job.education }}
+        </span>
+      }
+      @if (job.openings) {
+        <span class="jb-card__meta-item jb-card__meta-item--openings">
+          <i class="bi bi-people"></i>{{ job.openings }} opening{{ job.openings > 1 ? 's' : '' }}
+        </span>
+      }
+    </div>
+
+    <!-- Footer: date + skills preview -->
+    <div class="jb-card__footer">
+      <span class="jb-card__date">
+        <i class="bi bi-calendar3"></i>{{ job.createdAt | date:'mediumDate' }}
+      </span>
+      @if (job.skills && job.skills.length > 0) {
+        <div class="jb-card__skills-preview">
+          @for (skill of getFirstSkills(job); track skill) {
+            <span class="jb-card__skill-chip">{{ skill }}</span>
+          }
+          @if (getExtraSkillsCount(job) > 0) {
+            <span class="jb-card__skill-chip jb-card__skill-chip--more">
+              +{{ getExtraSkillsCount(job) }}
+            </span>
           }
         </div>
       }
     </div>
-  } @else {
-    <div class="jb-list" [class.jb-list--compact]="jobViewMode() === 'list'" role="list">
-      @for (job of jobs(); track job.id) {
-        <article class="jb-card animate-slide-in-up" [id]="'job-card-' + job.id"
-          [class.jb-card--active]="activeJobId() === job.id"
-          [class.jb-card--list]="jobViewMode() === 'list'"
-          role="listitem"
-          [attr.aria-expanded]="activeJobId() === job.id"
-          [attr.aria-label]="job.title">
+  </div>
+</ng-template>
 
-          @if (jobViewMode() === 'card') {
-          <!-- ── CARD HEADER ─────────────────────────────────── -->
-          <div class="jb-card__header">
-
-            <!-- Logo / Avatar -->
-            <div class="jb-card__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
-              @if (getCompanyLogoSrc(job)) {
-                <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
-                  class="jb-card__logo-img" loading="lazy" fetchpriority="high" appImageError />
-              } @else {
-                <span class="jb-card__logo-initials">{{ getPosterInitials(job) }}</span>
-              }
-            </div>
-
-            <!-- Text content -->
-            <div class="jb-card__info">
-              <!-- Company name — row above title -->
-              @if (job.companyName) {
-                <p class="jb-card__company">
-                  <i class="bi bi-building"></i>{{ job.companyName }}
-                </p>
-              }
-
-              <!-- Title + type badges -->
-              <div class="jb-card__title-row">
-                <h3 class="jb-card__title">{{ job.title }}</h3>
-                <div class="jb-card__badges">
-                  @if (job.status === 'PENDING') {
-                    <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
-                  } @else if (job.status === 'REJECTED') {
-                    <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
-                  }
-                  @if (job.jobType) {
-                    <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span>
-                  }
-                  @if (job.workMode) {
-                    <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span>
-                  }
-                </div>
-              </div>
-              @if (job.status === 'REJECTED' && job.rejectionReason) {
-                <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
-              }
-
-              <!-- Meta chips row -->
-              <div class="jb-card__meta">
-                @if (getLocationDisplay(job)) {
-                  <span class="jb-card__meta-item jb-card__meta-item--loc">
-                    <i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(job) }}
-                  </span>
-                }
-                @if (getSalaryDisplay(job)) {
-                  <span class="jb-card__meta-item jb-card__meta-item--salary">
-                    <i class="bi bi-cash-stack"></i>{{ getSalaryDisplay(job) }}
-                  </span>
-                }
-                @if (getExperienceLabel(job)) {
-                  <span class="jb-card__meta-item jb-card__meta-item--exp">
-                    <i class="bi bi-briefcase"></i>{{ getExperienceLabel(job) }}
-                  </span>
-                }
-                @if (job.education) {
-                  <span class="jb-card__meta-item jb-card__meta-item--edu">
-                    <i class="bi bi-mortarboard"></i>{{ job.education }}
-                  </span>
-                }
-                @if (job.openings) {
-                  <span class="jb-card__meta-item jb-card__meta-item--openings">
-                    <i class="bi bi-people"></i>{{ job.openings }} opening{{ job.openings > 1 ? 's' : '' }}
-                  </span>
-                }
-              </div>
-
-              <!-- Footer: date + skills preview -->
-              <div class="jb-card__footer">
-                <span class="jb-card__date">
-                  <i class="bi bi-calendar3"></i>{{ job.createdAt | date:'mediumDate' }}
-                </span>
-                @if (job.skills && job.skills.length > 0) {
-                  <div class="jb-card__skills-preview">
-                    @for (skill of getFirstSkills(job); track skill) {
-                      <span class="jb-card__skill-chip">{{ skill }}</span>
-                    }
-                    @if (getExtraSkillsCount(job) > 0) {
-                      <span class="jb-card__skill-chip jb-card__skill-chip--more">
-                        +{{ getExtraSkillsCount(job) }}
-                      </span>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Owner / Admin quick-actions on the card header -->
-            @if (canEditJob(job)) {
-              <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
-                <button class="um-iab um-iab--edit" data-tip="Edit"
-                  (click)="openEditModal(job, $event)"
-                  type="button">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="um-iab um-iab--delete" data-tip="Delete"
-                  (click)="openDeleteConfirm(job, $event)"
-                  type="button">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
-              <span class="jb-card__actions-divider" aria-hidden="true"></span>
-            }
-
-            <!-- Chevron toggle — expand / collapse -->
-            <button class="jb-card__toggle"
-              [class.jb-card__toggle--open]="activeJobId() === job.id"
-              (click)="toggleAccordion(job.id)"
-              [attr.aria-expanded]="activeJobId() === job.id"
-              [attr.aria-label]="activeJobId() === job.id ? 'Collapse job details' : 'Expand job details'"
-              type="button">
-              <i class="bi bi-chevron-down"></i>
-            </button>
-          </div>
-          } @else {
-          <!-- ── COMPACT LIST ROW — same data/actions as the card header,
-               laid out as one dense line instead of a stacked block. ── -->
-          <div class="jbl-row">
-            <div class="jbl-row__logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
-              @if (getCompanyLogoSrc(job)) {
-                <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
-                  class="jbl-row__logo-img" loading="lazy" appImageError />
-              } @else {
-                <span class="jbl-row__logo-initials">{{ getPosterInitials(job) }}</span>
-              }
-            </div>
-
-            <div class="jbl-row__main">
-              <div class="jbl-row__title-line">
-                <h3 class="jbl-row__title">{{ job.title }}</h3>
-                @if (job.companyName) {
-                  <span class="jbl-row__company"><i class="bi bi-building"></i>{{ job.companyName }}</span>
-                }
-                @if (job.status === 'PENDING') {
-                  <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> Pending</span>
-                } @else if (job.status === 'REJECTED') {
-                  <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
-                }
-              </div>
-              <div class="jbl-row__meta">
-                @if (job.jobType) {
-                  <span class="{{ getJobTypeBadgeClass(job.jobType) }} jbl-row__badge">{{ job.jobType }}</span>
-                }
-                @if (job.workMode) {
-                  <span class="{{ getWorkModeBadgeClass(job.workMode) }} jbl-row__badge">{{ job.workMode }}</span>
-                }
-                @if (getLocationDisplay(job)) {
-                  <span class="jbl-row__meta-item"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(job) }}</span>
-                }
-                @if (getSalaryDisplay(job)) {
-                  <span class="jbl-row__meta-item"><i class="bi bi-cash-stack"></i>{{ getSalaryDisplay(job) }}</span>
-                }
-                <span class="jbl-row__meta-item jbl-row__meta-item--date"><i class="bi bi-calendar3"></i>{{ job.createdAt | date:'mediumDate' }}</span>
-              </div>
-            </div>
-
-            @if (canEditJob(job)) {
-              <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
-                <button class="um-iab um-iab--edit" data-tip="Edit"
-                  (click)="openEditModal(job, $event)"
-                  type="button">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="um-iab um-iab--delete" data-tip="Delete"
-                  (click)="openDeleteConfirm(job, $event)"
-                  type="button">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
-            }
-
-            <button class="jb-card__toggle"
-              [class.jb-card__toggle--open]="activeJobId() === job.id"
-              (click)="toggleAccordion(job.id)"
-              [attr.aria-expanded]="activeJobId() === job.id"
-              [attr.aria-label]="activeJobId() === job.id ? 'Collapse job details' : 'Expand job details'"
-              type="button">
-              <i class="bi bi-chevron-down"></i>
-            </button>
-          </div>
-          }
-
-          <!-- ── ACCORDION BODY — Premium Redesign ────────────── -->
-          @if (activeJobId() === job.id) {
-            <div class="jbd-body" role="region" [attr.aria-label]="job.title + ' full details'">
-
+<ng-template #jobDetailTpl let-job="job">
               <!-- ═══ SECTION 2: JOB OVERVIEW (info cards grid) ═══ -->
               @if (job.workMode || job.shiftType || getExperienceLabel(job) || job.education || job.openings || job.jobType) {
                 <div class="jbd-section">
@@ -866,7 +672,216 @@
                   <i class="bi bi-share"></i> Share
                 </button>
               </div>
+</ng-template>
 
+
+<!-- ── RESULTS META ──────────────────────────────────────────── -->
+@if (!loading()) {
+  <div class="jb-meta">
+    <span class="jb-meta__count">
+      <strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'job' : 'jobs' }} found
+      @if (activeFilterCount() > 0) {
+        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
+      }
+    </span>
+
+    <div class="jb-view-toggle" role="group" aria-label="Switch view">
+      <button type="button" class="jb-view-toggle__btn"
+        [class.jb-view-toggle__btn--active]="jobViewMode() === 'card'"
+        data-tooltip="Card view"
+        (click)="setJobViewMode('card')">
+        <i class="bi bi-grid-3x2-gap"></i>
+      </button>
+      <button type="button" class="jb-view-toggle__btn"
+        [class.jb-view-toggle__btn--active]="jobViewMode() === 'list'"
+        data-tooltip="List view"
+        (click)="setJobViewMode('list')">
+        <i class="bi bi-list-ul"></i>
+      </button>
+    </div>
+  </div>
+}
+
+<!-- ── SKELETON ──────────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="jb-list" aria-busy="true">
+    @for (_ of skeletonItems; track $index) {
+      <div class="jb-skeleton">
+        <div class="jb-skeleton__avatar skeleton-pulse"></div>
+        <div class="jb-skeleton__body">
+          <div class="jb-skeleton__line jb-skeleton__line--company skeleton-pulse"></div>
+          <div class="jb-skeleton__line jb-skeleton__line--title skeleton-pulse"></div>
+          <div class="jb-skeleton__line jb-skeleton__line--meta skeleton-pulse"></div>
+          <div class="jb-skeleton__line jb-skeleton__line--short skeleton-pulse"></div>
+        </div>
+        <div class="jb-skeleton__toggle skeleton-pulse"></div>
+      </div>
+    }
+  </div>
+}
+
+<!-- ── JOB LIST ──────────────────────────────────────────────── -->
+@if (!loading()) {
+  @if (jobs().length === 0) {
+    <div class="jb-empty">
+      <div class="jb-empty__icon" aria-hidden="true">
+        <i class="bi bi-briefcase"></i>
+      </div>
+      @if (pageTab() === 'pending') {
+        <h5 class="jb-empty__title">No submissions yet</h5>
+        <p class="jb-empty__text">Jobs you post will show up here with their approval status.</p>
+      } @else if (activeFilterCount() > 0) {
+        <h5 class="jb-empty__title">No jobs match your filters</h5>
+        <p class="jb-empty__text">Try adjusting or clearing some filters to see more results.</p>
+        <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearAllFilters()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i> Clear All Filters
+        </button>
+      } @else {
+        <h5 class="jb-empty__title">No jobs posted yet</h5>
+        <p class="jb-empty__text">Be the first to post a job listing.</p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
+            <i class="bi bi-plus-lg me-1"></i> Post a Job
+          </button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="jb-list" [class.jb-list--grid]="jobViewMode() === 'list'" role="list">
+      @for (job of jobs(); track job.id) {
+        <article class="jb-card animate-slide-in-up" [id]="'job-card-' + job.id"
+          [class.jb-card--active]="activeJobId() === job.id"
+          [class.jb-card--grid]="jobViewMode() === 'list'"
+          role="listitem"
+          [attr.aria-expanded]="activeJobId() === job.id"
+          [attr.aria-label]="job.title">
+
+          @if (jobViewMode() === 'card') {
+          <!-- ── CARD HEADER ─────────────────────────────────── -->
+          <div class="jb-card__header">
+            <ng-container [ngTemplateOutlet]="jobHeaderTpl" [ngTemplateOutletContext]="{ job: job }"></ng-container>
+
+            <!-- Owner / Admin quick-actions on the card header -->
+            @if (canEditJob(job)) {
+              <div class="jb-card__quick-actions" (click)="$event.stopPropagation()">
+                <button class="um-iab um-iab--edit" data-tip="Edit"
+                  (click)="openEditModal(job, $event)"
+                  type="button">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="um-iab um-iab--delete" data-tip="Delete"
+                  (click)="openDeleteConfirm(job, $event)"
+                  type="button">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+              <span class="jb-card__actions-divider" aria-hidden="true"></span>
+            }
+
+            <!-- Chevron toggle — expand / collapse inline -->
+            <button class="jb-card__toggle"
+              [class.jb-card__toggle--open]="activeJobId() === job.id"
+              (click)="toggleAccordion(job.id)"
+              [attr.aria-expanded]="activeJobId() === job.id"
+              [attr.aria-label]="activeJobId() === job.id ? 'Collapse job details' : 'Expand job details'"
+              type="button">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          } @else {
+          <!-- ── GRID CARD — vertical card matching the Community page's
+               Grid view (cover band + overlapping logo + body + footer
+               chips/actions), laid out multi-column via .jb-list--grid. ── -->
+          <div class="jbg-cover">
+            @if (job.images.length > 0) {
+              <img class="jbg-cover-bg" [src]="job.images[0] | imageUrl" [alt]="job.title" loading="lazy" appImageError />
+            } @else {
+              <div class="jbg-cover-bg" [style.background]="getAvatarColor(job)" aria-hidden="true"></div>
+            }
+            <div class="jbg-cover-sheen" aria-hidden="true"></div>
+            <div class="jbg-cover-scrim" aria-hidden="true"></div>
+            @if (job.status === 'PENDING' || job.status === 'REJECTED') {
+              <div class="jbg-cover-badges">
+                @if (job.status === 'PENDING') {
+                  <span class="jbg-badge jbg-badge--pending"><i class="bi bi-hourglass-split"></i>Pending Approval</span>
+                } @else if (job.status === 'REJECTED') {
+                  <span class="jbg-badge jbg-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i>Rejected</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="jbg-body">
+            <div class="jbg-logo" [style.background-color]="getAvatarColor(job)" aria-hidden="true">
+              @if (getCompanyLogoSrc(job)) {
+                <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title"
+                  class="jbg-logo-img" loading="lazy" appImageError />
+              } @else {
+                <span class="jbg-logo-initials">{{ getPosterInitials(job) }}</span>
+              }
+            </div>
+
+            <h3 class="jbg-title">{{ job.title }}</h3>
+            @if (job.companyName) {
+              <span class="jbg-company"><i class="bi bi-building"></i>{{ job.companyName }}</span>
+            }
+
+            <div class="jbg-type-badges">
+              @if (job.jobType) {
+                <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span>
+              }
+              @if (job.workMode) {
+                <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span>
+              }
+            </div>
+
+            @if (job.description) {
+              <p class="jbg-desc">{{ job.description }}</p>
+            }
+            @if (job.status === 'REJECTED' && job.rejectionReason) {
+              <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+            }
+
+            <div class="jbg-foot">
+              <div class="jbg-stats">
+                @if (getLocationDisplay(job)) {
+                  <span class="jbg-chip"><i class="bi bi-geo-alt-fill"></i>{{ getLocationDisplay(job) }}</span>
+                }
+                @if (getSalaryDisplay(job)) {
+                  <span class="jbg-chip"><i class="bi bi-cash-stack"></i>{{ getSalaryDisplay(job) }}</span>
+                }
+              </div>
+
+              <div class="jbg-actions" (click)="$event.stopPropagation()">
+                @if (canEditJob(job)) {
+                  <button class="um-iab um-iab--edit" data-tip="Edit"
+                    (click)="openEditModal(job, $event)"
+                    type="button">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="um-iab um-iab--delete" data-tip="Delete"
+                    (click)="openDeleteConfirm(job, $event)"
+                    type="button">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                }
+                <button class="jb-card__toggle" data-tip="View details"
+                  (click)="openJobDetailsModal(job, $event)"
+                  [attr.aria-label]="'View full details for ' + job.title"
+                  type="button">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- ── ACCORDION BODY — inline for Card view only; List/Grid
+               view's eye icon shows the same content (#jobDetailTpl) in
+               the Job Details popup below instead. ── -->
+          @if (jobViewMode() === 'card' && activeJobId() === job.id) {
+            <div class="jbd-body" role="region" [attr.aria-label]="job.title + ' full details'">
+              <ng-container [ngTemplateOutlet]="jobDetailTpl" [ngTemplateOutletContext]="{ job: job }"></ng-container>
             </div>
           }
         </article>
@@ -1354,5 +1369,35 @@
           </button>
         </div>
 
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════
+     JOB DETAILS POPUP — List/Grid view's eye icon opens the full job
+     data here (header + every detail section) instead of expanding
+     inline (awkward in a multi-column grid cell). Card view instead
+     keeps its own inline accordion, since it already has the room. ══
+     ═══════════════════════════════════════════════════════════ -->
+@if (viewingJob(); as vJob) {
+  <div class="au-backdrop" (click)="closeJobDetailsModal()"></div>
+  <div class="au-modal jb-modal jb-view-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="jbViewModalTitle" (click)="$event.stopPropagation()">
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
+      <div class="au-header__icon cm-modal-icon"><i class="bi bi-briefcase-fill"></i></div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h4 class="au-header__title cm-modal-title" id="jbViewModalTitle">{{ vJob.title }}</h4>
+        <p class="au-header__sub cm-modal-subtitle">{{ vJob.companyName || 'Job details' }}</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="closeJobDetailsModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="au-body cm-modal-body">
+      <div class="jb-card__header jbv-header">
+        <ng-container [ngTemplateOutlet]="jobHeaderTpl" [ngTemplateOutletContext]="{ job: vJob }"></ng-container>
+      </div>
+      <div class="jbd-body jbv-detail">
+        <ng-container [ngTemplateOutlet]="jobDetailTpl" [ngTemplateOutletContext]="{ job: vJob }"></ng-container>
+      </div>
+    </div>
   </div>
 }
