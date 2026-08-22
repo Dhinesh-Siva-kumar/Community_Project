@@ -6,6 +6,70 @@
 //             .lp-hero-eyebrow, $shadow-primary-*, $radius-*
 // ═══════════════════════════════════════════════════════════════
 
+// ── Page push — while the Advanced Filters drawer is open (.jb-adv-open,
+// toggled via host binding in the .ts), the whole page shifts left by the
+// drawer's width so the job list stays fully visible next to it instead of
+// hidden behind the fixed-position drawer. Reverts on mobile, where the
+// drawer covers the full viewport anyway (see .jb-adv-drawer below). ────
+:host {
+  display: block;
+  transition: padding-right 280ms cubic-bezier(.22, 1, .36, 1);
+}
+
+:host(.jb-adv-open) {
+  padding-right: 340px;
+
+  @include media-sm-max { padding-right: 0; }
+}
+
+// ── Shared custom tooltip — dark bubble + arrow, driven by a
+// data-tooltip attr instead of the plain native `title` popup. Include
+// on any `position: relative` trigger; shows on hover/keyboard focus.
+// Used by both the Near Me pill and the Advanced Filters icon button. ─
+@mixin jb-tooltip {
+  &::after,
+  &::before {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    transform: translate(-50%, 4px);
+    z-index: 30;
+  }
+
+  &::after {
+    content: attr(data-tooltip);
+    max-width: 220px;
+    padding: 7px 11px;
+    border-radius: $radius-sm;
+    background: $color-stone-900;
+    color: #fff;
+    font-size: 11px;
+    font-weight: $font-weight-medium;
+    text-align: center;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 8px 20px rgba(28, 25, 23, 0.28);
+  }
+
+  &::before {
+    content: '';
+    bottom: calc(100% + 3px);
+    border: 5px solid transparent;
+    border-top-color: $color-stone-900;
+  }
+
+  &:hover::after, &:hover::before,
+  &:focus-visible::after, &:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+}
+
 // ── PAGE HEADER — matches the User Community/Business List pages'
 // .uc-head / .biz-head: title/subtitle left, add button right,
 // no gradient hero card, no tabs. ─────────────────────────────────
@@ -124,25 +188,11 @@
     flex-wrap: wrap;
   }
 
-  &--split {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: $spacing-lg;
-    flex-wrap: wrap;
-  }
-
   &--footer {
     padding-top: $spacing-sm;
     border-top: 1px solid $color-border;
     gap: $spacing-sm;
   }
-}
-
-.jb-filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex-shrink: 0;
 }
 
 .jb-filter-section-label {
@@ -217,8 +267,6 @@
   }
 }
 
-.jb-nearby-btn { flex-shrink: 0; }
-
 .jb-sort-wrap {
   min-width: 155px;
   flex-shrink: 0;
@@ -276,7 +324,101 @@
   &--temporary:not(.jb-chip--active):hover    { border-color: $color-stone-500; background: $color-stone-100; color: $color-stone-700; }
 }
 
-// ── Location cascade dropdowns row ────────────────────────────
+// ── Type + Mode row — one line, split by a vertical divider, on
+// screens wide enough to fit both label+chip groups comfortably.
+// Below $breakpoint-md the row becomes a column and the divider lays
+// flat, so the two groups stack with a horizontal rule between them
+// instead of squeezing onto one crowded line. ──────────────────────
+.jb-type-mode-row {
+  align-items: center;
+  gap: $spacing-md;
+
+  @include media-md-max {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-sm;
+  }
+}
+
+.jb-filter-inline-group {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.jb-type-mode-divider {
+  width: 1px;
+  align-self: stretch;
+  background: $color-border;
+  flex-shrink: 0;
+
+  @include media-md-max {
+    width: 100%;
+    height: 1px;
+    align-self: auto;
+  }
+}
+
+// ── Location pill — sits inline with search/sort on Row 1. Collapsed to
+// a single "Near Me" pill (its title attr tooltips the resolved
+// City/State/Country) that expands into a Country/State/City accordion
+// below when tapped, instead of always showing three dropdowns. ──────
+.jb-location-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  max-width: 100%;
+  @include transition-short(all);
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover { border-color: $color-amber-200; background: $color-primary-light; color: $color-primary-darker; }
+
+  &--active {
+    background: $color-text-primary;
+    border-color: $color-text-primary;
+    color: $color-white;
+    &:hover { background: $color-text-primary; color: $color-white; }
+  }
+
+  &__chevron {
+    font-size: 10px;
+    transition: transform $duration-base $easing-standard;
+    &--open { transform: rotate(180deg); }
+  }
+
+  // Custom tooltip — replaces the native `title` attr with a styled bubble
+  // showing the profile's City/State/Country ("Near Me" resolves silently
+  // otherwise). Only present in the DOM/hit-tested while data-tooltip is set.
+  &[data-tooltip] { @include jb-tooltip; }
+}
+
+// ── Location accordion body — Country/State/City cascade, revealed
+// only while the pill above is in "manual" (not Near Me) mode. ────
+.jb-location-expanded {
+  padding: $spacing-sm;
+  background: $color-bg-page;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
 .jb-location-row {
   display: flex;
   flex-wrap: wrap;
@@ -289,47 +431,54 @@
   }
 }
 
-// ── Advanced filter toggle button ─────────────────────────────
-.jb-advanced-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: $radius-full;
-  border: 1.5px solid $color-border;
-  background: $color-bg-light;
-  color: $color-stone-700;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  cursor: pointer;
-  @include transition-short(all);
-
-  &:hover, &--open {
-    border-color: $color-primary;
-    background: $color-primary-light;
-    color: $color-primary-darker;
-  }
-}
-
-.jb-advanced-count {
+// ── Advanced Filters trigger — icon-only button living on Row 1 next to
+// Sort, tooltipped rather than labelled to stay compact. Its panel opens
+// further down, below the Type/Mode row, behind a divider (.jb-adv-hr). ─
+.jb-adv-icon-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
   border-radius: $radius-full;
-  background: $color-primary;
-  color: $color-on-primary;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  line-height: 1;
-}
+  border: 1.5px solid $color-border;
+  background: $color-bg-light;
+  color: $color-stone-600;
+  font-size: 1rem;
+  cursor: pointer;
+  @include transition-short(all);
 
-.jb-advanced-chevron {
-  font-size: 0.75rem;
-  transition: transform $duration-base $easing-standard;
-  &--open { transform: rotate(180deg); }
+  &:hover { border-color: $color-amber-200; background: $color-primary-light; color: $color-primary-darker; }
+
+  &--active {
+    background: $color-text-primary;
+    border-color: $color-text-primary;
+    color: $color-white;
+    &:hover { background: $color-text-primary; color: $color-white; }
+  }
+
+  &[data-tooltip] { @include jb-tooltip; }
+
+  &__count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: $radius-full;
+    background: $color-primary;
+    color: $color-on-primary;
+    font-size: 9px;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+    border: 1.5px solid $color-bg-card;
+  }
 }
 
 // ── Clear All button ──────────────────────────────────────────
@@ -357,18 +506,92 @@
   }
 }
 
-// ── Advanced filter panel ─────────────────────────────────────
-.jb-advanced-panel {
-  padding: $spacing-lg;
-  background: $color-bg-page;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
+// ── Advanced Filters drawer — slides in from the right instead of
+// expanding inline, so the panel's own width no longer competes with
+// the job list for horizontal space. No backdrop: it's a docked panel,
+// not a blocking modal, so the job list stays clickable behind it.
+// Sidebar auto-collapse is driven from the TS side (LayoutService). ──
+@keyframes jbAdvDrawerIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.jb-adv-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  max-width: 100vw;
+  background: $color-bg-card;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 40px rgba(28, 25, 23, 0.16);
+  animation: jbAdvDrawerIn 280ms cubic-bezier(.22, 1, .36, 1);
+
+  @include media-sm-max { width: 100vw; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $color-border;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-family: $font-family-header;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: $color-stone-900;
+    .bi { color: $color-primary-dark; }
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-bg-light;
+    color: $color-stone-600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    @include transition-quick(all);
+    &:hover { background: $color-error-bg; color: $color-danger; }
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $spacing-lg;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-top: 1px solid $color-border;
+    flex-shrink: 0;
+  }
 }
 
 .jb-advanced-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: $spacing-md;
 }
 
@@ -377,11 +600,9 @@
   flex-direction: column;
   gap: 6px;
 
-  &--wide {
-    grid-column: span 2;
-
-    @include media-sm-max { grid-column: span 1; }
-  }
+  // The drawer is single-column throughout, so "wide" fields no longer
+  // need to span — they already get the full row width.
+  &--wide { grid-column: span 1; }
 }
 
 .jb-adv-label {
@@ -638,6 +859,7 @@
 .jb-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: $spacing-sm;
   margin-bottom: $spacing-md;
 
@@ -664,9 +886,51 @@
   }
 }
 
+// ── Card / List view toggle ────────────────────────────────────
+.jb-view-toggle {
+  display: flex;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &__btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: $color-bg-light;
+    color: $color-stone-500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    @include transition-quick(all);
+
+    &:not(:first-child) { border-left: 1.5px solid $color-border; }
+    &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+
+    &--active {
+      background: $color-text-primary;
+      color: #fff;
+      &:hover { background: $color-text-primary; color: #fff; }
+    }
+
+    &[data-tooltip] { @include jb-tooltip; }
+  }
+}
 
 // ── SKELETON ─────────────────────────────────────────────────────
-.jb-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: $spacing-lg; }
+.jb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: $spacing-lg;
+
+  // List mode: rows sit closer together than the roomier card gap.
+  &--compact { gap: 6px; }
+}
 
 .jb-skeleton {
   display: flex;
@@ -912,6 +1176,115 @@
     height: 1px;
     background: rgba(251, 191, 36, 0.20);
     margin-bottom: $spacing-lg;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────
+// LIST VIEW — dense single-line row, same data + actions as the card
+// header (getLocationDisplay/getSalaryDisplay/etc. are shared), just a
+// flatter/tighter layout. Clicking the chevron still opens the same
+// .jbd-body accordion below the row as in card view. (.jbl-*)
+// ──────────────────────────────────────────────────────────────────
+.jb-card--list {
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.05);
+
+  &:not(.jb-card--active):hover {
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.12);
+  }
+}
+
+.jbl-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 10px $spacing-md;
+
+  &__logo {
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  &__logo-img { width: 100%; height: 100%; object-fit: cover; }
+
+  &__logo-initials {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: #fff;
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__title-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $color-stone-900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  &__company {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: $font-weight-semibold;
+    color: $color-primary-darker;
+    white-space: nowrap;
+    .bi { font-size: 0.85em; color: $color-primary-dark; }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+
+  &__badge {
+    height: 18px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  &__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: $color-stone-500;
+    white-space: nowrap;
+    .bi { font-size: 0.9em; color: $color-stone-400; }
+
+    &--date { margin-left: auto; }
+  }
+}
+
+@include media-sm-max {
+  .jbl-row {
+    flex-wrap: wrap;
+    &__meta-item--date { margin-left: 0; }
   }
 }
 

@@ -4,6 +4,7 @@ import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+import { LayoutService } from '../../core/services/layout.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
 
@@ -32,9 +33,13 @@ const ROUTE_TITLES: Record<string, string> = {
 })
 export class UserLayoutComponent {
   authService = inject(AuthService);
+  private layoutService = inject(LayoutService);
   private router = inject(Router);
 
-  sidebarCollapsed = signal(false);
+  /** The user's own manual collapse/expand choice via the toggle button. */
+  private manualSidebarCollapsed = signal(false);
+  /** Effective collapsed state — also true while a page (e.g. a filter drawer) needs the extra width. */
+  sidebarCollapsed = computed(() => this.manualSidebarCollapsed() || this.layoutService.forceSidebarCollapsed());
   mobileSidebarOpen = signal(false);
   userDropdownOpen  = signal(false);
   isMobile          = signal(false);
@@ -81,7 +86,7 @@ export class UserLayoutComponent {
     const mobile = window.innerWidth < 992;
     this.isMobile.set(mobile);
     if (mobile) {
-      this.sidebarCollapsed.set(false);
+      this.manualSidebarCollapsed.set(false);
       this.mobileSidebarOpen.set(false);
     }
   }
@@ -90,7 +95,7 @@ export class UserLayoutComponent {
     if (this.isMobile()) {
       this.mobileSidebarOpen.update((v) => !v);
     } else {
-      this.sidebarCollapsed.update((v) => !v);
+      this.manualSidebarCollapsed.update((v) => !v);
     }
   }
 
