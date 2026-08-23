@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, inject, signal, computed
+  Component, OnInit, OnDestroy, HostListener, ElementRef, inject, signal, computed, effect, viewChildren
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -116,6 +116,37 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   // ─── Page tab — 'all' = public browse, 'pending' = the caller's own submissions ──
   pageTab             = signal<'all' | 'pending'>('all');
   myPendingJobsCount  = signal(0);
+
+  // ── All/Pending tabs — sliding active-pill indicator, position/width
+  // read from the real active button (same approach as the User Community
+  // page's .uc-tab-indicator) instead of a fixed 50%/translateX(100%) split,
+  // which ignores the row's flex gap and bleeds onto the neighbouring tab. ──
+  private tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabBtn');
+  tabIndicatorLeft  = signal(0);
+  tabIndicatorWidth = signal(0);
+  tabIndicatorReady = signal(false);
+
+  constructor() {
+    effect(() => {
+      this.tabButtons();
+      this.pageTab();
+      this.updateTabIndicator();
+    });
+  }
+
+  @HostListener('window:resize')
+  onTabRowResize(): void {
+    this.updateTabIndicator();
+  }
+
+  private updateTabIndicator(): void {
+    const idx = this.pageTab() === 'all' ? 0 : 1;
+    const btn = this.tabButtons()[idx]?.nativeElement;
+    if (!btn) return;
+    this.tabIndicatorLeft.set(btn.offsetLeft);
+    this.tabIndicatorWidth.set(btn.offsetWidth);
+    this.tabIndicatorReady.set(true);
+  }
 
   // ─── Pagination ─────────────────────────────────────────────
   currentPage = signal(1);

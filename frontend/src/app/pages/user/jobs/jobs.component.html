@@ -3,7 +3,7 @@
      ═══════════════════════════════════════════════════════════ -->
 
 <!-- ── PAGE HEADER — matches the User Community/Business List pages'
-     header: title/subtitle left, add button right. No tabs. ────── -->
+     header: title/subtitle left, All/Pending tabs + add button right. ── -->
 <div class="jb-head">
   <div>
     <h1 class="jb-title">Job Board</h1>
@@ -11,6 +11,40 @@
   </div>
 
   <div class="jb-head-controls">
+    <div class="biz-tabs-wrap">
+      <div class="biz-tabs" role="tablist">
+        <span class="biz-tab-indicator"
+          [class.biz-tab-indicator--ready]="tabIndicatorReady()"
+          [style.transform]="'translateX(' + tabIndicatorLeft() + 'px)'"
+          [style.width.px]="tabIndicatorWidth()"
+          aria-hidden="true"></span>
+        <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'all'"
+          [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
+          <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> All
+        </button>
+        <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
+          [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+          <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
+          @if (myPendingJobsCount()) { <span class="biz-tab-count">{{ myPendingJobsCount() }}</span> }
+        </button>
+      </div>
+    </div>
+
+    <div class="jb-view-toggle" role="group" aria-label="Switch view">
+      <button type="button" class="jb-view-toggle__btn"
+        [class.jb-view-toggle__btn--active]="jobViewMode() === 'card'"
+        data-tooltip="Card view"
+        (click)="setJobViewMode('card')">
+        <i class="bi bi-grid-3x2-gap"></i>
+      </button>
+      <button type="button" class="jb-view-toggle__btn"
+        [class.jb-view-toggle__btn--active]="jobViewMode() === 'list'"
+        data-tooltip="List view"
+        (click)="setJobViewMode('list')">
+        <i class="bi bi-list-ul"></i>
+      </button>
+    </div>
+
     <button type="button" class="jb-add-btn" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i> Post a Job
     </button>

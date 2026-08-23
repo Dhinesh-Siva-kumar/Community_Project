@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
@@ -52,6 +52,22 @@ export class UserBusinessComponent implements OnInit {
   /** 'all' = public browse (List/Categories toggle above), 'pending' = the caller's own submissions across every status */
   pageTab          = signal<'all' | 'pending'>('all');
   myPendingBusinessCount = signal(0);
+
+  // ── Sliding active-pill indicators (JS-measured, same approach as the
+  // User Community page's .uc-tab-indicator) for both tab rows below — the
+  // All/Pending row and the List/Category row. A fixed 50%/translateX(100%)
+  // ignores the row's flex gap and bleeds the pill's border onto the
+  // neighbouring tab, so position/width are read from the real button box
+  // instead. ──
+  private tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabBtn');
+  tabIndicatorLeft  = signal(0);
+  tabIndicatorWidth = signal(0);
+  tabIndicatorReady = signal(false);
+
+  private viewTabButtons = viewChildren<ElementRef<HTMLButtonElement>>('viewTabBtn');
+  viewTabIndicatorLeft  = signal(0);
+  viewTabIndicatorWidth = signal(0);
+  viewTabIndicatorReady = signal(false);
 
   // ── Master data ─────────────────────────────────────────────
   categories       = signal<BusinessCategory[]>([]);
@@ -241,6 +257,43 @@ export class UserBusinessComponent implements OnInit {
       this.catSortBy();
       this.visibleCategoryCount.set(this.CATEGORY_BATCH_SIZE);
     });
+
+    // Slide each pill under whichever tab is active in its row — recomputed
+    // whenever the active tab changes or the buttons first mount.
+    effect(() => {
+      this.tabButtons();
+      this.pageTab();
+      this.updateIndicator(this.tabButtons(), this.pageTab() === 'all' ? 0 : 1,
+        this.tabIndicatorLeft, this.tabIndicatorWidth, this.tabIndicatorReady);
+    });
+    effect(() => {
+      this.viewTabButtons();
+      this.businessView();
+      this.updateIndicator(this.viewTabButtons(), this.businessView() === 'list' ? 0 : 1,
+        this.viewTabIndicatorLeft, this.viewTabIndicatorWidth, this.viewTabIndicatorReady);
+    });
+  }
+
+  @HostListener('window:resize')
+  onTabRowResize(): void {
+    this.updateIndicator(this.tabButtons(), this.pageTab() === 'all' ? 0 : 1,
+      this.tabIndicatorLeft, this.tabIndicatorWidth, this.tabIndicatorReady);
+    this.updateIndicator(this.viewTabButtons(), this.businessView() === 'list' ? 0 : 1,
+      this.viewTabIndicatorLeft, this.viewTabIndicatorWidth, this.viewTabIndicatorReady);
+  }
+
+  private updateIndicator(
+    buttons: readonly ElementRef<HTMLButtonElement>[],
+    activeIndex: number,
+    leftSig: WritableSignal<number>,
+    widthSig: WritableSignal<number>,
+    readySig: WritableSignal<boolean>,
+  ): void {
+    const btn = buttons[activeIndex]?.nativeElement;
+    if (!btn) return;
+    leftSig.set(btn.offsetLeft);
+    widthSig.set(btn.offsetWidth);
+    readySig.set(true);
   }
 
   ngOnInit(): void {
@@ -482,6 +535,12 @@ export class UserBusinessComponent implements OnInit {
   }
 
   switchView(view: 'list' | 'categories'): void {
+    // Business List / Category View are the public "All" browse's own
+    // sub-tabs — the List/Category switcher and the grid/list toggle stay
+    // visible on the "Pending Approval" tab too now (rather than being
+    // hidden there), so picking either here means leaving "my submissions"
+    // and going back to the public browse.
+    if (this.pageTab() === 'pending') this.pageTab.set('all');
     this.businessView.set(view);
     this.currentView.set(view === 'categories' ? 'categories' : 'list');
     if (view === 'list') {

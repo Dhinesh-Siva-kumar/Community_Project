@@ -31,14 +31,22 @@
 
 .biz-tabs { display: flex; gap: 3px; position: relative; }
 
+// Position/width are read from the real active button's box in JS (same
+// approach as the User Community page's .uc-tab-indicator) rather than
+// assumed from a 50%/translateX(100%) split — a plain CSS split ignores
+// the row's flex gap, so the indicator bleeds past the real tab boundary
+// and its border visibly crosses onto the neighbouring, unselected tab.
 .biz-tab-indicator {
-  position: absolute; top: 0; left: 0; width: 50%; height: 32px;
+  position: absolute; top: 0; left: 0; height: 32px;
   border-radius: $radius-sm; background: #fff;
   border: 1px solid rgba(251, 191, 36, 0.35);
   box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
-  transition: transform 320ms cubic-bezier(.22, 1, .36, 1);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1), width 320ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
 
-  &--categories, &--pending { transform: translateX(100%); }
+  &--ready { opacity: 1; }
 }
 
 .biz-tab {

@@ -1,14 +1,15 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EventService, EventsQueryParams } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Event as AppEvent, PaginatedResponse } from '../../../core/models';
+import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -19,6 +20,25 @@ function endTimeValidator(group: AbstractControl): ValidationErrors | null {
   const end   = group.get('eventEndTime')?.value;
   if (start && end && end <= start) return { endBeforeStart: true };
   return null;
+}
+
+/** Fails when the trimmed value is empty (catches whitespace-only strings). */
+function noWhitespace(control: AbstractControl): ValidationErrors | null {
+  const val = ((control.value as string) ?? '').trim();
+  return val.length === 0 ? { whitespace: true } : null;
+}
+
+/**
+ * Fails when the trimmed value is shorter than `min`.
+ * Does NOT fail on empty/null (let `required` + `noWhitespace` handle that).
+ */
+function minLengthTrimmed(min: number) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = ((control.value as string) ?? '').trim();
+    return val.length > 0 && val.length < min
+      ? { minlengthTrimmed: { requiredLength: min, actualLength: val.length } }
+      : null;
+  };
 }
 
 type SortOption = 'near' | 'soonest' | 'latest';
@@ -44,7 +64,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
@@ -65,6 +85,37 @@ export class UserEventsComponent implements OnInit {
   pageTab              = signal<'all' | 'pending'>('all');
   myPendingEventsCount = signal(0);
 
+  // ── All/Pending tabs — sliding active-pill indicator, position/width
+  // read from the real active button (same approach as the User Community
+  // page's .uc-tab-indicator) instead of a fixed 50%/translateX(100%) split,
+  // which ignores the row's flex gap and bleeds onto the neighbouring tab. ──
+  private tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabBtn');
+  tabIndicatorLeft  = signal(0);
+  tabIndicatorWidth = signal(0);
+  tabIndicatorReady = signal(false);
+
+  constructor() {
+    effect(() => {
+      this.tabButtons();
+      this.pageTab();
+      this.updateTabIndicator();
+    });
+  }
+
+  @HostListener('window:resize')
+  onTabRowResize(): void {
+    this.updateTabIndicator();
+  }
+
+  private updateTabIndicator(): void {
+    const idx = this.pageTab() === 'all' ? 0 : 1;
+    const btn = this.tabButtons()[idx]?.nativeElement;
+    if (!btn) return;
+    this.tabIndicatorLeft.set(btn.offsetLeft);
+    this.tabIndicatorWidth.set(btn.offsetWidth);
+    this.tabIndicatorReady.set(true);
+  }
+
   readonly pageSize = 8;
   currentPage = signal(1);
   totalPages  = signal(1);
@@ -75,28 +126,42 @@ export class UserEventsComponent implements OnInit {
   sortOption  = signal<SortOption>('near');
   private searchDebounce: any = null;
 
+  readonly sortOptions: SelectOption[] = [
+    { value: 'near',    label: 'Near you first' },
+    { value: 'soonest', label: 'Soonest first' },
+    { value: 'latest',  label: 'Latest first' },
+  ];
+
+  // ── Advanced filters — Country + Event Date range (mirrors the Business
+  // page's search card: search + sort in the top row, everything else
+  // collapsed behind Advanced Filters) ──
+  filterCountry        = signal<string | null>(null);
+  filterCountryOptions: SelectOption[] = [];
+  filterDateFrom        = signal('');
+  filterDateTo          = signal('');
+  activeQuickRange      = signal<'today' | '7d' | '30d' | null>(null);
+  showAdvancedFilters   = signal(false);
+
+  activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.modeFilter() !== 'all') count++;
+    if (this.filterCountry()) count++;
+    if (this.filterDateFrom()) count++;
+    if (this.filterDateTo()) count++;
+    return count;
+  });
+
   currentUser   = computed(() => this.authService.currentUser());
   currentUserId = computed(() => this.currentUser()?.id ?? null);
   userPincode   = computed(() => this.currentUser()?.pincode ?? '');
   isAdmin       = computed(() => this.currentUser()?.role === 'ADMIN');
 
-  // ── selection (mirrors the admin post-approval bulk-select pattern) ──
-  selectionMode = signal(false);
-  selectedIds   = signal<Set<string>>(new Set());
-  selectedCount = computed(() => this.selectedIds().size);
-  pageMineIds   = computed(() => this.events().filter((e) => this.isMine(e)).map((e) => e.id));
-  allSelectedOnPage = computed(() => {
-    const ids = this.pageMineIds();
-    return ids.length > 0 && ids.every((id) => this.selectedIds().has(id));
-  });
-
   // ── add / edit modal ──
-  showAddModal     = signal(false);
-  editingId        = signal<string | null>(null);
-  selectedImage    = signal<File | null>(null);
-  imagePreview     = signal<string | null>(null);
-  imageUploadReset = signal(0);
-  existingImage    = signal<string | null>(null);
+  showAddModal        = signal(false);
+  editingId           = signal<string | null>(null);
+  selectedImage       = signal<File | null>(null);
+  existingImage       = signal<string | null>(null);
+  formSubmitAttempted = signal(false);
 
   eventForm!: FormGroup;
 
@@ -104,14 +169,19 @@ export class UserEventsComponent implements OnInit {
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
   readonly TIMEZONES   = ['UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney'];
 
+  readonly categoryOptions: SelectOption[] = this.EVENT_TYPES.map((t) => ({ value: t, label: t }));
+  readonly timezoneOptions: SelectOption[] = this.TIMEZONES.map((t) => ({ value: t, label: t }));
+
   get eventMode(): string { return this.eventForm?.get('eventMode')?.value ?? ''; }
   get showAddress(): boolean      { return this.eventMode === 'Offline' || this.eventMode === 'Hybrid'; }
   get showLocationLink(): boolean { return this.eventMode === 'Online'  || this.eventMode === 'Hybrid'; }
 
+  get f() { return this.eventForm.controls; }
+
   // ── detail popup ──
   viewingEvent = signal<AppEvent | null>(null);
 
-  // ── delete confirm (single id or several, for bulk) ──
+  // ── delete confirm ──
   confirmDeleteIds = signal<string[] | null>(null);
   bulkProcessing   = signal(false);
 
@@ -123,11 +193,21 @@ export class UserEventsComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadEvents();
+    this.loadCountries();
     this.route.queryParams.subscribe(params => {
       const eventId = params['eventId'];
       if (eventId) this.openEventFromQueryParam(eventId);
     });
     this.loadMyPendingEventsCount();
+  }
+
+  loadCountries(): void {
+    this.authService.getCountries().subscribe({
+      next: (res: any) => {
+        this.filterCountryOptions = (res.data ?? res ?? []).map((c: Country) => ({ value: c.name, label: c.name }));
+      },
+      error: () => {},
+    });
   }
 
   setPageTab(tab: 'all' | 'pending'): void {
@@ -185,39 +265,46 @@ export class UserEventsComponent implements OnInit {
 
   private initForm(): void {
     this.eventForm = this.fb.group({
-      title:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      description:  ['', [Validators.required, Validators.minLength(10)]],
+      title:        ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(100)]],
+      description:  ['', [Validators.required, noWhitespace, minLengthTrimmed(10), Validators.maxLength(1000)]],
       eventCategory:['', Validators.required],
       eventDate:    ['', [Validators.required, futureDateValidator]],
       eventTime:    ['', Validators.required],
       eventEndTime: [''],
       timezone:     ['Asia/Kolkata', Validators.required],
       eventMode:    ['Offline', Validators.required],
-      address:      ['', Validators.required], // Start with required for Offline default
-      locationLink: [''],
-      pincode:      [this.userPincode()],
-      location:     [''],
+      address:      ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]],
+      locationLink: ['', Validators.maxLength(300)],
+      pincode:      [this.userPincode(), Validators.maxLength(12)],
+      location:     ['', Validators.maxLength(150)],
       country:      [''],
     }, { validators: endTimeValidator });
 
-    this.eventForm.get('eventMode')!.valueChanges.subscribe(mode => {
-      const addr = this.eventForm.get('address')!;
-      const link = this.eventForm.get('locationLink')!;
+    // Apply mode-specific validators immediately (not just on the next change) so
+    // address/link stay correctly required even if the default eventMode value
+    // above ever changes — valueChanges alone only fires on a later user edit.
+    this.applyModeValidators(this.eventForm.get('eventMode')!.value);
+    this.eventForm.get('eventMode')!.valueChanges.subscribe((mode) => this.applyModeValidators(mode));
+  }
 
-      if (mode === 'Offline') {
-        addr.setValidators([Validators.required]);
-        link.clearValidators();
-      } else if (mode === 'Online') {
-        addr.clearValidators();
-        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
-      } else if (mode === 'Hybrid') {
-        addr.setValidators([Validators.required]);
-        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
-      }
+  /** (Re)apply the conditional required/format validators for address & meeting link based on event mode. */
+  private applyModeValidators(mode: string): void {
+    const addr = this.eventForm.get('address')!;
+    const link = this.eventForm.get('locationLink')!;
 
-      addr.updateValueAndValidity({ emitEvent: false });
-      link.updateValueAndValidity({ emitEvent: false });
-    });
+    if (mode === 'Offline') {
+      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
+      link.setValidators([Validators.maxLength(300)]);
+    } else if (mode === 'Online') {
+      addr.setValidators([Validators.maxLength(200)]);
+      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
+    } else if (mode === 'Hybrid') {
+      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
+      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
+    }
+
+    addr.updateValueAndValidity({ emitEvent: false });
+    link.updateValueAndValidity({ emitEvent: false });
   }
 
   // ── data loading ──
@@ -230,6 +317,9 @@ export class UserEventsComponent implements OnInit {
       limit: this.pageSize,
       search: this.searchQuery() || undefined,
       eventMode: mode === 'all' ? undefined : mode,
+      country: this.filterCountry() || undefined,
+      eventDateFrom: this.filterDateFrom() || undefined,
+      eventDateTo: this.filterDateTo() || undefined,
       sortBy: opt === 'near' ? 'near' : 'eventDate',
       sortDir: opt === 'latest' ? 'desc' : 'asc',
       nearPincode: opt === 'near' ? (this.userPincode() || undefined) : undefined,
@@ -240,13 +330,10 @@ export class UserEventsComponent implements OnInit {
         this.totalPages.set(res.totalPages);
         this.totalItems.set(res.total);
         this.loading.set(false);
-        this.clearSelection();
       },
       error: () => { this.toast.error('Failed to load events'); this.loading.set(false); },
     });
   }
-
-  private clearSelection(): void { this.selectedIds.set(new Set()); }
 
   applyFilters(): void { this.currentPage.set(1); this.loadEvents(); }
 
@@ -258,6 +345,75 @@ export class UserEventsComponent implements OnInit {
   clearSearch(): void { this.searchQuery.set(''); this.applyFilters(); }
   setModeFilter(mode: ModeFilter): void { this.modeFilter.set(mode); this.applyFilters(); }
   setSortOption(opt: SortOption): void { this.sortOption.set(opt); this.applyFilters(); }
+
+  toggleAdvancedFilters(): void { this.showAdvancedFilters.update(v => !v); }
+
+  onFilterCountryChange(value: string | null): void {
+    this.filterCountry.set(value);
+    this.applyFilters();
+  }
+
+  onFilterDateFromChange(e: Event): void {
+    this.activeQuickRange.set(null);
+    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  onFilterDateToChange(e: Event): void {
+    this.activeQuickRange.set(null);
+    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.applyFilters();
+  }
+
+  /** Fills From/To Date with a preset range (mirrors the Business list page's quick date presets). */
+  applyQuickDatePreset(preset: 'today' | '7d' | '30d'): void {
+    const today = new Date();
+    const to = this.toInputDate(today);
+
+    if (preset === 'today') {
+      this.filterDateFrom.set(to);
+      this.filterDateTo.set(to);
+      this.activeQuickRange.set('today');
+      this.applyFilters();
+      return;
+    }
+
+    const fromDate = new Date(today);
+    fromDate.setDate(today.getDate() - (preset === '7d' ? 6 : 29));
+    this.filterDateFrom.set(this.toInputDate(fromDate));
+    this.filterDateTo.set(to);
+    this.activeQuickRange.set(preset);
+    this.applyFilters();
+  }
+
+  private toInputDate(date: Date): string {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  removeFilter(key: 'mode' | 'country' | 'dateFrom' | 'dateTo'): void {
+    switch (key) {
+      case 'mode':     this.modeFilter.set('all'); break;
+      case 'country':  this.filterCountry.set(null); break;
+      case 'dateFrom': this.filterDateFrom.set(''); break;
+      case 'dateTo':   this.filterDateTo.set(''); break;
+    }
+    if (key === 'dateFrom' || key === 'dateTo') this.activeQuickRange.set(null);
+    this.applyFilters();
+  }
+
+  clearAllFilters(): void {
+    this.searchQuery.set('');
+    this.modeFilter.set('all');
+    this.filterCountry.set(null);
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+    this.activeQuickRange.set(null);
+    this.showAdvancedFilters.set(false);
+    this.applyFilters();
+  }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
@@ -300,28 +456,6 @@ export class UserEventsComponent implements OnInit {
     return evt.eventEndTime ? `${evt.eventTime} – ${evt.eventEndTime}` : evt.eventTime;
   }
 
-  // ── selection ──
-  toggleSelectionMode(): void {
-    this.selectionMode.update(v => !v);
-    if (!this.selectionMode()) this.clearSelection();
-  }
-  isSelected(id: string): boolean { return this.selectedIds().has(id); }
-  toggleSelect(id: string): void {
-    this.selectedIds.update(ids => {
-      const next = new Set(ids);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-  toggleSelectAll(): void {
-    const ids = this.pageMineIds();
-    if (this.allSelectedOnPage()) {
-      this.selectedIds.update(sel => { const n = new Set(sel); ids.forEach(id => n.delete(id)); return n; });
-    } else {
-      this.selectedIds.update(sel => { const n = new Set(sel); ids.forEach(id => n.add(id)); return n; });
-    }
-  }
-
   // ── detail popup ──
   viewEvent(evt: AppEvent): void { this.viewingEvent.set(evt); }
   closeView(): void { this.viewingEvent.set(null); }
@@ -338,12 +472,13 @@ export class UserEventsComponent implements OnInit {
   openAddModal(): void {
     this.editingId.set(null);
     this.eventForm.reset({ timezone: 'Asia/Kolkata', eventMode: 'Offline', pincode: this.userPincode() });
-    this.selectedImage.set(null); this.imagePreview.set(null); this.existingImage.set(null);
-    this.imageUploadReset.update(v => v + 1);
+    this.formSubmitAttempted.set(false);
+    this.selectedImage.set(null); this.existingImage.set(null);
     this.showAddModal.set(true);
   }
   openEditModal(evt: AppEvent): void {
     this.editingId.set(evt.id);
+    this.formSubmitAttempted.set(false);
     this.eventForm.reset({
       title: evt.title,
       description: evt.description ?? '',
@@ -359,22 +494,24 @@ export class UserEventsComponent implements OnInit {
       location: evt.location ?? '',
       country: evt.country ?? '',
     });
-    this.selectedImage.set(null); this.imagePreview.set(null);
+    this.selectedImage.set(null);
     this.existingImage.set(evt.images?.[0] ?? null);
-    this.imageUploadReset.update(v => v + 1);
     this.showAddModal.set(true);
   }
-  closeAddModal(): void { this.showAddModal.set(false); }
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.formSubmitAttempted.set(false);
+  }
 
   onImageChange(files: File[]): void {
-    const f = files[0] ?? null; this.selectedImage.set(f);
-    if (f) { const r = new FileReader(); r.onload = e => this.imagePreview.set(e.target?.result as string); r.readAsDataURL(f); }
-    else { this.imagePreview.set(null); }
+    this.selectedImage.set(files[0] ?? null);
   }
-  clearImage(): void { this.selectedImage.set(null); this.imagePreview.set(null); this.imageUploadReset.update(v => v + 1); }
 
   submitEvent(): void {
-    if (this.eventForm.invalid) { this.eventForm.markAllAsTouched(); return; }
+    this.formSubmitAttempted.set(true);
+    this.eventForm.markAllAsTouched();
+    if (this.eventForm.invalid) { this.scrollToFirstError(); return; }
+
     this.submitting.set(true);
     const data = this.eventForm.value;
     const images = this.selectedImage() ? [this.selectedImage()!] : undefined;
@@ -407,12 +544,18 @@ export class UserEventsComponent implements OnInit {
     });
   }
 
+  /** Scrolls the modal body to the first visible error message. */
+  private scrollToFirstError(): void {
+    setTimeout(() => {
+      const firstError = document.querySelector<HTMLElement>('.cm-error-msg');
+      firstError
+        ?.closest<HTMLElement>('.cm-field-group, .cm-section')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  }
+
   // ── delete ──
   requestDelete(evt: AppEvent): void { this.confirmDeleteIds.set([evt.id]); }
-  requestDeleteSelected(): void {
-    if (this.selectedCount() === 0) return;
-    this.confirmDeleteIds.set(Array.from(this.selectedIds()));
-  }
   cancelDeleteConfirm(): void { this.confirmDeleteIds.set(null); }
 
   confirmDeleteExecute(): void {
@@ -423,7 +566,6 @@ export class UserEventsComponent implements OnInit {
 
     const finish = () => {
       this.confirmDeleteIds.set(null); this.bulkProcessing.set(false);
-      this.selectedIds.update(sel => { const n = new Set(sel); ids.forEach(id => n.delete(id)); return n; });
       if (succeeded > 0) this.toast.success(succeeded === 1 ? 'Event deleted' : `${succeeded} events deleted`);
       if (failed > 0) this.toast.error(`${failed} event${failed === 1 ? '' : 's'} failed to delete`);
 

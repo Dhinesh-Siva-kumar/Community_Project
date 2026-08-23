@@ -87,6 +87,61 @@
 
 .jb-head-controls { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
 
+// ── All / Pending Approval tabs — replicated from the Business page's
+// .biz-tabs-wrap (same class names, so the header stays visually identical
+// across User Business/Events/Jobs). ────────────────────────────────
+.biz-tabs-wrap {
+  position: relative; flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.2); border-radius: $radius-md;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  padding: 4px; backdrop-filter: blur(10px); display: inline-block;
+}
+
+.biz-tabs { display: flex; gap: 3px; position: relative; }
+
+// Width/translate are offset by half the row's 3px gap on each side —
+// a plain 50%/translateX(100%) ignores that gap entirely, so the indicator
+// (sized to the full 50%) bleeds ~1.5px past the real tab boundary and
+// its border visibly crosses onto the neighbouring, unselected tab.
+// Position/width are read from the real active button's box in JS (same
+// approach as the User Community page's .uc-tab-indicator) rather than
+// assumed from a 50%/translateX(100%) split — a plain CSS split ignores
+// the row's flex gap, so the indicator bleeds past the real tab boundary
+// and its border visibly crosses onto the neighbouring, unselected tab.
+.biz-tab-indicator {
+  position: absolute; top: 0; left: 0; height: 32px;
+  border-radius: $radius-sm; background: #fff;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1), width 320ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
+
+  &--ready { opacity: 1; }
+}
+
+.biz-tab {
+  position: relative; z-index: 1; flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 14px; border-radius: $radius-sm; border: 1px solid transparent;
+  background: transparent; color: $color-stone-500; font-size: 12px; font-weight: $font-weight-semibold;
+  cursor: pointer; white-space: nowrap; @include transition-quick(color);
+
+  i { font-size: 12px; }
+
+  &:hover:not(.active) { color: $color-stone-800; }
+  &.active { color: $color-primary-darker; font-weight: $font-weight-bold; }
+}
+
+.biz-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-extrabold;
+}
+
 .jb-add-btn {
   display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
   border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
