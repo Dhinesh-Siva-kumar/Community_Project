@@ -335,7 +335,13 @@
             @if (evt.eventCategory) {
               <span class="ev-chip-sm">{{ evt.eventCategory }}</span>
             }
-            <span class="ev-badge" [class]="'ev-badge--approval-' + evt.status.toLowerCase()">{{ evt.status }}</span>
+            @if (evt.status === 'PENDING') {
+              <a class="ev-badge ev-badge--approval-pending ev-badge--link"
+                 [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'events' }"
+                 (click)="$event.stopPropagation()" title="Go to Approval page">
+                <i class="bi bi-hourglass-split"></i> Pending Approval
+              </a>
+            }
             @if (!evt.isActive) {
               <span class="ev-badge ev-badge--inactive">Inactive</span>
             }
@@ -352,25 +358,13 @@
             @if (evt.eventTime) {
               <li class="ev-meta-item ev-meta-item--time">
                 <span class="ev-meta-item__icon"><i class="bi bi-clock-fill"></i></span>
-                <span>{{ evt.eventTime }}{{ evt.eventEndTime ? ' – ' + evt.eventEndTime : '' }}</span>
+                <span>{{ formatEventTime(evt) }}</span>
               </li>
             }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && (evt.address || evt.location)) {
+            @if (evt.address || evt.location || evt.country) {
               <li class="ev-meta-item ev-meta-item--location">
                 <span class="ev-meta-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                <span>{{ evt.address || evt.location }}</span>
-              </li>
-            }
-            @if (evt.timezone) {
-              <li class="ev-meta-item ev-meta-item--timezone">
-                <span class="ev-meta-item__icon"><i class="bi bi-globe2"></i></span>
-                <span>{{ evt.timezone }}</span>
-              </li>
-            }
-            @if (evt.country) {
-              <li class="ev-meta-item ev-meta-item--country">
-                <span class="ev-meta-item__icon"><i class="bi bi-flag-fill"></i></span>
-                <span>{{ evt.country }}{{ evt.pincode ? ' · ' + evt.pincode : '' }}</span>
+                <span>{{ formatEventAddress(evt) }}</span>
               </li>
             }
           </ul>
@@ -496,8 +490,6 @@
                 [class.bi-arrow-down-up]="sortBy() !== 'location'"
               ></i>
             </th>
-            <th class="um-th d-none d-xl-table-cell">Country</th>
-            <th class="um-th d-none d-xl-table-cell">Timezone</th>
             <th class="um-th d-none d-lg-table-cell">Host</th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'status'" (click)="toggleSort('status')" role="button" tabindex="0" (keydown.enter)="toggleSort('status')">
               Status
@@ -538,13 +530,9 @@
               </td>
               <td class="um-td"><span class="um-td-text">{{ evt.eventDate | date:'d MMM y' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
-                <span class="um-td-text">{{ evt.eventTime ? evt.eventTime + (evt.eventEndTime ? ' – ' + evt.eventEndTime : '') : '—' }}</span>
+                <span class="um-td-text">{{ evt.eventTime ? formatEventTime(evt) : '—' }}</span>
               </td>
-              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ evt.address || evt.location || '—' }}</span></td>
-              <td class="um-td d-none d-xl-table-cell">
-                <span class="um-td-text">{{ evt.country }}{{ evt.pincode ? ' · ' + evt.pincode : '' }}</span>
-              </td>
-              <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ evt.timezone || '—' }}</span></td>
+              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ formatEventAddress(evt) || '—' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
                 @if (evt.user) {
                   <span class="ev-meta-item ev-meta-item--host">

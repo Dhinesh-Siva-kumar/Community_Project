@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -51,7 +52,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent, ImageUrlPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent, ImageUrlPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
@@ -494,5 +495,33 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     } else {
       return { label: 'Completed', type: 'completed' };
     }
+  }
+
+  /** "09:11" → "9:11 AM" */
+  private to12h(time24: string): string {
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return time24;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  formatEventTime(evt: AppEvent): string {
+    if (!evt.eventTime) return '';
+    let text = this.to12h(evt.eventTime);
+    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
+    if (evt.timezone) text += ` (${evt.timezone})`;
+    return text;
+  }
+
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  formatEventAddress(evt: AppEvent): string {
+    const parts: string[] = [];
+    if (evt.address) parts.push(evt.address);
+    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
+    if (venuePincode) parts.push(venuePincode);
+    if (evt.country) parts.push(evt.country);
+    return parts.join(', ');
   }
 }

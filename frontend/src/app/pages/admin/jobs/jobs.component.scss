@@ -946,7 +946,24 @@
 
 .jbd-meta-pill { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;background:rgba(255,255,255,0.80);border:1px solid $color-border;font-size:11px;font-weight:$font-weight-medium;color:$color-stone-500;white-space:nowrap;.bi{font-size:0.75rem;} &--date{color:$color-stone-500;} &--updated{color:#0284C7;border-color:rgba(2,132,199,0.25);background:rgba(224,242,254,0.50);} &--link{color:$color-info;border-color:rgba(14,165,233,0.30);text-decoration:none;@include transition-short(all);&:hover{background:rgba(224,242,254,0.60);}} }
 
-.jbd-status-badge { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;font-size:11px;font-weight:$font-weight-bold;.bi{font-size:7px;} &--active{background:rgba(22,163,74,0.10);border:1px solid rgba(22,163,74,0.30);color:#15803D;.bi{color:#16A34A;}} &--draft{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35);color:$color-primary-darker;} &--closed{background:$color-stone-100;border:1px solid $color-border;color:$color-stone-500;} }
+.jbd-status-badge {
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;font-size:11px;font-weight:$font-weight-bold;.bi{font-size:7px;}
+  &--active{background:rgba(22,163,74,0.10);border:1px solid rgba(22,163,74,0.30);color:#15803D;.bi{color:#16A34A;}}
+  &--draft{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35);color:$color-primary-darker;}
+  &--closed{background:$color-stone-100;border:1px solid $color-border;color:$color-stone-500;}
+  // Moderation status — the table's dedicated Approval column.
+  &--approved{background:#D1FAE5;border:1px solid #A7F3D0;color:#065F46;}
+  &--rejected{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;}
+  // Links to the Job Approval page — jobs awaiting moderation.
+  &--pending {
+    background: #FEF3C7; border: 1px solid #FDE68A; color: #92400E;
+    text-decoration: none; cursor: pointer;
+    .bi { font-size: 10px; }
+    transition: filter $duration-short $easing-standard, transform $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+    &:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(28, 25, 23, 0.14); }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+}
 
 .jbd-info-grid { display:grid;grid-template-columns:repeat(auto-fill, minmax(155px,1fr));gap:10px; }
 
@@ -1503,7 +1520,32 @@
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
-  overflow: hidden;
+
+  // Fixed-size variant used by the table view — mirrors the Community/Events
+  // admin pages: sticky header + its own internal scroll instead of growing
+  // the whole page.
+  &--fixed {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .table-responsive {
+      overflow-y: auto;
+      max-height: calc(100vh - 420px);
+      min-height: 220px;
+      overscroll-behavior: contain;
+
+      scrollbar-width: thin;
+      scrollbar-color: rgba(251, 191, 36, 0.45) transparent;
+
+      &::-webkit-scrollbar       { width: 6px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.45); border-radius: 999px; }
+      &::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.7); }
+    }
+
+    .um-th { position: sticky; top: 0; z-index: 2; }
+  }
 }
 
 .um-table {
@@ -1512,6 +1554,8 @@
 
   thead tr:first-child th:first-child { border-top-left-radius: $radius-lg; }
   thead tr:first-child th:last-child  { border-top-right-radius: $radius-lg; }
+  tbody tr:last-child td:first-child  { border-bottom-left-radius: $radius-lg; }
+  tbody tr:last-child td:last-child   { border-bottom-right-radius: $radius-lg; }
 }
 
 .um-th {
@@ -1525,6 +1569,8 @@
   border-bottom: 1px solid $color-border;
   white-space: nowrap;
 
+  &--actions { text-align: right; padding-right: 16px; }
+
   &--sortable {
     cursor: pointer;
     user-select: none;
@@ -1536,13 +1582,15 @@
   &--active { color: $color-primary-dark; font-weight: $font-weight-bold; }
 }
 
-// Only rendered in the template when its column is the active sort, so it
-// always shows an up/down arrow confirming direction — never a neutral
-// icon on unsorted columns.
+// Always rendered — shows a neutral icon on unsorted columns, and the
+// direction arrow only on the active one (mirrors Community/Events).
 .um-th__sort-icon {
   margin-left: 4px;
   font-size: 0.65rem;
-  color: $color-primary-dark;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
+  .um-th--active & { opacity: 1; color: $color-primary-dark; }
 }
 
 .um-td {
@@ -1698,6 +1746,16 @@
   &__info {
     font-size: $font-size-sm; color: $color-text-muted; white-space: nowrap;
     strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
+  }
+
+  // Nested inside .um-table-card--fixed — shares the card's border/shadow
+  // instead of drawing its own, and stays pinned as a non-scrolling footer.
+  &--nested {
+    margin-top: 0;
+    flex-shrink: 0;
+    border: none;
+    border-top: 1px solid $color-border;
+    border-radius: 0 0 $radius-lg $radius-lg;
   }
 }
 

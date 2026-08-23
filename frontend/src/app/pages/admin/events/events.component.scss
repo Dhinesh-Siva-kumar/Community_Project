@@ -697,6 +697,15 @@
   &--approval-approved { background: #D1FAE5; color: #065F46; }
   &--approval-rejected { background: #FEE2E2; color: #991B1B; }
   &--inactive { background: #F3F4F6; color: #6B7280; }
+
+  // Interactive variant — the Pending Approval chip links to the Approval page.
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    &:hover { filter: brightness(0.94); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(28, 25, 23, 0.14); }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
 }
 .ev-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
@@ -707,9 +716,15 @@
 }
 
 .ev-meta-item {
-  display: flex; align-items: center; gap: 9px; font-size: 13px;
+  display: flex; align-items: flex-start; gap: 9px; font-size: 13px;
   color: $color-text-muted;
-  span { line-height: 1.4; }
+  // The trailing text (address/location/host…) needs min-width: 0 to be
+  // allowed to wrap inside the flex row — without it a long, unbreakable
+  // line (e.g. "Address, Venue - Pincode, Country") overflows the card's
+  // clipped bounds instead of wrapping, cutting the country off entirely.
+  span:last-child { line-height: 1.4; flex: 1; min-width: 0; }
+  &:not(.ev-card__host) span:last-child { white-space: normal; overflow-wrap: break-word; }
+  .ev-meta-item__icon { margin-top: 1px; }
   &--link a { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } }
 }
 
@@ -729,9 +744,7 @@
 
   .ev-meta-item--time &      { background: $color-primary-light; color: $color-primary-darker; }
   .ev-meta-item--location &  { background: #FCE7F3; color: #BE185D; }
-  .ev-meta-item--timezone &  { background: #CCFBF1; color: #0F766E; }
   .ev-meta-item--host &      { background: #EDE9FE; color: #6B21A8; }
-  .ev-meta-item--country &   { background: #E0E7FF; color: #3730A3; }
 }
 
 // Rejection reason called out under the quick facts, only when relevant.

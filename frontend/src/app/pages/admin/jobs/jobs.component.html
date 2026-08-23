@@ -221,14 +221,14 @@
 
     </div>
   }
+</div>
 
 <!-- Image Viewer Modal -->
-<app-image-viewer 
+<app-image-viewer
   [images]="imageViewerImages()"
   [isOpen]="imageViewerOpen()"
   [initialIndex]="imageViewerInitialIndex()"
   (close)="closeImageViewer()"></app-image-viewer>
-</div>
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterChips().length > 0) {
@@ -254,9 +254,11 @@
       }
     </span>
   </div>
-  <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBarField()" [sortDir]="sortBarDir()"
-    (sortChange)="onSortBarChange($event)">
-  </app-sort-bar>
+  @if (viewMode() === 'list') {
+    <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBarField()" [sortDir]="sortBarDir()"
+      (sortChange)="onSortBarChange($event)">
+    </app-sort-bar>
+  }
 }
 
 <!-- ── SKELETON ──────────────────────────────────────────────── -->
@@ -568,6 +570,13 @@
                 <span class="jbd-status-badge" [class.jbd-status-badge--active]="job.isActive" [class.jbd-status-badge--closed]="!job.isActive">
                   <i class="bi bi-circle-fill"></i>{{ job.isActive ? 'Active' : 'Inactive' }}
                 </span>
+                @if (job.status === 'PENDING') {
+                  <a class="jbd-status-badge jbd-status-badge--pending"
+                     [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'jobs' }"
+                     (click)="$event.stopPropagation()" title="Go to Approval page">
+                    <i class="bi bi-hourglass-split"></i> Pending Approval
+                  </a>
+                }
                 <div class="jb-card__badges">
                   @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
                   @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
@@ -637,103 +646,8 @@
         </article>
       }
     </div>
-    } @else {
-    <!-- ── TABLE VIEW ────────────────────────────────────────── -->
-    <div class="um-table-card um-table-card--fixed mb-3">
-      <div class="table-responsive">
-        <table class="um-table">
-          <thead>
-            <tr>
-              <th class="um-th" style="width:64px"></th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'title'"
-                (click)="toggleColumnSort('title')" role="button" tabindex="0">
-                Job
-                @if (sortBarField() === 'title') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'location'"
-                (click)="toggleColumnSort('location')" role="button" tabindex="0">
-                Location
-                @if (sortBarField() === 'location') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'type'"
-                (click)="toggleColumnSort('type')" role="button" tabindex="0">
-                Type / Mode
-                @if (sortBarField() === 'type') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'salary'"
-                (click)="toggleColumnSort('salary')" role="button" tabindex="0">
-                Salary
-                @if (sortBarField() === 'salary') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'status'"
-                (click)="toggleColumnSort('status')" role="button" tabindex="0">
-                Status
-                @if (sortBarField() === 'status') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'date'"
-                (click)="toggleColumnSort('date')" role="button" tabindex="0">
-                Posted
-                @if (sortBarField() === 'date') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th" style="width:120px">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (job of filteredJobs(); track job.id) {
-              <tr class="jb-table-row">
-                <td class="um-td">
-                  <div class="jb-table-logo" [style.background-color]="getAvatarColor(job)">
-                    @if (getCompanyLogoSrc(job)) {
-                      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title" appImageError />
-                    } @else {
-                      <span>{{ getPosterInitials(job) }}</span>
-                    }
-                  </div>
-                </td>
-                <td class="um-td">
-                  <div class="jb-table-title">{{ job.title }}</div>
-                  @if (job.companyName) { <div class="jb-table-sub">{{ job.companyName }}</div> }
-                </td>
-                <td class="um-td">{{ getLocationDisplay(job) || '—' }}</td>
-                <td class="um-td">
-                  @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
-                  @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
-                </td>
-                <td class="um-td">{{ getSalaryDisplay(job) || '—' }}</td>
-                <td class="um-td">
-                  <span class="jb-table-status" [class.jb-table-status--active]="job.isActive" [class.jb-table-status--inactive]="!job.isActive">
-                    {{ job.isActive ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                <td class="um-td">{{ job.createdAt | date:'mediumDate' }}</td>
-                <td class="um-td um-td--actions">
-                  <div class="um-actions-row">
-                    <button class="um-iab um-iab--view" data-tip="View" (click)="openDetail(job)" type="button"><i class="bi bi-eye"></i></button>
-                    <button class="um-iab um-iab--edit" data-tip="Edit" (click)="openEditModal(job, $event)" type="button"><i class="bi bi-pencil"></i></button>
-                    <button class="um-iab um-iab--delete" data-tip="Delete" (click)="openDeleteConfirm(job, $event)" type="button"><i class="bi bi-trash3"></i></button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    }
 
-    <!-- ── PAGINATION ─────────────────────────────────────────── -->
+    <!-- ── Pagination — List view ──────────────────────────────── -->
     <div class="um-pagination">
       <div class="um-pagination__left">
         <span class="um-pagination__info">
@@ -773,6 +687,176 @@
         </div>
       }
     </div>
+    } @else {
+    <!-- ── TABLE VIEW ────────────────────────────────────────── -->
+    <div class="um-table-card um-table-card--fixed mb-3">
+      <div class="table-responsive">
+        <table class="um-table">
+          <thead>
+            <tr>
+              <th class="um-th" style="width:64px"></th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'title'"
+                (click)="toggleColumnSort('title')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('title')">
+                Job
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'title' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'title' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'title'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'location'"
+                (click)="toggleColumnSort('location')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('location')">
+                Location
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'location' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'location' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'location'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'type'"
+                (click)="toggleColumnSort('type')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('type')">
+                Type / Mode
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'type' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'type' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'type'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'salary'"
+                (click)="toggleColumnSort('salary')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('salary')">
+                Salary
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'salary' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'salary' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'salary'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'status'"
+                (click)="toggleColumnSort('status')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('status')">
+                Status
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'status' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'status' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'status'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'approval'"
+                (click)="toggleColumnSort('approval')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('approval')">
+                Approval
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'approval' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'approval' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'approval'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'date'"
+                (click)="toggleColumnSort('date')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('date')">
+                Posted
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'date' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'date' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'date'"
+                ></i>
+              </th>
+              <th class="um-th um-th--actions" style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (job of filteredJobs(); track job.id) {
+              <tr class="jb-table-row">
+                <td class="um-td">
+                  <div class="jb-table-logo" [style.background-color]="getAvatarColor(job)">
+                    @if (getCompanyLogoSrc(job)) {
+                      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title" appImageError />
+                    } @else {
+                      <span>{{ getPosterInitials(job) }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="um-td">
+                  <div class="jb-table-title">{{ job.title }}</div>
+                  @if (job.companyName) { <div class="jb-table-sub">{{ job.companyName }}</div> }
+                </td>
+                <td class="um-td">{{ getLocationDisplay(job) || '—' }}</td>
+                <td class="um-td">
+                  @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
+                  @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
+                </td>
+                <td class="um-td">{{ getSalaryDisplay(job) || '—' }}</td>
+                <td class="um-td">
+                  <span class="jb-table-status" [class.jb-table-status--active]="job.isActive" [class.jb-table-status--inactive]="!job.isActive">
+                    {{ job.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="um-td">
+                  @if (job.status === 'PENDING') {
+                    <a class="jbd-status-badge jbd-status-badge--pending"
+                       [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'jobs' }"
+                       (click)="$event.stopPropagation()" title="Go to Approval page">
+                      <i class="bi bi-hourglass-split"></i> Pending Approval
+                    </a>
+                  } @else {
+                    <span class="jbd-status-badge" [class.jbd-status-badge--approved]="job.status === 'APPROVED'" [class.jbd-status-badge--rejected]="job.status === 'REJECTED'">
+                      {{ job.status }}
+                    </span>
+                  }
+                </td>
+                <td class="um-td">{{ job.createdAt | date:'mediumDate' }}</td>
+                <td class="um-td um-td--actions">
+                  <div class="um-actions-row">
+                    <button class="um-iab um-iab--view" data-tip="View" (click)="openDetail(job)" type="button"><i class="bi bi-eye"></i></button>
+                    <button class="um-iab um-iab--edit" data-tip="Edit" (click)="openEditModal(job, $event)" type="button"><i class="bi bi-pencil"></i></button>
+                    <button class="um-iab um-iab--delete" data-tip="Delete" (click)="openDeleteConfirm(job, $event)" type="button"><i class="bi bi-trash3"></i></button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Pagination — Table view, nested inside the table card ── -->
+      <div class="um-pagination um-pagination--nested">
+        <div class="um-pagination__left">
+          <span class="um-pagination__info">
+            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            of <strong>{{ totalItems() }}</strong> jobs
+          </span>
+          <div class="um-pg-divider"></div>
+          <div class="um-pagination__size">
+            <span>Rows per page</span>
+            <div class="jb-select-wrap jb-select-wrap--xs">
+              <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+                (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+                aria-label="Rows per page">
+              </app-searchable-select>
+            </div>
+          </div>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="um-pagination__pages">
+            <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(1)" title="First page">
+              <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" title="Previous page">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            @for (page of getPages(); track page) {
+              <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()"
+                (click)="goToPage(page)">{{ page }}</button>
+            }
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" title="Next page">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())" title="Last page">
+              <i class="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+    }
   }
 }
 

@@ -125,6 +125,7 @@ export const ListJobsQueryDto = z.object({
     'location_az', 'location_za',
     'type_az', 'type_za',
     'status_active', 'status_inactive',
+    'approval_az', 'approval_za',
   ]).optional(),
 });
 

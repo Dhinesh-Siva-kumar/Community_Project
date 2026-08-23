@@ -397,6 +397,8 @@ export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?
     case 'type_za':         query.orderBy('j.job_type',     'desc'); break;
     case 'status_active':   query.orderBy('j.is_active',    'desc'); break; // active jobs first
     case 'status_inactive': query.orderBy('j.is_active',    'asc');  break; // inactive jobs first
+    case 'approval_az':     query.orderBy('j.status',       'asc');  break;
+    case 'approval_za':     query.orderBy('j.status',       'desc'); break;
     default:                query.orderBy('j.created_at',   'desc'); // newest first
   }
 

@@ -2,6 +2,7 @@ import {
   Component, OnInit, OnDestroy, HostListener, inject, signal, computed
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   ReactiveFormsModule, FormsModule, FormBuilder, FormGroup,
   Validators, AbstractControl, ValidationErrors, ValidatorFn
@@ -80,7 +81,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   selector: 'app-admin-jobs',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
+    CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink,
     SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
     SortBarComponent,
   ],
@@ -145,20 +146,13 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   ];
   pageSize = signal(20);
 
-  // ── Sort — column-click-sort equivalent, shared by the sort-bar (List
-  // view, date/salary only) and every sortable Table-view column header.
-  // Jobs' backend sort is a single combined enum (newest/oldest/salary_high/
-  // salary_low/company_az/title_az/…), so the generic {field, dir} used by
-  // the UI is translated to/from that enum here in one place.
-  //
-  // Table columns cycle through THREE states per click — ascending →
-  // descending → normal (no icon, default sort) — rather than just
-  // toggling asc/desc forever, so a column can be explicitly "un-sorted"
-  // again. `activeSortField`/`activeSortDir` track this UI-level state
-  // directly instead of being derived from the raw `sortBy` enum value,
-  // because the "normal" state and "Date, descending" both map to the same
-  // backend value ('newest' is the default sort) — deriving purely from
-  // the enum couldn't tell those two apart.
+  // ── Sort — same {field, dir} model as the Community/Events admin pages:
+  // always-active 2-state toggle (ascending ↔ descending, re-clicking the
+  // same column flips direction; picking a new column defaults to
+  // descending), shared by the sort-bar (List view) and every sortable
+  // Table-view column header. Jobs' backend sort is still a single combined
+  // enum (newest/oldest/salary_high/salary_low/…), so the generic
+  // {field, dir} used by the UI is translated to/from that enum here.
   readonly sortFields: SortField[] = [
     { key: 'date',   label: 'Date' },
     { key: 'salary', label: 'Salary' },
@@ -171,17 +165,17 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     location: { asc: 'location_az',     desc: 'location_za' },
     type:     { asc: 'type_az',         desc: 'type_za' },
     status:   { asc: 'status_inactive', desc: 'status_active' },
+    approval: { asc: 'approval_az',     desc: 'approval_za' },
   };
 
-  activeSortField = signal<string | null>(null);
-  activeSortDir   = signal<SortDir>('asc');
+  activeSortField = signal<string>('date');
+  activeSortDir   = signal<SortDir>('desc');
 
-  sortBarField = computed<string>(() => this.activeSortField() ?? '');
+  sortBarField = computed<string>(() => this.activeSortField());
   sortBarDir   = computed<SortDir>(() => this.activeSortDir());
 
   private applyActiveSort(): void {
-    const field = this.activeSortField();
-    const map = field ? this.sortFieldMap[field] : null;
+    const map = this.sortFieldMap[this.activeSortField()];
     this.sortBy.set(map ? (this.activeSortDir() === 'asc' ? map.asc : map.desc) : 'newest');
     this.loadJobs(1);
   }
@@ -193,15 +187,13 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.applyActiveSort();
   }
 
-  /** Table-view column header click — 3-click cycle: ascending → descending → normal. */
+  /** Table-view column header click — re-clicking the same column flips direction. */
   toggleColumnSort(field: string): void {
-    if (this.activeSortField() !== field) {
-      this.activeSortField.set(field);
-      this.activeSortDir.set('asc');
-    } else if (this.activeSortDir() === 'asc') {
-      this.activeSortDir.set('desc');
+    if (this.activeSortField() === field) {
+      this.activeSortDir.set(this.activeSortDir() === 'asc' ? 'desc' : 'asc');
     } else {
-      this.activeSortField.set(null);
+      this.activeSortField.set(field);
+      this.activeSortDir.set('desc');
     }
     this.applyActiveSort();
   }
@@ -782,9 +774,10 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       const [field, map] = found;
       this.activeSortField.set(field);
       this.activeSortDir.set(map.asc === v ? 'asc' : 'desc');
-    } else {
-      this.activeSortField.set(null);
     }
+    // Presets with no table-column equivalent (e.g. "Company (A→Z)") leave
+    // activeSortField/Dir — and therefore the table's highlighted column —
+    // as whatever it was before; there's no column to point it at instead.
     this.loadJobs(1);
   }
 
@@ -888,7 +881,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.filterStatus.set(''); this.filterDateFrom.set(''); this.filterDateTo.set('');
     this.filterStates.set([]); this.filterCities.set([]);
     this.sortBy.set('newest');
-    this.activeSortField.set(null);
+    this.activeSortField.set('date');
+    this.activeSortDir.set('desc');
     this.loadJobs(1);
   }
 

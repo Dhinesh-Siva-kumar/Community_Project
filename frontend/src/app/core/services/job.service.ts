@@ -58,7 +58,8 @@ export interface JobsQueryParams {
   dateTo?:   string;
   sortBy?: 'newest' | 'oldest' | 'salary_high' | 'salary_low' | 'company_az'
     | 'title_az' | 'title_za' | 'location_az' | 'location_za'
-    | 'type_az' | 'type_za' | 'status_active' | 'status_inactive';
+    | 'type_az' | 'type_za' | 'status_active' | 'status_inactive'
+    | 'approval_az' | 'approval_za';
 
   // ── Status (admin only) ───────────────────────────────────────
   status?: 'active' | 'inactive';
