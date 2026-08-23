@@ -1,7 +1,9 @@
 <!-- ══════════════════════════════════════════════════════════════
-     SHIMMER SKELETON
+     SHIMMER SKELETON — only the very first load; later fetches (stat-card
+     click, search, filter, sort) just dim the still-mounted live page
+     below instead of swapping it out, so the page doesn't blink.
 ══════════════════════════════════════════════════════════════ -->
-@if (loading()) {
+@if (loading() && !pageReady()) {
   <div class="um-skeleton">
     <div class="sk-header">
       <div class="sk-block sk-block--title"></div>
@@ -21,12 +23,15 @@
       @for (_ of [1,2,3,4,5,6,7]; track _) { <div class="sk-row"></div> }
     </div>
   </div>
-} @else {
+}
+@if (pageReady()) {
 
 <!-- ══════════════════════════════════════════════════════════════
      LIVE PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div class="um-layout" (click)="closeDropdowns()">
+<div class="um-layout"
+  [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'"
+  (click)="closeDropdowns()">
 
   <!-- ── Page Header ──────────────────────────────────────── -->
   <div class="jb-page-header">
@@ -520,7 +525,7 @@
 
 </div><!-- /.um-layout -->
 
-} <!-- end @if loading -->
+} <!-- end @if pageReady -->
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->
 <button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"

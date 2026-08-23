@@ -14,42 +14,46 @@
 
 <!-- ── STATISTICS BAR ─────────────────────────────────────── -->
 <div class="admin-stats-bar">
-  <div class="admin-stat-card">
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'all'"
+    (click)="setEventStatFilter('all')" aria-label="Show all events">
     <div class="admin-stat-card__icon admin-stat-card__icon--jobs">
       <i class="bi bi-calendar-event"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ totalItems() }}</div>
+      <div class="admin-stat-card__value">{{ totalEventsCount() }}</div>
       <div class="admin-stat-card__label">Total Events</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'upcoming'"
+    (click)="setEventStatFilter('upcoming')" aria-label="Filter by upcoming events">
     <div class="admin-stat-card__icon admin-stat-card__icon--fulltime">
       <i class="bi bi-clock-history"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ upcomingEvents() }}</div>
+      <div class="admin-stat-card__value">{{ upcomingEventsCount() }}</div>
       <div class="admin-stat-card__label">Upcoming</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'hybrid'"
+    (click)="setEventStatFilter('hybrid')" aria-label="Filter by hybrid events">
     <div class="admin-stat-card__icon admin-stat-card__icon--parttime">
       <i class="bi bi-diagram-2"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ hybridEvents() }}</div>
+      <div class="admin-stat-card__value">{{ hybridEventsCount() }}</div>
       <div class="admin-stat-card__label">Hybrid</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'offline'"
+    (click)="setEventStatFilter('offline')" aria-label="Filter by offline events">
     <div class="admin-stat-card__icon admin-stat-card__icon--contract">
       <i class="bi bi-geo-alt"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ offlineEvents() }}</div>
+      <div class="admin-stat-card__value">{{ offlineEventsCount() }}</div>
       <div class="admin-stat-card__label">Offline</div>
     </div>
-  </div>
+  </button>
 </div>
 
 <!-- ── FILTER PANEL ────────────────────────────────────────── -->
@@ -88,17 +92,30 @@
       @if (activeFilterCount() > 0) {
         <span class="jb-advanced-count">{{ activeFilterCount() }}</span>
       }
-      <i class="bi bi-chevron-down jb-advanced-chevron"
-        [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
     </button>
     @if (activeFilterCount() > 0) {
       <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
     }
   </div>
 
-  <!-- Advanced filter panel (hidden by default, shown when toggle clicked) -->
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel animate-slide-in-up">
+
+</div>
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the events list stays fully visible and
+     clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
 
       <!-- ── Location & Status ────────────────────────────────── -->
       <div class="jb-adv-section">
@@ -191,8 +208,17 @@
       </div>
 
     </div>
-  }
-</div>
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
+}
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterCount() > 0) {
@@ -239,7 +265,7 @@
 }
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="jb-meta">
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'event' : 'events' }}
@@ -250,8 +276,10 @@
   </div>
 }
 
-<!-- ── LOADING ────────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── LOADING — only the very first load; later fetches (stat-card click,
+     search, filter, sort) just dim the still-mounted content below instead
+     of swapping it out, so the page doesn't blink. ──────────── -->
+@if (loading() && !pageReady()) {
   <div class="ev-grid">
     @for (_ of skeletons; track $index) {
       <div class="ev-skeleton">
@@ -281,6 +309,7 @@
     }
   </div>
 } @else if (viewMode() === 'grid') {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
     (sortChange)="onSortChange($event)">
   </app-sort-bar>
@@ -441,7 +470,9 @@
       </div>
     }
   </div>
+  </div>
 } @else {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   <!-- ── EVENTS TABLE ──────────────────────────────────────────────────── -->
   <div class="um-table-card um-table-card--fixed mb-3">
     <div class="table-responsive">
@@ -614,6 +645,7 @@
         </div>
       }
     </div>
+  </div>
   </div>
 }
 

@@ -1,8 +1,9 @@
-import { Component, OnInit, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -39,10 +40,15 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   imports: [CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the business list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserBusinessComponent implements OnInit {
+export class UserBusinessComponent implements OnInit, OnDestroy {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
+  private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
 
   // ── View state ──────────────────────────────────────────────
@@ -307,6 +313,10 @@ export class UserBusinessComponent implements OnInit {
     this.loadCountries();
     this.requestGeolocation();
     this.loadMyPendingBusinessCount();
+  }
+
+  ngOnDestroy(): void {
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   /** The signed-in user's own country — the default the country filter starts/resets to. */
@@ -579,8 +589,16 @@ export class UserBusinessComponent implements OnInit {
     this.currentPage.set(1);
   }
 
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   onFilterOpeningHoursChange(value: string | null): void {

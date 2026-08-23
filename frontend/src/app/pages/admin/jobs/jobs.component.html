@@ -14,36 +14,40 @@
 </div>
 
 <!-- ── STATS BAR ────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="admin-stats-bar">
-    <div class="admin-stat-card">
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === ''"
+      (click)="setJobTypeFilter('')" aria-label="Show all jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-briefcase-fill"></i></div>
       <div class="admin-stat-card__body">
-        <span class="admin-stat-card__value">{{ totalItems() }}</span>
+        <span class="admin-stat-card__value">{{ totalJobsCount() }}</span>
         <span class="admin-stat-card__label">Total Jobs</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Full-time'"
+      (click)="setJobTypeFilter('Full-time')" aria-label="Filter by full-time jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-person-workspace"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Full-time'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Full-time</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Part-time'"
+      (click)="setJobTypeFilter('Part-time')" aria-label="Filter by part-time jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-hourglass-split"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Part-time'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Part-time</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Contract'"
+      (click)="setJobTypeFilter('Contract')" aria-label="Filter by contract jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-file-earmark-text"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Contract'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Contract</span>
       </div>
-    </div>
+    </button>
   </div>
 }
 
@@ -80,17 +84,31 @@
       <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
         <i class="bi bi-sliders2"></i>
         Advanced Filters
-        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-      </button>
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }      </button>
       @if (activeFilterCount() > 0) {
         <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
       }
     </div>
   </div>
 
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel animate-slide-in-up">
+
+</div>
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the job list stays fully visible and
+     clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
 
       <!-- ── Type ─────────────────────────────────────────────── -->
       <div class="jb-adv-section">
@@ -103,31 +121,32 @@
         </div>
       </div>
 
-      <!-- ── Mode + Location ──────────────────────────────────── -->
+      <!-- ── Mode ─────────────────────────────────────────────── -->
       <div class="jb-adv-section">
-        <div class="jb-filter-row jb-filter-row--split">
-          <div class="jb-filter-group">
-            <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
-            <div class="jb-chip-group" role="group">
-              <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
-              @for (mode of workModes; track mode) {
-                <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
-              }
-            </div>
-          </div>
-          <div class="jb-location-row">
-            <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
-              (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
-              (ngModelChange)="onFilterStateChange($event)"
-              [placeholder]="filterStatesLoading() ? 'Loading…' : (filterStates().length ? 'State / Region' : 'Select country first')">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
-              (ngModelChange)="onFilterCityChange($event)"
-              [placeholder]="filterCitiesLoading() ? 'Loading…' : (filterCities().length ? 'City' : 'Select state first')">
-            </app-searchable-select>
-          </div>
+        <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
+        <div class="jb-chip-group" role="group">
+          <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
+          @for (mode of workModes; track mode) {
+            <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
+          }
+        </div>
+      </div>
+
+      <!-- ── Location ─────────────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
+        <div class="jb-location-row">
+          <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
+            (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
+            (ngModelChange)="onFilterStateChange($event)"
+            [placeholder]="filterStatesLoading() ? 'Loading…' : (filterStates().length ? 'State / Region' : 'Select country first')">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
+            (ngModelChange)="onFilterCityChange($event)"
+            [placeholder]="filterCitiesLoading() ? 'Loading…' : (filterCities().length ? 'City' : 'Select state first')">
+          </app-searchable-select>
         </div>
       </div>
 
@@ -220,8 +239,17 @@
       </div>
 
     </div>
-  }
-</div>
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
+}
 
 <!-- Image Viewer Modal -->
 <app-image-viewer
@@ -245,7 +273,7 @@
 }
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="jb-meta">
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'job' : 'jobs' }}
@@ -261,8 +289,10 @@
   }
 }
 
-<!-- ── SKELETON ──────────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── SKELETON — only the very first load; later fetches (stat-card
+     click, search, filter, sort) just dim the still-mounted list below
+     instead of swapping it out, so the page doesn't blink. ──────────── -->
+@if (loading() && !pageReady()) {
   <div class="jb-list" aria-busy="true">
     @for (_ of skeletonItems; track $index) {
       <div class="jb-skeleton">
@@ -516,7 +546,8 @@
 </ng-template>
 
 <!-- ── JOB LIST ──────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   @if (filteredJobs().length === 0) {
     <div class="jb-empty">
       <div class="jb-empty__illustration" aria-hidden="true">
@@ -862,6 +893,7 @@
     </div>
     }
   }
+  </div>
 }
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->

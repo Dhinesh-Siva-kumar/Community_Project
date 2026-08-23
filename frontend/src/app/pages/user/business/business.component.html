@@ -117,17 +117,98 @@
         <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
           <i class="bi bi-sliders2"></i>
           Advanced Filters
-          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-          <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-        </button>
+          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }        </button>
         @if (hasActiveFilters()) {
           <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
         }
       </div>
     </div>
 
-    @if (showAdvancedFilters()) {
-      <div class="jb-advanced-panel animate-slide-in-up">
+  </div>
+
+  <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
+  @if (hasActiveFilters()) {
+    <div class="jb-active-chips">
+      <span class="jb-active-chips__label">Active filters:</span>
+      @if (filterSearch()) {
+        <span class="jb-active-chip">
+          Search: {{ filterSearch() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCountry() !== getDefaultCountry()) {
+        <span class="jb-active-chip">
+          Country: {{ filterCountry() || 'All Countries' }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterPincode()) {
+        <span class="jb-active-chip">
+          Pincode: {{ filterPincode() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('pincode')" aria-label="Remove pincode filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCategoryId()) {
+        <span class="jb-active-chip">
+          Category: {{ filterCategoryLabel() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('category')" aria-label="Remove category filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDistance() !== DISTANCE_DEFAULT_M) {
+        <span class="jb-active-chip">
+          Distance: {{ filterDistance() === null ? 'All' : filterDistanceKm() + ' km' }}
+          <button class="jb-active-chip__remove" (click)="setDistance(DISTANCE_DEFAULT_M)" aria-label="Reset distance filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterOpeningHours()) {
+        <span class="jb-active-chip">
+          Hours: {{ filterOpeningHours() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hours')" aria-label="Remove hours filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDateFrom()) {
+        <span class="jb-active-chip">
+          From: {{ filterDateFrom() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterDateTo()) {
+        <span class="jb-active-chip">
+          To: {{ filterDateTo() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter"><i class="bi bi-x"></i></button>
+        </span>
+      }
+    </div>
+  }
+
+  <!-- Geolocation status -->
+  @if (geoLoading()) {
+    <div class="biz-geo-status">
+      <i class="bi bi-crosshair"></i> Getting your location…
+    </div>
+  }
+  @if (geoDenied() && !geoLoading()) {
+    <div class="biz-geo-status biz-geo-status--muted">
+      <i class="bi bi-info-circle"></i> Location access denied. Showing all businesses (no distance filter).
+    </div>
+  }
+  }
+
+  <!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+       .jb-adv-drawer. No backdrop: the business list stays fully visible
+       and clickable behind it (only the sidebar auto-minimizes, via
+       LayoutService, to make room) — this is a docked panel, not a
+       blocking modal. -->
+  @if (showAdvancedFilters()) {
+    <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+      <div class="jb-adv-drawer__header">
+        <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+        <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="jb-adv-drawer__body">
 
         <!-- ── Location ─────────────────────────────────────── -->
         <div class="jb-adv-section">
@@ -231,75 +312,16 @@
         </div>
 
       </div>
-    }
-  </div>
 
-  <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
-  @if (hasActiveFilters()) {
-    <div class="jb-active-chips">
-      <span class="jb-active-chips__label">Active filters:</span>
-      @if (filterSearch()) {
-        <span class="jb-active-chip">
-          Search: {{ filterSearch() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterCountry() !== getDefaultCountry()) {
-        <span class="jb-active-chip">
-          Country: {{ filterCountry() || 'All Countries' }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterPincode()) {
-        <span class="jb-active-chip">
-          Pincode: {{ filterPincode() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('pincode')" aria-label="Remove pincode filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterCategoryId()) {
-        <span class="jb-active-chip">
-          Category: {{ filterCategoryLabel() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('category')" aria-label="Remove category filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterDistance() !== DISTANCE_DEFAULT_M) {
-        <span class="jb-active-chip">
-          Distance: {{ filterDistance() === null ? 'All' : filterDistanceKm() + ' km' }}
-          <button class="jb-active-chip__remove" (click)="setDistance(DISTANCE_DEFAULT_M)" aria-label="Reset distance filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterOpeningHours()) {
-        <span class="jb-active-chip">
-          Hours: {{ filterOpeningHours() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('hours')" aria-label="Remove hours filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterDateFrom()) {
-        <span class="jb-active-chip">
-          From: {{ filterDateFrom() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-      @if (filterDateTo()) {
-        <span class="jb-active-chip">
-          To: {{ filterDateTo() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter"><i class="bi bi-x"></i></button>
-        </span>
-      }
-    </div>
-  }
-
-  <!-- Geolocation status -->
-  @if (geoLoading()) {
-    <div class="biz-geo-status">
-      <i class="bi bi-crosshair"></i> Getting your location…
-    </div>
-  }
-  @if (geoDenied() && !geoLoading()) {
-    <div class="biz-geo-status biz-geo-status--muted">
-      <i class="bi bi-info-circle"></i> Location access denied. Showing all businesses (no distance filter).
-    </div>
-  }
+      <div class="jb-adv-drawer__footer">
+        <button type="button" class="jb-clear-all-btn" (click)="clearFilters()">
+          <i class="bi bi-x-circle"></i> Clear All
+        </button>
+        <button type="button" class="biz-add-btn" (click)="closeAdvancedFilters()">
+          Done
+        </button>
+      </div>
+    </aside>
   }
 
   <!-- Loading skeleton -->

@@ -469,12 +469,6 @@
   font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
 }
 
-.jb-advanced-chevron {
-  font-size: 0.75rem;
-  transition: transform $duration-base $easing-standard;
-  &--open { transform: rotate(180deg); }
-}
-
 // ── Clear All button ──────────────────────────────────────────
 .jb-clear-all-btn {
   display: inline-flex;

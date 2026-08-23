@@ -1,9 +1,10 @@
-import { Component, OnInit, HostListener, ElementRef, inject, signal, computed, effect, viewChildren } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EventService, EventsQueryParams } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
@@ -67,10 +68,15 @@ const CATEGORY_GRADIENT: Record<string, string> = {
   imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the events list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserEventsComponent implements OnInit {
+export class UserEventsComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
   private authService  = inject(AuthService);
+  private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -199,6 +205,10 @@ export class UserEventsComponent implements OnInit {
       if (eventId) this.openEventFromQueryParam(eventId);
     });
     this.loadMyPendingEventsCount();
+  }
+
+  ngOnDestroy(): void {
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   loadCountries(): void {
@@ -346,7 +356,17 @@ export class UserEventsComponent implements OnInit {
   setModeFilter(mode: ModeFilter): void { this.modeFilter.set(mode); this.applyFilters(); }
   setSortOption(opt: SortOption): void { this.sortOption.set(opt); this.applyFilters(); }
 
-  toggleAdvancedFilters(): void { this.showAdvancedFilters.update(v => !v); }
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
+  }
 
   onFilterCountryChange(value: string | null): void {
     this.filterCountry.set(value);

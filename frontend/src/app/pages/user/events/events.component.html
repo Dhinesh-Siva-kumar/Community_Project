@@ -58,93 +58,13 @@
         <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
           <i class="bi bi-sliders2"></i>
           Advanced Filters
-          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-          <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-        </button>
+          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }        </button>
         @if (activeFilterCount() > 0 || searchQuery()) {
           <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
         }
       </div>
     </div>
 
-    @if (showAdvancedFilters()) {
-      <div class="jb-advanced-panel animate-slide-in-up">
-
-        <!-- ── Event Mode ─────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Event Mode</span>
-          <div class="jb-pill-row" role="group" aria-label="Filter by event mode">
-            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="modeFilter() === 'all'" (click)="setModeFilter('all')">
-              All
-            </button>
-            @for (mode of EVENT_MODES; track mode) {
-              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="modeFilter() === mode" (click)="setModeFilter(mode)">
-                <i class="bi" [ngClass]="mode === 'Offline' ? 'bi-geo-alt-fill' : mode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
-                {{ mode }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- ── Country ────────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Country</span>
-          <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-            (ngModelChange)="onFilterCountryChange($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
-          </app-searchable-select>
-        </div>
-
-        <!-- ── Event Date ─────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Event Date</span>
-          <div class="jb-advanced-grid jb-advanced-grid--dates">
-            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
-              <div class="jb-adv-date-head">
-                <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
-                <span class="jb-adv-date-help">Start date</span>
-              </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-                <input id="evFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                  (change)="onFilterDateFromChange($event)" placeholder="From date" />
-              </div>
-            </div>
-
-            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
-              <div class="jb-adv-date-head">
-                <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
-                <span class="jb-adv-date-help">End date</span>
-              </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-                <input id="evFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                  (change)="onFilterDateToChange($event)" placeholder="To date" />
-              </div>
-            </div>
-          </div>
-
-          <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
-            <span class="jb-quick-date-row__label">Quick range:</span>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
-              (click)="applyQuickDatePreset('today')">
-              Today
-            </button>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
-              (click)="applyQuickDatePreset('7d')">
-              Last 7 Days
-            </button>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
-              (click)="applyQuickDatePreset('30d')">
-              Last 30 Days
-            </button>
-          </div>
-        </div>
-
-      </div>
-    }
   </div>
 
   <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────── -->
@@ -183,6 +103,108 @@
       }
     </div>
   }
+}
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the events list stays fully visible and
+     clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
+
+      <!-- ── Event Mode ─────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Event Mode</span>
+        <div class="jb-pill-row" role="group" aria-label="Filter by event mode">
+          <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="modeFilter() === 'all'" (click)="setModeFilter('all')">
+            All
+          </button>
+          @for (mode of EVENT_MODES; track mode) {
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="modeFilter() === mode" (click)="setModeFilter(mode)">
+              <i class="bi" [ngClass]="mode === 'Offline' ? 'bi-geo-alt-fill' : mode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
+              {{ mode }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- ── Country ────────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Country</span>
+        <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+          (ngModelChange)="onFilterCountryChange($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
+        </app-searchable-select>
+      </div>
+
+      <!-- ── Event Date ─────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Event Date</span>
+        <div class="jb-advanced-grid jb-advanced-grid--dates">
+          <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
+            <div class="jb-adv-date-head">
+              <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+              <span class="jb-adv-date-help">Start date</span>
+            </div>
+            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
+              <input id="evFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
+                (change)="onFilterDateFromChange($event)" placeholder="From date" />
+            </div>
+          </div>
+
+          <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
+            <div class="jb-adv-date-head">
+              <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+              <span class="jb-adv-date-help">End date</span>
+            </div>
+            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
+              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
+              <input id="evFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
+                (change)="onFilterDateToChange($event)" placeholder="To date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
+          <span class="jb-quick-date-row__label">Quick range:</span>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
+            (click)="applyQuickDatePreset('today')">
+            Today
+          </button>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
+            (click)="applyQuickDatePreset('7d')">
+            Last 7 Days
+          </button>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
+            (click)="applyQuickDatePreset('30d')">
+            Last 30 Days
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="ev-add-btn ev-add-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
 }
 
 <!-- ── LOADING ────────────────────────────────────────────── -->

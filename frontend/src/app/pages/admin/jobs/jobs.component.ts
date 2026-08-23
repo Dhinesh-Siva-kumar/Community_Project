@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { Subject, takeUntil, Observable, map } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
 import { GeographyService } from '../../../core/services/geography.service';
@@ -87,9 +88,14 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the job list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminJobsComponent implements OnInit, OnDestroy {
   private jobService        = inject(JobService);
+  private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
   private geographyService  = inject(GeographyService);
@@ -99,6 +105,12 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // ─── Data ───────────────────────────────────────────────────
   jobs          = signal<Job[]>([]);
   loading       = signal(true);
+  // Gates the full-page skeleton — true only until the very first fetch
+  // resolves, then stays true forever after. Later fetches (stat-card
+  // click, search, filter, sort) still flip `loading`, but the stats bar /
+  // results meta / list stay mounted throughout instead of unmounting into
+  // a skeleton and back, which read as the whole page blinking.
+  pageReady     = signal(false);
   submitting    = signal(false);
   skeletonItems = Array(5);
 
@@ -436,14 +448,14 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   ];
 
   // ─── Stats ──────────────────────────────────────────────────
-  jobTypeCounts = computed(() => {
-    const counts: Record<string, number> = {};
-    for (const job of this.jobs()) {
-      const type = job.jobType ?? 'Other';
-      counts[type] = (counts[type] ?? 0) + 1;
-    }
-    return counts;
-  });
+  // Stat-card counts — fetched separately (see loadJobTypeCounts()) so each
+  // card always shows its own true total regardless of which card is
+  // currently selected, instead of being derived from whatever page
+  // `jobs()` currently holds (which — once a card filters the list — no
+  // longer contains any of the OTHER cards' jobs, making their counts
+  // collapse to 0 and making the stat bar look broken).
+  totalJobsCount = signal(0);
+  jobTypeCounts  = signal<Record<string, number>>({});
 
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
@@ -462,6 +474,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.layoutService.forceSidebarCollapsed.set(false);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -674,6 +687,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.currentPage.set(page);
     this.activeJobId.set(null);
+    this.loadJobTypeCounts();
 
     const query: JobsQueryParams = { page, limit: this.pageSize() };
     if (this.searchQuery().trim())    query.search      = this.searchQuery().trim();
@@ -701,8 +715,46 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
         this.loading.set(false);
+        this.pageReady.set(true);
       },
-      error: () => { this.toast.error('Failed to load jobs'); this.loading.set(false); },
+      error: () => { this.toast.error('Failed to load jobs'); this.loading.set(false); this.pageReady.set(true); },
+    });
+  }
+
+  /** Powers the stat cards (Total/Full-time/Part-time/Contract) — lightweight
+   * `limit:1` calls scoped by every OTHER active filter (search, mode,
+   * location, experience, salary, status, date) but never `jobType` itself,
+   * so each count stays accurate no matter which card is currently selected. */
+  private loadJobTypeCounts(): void {
+    const base: JobsQueryParams = { page: 1, limit: 1 };
+    if (this.searchQuery().trim())    base.search      = this.searchQuery().trim();
+    if (this.filterWorkMode())        base.workMode    = this.filterWorkMode();
+    if (this.filterCountry())         base.country     = this.filterCountry();
+    if (this.filterState())           base.state       = this.filterState();
+    if (this.filterCity())            base.city        = this.filterCity();
+    if (this.filterShiftType())       base.shiftType   = this.filterShiftType();
+    if (this.filterEducation())       base.education   = this.filterEducation();
+    if (this.filterExpMin() != null)  base.expMin      = this.filterExpMin()!;
+    if (this.filterExpMax() != null)  base.expMax      = this.filterExpMax()!;
+    if (this.filterSalaryMin() != null) base.salaryMin = this.filterSalaryMin()!;
+    if (this.filterSalaryMax() != null) base.salaryMax = this.filterSalaryMax()!;
+    if (this.filterSalaryHidden() != null) base.salaryHidden = this.filterSalaryHidden()!;
+    if (this.filterPostedWithin() != null) base.postedWithin = this.filterPostedWithin()!;
+    if (this.filterStatus())          base.status      = this.filterStatus() as 'active' | 'inactive';
+    if (this.filterDateFrom())        base.dateFrom    = this.filterDateFrom();
+    if (this.filterDateTo())          base.dateTo      = this.filterDateTo();
+
+    this.jobService.getJobs(base).subscribe({
+      next: (res) => this.totalJobsCount.set(res.total), error: () => {},
+    });
+
+    const types = ['Full-time', 'Part-time', 'Contract'];
+    const counts: Record<string, number> = {};
+    types.forEach(type => {
+      this.jobService.getJobs({ ...base, jobType: type }).subscribe({
+        next: (res) => { counts[type] = res.total; this.jobTypeCounts.set({ ...counts }); },
+        error: () => {},
+      });
     });
   }
 
@@ -793,7 +845,17 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.triggerFilteredLoad();
   }
 
-  toggleAdvancedFilters(): void { this.showAdvancedFilters.update(v => !v); }
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
+  }
 
   onFilterCountryChange(countryName: any): void {
     this.filterCountry.set(countryName ?? '');
