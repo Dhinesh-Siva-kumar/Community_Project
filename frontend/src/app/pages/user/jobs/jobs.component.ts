@@ -436,12 +436,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own jobs across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own jobs awaiting admin approval only. */
   loadMyJobs(): void {
     this.loading.set(true);
     this.currentPage.set(1);
     this.activeJobId.set(null);
-    this.jobService.getMyJobs({ page: 1, limit: 100 }).subscribe({
+    this.jobService.getMyJobs({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
       next: (res: PaginatedResponse<Job>) => {
         this.jobs.set(res.data);
         this.totalItems.set(res.total);

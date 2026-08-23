@@ -506,12 +506,12 @@ export class UserBusinessComponent implements OnInit {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own businesses across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own businesses awaiting admin approval only. */
   loadMyBusinesses(): void {
     this.currentView.set('list');
     this.businessView.set('list');
     this.loading.set(true);
-    this.svc.getMyBusinesses({ page: 1, limit: 100 }).subscribe({
+    this.svc.getMyBusinesses({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
       next: (res: PaginatedResponse<Business>) => {
         this.businesses.set(res.data);
         this.allFilteredBusinesses.set(res.data);

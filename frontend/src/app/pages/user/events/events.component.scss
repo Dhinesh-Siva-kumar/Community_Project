@@ -1,5 +1,18 @@
 @use '../../../../assets/styles/index' as *;
 
+// display:flex + flex-direction:column + a min-height matching the
+// visible viewport below the sticky top header (see $header-height and
+// .main-content's own padding in user-layout.component.scss) — so that
+// when the "No submissions yet" empty state is the only content (the
+// Pending Approval tab hides the filter panel above it), it can flex:1
+// and truly center itself in the leftover page height instead of just
+// centering within its own fixed-height box near the top of the page.
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$header-height} - 3rem);
+}
+
 // ── Header — replicated from the Business page's .biz-head: title/count
 // on the left, tabs + Select + Add on the right. ────────────────────
 .biz-head {
@@ -574,7 +587,8 @@
 }
 
 // ── Empty ─────────────────────────────────────────────────────
-.ev-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: $spacing-4xl $spacing-xl;
+.ev-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: $spacing-4xl $spacing-xl;
   &__icon { width: 72px; height: 72px; border-radius: $radius-full; background: rgba(251,191,36,0.10); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: $color-primary-dark; margin-bottom: $spacing-lg; }
   &__title { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-800; margin-bottom: $spacing-sm; }
   &__sub { font-size: $font-size-sm; color: $color-text-muted; max-width: 320px; line-height: 1.6; margin-bottom: $spacing-lg; }

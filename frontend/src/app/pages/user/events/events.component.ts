@@ -221,11 +221,11 @@ export class UserEventsComponent implements OnInit {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own events across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own events awaiting admin approval only. */
   loadMyEvents(): void {
     this.loading.set(true);
     this.currentPage.set(1);
-    this.eventService.getMyEvents({ page: 1, limit: 100 }).subscribe({
+    this.eventService.getMyEvents({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data);
         this.totalItems.set(res.total);

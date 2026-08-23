@@ -390,9 +390,13 @@
 
   <!-- S6+S7+S8+S9: Description (main) / Skills + Hiring Manager + Gallery (side) -->
   @if (hasDescription(job) || (job.skills && job.skills.length) || job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo || (job.images && job.images.length)) {
-    <div class="jbd-content-split">
-      <div class="jbd-content-split__main">
-        @if (hasDescription(job)) {
+    <!-- Collapses to a single (side-only) column when there's no
+         description — otherwise an empty .jbd-content-split__main still
+         reserved its ~68% grid column, leaving a large blank gap next to
+         a short sidebar. -->
+    <div class="jbd-content-split" [class.jbd-content-split--single]="!hasDescription(job)">
+      @if (hasDescription(job)) {
+        <div class="jbd-content-split__main">
           <div class="jbd-section">
             <div class="jbd-section__header"><i class="bi bi-file-earmark-text-fill"></i><span>Job Description</span></div>
 
@@ -438,8 +442,8 @@
               }
             }
           </div>
-        }
-      </div>
+        </div>
+      }
 
       <div class="jbd-content-split__side">
         @if (job.skills && job.skills.length) {

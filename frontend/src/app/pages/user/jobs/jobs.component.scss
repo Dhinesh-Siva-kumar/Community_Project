@@ -11,8 +11,17 @@
 // drawer's width so the job list stays fully visible next to it instead of
 // hidden behind the fixed-position drawer. Reverts on mobile, where the
 // drawer covers the full viewport anyway (see .jb-adv-drawer below). ────
+// display:flex + flex-direction:column + a min-height matching the
+// visible viewport below the sticky top header (see $header-height and
+// .main-content's own padding in user-layout.component.scss) — so that
+// when the "No submissions yet" empty state is the only content (the
+// Pending Approval tab hides the filter panel above it), it can flex:1
+// and truly center itself in the leftover page height instead of just
+// centering within its own fixed-height box near the top of the page.
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$header-height} - 3rem);
   transition: padding-right 280ms cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -429,54 +438,41 @@
   }
 }
 
-// ── Advanced Filters trigger — icon-only button living on Row 1 next to
-// Sort, tooltipped rather than labelled to stay compact. Its panel opens
-// further down, below the Type/Mode row, behind a divider (.jb-adv-hr). ─
-.jb-adv-icon-btn {
-  position: relative;
+// ── Advanced Filters trigger — labelled pill button on Row 1's right end,
+// matching the User Business page's .jb-advanced-toggle (icon + label +
+// count badge + chevron). Its panel opens further down, below the
+// Type/Mode row, behind a divider (.jb-adv-hr). ──────────────────────
+.jb-advanced-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
+  gap: 7px;
+  padding: 6px 14px;
   height: 40px;
   flex-shrink: 0;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
   background: $color-bg-light;
-  color: $color-stone-600;
-  font-size: 1rem;
+  color: $color-stone-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   @include transition-short(all);
 
-  &:hover { border-color: $color-primary; color: $color-primary-darker; }
+  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+}
 
-  &--active {
-    background: rgba($color-primary, 0.14);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    &:hover { background: rgba($color-primary, 0.20); border-color: $color-primary-dark; }
-  }
+.jb-advanced-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
+}
 
-  &[data-tooltip] { @include jb-tooltip; }
-
-  &__count {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 3px;
-    border-radius: $radius-full;
-    background: $color-primary;
-    color: $color-on-primary;
-    font-size: 9px;
-    font-weight: $font-weight-bold;
-    line-height: 1;
-    border: 1.5px solid $color-bg-card;
-  }
+.jb-advanced-chevron {
+  font-size: 0.75rem;
+  transition: transform $duration-base $easing-standard;
+  &--open { transform: rotate(180deg); }
 }
 
 // ── Clear All button ──────────────────────────────────────────
@@ -790,8 +786,10 @@
 // ── Empty state (new icon-based) ──────────────────────────────
 .jb-empty {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: $spacing-4xl $spacing-xl;
 
@@ -910,9 +908,9 @@
     &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
 
     &--active {
-      background: rgba($color-primary, 0.18);
-      color: $color-primary-darker;
-      &:hover { background: rgba($color-primary, 0.24); color: $color-primary-darker; }
+      background: $color-stone-900;
+      color: #fff;
+      &:hover { background: $color-stone-900; color: #fff; }
     }
 
     &[data-tooltip] { @include jb-tooltip; }
@@ -1767,6 +1765,23 @@
   grid-template-columns: minmax(0, 1fr) minmax(220px, 32%);
   gap: $spacing-lg;
   align-items: start;
+
+  // No description entered — the main column would otherwise be an empty
+  // grid cell still reserving its ~68% width, leaving a large blank gap
+  // next to a much shorter sidebar.
+  &--single { grid-template-columns: 1fr; }
+}
+
+// Stacked sections (Skills Required / Hiring Manager / Gallery) inside the
+// side column had no gap of their own — they relied entirely on
+// .jbd-content-split's column gap, which only separates main from side,
+// so consecutive side sections butted directly against each other with a
+// section's header (and its divider) landing right under the previous
+// section's content.
+.jbd-content-split__side {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
 }
 
 .jbd-hiring-card {
@@ -1862,6 +1877,21 @@
 
     .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: span 2; }
     .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 16 / 9; }
+
+    // In the "minimal" job detail layout (no description — see
+    // .jbd-content-split--single), this side column stretches to the full
+    // page width, so the 2-wide grid above would blow each photo up to
+    // roughly half the page. Switch to small fixed-size tiles that just
+    // wrap to fit instead, and drop the odd-count "big cover" tile sizing
+    // that was tuned for the narrow 2-column sidebar.
+    .jbd-content-split--single & {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 120px));
+      justify-content: flex-start;
+
+      .jbd-gallery__btn { width: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 1 / 1; }
+    }
   }
 }
 

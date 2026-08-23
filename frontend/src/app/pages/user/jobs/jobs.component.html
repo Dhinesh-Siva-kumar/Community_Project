@@ -58,7 +58,10 @@
 @if (pageTab() === 'all') {
 <div class="jb-filter-panel">
 
-  <!-- Row 1: Search + Advanced Filters + Sort — one line. -->
+  <!-- Row 1: Search + Sort (left) + Advanced Filters (right end) — matches
+       the User Business page's row layout and its .jb-advanced-toggle
+       button (icon + label + count + chevron), in place of the old
+       icon-only trigger. -->
   <div class="jb-filter-row jb-filter-row--top">
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
@@ -69,16 +72,6 @@
         <button class="jb-search-wrap__clear" (click)="clearSearch()"><i class="bi bi-x"></i></button>
       }
     </div>
-    <button type="button" class="jb-adv-icon-btn"
-      [class.jb-adv-icon-btn--active]="showAdvancedFilters()"
-      data-tooltip="Advanced Filters"
-      [attr.aria-label]="'Advanced Filters' + (activeFilterCount() > 0 ? ', ' + activeFilterCount() + ' active' : '')"
-      (click)="toggleAdvancedFilters()">
-      <i class="bi bi-sliders2"></i>
-      @if (activeFilterCount() > 0) {
-        <span class="jb-adv-icon-btn__count">{{ activeFilterCount() }}</span>
-      }
-    </button>
     <div class="jb-sort-wrap">
       <app-searchable-select
         [options]="sortOptions"
@@ -87,6 +80,16 @@
         placeholder="Sort: Newest">
       </app-searchable-select>
     </div>
+    <button type="button" class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()"
+      [attr.aria-label]="'Advanced Filters' + (activeFilterCount() > 0 ? ', ' + activeFilterCount() + ' active' : '')"
+      (click)="toggleAdvancedFilters()">
+      <i class="bi bi-sliders2"></i>
+      Advanced Filters
+      @if (activeFilterCount() > 0) {
+        <span class="jb-advanced-count">{{ activeFilterCount() }}</span>
+      }
+      <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
+    </button>
   </div>
 
   <!-- Row 3: Type + Mode — one line on wide screens, split by a vertical
@@ -566,9 +569,13 @@
 
               <!-- ═══ SECTION 6+7+8+9: Description (main) / Skills + Hiring Manager + Gallery (side) ═══ -->
               @if (hasDescription(job) || (job.skills && job.skills.length) || job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo || (job.images && job.images.length)) {
-                <div class="jbd-content-split">
-                  <div class="jbd-content-split__main">
-                    @if (hasDescription(job)) {
+                <!-- Collapses to a single (side-only) column when there's no
+                     description — otherwise an empty .jbd-content-split__main
+                     still reserved its ~68% grid column, leaving a large
+                     blank gap next to a short sidebar. -->
+                <div class="jbd-content-split" [class.jbd-content-split--single]="!hasDescription(job)">
+                  @if (hasDescription(job)) {
+                    <div class="jbd-content-split__main">
                       <div class="jbd-section">
                         <div class="jbd-section__header">
                           <i class="bi bi-file-earmark-text-fill"></i>
@@ -617,8 +624,8 @@
                           }
                         }
                       </div>
-                    }
-                  </div>
+                    </div>
+                  }
 
                   <div class="jbd-content-split__side">
                     @if (job.skills && job.skills.length) {
@@ -718,21 +725,6 @@
         <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
       }
     </span>
-
-    <div class="jb-view-toggle" role="group" aria-label="Switch view">
-      <button type="button" class="jb-view-toggle__btn"
-        [class.jb-view-toggle__btn--active]="jobViewMode() === 'card'"
-        data-tooltip="Card view"
-        (click)="setJobViewMode('card')">
-        <i class="bi bi-grid-3x2-gap"></i>
-      </button>
-      <button type="button" class="jb-view-toggle__btn"
-        [class.jb-view-toggle__btn--active]="jobViewMode() === 'list'"
-        data-tooltip="List view"
-        (click)="setJobViewMode('list')">
-        <i class="bi bi-list-ul"></i>
-      </button>
-    </div>
   </div>
 }
 
