@@ -1,5 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ALL_NOTIFICATION_TYPES, Notification, NotificationType } from '../../../core/models';
 import { notificationIcon, notificationColor, notificationRoute, notificationTypeLabel } from '../../../shared/utils/notification-display';
@@ -10,6 +12,7 @@ type ReadFilter = 'all' | 'unread';
 @Component({
   selector: 'app-notifications',
   standalone: true,
+  imports: [FormsModule, ToggleComponent],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
 })

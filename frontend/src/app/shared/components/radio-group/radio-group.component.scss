@@ -1,0 +1,78 @@
+@use '../../../../assets/styles/index' as *;
+
+:host { display: block; }
+
+// ── Group ─────────────────────────────────────────────────────
+.rg-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+
+  &--error .rg-opt:not(.rg-opt--active) {
+    border-color: rgba($color-danger, 0.55);
+  }
+
+  // Icon-above-label cards, laid out as an even grid.
+  &--card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+}
+
+// ── Option ────────────────────────────────────────────────────
+.rg-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-full;
+  background: $color-bg-card;
+  color: $color-stone-600;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  @include transition-short(all);
+
+  &__icon { font-size: 0.9rem; flex-shrink: 0; }
+
+  &:hover:not(:disabled):not(.rg-opt--active) {
+    border-color: $color-primary;
+    background: $color-amber-50;
+    color: $color-primary-darker;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &--active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+    border-color: $color-primary-darker;
+    color: $color-on-primary;
+    box-shadow: 0 4px 12px rgba($color-primary, 0.28);
+  }
+}
+
+// ── Card variant ──────────────────────────────────────────────
+.rg-group--card .rg-opt {
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: $spacing-md $spacing-sm;
+  border-radius: $radius-lg;
+  white-space: normal;
+  text-align: center;
+
+  .rg-opt__icon { font-size: 1.25rem; }
+}
+
+@include media-sm-max {
+  .rg-opt { padding: 7px 12px; font-size: $font-size-xs; }
+}

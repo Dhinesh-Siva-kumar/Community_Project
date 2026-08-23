@@ -154,11 +154,13 @@
               <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
               <span class="jb-adv-date-help">Start date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-              <input id="evFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                (change)="onFilterDateFromChange($event)" placeholder="From date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
@@ -166,11 +168,13 @@
               <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
               <span class="jb-adv-date-help">End date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-              <input id="evFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                (change)="onFilterDateToChange($event)" placeholder="To date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
           </div>
         </div>
 
@@ -522,13 +526,12 @@
             <div class="cm-field-group">
               <label class="cm-label">Event Date <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
-                <i class="bi bi-calendar3 cm-input-icon"></i>
-                <input
-                  type="date"
+                <app-date-input
                   formControlName="eventDate"
-                  class="cm-input"
-                  [class.cm-input-error]="f['eventDate'].touched && f['eventDate'].invalid"
-                />
+                  ariaLabel="Event date"
+                  placeholder="Event date"
+                  [invalid]="f['eventDate'].touched && f['eventDate'].invalid"
+                ></app-date-input>
               </div>
               @if (f['eventDate'].touched && f['eventDate'].invalid) {
                 <div class="cm-error-msg">
@@ -546,13 +549,12 @@
             <div class="cm-field-group">
               <label class="cm-label">Start Time <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
-                <i class="bi bi-clock cm-input-icon"></i>
-                <input
-                  type="time"
+                <app-time-input
                   formControlName="eventTime"
-                  class="cm-input"
-                  [class.cm-input-error]="f['eventTime'].touched && f['eventTime'].invalid"
-                />
+                  ariaLabel="Start time"
+                  placeholder="Start time"
+                  [invalid]="f['eventTime'].touched && f['eventTime'].invalid"
+                ></app-time-input>
               </div>
               @if (f['eventTime'].touched && f['eventTime'].invalid) {
                 <div class="cm-error-msg">
@@ -567,13 +569,12 @@
             <div class="cm-field-group">
               <label class="cm-label">End Time</label>
               <div class="cm-input-wrap">
-                <i class="bi bi-clock-history cm-input-icon"></i>
-                <input
-                  type="time"
+                <app-time-input
                   formControlName="eventEndTime"
-                  class="cm-input"
-                  [class.cm-input-error]="eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
-                />
+                  ariaLabel="End time"
+                  placeholder="End time"
+                  [invalid]="!!eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
+                ></app-time-input>
               </div>
               @if (eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched) {
                 <div class="cm-error-msg">
@@ -604,15 +605,11 @@
           <!-- Event Mode -->
           <div class="cm-field-group">
             <label class="cm-label">Event Mode <span class="cm-required">*</span></label>
-            <div class="cm-toggle-group">
-              @for (mode of EVENT_MODES; track mode) {
-                <label class="cm-toggle-pill" [class.cm-toggle-active]="eventMode === mode">
-                  <input type="radio" formControlName="eventMode" [value]="mode" hidden />
-                  <i class="bi" [ngClass]="mode === 'Offline' ? 'bi-geo-alt-fill' : mode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
-                  {{ mode }}
-                </label>
-              }
-            </div>
+            <app-radio-group
+              formControlName="eventMode"
+              [options]="eventModeOptions"
+              ariaLabel="Event mode">
+            </app-radio-group>
           </div>
 
           @if (showAddress) {

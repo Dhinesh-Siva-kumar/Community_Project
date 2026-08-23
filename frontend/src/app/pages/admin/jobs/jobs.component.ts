@@ -15,6 +15,8 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { GeographyService } from '../../../core/services/geography.service';
 import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
@@ -23,6 +25,7 @@ import { ImageViewerComponent } from '../../../shared/components/image-viewer/im
 import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 export interface FilterChip { key: string; label: string; value: any; }
 
@@ -81,9 +84,9 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-admin-jobs',
   standalone: true,
-  imports: [
+  imports: [DateInputComponent, 
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
+    SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
     SortBarComponent,
   ],
   templateUrl: './jobs.component.html',
@@ -918,13 +921,13 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.loadJobs(1);
   }
 
-  onFilterDateFromChange(e: Event): void {
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+  onFilterDateFromChange(value: string): void {
+    this.filterDateFrom.set(value);
     this.loadJobs(1);
   }
 
-  onFilterDateToChange(e: Event): void {
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+  onFilterDateToChange(value: string): void {
+    this.filterDateTo.set(value);
     this.loadJobs(1);
   }
 

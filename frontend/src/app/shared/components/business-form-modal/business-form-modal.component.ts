@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
 import { Business, BusinessCategory, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
+import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { getPhoneRule } from '../../utils/phone';
@@ -42,7 +43,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-business-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent, ImageUrlPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe],
   templateUrl: './business-form-modal.component.html',
   styleUrls: ['./business-form-modal.component.scss'],
 })

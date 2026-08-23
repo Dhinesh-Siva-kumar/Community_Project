@@ -11,6 +11,9 @@ import { FileUploadComponent } from '../../../shared/components/file-upload/file
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -65,7 +68,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -173,6 +176,13 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
   readonly EVENT_TYPES = ['Workshop','Meetup','Webinar','Festival','Conference','Exhibition','Concert','Sports','Social','Other'];
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
+
+  /** Event Mode radio group in the create/edit modal (app-radio-group). */
+  readonly eventModeOptions: RadioOption[] = [
+    { value: 'Offline', label: 'Offline', icon: 'bi-geo-alt-fill' },
+    { value: 'Online',  label: 'Online',  icon: 'bi-camera-video-fill' },
+    { value: 'Hybrid',  label: 'Hybrid',  icon: 'bi-diagram-2-fill' },
+  ];
   readonly TIMEZONES   = ['UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney'];
 
   readonly categoryOptions: SelectOption[] = this.EVENT_TYPES.map((t) => ({ value: t, label: t }));
@@ -373,15 +383,15 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.applyFilters();
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.applyFilters();
   }
 

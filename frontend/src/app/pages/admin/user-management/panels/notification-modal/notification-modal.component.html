@@ -31,23 +31,14 @@
 
       <div class="nm-field">
         <label class="nm-label">Send To</label>
-        <div class="nm-recipient-grid">
-          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'all'">
-            <input type="radio" [value]="'all'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
-            <i class="bi bi-people-fill"></i>
-            <span>All Users</span>
-          </label>
-          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'role'">
-            <input type="radio" [value]="'role'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
-            <i class="bi bi-person-gear"></i>
-            <span>By Role</span>
-          </label>
-          <label class="nm-recipient" [class.nm-recipient--active]="recipient() === 'user'">
-            <input type="radio" [value]="'user'" [ngModel]="recipient()" (ngModelChange)="recipient.set($event)" />
-            <i class="bi bi-person-fill"></i>
-            <span>Specific User</span>
-          </label>
-        </div>
+        <app-radio-group
+          variant="card"
+          [options]="recipientOptions"
+          [ngModel]="recipient()"
+          (ngModelChange)="recipient.set($any($event))"
+          [ngModelOptions]="{ standalone: true }"
+          ariaLabel="Send to">
+        </app-radio-group>
 
         @if (recipient() === 'role') {
           <div class="nm-inline-field">

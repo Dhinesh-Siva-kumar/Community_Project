@@ -15,6 +15,7 @@ import { SelectOption, SearchableSelectComponent } from '../../../shared/compone
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -43,7 +44,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })

@@ -161,7 +161,6 @@
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
 }
 
-
 // ── BUTTONS — Landing-Page Style ─────────────────────────────────
 // .jb-btn-neon mirrors .lp-btn-neon
 .jb-btn {
@@ -222,7 +221,6 @@
     font-size: $font-size-xs;
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // FILTER PANEL — Community Tab-inspired design
@@ -710,7 +708,6 @@
   margin-left: 4px;
 }
 
-
 // ═══════════════════════════════════════════════════════════════
 // ENHANCED CARD — company name above title, skill preview chips
 // ═══════════════════════════════════════════════════════════════
@@ -776,7 +773,6 @@
   }
 }
 
-
 // ── Empty state (new icon-based) ──────────────────────────────
 .jb-empty {
   display: flex;
@@ -818,7 +814,6 @@
   }
 }
 
-
 // ── Responsive updates for new filter panel ───────────────────
 @include media-lg-max {
   .jb-filter-row--split { flex-direction: column; gap: $spacing-md; }
@@ -843,7 +838,6 @@
   .jb-head { flex-direction: column; align-items: stretch; }
   .jb-head-controls { justify-content: space-between; }
 }
-
 
 // ── RESULTS META ─────────────────────────────────────────────────
 .jb-meta {
@@ -961,7 +955,6 @@
   50%       { background-color: $color-stone-200; }
 }
 .skeleton-pulse { animation: skeletonPulse 1.6s ease-in-out infinite; }
-
 
 // ── JOB CARD — glass-card aesthetic ──────────────────────────────
 // No `overflow: hidden` here (deliberately — a tooltip on the header's
@@ -1172,10 +1165,11 @@
 // Staggered entrance
 .jb-list .jb-card {
   @for $i from 1 through 12 {
-    &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}ms; }
+    &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}
+
+ms; }
   }
 }
-
 
 // ── JOB TYPE / WORK MODE BADGES ───────────────────────────────────
 .jb-badge {
@@ -2041,7 +2035,6 @@
   .bi { font-size: 0.8em; color: #0284C7; }
 }
 
-
 // ═══════════════════════════════════════════════════════════════
 // POST JOB MODAL — Sticky header/footer, 10-section form
 // ═══════════════════════════════════════════════════════════════
@@ -2266,7 +2259,6 @@
   strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
 }
 
-
 // ── FORM SECTIONS ─────────────────────────────────────────────────
 .jb-form-section {
   margin-bottom: $spacing-xl;
@@ -2315,7 +2307,6 @@
   }
 }
 
-
 // ── FORM LABELS ───────────────────────────────────────────────────
 .jb-label {
   display: block;
@@ -2353,7 +2344,6 @@
   color: $color-stone-300;
   font-weight: $font-weight-light;
 }
-
 
 // ── FORM INPUTS — mirrors .cm-input on the Community Create/Edit
 // popup (community-form-modal.component.scss), so every text/url/
@@ -2441,7 +2431,6 @@
   .bi { font-size: 0.8rem; flex-shrink: 0; }
 }
 
-
 // ── RADIO MODE CHIPS — mirrors .cm-toggle-pill/.cm-toggle-group on the
 // Community Create/Edit popup's Visibility/Community Mode toggles. ──
 .jb-mode-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2470,7 +2459,6 @@
   }
 }
 
-
 // ── WORKING DAY TOGGLES ───────────────────────────────────────────
 .jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -2498,36 +2486,7 @@
     font-weight: $font-weight-bold;
     &:hover { background: rgba(251, 191, 36, 0.36); border-color: $color-primary-dark; }
   }
-}
-
-
-// ── CHECKBOX ─────────────────────────────────────────────────────
-.jb-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  cursor: pointer;
-  user-select: none;
-}
-
-.jb-checkbox {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid $color-border;
-  cursor: pointer;
-  accent-color: $color-primary;
-  flex-shrink: 0;
-}
-
-.jb-checkbox-text {
-  font-size: $font-size-sm;
-  color: $color-stone-700;
-  line-height: 1.4;
-}
-
-
-// ── PHONE FIELD ───────────────────────────────────────────────────
+}// ── PHONE FIELD ───────────────────────────────────────────────────
 .jb-phone-field {
   display: flex;
   gap: $spacing-sm;
@@ -2536,7 +2495,6 @@
   &__dial   { flex: 0 0 140px; }
   &__number { flex: 1; min-width: 0; }
 }
-
 
 // ── LOGO PREVIEW ─────────────────────────────────────────────────
 .jb-logo-preview {
@@ -2581,7 +2539,6 @@
   color: $color-stone-400;
 }
 
-
 // ── RESPONSIVE: modal form ────────────────────────────────────────
 @include media-md-max {
   .jb-modal            { width: calc(100vw - 24px); }
@@ -2591,7 +2548,6 @@
   .jb-form-section  { padding: $spacing-md; }
   .jb-phone-field   { flex-direction: column; &__dial { flex: none; } }
 }
-
 
 // ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
 // Same .um-iab icon-button style as the Community/Business admin pages,
@@ -2685,7 +2641,6 @@
 
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // DELETE CONFIRMATION MODAL

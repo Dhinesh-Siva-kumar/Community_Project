@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { UserService } from '../../../core/services/user.service';
@@ -7,11 +8,12 @@ import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CommunityService } from '../../../core/services/community.service';
 import { DashboardStats, Post, AuditLog, ChartData, CommunityAnalyticsCounts } from '../../../core/models';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [DateInputComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
 })
@@ -192,12 +194,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.chartPreset.set('custom');
   }
 
-  onChartFromInput(event: Event): void {
-    this.chartFrom.set((event.target as HTMLInputElement).value);
+  onChartFromInput(value: string): void {
+    this.chartFrom.set(value);
   }
 
-  onChartToInput(event: Event): void {
-    this.chartTo.set((event.target as HTMLInputElement).value);
+  onChartToInput(value: string): void {
+    this.chartTo.set(value);
   }
 
   applyCustomChartRange(): void {

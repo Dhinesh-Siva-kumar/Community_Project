@@ -10,6 +10,7 @@ import {
 import { ToastService } from '../../../core/services/toast.service';
 import { ApexChartComponent } from '../../../shared/components/apex-chart/apex-chart.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 type ApexOptions = ApexCharts.ApexOptions;
 type DatePreset = '7d' | '30d' | '90d' | '365d' | 'custom';
@@ -26,7 +27,7 @@ const RED     = '#DC2626';
 @Component({
   selector: 'app-admin-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, ApexChartComponent, SearchableSelectComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, ApexChartComponent, SearchableSelectComponent],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss'],
 })
@@ -90,15 +91,15 @@ export class AdminAnalyticsComponent implements OnInit {
     this.load();
   }
 
-  onDateFromChange(e: Event): void {
+  onDateFromChange(value: string): void {
     this.datePreset.set('custom');
-    this.dateFrom.set((e.target as HTMLInputElement).value);
+    this.dateFrom.set(value);
     this.load();
   }
 
-  onDateToChange(e: Event): void {
+  onDateToChange(value: string): void {
     this.datePreset.set('custom');
-    this.dateTo.set((e.target as HTMLInputElement).value);
+    this.dateTo.set(value);
     this.load();
   }
 

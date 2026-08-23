@@ -22,6 +22,7 @@
 @import 'variables';                    // Spacing, z-index, component tokens
 @import 'profile-tokens';               // Profile-specific design tokens
 @import 'profile-shared';               // Profile mixins & utility classes
+@import 'form-controls';                // Shared mixins for the custom themed form controls
 
 // ============================================================
 // 3. SHORT ALIASES — redeclared here so they are guaranteed to

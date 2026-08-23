@@ -103,10 +103,7 @@
                     {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
                   </span>
                 </div>
-                <label class="cm-switch">
-                  <input type="checkbox" formControlName="isActive" />
-                  <span class="cm-switch-slider"></span>
-                </label>
+                <app-toggle formControlName="isActive" ariaLabel="Active"></app-toggle>
               </div>
             </div>
           </div>
@@ -142,10 +139,7 @@
 
             <!-- Row 2: Same-as-phone toggle -->
             <div class="col-12">
-              <label class="jb-checkbox-label">
-                <input type="checkbox" formControlName="sameAsPhone" />
-                <span>WhatsApp number is same as phone</span>
-              </label>
+              <app-toggle formControlName="sameAsPhone" label="WhatsApp number is same as phone" ariaLabel="WhatsApp number is same as phone"></app-toggle>
             </div>
 
             <!-- Row 3: WhatsApp — its own Country dropdown only when NOT

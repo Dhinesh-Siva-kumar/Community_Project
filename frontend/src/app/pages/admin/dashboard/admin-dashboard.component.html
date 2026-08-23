@@ -180,11 +180,9 @@
 
         @if (chartPreset() === 'custom') {
           <div class="chart-custom-range">
-            <input type="date" class="chart-date-input" [value]="chartFrom()" [max]="chartTo() || chartRangeMax"
-                   (change)="onChartFromInput($event)" aria-label="From date" />
+            <app-date-input [ngModel]="chartFrom()" (ngModelChange)="onChartFromInput($event)" [ngModelOptions]="{ standalone: true }" [max]="chartTo() || chartRangeMax" ariaLabel="From date" placeholder="From date"></app-date-input>
             <span class="chart-range-sep">–</span>
-            <input type="date" class="chart-date-input" [value]="chartTo()" [min]="chartFrom()" [max]="chartRangeMax"
-                   (change)="onChartToInput($event)" aria-label="To date" />
+            <app-date-input [ngModel]="chartTo()" (ngModelChange)="onChartToInput($event)" [ngModelOptions]="{ standalone: true }" [min]="chartFrom()" [max]="chartRangeMax" ariaLabel="To date" placeholder="To date"></app-date-input>
             <button type="button" class="chart-apply-btn" [disabled]="loadingChart()" (click)="applyCustomChartRange()">Apply</button>
           </div>
         }

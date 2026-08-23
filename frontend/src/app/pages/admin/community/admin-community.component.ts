@@ -10,11 +10,14 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -48,7 +51,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -81,6 +84,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterVisibilityOptions: SelectOption[] = [
     { value: 'global',  label: 'Global'  },
     { value: 'private', label: 'Private' },
+  ];
+
+  // ── Radio group options (app-radio-group, create/edit modal) ──
+  readonly visibilityOptions: RadioOption[] = [
+    { value: 'private', label: 'Private', icon: 'bi-lock-fill' },
+    { value: 'global',  label: 'Global',  icon: 'bi-globe2' },
+  ];
+
+  readonly communityModeOptions: RadioOption[] = [
+    { value: 'HELP_EMERGENCY', label: 'Help & Emergency Assistance', icon: 'bi-life-preserver' },
+    { value: 'ENQUIRE',        label: 'Enquire',                     icon: 'bi-question-circle-fill' },
   ];
 
   // ── Signals ──────────────────────────────────────────────────
@@ -381,15 +395,15 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onFilterFromDateChange(event: Event): void {
+  onFilterFromDateChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterFromDate.set((event.target as HTMLInputElement).value);
+    this.filterFromDate.set(value);
     this.applyFilters();
   }
 
-  onFilterToDateChange(event: Event): void {
+  onFilterToDateChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterToDate.set((event.target as HTMLInputElement).value);
+    this.filterToDate.set(value);
     this.applyFilters();
   }
 

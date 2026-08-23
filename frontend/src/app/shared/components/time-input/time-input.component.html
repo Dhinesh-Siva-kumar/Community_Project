@@ -1,0 +1,89 @@
+<div class="ti-host">
+
+  <!-- ── Trigger ──────────────────────────────────────────── -->
+  <button
+    type="button"
+    class="ti-trigger"
+    [class.is-open]="isOpen()"
+    [class.is-invalid]="invalid()"
+    [class.is-placeholder]="!displayText()"
+    [disabled]="isDisabled()"
+    [attr.aria-label]="ariaLabel() || placeholder()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="dialog"
+    (click)="toggle()"
+  >
+    <i class="bi bi-clock fc-trigger__icon" aria-hidden="true"></i>
+    <span class="fc-trigger__text">{{ displayText() || placeholder() }}</span>
+
+    @if (clearable() && displayText() && !isDisabled()) {
+      <span class="ti-clear" role="button" tabindex="-1" aria-label="Clear time" (click)="clear($event)">
+        <i class="bi bi-x" aria-hidden="true"></i>
+      </span>
+    }
+  </button>
+
+  <!-- ── Time popup ───────────────────────────────────────── -->
+  @if (isOpen()) {
+    <div class="ti-panel" [class.fc-panel--up]="dropUp()" role="dialog" [attr.aria-label]="ariaLabel() || 'Choose time'">
+
+      <div class="ti-cols">
+
+        <!-- Hours -->
+        <div class="ti-col" role="listbox" aria-label="Hour">
+          <span class="ti-col__label">Hr</span>
+          <div class="ti-col__scroll">
+            @for (h of hours12; track h) {
+              <button type="button" class="ti-opt"
+                [class.ti-opt--active]="selectedHour12() === h"
+                [attr.aria-selected]="selectedHour12() === h"
+                (click)="pickHour(h)">{{ h }}</button>
+            }
+          </div>
+        </div>
+
+        <!-- Minutes -->
+        <div class="ti-col" role="listbox" aria-label="Minute">
+          <span class="ti-col__label">Min</span>
+          <div class="ti-col__scroll">
+            @for (m of minutes(); track m) {
+              <button type="button" class="ti-opt"
+                [class.ti-opt--active]="selectedMinute() === m"
+                [attr.aria-selected]="selectedMinute() === m"
+                (click)="pickMinute(m)">{{ m < 10 ? '0' + m : m }}</button>
+            }
+          </div>
+        </div>
+
+        <!-- Meridiem -->
+        <div class="ti-col ti-col--meridiem" role="listbox" aria-label="AM or PM">
+          <span class="ti-col__label">&nbsp;</span>
+          <div class="ti-col__scroll ti-col__scroll--tight">
+            <button type="button" class="ti-opt"
+              [class.ti-opt--active]="selectedMeridiem() === 'AM'"
+              [attr.aria-selected]="selectedMeridiem() === 'AM'"
+              (click)="pickMeridiem('AM')">AM</button>
+            <button type="button" class="ti-opt"
+              [class.ti-opt--active]="selectedMeridiem() === 'PM'"
+              [attr.aria-selected]="selectedMeridiem() === 'PM'"
+              (click)="pickMeridiem('PM')">PM</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="ti-foot">
+        <button type="button" class="ti-text-btn" (click)="selectNow()">Now</button>
+        <div class="ti-foot__right">
+          @if (clearable() && displayText()) {
+            <button type="button" class="ti-text-btn ti-text-btn--muted" (click)="clear($event)">Clear</button>
+          }
+          <button type="button" class="ti-done" (click)="close()">Done</button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

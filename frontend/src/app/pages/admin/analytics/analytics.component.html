@@ -55,9 +55,9 @@
     </div>
 
     <div class="an-date-inputs">
-      <input type="date" class="jb-adv-input" [value]="dateFrom()" [max]="rangeMax" (change)="onDateFromChange($event)" aria-label="From date" />
+      <app-date-input [ngModel]="dateFrom()" (ngModelChange)="onDateFromChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" ariaLabel="From date" placeholder="From date"></app-date-input>
       <span class="an-date-sep">to</span>
-      <input type="date" class="jb-adv-input" [value]="dateTo()" [max]="rangeMax" (change)="onDateToChange($event)" aria-label="To date" />
+      <app-date-input [ngModel]="dateTo()" (ngModelChange)="onDateToChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" ariaLabel="To date" placeholder="To date"></app-date-input>
     </div>
 
     <div class="an-granularity jb-select-wrap jb-select-wrap--xs">

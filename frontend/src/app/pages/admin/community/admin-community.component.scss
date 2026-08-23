@@ -1969,63 +1969,7 @@
   i {
     font-size: 12px;
   }
-}
-
-// ── Toggle pills ──────────────────────────────────────────────
-.cm-toggle-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-  border-radius: 12px;
-  padding: 2px;
-  transition: border 0.2s, background 0.2s;
-
-  &.cm-toggle-group--error {
-    border: 1.5px solid rgba($danger, 0.55);
-    background: rgba($danger, 0.03);
-    padding: 6px 8px;
-  }
-}
-
-.cm-toggle-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 14px;
-  border-radius: 20px;
-  border: 1.5px solid $color-border;
-  font-size: 13px;
-  font-weight: 500;
-  color: $color-stone-500;
-  background: $color-bg-page;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.18s ease;
-
-  &:hover {
-    border-color: $primary;
-    color: $primary-dark;
-    background: $amber-50;
-  }
-
-  &.cm-toggle-active {
-    border-color: $primary-dark;
-    background: $primary;
-    color: $color-on-primary;
-
-    i {
-      color: $color-on-primary;
-    }
-  }
-
-  i {
-    font-size: 12px;
-    color: $muted;
-  }
-}
-
-// ── Default community row ─────────────────────────────────────
+}// ── Default community row ─────────────────────────────────────
 .cm-default-row {
   display: flex;
   align-items: center;
@@ -2069,62 +2013,7 @@
   color: $muted !important;
   width: 100%;
   margin-top: 1px;
-}
-
-// ── Amber toggle switch ───────────────────────────────────────
-.cm-switch {
-  position: relative;
-  display: inline-block;
-  width: 42px;
-  height: 24px;
-  flex-shrink: 0;
-
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-  }
-}
-
-.cm-switch-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: $color-stone-300;
-  border-radius: 24px;
-  transition: background 0.25s ease;
-
-  &::before {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: $white;
-    border-radius: 50%;
-    transition: transform 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.cm-switch input:checked + .cm-switch-slider {
-  background: $primary;
-}
-
-.cm-switch input:focus + .cm-switch-slider {
-  box-shadow: 0 0 0 3px rgba($primary, 0.25);
-}
-
-.cm-switch input:checked + .cm-switch-slider::before {
-  transform: translateX(18px);
-}
-
-// ── Modal Footer ──────────────────────────────────────────────
+}// ── Modal Footer ──────────────────────────────────────────────
 .au-footer.cm-modal-footer {
   display: flex;
   align-items: center;

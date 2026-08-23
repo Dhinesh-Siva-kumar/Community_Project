@@ -144,7 +144,6 @@
   }
 }
 
-
 // ─── Category Card ────────────────────────────────────────────
 .biz-cat-card {
   display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -214,7 +213,6 @@ $accents: (
   &__title { font-family: $font-family-header; font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-stone-800; margin-bottom: $spacing-sm; }
   &__sub   { font-size: $font-size-sm; color: $color-text-muted; max-width: 320px; line-height: 1.6; margin-bottom: $spacing-lg; }
 }
-
 
 // ─── Business List View ───────────────────────────────────────
 .bl-header {
@@ -438,7 +436,6 @@ $accents: (
   &:disabled { opacity: 0.38; cursor: not-allowed; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
-
 
 // ─── Business Detail View — replicated verbatim from the Admin
 // Business page's .bd-hero / .bd-badge / .bd-action-btn design system. ──

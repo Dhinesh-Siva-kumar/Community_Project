@@ -1,0 +1,104 @@
+@use '../../../../assets/styles/index' as *;
+
+:host { display: block; }
+
+.di-host { position: relative; }
+
+.di-trigger { @include fc-trigger; }
+.di-clear   { @include fc-clear-btn; }
+.di-panel   { @include fc-panel; width: 268px; }
+.di-nav     { @include fc-nav-btn; }
+.di-foot    { @include fc-panel-footer; }
+.di-text-btn {
+  @include fc-text-btn;
+  &:disabled { opacity: 0.4; cursor: not-allowed; background: none; }
+}
+
+// ── Month pager ───────────────────────────────────────────────
+.di-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  margin-bottom: 6px;
+}
+
+.di-month {
+  font-family: $font-family-header;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-stone-800;
+  letter-spacing: -0.01em;
+}
+
+// ── Grid ──────────────────────────────────────────────────────
+.di-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+
+  &--head { margin-bottom: 2px; }
+}
+
+.di-weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  font-size: 10.5px;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $color-stone-400;
+}
+
+.di-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-stone-800;
+  font-family: $font-family-body;
+  font-size: 12.5px;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover:not(:disabled):not(.di-day--selected) {
+    background: $color-amber-50;
+    border-color: rgba($color-primary, 0.35);
+    color: $color-primary-darker;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: -1px;
+  }
+
+  // Leading/trailing days from the adjacent months — kept visible
+  // (rather than blanked) so the grid reads as a continuous calendar.
+  &--muted { color: $color-stone-300; }
+
+  &--today:not(.di-day--selected) {
+    border-color: rgba($color-primary, 0.45);
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+  }
+
+  &--selected {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+    border-color: $color-primary-darker;
+    color: $color-on-primary;
+    font-weight: $font-weight-bold;
+    box-shadow: 0 2px 8px rgba($color-primary, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: transparent;
+  }
+}

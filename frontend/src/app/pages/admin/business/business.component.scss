@@ -1790,14 +1790,9 @@
   }
 }
 
-
 // ═══════════════════════════════════════════════════════════
 // BUSINESS DIRECTORY — Premium Category View
 // ═══════════════════════════════════════════════════════════
-
-
-
-
 
 .biz-view-toggle {
   display: flex;
@@ -2418,8 +2413,6 @@ $accents: (
   .biz-grid { grid-template-columns: 1fr; gap: $spacing-sm; }
 }
 
-
-
 // ═══════════════════════════════════════════════════════════════
 // ADD / EDIT BUSINESS MODAL STYLES
 // ═══════════════════════════════════════════════════════════════
@@ -2479,65 +2472,6 @@ $accents: (
 .jb-input-group {
   position: relative;
   &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
-}
-
-// "Same as phone" style checkbox toggles that sit inline in a field row.
-// Custom-drawn box (native `appearance: none` + a CSS checkmark) instead of
-// the plain browser checkbox, so it matches the app's amber theme.
-.jb-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  color: $color-text-body;
-  cursor: pointer;
-  white-space: nowrap;
-  user-select: none;
-
-  input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    border: 1.5px solid $color-border;
-    border-radius: 4px;
-    background: $color-bg-page;
-    cursor: pointer;
-    flex-shrink: 0;
-    position: relative;
-    transition: background 0.15s ease, border-color 0.15s ease;
-
-    &:hover { border-color: $color-primary; }
-    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-
-    &:checked {
-      background: $color-primary;
-      border-color: $color-primary;
-
-      &::after {
-        content: '';
-        position: absolute;
-        left: 4px;
-        top: 1px;
-        width: 4px;
-        height: 8px;
-        border: solid $color-on-primary;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-      }
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  // Sits directly under its field's input (and error message, if any)
-  // instead of occupying its own column.
-  &--below { margin-top: 8px; }
 }
 
 .jb-field-error {
@@ -2600,29 +2534,9 @@ $accents: (
   width: 100%; margin-top: 1px;
 }
 
-.cm-switch {
-  position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0;
-  input { opacity: 0; width: 0; height: 0; position: absolute; }
-}
-
-.cm-switch-slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background: $color-stone-300; border-radius: 24px; transition: background 0.25s ease;
-  &::before {
-    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
-    background: #fff; border-radius: 50%; transition: transform 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.cm-switch input:checked + .cm-switch-slider { background: $color-primary; }
-.cm-switch input:focus + .cm-switch-slider { box-shadow: 0 0 0 3px rgba(251,191,36,0.25); }
-.cm-switch input:checked + .cm-switch-slider::before { transform: translateX(18px); }
-
 @include media-md-max {
   .jb-form-section { padding: $spacing-md; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // BREADCRUMB & BUSINESS LIST HEADER — Premium Redesign
@@ -2652,7 +2566,6 @@ $accents: (
 // ═══════════════════════════════════════════════════════════════
 // BUSINESS LIST VIEW — Premium Redesign
 // ═══════════════════════════════════════════════════════════════
-
 
 .bl-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -2782,7 +2695,6 @@ $accents: (
   .bl-grid { grid-template-columns: 1fr; }
 }
 
-
 .biz-gallery-existing {
   margin-top: $spacing-md;
   &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; }
@@ -2799,7 +2711,6 @@ $accents: (
   }
   &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; .bi { font-size: 0.75em; } }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // BUSINESS DETAIL VIEW

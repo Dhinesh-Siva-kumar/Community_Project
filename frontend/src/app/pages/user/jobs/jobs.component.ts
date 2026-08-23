@@ -15,6 +15,8 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { GeographyService } from '../../../core/services/geography.service';
 import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
@@ -87,7 +89,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
+    SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
     ImageErrorHandlerDirective, InfiniteScrollDirective,
   ],
   templateUrl: './jobs.component.html',

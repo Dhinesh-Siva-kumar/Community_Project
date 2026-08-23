@@ -10,12 +10,14 @@ import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
 import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { TruncatedDirective } from '../../../shared/directives/truncated.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last selected category view mode (grid/list) across navigations.
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
@@ -63,7 +65,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -1292,15 +1294,15 @@ private initForms(): void {
     this.applyFilters();
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.applyFilters();
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.applyFilters();
   }
 

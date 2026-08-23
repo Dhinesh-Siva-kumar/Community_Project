@@ -227,13 +227,11 @@
           </div>
           <div class="jb-adv-field">
             <label class="jb-adv-label" for="jobFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
-            <input id="jobFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
-              (change)="onFilterDateFromChange($event)" />
+            <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="onFilterDateFromChange($event)" [ngModelOptions]="{ standalone: true }" ariaLabel="From date" placeholder="From date"></app-date-input>
           </div>
           <div class="jb-adv-field">
             <label class="jb-adv-label" for="jobFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
-            <input id="jobFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
-              (change)="onFilterDateToChange($event)" />
+            <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="onFilterDateToChange($event)" [ngModelOptions]="{ standalone: true }" ariaLabel="To date" placeholder="To date"></app-date-input>
           </div>
         </div>
       </div>
@@ -1051,10 +1049,7 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="salaryHidden" class="jb-checkbox" />
-                    <span class="jb-checkbox-text"><i class="bi bi-eye-slash me-1"></i>Hide salary — show "Not Disclosed"</span>
-                  </label>
+                  <app-toggle formControlName="salaryHidden" label="Hide salary — show &quot;Not Disclosed&quot;" ariaLabel="Hide salary"></app-toggle>
                 </div>
                 @if (!isSalaryHidden) {
                   <div class="col-12">
@@ -1109,10 +1104,7 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="isRemote" class="jb-checkbox" />
-                    <span class="jb-checkbox-text"><i class="bi bi-house-door me-1"></i>Fully remote position</span>
-                  </label>
+                  <app-toggle formControlName="isRemote" label="Fully remote position" ariaLabel="Fully remote position"></app-toggle>
                 </div>
                 @if (!isRemoteCtrl) {
                   <div class="col-md-4">
@@ -1192,12 +1184,12 @@
                 <div class="jb-time-range">
                   <div class="jb-time-range__field">
                     <i class="bi bi-sunrise"></i>
-                    <input id="aWorkStart" type="time" class="jb-input" formControlName="workStartTime" aria-label="Start time" />
+                    <app-time-input formControlName="workStartTime" ariaLabel="Start time" placeholder="Start"></app-time-input>
                   </div>
                   <i class="bi bi-arrow-right jb-time-range__sep"></i>
                   <div class="jb-time-range__field">
                     <i class="bi bi-sunset"></i>
-                    <input id="aWorkEnd" type="time" class="jb-input" formControlName="workEndTime" aria-label="End time" />
+                    <app-time-input formControlName="workEndTime" ariaLabel="End time" placeholder="End"></app-time-input>
                   </div>
                 </div>
               </div>

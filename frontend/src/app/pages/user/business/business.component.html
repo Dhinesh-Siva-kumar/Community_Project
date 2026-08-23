@@ -269,12 +269,13 @@
                 <label class="jb-adv-label" for="userBizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
                 <span class="jb-adv-date-help">Start date</span>
               </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-                <input id="userBizFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                  (change)="onFilterDateFromChange($event)"
-                  placeholder="From date" />
-              </div>
+              <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
             </div>
 
             <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
@@ -282,12 +283,13 @@
                 <label class="jb-adv-label" for="userBizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
                 <span class="jb-adv-date-help">End date</span>
               </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-                <input id="userBizFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                  (change)="onFilterDateToChange($event)"
-                  placeholder="To date" />
-              </div>
+              <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
             </div>
           </div>
 

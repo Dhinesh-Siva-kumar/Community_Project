@@ -11,6 +11,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -37,7 +38,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -606,15 +607,15 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.currentPage.set(1);
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.currentPage.set(1);
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.currentPage.set(1);
   }
 

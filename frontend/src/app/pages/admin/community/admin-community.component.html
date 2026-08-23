@@ -173,12 +173,13 @@
               <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
               <span class="jb-adv-date-help">Start date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-              <input id="communityFilterFromDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterFromDate()"
-                (change)="onFilterFromDateChange($event)"
-                placeholder="From date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterFromDate()"
+                  (ngModelChange)="onFilterFromDateChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
@@ -186,12 +187,13 @@
               <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
               <span class="jb-adv-date-help">End date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-              <input id="communityFilterToDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterToDate()"
-                (change)="onFilterToDateChange($event)"
-                placeholder="To date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterToDate()"
+                  (ngModelChange)="onFilterToDateChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
           </div>
         </div>
 
@@ -820,17 +822,12 @@
                 <!-- Visibility Toggles -->
                 <div class="cm-field-group">
                   <label class="cm-label">Visibility <span class="cm-required">*</span></label>
-                  <div class="cm-toggle-group"
-                       [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['visibility'].value">
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'private'">
-                      <input type="radio" formControlName="visibility" value="private" hidden />
-                      <i class="bi bi-lock-fill me-1"></i> Private
-                    </label>
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'global'">
-                      <input type="radio" formControlName="visibility" value="global" hidden />
-                      <i class="bi bi-globe2 me-1"></i> Global
-                    </label>
-                  </div>
+                  <app-radio-group
+                    formControlName="visibility"
+                    [options]="visibilityOptions"
+                    [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
+                    ariaLabel="Visibility">
+                  </app-radio-group>
                   @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
@@ -842,16 +839,11 @@
               <!-- Community Mode -->
               <div class="cm-field-group">
                 <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
-                <div class="cm-toggle-group">
-                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
-                    <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
-                    <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency Assistance
-                  </label>
-                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
-                    <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
-                    <i class="bi bi-question-circle-fill me-1"></i> Enquire
-                  </label>
-                </div>
+                <app-radio-group
+                  formControlName="communityMode"
+                  [options]="communityModeOptions"
+                  ariaLabel="Community mode">
+                </app-radio-group>
                 <div class="cm-default-hint">
                   @if (f['communityMode'].value === 'ENQUIRE') {
                     Members can raise and track enquiries in a dedicated Enquire tab.
@@ -868,10 +860,7 @@
                   <span>Default Community</span>
                   <span class="cm-default-hint">Mark this as the default community for new users</span>
                 </div>
-                <label class="cm-switch">
-                  <input type="checkbox" formControlName="isDefault" />
-                  <span class="cm-switch-slider"></span>
-                </label>
+                <app-toggle formControlName="isDefault" ariaLabel="Default community"></app-toggle>
               </div>
             </div>
 

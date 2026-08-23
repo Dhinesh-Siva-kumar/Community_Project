@@ -10,8 +10,11 @@ import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/mod
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last selected view mode (grid/table) across navigations.
 const VIEW_STORAGE_KEY = 'admin-events:viewMode';
@@ -53,7 +56,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent, ImageUrlPipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -205,6 +208,13 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   readonly EVENT_TYPES = ['Workshop','Meetup','Webinar','Festival','Conference','Exhibition','Concert','Sports','Social','Other'];
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
+
+  /** Event Mode radio group in the create/edit modal (app-radio-group). */
+  readonly eventModeOptions: RadioOption[] = [
+    { value: 'Offline', label: 'Offline', icon: 'bi-geo-alt-fill' },
+    { value: 'Online',  label: 'Online',  icon: 'bi-camera-video-fill' },
+    { value: 'Hybrid',  label: 'Hybrid',  icon: 'bi-diagram-2-fill' },
+  ];
   readonly TIMEZONES   = [
     'UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney',
   ];
@@ -376,15 +386,15 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.applyFilters();
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.applyFilters();
   }
 

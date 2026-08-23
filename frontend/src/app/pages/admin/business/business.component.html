@@ -540,12 +540,13 @@
                   <label class="jb-adv-label" for="bizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
                   <span class="jb-adv-date-help">Start date</span>
                 </div>
-                <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                  <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-                  <input id="bizFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                    (change)="onFilterDateFromChange($event)"
-                    placeholder="From date" />
-                </div>
+                <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
               </div>
 
               <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
@@ -553,12 +554,13 @@
                   <label class="jb-adv-label" for="bizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
                   <span class="jb-adv-date-help">End date</span>
                 </div>
-                <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                  <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-                  <input id="bizFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                    (change)="onFilterDateToChange($event)"
-                    placeholder="To date" />
-                </div>
+                <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
               </div>
             </div>
 
@@ -1405,10 +1407,7 @@
                         {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
                       </span>
                     </div>
-                    <label class="cm-switch">
-                      <input type="checkbox" formControlName="isActive" />
-                      <span class="cm-switch-slider"></span>
-                    </label>
+                    <app-toggle formControlName="isActive" ariaLabel="Active"></app-toggle>
                   </div>
                 </div>
               </div>
@@ -1444,10 +1443,7 @@
 
                 <!-- Row 2: Same-as-phone toggle -->
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="sameAsPhone" />
-                    <span>WhatsApp number is same as phone</span>
-                  </label>
+                  <app-toggle formControlName="sameAsPhone" label="WhatsApp number is same as phone" ariaLabel="WhatsApp number is same as phone"></app-toggle>
                 </div>
 
                 <!-- Row 3: WhatsApp — its own Country dropdown only when NOT
