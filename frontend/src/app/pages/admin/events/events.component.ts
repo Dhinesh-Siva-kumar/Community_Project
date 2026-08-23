@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
@@ -9,6 +9,13 @@ import { FileUploadComponent } from '../../../shared/components/file-upload/file
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+
+// Remembers the last selected view mode (grid/table) across navigations.
+const VIEW_STORAGE_KEY = 'admin-events:viewMode';
+
+/** Every column the table view can sort by (all but Actions). */
+type EventSortField = 'name' | 'eventDate' | 'joined' | 'category' | 'mode' | 'location' | 'status';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -22,18 +29,48 @@ function endTimeValidator(group: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+/** Fails when the trimmed value is empty (catches whitespace-only strings). */
+function noWhitespace(control: AbstractControl): ValidationErrors | null {
+  const val = ((control.value as string) ?? '').trim();
+  return val.length === 0 ? { whitespace: true } : null;
+}
+
+/**
+ * Fails when the trimmed value is shorter than `min`.
+ * Does NOT fail on empty/null (let `required` + `noWhitespace` handle that).
+ */
+function minLengthTrimmed(min: number) {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = ((control.value as string) ?? '').trim();
+    return val.length > 0 && val.length < min
+      ? { minlengthTrimmed: { requiredLength: min, actualLength: val.length } }
+      : null;
+  };
+}
+
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent, ImageUrlPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
 })
-export class AdminEventsComponent implements OnInit {
+export class AdminEventsComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+
+  constructor() {
+    // Lock background scroll while the add/edit or delete-confirm modal is open.
+    effect(() => {
+      document.body.style.overflow = (this.showAddModal() || this.showDeleteConfirm()) ? 'hidden' : '';
+    });
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
 
   events     = signal<AppEvent[]>([]);
   loading    = signal(true);
@@ -60,19 +97,22 @@ export class AdminEventsComponent implements OnInit {
 
   searchQuery = signal('');
   filterCountry  = signal('');
-  filterStatus   = signal<'active' | 'inactive' | ''>('');
+  filterStatus   = signal<'upcoming' | 'completed' | ''>('');
+  filterEventMode = signal<'Offline' | 'Online' | 'Hybrid' | ''>('');
   filterDateFrom = signal('');
   filterDateTo   = signal('');
+  activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
   private searchDebounce: any = null;
 
   // Premium filter UI state
   showAdvancedFilters = signal(false);
+  viewMode = signal<'grid' | 'table'>('grid');
 
   filterCountryOptions: SelectOption[] = [];
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',         label: 'All Status' },
-    { value: 'active',   label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: '',          label: 'All Status' },
+    { value: 'upcoming',  label: 'Upcoming' },
+    { value: 'completed', label: 'Completed' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -87,12 +127,28 @@ export class AdminEventsComponent implements OnInit {
     { key: 'eventDate', label: 'Event Date' },
     { key: 'name',      label: 'Name' },
   ];
-  sortBy  = signal<'joined' | 'eventDate' | 'name'>('joined');
+  sortBy  = signal<EventSortField>('joined');
   sortDir = signal<SortDir>('desc');
 
   onSortChange(change: SortChange): void {
-    this.sortBy.set(change.sortBy as 'joined' | 'eventDate' | 'name');
+    this.sortBy.set(change.sortBy as EventSortField);
     this.sortDir.set(change.sortDir);
+    this.applyFilters();
+  }
+
+  setViewMode(mode: 'grid' | 'table'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem(VIEW_STORAGE_KEY, mode);
+  }
+
+  /** Toggle sort for a clickable table column header — re-clicking the same column flips direction. */
+  toggleSort(field: EventSortField): void {
+    if (this.sortBy() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(field);
+      this.sortDir.set('desc');
+    }
     this.applyFilters();
   }
 
@@ -114,20 +170,20 @@ export class AdminEventsComponent implements OnInit {
     if (this.searchQuery()) count++;
     if (this.filterCountry()) count++;
     if (this.filterStatus()) count++;
+    if (this.filterEventMode()) count++;
     if (this.filterDateFrom()) count++;
     if (this.filterDateTo()) count++;
     return count;
   });
 
-  showAddModal      = signal(false);
-  editingEvent      = signal<AppEvent | null>(null);
-  showDeleteConfirm = signal(false);
-  eventToDelete     = signal<AppEvent | null>(null);
-  deleting          = signal(false);
+  showAddModal        = signal(false);
+  editingEvent        = signal<AppEvent | null>(null);
+  showDeleteConfirm   = signal(false);
+  eventToDelete       = signal<AppEvent | null>(null);
+  deleting            = signal(false);
+  formSubmitAttempted = signal(false);
 
-  selectedImage    = signal<File | null>(null);
-  imagePreview     = signal<string | null>(null);
-  imageUploadReset = signal(0);
+  selectedImage = signal<File | null>(null);
 
   eventForm!: FormGroup;
 
@@ -137,11 +193,24 @@ export class AdminEventsComponent implements OnInit {
     'UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney',
   ];
 
+  readonly categoryOptions: SelectOption[] = this.EVENT_TYPES.map((t) => ({ value: t, label: t }));
+  readonly timezoneOptions: SelectOption[] = this.TIMEZONES.map((t) => ({ value: t, label: t }));
+
   get eventMode(): string { return this.eventForm?.get('eventMode')?.value ?? ''; }
   get showAddress(): boolean      { return this.eventMode === 'Offline' || this.eventMode === 'Hybrid'; }
   get showLocationLink(): boolean { return this.eventMode === 'Online'  || this.eventMode === 'Hybrid'; }
 
-  ngOnInit(): void { this.initForm(); this.loadEvents(); this.loadCountries(); }
+  get f() {
+    return this.eventForm.controls;
+  }
+
+  ngOnInit(): void { this.initForm(); this.restoreSavedViewMode(); this.loadEvents(); this.loadCountries(); }
+
+  /** Resume the last selected grid/table view across navigations. */
+  private restoreSavedViewMode(): void {
+    const saved = sessionStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === 'grid' || saved === 'table') this.viewMode.set(saved);
+  }
 
   loadCountries(): void {
     this.authService.getCountries().subscribe({
@@ -153,40 +222,46 @@ export class AdminEventsComponent implements OnInit {
 
   private initForm(): void {
     this.eventForm = this.fb.group({
-      title:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      description:  ['', [Validators.required, Validators.minLength(10)]],
+      title:        ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(100)]],
+      description:  ['', [Validators.required, noWhitespace, minLengthTrimmed(10), Validators.maxLength(1000)]],
       eventCategory:['', Validators.required],
       eventDate:    ['', [Validators.required, futureDateValidator]],
       eventTime:    ['', Validators.required],
       eventEndTime: [''],
       timezone:     ['Asia/Kolkata', Validators.required],
       eventMode:    ['Offline', Validators.required],
-      address:      ['', Validators.required], // Start with required for Offline default
-      locationLink: [''],
-      pincode:      [''],
-      location:     [''],
+      address:      ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]],
+      locationLink: ['', Validators.maxLength(300)],
+      pincode:      ['', Validators.maxLength(12)],
+      location:     ['', Validators.maxLength(150)],
       country:      [''],
     }, { validators: endTimeValidator });
 
-    // Update conditional required validators when mode changes
-    this.eventForm.get('eventMode')!.valueChanges.subscribe(mode => {
-      const addr = this.eventForm.get('address')!;
-      const link = this.eventForm.get('locationLink')!;
-      
-      if (mode === 'Offline') {
-        addr.setValidators([Validators.required]);
-        link.clearValidators();
-      } else if (mode === 'Online') {
-        addr.clearValidators();
-        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
-      } else if (mode === 'Hybrid') {
-        addr.setValidators([Validators.required]);
-        link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
-      }
-      
-      addr.updateValueAndValidity({ emitEvent: false });
-      link.updateValueAndValidity({ emitEvent: false });
-    });
+    // Apply mode-specific validators immediately (not just on the next change) so
+    // address/link stay correctly required even if the default eventMode value
+    // above ever changes — valueChanges alone only fires on a later user edit.
+    this.applyModeValidators(this.eventForm.get('eventMode')!.value);
+    this.eventForm.get('eventMode')!.valueChanges.subscribe((mode) => this.applyModeValidators(mode));
+  }
+
+  /** (Re)apply the conditional required/format validators for address & meeting link based on event mode. */
+  private applyModeValidators(mode: string): void {
+    const addr = this.eventForm.get('address')!;
+    const link = this.eventForm.get('locationLink')!;
+
+    if (mode === 'Offline') {
+      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
+      link.setValidators([Validators.maxLength(300)]);
+    } else if (mode === 'Online') {
+      addr.setValidators([Validators.maxLength(200)]);
+      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
+    } else if (mode === 'Hybrid') {
+      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
+      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
+    }
+
+    addr.updateValueAndValidity({ emitEvent: false });
+    link.updateValueAndValidity({ emitEvent: false });
   }
 
   loadEvents(): void {
@@ -200,6 +275,7 @@ export class AdminEventsComponent implements OnInit {
     if (this.searchQuery().trim()) params['search'] = this.searchQuery().trim();
     if (this.filterCountry())      params['country'] = this.filterCountry();
     if (this.filterStatus())       params['status']  = this.filterStatus();
+    if (this.filterEventMode())    params['eventMode'] = this.filterEventMode();
     if (this.filterDateFrom())     params['dateFrom'] = this.filterDateFrom();
     if (this.filterDateTo())       params['dateTo']   = this.filterDateTo();
 
@@ -229,18 +305,52 @@ export class AdminEventsComponent implements OnInit {
   }
 
   setStatusFilter(v: string | number): void {
-    this.filterStatus.set(v as 'active' | 'inactive' | '');
+    this.filterStatus.set(v as 'upcoming' | 'completed' | '');
+    this.applyFilters();
+  }
+
+  setEventModeFilter(mode: 'Offline' | 'Online' | 'Hybrid' | null): void {
+    this.filterEventMode.set(mode ?? '');
     this.applyFilters();
   }
 
   onFilterDateFromChange(e: Event): void {
+    this.activeQuickRange.set(null);
     this.filterDateFrom.set((e.target as HTMLInputElement).value);
     this.applyFilters();
   }
 
   onFilterDateToChange(e: Event): void {
+    this.activeQuickRange.set(null);
     this.filterDateTo.set((e.target as HTMLInputElement).value);
     this.applyFilters();
+  }
+
+  applyQuickDatePreset(preset: 'today' | '7d' | '30d'): void {
+    const today = new Date();
+    const to = this.toInputDate(today);
+
+    if (preset === 'today') {
+      this.filterDateFrom.set(to);
+      this.filterDateTo.set(to);
+      this.activeQuickRange.set('today');
+      this.applyFilters();
+      return;
+    }
+
+    const fromDate = new Date(today);
+    fromDate.setDate(today.getDate() - (preset === '7d' ? 6 : 29));
+    this.filterDateFrom.set(this.toInputDate(fromDate));
+    this.filterDateTo.set(to);
+    this.activeQuickRange.set(preset);
+    this.applyFilters();
+  }
+
+  private toInputDate(date: Date): string {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   onPageSizeChange(size: number): void {
@@ -256,8 +366,10 @@ export class AdminEventsComponent implements OnInit {
     this.searchQuery.set('');
     this.filterCountry.set('');
     this.filterStatus.set('');
+    this.filterEventMode.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.activeQuickRange.set(null);
     this.applyFilters();
   }
 
@@ -266,20 +378,24 @@ export class AdminEventsComponent implements OnInit {
       case 'search':    this.searchQuery.set('');   break;
       case 'country':   this.filterCountry.set(''); break;
       case 'status':    this.filterStatus.set('');  break;
+      case 'eventMode': this.filterEventMode.set(''); break;
       case 'dateFrom':  this.filterDateFrom.set(''); break;
       case 'dateTo':    this.filterDateTo.set('');  break;
     }
+    if (key === 'dateFrom' || key === 'dateTo') this.activeQuickRange.set(null);
     this.applyFilters();
   }
 
   openAddModal(): void {
     this.editingEvent.set(null); this.eventForm.reset();
-    this.selectedImage.set(null); this.imagePreview.set(null);
-    this.imageUploadReset.update(v => v + 1); this.showAddModal.set(true);
+    this.formSubmitAttempted.set(false);
+    this.selectedImage.set(null);
+    this.showAddModal.set(true);
   }
 
   openEditModal(evt: AppEvent, event: Event): void {
     event.stopPropagation(); this.editingEvent.set(evt);
+    this.formSubmitAttempted.set(false);
     this.eventForm.patchValue({
       title: evt.title, description: evt.description ?? '',
       eventCategory: (evt as any).eventCategory ?? '',
@@ -291,21 +407,24 @@ export class AdminEventsComponent implements OnInit {
       pincode: evt.pincode ?? '', location: evt.location ?? '', country: evt.country ?? '',
     });
     this.selectedImage.set(null);
-    this.imagePreview.set(evt.images?.length ? evt.images[0] : null);
-    this.imageUploadReset.update(v => v + 1); this.showAddModal.set(true);
+    this.showAddModal.set(true);
   }
 
-  closeAddModal(): void { this.showAddModal.set(false); this.editingEvent.set(null); }
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.editingEvent.set(null);
+    this.formSubmitAttempted.set(false);
+  }
 
   onImageChange(files: File[]): void {
-    const f = files[0] ?? null; this.selectedImage.set(f);
-    if (f) { const r = new FileReader(); r.onload = e => this.imagePreview.set(e.target?.result as string); r.readAsDataURL(f); }
-    else { this.imagePreview.set(null); }
+    this.selectedImage.set(files[0] ?? null);
   }
-  clearImage(): void { this.selectedImage.set(null); this.imagePreview.set(null); this.imageUploadReset.update(v => v + 1); }
 
   submitEvent(): void {
-    if (this.eventForm.invalid) { this.eventForm.markAllAsTouched(); return; }
+    this.formSubmitAttempted.set(true);
+    this.eventForm.markAllAsTouched();
+    if (this.eventForm.invalid) { this.scrollToFirstError(); return; }
+
     this.submitting.set(true);
     const data = this.eventForm.value;
     const images = this.selectedImage() ? [this.selectedImage()!] : undefined;
@@ -321,6 +440,16 @@ export class AdminEventsComponent implements OnInit {
       },
       error: (err) => { this.toast.error(err?.error?.message ?? 'Failed to save event'); this.submitting.set(false); },
     });
+  }
+
+  /** Scrolls the modal body to the first visible error message. */
+  private scrollToFirstError(): void {
+    setTimeout(() => {
+      const firstError = document.querySelector<HTMLElement>('.cm-error-msg');
+      firstError
+        ?.closest<HTMLElement>('.cm-field-group, .cm-section')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
   }
 
   openDeleteConfirm(evt: AppEvent, event: Event): void {
@@ -348,6 +477,9 @@ export class AdminEventsComponent implements OnInit {
     const e = Math.min(total, s + max - 1); s = Math.max(1, e - max + 1);
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
+
+  showingFrom(): number { return this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1; }
+  showingTo():   number { return Math.min(this.currentPage() * this.pageSize(), this.totalItems()); }
   truncate(text: string | undefined, n: number): string {
     if (!text) return ''; return text.length > n ? text.substring(0, n) + '…' : text;
   }

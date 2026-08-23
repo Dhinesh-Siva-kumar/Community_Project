@@ -373,8 +373,8 @@
   white-space: nowrap;
   @include transition-short(all);
 
-  &:not(.jb-chip--active):hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
-  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-white; }
+  &:not(.jb-chip--active):hover { border-color: $color-primary; color: $color-primary-darker; }
+  &--active { background: rgba($color-primary, 0.14); border-color: $color-primary; color: $color-primary-darker; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 

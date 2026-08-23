@@ -1,8 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
-  HostListener,
   computed,
   forwardRef,
   inject,
@@ -124,6 +124,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   readonly selectedOption    = input<SelectOption | null>(null);
 
   private readonly hostEl = inject(ElementRef<HTMLElement>);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ── State (Signals) ──────────────────────────────────────────
   protected value      = signal<string | number | null>(null);
@@ -155,6 +156,19 @@ export class SearchableSelectComponent implements ControlValueAccessor {
         this.remoteOptions.set(results);
         this.remoteLoading.set(false);
       });
+
+    // Capture-phase (not the default bubble-phase `HostListener('document:click')`)
+    // so this still fires even when an ancestor — e.g. the modal shells' own
+    // `(click)="$event.stopPropagation()"` guard that keeps clicks from reaching
+    // the backdrop — stops the event from bubbling back up to `document`.
+    const onDocumentClick = (e: MouseEvent) => {
+      if (!this.hostEl.nativeElement.contains(e.target as Node) && this.isOpen()) {
+        this.isOpen.set(false);
+        this._onTouched();
+      }
+    };
+    document.addEventListener('click', onDocumentClick, true);
+    this.destroyRef.onDestroy(() => document.removeEventListener('click', onDocumentClick, true));
   }
 
   // ── Computed ─────────────────────────────────────────────────
@@ -240,15 +254,5 @@ export class SearchableSelectComponent implements ControlValueAccessor {
     this.query = '';
     this._querySig.set('');
     if (this.remoteSearchFn()) this.searchInput$.next('');
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(e: MouseEvent): void {
-    if (!this.hostEl.nativeElement.contains(e.target as Node)) {
-      if (this.isOpen()) {
-        this.isOpen.set(false);
-        this._onTouched();
-      }
-    }
   }
 }

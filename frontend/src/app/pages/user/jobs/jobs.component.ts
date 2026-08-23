@@ -9,6 +9,7 @@ import {
 import { Subject, takeUntil, Observable, map } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
 import { GeographyService } from '../../../core/services/geography.service';
@@ -91,10 +92,15 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   ],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the job list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class UserJobsComponent implements OnInit, OnDestroy {
   private jobService        = inject(JobService);
   private authService       = inject(AuthService);
+  private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
   private geographyService  = inject(GeographyService);
@@ -165,6 +171,20 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   // ─── Edit mode ───────────────────────────────────────────────
   editingJob      = signal<Job | null>(null);   // null = create mode, set = edit mode
   editSubmitting  = signal(false);
+
+  // ─── Job details popup — List/Grid view's eye icon opens the full
+  // job data here instead of expanding it inline (Card view keeps
+  // the inline accordion via activeJobId). ─────────────────────
+  viewingJob = signal<Job | null>(null);
+
+  openJobDetailsModal(job: Job, event: Event): void {
+    event.stopPropagation();
+    this.viewingJob.set(job);
+  }
+
+  closeJobDetailsModal(): void {
+    this.viewingJob.set(null);
+  }
 
   // ─── Delete confirmation modal ───────────────────────────────
   showDeleteConfirm  = signal(false);
@@ -242,22 +262,22 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     );
   };
 
-  // ─── User Context ────────────────────────────────────────────
-  userPincode = computed(() => this.authService.currentUser()?.pincode ?? '');
-
   // ═══════════════════════════════════════════════════════════
   // FILTER STATE
   // ═══════════════════════════════════════════════════════════
 
   // Basic filters
   searchQuery     = signal('');
-  showAllJobs     = signal(false);
   filterJobType   = signal('');
   filterWorkMode  = signal('');
   filterCountry   = signal('');
   filterState     = signal('');
   filterCity      = signal('');
   sortBy          = signal<string>('newest');
+
+  /** Card = the full detailed listing (default); List = a dense single-line row. */
+  jobViewMode = signal<'card' | 'list'>('card');
+  setJobViewMode(mode: 'card' | 'list'): void { this.jobViewMode.set(mode); }
 
   // Advanced filter panel visibility
   showAdvancedFilters = signal(false);
@@ -414,6 +434,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.searchDebounce) clearTimeout(this.searchDebounce);
     if (this.filterDebounce) clearTimeout(this.filterDebounce);
+    this.layoutService.forceSidebarCollapsed.set(false);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -661,7 +682,6 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   private buildQuery(page: number): JobsQueryParams {
     const query: JobsQueryParams = { page, limit: this.PAGE_SIZE };
 
-    if (!this.showAllJobs() && this.userPincode()) query.pincode  = this.userPincode();
     if (this.searchQuery().trim())    query.search      = this.searchQuery().trim();
     if (this.filterJobType())         query.jobType     = this.filterJobType();
     if (this.filterWorkMode())        query.workMode    = this.filterWorkMode();
@@ -761,13 +781,16 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.triggerFilteredLoad();
   }
 
-  toggleShowAllJobs(): void {
-    this.showAllJobs.update(v => !v);
-    this.loadJobs(1);
-  }
-
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   // ─── Remove individual filter chip ───────────────────────────

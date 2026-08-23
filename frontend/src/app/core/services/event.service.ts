@@ -31,13 +31,13 @@ export interface EventsQueryParams {
   limit?:       number;
   search?:      string;
   country?:     string;
-  status?:      'active' | 'inactive';
+  status?:      'upcoming' | 'completed';
   dateFrom?:    string;
   dateTo?:      string;
   /** Filters on event_date (when the event happens), unlike dateFrom/dateTo which filter created_at. */
   eventDateFrom?: string;
   eventDateTo?:   string;
-  sortBy?:      'name' | 'eventDate' | 'joined' | 'near';
+  sortBy?:      'name' | 'eventDate' | 'joined' | 'near' | 'category' | 'mode' | 'location' | 'status';
   sortDir?:     'asc' | 'desc';
 }
 

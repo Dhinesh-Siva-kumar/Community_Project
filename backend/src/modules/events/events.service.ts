@@ -89,16 +89,24 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
 
   const countQuery = db('events');
 
-  // Admin callers set skipActiveFilter=true to see inactive events too,
-  // unless they've explicitly picked a status to filter by below.
+  // Admin callers set skipActiveFilter=true to see inactive events too.
   if (!skipActiveFilter) {
     query.where('e.is_active', true);
     countQuery.where({ is_active: true });
   }
+
+  // 'status' filters by event date — 'upcoming' (today or later) vs
+  // 'completed' (before today) — independent of is_active.
   if (status) {
-    const isActive = status === 'active';
-    query.andWhere('e.is_active', isActive);
-    countQuery.andWhere('is_active', isActive);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (status === 'upcoming') {
+      query.andWhere('e.event_date', '>=', todayStart);
+      countQuery.andWhere('event_date', '>=', todayStart);
+    } else {
+      query.andWhere('e.event_date', '<', todayStart);
+      countQuery.andWhere('event_date', '<', todayStart);
+    }
   }
 
   // ── Moderation status — non-owner/non-admin callers only ever see
@@ -150,8 +158,20 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     query
       .orderByRaw("(e.event_mode != 'Online' AND e.pincode = ?) DESC", [nearPincode])
       .orderBy('e.event_date', 'asc');
+  } else if (sortBy === 'location') {
+    // No single "location" column — admin table lists whichever of
+    // address/location/country is populated, so sort on the same fallback.
+    query.orderByRaw(`COALESCE(e.address, e.location, e.country) ${sortDir}`);
   } else {
-    const sortColumn = sortBy === 'name' ? 'e.title' : sortBy === 'joined' ? 'e.created_at' : 'e.event_date';
+    const sortColumn =
+      sortBy === 'name'     ? 'e.title'
+      : sortBy === 'joined'   ? 'e.created_at'
+      : sortBy === 'category' ? 'e.event_category'
+      : sortBy === 'mode'     ? 'e.event_mode'
+      // 'status' (Upcoming/Completed) is derived entirely from event_date,
+      // so sorting by event_date also sorts by status (completed events —
+      // the smaller dates — group together, then upcoming ones).
+      : 'e.event_date'; // eventDate | status
     query.orderBy(sortColumn, sortDir);
   }
 
