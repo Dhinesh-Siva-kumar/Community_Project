@@ -728,9 +728,11 @@
                 </div>
               }
               @if (biz.status === 'PENDING') {
-                <span class="bl-card__status-badge bl-card__status-badge--pending">
+                <a class="bl-card__status-badge bl-card__status-badge--pending bl-card__status-badge--link"
+                  [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }"
+                  title="Go to Business Approval" (click)="$event.stopPropagation()">
                   <i class="bi bi-hourglass-split"></i> Pending Approval
-                </span>
+                </a>
               } @else if (biz.status === 'REJECTED') {
                 <span class="bl-card__status-badge bl-card__status-badge--rejected" [title]="biz.rejectionReason || 'Rejected'">
                   <i class="bi bi-x-circle-fill"></i> Rejected
@@ -900,7 +902,8 @@
                   <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ biz.phone || '—' }}</span></td>
                   <td class="um-td">
                     @if (biz.status === 'PENDING') {
-                      <span class="um-badge um-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                      <a class="um-badge um-badge--pending um-badge--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }"
+                        title="Go to Business Approval" (click)="$event.stopPropagation()"><i class="bi bi-hourglass-split"></i> Pending Approval</a>
                     } @else if (biz.status === 'REJECTED') {
                       <span class="um-badge um-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
                     } @else {
@@ -1014,7 +1017,7 @@
             <div class="bd-hero__name-row">
               <h1 class="bd-hero__name">{{ biz.name }}</h1>
               @if (biz.status === 'PENDING') {
-                <span class="bd-badge bd-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                <a class="bd-badge bd-badge--pending bd-badge--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }" title="Go to Business Approval"><i class="bi bi-hourglass-split"></i> Pending Approval</a>
               } @else if (biz.status === 'REJECTED') {
                 <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
               } @else if (biz.isActive) {

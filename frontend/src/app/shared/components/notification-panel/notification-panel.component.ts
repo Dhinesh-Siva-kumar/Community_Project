@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Notification } from '../../../core/models';
-import { notificationIcon, notificationColor, notificationRoute } from '../../utils/notification-display';
+import { notificationIcon, notificationColor, notificationBgColor, notificationRoute } from '../../utils/notification-display';
 import { timeAgo } from '../../utils/time-ago';
 
 @Component({
@@ -40,6 +40,10 @@ export class NotificationPanelComponent {
 
   color(n: Notification): string {
     return notificationColor(n.type);
+  }
+
+  bgColor(n: Notification): string {
+    return notificationBgColor(n.type);
   }
 
   relativeTime(n: Notification): string {

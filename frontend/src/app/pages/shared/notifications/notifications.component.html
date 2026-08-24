@@ -69,7 +69,7 @@
     <div class="ntf-list">
       @for (n of filteredItems(); track n.id) {
         <button type="button" class="ntf-item" [class.ntf-item-unread]="!n.isRead" (click)="open(n)">
-          <span class="ntf-item-icon" [style.background]="color(n) + '1F'" [style.color]="color(n)">
+          <span class="ntf-item-icon" [style.background]="bgColor(n)" [style.color]="color(n)">
             <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
           </span>
           <span class="ntf-item-body">

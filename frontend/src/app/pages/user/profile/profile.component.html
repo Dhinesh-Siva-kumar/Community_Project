@@ -82,7 +82,7 @@
                 <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" placeholder="Phone number" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="whatsappNo"><i class="bi bi-whatsapp me-1"></i>WhatsApp</label>
+                <label class="prf-label" for="whatsappNo">WhatsApp</label>
                 <input id="whatsappNo" type="text" class="form-control" formControlName="whatsappNo" maxlength="20" [readonly]="!editMode()" placeholder="WhatsApp number" />
               </div>
             </div>
@@ -260,34 +260,10 @@
           <div class="prf-section-header">
             <span class="prf-section-badge"><i class="bi bi-key"></i></span>
             <span class="prf-section-title">Change Password</span>
-            <button class="btn btn-outline-secondary btn-sm ms-auto" (click)="togglePasswordSection()">
-              @if (showPasswordSection()) { Cancel } @else { <i class="bi bi-key me-1"></i>Change }
+            <button class="prf-btn prf-btn--ghost ms-auto" (click)="togglePasswordSection()">
+              <i class="bi bi-key"></i>Change Password
             </button>
           </div>
-          @if (showPasswordSection()) {
-            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-              <div class="row g-3" style="max-width: 400px;">
-                <div class="col-12">
-                  <label class="prf-label" for="currentPwd">Current Password</label>
-                  <input id="currentPwd" type="password" class="form-control" formControlName="currentPassword" />
-                </div>
-                <div class="col-12">
-                  <label class="prf-label" for="newPwd">New Password</label>
-                  <input id="newPwd" type="password" class="form-control" formControlName="newPassword" />
-                </div>
-                <div class="col-12">
-                  <label class="prf-label" for="confirmPwd">Confirm Password</label>
-                  <input id="confirmPwd" type="password" class="form-control" formControlName="confirmPassword" />
-                </div>
-                <div class="col-12">
-                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()">
-                    @if (changingPassword()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                    Update Password
-                  </button>
-                </div>
-              </div>
-            </form>
-          }
         </div>
       </app-profile-info-card>
       </div>
@@ -296,12 +272,8 @@
     <!-- ==================== MY BUSINESSES TAB ==================== -->
     @if (activeTab() === 'businesses') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Businesses" icon="bi-shop" [showEdit]="false">
-        <div class="d-flex justify-content-end mb-3">
-          <button type="button" class="btn btn-primary btn-sm" (click)="openAddBusiness()">
-            <i class="bi bi-plus-lg me-1"></i> Add Business
-          </button>
-        </div>
+      <app-profile-info-card title="My Businesses" icon="bi-shop" [showEdit]="false"
+        actionLabel="Add Business" actionIcon="bi-plus-lg" (action)="openAddBusiness()">
         @if (loadingBusinesses()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -315,7 +287,8 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (biz of myBusinesses(); track biz.id) {
-              <div class="prf-item">
+              <div class="prf-item prf-item--clickable" role="button" tabindex="0"
+                (click)="goToBusiness(biz.id)" (keydown.enter)="goToBusiness(biz.id)">
                 <div class="prf-item__lead">
                   @if (biz.logo) {
                     <img [src]="biz.logo | imageUrl" class="prf-item__thumb" [alt]="biz.name" loading="lazy" fetchpriority="auto" />
@@ -336,11 +309,11 @@
                     @if (biz.address) { <small class="prf-item__meta">{{ biz.address }}</small> }
                   </div>
                 </div>
-                <div class="prf-item__actions">
-                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditBusiness(biz.id)" aria-label="Edit business">
+                <div class="prf-item__actions" (click)="$event.stopPropagation()">
+                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditBusiness(biz.id)" aria-label="Edit business">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteBusiness(biz)" aria-label="Delete business">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteBusiness(biz)" aria-label="Delete business">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -355,12 +328,8 @@
     <!-- ==================== MY COMMUNITIES TAB ==================== -->
     @if (activeTab() === 'communities') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Communities" icon="bi-people" [showEdit]="false">
-        <div class="d-flex justify-content-end mb-3">
-          <button type="button" class="btn btn-primary btn-sm" (click)="openAddCommunity()">
-            <i class="bi bi-plus-lg me-1"></i> Add Community
-          </button>
-        </div>
+      <app-profile-info-card title="My Communities" icon="bi-people" [showEdit]="false"
+        actionLabel="Add Community" actionIcon="bi-plus-lg" (action)="openAddCommunity()">
         @if (loadingCommunities()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -374,7 +343,8 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (community of myCommunities(); track community.id) {
-              <div class="prf-item">
+              <div class="prf-item prf-item--clickable" role="button" tabindex="0"
+                (click)="goToCommunity(community.id)" (keydown.enter)="goToCommunity(community.id)">
                 <div class="prf-item__lead">
                   @if (community.image) {
                     <img [src]="community.image | imageUrl" class="prf-item__thumb" [alt]="community.name" loading="lazy" fetchpriority="auto" />
@@ -395,11 +365,11 @@
                     <small class="prf-item__meta">{{ community._count?.members ?? 0 }} members</small>
                   </div>
                 </div>
-                <div class="prf-item__actions">
-                  <button class="btn btn-outline-secondary btn-sm" (click)="openEditCommunity(community.id)" aria-label="Edit community">
+                <div class="prf-item__actions" (click)="$event.stopPropagation()">
+                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditCommunity(community.id)" aria-label="Edit community">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="btn btn-outline-danger btn-sm" (click)="openDeleteCommunity(community)" aria-label="Delete community">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteCommunity(community)" aria-label="Delete community">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -414,7 +384,8 @@
     <!-- ==================== MY JOBS TAB ==================== -->
     @if (activeTab() === 'jobs') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Jobs" icon="bi-briefcase" [showEdit]="false">
+      <app-profile-info-card title="My Jobs" icon="bi-briefcase" [showEdit]="false"
+        actionLabel="Add Job" actionIcon="bi-plus-lg" (action)="goToAddJob()">
         @if (loadingJobs()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -428,13 +399,14 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (job of myJobs(); track job.id) {
-              <div class="prf-item">
+              <div class="prf-item prf-item--clickable" role="button" tabindex="0"
+                (click)="goToJob(job.id)" (keydown.enter)="goToJob(job.id)">
                 <div class="prf-item__lead">
-                  @if (job.images?.length) {
-                    <img [src]="job.images[0] | imageUrl" class="prf-item__thumb" [alt]="job.title" loading="lazy" fetchpriority="auto" />
+                  @if (job.companyLogo || job.images?.length) {
+                    <img [src]="(job.companyLogo || job.images[0]) | imageUrl" class="prf-item__thumb" [alt]="job.companyName || job.title" loading="lazy" fetchpriority="auto" />
                   } @else {
-                    <div class="prf-item__thumb prf-item__thumb--placeholder">
-                      <i class="bi bi-briefcase"></i>
+                    <div class="prf-item__thumb prf-item__thumb--placeholder" [style.background]="getJobAvatarColor(job)">
+                      <span class="prf-item__thumb-initials">{{ getJobInitials(job) }}</span>
                     </div>
                   }
                   <div class="prf-item__body">
@@ -442,11 +414,12 @@
                       <h6 class="prf-item__name">{{ job.title }}</h6>
                       @if (job.jobType) { <span class="prf-badge prf-badge--neutral">{{ job.jobType }}</span> }
                     </div>
+                    @if (job.companyName) { <small class="prf-item__meta prf-item__meta--company"><i class="bi bi-building"></i>{{ job.companyName }}</small> }
                     <small class="prf-item__meta">{{ job.location }} &middot; Posted {{ job.createdAt | date:'mediumDate' }}</small>
                   </div>
                 </div>
-                <div class="prf-item__actions">
-                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" aria-label="Delete job">
+                <div class="prf-item__actions" (click)="$event.stopPropagation()">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" aria-label="Delete job">
                     @if (deletingJobId() === job.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -504,7 +477,7 @@
                   </div>
                 </div>
                 <div class="prf-item__actions">
-                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" aria-label="Delete post">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" aria-label="Delete post">
                     @if (deletingPostId() === post.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -519,7 +492,8 @@
     <!-- ==================== MY EVENTS TAB ==================== -->
     @if (activeTab() === 'events') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Events" icon="bi-calendar-event" [showEdit]="false">
+      <app-profile-info-card title="My Events" icon="bi-calendar-event" [showEdit]="false"
+        actionLabel="Add Event" actionIcon="bi-plus-lg" (action)="goToAddEvent()">
         @if (loadingEvents()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
@@ -533,7 +507,8 @@
         } @else {
           <div class="d-flex flex-column gap-3">
             @for (event of myEvents(); track event.id) {
-              <div class="prf-item">
+              <div class="prf-item prf-item--clickable" role="button" tabindex="0"
+                (click)="goToEvent(event.id)" (keydown.enter)="goToEvent(event.id)">
                 <div class="prf-item__lead">
                   @if (event.images?.length) {
                     <img [src]="event.images[0] | imageUrl" class="prf-item__thumb" [alt]="event.title" loading="lazy" fetchpriority="auto" />
@@ -559,8 +534,8 @@
                     }
                   </div>
                 </div>
-                <div class="prf-item__actions">
-                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingEventId() === event.id" (click)="deleteEvent(event.id)" aria-label="Delete event">
+                <div class="prf-item__actions" (click)="$event.stopPropagation()">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingEventId() === event.id" (click)="deleteEvent(event.id)" aria-label="Delete event">
                     @if (deletingEventId() === event.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -577,7 +552,8 @@
       <aside class="prf-sidebar">
         <app-profile-info-card title="Profile Completion" icon="bi-graph-up-arrow" [showEdit]="false">
           <div class="prf-completion">
-            <div class="prf-completion__ring" [ngClass]="completionRingClass()">
+            <div class="prf-completion__ring" [ngClass]="completionRingClass()"
+              [style.--ring-pct]="profileCompletion()" [style.--ring-clr]="completionRingColor()">
               <span class="prf-completion__percent">{{ profileCompletion() }}%</span>
             </div>
             <app-profile-progress [percentage]="profileCompletion()" [showLabel]="false"></app-profile-progress>
@@ -615,6 +591,84 @@
       </aside>
 
     </div><!-- /prf-layout -->
+
+    <!-- ── CHANGE PASSWORD MODAL — same design language as the Add Event
+         popup (.au-*/.cm-* shell, sections, inputs, validation). ────── -->
+    @if (showPasswordSection()) {
+      <div class="au-backdrop" (click)="togglePasswordSection()"></div>
+      <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="pwdModalTitle">
+
+        <!-- Modal Header -->
+        <div class="au-header cm-modal-header">
+          <div class="au-header__cover-shapes" aria-hidden="true">
+            <span class="shape shape--1"></span>
+            <span class="shape shape--2"></span>
+          </div>
+          <div class="au-header__icon cm-modal-icon">
+            <i class="bi bi-key-fill"></i>
+          </div>
+          <div class="au-header__text cm-modal-header-inner">
+            <h5 class="au-header__title cm-modal-title" id="pwdModalTitle">Change Password</h5>
+            <p class="au-header__sub cm-modal-subtitle">Update the password used to sign in</p>
+          </div>
+          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="au-body cm-modal-body">
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="au-form cm-form">
+            <div class="cm-section cm-section-last">
+              <div class="cm-field-group">
+                <label class="cm-label" for="currentPwd">Current Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-lock cm-input-icon"></i>
+                  <input id="currentPwd" type="password" formControlName="currentPassword" class="cm-input" placeholder="Enter current password" />
+                </div>
+              </div>
+              <div class="cm-field-group">
+                <label class="cm-label" for="newPwd">New Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-shield-lock cm-input-icon"></i>
+                  <input id="newPwd" type="password" formControlName="newPassword" class="cm-input" placeholder="At least 6 characters" />
+                </div>
+                @if (passwordForm.get('newPassword')?.hasError('minlength') && passwordForm.get('newPassword')?.dirty) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Must be at least 6 characters.</div>
+                }
+              </div>
+              <div class="cm-field-group">
+                <label class="cm-label" for="confirmPwd">Confirm Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-shield-check cm-input-icon"></i>
+                  <input id="confirmPwd" type="password" formControlName="confirmPassword" class="cm-input" placeholder="Re-enter new password" />
+                </div>
+                @if (passwordForm.get('confirmPassword')?.dirty && passwordForm.get('newPassword')?.value !== passwordForm.get('confirmPassword')?.value) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Passwords do not match.</div>
+                }
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="au-footer cm-modal-footer">
+          <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="togglePasswordSection()" [disabled]="changingPassword()">
+            Cancel
+          </button>
+          <button type="button" class="au-btn cm-btn-submit au-btn--primary"
+            [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()"
+            (click)="changePassword()">
+            @if (changingPassword()) {
+              <span class="spinner-border spinner-border-sm"></span> Updating...
+            } @else {
+              <i class="bi bi-check-lg"></i> Update Password
+            }
+          </button>
+        </div>
+
+      </div>
+    }
 
     <app-business-form-modal
       [open]="showBusinessModal()"

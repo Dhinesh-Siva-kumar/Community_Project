@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule, FormsModule, FormBuilder, FormGroup,
   Validators, AbstractControl, ValidationErrors, ValidatorFn
 } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, Observable, map } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -107,6 +108,8 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   private masterDataService = inject(MasterDataService);
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
+  private route             = inject(ActivatedRoute);
+  private router            = inject(Router);
   private destroy$          = new Subject<void>();
 
   // ─── Data ───────────────────────────────────────────────────
@@ -426,6 +429,44 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.loadGeoCountries();
     this.subscribeToSalaryHidden();
     this.loadMyPendingJobsCount();
+
+    // Deep-link support — e.g. the Profile page's "My Jobs" tab navigates
+    // here with ?jobId=xxx to expand and scroll straight to that job's card.
+    this.route.queryParams.subscribe(params => {
+      const jobId = params['jobId'];
+      if (jobId) this.openJobFromQueryParam(jobId);
+      // Deep-link support — e.g. the Profile page's "My Jobs" tab
+      // navigates here with ?openAdd=1 to jump straight into Add Job.
+      if (params['openAdd']) {
+        this.openAddModal();
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { openAdd: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+    });
+  }
+
+  /** The target job may not be on the currently loaded/filtered page —
+   * fetched directly and prepended if it isn't already in `jobs()`. */
+  private openJobFromQueryParam(id: string): void {
+    this.jobService.getJob(id).subscribe({
+      next: job => {
+        if (!this.jobs().some(j => j.id === id)) {
+          this.jobs.update(list => [job, ...list]);
+        }
+        setTimeout(() => this.toggleAccordion(id), 60);
+      },
+      error: () => this.toast.error('Job not found or no longer available'),
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { jobId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   setPageTab(tab: 'all' | 'pending'): void {

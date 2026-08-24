@@ -1,5 +1,6 @@
 ﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, map, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -23,6 +24,8 @@ import { DateInputComponent } from '../../../shared/components/date-input/date-i
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
 // Remembers the last selected business-list view mode (grid/table) across navigations.
 const LIST_VIEW_STORAGE_KEY = 'admin-business:listViewMode';
+// Remembers the last selected Category View / Business View scope across navigations.
+const SCOPE_STORAGE_KEY = 'admin-business:scope';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -65,7 +68,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -630,11 +633,16 @@ getCategoryAccent(icon?: string): string {
   ngOnInit(): void {
     this.restoreSavedViewMode();
     this.restoreSavedListViewMode();
+    this.restoreSavedBusinessScope();
     this.initForms();
     this.loadCountries();
     this.loadCategories();
     this.loadGeoCountries();
     this.loadPhoneCountries();
+    // Resume straight into the flat Business View if that's what was last
+    // selected — the default 'categories' currentView already covers the
+    // other case, so nothing extra is needed there.
+    if (this.businessScope() === 'business') this.loadBusinesses(null, true, false);
   }
 
   /** Resume the last selected grid/list view across navigations. */
@@ -657,6 +665,12 @@ getCategoryAccent(icon?: string): string {
   setListViewMode(mode: 'grid' | 'table'): void {
     this.listViewMode.set(mode);
     sessionStorage.setItem(LIST_VIEW_STORAGE_KEY, mode);
+  }
+
+  /** Resume the last selected Category View / Business View scope across navigations. */
+  private restoreSavedBusinessScope(): void {
+    const saved = sessionStorage.getItem(SCOPE_STORAGE_KEY);
+    if (saved === 'categories' || saved === 'business') this.businessScope.set(saved);
   }
 
   ngOnDestroy(): void {
@@ -1204,6 +1218,7 @@ private initForms(): void {
    * (flat list of every business, regardless of category) — the toggle
    * placed in the search card before the Grid/List switch. */
   setBusinessScope(mode: 'categories' | 'business'): void {
+    sessionStorage.setItem(SCOPE_STORAGE_KEY, mode);
     if (mode === 'categories') {
       if (this.currentView() === 'categories') return;
       this.businessScope.set('categories');
