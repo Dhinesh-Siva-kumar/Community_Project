@@ -14,6 +14,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
 import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -68,7 +69,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, InfiniteScrollDirective],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -88,11 +89,15 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   events     = signal<AppEvent[]>([]);
   loading    = signal(true);
   submitting = signal(false);
-  skeletons  = Array(8);
+  skeletons  = Array(10);
 
   // ── Page tab — 'all' = public browse, 'pending' = the caller's own submissions ──
   pageTab              = signal<'all' | 'pending'>('all');
   myPendingEventsCount = signal(0);
+
+  // ── Grid / List view — same card markup either way (see .ev-list-view),
+  // just a denser multi-column layout for List, mirroring the Business page.
+  viewMode = signal<'grid' | 'list'>('grid');
 
   // ── All/Pending tabs — sliding active-pill indicator, position/width
   // read from the real active button (same approach as the User Community
@@ -108,6 +113,13 @@ export class UserEventsComponent implements OnInit, OnDestroy {
       this.tabButtons();
       this.pageTab();
       this.updateTabIndicator();
+    });
+
+    // Lock background scroll while the add/edit modal, delete-confirm
+    // popup, or image viewer is open.
+    effect(() => {
+      const open = this.showAddModal() || !!this.eventToDelete() || this.imageViewerOpen();
+      document.body.style.overflow = open ? 'hidden' : '';
     });
   }
 
@@ -125,10 +137,16 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.tabIndicatorReady.set(true);
   }
 
-  readonly pageSize = 8;
+  // ── Infinite scroll — loads 10 events at a time; loadEvents() (re)starts
+  // from page 1 and replaces the list (filters/tab/sort changes), while
+  // loadMoreEvents() appends the next page once the sentinel at the bottom
+  // of the grid scrolls into view. ──
+  readonly pageSize = 10;
   currentPage = signal(1);
   totalPages  = signal(1);
   totalItems  = signal(0);
+  loadingMore = signal(false);
+  hasMore     = computed(() => this.currentPage() < this.totalPages());
 
   searchQuery = signal('');
   modeFilter  = signal<ModeFilter>('all');
@@ -194,12 +212,13 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
   get f() { return this.eventForm.controls; }
 
-  // ── detail popup ──
-  viewingEvent = signal<AppEvent | null>(null);
+  // ── card — expandable description + scroll-to-and-highlight (deep link) ──
+  expandedDescriptions = signal<Set<string>>(new Set());
+  highlightedEventId   = signal<string | null>(null);
 
   // ── delete confirm ──
-  confirmDeleteIds = signal<string[] | null>(null);
-  bulkProcessing   = signal(false);
+  eventToDelete = signal<AppEvent | null>(null);
+  deleting      = signal(false);
 
   // ── image viewer ──
   imageViewerOpen = signal(false);
@@ -218,6 +237,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    document.body.style.overflow = '';
     this.layoutService.forceSidebarCollapsed.set(false);
   }
 
@@ -267,12 +287,21 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   // Deep-link support — the dashboard calendar navigates here with
-  // ?eventId=xxx to open a specific event's detail popup. The target event
-  // may not be on the currently loaded/sorted page, so it's fetched directly
-  // rather than looked up in `events()`.
+  // ?eventId=xxx to scroll to and briefly highlight that event's card. The
+  // target event may not be on the currently loaded/sorted page, so it's
+  // fetched directly and prepended if it isn't already in `events()`.
   private openEventFromQueryParam(id: string): void {
     this.eventService.getEvent(id).subscribe({
-      next: evt => this.viewingEvent.set(evt),
+      next: evt => {
+        if (!this.events().some(e => e.id === id)) {
+          this.events.update(list => [evt, ...list]);
+        }
+        this.highlightedEventId.set(id);
+        setTimeout(() => {
+          document.getElementById('event-card-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 60);
+        setTimeout(() => this.highlightedEventId.set(null), 3000);
+      },
       error: () => this.toast.error('Event not found or no longer available'),
     });
     this.router.navigate([], {
@@ -328,12 +357,11 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   // ── data loading ──
-  loadEvents(): void {
-    this.loading.set(true);
+  private buildEventsQueryParams(page: number): EventsQueryParams {
     const opt = this.sortOption();
     const mode = this.modeFilter();
-    const params: EventsQueryParams = {
-      page: this.currentPage(),
+    return {
+      page,
       limit: this.pageSize,
       search: this.searchQuery() || undefined,
       eventMode: mode === 'all' ? undefined : mode,
@@ -344,7 +372,13 @@ export class UserEventsComponent implements OnInit, OnDestroy {
       sortDir: opt === 'latest' ? 'desc' : 'asc',
       nearPincode: opt === 'near' ? (this.userPincode() || undefined) : undefined,
     };
-    this.eventService.getEvents(params).subscribe({
+  }
+
+  /** (Re)starts from page 1 and replaces the list — used on load, and whenever search/filters/tab/sort change. */
+  loadEvents(): void {
+    this.loading.set(true);
+    this.currentPage.set(1);
+    this.eventService.getEvents(this.buildEventsQueryParams(1)).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data);
         this.totalPages.set(res.totalPages);
@@ -355,7 +389,24 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyFilters(): void { this.currentPage.set(1); this.loadEvents(); }
+  /** Appends the next page — triggered by the sentinel at the bottom of the grid scrolling into view. */
+  loadMoreEvents(): void {
+    if (this.loading() || this.loadingMore() || !this.hasMore()) return;
+    const nextPage = this.currentPage() + 1;
+    this.loadingMore.set(true);
+    this.eventService.getEvents(this.buildEventsQueryParams(nextPage)).subscribe({
+      next: (res: PaginatedResponse<AppEvent>) => {
+        this.events.update(list => [...list, ...res.data]);
+        this.currentPage.set(nextPage);
+        this.totalPages.set(res.totalPages);
+        this.totalItems.set(res.total);
+        this.loadingMore.set(false);
+      },
+      error: () => { this.toast.error('Failed to load more events'); this.loadingMore.set(false); },
+    });
+  }
+
+  applyFilters(): void { this.loadEvents(); }
 
   onSearchInput(value: string): void {
     this.searchQuery.set(value);
@@ -445,19 +496,6 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page); this.loadEvents();
-  }
-  getPages(): number[] {
-    const total = this.totalPages(), cur = this.currentPage(), max = 5;
-    let s = Math.max(1, cur - Math.floor(max / 2));
-    const e = Math.min(total, s + max - 1); s = Math.max(1, e - max + 1);
-    return Array.from({ length: e - s + 1 }, (_, i) => s + i);
-  }
-  showingFrom(): number { return this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize + 1; }
-  showingTo():   number { return Math.min(this.currentPage() * this.pageSize, this.totalItems()); }
-
   // ── helpers ──
   isMine(evt: AppEvent): boolean {
     const uid = this.currentUserId();
@@ -481,14 +519,43 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     if (days <= 14) return { label: `In ${days} days`, cls: 'is-soon', isPast: false };
     return { label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'long' }), cls: '', isPast: false };
   }
-  fmtTimeRange(evt: AppEvent): string {
-    if (!evt.eventTime) return '';
-    return evt.eventEndTime ? `${evt.eventTime} – ${evt.eventEndTime}` : evt.eventTime;
+  /** "09:11" → "9:11 AM" — same formatting as the Admin Events card. */
+  private to12h(time24: string): string {
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return time24;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
   }
 
-  // ── detail popup ──
-  viewEvent(evt: AppEvent): void { this.viewingEvent.set(evt); }
-  closeView(): void { this.viewingEvent.set(null); }
+  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  formatEventTime(evt: AppEvent): string {
+    if (!evt.eventTime) return '';
+    let text = this.to12h(evt.eventTime);
+    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
+    if (evt.timezone) text += ` (${evt.timezone})`;
+    return text;
+  }
+
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  formatEventAddress(evt: AppEvent): string {
+    const parts: string[] = [];
+    if (evt.address) parts.push(evt.address);
+    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
+    if (venuePincode) parts.push(venuePincode);
+    if (evt.country) parts.push(evt.country);
+    return parts.join(', ');
+  }
+
+  // ── card description expand/collapse ──
+  toggleDescription(id: string, event: Event): void {
+    event.stopPropagation();
+    this.expandedDescriptions.update(set => {
+      const next = new Set(set);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   // ── image viewer ──
   openImageViewer(images: string[], index = 0): void {
@@ -585,30 +652,26 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   // ── delete ──
-  requestDelete(evt: AppEvent): void { this.confirmDeleteIds.set([evt.id]); }
-  cancelDeleteConfirm(): void { this.confirmDeleteIds.set(null); }
+  requestDelete(evt: AppEvent): void { this.eventToDelete.set(evt); }
+  cancelDeleteConfirm(): void { this.eventToDelete.set(null); }
 
   confirmDeleteExecute(): void {
-    const ids = this.confirmDeleteIds();
-    if (!ids || ids.length === 0) return;
-    this.bulkProcessing.set(true);
-    let completed = 0, succeeded = 0, failed = 0;
+    const evt = this.eventToDelete();
+    if (!evt) return;
+    this.deleting.set(true);
 
-    const finish = () => {
-      this.confirmDeleteIds.set(null); this.bulkProcessing.set(false);
-      if (succeeded > 0) this.toast.success(succeeded === 1 ? 'Event deleted' : `${succeeded} events deleted`);
-      if (failed > 0) this.toast.error(`${failed} event${failed === 1 ? '' : 's'} failed to delete`);
-
-      const remainingOnPage = this.events().length - succeeded;
-      if (remainingOnPage <= 0 && this.currentPage() > 1) this.currentPage.update(p => p - 1);
-      this.loadEvents();
-    };
-
-    ids.forEach((id) => {
-      this.eventService.deleteEvent(id).subscribe({
-        next: () => { succeeded++; completed++; if (completed === ids.length) finish(); },
-        error: () => { failed++; completed++; if (completed === ids.length) finish(); },
-      });
+    this.eventService.deleteEvent(evt.id).subscribe({
+      next: () => {
+        this.toast.success('Event deleted');
+        this.eventToDelete.set(null);
+        this.deleting.set(false);
+        // Reset to a fresh page 1 rather than trying to patch the
+        // infinite-scroll list in place — deletes are rare enough that
+        // losing scroll position is an acceptable trade for guaranteed
+        // consistency with the server.
+        this.loadEvents();
+      },
+      error: () => { this.toast.error('Failed to delete event'); this.deleting.set(false); },
     });
   }
 }

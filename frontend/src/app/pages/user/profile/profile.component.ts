@@ -10,9 +10,10 @@ import { BusinessService } from '../../../core/services/business.service';
 import { CommunityService } from '../../../core/services/community.service';
 import { JobService } from '../../../core/services/job.service';
 import { PostService } from '../../../core/services/post.service';
+import { EventService } from '../../../core/services/event.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
-import { User, Business, Community, Job, Post, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
+import { User, Business, Community, Job, Post, Event as CommunityEvent, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
@@ -55,6 +56,7 @@ export class UserProfileComponent implements OnInit {
   private communityService = inject(CommunityService);
   private jobService = inject(JobService);
   private postService = inject(PostService);
+  private eventService = inject(EventService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -74,16 +76,19 @@ export class UserProfileComponent implements OnInit {
   editCommunityId    = signal<string | null>(null);
   myJobs = signal<Job[]>([]);
   myPosts = signal<Post[]>([]);
+  myEvents = signal<CommunityEvent[]>([]);
   loadingBusinesses = signal(false);
   loadingCommunities = signal(false);
   loadingJobs = signal(false);
   loadingPosts = signal(false);
+  loadingEvents = signal(false);
   showDeleteBusinessModal = signal(false);
   businessToDelete = signal<Business | null>(null);
   showDeleteCommunityModal = signal(false);
   communityToDelete = signal<Community | null>(null);
   deletingJobId = signal<string | null>(null);
   deletingPostId = signal<string | null>(null);
+  deletingEventId = signal<string | null>(null);
 
   avatarFile = signal<File | null>(null);
   newInterest = signal('');
@@ -181,6 +186,7 @@ export class UserProfileComponent implements OnInit {
     { id: 'communities', label: 'My Communities',  icon: 'bi-people' },
     { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase' },
     { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post' },
+    { id: 'events',      label: 'My Events',        icon: 'bi-calendar-event' },
   ];
 
   profCatOptions: SelectOption[] = [
@@ -435,6 +441,7 @@ export class UserProfileComponent implements OnInit {
     if (id === 'communities' && !this.myCommunities().length) this.loadMyCommunities();
     if (id === 'jobs'        && !this.myJobs().length)        this.loadMyJobs();
     if (id === 'posts'       && !this.myPosts().length)       this.loadMyPosts();
+    if (id === 'events'      && !this.myEvents().length)      this.loadMyEvents();
   }
 
   toggleEdit(): void {
@@ -615,6 +622,23 @@ export class UserProfileComponent implements OnInit {
     this.postService.deletePost(id).subscribe({
       next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('Post deleted'); this.deletingPostId.set(null); },
       error: () => { this.toast.error('Failed to delete post'); this.deletingPostId.set(null); },
+    });
+  }
+
+  loadMyEvents(): void {
+    this.loadingEvents.set(true);
+    this.eventService.getMyEvents({ page: 1, limit: 50 }).subscribe({
+      next: (r) => { this.myEvents.set(r.data); this.loadingEvents.set(false); },
+      error: () => this.loadingEvents.set(false),
+    });
+  }
+
+  deleteEvent(id: string): void {
+    if (!confirm('Delete this event?')) return;
+    this.deletingEventId.set(id);
+    this.eventService.deleteEvent(id).subscribe({
+      next: () => { this.myEvents.update(l => l.filter(e => e.id !== id)); this.toast.success('Event deleted'); this.deletingEventId.set(null); },
+      error: () => { this.toast.error('Failed to delete event'); this.deletingEventId.set(null); },
     });
   }
 }

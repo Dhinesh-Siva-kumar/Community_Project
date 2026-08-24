@@ -89,6 +89,15 @@
   font-size: 10px; font-weight: $font-weight-extrabold;
 }
 
+.biz-view-toggle { display: flex; border: 1.5px solid $color-border; border-radius: $radius-md; overflow: hidden; flex-shrink: 0; }
+.biz-view-btn {
+  width: 36px; height: 36px; border: none; background: $color-bg-light; color: $color-stone-500;
+  font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  @include transition-quick(all);
+  &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &--active { background: $color-stone-900; color: #fff; }
+}
+
 .biz-add-btn {
   display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
   border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
@@ -558,103 +567,278 @@
 }
 
 // ── Grid ──────────────────────────────────────────────────────
-.ev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: $spacing-lg; margin-bottom: $spacing-lg; }
+.ev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: $spacing-lg; margin-bottom: $spacing-lg; }
 
-// ── Card (ticket-stub motif) ────────────────────────────────────
+// List view — two full-detail horizontal cards per row (reuses the exact
+// same .ev-card markup/content as Grid view — nothing is hidden or
+// clamped tighter — just laid out sideways: a wide image on the left,
+// the full body — tags, title, description, both facts, footer — on the
+// right, height driven by content instead of a fixed row height).
+.ev-list-view {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  @include media-md-max { grid-template-columns: 1fr; }
+
+  .ev-card {
+    flex-direction: row;
+    align-items: stretch;
+
+    .ev-card__media {
+      width: 240px;
+      height: auto;
+      flex-shrink: 0;
+    }
+
+    .ev-card__body {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  @include media-sm-max {
+    .ev-card {
+      flex-direction: column;
+      .ev-card__media { width: 100%; height: 200px; }
+    }
+  }
+}
+
 .g-fest  { background: linear-gradient(135deg, #F59E0B, #F97316); }
 .g-work  { background: linear-gradient(135deg, #D97706, #92400E); }
 .g-conc  { background: linear-gradient(135deg, $color-violet, #C026D3); }
 .g-sport { background: linear-gradient(135deg, $color-info, #0369A1); }
 .g-meet  { background: linear-gradient(135deg, #F59E0B, $color-violet); }
 
+// ── Event Card — same design as the Admin Events card ───────────────────
+// Not a click target as a whole anymore (no detail popup to open) — only
+// the buttons/links inside it are interactive, so no cursor:pointer,
+// hover-lift, or focus ring on the card itself.
 .ev-card {
-  display: flex; flex-direction: column; background: #fff; border: 1.5px solid $color-border;
-  border-radius: $radius-lg; overflow: hidden; cursor: pointer;
-  box-shadow: 0 1px 4px rgba(28,25,23,0.06);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
-  &:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(28,25,23,0.10); border-color: rgba(217,119,6,0.35); }
-  &:focus-visible { outline: 2px solid $color-primary-darker; outline-offset: 2px; }
-  &.is-past { opacity: 0.62; &:hover { transform: none; box-shadow: 0 1px 4px rgba(28,25,23,0.06); } .ev-card__media { filter: grayscale(55%); } }
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(28, 25, 23, 0.06);
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+
+  &:hover {
+    box-shadow: 0 10px 26px rgba(28, 25, 23, 0.08);
+    border-color: rgba(245, 158, 11, 0.30);
+    .ev-card__media img { transform: scale(1.05); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover .ev-card__media img { transform: none; }
+  }
+
+  &--past {
+    .ev-card__media img { filter: grayscale(0.35) brightness(0.92); }
+    .ev-card__date { background: rgba(255, 255, 255, 0.85); }
+  }
+
+  // Deep-link scroll target (dashboard calendar → jump to this event).
+  &--highlight {
+    animation: ev-card-highlight-pulse 1.6s ease-out 2;
+  }
 }
 
+@keyframes ev-card-highlight-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55); border-color: $color-primary; }
+  70%  { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); border-color: $color-primary; }
+  100% { box-shadow: 0 1px 4px rgba(28, 25, 23, 0.06); border-color: $color-border; }
+}
+
+// Media — image/placeholder + date badge + status ribbon + action overlay
 .ev-card__media {
-  position: relative; height: 152px; overflow: hidden; flex-shrink: 0;
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: $color-bg-page;
+  flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 350ms ease; }
-  .watermark { font-size: 3.6rem; color: rgba(255,255,255,0.34); }
-}
-.ev-card:hover .ev-card__media img { transform: scale(1.05); }
 
-.ev-ticket {
-  position: absolute; top: 12px; left: 14px; background: #fff; border-radius: $radius-sm;
-  padding: 6px 11px 7px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.18); min-width: 44px;
-}
-.ev-ticket__day { font-family: $font-family-header; font-size: 1.15rem; font-weight: 800; line-height: 1; color: $color-stone-900; }
-.ev-ticket__mon { font-size: 9.5px; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-primary-darker; }
+  img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 400ms ease; }
+  .watermark { font-size: 3.6rem; color: rgba(255, 255, 255, 0.34); }
 
-.ev-card__tags { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.ev-mode-tag { padding: 4px 10px; border-radius: $radius-full; font-size: 11px; font-weight: $font-weight-bold; white-space: nowrap;
-  &.m-offline { background: rgba(255,255,255,0.92); color: $color-stone-900; }
-  &.m-online  { background: rgba(14,165,233,0.92); color: #fff; }
-  &.m-hybrid  { background: rgba(124,58,237,0.92); color: #fff; }
-}
-.ev-near-badge {
-  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px 4px 8px; border-radius: $radius-full;
-  font-size: 11px; font-weight: $font-weight-bold; white-space: nowrap;
-  background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-  .bi { font-size: 0.8em; }
-
-  &--pending  { background: rgba(245, 158, 11, 0.94); }
-  &--rejected { background: rgba(220, 38, 38, 0.94); }
+  // Soft bottom scrim — keeps the status ribbon/date badge readable over
+  // any photo without needing a solid backdrop behind them.
+  &::after {
+    content: ''; position: absolute; inset: auto 0 0 0; height: 55%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.20) 100%);
+    pointer-events: none;
+  }
 }
 
-.ev-card__rejection-reason {
-  display: flex; align-items: flex-start; gap: 5px;
-  font-size: 11.5px; color: #dc2626; background: rgba(220, 38, 38, 0.08);
-  border-radius: $radius-sm; padding: 6px 8px; margin: 0;
-  .bi { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+// Calendar-style date badge, top-left over the image.
+.ev-card__date {
+  position: absolute; top: 12px; left: 12px;
+  display: flex; flex-direction: column; align-items: center; line-height: 1;
+  min-width: 46px; padding: 6px 8px 7px; border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.96); box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
+  transition: background-color 220ms ease;
+}
+.ev-card__date-day { font-family: $font-family-header; font-size: 1.25rem; font-weight: 800; color: $color-stone-900; }
+.ev-card__date-mon { margin-top: 1px; font-size: 10px; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-primary-dark; }
+
+// Status ribbon, top-right over the image.
+.ev-card__status { position: absolute; top: 12px; right: 12px; box-shadow: 0 2px 8px rgba(28, 25, 23, 0.16); }
+
+// Edit / delete overlay — bottom-right over the image on frosted pills so
+// they stay legible over any photo. Only shown for the caller's own events.
+.ev-card__actions {
+  position: absolute; bottom: 10px; right: 10px;
+  display: flex; gap: 6px;
+  opacity: 0.88; transition: opacity 200ms ease;
+  .ev-card:hover &, .ev-card__action:focus-visible ~ & { opacity: 1; }
+}
+.ev-card__action {
+  width: 34px; height: 34px; border-radius: $radius-full;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  color: #0284C7;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; box-shadow: 0 2px 6px rgba(28, 25, 23, 0.22);
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease,
+              transform 150ms ease, box-shadow 150ms ease;
+
+  &:hover {
+    background: #0284C7; border-color: #0284C7; color: #fff;
+    transform: translateY(-2px) scale(1.06); box-shadow: 0 6px 14px rgba(2, 132, 199, 0.4);
+  }
+  &--danger {
+    color: $color-danger;
+    &:hover { background: $color-danger; border-color: $color-danger; color: #fff; box-shadow: 0 6px 14px rgba(220, 38, 38, 0.4); }
+  }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
-.ev-card__body { flex: 1; padding: $spacing-md $spacing-lg $spacing-sm; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+// Zoom — bottom-left counterpart to the edit/delete overlay, shown for
+// every event with a photo (not just the caller's own).
+.ev-card__zoom-btn {
+  position: absolute; bottom: 10px; left: 10px;
+  width: 34px; height: 34px; border-radius: $radius-full;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  color: $color-stone-700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; box-shadow: 0 2px 6px rgba(28, 25, 23, 0.22);
+  opacity: 0.88;
+  transition: opacity 200ms ease, background-color 150ms ease, color 150ms ease,
+              border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 
-.ev-card__eyebrow {
-  display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: $font-weight-bold;
-  text-transform: uppercase; letter-spacing: 0.04em; color: $color-stone-400;
-  .cat { color: $color-primary-darker; }
-  .dot { width: 3px; height: 3px; border-radius: 50%; background: $color-border-strong; }
-  &.is-soon { color: #C2410C; }
-}
-.ev-card__title { font-family: $font-family-header; font-weight: $font-weight-bold; font-size: 1.03rem; line-height: 1.32; margin: 0; color: $color-stone-900;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.ev-card__desc { font-size: $font-size-xs; line-height: 1.55; color: $color-text-muted; margin: 0;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-.ev-card__meta { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
-.ev-meta-row { display: flex; align-items: center; gap: 7px; font-size: $font-size-xs; color: $color-text-muted; min-width: 0;
-  .bi { font-size: 0.85em; color: $color-primary-dark; flex-shrink: 0; }
-  span, a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  a { color: #0369A1; text-decoration: none; &:hover { text-decoration: underline; } }
+  .ev-card:hover &, &:focus-visible { opacity: 1; }
+  &:hover {
+    background: $color-primary; border-color: $color-primary; color: $color-on-primary;
+    transform: translateY(-2px) scale(1.06); box-shadow: 0 6px 14px rgba(251, 191, 36, 0.4);
+  }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
-.ev-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid $color-border; }
-.ev-host { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.ev-host__avatar {
-  width: 22px; height: 22px; border-radius: 50%; background: $color-primary-light; color: $color-primary-darker;
-  display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0;
-}
-.ev-host__name { font-size: $font-size-xs; color: $color-text-muted; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+// Body
+.ev-card__body { flex: 1; display: flex; flex-direction: column; gap: 9px; padding: $spacing-md $spacing-lg $spacing-lg; }
 
-.ev-card__actions { display: flex; gap: 6px; flex-shrink: 0; }
-.ev-iab {
-  width: 30px; height: 30px; border-radius: $radius-sm; border: 1.5px solid transparent;
-  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; @include transition-short(all);
-  .bi { font-size: 0.8rem; }
-  &--edit { background: $color-primary-light; border-color: rgba(217,119,6,0.3); color: $color-primary-darker; &:hover { background: $color-primary-darker; border-color: $color-primary-darker; color: #fff; } }
-  &--del  { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.35); color: #C2410C; &:hover { background: $color-saffron; border-color: $color-saffron; color: #fff; } }
+.ev-card__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.ev-card__title {
+  font-family: $font-family-header; font-size: 1.12rem; font-weight: $font-weight-bold;
+  color: $color-stone-900; line-height: 1.35; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color 180ms ease;
+  .ev-card:hover & { color: $color-primary-darker; }
 }
-.ev-view-tag { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-400;
-  .bi { font-size: 0.75em; }
+
+.ev-card__description {
+  font-size: $font-size-sm; line-height: 1.6; color: $color-text-muted; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+
+  &--expanded { -webkit-line-clamp: unset; overflow: visible; }
+}
+
+.ev-card__read-more {
+  align-self: flex-start;
+  border: none; background: none; padding: 0; margin: -4px 0 0;
+  font-size: 12px; font-weight: $font-weight-bold; color: $color-primary-darker;
+  cursor: pointer; @include transition-quick(color);
+  &:hover, &:focus-visible { color: $color-primary-dark; text-decoration: underline; }
+}
+
+.ev-card__facts {
+  display: flex; flex-direction: column; gap: 6px; list-style: none;
+  margin: 4px 0 0; padding: $spacing-sm 0 0; border-top: 1px solid $color-border;
+}
+
+.ev-card__footer {
+  display: flex; align-items: center; justify-content: space-between; gap: $spacing-sm;
+  margin-top: 4px; padding-top: $spacing-sm; border-top: 1px solid $color-border;
+}
+.ev-card__host { min-width: 0; span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.ev-card__join {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-primary-darker;
+  text-decoration: none; padding: 5px 12px; border-radius: $radius-full;
+  background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.35);
+  transition: background-color 150ms ease, border-color 150ms ease;
+  &:hover { background: rgba(251, 191, 36, 0.22); border-color: $color-primary; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+}
+
+// Status / mode badges
+.ev-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+  border-radius: $radius-full; font-size: 12px; font-weight: $font-weight-semibold;
+  &--upcoming { background: #D1FAE5; color: #065F46; }
+  &--completed { background: #F3F4F6; color: #6B7280; }
+  &--offline { background: #E5E7EB; color: #374151; }
+  &--online { background: #DBEAFE; color: #1E40AF; }
+  &--hybrid { background: #EDE9FE; color: #6B21A8; }
+  &--approval-pending { background: #FEF3C7; color: #92400E; }
+  &--near { background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; }
+}
+.ev-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.ev-chip-sm {
+  padding: 4px 10px; border-radius: $radius-sm; background: $color-bg-page;
+  color: $color-text-muted; font-size: 12px; font-weight: $font-weight-medium;
+  border: 1px solid $color-border;
+}
+
+.ev-meta-item {
+  display: flex; align-items: flex-start; gap: 9px; font-size: 13px;
+  color: $color-text-muted;
+  span:last-child, a { line-height: 1.4; flex: 1; min-width: 0; }
+  &:not(.ev-card__host) span:last-child { white-space: normal; overflow-wrap: break-word; }
+  .ev-meta-item__icon { margin-top: 1px; }
+  a { color: $color-info; text-decoration: none; overflow-wrap: anywhere; &:hover { text-decoration: underline; } }
+}
+
+// Small tinted "icon chip" in front of each fact.
+.ev-meta-item__icon {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: $radius-sm;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: $color-primary-light; color: $color-primary-darker;
+  i { font-size: 12px; }
+
+  .ev-meta-item--time &     { background: $color-primary-light; color: $color-primary-darker; }
+  .ev-meta-item--location & { background: #FCE7F3; color: #BE185D; }
+  .ev-meta-item--host &     { background: #EDE9FE; color: #6B21A8; }
+  .ev-meta-item--link &     { background: #E0F2FE; color: #0369A1; }
+}
+
+// Rejection reason called out under the quick facts, only when relevant.
+.ev-card__reject-note {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: 2px 0 0; padding: 8px 10px;
+  background: #FEE2E2; border: 1px solid #FECACA; border-radius: $radius-sm;
+  font-size: 12px; line-height: 1.4; color: #991B1B;
+  i { flex-shrink: 0; margin-top: 1px; font-size: 12px; }
 }
 
 // ── Skeleton ──────────────────────────────────────────────────
@@ -673,52 +857,13 @@
   &__sub { font-size: $font-size-sm; color: $color-text-muted; max-width: 320px; line-height: 1.6; margin-bottom: $spacing-lg; }
 }
 
-// ── Pagination ────────────────────────────────────────────────
-.ev-pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: $spacing-md; margin-top: 4px; border-top: 1px solid $color-border; margin-bottom: $spacing-lg; }
-.ev-pagination-info { font-size: $font-size-xs; color: $color-text-muted; strong { color: $color-stone-800; font-variant-numeric: tabular-nums; } }
-.ev-pagination { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.ev-page-btn { min-width: 34px; height: 34px; padding: 0 8px; border-radius: $radius-sm; border: 1.5px solid $color-border; background: #fff; color: $color-stone-600; font-size: $font-size-xs; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-short(all);
-  &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.08); color: $color-primary-darker; }
-  &.is-active { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
-  &:disabled { opacity: 0.38; cursor: not-allowed; }
+// ── Infinite scroll ──────────────────────────────────────────────
+.ev-load-more-sentinel {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: $spacing-lg; margin-top: $spacing-sm;
+  font-size: $font-size-xs; font-weight: $font-weight-medium; color: $color-stone-400;
+  .spinner-border { width: 1rem; height: 1rem; border-width: 2px; color: $color-primary; }
 }
-
-// ── View detail / delete confirm overlays ───────────────────────
-.ev-backdrop { position: fixed; inset: 0; background: rgba(28,25,23,0.55); display: flex; align-items: center; justify-content: center; padding: $spacing-lg; z-index: 1055; }
-.ev-panel { background: #fff; border-radius: $radius-xl; max-width: 620px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.28); position: relative; }
-.ev-panel__close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-text-muted; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; @include transition-short(all); &:hover { border-color: $color-primary; color: $color-stone-800; } }
-
-.ev-detail__media { height: 200px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
-  .watermark { font-size: 4.4rem; color: rgba(255,255,255,0.34); }
-}
-.ev-detail__media-btn { border: none; padding: 0; margin: 0; width: 100%; height: 100%; cursor: zoom-in; img { width: 100%; height: 100%; object-fit: cover; display: block; } }
-.ev-detail__body { padding: $spacing-xl $spacing-xl $spacing-lg; }
-.ev-detail__eyebrow { font-size: $font-size-xs; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.05em; color: $color-primary-darker; margin-bottom: 6px; }
-.ev-detail__title { font-family: $font-family-header; font-weight: 800; font-size: $font-size-2xl; margin: 0 0 $spacing-md; }
-.ev-detail__meta { display: flex; flex-direction: column; gap: 10px; margin-bottom: $spacing-md; padding: $spacing-sm $spacing-md; background: $color-bg-page; border-radius: $radius-md;
-  .ev-meta-row { font-size: $font-size-sm; .bi { font-size: 0.95em; } }
-}
-.ev-detail__desc { font-size: $font-size-sm; line-height: 1.7; color: $color-text-muted; margin: 0 0 $spacing-lg; }
-.ev-detail__host { display: flex; align-items: center; gap: 10px; margin-bottom: $spacing-lg;
-  .ev-host__avatar { width: 34px; height: 34px; font-size: $font-size-sm; }
-}
-.ev-detail__host-name { font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-stone-800; }
-.ev-detail__host-label { font-size: 11.5px; color: $color-stone-400; }
-.ev-detail__actions { display: flex; gap: 10px; }
-
-.ev-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 42px; padding: 0 20px; border-radius: $radius-md; font-size: $font-size-sm; font-weight: $font-weight-bold; cursor: pointer; border: 1.5px solid transparent; @include transition-short(all); flex: 1;
-  .bi { font-size: 0.85em; }
-  &--gold { background: $color-primary; border-color: $color-primary; color: $color-on-primary; box-shadow: $shadow-primary-sm; &:hover:not(:disabled) { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: $shadow-primary-md; } }
-  &--ghost { background: transparent; border-color: $color-border-strong; color: $color-text-muted; flex: initial; &:hover:not(:disabled) { border-color: $color-stone-400; color: $color-stone-800; } }
-  &--saffron { background: $color-saffron; border-color: $color-saffron; color: #fff; flex: initial; &:hover:not(:disabled) { background: #C2410C; border-color: #C2410C; } }
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
-}
-
-.ev-confirm { max-width: 380px; padding: $spacing-2xl $spacing-xl $spacing-xl; text-align: center; }
-.ev-confirm__icon { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto $spacing-md; background: rgba(249,115,22,0.12); color: #C2410C; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 7px rgba(249,115,22,0.12); font-size: 1.3rem; }
-.ev-confirm__title { font-family: $font-family-header; font-weight: $font-weight-bold; font-size: $font-size-lg; margin: 0 0 $spacing-sm; }
-.ev-confirm__desc { font-size: $font-size-sm; color: $color-text-muted; line-height: 1.55; margin: 0 0 $spacing-xl; }
-.ev-confirm__actions { display: flex; gap: 10px; justify-content: center; }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ADD / EDIT MODAL — same design language as the Admin Add Event popup
@@ -951,7 +1096,54 @@
     &:not(:disabled):hover { background: $color-primary-dark; border-color: $color-primary-dark; box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35); }
   }
 
+  &.au-btn--danger {
+    background: $color-danger; border-color: $color-danger; color: #fff;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+    &:not(:disabled):hover { background: #b91c1c; border-color: #b91c1c; box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35); }
+  }
+
   &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+}
+
+// ── Delete-confirmation popup — same design language as the Admin Events
+// delete popup (self-contained: its own position/centering, since it uses
+// the "cm-delete-modal" variant rather than "cm-modal"). ──
+.au-modal.cm-delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 32px));
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.au-header.cm-delete-modal-header {
+  display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 55%, #b91c1c 130%);
+  position: relative; overflow: hidden; flex-shrink: 0;
+  border-radius: $radius-xl $radius-xl 0 0;
+}
+
+.au-header__icon.cm-delete-modal-icon {
+  width: 44px; height: 44px; border-radius: $radius-md;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  color: #fca5a5; font-size: 1.15rem; flex-shrink: 0;
+  position: relative; z-index: 1;
+  i { color: #fca5a5; font-size: 1.1rem; }
+}
+
+.au-body.cm-delete-modal-body { padding: 20px 24px 4px; }
+
+.cm-delete-modal-text {
+  font-size: $font-size-sm; color: $color-text-muted; line-height: 1.6; margin: 0 0 4px;
+  strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
 }
 
 // ── Modal searchable-select overrides — same look as .cm-input ──
@@ -1016,5 +1208,4 @@
 @include media-sm-max {
   .ev-grid { grid-template-columns: 1fr; }
   .ev-add-btn { width: 100%; justify-content: center; }
-  .ev-detail__actions { flex-direction: column; }
 }

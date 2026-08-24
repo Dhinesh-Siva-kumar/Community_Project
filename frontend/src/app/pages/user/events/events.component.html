@@ -26,6 +26,11 @@
       </div>
     </div>
 
+    <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
+      <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="viewMode() === 'grid'" (click)="viewMode.set('grid')" aria-label="Grid view" title="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+      <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="viewMode() === 'list'" (click)="viewMode.set('list')" aria-label="List view" title="List view"><i class="bi bi-list-ul"></i></button>
+    </div>
+
     <button type="button" class="biz-add-btn" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i> Add Event
     </button>
@@ -239,65 +244,123 @@
     @if (pageTab() === 'all' && !searchQuery() && activeFilterCount() === 0) { <button class="ev-add-btn ev-add-btn--sm" (click)="openAddModal()"><i class="bi bi-plus-lg"></i> Create Event</button> }
   </div>
 } @else {
-  <div class="ev-grid">
+  <div [class]="viewMode() === 'grid' ? 'ev-grid' : 'ev-list-view'">
     @for (evt of events(); track evt.id) {
       @let rt = relTime(evt.eventDate);
       @let near = isNear(evt);
       @let mine = isMine(evt);
-      <article class="ev-card" [class.is-past]="rt.isPast"
-        role="button" tabindex="0" (click)="viewEvent(evt)" (keydown.enter)="viewEvent(evt)">
+      <article class="ev-card" [class.ev-card--past]="rt.isPast" [class.ev-card--highlight]="evt.id === highlightedEventId()"
+        [id]="'event-card-' + evt.id">
 
+        <!-- Media -->
         <div class="ev-card__media" [class]="!evt.images?.length ? categoryGradient(evt.eventCategory) : ''">
           @if (evt.images && evt.images.length > 0) {
             <img [src]="evt.images[0] | imageUrl" [alt]="evt.title" loading="lazy" />
           } @else {
             <i class="bi watermark {{ categoryIcon(evt.eventCategory) }}"></i>
           }
-          <div class="ev-ticket">
-            <div class="ev-ticket__day">{{ evt.eventDate | date:'d' }}</div>
-            <div class="ev-ticket__mon">{{ evt.eventDate | date:'MMM' }}</div>
-          </div>
-          <div class="ev-card__tags">
-            @if (evt.status === 'PENDING') {
-              <span class="ev-near-badge ev-near-badge--pending"><i class="bi bi-hourglass-split"></i>Pending Approval</span>
-            } @else if (evt.status === 'REJECTED') {
-              <span class="ev-near-badge ev-near-badge--rejected" [title]="evt.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i>Rejected</span>
-            }
-            @if (near) { <span class="ev-near-badge"><i class="bi bi-house-fill"></i>Near you</span> }
-            <span class="ev-mode-tag" [ngClass]="'m-' + evt.eventMode?.toLowerCase()">{{ evt.eventMode }}</span>
-          </div>
-        </div>
 
-        <div class="ev-card__body">
-          <div class="ev-card__eyebrow" [class.is-soon]="rt.cls === 'is-soon'" [class.is-past]="rt.isPast">
-            <span class="cat">{{ evt.eventCategory }}</span><span class="dot"></span><span>{{ rt.label }}</span>
+          <!-- Date badge -->
+          <div class="ev-card__date" aria-hidden="true">
+            <span class="ev-card__date-day">{{ evt.eventDate | date:'d' }}</span>
+            <span class="ev-card__date-mon">{{ evt.eventDate | date:'MMM' }}</span>
           </div>
-          <h3 class="ev-card__title">{{ evt.title }}</h3>
-          @if (evt.description) { <p class="ev-card__desc">{{ evt.description }}</p> }
-          @if (evt.status === 'REJECTED' && evt.rejectionReason) {
-            <p class="ev-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ evt.rejectionReason }}</p>
+
+          <!-- Status ribbon -->
+          <span class="ev-badge ev-card__status" [class]="'ev-badge--' + (rt.isPast ? 'completed' : 'upcoming')">
+            <span class="ev-badge__dot"></span>
+            {{ rt.label }}
+          </span>
+
+          <!-- Zoom — view the full photo(s) -->
+          @if (evt.images && evt.images.length > 0) {
+            <button class="ev-card__zoom-btn" (click)="openImageViewer(evt.images, 0)" title="View photo" aria-label="View photo">
+              <i class="bi bi-arrows-fullscreen"></i>
+            </button>
           }
 
-          <div class="ev-card__meta">
-            @if (evt.eventTime) { <div class="ev-meta-row"><i class="bi bi-clock"></i><span>{{ fmtTimeRange(evt) }}</span></div> }
-            <div class="ev-meta-row">
-              <i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-link-45deg' : 'bi-geo-alt-fill'"></i>
-              <span>{{ evt.eventMode === 'Online' ? 'Online — link on request' : (evt.location || evt.address) }}</span>
+          <!-- Edit / Delete overlay — only for the caller's own events -->
+          @if (mine) {
+            <div class="ev-card__actions">
+              <button class="ev-card__action ev-card__action--edit" (click)="openEditModal(evt)" title="Edit event" aria-label="Edit event">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="ev-card__action ev-card__action--danger" (click)="requestDelete(evt)" title="Delete event" aria-label="Delete event">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
             </div>
+          }
+        </div>
+
+        <!-- Body -->
+        <div class="ev-card__body">
+          <!-- Tags -->
+          <div class="ev-card__tags">
+            @if (evt.eventMode) {
+              <span class="ev-badge" [class]="'ev-badge--' + evt.eventMode.toLowerCase()">
+                <i class="bi" [ngClass]="evt.eventMode === 'Offline' ? 'bi-geo-alt-fill' : evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
+                {{ evt.eventMode }}
+              </span>
+            }
+            @if (evt.eventCategory) {
+              <span class="ev-chip-sm">{{ evt.eventCategory }}</span>
+            }
+            @if (near) {
+              <span class="ev-badge ev-badge--near"><i class="bi bi-house-fill"></i> Near you</span>
+            }
+            @if (evt.status === 'PENDING') {
+              <span class="ev-badge ev-badge--approval-pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+            }
           </div>
 
+          <h3 class="ev-card__title">{{ evt.title }}</h3>
+
+          @if (evt.description) {
+            <p class="ev-card__description" [class.ev-card__description--expanded]="expandedDescriptions().has(evt.id)">{{ evt.description }}</p>
+            @if (evt.description.length > 180) {
+              <button type="button" class="ev-card__read-more" (click)="toggleDescription(evt.id, $event)">
+                {{ expandedDescriptions().has(evt.id) ? 'Show less' : 'Read more' }}
+              </button>
+            }
+          }
+
+          <!-- Quick facts -->
+          <ul class="ev-card__facts">
+            <li class="ev-meta-item ev-meta-item--time">
+              <span class="ev-meta-item__icon"><i class="bi bi-calendar3"></i></span>
+              <span>{{ evt.eventDate | date:'EEEE, d MMMM y' }}</span>
+            </li>
+            @if (evt.eventTime) {
+              <li class="ev-meta-item ev-meta-item--time">
+                <span class="ev-meta-item__icon"><i class="bi bi-clock-fill"></i></span>
+                <span>{{ formatEventTime(evt) }}</span>
+              </li>
+            }
+            @if (evt.address || evt.location || evt.country) {
+              <li class="ev-meta-item ev-meta-item--location">
+                <span class="ev-meta-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
+                <span>{{ formatEventAddress(evt) }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (evt.status === 'REJECTED' && evt.rejectionReason) {
+            <p class="ev-card__reject-note">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span><strong>Rejected:</strong> {{ evt.rejectionReason }}</span>
+            </p>
+          }
+
+          <!-- Footer: host + join link -->
           <div class="ev-card__footer">
-            <div class="ev-host">
-              <div class="ev-host__avatar">{{ (evt.user?.displayName ?? evt.user?.userName ?? '?').charAt(0).toUpperCase() }}</div>
-              <span class="ev-host__name">{{ evt.user?.displayName ?? evt.user?.userName }}</span>
-            </div>
-            @if (mine) {
-              <div class="ev-card__actions" (click)="$event.stopPropagation()">
-                <button class="ev-iab ev-iab--edit" title="Edit" aria-label="Edit event" (click)="openEditModal(evt)"><i class="bi bi-pencil-fill"></i></button>
-                <button class="ev-iab ev-iab--del" title="Delete" aria-label="Delete event" (click)="requestDelete(evt)"><i class="bi bi-trash-fill"></i></button>
-              </div>
-            } @else {
-              <span class="ev-view-tag">View <i class="bi bi-arrow-right"></i></span>
+            <span class="ev-meta-item ev-meta-item--host ev-card__host">
+              <span class="ev-meta-item__icon"><i class="bi bi-person-fill"></i></span>
+              <span>{{ evt.user?.displayName ?? evt.user?.userName }}</span>
+            </span>
+            @if ((evt.eventMode === 'Online' || evt.eventMode === 'Hybrid') && evt.locationLink) {
+              <a class="ev-card__join" [href]="evt.locationLink" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                <i class="bi bi-camera-video-fill"></i> Join Meeting
+              </a>
             }
           </div>
         </div>
@@ -305,75 +368,12 @@
     }
   </div>
 
-  @if (totalPages() > 1) {
-    <div class="ev-pagination-bar">
-      <span class="ev-pagination-info">Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong> of <strong>{{ totalItems() }}</strong> events</span>
-      <nav class="ev-pagination" aria-label="Pages">
-        <button class="ev-page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage()-1)"><i class="bi bi-chevron-left"></i></button>
-        @for (p of getPages(); track p) {
-          <button class="ev-page-btn" [class.is-active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
-        }
-        <button class="ev-page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage()+1)"><i class="bi bi-chevron-right"></i></button>
-      </nav>
+  <!-- Lazily loads the next 10 events as this scrolls into view. -->
+  @if (hasMore()) {
+    <div class="ev-load-more-sentinel" appInfiniteScroll (nearEnd)="loadMoreEvents()">
+      <span class="spinner-border spinner-border-sm"></span> Loading more events…
     </div>
   }
-}
-
-<!-- ── VIEW DETAIL POPUP ─────────────────────────────────────── -->
-@if (viewingEvent(); as vp) {
-  <div class="ev-backdrop" (click)="closeView()">
-    <div class="ev-panel" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <button class="ev-panel__close" (click)="closeView()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-
-      <div class="ev-detail__media" [class]="!vp.images?.length ? categoryGradient(vp.eventCategory) : ''">
-        @if (vp.images && vp.images.length > 0) {
-          <button class="ev-detail__media-btn" type="button" (click)="openImageViewer(vp.images, 0)">
-            <img [src]="vp.images[0] | imageUrl" [alt]="vp.title" />
-          </button>
-        } @else {
-          <i class="bi watermark {{ categoryIcon(vp.eventCategory) }}"></i>
-        }
-      </div>
-
-      <div class="ev-detail__body">
-        <div class="ev-detail__eyebrow">
-          {{ vp.eventCategory }} · {{ vp.eventMode }}
-          @if (isNear(vp)) { · Near you }
-        </div>
-        <h2 class="ev-detail__title">{{ vp.title }}</h2>
-
-        <div class="ev-detail__meta">
-          <div class="ev-meta-row"><i class="bi bi-calendar3"></i><span>{{ vp.eventDate | date:'EEEE, d MMMM y' }}</span></div>
-          @if (vp.eventTime) { <div class="ev-meta-row"><i class="bi bi-clock"></i><span>{{ fmtTimeRange(vp) }} @if (vp.timezone) { ({{ vp.timezone }}) }</span></div> }
-          @if ((vp.eventMode === 'Offline' || vp.eventMode === 'Hybrid') && (vp.address || vp.location)) {
-            <div class="ev-meta-row"><i class="bi bi-geo-alt-fill"></i><span>{{ vp.address }}@if (vp.address && vp.location) { , }{{ vp.location }}</span></div>
-          }
-          @if ((vp.eventMode === 'Online' || vp.eventMode === 'Hybrid') && vp.locationLink) {
-            <div class="ev-meta-row"><i class="bi bi-link-45deg"></i><a [href]="vp.locationLink" target="_blank" rel="noopener">{{ vp.locationLink }}</a></div>
-          }
-        </div>
-
-        @if (vp.description) { <p class="ev-detail__desc">{{ vp.description }}</p> }
-
-        <div class="ev-detail__host">
-          <div class="ev-host__avatar">{{ (vp.user?.displayName ?? vp.user?.userName ?? '?').charAt(0).toUpperCase() }}</div>
-          <div>
-            <div class="ev-detail__host-name">{{ vp.user?.displayName ?? vp.user?.userName }}</div>
-            <div class="ev-detail__host-label">Hosting this event</div>
-          </div>
-        </div>
-
-        <div class="ev-detail__actions">
-          @if (isMine(vp)) {
-            <button class="ev-btn ev-btn--ghost" (click)="closeView(); requestDelete(vp)"><i class="bi bi-trash-fill"></i>Delete</button>
-            <button class="ev-btn ev-btn--gold" (click)="closeView(); openEditModal(vp)"><i class="bi bi-pencil-fill"></i>Edit Event</button>
-          } @else {
-            <button class="ev-btn ev-btn--gold" style="flex:1;" (click)="closeView()">Close</button>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
 }
 
 <app-image-viewer
@@ -382,20 +382,50 @@
   [initialIndex]="imageViewerInitialIndex()"
   (close)="closeImageViewer()"></app-image-viewer>
 
-<!-- ── DELETE CONFIRM ──────────────────────────────────────── -->
-@if (confirmDeleteIds(); as ids) {
-  <div class="ev-backdrop" (click)="cancelDeleteConfirm()">
-    <div class="ev-panel ev-confirm" (click)="$event.stopPropagation()">
-      <div class="ev-confirm__icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-      <h3 class="ev-confirm__title">{{ ids.length === 1 ? 'Delete this event?' : 'Delete ' + ids.length + ' events?' }}</h3>
-      <p class="ev-confirm__desc">This can't be undone.</p>
-      <div class="ev-confirm__actions">
-        <button class="ev-btn ev-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelDeleteConfirm()">Cancel</button>
-        <button class="ev-btn ev-btn--saffron" [disabled]="bulkProcessing()" (click)="confirmDeleteExecute()">
-          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-          <i class="bi bi-trash-fill"></i>Delete
-        </button>
+<!-- ── DELETE CONFIRM — same design language as the Admin Events delete popup ── -->
+@if (eventToDelete(); as evt) {
+  <div class="au-backdrop" (click)="cancelDeleteConfirm()"></div>
+  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true"
+    aria-labelledby="evDeleteTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-delete-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
       </div>
+      <div class="au-header__icon cm-delete-modal-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="evDeleteTitle">Delete Event</h5>
+        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="cancelDeleteConfirm()" [disabled]="deleting()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-delete-modal-body">
+      <p class="cm-delete-modal-text">
+        Are you sure you want to delete <strong>"{{ evt.title }}"</strong>? This will permanently remove the event.
+      </p>
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="cancelDeleteConfirm()" [disabled]="deleting()">
+        Cancel
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--danger"
+        (click)="confirmDeleteExecute()" [disabled]="deleting()">
+        @if (deleting()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          Deleting...
+        } @else {
+          <i class="bi bi-trash3-fill"></i>
+          Delete Event
+        }
+      </button>
     </div>
   </div>
 }

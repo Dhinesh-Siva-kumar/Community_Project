@@ -516,6 +516,62 @@
       </div>
     }
 
+    <!-- ==================== MY EVENTS TAB ==================== -->
+    @if (activeTab() === 'events') {
+      <div class="tab-enter">
+      <app-profile-info-card title="My Events" icon="bi-calendar-event" [showEdit]="false">
+        @if (loadingEvents()) {
+          <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary"></div>
+            <p class="text-muted small mt-2">Loading events...</p>
+          </div>
+        } @else if (!myEvents().length) {
+          <div class="text-center py-4">
+            <i class="bi bi-calendar-event text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
+            <p class="text-muted small mt-2">You haven't created any events yet.</p>
+          </div>
+        } @else {
+          <div class="d-flex flex-column gap-3">
+            @for (event of myEvents(); track event.id) {
+              <div class="prf-item">
+                <div class="prf-item__lead">
+                  @if (event.images?.length) {
+                    <img [src]="event.images[0] | imageUrl" class="prf-item__thumb" [alt]="event.title" loading="lazy" fetchpriority="auto" />
+                  } @else {
+                    <div class="prf-item__thumb prf-item__thumb--placeholder">
+                      <i class="bi bi-calendar-event"></i>
+                    </div>
+                  }
+                  <div class="prf-item__body">
+                    <div class="prf-item__title-row">
+                      <h6 class="prf-item__name">{{ event.title }}</h6>
+                      @if (event.status === 'PENDING') {
+                        <span class="prf-badge prf-badge--pending">Pending approval</span>
+                      } @else if (event.status === 'APPROVED') {
+                        <span class="prf-badge prf-badge--active">Approved</span>
+                      } @else if (event.status === 'REJECTED') {
+                        <span class="prf-badge prf-badge--rejected">Rejected</span>
+                      }
+                    </div>
+                    <small class="prf-item__meta">{{ event.eventDate | date:'mediumDate' }} &middot; {{ event.location || event.address || event.country }}</small>
+                    @if (event.status === 'REJECTED' && event.rejectionReason) {
+                      <div class="small text-danger mt-1"><i class="bi bi-info-circle me-1"></i>Reason: {{ event.rejectionReason }}</div>
+                    }
+                  </div>
+                </div>
+                <div class="prf-item__actions">
+                  <button class="btn btn-outline-danger btn-sm" [disabled]="deletingEventId() === event.id" (click)="deleteEvent(event.id)" aria-label="Delete event">
+                    @if (deletingEventId() === event.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </app-profile-info-card>
+      </div>
+    }
+
       </div><!-- /prf-main -->
 
       <aside class="prf-sidebar">
