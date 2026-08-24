@@ -1801,6 +1801,30 @@
   overflow: hidden;
 }
 
+// ── Category View / Business View scope toggle — sits before the Grid/List
+// (or Grid/Table) switch in the search card, same shell as .biz-view-toggle
+// but sized for a text + icon label instead of an icon-only square button. ──
+.biz-scope-toggle {
+  display: flex;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.biz-scope-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px; border: none;
+  background: $color-bg-light; color: $color-stone-500; font-size: 12.5px; font-weight: $font-weight-semibold;
+  cursor: pointer; white-space: nowrap;
+  @include transition-quick(all);
+  & + & { border-left: 1.5px solid $color-border; }
+  .bi { font-size: 0.85rem; }
+  &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &--active { background: $color-stone-900; color: #fff; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
 .biz-view-btn {
   width: 36px; height: 36px; border: none;
   background: $color-bg-light; color: $color-stone-500; font-size: 0.85rem;

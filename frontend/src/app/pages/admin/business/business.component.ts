@@ -91,6 +91,13 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // View state
   currentView = signal<ViewState>('categories');
+  // "Category View" (browse via category cards) vs "Business View" (flat
+  // list of every business, regardless of category) — the toggle that sits
+  // in the search card before the Grid/List (or Grid/Table) switch. Drilling
+  // into a specific category (loadBusinesses with a category) still counts
+  // as "categories" scope for this toggle; only the flat cross-category
+  // list (loadBusinesses(null, ...)) counts as "business" scope.
+  businessScope = signal<'categories' | 'business'>('categories');
 
   // Floating header action (shows once scrolled past the page header)
   showHeaderFab = signal(false);
@@ -688,14 +695,15 @@ getCategoryAccent(icon?: string): string {
       return;
     }
 
-    if (state?.view === 'list' && state.category) {
+    if (state?.view === 'list') {
       this.selectedBusiness.set(null);
-      this.loadBusinesses(state.category, true, false);
+      this.loadBusinesses(state.category ?? null, true, false);
       return;
     }
 
     // Fallback: categories view (also covers the initial entry, whose state is null).
     this.currentView.set('categories');
+    this.businessScope.set('categories');
     this.selectedCategory.set(null);
     this.selectedBusiness.set(null);
     this.businesses.set([]);
@@ -1138,12 +1146,13 @@ private initForms(): void {
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false, silent = false): void {
+  loadBusinesses(category: BusinessCategory | null, resetPage = false, pushHistory = false, silent = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
+    this.businessScope.set(category ? 'categories' : 'business');
     if (resetPage) this.currentPage.set(1);
     if (pushHistory) {
-      history.pushState({ view: 'list', category } satisfies BusinessNavState, '');
+      history.pushState({ view: 'list', category: category ?? undefined } satisfies BusinessNavState, '');
       // Only a genuine categories → list navigation (not an in-place filter/
       // sort/pagination refresh, which also calls this method) should reset
       // scroll — otherwise re-filtering while scrolled through results would
@@ -1154,12 +1163,12 @@ private initForms(): void {
     this.loadBusinessStatusCounts(category);
 
     const params: Record<string, any> = {
-      categoryId: category.id,
       page: this.currentPage(),
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       sortDir: this.sortDir(),
     };
+    if (category) params['categoryId'] = category.id;
     if (this.filterSearch()) params['search'] = this.filterSearch();
     if (this.filterCountry()) params['country'] = this.filterCountry();
     if (this.filterPincode()) params['pincode'] = this.filterPincode();
@@ -1191,13 +1200,32 @@ private initForms(): void {
     });
   }
 
+  /** Switches between "Category View" (categories grid) and "Business View"
+   * (flat list of every business, regardless of category) — the toggle
+   * placed in the search card before the Grid/List switch. */
+  setBusinessScope(mode: 'categories' | 'business'): void {
+    if (mode === 'categories') {
+      if (this.currentView() === 'categories') return;
+      this.businessScope.set('categories');
+      this.currentView.set('categories');
+      this.selectedCategory.set(null);
+      this.selectedBusiness.set(null);
+      history.pushState({ view: 'categories' } satisfies BusinessNavState, '');
+      this.scrollToTop();
+    } else {
+      if (this.currentView() === 'list' && !this.selectedCategory()) return;
+      this.loadBusinesses(null, true, true);
+    }
+  }
+
   /** Powers the List view's Total/Active/Inactive stat cards — three
    * lightweight `limit:1` calls scoped by category + every filter except
    * `status` itself, so the counts stay accurate regardless of which
    * status card (if any) is currently selected, instead of being derived
    * from whatever page `businesses()`/`totalItems()` currently holds. */
-  private loadBusinessStatusCounts(category: BusinessCategory): void {
-    const baseParams: Record<string, any> = { categoryId: category.id, page: 1, limit: 1 };
+  private loadBusinessStatusCounts(category: BusinessCategory | null): void {
+    const baseParams: Record<string, any> = { page: 1, limit: 1 };
+    if (category) baseParams['categoryId'] = category.id;
     if (this.filterSearch()) baseParams['search'] = this.filterSearch();
     if (this.filterCountry()) baseParams['country'] = this.filterCountry();
     if (this.filterPincode()) baseParams['pincode'] = this.filterPincode();
@@ -1235,8 +1263,8 @@ private initForms(): void {
   }
 
   applyFilters(): void {
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat, true);
+    if (this.currentView() !== 'list') return;
+    this.loadBusinesses(this.selectedCategory(), true);
   }
 
   /** Advanced Filters lives in a right-side drawer — while it's open, the
@@ -1337,8 +1365,7 @@ private initForms(): void {
   onPageSizeChange(size: number): void {
     this.pageSize.set(size);
     this.currentPage.set(1);
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat);
+    if (this.currentView() === 'list') this.loadBusinesses(this.selectedCategory());
   }
 
   clearAllFilters(): void {
@@ -1351,8 +1378,7 @@ private initForms(): void {
     this.filterDateTo.set('');
     this.activeQuickRange.set(null);
     this.showAdvancedFilters.set(false);
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat, true);
+    if (this.currentView() === 'list') this.loadBusinesses(this.selectedCategory(), true);
   }
 
   clearFilters(): void {
