@@ -38,10 +38,10 @@
     </div>
 
     <div class="jb-filter-group">
-      <input type="date" class="jb-adv-input" [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" aria-label="From date" />
+      <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" ariaLabel="From date" placeholder="From date"></app-date-input>
     </div>
     <div class="jb-filter-group">
-      <input type="date" class="jb-adv-input" [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" aria-label="To date" />
+      <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" ariaLabel="To date" placeholder="To date"></app-date-input>
     </div>
 
     @if (hasActiveFilters()) {

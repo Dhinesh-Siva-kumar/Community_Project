@@ -1,19 +1,23 @@
-import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../../../shared/components/community-rules-input/community-rules-input.component';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -47,18 +51,27 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the community list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class AdminCommunityComponent implements OnInit {
+export class AdminCommunityComponent implements OnInit, OnDestroy {
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
+  private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+
+  ngOnDestroy(): void {
+    this.layoutService.forceSidebarCollapsed.set(false);
+  }
 
   countries: Country[] = [];
   interests: interests[] = [];
@@ -73,9 +86,26 @@ export class AdminCommunityComponent implements OnInit {
     { value: 'private', label: 'Private' },
   ];
 
+  // ── Radio group options (app-radio-group, create/edit modal) ──
+  readonly visibilityOptions: RadioOption[] = [
+    { value: 'private', label: 'Private', icon: 'bi-lock-fill' },
+    { value: 'global',  label: 'Global',  icon: 'bi-globe2' },
+  ];
+
+  readonly communityModeOptions: RadioOption[] = [
+    { value: 'HELP_EMERGENCY', label: 'Help & Emergency Assistance', icon: 'bi-life-preserver' },
+    { value: 'ENQUIRE',        label: 'Enquire',                     icon: 'bi-question-circle-fill' },
+  ];
+
   // ── Signals ──────────────────────────────────────────────────
   communities        = signal<Community[]>([]);
   loading            = signal(true);
+  // Gates the full-page skeleton — true only until the very first fetch
+  // resolves, then stays true forever after. Later fetches (stat-card
+  // click, search, filter, sort) still flip `loading`, but the stats bar /
+  // results meta / list stay mounted throughout instead of unmounting into
+  // a skeleton and back, which read as the whole page blinking.
+  pageReady          = signal(false);
   searchTerm         = signal('');
   currentPage        = signal(1);
   totalPages         = signal(1);
@@ -340,10 +370,12 @@ export class AdminCommunityComponent implements OnInit {
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
       error: () => {
         this.toast.error('Failed to load communities');
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
     });
   }
@@ -363,15 +395,15 @@ export class AdminCommunityComponent implements OnInit {
     this.applyFilters();
   }
 
-  onFilterFromDateChange(event: Event): void {
+  onFilterFromDateChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterFromDate.set((event.target as HTMLInputElement).value);
+    this.filterFromDate.set(value);
     this.applyFilters();
   }
 
-  onFilterToDateChange(event: Event): void {
+  onFilterToDateChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterToDate.set((event.target as HTMLInputElement).value);
+    this.filterToDate.set(value);
     this.applyFilters();
   }
 
@@ -407,6 +439,25 @@ export class AdminCommunityComponent implements OnInit {
 
   onFilterVisibilityChange(value: any): void {
     this.filterVisibility.set(value);
+    this.applyFilters();
+  }
+
+  /** The four stat cards (Total/Global/Private/Default) all drive this one
+   * derived value, so exactly one is ever selected at a time — each setter
+   * clears the other axis (visibility vs. default) so they can't both be
+   * active simultaneously. */
+  communityStatFilter = computed<'all' | 'global' | 'private' | 'default'>(() => {
+    if (this.filterIsDefault() === true) return 'default';
+    if (this.filterVisibility() === 'global') return 'global';
+    if (this.filterVisibility() === 'private') return 'private';
+    return 'all';
+  });
+
+  /** Toggles off back to 'all' on a repeat click of the same card. */
+  setCommunityStatFilter(value: 'all' | 'global' | 'private' | 'default'): void {
+    const next = this.communityStatFilter() === value ? 'all' : value;
+    this.filterVisibility.set(next === 'global' ? 'global' : next === 'private' ? 'private' : null);
+    this.filterIsDefault.set(next === 'default' ? true : null);
     this.applyFilters();
   }
 
@@ -453,9 +504,16 @@ export class AdminCommunityComponent implements OnInit {
     this.loadCommunities();
   }
 
-  /** Toggle advanced filters visibility. */
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   /** Remove a single filter chip. */

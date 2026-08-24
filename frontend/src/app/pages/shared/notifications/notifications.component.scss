@@ -65,40 +65,7 @@
 .ntf-prefs-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 7px 2px;
-  font-size: 13px; color: $color-text-primary;
-  cursor: pointer;
-}
-
-// ── Toggle switch ─────────────────────────────────────────────
-.ntf-switch {
-  position: relative; display: inline-flex; flex-shrink: 0; cursor: pointer;
-
-  input { position: absolute; opacity: 0; width: 0; height: 0; }
-}
-
-.ntf-switch-track {
-  width: 36px; height: 20px; border-radius: $radius-full;
-  background: $color-border-strong;
-  display: inline-flex; align-items: center;
-  transition: background $transition-fast ease;
-  padding: 2px;
-}
-
-.ntf-switch-thumb {
-  width: 16px; height: 16px; border-radius: $radius-full;
-  background: $color-white;
-  box-shadow: $shadow-1;
-  transition: transform $transition-fast ease;
-}
-
-.ntf-switch input:checked + .ntf-switch-track {
-  background: $color-primary;
-}
-.ntf-switch input:checked + .ntf-switch-track .ntf-switch-thumb {
-  transform: translateX(16px);
-}
-.ntf-switch input:focus-visible + .ntf-switch-track {
-  box-shadow: $shadow-focus-ring;
+  font-size: 13px; color: $color-text-primary;
 }
 
 .ntf-filters {

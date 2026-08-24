@@ -11,36 +11,40 @@
 </div>
 
 <!-- ── STATS BAR ────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="admin-stats-bar">
-    <div class="admin-stat-card">
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'all'"
+      (click)="setCommunityStatFilter('all')" aria-label="Show all communities">
       <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-people-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().total }}</span>
         <span class="admin-stat-card__label">Total Communities</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'global'"
+      (click)="setCommunityStatFilter('global')" aria-label="Filter by global communities">
       <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-globe2"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().global }}</span>
         <span class="admin-stat-card__label">Global</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'private'"
+      (click)="setCommunityStatFilter('private')" aria-label="Filter by private communities">
       <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-lock-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().private }}</span>
         <span class="admin-stat-card__label">Private</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'default'"
+      (click)="setCommunityStatFilter('default')" aria-label="Filter by default communities">
       <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-star-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().default }}</span>
         <span class="admin-stat-card__label">Default</span>
       </div>
-    </div>
+    </button>
   </div>
 }
 
@@ -71,83 +75,92 @@
       <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
         <i class="bi bi-sliders2"></i>
         Advanced Filters
-        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-      </button>
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }      </button>
       @if (activeFilterCount() > 0) {
         <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
       }
     </div>
   </div>
 
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel animate-slide-in-up">
+
+</div>
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the community list stays fully visible
+     and clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
 
       <!-- ── Location & Category ─────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location &amp; Category</span>
-        <div class="jb-filter-row jb-filter-row--split">
-          <div class="jb-location-row">
-            <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-              (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
-              (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
-              (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
-            </app-searchable-select>
-            <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
-              (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
-            </app-searchable-select>
-          </div>
+        <div class="jb-location-row">
+          <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+            (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
+            (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
+            (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
+          </app-searchable-select>
+          <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
+            (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+          </app-searchable-select>
         </div>
       </div>
 
-      <!-- ── Community Mode + Default Community ──────────────── -->
+      <!-- ── Community Mode ───────────────────────────────────── -->
       <div class="jb-adv-section">
-        <div class="jb-pill-group-row">
-          <div class="jb-pill-group">
-            <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Community Mode</span>
-            <div class="jb-pill-row" role="group" aria-label="Filter by community mode">
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterCommunityMode() === null"
-                      (click)="onFilterCommunityModeChange(null)">
-                All
-              </button>
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
-                      (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
-                <i class="bi bi-life-preserver"></i> Help &amp; Emergency Assistance
-              </button>
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
-                      (click)="onFilterCommunityModeChange('ENQUIRE')">
-                <i class="bi bi-question-circle-fill"></i> Enquire
-              </button>
-            </div>
-          </div>
+        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Community Mode</span>
+        <div class="jb-pill-row" role="group" aria-label="Filter by community mode">
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityMode() === null"
+                  (click)="onFilterCommunityModeChange(null)">
+            All
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
+                  (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
+            <i class="bi bi-life-preserver"></i> Help &amp; Emergency Assistance
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
+                  (click)="onFilterCommunityModeChange('ENQUIRE')">
+            <i class="bi bi-question-circle-fill"></i> Enquire
+          </button>
+        </div>
+      </div>
 
-          <div class="jb-pill-group">
-            <span class="jb-filter-section-label"><i class="bi bi-star"></i> Default Community</span>
-            <div class="jb-pill-row" role="group" aria-label="Filter by default status">
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterIsDefault() === null"
-                      (click)="onFilterIsDefaultChange(null)">
-                All
-              </button>
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterIsDefault() === true"
-                      (click)="onFilterIsDefaultChange(true)">
-                <i class="bi bi-star-fill"></i> Default Only
-              </button>
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterIsDefault() === false"
-                      (click)="onFilterIsDefaultChange(false)">
-                <i class="bi bi-star"></i> Non-Default
-              </button>
-            </div>
-          </div>
+      <!-- ── Default Community ────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-star"></i> Default Community</span>
+        <div class="jb-pill-row" role="group" aria-label="Filter by default status">
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterIsDefault() === null"
+                  (click)="onFilterIsDefaultChange(null)">
+            All
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterIsDefault() === true"
+                  (click)="onFilterIsDefaultChange(true)">
+            <i class="bi bi-star-fill"></i> Default Only
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterIsDefault() === false"
+                  (click)="onFilterIsDefaultChange(false)">
+            <i class="bi bi-star"></i> Non-Default
+          </button>
         </div>
       </div>
 
@@ -160,12 +173,13 @@
               <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
               <span class="jb-adv-date-help">Start date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-              <input id="communityFilterFromDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterFromDate()"
-                (change)="onFilterFromDateChange($event)"
-                placeholder="From date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterFromDate()"
+                  (ngModelChange)="onFilterFromDateChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
@@ -173,12 +187,13 @@
               <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
               <span class="jb-adv-date-help">End date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-              <input id="communityFilterToDate" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterToDate()"
-                (change)="onFilterToDateChange($event)"
-                placeholder="To date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterToDate()"
+                  (ngModelChange)="onFilterToDateChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
           </div>
         </div>
 
@@ -212,8 +227,17 @@
       </div>
 
     </div>
-  }
-</div>
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
+}
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterChips().length > 0) {
@@ -230,7 +254,7 @@
 }
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="jb-meta">
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'community' : 'communities' }}
@@ -241,8 +265,10 @@
   </div>
 }
 
-<!-- ── LOADING STATE ────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── LOADING STATE — only the very first load; later fetches (stat-card
+     click, search, filter, sort) just dim the still-mounted content below
+     instead of swapping it out, so the page doesn't blink. ────────────── -->
+@if (loading() && !pageReady()) {
   <div class="jb-list" aria-busy="true">
     <div class="jb-skeleton">
       <div class="jb-skeleton__avatar skeleton-pulse"></div>
@@ -256,8 +282,8 @@
 }
 
 <!-- ── Empty state (icon-based) ──────────────────────────────────────── -->
-@if (!loading()) {
-  <div class="cm-results-section">
+@if (pageReady()) {
+  <div class="cm-results-section" [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   @if (communities().length === 0) {
     <div class="jb-empty">
       <div class="jb-empty__illustration" aria-hidden="true">
@@ -796,17 +822,12 @@
                 <!-- Visibility Toggles -->
                 <div class="cm-field-group">
                   <label class="cm-label">Visibility <span class="cm-required">*</span></label>
-                  <div class="cm-toggle-group"
-                       [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['visibility'].value">
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'private'">
-                      <input type="radio" formControlName="visibility" value="private" hidden />
-                      <i class="bi bi-lock-fill me-1"></i> Private
-                    </label>
-                    <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'global'">
-                      <input type="radio" formControlName="visibility" value="global" hidden />
-                      <i class="bi bi-globe2 me-1"></i> Global
-                    </label>
-                  </div>
+                  <app-radio-group
+                    formControlName="visibility"
+                    [options]="visibilityOptions"
+                    [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
+                    ariaLabel="Visibility">
+                  </app-radio-group>
                   @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
@@ -818,16 +839,11 @@
               <!-- Community Mode -->
               <div class="cm-field-group">
                 <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
-                <div class="cm-toggle-group">
-                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
-                    <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
-                    <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency Assistance
-                  </label>
-                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
-                    <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
-                    <i class="bi bi-question-circle-fill me-1"></i> Enquire
-                  </label>
-                </div>
+                <app-radio-group
+                  formControlName="communityMode"
+                  [options]="communityModeOptions"
+                  ariaLabel="Community mode">
+                </app-radio-group>
                 <div class="cm-default-hint">
                   @if (f['communityMode'].value === 'ENQUIRE') {
                     Members can raise and track enquiries in a dedicated Enquire tab.
@@ -844,10 +860,7 @@
                   <span>Default Community</span>
                   <span class="cm-default-hint">Mark this as the default community for new users</span>
                 </div>
-                <label class="cm-switch">
-                  <input type="checkbox" formControlName="isDefault" />
-                  <span class="cm-switch-slider"></span>
-                </label>
+                <app-toggle formControlName="isDefault" ariaLabel="Default community"></app-toggle>
               </div>
             </div>
 

@@ -9,6 +9,20 @@
 $_transition:   200ms #{$transition-easing};
 $_side-rail-w:  268px;
 
+// display:flex + flex-direction:column + a min-height matching the
+// visible viewport below the sticky top header (see $header-height and
+// .main-content's own padding in user-layout.component.scss) — so that
+// when the "No submissions yet" empty state is the only content (the
+// Pending Approval tab hides the spotlight rail above it), .uc-main can
+// grow to fill the leftover page height and .uc-empty can flex:1 to
+// truly center itself in it, instead of just centering within its own
+// fixed-height box near the top of the page.
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$header-height} - 3rem);
+}
+
 // Tab accent colors — lifted from the real .cd-tab-btn / .cd-tab-badge system
 // (community-detail.component.scss) so this page's tabs read as the same UI language.
 $_tab-all-text:      #1d4ed8;
@@ -654,7 +668,17 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   @include media-lg-max { grid-template-columns: 1fr; }
 }
 
-.uc-main { min-width: 0; position: relative; }
+// display:flex + flex-direction:column + the same min-height as :host —
+// set directly here (rather than relying on the surrounding .uc-layout
+// grid row to stretch) so .uc-empty can flex:1 and center itself
+// regardless of grid row auto-sizing quirks.
+.uc-main {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$header-height} - 3rem);
+}
 
 // Subsequent fetches (tab switch, pagination, search) dim the still-mounted
 // results instead of swapping the whole page for the big loading screen —
@@ -692,8 +716,10 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 // ============================================================
 .uc-empty {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 4.5rem 1.5rem;
   background: $color-bg-card;

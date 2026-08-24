@@ -14,42 +14,46 @@
 
 <!-- ── STATISTICS BAR ─────────────────────────────────────── -->
 <div class="admin-stats-bar">
-  <div class="admin-stat-card">
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'all'"
+    (click)="setEventStatFilter('all')" aria-label="Show all events">
     <div class="admin-stat-card__icon admin-stat-card__icon--jobs">
       <i class="bi bi-calendar-event"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ totalItems() }}</div>
+      <div class="admin-stat-card__value">{{ totalEventsCount() }}</div>
       <div class="admin-stat-card__label">Total Events</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'upcoming'"
+    (click)="setEventStatFilter('upcoming')" aria-label="Filter by upcoming events">
     <div class="admin-stat-card__icon admin-stat-card__icon--fulltime">
       <i class="bi bi-clock-history"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ upcomingEvents() }}</div>
+      <div class="admin-stat-card__value">{{ upcomingEventsCount() }}</div>
       <div class="admin-stat-card__label">Upcoming</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'hybrid'"
+    (click)="setEventStatFilter('hybrid')" aria-label="Filter by hybrid events">
     <div class="admin-stat-card__icon admin-stat-card__icon--parttime">
       <i class="bi bi-diagram-2"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ hybridEvents() }}</div>
+      <div class="admin-stat-card__value">{{ hybridEventsCount() }}</div>
       <div class="admin-stat-card__label">Hybrid</div>
     </div>
-  </div>
-  <div class="admin-stat-card">
+  </button>
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'offline'"
+    (click)="setEventStatFilter('offline')" aria-label="Filter by offline events">
     <div class="admin-stat-card__icon admin-stat-card__icon--contract">
       <i class="bi bi-geo-alt"></i>
     </div>
     <div class="admin-stat-card__body">
-      <div class="admin-stat-card__value">{{ offlineEvents() }}</div>
+      <div class="admin-stat-card__value">{{ offlineEventsCount() }}</div>
       <div class="admin-stat-card__label">Offline</div>
     </div>
-  </div>
+  </button>
 </div>
 
 <!-- ── FILTER PANEL ────────────────────────────────────────── -->
@@ -88,17 +92,30 @@
       @if (activeFilterCount() > 0) {
         <span class="jb-advanced-count">{{ activeFilterCount() }}</span>
       }
-      <i class="bi bi-chevron-down jb-advanced-chevron"
-        [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
     </button>
     @if (activeFilterCount() > 0) {
       <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
     }
   </div>
 
-  <!-- Advanced filter panel (hidden by default, shown when toggle clicked) -->
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel animate-slide-in-up">
+
+</div>
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the events list stays fully visible and
+     clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
 
       <!-- ── Location & Status ────────────────────────────────── -->
       <div class="jb-adv-section">
@@ -148,12 +165,13 @@
               <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
               <span class="jb-adv-date-help">Start date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-              <input id="evFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                (change)="onFilterDateFromChange($event)"
-                placeholder="From date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
@@ -161,12 +179,13 @@
               <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
               <span class="jb-adv-date-help">End date</span>
             </div>
-            <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-              <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-              <input id="evFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                (change)="onFilterDateToChange($event)"
-                placeholder="To date" />
-            </div>
+            <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
           </div>
         </div>
 
@@ -191,8 +210,17 @@
       </div>
 
     </div>
-  }
-</div>
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
+}
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterCount() > 0) {
@@ -239,7 +267,7 @@
 }
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="jb-meta">
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'event' : 'events' }}
@@ -250,8 +278,10 @@
   </div>
 }
 
-<!-- ── LOADING ────────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── LOADING — only the very first load; later fetches (stat-card click,
+     search, filter, sort) just dim the still-mounted content below instead
+     of swapping it out, so the page doesn't blink. ──────────── -->
+@if (loading() && !pageReady()) {
   <div class="ev-grid">
     @for (_ of skeletons; track $index) {
       <div class="ev-skeleton">
@@ -281,6 +311,7 @@
     }
   </div>
 } @else if (viewMode() === 'grid') {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBy()" [sortDir]="sortDir()"
     (sortChange)="onSortChange($event)">
   </app-sort-bar>
@@ -335,7 +366,13 @@
             @if (evt.eventCategory) {
               <span class="ev-chip-sm">{{ evt.eventCategory }}</span>
             }
-            <span class="ev-badge" [class]="'ev-badge--approval-' + evt.status.toLowerCase()">{{ evt.status }}</span>
+            @if (evt.status === 'PENDING') {
+              <a class="ev-badge ev-badge--approval-pending ev-badge--link"
+                 [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'events' }"
+                 (click)="$event.stopPropagation()" title="Go to Approval page">
+                <i class="bi bi-hourglass-split"></i> Pending Approval
+              </a>
+            }
             @if (!evt.isActive) {
               <span class="ev-badge ev-badge--inactive">Inactive</span>
             }
@@ -352,25 +389,13 @@
             @if (evt.eventTime) {
               <li class="ev-meta-item ev-meta-item--time">
                 <span class="ev-meta-item__icon"><i class="bi bi-clock-fill"></i></span>
-                <span>{{ evt.eventTime }}{{ evt.eventEndTime ? ' – ' + evt.eventEndTime : '' }}</span>
+                <span>{{ formatEventTime(evt) }}</span>
               </li>
             }
-            @if ((evt.eventMode === 'Offline' || evt.eventMode === 'Hybrid') && (evt.address || evt.location)) {
+            @if (evt.address || evt.location || evt.country) {
               <li class="ev-meta-item ev-meta-item--location">
                 <span class="ev-meta-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                <span>{{ evt.address || evt.location }}</span>
-              </li>
-            }
-            @if (evt.timezone) {
-              <li class="ev-meta-item ev-meta-item--timezone">
-                <span class="ev-meta-item__icon"><i class="bi bi-globe2"></i></span>
-                <span>{{ evt.timezone }}</span>
-              </li>
-            }
-            @if (evt.country) {
-              <li class="ev-meta-item ev-meta-item--country">
-                <span class="ev-meta-item__icon"><i class="bi bi-flag-fill"></i></span>
-                <span>{{ evt.country }}{{ evt.pincode ? ' · ' + evt.pincode : '' }}</span>
+                <span>{{ formatEventAddress(evt) }}</span>
               </li>
             }
           </ul>
@@ -447,7 +472,9 @@
       </div>
     }
   </div>
+  </div>
 } @else {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   <!-- ── EVENTS TABLE ──────────────────────────────────────────────────── -->
   <div class="um-table-card um-table-card--fixed mb-3">
     <div class="table-responsive">
@@ -496,8 +523,6 @@
                 [class.bi-arrow-down-up]="sortBy() !== 'location'"
               ></i>
             </th>
-            <th class="um-th d-none d-xl-table-cell">Country</th>
-            <th class="um-th d-none d-xl-table-cell">Timezone</th>
             <th class="um-th d-none d-lg-table-cell">Host</th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'status'" (click)="toggleSort('status')" role="button" tabindex="0" (keydown.enter)="toggleSort('status')">
               Status
@@ -538,13 +563,9 @@
               </td>
               <td class="um-td"><span class="um-td-text">{{ evt.eventDate | date:'d MMM y' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
-                <span class="um-td-text">{{ evt.eventTime ? evt.eventTime + (evt.eventEndTime ? ' – ' + evt.eventEndTime : '') : '—' }}</span>
+                <span class="um-td-text">{{ evt.eventTime ? formatEventTime(evt) : '—' }}</span>
               </td>
-              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ evt.address || evt.location || '—' }}</span></td>
-              <td class="um-td d-none d-xl-table-cell">
-                <span class="um-td-text">{{ evt.country }}{{ evt.pincode ? ' · ' + evt.pincode : '' }}</span>
-              </td>
-              <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ evt.timezone || '—' }}</span></td>
+              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ formatEventAddress(evt) || '—' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
                 @if (evt.user) {
                   <span class="ev-meta-item ev-meta-item--host">
@@ -626,6 +647,7 @@
         </div>
       }
     </div>
+  </div>
   </div>
 }
 
@@ -760,13 +782,12 @@
             <div class="cm-field-group">
               <label class="cm-label">Event Date <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
-                <i class="bi bi-calendar3 cm-input-icon"></i>
-                <input
-                  type="date"
+                <app-date-input
                   formControlName="eventDate"
-                  class="cm-input"
-                  [class.cm-input-error]="f['eventDate'].touched && f['eventDate'].invalid"
-                />
+                  ariaLabel="Event date"
+                  placeholder="Event date"
+                  [invalid]="f['eventDate'].touched && f['eventDate'].invalid"
+                ></app-date-input>
               </div>
               @if (f['eventDate'].touched && f['eventDate'].invalid) {
                 <div class="cm-error-msg">
@@ -784,13 +805,12 @@
             <div class="cm-field-group">
               <label class="cm-label">Start Time <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
-                <i class="bi bi-clock cm-input-icon"></i>
-                <input
-                  type="time"
+                <app-time-input
                   formControlName="eventTime"
-                  class="cm-input"
-                  [class.cm-input-error]="f['eventTime'].touched && f['eventTime'].invalid"
-                />
+                  ariaLabel="Start time"
+                  placeholder="Start time"
+                  [invalid]="f['eventTime'].touched && f['eventTime'].invalid"
+                ></app-time-input>
               </div>
               @if (f['eventTime'].touched && f['eventTime'].invalid) {
                 <div class="cm-error-msg">
@@ -805,13 +825,12 @@
             <div class="cm-field-group">
               <label class="cm-label">End Time</label>
               <div class="cm-input-wrap">
-                <i class="bi bi-clock-history cm-input-icon"></i>
-                <input
-                  type="time"
+                <app-time-input
                   formControlName="eventEndTime"
-                  class="cm-input"
-                  [class.cm-input-error]="eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
-                />
+                  ariaLabel="End time"
+                  placeholder="End time"
+                  [invalid]="!!eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
+                ></app-time-input>
               </div>
               @if (eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched) {
                 <div class="cm-error-msg">
@@ -842,15 +861,11 @@
           <!-- Event Mode -->
           <div class="cm-field-group">
             <label class="cm-label">Event Mode <span class="cm-required">*</span></label>
-            <div class="cm-toggle-group">
-              @for (mode of EVENT_MODES; track mode) {
-                <label class="cm-toggle-pill" [class.cm-toggle-active]="eventMode === mode">
-                  <input type="radio" formControlName="eventMode" [value]="mode" hidden />
-                  <i class="bi" [ngClass]="mode === 'Offline' ? 'bi-geo-alt-fill' : mode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
-                  {{ mode }}
-                </label>
-              }
-            </div>
+            <app-radio-group
+              formControlName="eventMode"
+              [options]="eventModeOptions"
+              ariaLabel="Event mode">
+            </app-radio-group>
           </div>
 
           @if (showAddress) {

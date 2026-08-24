@@ -8,6 +8,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityRequest, Country, interests } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../radio-group/radio-group.component';
+import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../community-rules-input/community-rules-input.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
@@ -45,7 +47,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-community-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe],
   templateUrl: './community-form-modal.component.html',
   styleUrls: ['./community-form-modal.component.scss'],
 })
@@ -71,6 +73,19 @@ export class CommunityFormModalComponent implements OnChanges {
   isAdminUser = computed(() => this.authService.currentUser()?.role === 'ADMIN');
   isEditing = computed(() => !!this.editingCommunity());
   modalTitle = computed(() => this.isEditing() ? 'Edit Community' : 'Create Community');
+
+  // ── Radio group options (app-radio-group) ────────────────────
+  /** Non-admins only ever get Private — Global is admin-only. */
+  visibilityOptions = computed<RadioOption[]>(() => {
+    const opts: RadioOption[] = [{ value: 'private', label: 'Private', icon: 'bi-lock-fill' }];
+    if (this.isAdminUser()) opts.push({ value: 'global', label: 'Global', icon: 'bi-globe2' });
+    return opts;
+  });
+
+  readonly communityModeOptions: RadioOption[] = [
+    { value: 'HELP_EMERGENCY', label: 'Help & Emergency Assistance', icon: 'bi-life-preserver' },
+    { value: 'ENQUIRE',        label: 'Enquire',                     icon: 'bi-question-circle-fill' },
+  ];
 
   countries: Country[] = [];
   interests: interests[] = [];

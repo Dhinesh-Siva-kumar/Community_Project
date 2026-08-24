@@ -5,6 +5,21 @@
 // Extends with community-specific card styling
 // ═══════════════════════════════════════════════════════════════
 
+// Pushes the page's own content left while the Advanced Filters drawer is
+// open, instead of letting the fixed-position drawer just sit on top of —
+// and hide — the right edge of the community list. Reverts on mobile,
+// where the drawer covers the full viewport anyway (see .jb-adv-drawer below).
+:host {
+  display: block;
+  transition: padding-right 280ms cubic-bezier(.22, 1, .36, 1);
+}
+
+:host(.jb-adv-open) {
+  padding-right: 340px;
+
+  @include media-sm-max { padding-right: 0; }
+}
+
 // ── ADMIN STATS BAR (from jobs.component.scss) ─────────────────
 .admin-stats-bar {
   display: flex;
@@ -26,6 +41,12 @@
   min-height: 88px;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
   @include transition-short(all);
+  // Now a clickable filter trigger (see (click)="onFilterVisibilityChange(...)"
+  // in the template) rather than a plain info card, so reset <button> defaults.
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
 
   &:hover {
     border-color: rgba(251, 191, 36, 0.55);
@@ -34,6 +55,11 @@
   }
 
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &--active {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: $color-primary;
+  }
 
   &__icon {
     width: 44px;
@@ -367,12 +393,6 @@
   font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
 }
 
-.jb-advanced-chevron {
-  font-size: 0.75rem;
-  transition: transform $duration-base $easing-standard;
-  &--open { transform: rotate(180deg); }
-}
-
 .jb-clear-all-btn {
   display: inline-flex; align-items: center; gap: 5px;
   border: none; background: none; padding: 6px 10px;
@@ -384,12 +404,86 @@
   &--inline { margin-left: auto; color: $color-stone-500; &:hover { color: $color-danger; background: none; } }
 }
 
-.jb-advanced-panel {
-  padding: $spacing-lg;
-  background: $color-bg-page;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
+// ── Advanced Filters — right-side drawer, matches the User Jobs page's
+// .jb-adv-drawer. No backdrop: it's a docked panel, not a blocking modal,
+// so the community list stays fully visible and clickable behind it.
+// Sidebar auto-collapse is driven from the TS side (LayoutService). ──
+@keyframes jbAdvDrawerIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.jb-adv-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  max-width: 100vw;
+  background: $color-bg-card;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 40px rgba(28, 25, 23, 0.16);
+  animation: jbAdvDrawerIn 280ms cubic-bezier(.22, 1, .36, 1);
+
+  @include media-sm-max { width: 100vw; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $color-border;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-family: $font-family-header;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: $color-stone-900;
+    .bi { color: $color-primary-dark; }
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-bg-light;
+    color: $color-stone-600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    @include transition-quick(all);
+    &:hover { background: $color-error-bg; color: $color-danger; }
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $spacing-lg;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-top: 1px solid $color-border;
+    flex-shrink: 0;
+  }
 }
 
 .jb-adv-section {
@@ -403,25 +497,6 @@
     display: flex;
     margin-bottom: 10px;
   }
-}
-
-.jb-pill-group-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-lg;
-
-  @include media-sm-max {
-    grid-template-columns: 1fr;
-  }
-}
-
-.jb-pill-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-
-  > .jb-filter-section-label { display: flex; }
 }
 
 .jb-pill-row {
@@ -468,24 +543,22 @@
   }
 }
 
+// Always rendered inside the ~340px-wide Advanced Filters drawer now
+// (see .jb-adv-drawer) rather than the full-width filter panel, so a
+// multi-column split no longer fits — single column throughout.
 .jb-advanced-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: $spacing-md;
 
   &--dates {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
     margin-top: 2px;
-
-    @include media-sm-max {
-      grid-template-columns: 1fr;
-    }
   }
 }
 
 .jb-adv-field {
   display: flex; flex-direction: column; gap: 6px;
-  &--wide { grid-column: span 2; @include media-sm-max { grid-column: span 1; } }
+  &--wide { grid-column: span 1; }
 }
 
 .jb-adv-label {
@@ -730,23 +803,15 @@
 .skeleton-pulse { animation: skeletonPulse 1.6s ease-in-out infinite; }
 
 // ── RESPONSIVE ───────────────────────────────────────────────────
-@include media-lg-max {
-  .jb-filter-row--split { flex-direction: column; gap: $spacing-md; }
-  .jb-location-row { width: 100%; }
-}
-
 @include media-md-max {
   .admin-stats-bar .admin-stat-card { flex: 1 1 calc(50% - #{$spacing-sm}); }
   .jb-page-header { flex-direction: column; align-items: flex-start; padding: $spacing-lg; }
   .jb-filter-panel { padding: $spacing-md; }
   .jb-filter-row--top { .jb-search-wrap { min-width: 100%; flex: 0 0 100%; } }
-  .jb-advanced-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @include media-sm-max {
   .admin-stats-bar .admin-stat-card { flex: 1 1 100%; }
-  .jb-advanced-grid { grid-template-columns: 1fr; }
-  .jb-adv-field--wide { grid-column: span 1; }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1904,63 +1969,7 @@
   i {
     font-size: 12px;
   }
-}
-
-// ── Toggle pills ──────────────────────────────────────────────
-.cm-toggle-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 2px;
-  border-radius: 12px;
-  padding: 2px;
-  transition: border 0.2s, background 0.2s;
-
-  &.cm-toggle-group--error {
-    border: 1.5px solid rgba($danger, 0.55);
-    background: rgba($danger, 0.03);
-    padding: 6px 8px;
-  }
-}
-
-.cm-toggle-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 14px;
-  border-radius: 20px;
-  border: 1.5px solid $color-border;
-  font-size: 13px;
-  font-weight: 500;
-  color: $color-stone-500;
-  background: $color-bg-page;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.18s ease;
-
-  &:hover {
-    border-color: $primary;
-    color: $primary-dark;
-    background: $amber-50;
-  }
-
-  &.cm-toggle-active {
-    border-color: $primary-dark;
-    background: $primary;
-    color: $color-on-primary;
-
-    i {
-      color: $color-on-primary;
-    }
-  }
-
-  i {
-    font-size: 12px;
-    color: $muted;
-  }
-}
-
-// ── Default community row ─────────────────────────────────────
+}// ── Default community row ─────────────────────────────────────
 .cm-default-row {
   display: flex;
   align-items: center;
@@ -2004,62 +2013,7 @@
   color: $muted !important;
   width: 100%;
   margin-top: 1px;
-}
-
-// ── Amber toggle switch ───────────────────────────────────────
-.cm-switch {
-  position: relative;
-  display: inline-block;
-  width: 42px;
-  height: 24px;
-  flex-shrink: 0;
-
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-  }
-}
-
-.cm-switch-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: $color-stone-300;
-  border-radius: 24px;
-  transition: background 0.25s ease;
-
-  &::before {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: $white;
-    border-radius: 50%;
-    transition: transform 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.cm-switch input:checked + .cm-switch-slider {
-  background: $primary;
-}
-
-.cm-switch input:focus + .cm-switch-slider {
-  box-shadow: 0 0 0 3px rgba($primary, 0.25);
-}
-
-.cm-switch input:checked + .cm-switch-slider::before {
-  transform: translateX(18px);
-}
-
-// ── Modal Footer ──────────────────────────────────────────────
+}// ── Modal Footer ──────────────────────────────────────────────
 .au-footer.cm-modal-footer {
   display: flex;
   align-items: center;

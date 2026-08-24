@@ -1,0 +1,81 @@
+<div class="di-host">
+
+  <!-- ── Trigger ──────────────────────────────────────────── -->
+  <button
+    type="button"
+    class="di-trigger"
+    [class.is-open]="isOpen()"
+    [class.is-invalid]="invalid()"
+    [class.is-placeholder]="!displayText()"
+    [disabled]="isDisabled()"
+    [attr.aria-label]="ariaLabel() || placeholder()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="dialog"
+    (click)="toggle()"
+  >
+    <i class="bi bi-calendar2-week fc-trigger__icon" aria-hidden="true"></i>
+    <span class="fc-trigger__text">{{ displayText() || placeholder() }}</span>
+
+    @if (clearable() && displayText() && !isDisabled()) {
+      <span class="di-clear" role="button" tabindex="-1" aria-label="Clear date" (click)="clear($event)">
+        <i class="bi bi-x" aria-hidden="true"></i>
+      </span>
+    }
+  </button>
+
+  <!-- ── Calendar popup ───────────────────────────────────── -->
+  @if (isOpen()) {
+    <div class="di-panel" [class.fc-panel--up]="dropUp()" role="dialog" [attr.aria-label]="ariaLabel() || 'Choose date'">
+
+      <!-- Month pager -->
+      <div class="di-head">
+        <button type="button" class="di-nav" [disabled]="prevDisabled()"
+          (click)="shiftMonth(-1)" aria-label="Previous month">
+          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+        </button>
+        <span class="di-month" aria-live="polite">{{ monthLabel() }}</span>
+        <button type="button" class="di-nav" [disabled]="nextDisabled()"
+          (click)="shiftMonth(1)" aria-label="Next month">
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Weekday header -->
+      <div class="di-grid di-grid--head" aria-hidden="true">
+        @for (w of weekdays; track w) {
+          <span class="di-weekday">{{ w }}</span>
+        }
+      </div>
+
+      <!-- Day grid -->
+      <div class="di-grid" role="grid">
+        @for (cell of days(); track cell.key) {
+          <button
+            type="button"
+            class="di-day"
+            [class.di-day--muted]="cell.otherMonth"
+            [class.di-day--today]="cell.isToday"
+            [class.di-day--selected]="cell.isSelected"
+            [disabled]="cell.disabled"
+            [attr.aria-selected]="cell.isSelected"
+            (click)="select(cell)"
+          >{{ cell.day }}</button>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="di-foot">
+        <button type="button" class="di-text-btn" [disabled]="todayDisabled()" (click)="selectToday()">
+          Today
+        </button>
+        @if (clearable() && displayText()) {
+          <button type="button" class="di-text-btn di-text-btn--muted" (click)="clear($event)">
+            Clear
+          </button>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

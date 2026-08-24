@@ -1,0 +1,187 @@
+// ============================================================
+// FORM CONTROL SHARED MIXINS
+// Shared look-and-feel for the custom themed form controls
+// (app-date-input / app-time-input). Keeps their trigger button
+// and dropdown panel visually identical to each other and to the
+// existing .jb-adv-input / .form-control fields they replace.
+// ============================================================
+
+// ── Trigger ───────────────────────────────────────────────────
+// The always-visible button that opens the popup. Mirrors the
+// native input it replaces: same height, border weight, radius
+// and amber focus ring.
+@mixin fc-trigger {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-card;
+  color: $color-stone-800;
+  font-family: $font-family-body;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: border-color $duration-short $easing-standard,
+              box-shadow   $duration-short $easing-standard,
+              background   $duration-short $easing-standard;
+
+  &:hover:not(:disabled) {
+    border-color: $color-amber-300;
+    background: $color-amber-50;
+  }
+
+  &:focus-visible,
+  &.is-open {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.18);
+  }
+
+  &:disabled {
+    background: $color-bg-light;
+    border-color: $color-border;
+    color: $color-stone-400;
+    cursor: not-allowed;
+  }
+
+  // Mirrors the .cm-input-error / .jb-input--error treatment on the
+  // native inputs these replace, so form validation still reads.
+  &.is-invalid {
+    border-color: $color-danger;
+
+    &:focus-visible,
+    &.is-open { box-shadow: 0 0 0 3px rgba($color-danger, 0.18); }
+  }
+
+  // Leading bootstrap-icon
+  .fc-trigger__icon {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    color: $color-primary-dark;
+  }
+
+  // The formatted value / placeholder
+  .fc-trigger__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &.is-placeholder .fc-trigger__text {
+    color: $color-stone-400;
+    font-weight: $font-weight-normal;
+  }
+}
+
+// Inline "clear" affordance inside the trigger.
+@mixin fc-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-full;
+  background: $color-stone-200;
+  color: $color-stone-600;
+  font-size: 0.6rem;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover {
+    background: $color-error-bg;
+    color: $color-danger;
+  }
+}
+
+// ── Popup panel ───────────────────────────────────────────────
+@mixin fc-panel {
+  position: absolute;
+  left: 0;
+  z-index: $z-popover;
+  min-width: 100%;
+  padding: $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-card;
+  box-shadow: 0 12px 32px rgba(28, 25, 23, 0.16), 0 2px 8px rgba(28, 25, 23, 0.06);
+  animation: fcPanelIn 160ms $easing-decelerate;
+
+  // Default drops down; --up flips above the trigger when there
+  // isn't room below (see the drop-up check in the components).
+  top: calc(100% + 6px);
+
+  &.fc-panel--up {
+    top: auto;
+    bottom: calc(100% + 6px);
+  }
+}
+
+@keyframes fcPanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Small round nav / action button used inside panels ────────
+@mixin fc-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $color-stone-600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover:not(:disabled) {
+    background: $color-amber-50;
+    border-color: rgba($color-primary, 0.35);
+    color: $color-primary-darker;
+  }
+
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+// ── Panel footer (Clear / Today / Now actions) ────────────────
+@mixin fc-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+@mixin fc-text-btn {
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  font-size: 11.5px;
+  font-weight: $font-weight-semibold;
+  color: $color-primary-darker;
+  cursor: pointer;
+  @include transition-quick(all);
+
+  &:hover { background: $color-amber-50; }
+
+  &.fc-text-btn--muted {
+    color: $color-stone-500;
+    &:hover { color: $color-danger; background: $color-error-bg; }
+  }
+}

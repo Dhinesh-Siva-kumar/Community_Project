@@ -5,6 +5,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { filter } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { LayoutService } from '../../core/services/layout.service';
 import { PostService } from '../../core/services/post.service';
 import { CommunityService } from '../../core/services/community.service';
 import { BusinessService } from '../../core/services/business.service';
@@ -42,6 +43,7 @@ const ROUTE_TITLES: Record<string, string> = {
 })
 export class AdminLayoutComponent {
   authService = inject(AuthService);
+  private layoutService     = inject(LayoutService);
   private postService      = inject(PostService);
   private communityService = inject(CommunityService);
   private businessService  = inject(BusinessService);
@@ -49,7 +51,10 @@ export class AdminLayoutComponent {
   private eventService      = inject(EventService);
   private router = inject(Router);
 
-  sidebarCollapsed = signal(false);
+  /** The admin's own manual collapse/expand choice via the toggle button. */
+  private manualSidebarCollapsed = signal(false);
+  /** Effective collapsed state — also true while a page (e.g. a filter drawer) needs the extra width. */
+  sidebarCollapsed = computed(() => this.manualSidebarCollapsed() || this.layoutService.forceSidebarCollapsed());
   mobileSidebarOpen = signal(false);
   userDropdownOpen = signal(false);
   isMobile = signal(false);
@@ -121,7 +126,7 @@ export class AdminLayoutComponent {
     const mobile = window.innerWidth < 992;
     this.isMobile.set(mobile);
     if (mobile) {
-      this.sidebarCollapsed.set(false);
+      this.manualSidebarCollapsed.set(false);
       this.mobileSidebarOpen.set(false);
     }
   }
@@ -130,7 +135,7 @@ export class AdminLayoutComponent {
     if (this.isMobile()) {
       this.mobileSidebarOpen.update((v) => !v);
     } else {
-      this.sidebarCollapsed.update((v) => !v);
+      this.manualSidebarCollapsed.update((v) => !v);
     }
   }
 

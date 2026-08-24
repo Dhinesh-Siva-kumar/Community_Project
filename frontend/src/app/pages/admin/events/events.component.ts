@@ -1,15 +1,20 @@
 import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last selected view mode (grid/table) across navigations.
 const VIEW_STORAGE_KEY = 'admin-events:viewMode';
@@ -51,13 +56,18 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, SortBarComponent, ImageUrlPipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the events list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminEventsComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
   private authService = inject(AuthService);
+  private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
@@ -70,10 +80,17 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     document.body.style.overflow = '';
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   events     = signal<AppEvent[]>([]);
   loading    = signal(true);
+  // Gates the full-page skeleton — true only until the very first fetch
+  // resolves, then stays true forever after. Later fetches (stat-card
+  // click, search, filter, sort) still flip `loading`, but the stats bar /
+  // results meta / list stay mounted throughout instead of unmounting into
+  // a skeleton and back, which read as the whole page blinking.
+  pageReady  = signal(false);
   submitting = signal(false);
   skeletons  = Array(6);
 
@@ -152,14 +169,16 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  // Statistics (server-supplied page only — a lightweight "on this page" read)
-  upcomingEvents = computed(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return this.events().filter(e => new Date(e.eventDate) >= today).length;
-  });
-  hybridEvents = computed(() => this.events().filter(e => e.eventMode === 'Hybrid').length);
-  offlineEvents = computed(() => this.events().filter(e => e.eventMode === 'Offline').length);
+  // Stat-card counts — fetched separately (see loadEventStatCounts()) so
+  // each card always shows its own true total regardless of which card is
+  // currently selected, instead of being derived from whatever page
+  // `events()` currently holds (which — once a card filters the list — no
+  // longer contains any of the OTHER cards' events, making their counts
+  // collapse to 0 and making the stat bar look broken).
+  totalEventsCount    = signal(0);
+  upcomingEventsCount = signal(0);
+  hybridEventsCount   = signal(0);
+  offlineEventsCount  = signal(0);
 
   // Server-side filtering: component list is whatever the API returned.
   filteredEvents = computed(() => this.events());
@@ -189,6 +208,13 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   readonly EVENT_TYPES = ['Workshop','Meetup','Webinar','Festival','Conference','Exhibition','Concert','Sports','Social','Other'];
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
+
+  /** Event Mode radio group in the create/edit modal (app-radio-group). */
+  readonly eventModeOptions: RadioOption[] = [
+    { value: 'Offline', label: 'Offline', icon: 'bi-geo-alt-fill' },
+    { value: 'Online',  label: 'Online',  icon: 'bi-camera-video-fill' },
+    { value: 'Hybrid',  label: 'Hybrid',  icon: 'bi-diagram-2-fill' },
+  ];
   readonly TIMEZONES   = [
     'UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney',
   ];
@@ -266,6 +292,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   loadEvents(): void {
     this.loading.set(true);
+    this.loadEventStatCounts();
     const params: Record<string, any> = {
       page: this.currentPage(),
       limit: this.pageSize(),
@@ -283,8 +310,32 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data); this.totalPages.set(res.totalPages);
         this.totalItems.set(res.total); this.loading.set(false);
+        this.pageReady.set(true);
       },
-      error: () => { this.toast.error('Failed to load events'); this.loading.set(false); },
+      error: () => { this.toast.error('Failed to load events'); this.loading.set(false); this.pageReady.set(true); },
+    });
+  }
+
+  /** Powers the four stat cards — lightweight `limit:1` calls scoped by
+   * search/country only (every filter EXCEPT status/eventMode, which is
+   * what the cards themselves toggle), so each count stays accurate no
+   * matter which card is currently selected. */
+  private loadEventStatCounts(): void {
+    const base: Record<string, any> = { page: 1, limit: 1 };
+    if (this.searchQuery().trim()) base['search']  = this.searchQuery().trim();
+    if (this.filterCountry())      base['country'] = this.filterCountry();
+
+    this.eventService.getEvents(base).subscribe({
+      next: (res) => this.totalEventsCount.set(res.total), error: () => {},
+    });
+    this.eventService.getEvents({ ...base, status: 'upcoming' }).subscribe({
+      next: (res) => this.upcomingEventsCount.set(res.total), error: () => {},
+    });
+    this.eventService.getEvents({ ...base, eventMode: 'Hybrid' }).subscribe({
+      next: (res) => this.hybridEventsCount.set(res.total), error: () => {},
+    });
+    this.eventService.getEvents({ ...base, eventMode: 'Offline' }).subscribe({
+      next: (res) => this.offlineEventsCount.set(res.total), error: () => {},
     });
   }
 
@@ -314,15 +365,36 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onFilterDateFromChange(e: Event): void {
-    this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+  /** The four stat cards (Total/Upcoming/Hybrid/Offline) all drive this one
+   * derived value, so exactly one is ever selected at a time — "Upcoming"
+   * reuses the existing server-side `filterStatus` ("Status" in Advanced
+   * Filters) rather than a separate client-side date hack, and Hybrid/
+   * Offline reuse `filterEventMode`; each setter clears the other axis so
+   * they can't both be active simultaneously. */
+  eventStatFilter = computed<'all' | 'upcoming' | 'hybrid' | 'offline'>(() => {
+    if (this.filterStatus() === 'upcoming') return 'upcoming';
+    if (this.filterEventMode() === 'Hybrid') return 'hybrid';
+    if (this.filterEventMode() === 'Offline') return 'offline';
+    return 'all';
+  });
+
+  /** Toggles off back to 'all' on a repeat click of the same card. */
+  setEventStatFilter(value: 'all' | 'upcoming' | 'hybrid' | 'offline'): void {
+    const next = this.eventStatFilter() === value ? 'all' : value;
+    this.filterStatus.set(next === 'upcoming' ? 'upcoming' : '');
+    this.filterEventMode.set(next === 'hybrid' ? 'Hybrid' : next === 'offline' ? 'Offline' : '');
     this.applyFilters();
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
+    this.applyFilters();
+  }
+
+  onFilterDateToChange(value: string): void {
+    this.activeQuickRange.set(null);
+    this.filterDateTo.set(value);
     this.applyFilters();
   }
 
@@ -358,8 +430,16 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   clearAllFilters(): void {
@@ -494,5 +574,33 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     } else {
       return { label: 'Completed', type: 'completed' };
     }
+  }
+
+  /** "09:11" → "9:11 AM" */
+  private to12h(time24: string): string {
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return time24;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  formatEventTime(evt: AppEvent): string {
+    if (!evt.eventTime) return '';
+    let text = this.to12h(evt.eventTime);
+    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
+    if (evt.timezone) text += ` (${evt.timezone})`;
+    return text;
+  }
+
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  formatEventAddress(evt: AppEvent): string {
+    const parts: string[] = [];
+    if (evt.address) parts.push(evt.address);
+    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
+    if (venuePincode) parts.push(venuePincode);
+    if (evt.country) parts.push(evt.country);
+    return parts.join(', ');
   }
 }

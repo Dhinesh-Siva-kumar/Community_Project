@@ -1,5 +1,7 @@
-<!-- Loading State -->
-@if (loading()) {
+<!-- Loading State — only the very first load; later fetches (stat-card
+     click, search, filter, sort) just dim the still-mounted content below
+     instead of tearing the whole page down, so it doesn't blink. -->
+@if (loading() && !pageReady()) {
   <div class="d-flex justify-content-center align-items-center py-5">
     <div class="text-center">
       <div class="spinner-border text-primary mb-3" role="status">
@@ -26,36 +28,40 @@
     </div>
 
     <!-- ── STATS BAR ──────────────────────────────────────────── -->
-    @if (!loading()) {
+    @if (pageReady()) {
       <div class="admin-stats-bar">
-        <div class="admin-stat-card">
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="catFilter() === 'all'"
+          (click)="setCatFilter('all')" aria-label="Show all categories">
           <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-grid"></i></div>
           <div class="admin-stat-card__body">
             <span class="admin-stat-card__value">{{ totalCategories() }}</span>
             <span class="admin-stat-card__label">Categories</span>
           </div>
-        </div>
-        <div class="admin-stat-card">
+        </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="catFilter() === 'nonEmpty'"
+          (click)="setCatFilter('nonEmpty')" aria-label="Filter by categories with businesses">
           <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-shop"></i></div>
           <div class="admin-stat-card__body">
             <span class="admin-stat-card__value">{{ totalBusinesses() }}</span>
             <span class="admin-stat-card__label">Businesses</span>
           </div>
-        </div>
-        <div class="admin-stat-card">
+        </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="catFilter() === 'aboveAvg'"
+          (click)="setCatFilter('aboveAvg')" aria-label="Filter by categories at or above the average">
           <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-bar-chart-line"></i></div>
           <div class="admin-stat-card__body">
             <span class="admin-stat-card__value">{{ avgBusinessesPerCategory() }}</span>
             <span class="admin-stat-card__label">Avg / Category</span>
           </div>
-        </div>
-        <div class="admin-stat-card">
+        </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="catFilter() === 'empty'"
+          (click)="setCatFilter('empty')" aria-label="Filter by empty categories">
           <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-inbox"></i></div>
           <div class="admin-stat-card__body">
             <span class="admin-stat-card__value">{{ emptyCategoriesCount() }}</span>
             <span class="admin-stat-card__label">Empty Categories</span>
           </div>
-        </div>
+        </button>
       </div>
     }
 
@@ -86,9 +92,10 @@
       </div>
     </div>
 
-    <div class="biz-results-section">
-    <!-- Loading skeletons -->
-    @if (loading()) {
+    <div class="biz-results-section" [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
+    <!-- Loading skeletons — only the very first load; later fetches just
+         dim this still-mounted section instead of swapping it out. -->
+    @if (loading() && !pageReady()) {
       <div class="biz-grid">
         @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
           <div class="biz-cat-skeleton">
@@ -382,6 +389,36 @@
       <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
     </div>
 
+    <!-- ── STATS BAR ──────────────────────────────────────────── -->
+    @if (pageReady()) {
+      <div class="admin-stats-bar">
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="filterStatus() === ''"
+          (click)="setStatusFilter('')" aria-label="Show all businesses">
+          <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-shop"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ totalBusinessesStatCount() }}</span>
+            <span class="admin-stat-card__label">Total Businesses</span>
+          </div>
+        </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="filterStatus() === 'active'"
+          (click)="setStatusStatFilter('active')" aria-label="Filter by active businesses">
+          <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ activeBusinessCount() }}</span>
+            <span class="admin-stat-card__label">Active</span>
+          </div>
+        </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="filterStatus() === 'inactive'"
+          (click)="setStatusStatFilter('inactive')" aria-label="Filter by inactive businesses">
+          <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-dash-circle-fill"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ inactiveBusinessCount() }}</span>
+            <span class="admin-stat-card__label">Inactive</span>
+          </div>
+        </button>
+      </div>
+    }
+
     <!-- ── FILTER PANEL ──────────────────────────────────────── -->
     <div class="jb-filter-panel">
       <div class="jb-filter-row jb-filter-row--top">
@@ -410,79 +447,87 @@
           <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
             <i class="bi bi-sliders2"></i>
             Advanced Filters
-            @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-            <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-          </button>
+            @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }          </button>
           @if (activeFilterCount() > 0) {
             <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
           }
         </div>
       </div>
 
-      @if (showAdvancedFilters()) {
-        <div class="jb-advanced-panel animate-slide-in-up">
+    </div>
+
+    <!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+         .jb-adv-drawer. No backdrop: the business list stays fully visible
+         and clickable behind it (only the sidebar auto-minimizes, via
+         LayoutService, to make room) — this is a docked panel, not a
+         blocking modal. -->
+    @if (showAdvancedFilters()) {
+      <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+        <div class="jb-adv-drawer__header">
+          <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+          <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="jb-adv-drawer__body">
 
           <!-- ── Location ─────────────────────────────────────── -->
           <div class="jb-adv-section">
             <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
-            <div class="jb-filter-row jb-filter-row--split">
-              <div class="jb-location-row">
-                <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-                  (ngModelChange)="filterCountry.set($event); applyFilters()"
-                  placeholder="All Countries" searchPlaceholder="Search countries…">
-                </app-searchable-select>
-                <div class="jb-adv-input-wrap jb-adv-input-wrap--icon">
-                  <i class="bi bi-mailbox2 jb-adv-input-icon"></i>
-                  <input type="text" class="form-control jb-adv-input--icon-left" placeholder="Pincode" maxlength="12"
-                    [value]="filterPincode()"
-                    (change)="filterPincode.set($any($event.target).value); applyFilters()"
-                    aria-label="Filter by pincode" />
-                </div>
+            <div class="jb-location-row">
+              <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+                (ngModelChange)="filterCountry.set($event); applyFilters()"
+                placeholder="All Countries" searchPlaceholder="Search countries…">
+              </app-searchable-select>
+              <div class="jb-adv-input-wrap jb-adv-input-wrap--icon">
+                <i class="bi bi-mailbox2 jb-adv-input-icon"></i>
+                <input type="text" class="form-control jb-adv-input--icon-left" placeholder="Pincode" maxlength="12"
+                  [value]="filterPincode()"
+                  (change)="filterPincode.set($any($event.target).value); applyFilters()"
+                  aria-label="Filter by pincode" />
               </div>
             </div>
           </div>
 
-          <!-- ── Opening Hours + Status ───────────────────────── -->
+          <!-- ── Opening Hours ─────────────────────────────────── -->
           <div class="jb-adv-section">
-            <div class="jb-pill-group-row">
-              <div class="jb-pill-group">
-                <span class="jb-filter-section-label"><i class="bi bi-clock"></i> Opening Hours</span>
-                <div class="jb-pill-row" role="group" aria-label="Filter by opening hours">
-                  <button type="button" class="jb-pill-btn"
-                          [class.jb-pill-btn--active]="filterOpeningHours() === null"
-                          (click)="onFilterOpeningHoursChange(null)">
-                    All
-                  </button>
-                  @for (opt of filterOpeningHoursOptions; track opt.value) {
-                    <button type="button" class="jb-pill-btn"
-                            [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
-                            (click)="onFilterOpeningHoursChange(opt.value + '')">
-                      <i class="bi bi-clock-history"></i> {{ opt.label }}
-                    </button>
-                  }
-                </div>
-              </div>
+            <span class="jb-filter-section-label"><i class="bi bi-clock"></i> Opening Hours</span>
+            <div class="jb-pill-row" role="group" aria-label="Filter by opening hours">
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterOpeningHours() === null"
+                      (click)="onFilterOpeningHoursChange(null)">
+                All
+              </button>
+              @for (opt of filterOpeningHoursOptions; track opt.value) {
+                <button type="button" class="jb-pill-btn"
+                        [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
+                        (click)="onFilterOpeningHoursChange(opt.value + '')">
+                  <i class="bi bi-clock-history"></i> {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
 
-              <div class="jb-pill-group">
-                <span class="jb-filter-section-label"><i class="bi bi-toggle-on"></i> Status</span>
-                <div class="jb-pill-row" role="group" aria-label="Filter by status">
-                  <button type="button" class="jb-pill-btn"
-                          [class.jb-pill-btn--active]="filterStatus() === ''"
-                          (click)="setStatusFilter('')">
-                    All
-                  </button>
-                  <button type="button" class="jb-pill-btn"
-                          [class.jb-pill-btn--active]="filterStatus() === 'active'"
-                          (click)="setStatusFilter('active')">
-                    <i class="bi bi-check-circle-fill"></i> Active
-                  </button>
-                  <button type="button" class="jb-pill-btn"
-                          [class.jb-pill-btn--active]="filterStatus() === 'inactive'"
-                          (click)="setStatusFilter('inactive')">
-                    <i class="bi bi-dash-circle-fill"></i> Inactive
-                  </button>
-                </div>
-              </div>
+          <!-- ── Status ────────────────────────────────────────── -->
+          <div class="jb-adv-section">
+            <span class="jb-filter-section-label"><i class="bi bi-toggle-on"></i> Status</span>
+            <div class="jb-pill-row" role="group" aria-label="Filter by status">
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterStatus() === ''"
+                      (click)="setStatusFilter('')">
+                All
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterStatus() === 'active'"
+                      (click)="setStatusFilter('active')">
+                <i class="bi bi-check-circle-fill"></i> Active
+              </button>
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterStatus() === 'inactive'"
+                      (click)="setStatusFilter('inactive')">
+                <i class="bi bi-dash-circle-fill"></i> Inactive
+              </button>
             </div>
           </div>
 
@@ -495,12 +540,13 @@
                   <label class="jb-adv-label" for="bizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
                   <span class="jb-adv-date-help">Start date</span>
                 </div>
-                <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                  <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-                  <input id="bizFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                    (change)="onFilterDateFromChange($event)"
-                    placeholder="From date" />
-                </div>
+                <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
               </div>
 
               <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
@@ -508,12 +554,13 @@
                   <label class="jb-adv-label" for="bizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
                   <span class="jb-adv-date-help">End date</span>
                 </div>
-                <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                  <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-                  <input id="bizFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                    (change)="onFilterDateToChange($event)"
-                    placeholder="To date" />
-                </div>
+                <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
               </div>
             </div>
 
@@ -538,8 +585,17 @@
           </div>
 
         </div>
-      }
-    </div>
+
+        <div class="jb-adv-drawer__footer">
+          <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+            <i class="bi bi-x-circle"></i> Clear All
+          </button>
+          <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+            Done
+          </button>
+        </div>
+      </aside>
+    }
 
     <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
     @if (hasActiveFilters()) {
@@ -590,8 +646,10 @@
       </div>
     }
 
-    <!-- Loading skeletons -->
-    @if (loading()) {
+    <!-- Loading skeletons — only the very first load; later fetches just
+         dim the still-mounted content below instead of swapping it out. -->
+    <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
+    @if (loading() && !pageReady()) {
       <div class="bl-grid">
         @for (_ of [1,2,3,4,5,6]; track $index) {
           <div class="bl-card-skeleton">
@@ -872,6 +930,7 @@
         </div>
       </div>
     }
+    </div>
   }
 
 
@@ -1348,10 +1407,7 @@
                         {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
                       </span>
                     </div>
-                    <label class="cm-switch">
-                      <input type="checkbox" formControlName="isActive" />
-                      <span class="cm-switch-slider"></span>
-                    </label>
+                    <app-toggle formControlName="isActive" ariaLabel="Active"></app-toggle>
                   </div>
                 </div>
               </div>
@@ -1387,10 +1443,7 @@
 
                 <!-- Row 2: Same-as-phone toggle -->
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="sameAsPhone" />
-                    <span>WhatsApp number is same as phone</span>
-                  </label>
+                  <app-toggle formControlName="sameAsPhone" label="WhatsApp number is same as phone" ariaLabel="WhatsApp number is same as phone"></app-toggle>
                 </div>
 
                 <!-- Row 3: WhatsApp — its own Country dropdown only when NOT

@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { UserService, BroadcastPayload } from '../../../../../core/services/user.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { NotificationType } from '../../../../../core/models';
+import { RadioGroupComponent, RadioOption } from '../../../../../shared/components/radio-group/radio-group.component';
 
 type RecipientType = 'all' | 'role' | 'user';
 
 @Component({
   selector: 'app-notification-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RadioGroupComponent],
   templateUrl: './notification-modal.component.html',
   styleUrls: ['./notification-modal.component.scss'],
 })
@@ -22,6 +23,13 @@ export class NotificationModalComponent {
   private toast       = inject(ToastService);
 
   recipient    = signal<RecipientType>('all');
+
+  /** "Send To" radio group (app-radio-group, card variant). */
+  readonly recipientOptions: RadioOption[] = [
+    { value: 'all',  label: 'All Users',     icon: 'bi-people-fill' },
+    { value: 'role', label: 'By Role',       icon: 'bi-person-gear' },
+    { value: 'user', label: 'Specific User', icon: 'bi-person-fill' },
+  ];
   roleTarget   = signal<'ADMIN' | 'USER'>('USER');
   userId       = signal('');
   notifType    = signal<NotificationType>('COMMUNITY_POST');

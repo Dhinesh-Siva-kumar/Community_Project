@@ -134,19 +134,12 @@
             <!-- Visibility Toggles — non-admins only ever get Private -->
             <div class="cm-field-group">
               <label class="cm-label">Visibility <span class="cm-required">*</span></label>
-              <div class="cm-toggle-group"
-                   [class.cm-toggle-group--error]="formSubmitAttempted() && !isEditing() && !f['visibility'].value">
-                <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'private'">
-                  <input type="radio" formControlName="visibility" value="private" hidden />
-                  <i class="bi bi-lock-fill me-1"></i> Private
-                </label>
-                @if (isAdminUser()) {
-                  <label class="cm-toggle-pill" [class.cm-toggle-active]="f['visibility'].value === 'global'">
-                    <input type="radio" formControlName="visibility" value="global" hidden />
-                    <i class="bi bi-globe2 me-1"></i> Global
-                  </label>
-                }
-              </div>
+              <app-radio-group
+                formControlName="visibility"
+                [options]="visibilityOptions()"
+                [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
+                ariaLabel="Visibility">
+              </app-radio-group>
               @if (!isAdminUser()) {
                 <div class="cm-default-hint">Your communities are always Private, scoped to your own country.</div>
               }
@@ -161,16 +154,11 @@
           <!-- Community Mode -->
           <div class="cm-field-group">
             <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
-            <div class="cm-toggle-group">
-              <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'HELP_EMERGENCY'">
-                <input type="radio" formControlName="communityMode" value="HELP_EMERGENCY" hidden />
-                <i class="bi bi-life-preserver me-1"></i> Help &amp; Emergency Assistance
-              </label>
-              <label class="cm-toggle-pill" [class.cm-toggle-active]="f['communityMode'].value === 'ENQUIRE'">
-                <input type="radio" formControlName="communityMode" value="ENQUIRE" hidden />
-                <i class="bi bi-question-circle-fill me-1"></i> Enquire
-              </label>
-            </div>
+            <app-radio-group
+              formControlName="communityMode"
+              [options]="communityModeOptions"
+              ariaLabel="Community mode">
+            </app-radio-group>
             <div class="cm-default-hint">
               @if (f['communityMode'].value === 'ENQUIRE') {
                 Members can raise and track enquiries in a dedicated Enquire tab.
@@ -188,10 +176,7 @@
                 <span>Default Community</span>
                 <span class="cm-default-hint">Mark this as the default community for new users</span>
               </div>
-              <label class="cm-switch">
-                <input type="checkbox" formControlName="isDefault" />
-                <span class="cm-switch-slider"></span>
-              </label>
+              <app-toggle formControlName="isDefault" ariaLabel="Default community"></app-toggle>
             </div>
           }
         </div>

@@ -37,6 +37,12 @@ export class UserManagementComponent implements OnInit {
   // ── Data ──────────────────────────────────────────────────────────────────
   users      = signal<User[]>([]);
   loading    = signal(true);
+  // Gates the full-page skeleton — true only until the very first fetch
+  // resolves, then stays true forever after. Later fetches (stat-card
+  // click, search, filter, sort) still flip `loading`, but the live page
+  // stays mounted throughout instead of unmounting into a skeleton and
+  // back, which read as the whole page blinking.
+  pageReady  = signal(false);
   stats      = signal({ total: 0, active: 0, blocked: 0, trusted: 0, adminCount: 0 });
   total      = signal(0);
   totalPages = signal(1);
@@ -185,10 +191,12 @@ export class UserManagementComponent implements OnInit {
         this.totalPages.set(res.totalPages);
         this.stats.set(res.stats);
         this.loading.set(false);
+        this.pageReady.set(true);
       },
       error: () => {
         this.toast.error('Failed to load users');
         this.loading.set(false);
+        this.pageReady.set(true);
       },
     });
   }

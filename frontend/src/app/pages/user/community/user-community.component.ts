@@ -279,10 +279,10 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     return params;
   }
 
-  /** "Pending Approval" tab — the caller's own communities across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own communities awaiting admin approval only. */
   private fetchCommunitiesForCurrentTab(page: number) {
     if (this.activeTab() === 'pending') {
-      return this.communityService.getMyCreatedCommunities({ page, limit: this.pageSize() });
+      return this.communityService.getMyCreatedCommunities({ page, limit: this.pageSize(), approvalStatus: 'PENDING' });
     }
     return this.communityService.getCommunities(this.buildCommunitiesParams(page));
   }

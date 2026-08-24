@@ -20,10 +20,12 @@
         <div class="ntf-loading"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
       } @else {
         <div class="ntf-prefs-digest">
-          <label class="ntf-switch">
-            <input type="checkbox" [checked]="emailDigestEnabled()" (change)="toggleEmailDigest()" />
-            <span class="ntf-switch-track"><span class="ntf-switch-thumb"></span></span>
-          </label>
+          <app-toggle
+            [ngModel]="emailDigestEnabled()"
+            (ngModelChange)="toggleEmailDigest()"
+            [ngModelOptions]="{ standalone: true }"
+            ariaLabel="Email me a daily summary">
+          </app-toggle>
           <div>
             <span class="ntf-prefs-digest-title">Email me a daily summary</span>
             <span class="ntf-prefs-digest-sub">Get a once-a-day email of anything you missed.</span>
@@ -32,13 +34,16 @@
 
         <div class="ntf-prefs-list">
           @for (t of allTypes; track t) {
-            <label class="ntf-prefs-row">
+            <div class="ntf-prefs-row">
               <span>{{ typeLabel(t) }}</span>
-              <span class="ntf-switch">
-                <input type="checkbox" [checked]="isTypeEnabled(t)" (change)="toggleType(t)" />
-                <span class="ntf-switch-track"><span class="ntf-switch-thumb"></span></span>
-              </span>
-            </label>
+              <app-toggle
+                size="sm"
+                [ngModel]="isTypeEnabled(t)"
+                (ngModelChange)="toggleType(t)"
+                [ngModelOptions]="{ standalone: true }"
+                [ariaLabel]="typeLabel(t)">
+              </app-toggle>
+            </div>
           }
         </div>
       }

@@ -5,6 +5,21 @@
 // Extends user jobs design + admin stats bar + delete confirm
 // ═══════════════════════════════════════════════════════════════
 
+// Pushes the page's own content left while the Advanced Filters drawer is
+// open, instead of letting the fixed-position drawer just sit on top of —
+// and hide — the right edge of the job list. Reverts on mobile, where the
+// drawer covers the full viewport anyway (see .jb-adv-drawer below).
+:host {
+  display: block;
+  transition: padding-right 280ms cubic-bezier(.22, 1, .36, 1);
+}
+
+:host(.jb-adv-open) {
+  padding-right: 340px;
+
+  @include media-sm-max { padding-right: 0; }
+}
+
 // ── ADMIN STATS BAR ──────────────────────────────────────────────
 .admin-stats-bar {
   display: flex;
@@ -26,6 +41,12 @@
   min-height: 88px;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
   @include transition-short(all);
+  // Now a clickable filter trigger (see (click)="setJobTypeFilter(...)" in
+  // the template) rather than a plain info card, so reset <button> defaults.
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
 
   &:hover {
     border-color: rgba(251, 191, 36, 0.55);
@@ -34,6 +55,11 @@
   }
 
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &--active {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: $color-primary;
+  }
 
   &__icon {
     width: 44px;
@@ -65,7 +91,6 @@
 
   @include media-sm-max { &__value { font-size: $font-size-xl; } }
 }
-
 
 // ── Shared page + toolbar styles (same as user) ──────────────────
 
@@ -234,7 +259,6 @@
 .jb-page-header__sub { font-size: $font-size-xs; color: $color-text-muted; margin: 0; }
 .jb-page-header__actions { display: flex; align-items: center; gap: $spacing-sm; flex-shrink: 0; }
 
-
 // ── BUTTONS ───────────────────────────────────────────────────────
 .jb-btn {
   display: inline-flex;
@@ -267,7 +291,6 @@
 
   &--sm { padding: 8px 16px; font-size: $font-size-xs; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // FILTER PANEL — same as user component
@@ -410,12 +433,6 @@
   font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
 }
 
-.jb-advanced-chevron {
-  font-size: 0.75rem;
-  transition: transform $duration-base $easing-standard;
-  &--open { transform: rotate(180deg); }
-}
-
 .jb-clear-all-btn {
   display: inline-flex; align-items: center; gap: 5px;
   border: none; background: none; padding: 6px 10px;
@@ -427,12 +444,86 @@
   &--inline { margin-left: auto; color: $color-stone-500; &:hover { color: $color-danger; background: none; } }
 }
 
-.jb-advanced-panel {
-  padding: $spacing-lg;
-  background: $color-bg-page;
-  border: 1px solid $color-border;
-  border-radius: $radius-md;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(28, 25, 23, 0.04);
+// ── Advanced Filters — right-side drawer, matches the User Jobs page's
+// .jb-adv-drawer. No backdrop: it's a docked panel, not a blocking modal,
+// so the job list stays fully visible and clickable behind it. Sidebar
+// auto-collapse is driven from the TS side (LayoutService). ──
+@keyframes jbAdvDrawerIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.jb-adv-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  max-width: 100vw;
+  background: $color-bg-card;
+  z-index: $z-modal;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 40px rgba(28, 25, 23, 0.16);
+  animation: jbAdvDrawerIn 280ms cubic-bezier(.22, 1, .36, 1);
+
+  @include media-sm-max { width: 100vw; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $color-border;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-family: $font-family-header;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    color: $color-stone-900;
+    .bi { color: $color-primary-dark; }
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-bg-light;
+    color: $color-stone-600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    @include transition-quick(all);
+    &:hover { background: $color-error-bg; color: $color-danger; }
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $spacing-lg;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    border-top: 1px solid $color-border;
+    flex-shrink: 0;
+  }
 }
 
 .jb-adv-section {
@@ -448,15 +539,18 @@
   }
 }
 
+// Always rendered inside the ~340px-wide Advanced Filters drawer now
+// (see .jb-adv-drawer) rather than the full-width filter panel, so a
+// multi-column split no longer fits — single column throughout.
 .jb-advanced-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: $spacing-md;
 }
 
 .jb-adv-field {
   display: flex; flex-direction: column; gap: 6px;
-  &--wide { grid-column: span 2; @include media-sm-max { grid-column: span 1; } }
+  &--wide { grid-column: span 1; }
 }
 
 .jb-adv-label {
@@ -566,19 +660,12 @@
   &__text  { font-size: $font-size-sm; color: $color-text-muted; max-width: 360px; line-height: 1.6; margin-bottom: $spacing-lg; }
 }
 
-
 // ── RESPONSIVE ───────────────────────────────────────────────────
-@include media-lg-max {
-  .jb-filter-row--split { flex-direction: column; gap: $spacing-md; }
-  .jb-location-row { width: 100%; }
-}
-
 @include media-md-max {
   .admin-stats-bar .admin-stat-card { flex: 1 1 calc(50% - #{$spacing-sm}); }
   .jb-page-header { flex-direction: column; align-items: flex-start; padding: $spacing-lg; }
   .jb-filter-panel { padding: $spacing-md; }
   .jb-filter-row--top { .jb-search-wrap { min-width: 100%; flex: 0 0 100%; } }
-  .jb-advanced-grid { grid-template-columns: 1fr 1fr; }
   .jb-card__header { padding: $spacing-md; gap: $spacing-sm; }
   .jb-accordion { padding: 0 $spacing-md $spacing-md; }
   .jb-acc-grid { grid-template-columns: 1fr; }
@@ -591,8 +678,6 @@
 
 @include media-sm-max {
   .admin-stats-bar .admin-stat-card { flex: 1 1 100%; }
-  .jb-advanced-grid { grid-template-columns: 1fr; }
-  .jb-adv-field--wide { grid-column: span 1; }
   .jb-adv-salary-row { flex-direction: column; }
   .jb-adv-range { flex-direction: column; align-items: stretch; }
   .jb-card__toggle { width: 32px; height: 32px; }
@@ -600,7 +685,6 @@
   .jb-acc-posted { margin-left: 0; }
   .um-pagination__left { flex-wrap: wrap; }
 }
-
 
 // ── RESULTS META ─────────────────────────────────────────────────
 .jb-meta {
@@ -636,7 +720,6 @@
   }
 }
 
-
 // ── SKELETON ─────────────────────────────────────────────────────
 .jb-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: $spacing-lg; }
 
@@ -665,7 +748,6 @@
   50%       { background-color: $color-stone-200; }
 }
 .skeleton-pulse { animation: skeletonPulse 1.6s ease-in-out infinite; }
-
 
 // ── JOB CARD ─────────────────────────────────────────────────────
 .jb-card {
@@ -798,9 +880,10 @@
 }
 
 .jb-list .jb-card {
-  @for $i from 1 through 12 { &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}ms; } }
-}
+  @for $i from 1 through 12 { &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}
 
+ms; } }
+}
 
 // ── ADMIN-SPECIFIC: DELETE ACTIONS ───────────────────────────────
 .jb-admin-actions {
@@ -872,7 +955,6 @@
   }
 }
 
-
 // ── BADGE SYSTEM (shared) ─────────────────────────────────────────
 .jb-badge {
   display: inline-flex;
@@ -896,8 +978,6 @@
   &--onsite     { background: $color-stone-100; color: $color-stone-700; }
 }
 
-
-
 // ── ACCORDION BODY (legacy wrapper kept for compatibility) ───────
 .jb-accordion {
   padding: 0 $spacing-lg $spacing-lg;
@@ -914,17 +994,37 @@
 .jb-acc-grid { display:grid;grid-template-columns:1fr 1fr;gap:$spacing-sm;margin-bottom:$spacing-md;@include media-sm-max{grid-template-columns:1fr;} }
 .jb-acc-panel { padding:$spacing-md;background:rgba(255,255,255,0.80);border:1px solid rgba(251,191,36,0.18);border-radius:$radius-md;&__title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.07em;color:$color-stone-500;margin-bottom:$spacing-sm;.bi{color:$color-primary-dark;}} }
 .jb-acc-rows { display:flex;flex-direction:column;gap:6px; }
-.jb-acc-row { display:flex;justify-content:space-between;align-items:center;gap:$spacing-sm;&__lbl{font-size:$font-size-xs;color:$color-stone-400;white-space:nowrap;}&__val{font-size:$font-size-sm;font-weight:$font-weight-medium;color:$color-stone-800;text-align:right;} }
+.jb-acc-row { display:flex;justify-content:space-between;align-items:center;gap:$spacing-sm;&__lbl{font-size:$font-size-xs;color:$color-stone-400;white-space:nowrap;}
+
+&__val{font-size:$font-size-sm;font-weight:$font-weight-medium;color:$color-stone-800;text-align:right;} }
 .jb-acc-salary { &__amount { font-size:$font-size-lg;font-weight:$font-weight-bold;color:#15803D;line-height:1.2; } }
 .jb-acc-not-disclosed { display:inline-flex;align-items:center;gap:5px;font-size:$font-size-sm;color:$color-stone-500;font-style:italic;.bi{font-size:0.9em;} }
 .jb-acc-na { font-size:$font-size-sm;color:$color-stone-400; }
-.jb-acc-strip { display:flex;align-items:flex-start;gap:$spacing-sm;padding:10px $spacing-md;background:rgba(255,255,255,0.80);border:1px solid rgba(251,191,36,0.15);border-radius:$radius-md;margin-bottom:$spacing-sm;&__icon{font-size:0.9rem;flex-shrink:0;margin-top:2px;&--loc{color:#DC2626;}&--time{color:#0284C7;}}&__lbl{display:block;font-size:10px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.06em;color:$color-stone-400;margin-bottom:2px;}&__val{font-size:$font-size-sm;font-weight:$font-weight-medium;color:$color-stone-800;}&__sub{display:block;font-size:$font-size-xs;color:$color-stone-400;margin-top:2px;} }
+.jb-acc-strip { display:flex;align-items:flex-start;gap:$spacing-sm;padding:10px $spacing-md;background:rgba(255,255,255,0.80);border:1px solid rgba(251,191,36,0.15);border-radius:$radius-md;margin-bottom:$spacing-sm;&__icon{font-size:0.9rem;flex-shrink:0;margin-top:2px;&--loc{color:#DC2626;}
+
+&--time{color:#0284C7;}}
+
+&__lbl{display:block;font-size:10px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.06em;color:$color-stone-400;margin-bottom:2px;}
+
+&__val{font-size:$font-size-sm;font-weight:$font-weight-medium;color:$color-stone-800;}
+
+&__sub{display:block;font-size:$font-size-xs;color:$color-stone-400;margin-top:2px;} }
 .jb-day-pills { display:flex;flex-wrap:wrap;gap:4px;margin-top:6px; }
 .jb-day-pill { padding:2px 8px;border-radius:$radius-full;font-size:11px;font-weight:$font-weight-semibold;background:$color-stone-100;color:$color-stone-400;border:1px solid $color-stone-200;&--on{background:rgba(251,191,36,0.15);color:$color-primary-darker;border-color:rgba(251,191,36,0.40);} }
 .jb-skill-chips { display:flex;flex-wrap:wrap;gap:6px; }
 .jb-skill-chip { padding:4px 12px;border-radius:$radius-full;font-size:$font-size-xs;font-weight:$font-weight-semibold;background:rgba(251,191,36,0.12);color:$color-primary-darker;border:1px solid rgba(251,191,36,0.30); }
-.jb-acc-section { margin-bottom:$spacing-md;&:last-of-type{margin-bottom:0;}&__title{display:flex;align-items:center;gap:6px;font-size:$font-size-sm;font-weight:$font-weight-semibold;color:$color-stone-700;margin-bottom:$spacing-sm;padding-bottom:8px;border-bottom:1px solid rgba(251,191,36,0.15);.bi{color:$color-primary-dark;}}&__text{font-size:$font-size-sm;color:$color-text-body;line-height:1.75;white-space:pre-wrap;margin:0;} }
-.jb-acc-contact { padding:$spacing-md;background:rgba(255,255,255,0.80);border:1px solid rgba(251,191,36,0.15);border-radius:$radius-md;margin-bottom:$spacing-md;&__title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.07em;color:$color-stone-500;margin-bottom:$spacing-sm;.bi{color:$color-primary-dark;}}&__list{display:flex;flex-direction:column;gap:6px;}&__item{display:flex;align-items:center;gap:$spacing-sm;font-size:$font-size-sm;color:$color-stone-700;.bi{color:$color-stone-400;font-size:0.85rem;flex-shrink:0;}a{color:$color-info;text-decoration:none;&:hover{text-decoration:underline;}}} }
+.jb-acc-section { margin-bottom:$spacing-md;&:last-of-type{margin-bottom:0;}
+
+&__title{display:flex;align-items:center;gap:6px;font-size:$font-size-sm;font-weight:$font-weight-semibold;color:$color-stone-700;margin-bottom:$spacing-sm;padding-bottom:8px;border-bottom:1px solid rgba(251,191,36,0.15);.bi{color:$color-primary-dark;}}
+
+&__text{font-size:$font-size-sm;color:$color-text-body;line-height:1.75;white-space:pre-wrap;margin:0;} }
+.jb-acc-contact { padding:$spacing-md;background:rgba(255,255,255,0.80);border:1px solid rgba(251,191,36,0.15);border-radius:$radius-md;margin-bottom:$spacing-md;&__title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.07em;color:$color-stone-500;margin-bottom:$spacing-sm;.bi{color:$color-primary-dark;}}
+
+&__list{display:flex;flex-direction:column;gap:6px;}
+
+&__item{display:flex;align-items:center;gap:$spacing-sm;font-size:$font-size-sm;color:$color-stone-700;.bi{color:$color-stone-400;font-size:0.85rem;flex-shrink:0;}
+
+a{color:$color-info;text-decoration:none;&:hover{text-decoration:underline;}}} }
 .jb-gallery { display:flex;flex-wrap:wrap;gap:$spacing-sm; }
 .jb-gallery__img { width:100px;height:70px;object-fit:cover;border-radius:$radius-sm;border:1px solid rgba(251,191,36,0.20);cursor:zoom-in;@include transition-short(all);&:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,0.14);} }
 .jb-acc-actions { display:flex;align-items:center;flex-wrap:wrap;gap:$spacing-sm;padding-top:$spacing-md;margin-top:$spacing-md;border-top:1px solid rgba(251,191,36,0.18); }
@@ -946,11 +1046,38 @@
 
 .jbd-meta-pill { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;background:rgba(255,255,255,0.80);border:1px solid $color-border;font-size:11px;font-weight:$font-weight-medium;color:$color-stone-500;white-space:nowrap;.bi{font-size:0.75rem;} &--date{color:$color-stone-500;} &--updated{color:#0284C7;border-color:rgba(2,132,199,0.25);background:rgba(224,242,254,0.50);} &--link{color:$color-info;border-color:rgba(14,165,233,0.30);text-decoration:none;@include transition-short(all);&:hover{background:rgba(224,242,254,0.60);}} }
 
-.jbd-status-badge { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;font-size:11px;font-weight:$font-weight-bold;.bi{font-size:7px;} &--active{background:rgba(22,163,74,0.10);border:1px solid rgba(22,163,74,0.30);color:#15803D;.bi{color:#16A34A;}} &--draft{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35);color:$color-primary-darker;} &--closed{background:$color-stone-100;border:1px solid $color-border;color:$color-stone-500;} }
+.jbd-status-badge {
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:$radius-full;font-size:11px;font-weight:$font-weight-bold;.bi{font-size:7px;}
+  &--active{background:rgba(22,163,74,0.10);border:1px solid rgba(22,163,74,0.30);color:#15803D;.bi{color:#16A34A;}}
+  &--draft{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35);color:$color-primary-darker;}
+  &--closed{background:$color-stone-100;border:1px solid $color-border;color:$color-stone-500;}
+  // Moderation status — the table's dedicated Approval column.
+  &--approved{background:#D1FAE5;border:1px solid #A7F3D0;color:#065F46;}
+  &--rejected{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;}
+  // Links to the Job Approval page — jobs awaiting moderation.
+  &--pending {
+    background: #FEF3C7; border: 1px solid #FDE68A; color: #92400E;
+    text-decoration: none; cursor: pointer;
+    .bi { font-size: 10px; }
+    transition: filter $duration-short $easing-standard, transform $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
+    &:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(28, 25, 23, 0.14); }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
+}
 
 .jbd-info-grid { display:grid;grid-template-columns:repeat(auto-fill, minmax(155px,1fr));gap:10px; }
 
-.jbd-info-card { display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:$spacing-md;background:$color-bg-card;border:1px solid $color-border;border-radius:$radius-md;transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;&:hover{border-color:rgba(251,191,36,0.40);box-shadow:0 2px 8px rgba(251,191,36,0.10);} &__icon{width:34px;height:34px;border-radius:$radius-sm;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;&--type{background:rgba(251,191,36,0.12);color:$color-primary-darker;}&--mode{background:#EDE9FE;color:#7C3AED;}&--exp{background:#FFEDD5;color:#EA580C;}&--edu{background:#DCFCE7;color:#15803D;}&--openings{background:#E0F2FE;color:#0284C7;}&--shift{background:rgba(22,163,74,0.10);color:#15803D;}} &__body{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;} &__label{font-size:10px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.07em;color:$color-stone-400;white-space:nowrap;} &__value{font-size:$font-size-sm;font-weight:$font-weight-bold;color:$color-stone-800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} }
+.jbd-info-card { display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:$spacing-md;background:$color-bg-card;border:1px solid $color-border;border-radius:$radius-md;transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;&:hover{border-color:rgba(251,191,36,0.40);box-shadow:0 2px 8px rgba(251,191,36,0.10);} &__icon{width:34px;height:34px;border-radius:$radius-sm;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;&--type{background:rgba(251,191,36,0.12);color:$color-primary-darker;}
+
+&--mode{background:#EDE9FE;color:#7C3AED;}
+
+&--exp{background:#FFEDD5;color:#EA580C;}
+
+&--edu{background:#DCFCE7;color:#15803D;}
+
+&--openings{background:#E0F2FE;color:#0284C7;}
+
+&--shift{background:rgba(22,163,74,0.10);color:#15803D;}} &__body{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;} &__label{font-size:10px;font-weight:$font-weight-semibold;text-transform:uppercase;letter-spacing:0.07em;color:$color-stone-400;white-space:nowrap;} &__value{font-size:$font-size-sm;font-weight:$font-weight-bold;color:$color-stone-800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} }
 
 .jbd-two-col { display:grid;grid-template-columns:1fr 1fr;gap:$spacing-md;align-items:stretch; & > .jbd-section{height:100%;} }
 
@@ -962,7 +1089,13 @@
 // wrapping only on very narrow viewports instead of stacking by default.
 .jbd-schedule-card { padding:7px $spacing-md;background:$color-bg-card;border:1px solid $color-border;border-radius:$radius-md;display:flex;flex-wrap:wrap;align-items:center;gap:$spacing-sm; }
 
-.jbd-content-split { display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,32%);gap:$spacing-lg;align-items:start; }
+.jbd-content-split { display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,32%);gap:$spacing-lg;align-items:start; &--single{grid-template-columns:1fr;} }
+
+// Stacked sections (Skills Required / Hiring Manager / Gallery) had no gap
+// of their own — they relied entirely on .jbd-content-split's column gap,
+// which only separates main from side, so consecutive side sections
+// butted directly against each other.
+.jbd-content-split__side { display:flex;flex-direction:column;gap:$spacing-lg; }
 
 .jbd-hiring-card { display:flex;align-items:center;gap:$spacing-md;padding:$spacing-md;background:$color-bg-card;border:1px solid $color-border;border-radius:$radius-lg; &__avatar{width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-family:$font-family-header;font-size:$font-size-sm;font-weight:$font-weight-bold;} &__body{min-width:0;} &__name{font-size:$font-size-sm;font-weight:$font-weight-bold;color:$color-stone-800;margin:0 0 2px;} &__link{display:block;font-size:$font-size-xs;color:$color-text-muted;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;&:hover{color:$color-primary-darker;text-decoration:underline;}} }
 
@@ -984,7 +1117,9 @@
 
 .jbd-description { &__text{font-size:$font-size-sm;color:$color-text-body;line-height:1.85;white-space:pre-wrap;margin:0;word-break:break-word;} }
 
-.jbd-show-more-btn { display:inline-flex;align-items:center;gap:5px;margin-top:$spacing-sm;padding:0;border:none;background:none;font-size:$font-size-sm;font-weight:$font-weight-semibold;color:$color-primary-darker;cursor:pointer;@include transition-quick(color);.bi{font-size:0.8rem;}&:hover{color:$color-primary-dark;} }
+.jbd-show-more-btn { display:inline-flex;align-items:center;gap:5px;margin-top:$spacing-sm;padding:0;border:none;background:none;font-size:$font-size-sm;font-weight:$font-weight-semibold;color:$color-primary-darker;cursor:pointer;@include transition-quick(color);.bi{font-size:0.8rem;}
+
+&:hover{color:$color-primary-dark;} }
 
 .jbd-gallery { display:flex;flex-wrap:wrap;gap:$spacing-sm;
   &__btn{background:none;border:none;padding:0;cursor:pointer;display:block;
@@ -1003,6 +1138,21 @@
 
     .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: span 2; }
     .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 16 / 9; }
+
+    // In the "minimal" job detail layout (no description — see
+    // .jbd-content-split--single), this side column stretches to the full
+    // page width, so the 2-wide grid above would blow each photo up to
+    // roughly half the page. Switch to small fixed-size tiles that just
+    // wrap to fit instead, and drop the odd-count "big cover" tile sizing
+    // that was tuned for the narrow 2-column sidebar.
+    .jbd-content-split--single & {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 120px));
+      justify-content: flex-start;
+
+      .jbd-gallery__btn { width: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 1 / 1; }
+    }
   }
 }
 
@@ -1074,7 +1224,6 @@
   font-size: $font-size-xs; color: $color-stone-400; font-style: italic;
   .bi { font-size: 0.8em; color: #0284C7; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // POST JOB MODAL — shared with user component
@@ -1387,10 +1536,6 @@
   &--on { background: linear-gradient(135deg, $color-primary, $color-saffron); border-color: transparent; color: $color-on-primary; box-shadow: 0 2px 6px rgba(251,191,36,0.30); }
 }
 
-.jb-checkbox-label { display: flex; align-items: center; gap: $spacing-sm; cursor: pointer; user-select: none; }
-.jb-checkbox       { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid $color-border; cursor: pointer; accent-color: $color-primary; flex-shrink: 0; }
-.jb-checkbox-text  { font-size: $font-size-sm; color: $color-stone-700; line-height: 1.4; }
-
 .jb-phone-field {
   display: flex; gap: $spacing-sm; align-items: stretch;
   &__dial   { flex: 0 0 140px; }
@@ -1413,7 +1558,6 @@
   .jb-phone-field   { flex-direction: column; &__dial { flex: none; } }
 }
 
-
 // ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
 // Uses .um-iab (defined further below, alongside the Table view's Actions
 // column) — same icon-button style as the Community/Business admin pages.
@@ -1431,7 +1575,6 @@
   background: $color-border;
   flex-shrink: 0;
 }
-
 
 // Delete confirmation is a nested/stacked confirmation — it can be opened
 // from within the Table-view detail popup (which stays open underneath it,
@@ -1503,7 +1646,32 @@
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
-  overflow: hidden;
+
+  // Fixed-size variant used by the table view — mirrors the Community/Events
+  // admin pages: sticky header + its own internal scroll instead of growing
+  // the whole page.
+  &--fixed {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .table-responsive {
+      overflow-y: auto;
+      max-height: calc(100vh - 420px);
+      min-height: 220px;
+      overscroll-behavior: contain;
+
+      scrollbar-width: thin;
+      scrollbar-color: rgba(251, 191, 36, 0.45) transparent;
+
+      &::-webkit-scrollbar       { width: 6px; }
+      &::-webkit-scrollbar-track { background: transparent; }
+      &::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.45); border-radius: 999px; }
+      &::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.7); }
+    }
+
+    .um-th { position: sticky; top: 0; z-index: 2; }
+  }
 }
 
 .um-table {
@@ -1512,6 +1680,8 @@
 
   thead tr:first-child th:first-child { border-top-left-radius: $radius-lg; }
   thead tr:first-child th:last-child  { border-top-right-radius: $radius-lg; }
+  tbody tr:last-child td:first-child  { border-bottom-left-radius: $radius-lg; }
+  tbody tr:last-child td:last-child   { border-bottom-right-radius: $radius-lg; }
 }
 
 .um-th {
@@ -1525,6 +1695,8 @@
   border-bottom: 1px solid $color-border;
   white-space: nowrap;
 
+  &--actions { text-align: right; padding-right: 16px; }
+
   &--sortable {
     cursor: pointer;
     user-select: none;
@@ -1536,13 +1708,15 @@
   &--active { color: $color-primary-dark; font-weight: $font-weight-bold; }
 }
 
-// Only rendered in the template when its column is the active sort, so it
-// always shows an up/down arrow confirming direction — never a neutral
-// icon on unsorted columns.
+// Always rendered — shows a neutral icon on unsorted columns, and the
+// direction arrow only on the active one (mirrors Community/Events).
 .um-th__sort-icon {
   margin-left: 4px;
   font-size: 0.65rem;
-  color: $color-primary-dark;
+  opacity: 0.5;
+
+  .um-th--sortable:hover & { opacity: 0.8; }
+  .um-th--active & { opacity: 1; color: $color-primary-dark; }
 }
 
 .um-td {
@@ -1698,6 +1872,16 @@
   &__info {
     font-size: $font-size-sm; color: $color-text-muted; white-space: nowrap;
     strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
+  }
+
+  // Nested inside .um-table-card--fixed — shares the card's border/shadow
+  // instead of drawing its own, and stays pinned as a non-scrolling footer.
+  &--nested {
+    margin-top: 0;
+    flex-shrink: 0;
+    border: none;
+    border-top: 1px solid $color-border;
+    border-radius: 0 0 $radius-lg $radius-lg;
   }
 }
 

@@ -10,12 +10,13 @@ import {
   AUDIT_ACTION_OPTIONS, AUDIT_RESOURCE_OPTIONS,
   formatAuditAction, formatAuditResource, getAuditActionColor, getAuditActionIcon,
 } from '../../../core/constants/audit-actions';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 @Component({
   selector: 'app-audit-log',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DatePipe, FormsModule, SearchableSelectComponent],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent],
   templateUrl: './audit-log.component.html',
   styleUrls: ['./audit-log.component.scss'],
 })

@@ -1,8 +1,9 @@
-import { Component, OnInit, HostListener, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -10,6 +11,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -36,13 +38,18 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the business list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserBusinessComponent implements OnInit {
+export class UserBusinessComponent implements OnInit, OnDestroy {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
+  private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
 
   // ── View state ──────────────────────────────────────────────
@@ -52,6 +59,22 @@ export class UserBusinessComponent implements OnInit {
   /** 'all' = public browse (List/Categories toggle above), 'pending' = the caller's own submissions across every status */
   pageTab          = signal<'all' | 'pending'>('all');
   myPendingBusinessCount = signal(0);
+
+  // ── Sliding active-pill indicators (JS-measured, same approach as the
+  // User Community page's .uc-tab-indicator) for both tab rows below — the
+  // All/Pending row and the List/Category row. A fixed 50%/translateX(100%)
+  // ignores the row's flex gap and bleeds the pill's border onto the
+  // neighbouring tab, so position/width are read from the real button box
+  // instead. ──
+  private tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabBtn');
+  tabIndicatorLeft  = signal(0);
+  tabIndicatorWidth = signal(0);
+  tabIndicatorReady = signal(false);
+
+  private viewTabButtons = viewChildren<ElementRef<HTMLButtonElement>>('viewTabBtn');
+  viewTabIndicatorLeft  = signal(0);
+  viewTabIndicatorWidth = signal(0);
+  viewTabIndicatorReady = signal(false);
 
   // ── Master data ─────────────────────────────────────────────
   categories       = signal<BusinessCategory[]>([]);
@@ -241,6 +264,43 @@ export class UserBusinessComponent implements OnInit {
       this.catSortBy();
       this.visibleCategoryCount.set(this.CATEGORY_BATCH_SIZE);
     });
+
+    // Slide each pill under whichever tab is active in its row — recomputed
+    // whenever the active tab changes or the buttons first mount.
+    effect(() => {
+      this.tabButtons();
+      this.pageTab();
+      this.updateIndicator(this.tabButtons(), this.pageTab() === 'all' ? 0 : 1,
+        this.tabIndicatorLeft, this.tabIndicatorWidth, this.tabIndicatorReady);
+    });
+    effect(() => {
+      this.viewTabButtons();
+      this.businessView();
+      this.updateIndicator(this.viewTabButtons(), this.businessView() === 'list' ? 0 : 1,
+        this.viewTabIndicatorLeft, this.viewTabIndicatorWidth, this.viewTabIndicatorReady);
+    });
+  }
+
+  @HostListener('window:resize')
+  onTabRowResize(): void {
+    this.updateIndicator(this.tabButtons(), this.pageTab() === 'all' ? 0 : 1,
+      this.tabIndicatorLeft, this.tabIndicatorWidth, this.tabIndicatorReady);
+    this.updateIndicator(this.viewTabButtons(), this.businessView() === 'list' ? 0 : 1,
+      this.viewTabIndicatorLeft, this.viewTabIndicatorWidth, this.viewTabIndicatorReady);
+  }
+
+  private updateIndicator(
+    buttons: readonly ElementRef<HTMLButtonElement>[],
+    activeIndex: number,
+    leftSig: WritableSignal<number>,
+    widthSig: WritableSignal<number>,
+    readySig: WritableSignal<boolean>,
+  ): void {
+    const btn = buttons[activeIndex]?.nativeElement;
+    if (!btn) return;
+    leftSig.set(btn.offsetLeft);
+    widthSig.set(btn.offsetWidth);
+    readySig.set(true);
   }
 
   ngOnInit(): void {
@@ -254,6 +314,10 @@ export class UserBusinessComponent implements OnInit {
     this.loadCountries();
     this.requestGeolocation();
     this.loadMyPendingBusinessCount();
+  }
+
+  ngOnDestroy(): void {
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   /** The signed-in user's own country — the default the country filter starts/resets to. */
@@ -453,12 +517,12 @@ export class UserBusinessComponent implements OnInit {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own businesses across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own businesses awaiting admin approval only. */
   loadMyBusinesses(): void {
     this.currentView.set('list');
     this.businessView.set('list');
     this.loading.set(true);
-    this.svc.getMyBusinesses({ page: 1, limit: 100 }).subscribe({
+    this.svc.getMyBusinesses({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
       next: (res: PaginatedResponse<Business>) => {
         this.businesses.set(res.data);
         this.allFilteredBusinesses.set(res.data);
@@ -482,6 +546,12 @@ export class UserBusinessComponent implements OnInit {
   }
 
   switchView(view: 'list' | 'categories'): void {
+    // Business List / Category View are the public "All" browse's own
+    // sub-tabs — the List/Category switcher and the grid/list toggle stay
+    // visible on the "Pending Approval" tab too now (rather than being
+    // hidden there), so picking either here means leaving "my submissions"
+    // and going back to the public browse.
+    if (this.pageTab() === 'pending') this.pageTab.set('all');
     this.businessView.set(view);
     this.currentView.set(view === 'categories' ? 'categories' : 'list');
     if (view === 'list') {
@@ -520,8 +590,16 @@ export class UserBusinessComponent implements OnInit {
     this.currentPage.set(1);
   }
 
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   onFilterOpeningHoursChange(value: string | null): void {
@@ -529,15 +607,15 @@ export class UserBusinessComponent implements OnInit {
     this.currentPage.set(1);
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.currentPage.set(1);
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.currentPage.set(1);
   }
 

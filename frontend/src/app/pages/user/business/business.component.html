@@ -13,12 +13,16 @@
     <div class="biz-head-controls">
       <div class="biz-tabs-wrap">
         <div class="biz-tabs" role="tablist">
-          <span class="biz-tab-indicator" [class.biz-tab-indicator--pending]="pageTab() === 'pending'" aria-hidden="true"></span>
-          <button role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'all'"
+          <span class="biz-tab-indicator"
+            [class.biz-tab-indicator--ready]="tabIndicatorReady()"
+            [style.transform]="'translateX(' + tabIndicatorLeft() + 'px)'"
+            [style.width.px]="tabIndicatorWidth()"
+            aria-hidden="true"></span>
+          <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'all'"
             [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
             <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> All
           </button>
-          <button role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
+          <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
             [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
             <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
             @if (myPendingBusinessCount()) {
@@ -28,31 +32,33 @@
         </div>
       </div>
 
-      @if (pageTab() === 'all') {
-        <div class="biz-tabs-wrap">
-          <div class="biz-tabs" role="tablist">
-            <span class="biz-tab-indicator" [class.biz-tab-indicator--categories]="businessView() === 'categories'" aria-hidden="true"></span>
-            <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'list'"
-              [attr.aria-selected]="businessView() === 'list'" (click)="switchView('list')">
-              <i class="bi bi-list-ul" aria-hidden="true"></i> Business List
-            </button>
-            <button role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'categories'"
-              [attr.aria-selected]="businessView() === 'categories'" (click)="switchView('categories')">
-              <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i> Category View
-            </button>
-          </div>
+      <div class="biz-tabs-wrap">
+        <div class="biz-tabs" role="tablist">
+          <span class="biz-tab-indicator"
+            [class.biz-tab-indicator--ready]="viewTabIndicatorReady()"
+            [style.transform]="'translateX(' + viewTabIndicatorLeft() + 'px)'"
+            [style.width.px]="viewTabIndicatorWidth()"
+            aria-hidden="true"></span>
+          <button #viewTabBtn role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'list'"
+            [attr.aria-selected]="businessView() === 'list'" (click)="switchView('list')">
+            <i class="bi bi-list-ul" aria-hidden="true"></i> Business List
+          </button>
+          <button #viewTabBtn role="tab" type="button" class="biz-tab" [class.active]="businessView() === 'categories'"
+            [attr.aria-selected]="businessView() === 'categories'" (click)="switchView('categories')">
+            <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i> Category View
+          </button>
         </div>
+      </div>
 
-        <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
-          @if (businessView() === 'list') {
-            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'grid'" (click)="bizViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
-            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'list'" (click)="bizViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
-          } @else {
-            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
-            <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
-          }
-        </div>
-      }
+      <div class="biz-view-toggle" role="group" aria-label="Switch view mode">
+        @if (businessView() === 'list') {
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'grid'" (click)="bizViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="bizViewMode() === 'list'" (click)="bizViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+        } @else {
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'grid'" (click)="catViewMode.set('grid')" aria-label="Grid view"><i class="bi bi-grid-3x2-gap"></i></button>
+          <button class="biz-view-btn" type="button" [class.biz-view-btn--active]="catViewMode() === 'list'" (click)="catViewMode.set('list')" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+        }
+      </div>
 
       <button type="button" class="biz-add-btn" (click)="openAddBusiness()">
         <i class="bi bi-plus-lg"></i> Add Business
@@ -111,121 +117,13 @@
         <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
           <i class="bi bi-sliders2"></i>
           Advanced Filters
-          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-          <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-        </button>
+          @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }        </button>
         @if (hasActiveFilters()) {
           <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
         }
       </div>
     </div>
 
-    @if (showAdvancedFilters()) {
-      <div class="jb-advanced-panel animate-slide-in-up">
-
-        <!-- ── Location ─────────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
-          <div class="jb-filter-row jb-filter-row--split">
-            <div class="jb-location-row">
-              <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-                (ngModelChange)="filterCountry.set($event)"
-                placeholder="All Countries" searchPlaceholder="Search countries…">
-              </app-searchable-select>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--icon">
-                <i class="bi bi-mailbox2 jb-adv-input-icon"></i>
-                <input type="text" class="form-control jb-adv-input--icon-left" placeholder="Pincode" maxlength="12"
-                  [value]="filterPincode()"
-                  (change)="filterPincode.set($any($event.target).value)"
-                  aria-label="Filter by pincode" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Category ─────────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-tags"></i> Category</span>
-          <app-searchable-select
-            [options]="categorySelectOptions()"
-            [ngModel]="filterCategoryId()"
-            (ngModelChange)="onCategoryFilterChange($event)"
-            placeholder="All Categories">
-          </app-searchable-select>
-        </div>
-
-        <!-- ── Opening Hours ─────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-clock"></i> Opening Hours</span>
-          <div class="jb-pill-row" role="group" aria-label="Filter by opening hours">
-            <button type="button" class="jb-pill-btn"
-                    [class.jb-pill-btn--active]="filterOpeningHours() === null"
-                    (click)="onFilterOpeningHoursChange(null)">
-              All
-            </button>
-            @for (opt of filterOpeningHoursOptions; track opt.value) {
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
-                      (click)="onFilterOpeningHoursChange(opt.value + '')">
-                <i class="bi bi-clock-history"></i> {{ opt.label }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- ── Date Added ───────────────────────────────────── -->
-        <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Added</span>
-          <div class="jb-advanced-grid jb-advanced-grid--dates">
-            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
-              <div class="jb-adv-date-head">
-                <label class="jb-adv-label" for="userBizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
-                <span class="jb-adv-date-help">Start date</span>
-              </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-week jb-adv-input-icon"></i>
-                <input id="userBizFilterDateFrom" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateFrom()"
-                  (change)="onFilterDateFromChange($event)"
-                  placeholder="From date" />
-              </div>
-            </div>
-
-            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
-              <div class="jb-adv-date-head">
-                <label class="jb-adv-label" for="userBizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
-                <span class="jb-adv-date-help">End date</span>
-              </div>
-              <div class="jb-adv-input-wrap jb-adv-input-wrap--date">
-                <i class="bi bi-calendar2-check jb-adv-input-icon"></i>
-                <input id="userBizFilterDateTo" type="date" class="jb-adv-input jb-adv-input--date" [value]="filterDateTo()"
-                  (change)="onFilterDateToChange($event)"
-                  placeholder="To date" />
-              </div>
-            </div>
-          </div>
-
-          <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
-            <span class="jb-quick-date-row__label">Quick range:</span>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
-              (click)="applyQuickDatePreset('today')">
-              Today
-            </button>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
-              (click)="applyQuickDatePreset('7d')">
-              Last 7 Days
-            </button>
-            <button type="button" class="jb-quick-date-btn"
-              [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
-              (click)="applyQuickDatePreset('30d')">
-              Last 30 Days
-            </button>
-          </div>
-        </div>
-
-      </div>
-    }
   </div>
 
   <!-- ── ACTIVE FILTER CHIPS ────────────────────────────────── -->
@@ -294,6 +192,138 @@
       <i class="bi bi-info-circle"></i> Location access denied. Showing all businesses (no distance filter).
     </div>
   }
+  }
+
+  <!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+       .jb-adv-drawer. No backdrop: the business list stays fully visible
+       and clickable behind it (only the sidebar auto-minimizes, via
+       LayoutService, to make room) — this is a docked panel, not a
+       blocking modal. -->
+  @if (showAdvancedFilters()) {
+    <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+      <div class="jb-adv-drawer__header">
+        <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+        <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="jb-adv-drawer__body">
+
+        <!-- ── Location ─────────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
+          <div class="jb-filter-row jb-filter-row--split">
+            <div class="jb-location-row">
+              <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+                (ngModelChange)="filterCountry.set($event)"
+                placeholder="All Countries" searchPlaceholder="Search countries…">
+              </app-searchable-select>
+              <div class="jb-adv-input-wrap jb-adv-input-wrap--icon">
+                <i class="bi bi-mailbox2 jb-adv-input-icon"></i>
+                <input type="text" class="form-control jb-adv-input--icon-left" placeholder="Pincode" maxlength="12"
+                  [value]="filterPincode()"
+                  (change)="filterPincode.set($any($event.target).value)"
+                  aria-label="Filter by pincode" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Category ─────────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-tags"></i> Category</span>
+          <app-searchable-select
+            [options]="categorySelectOptions()"
+            [ngModel]="filterCategoryId()"
+            (ngModelChange)="onCategoryFilterChange($event)"
+            placeholder="All Categories">
+          </app-searchable-select>
+        </div>
+
+        <!-- ── Opening Hours ─────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-clock"></i> Opening Hours</span>
+          <div class="jb-pill-row" role="group" aria-label="Filter by opening hours">
+            <button type="button" class="jb-pill-btn"
+                    [class.jb-pill-btn--active]="filterOpeningHours() === null"
+                    (click)="onFilterOpeningHoursChange(null)">
+              All
+            </button>
+            @for (opt of filterOpeningHoursOptions; track opt.value) {
+              <button type="button" class="jb-pill-btn"
+                      [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
+                      (click)="onFilterOpeningHoursChange(opt.value + '')">
+                <i class="bi bi-clock-history"></i> {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- ── Date Added ───────────────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Added</span>
+          <div class="jb-advanced-grid jb-advanced-grid--dates">
+            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
+              <div class="jb-adv-date-head">
+                <label class="jb-adv-label" for="userBizFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
+                <span class="jb-adv-date-help">Start date</span>
+              </div>
+              <app-date-input
+                  [ngModel]="filterDateFrom()"
+                  (ngModelChange)="onFilterDateFromChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="From date"
+                  ariaLabel="From date"
+                ></app-date-input>
+            </div>
+
+            <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
+              <div class="jb-adv-date-head">
+                <label class="jb-adv-label" for="userBizFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
+                <span class="jb-adv-date-help">End date</span>
+              </div>
+              <app-date-input
+                  [ngModel]="filterDateTo()"
+                  (ngModelChange)="onFilterDateToChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="To date"
+                  ariaLabel="To date"
+                ></app-date-input>
+            </div>
+          </div>
+
+          <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
+            <span class="jb-quick-date-row__label">Quick range:</span>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
+              (click)="applyQuickDatePreset('today')">
+              Today
+            </button>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
+              (click)="applyQuickDatePreset('7d')">
+              Last 7 Days
+            </button>
+            <button type="button" class="jb-quick-date-btn"
+              [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
+              (click)="applyQuickDatePreset('30d')">
+              Last 30 Days
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="jb-adv-drawer__footer">
+        <button type="button" class="jb-clear-all-btn" (click)="clearFilters()">
+          <i class="bi bi-x-circle"></i> Clear All
+        </button>
+        <button type="button" class="biz-add-btn" (click)="closeAdvancedFilters()">
+          Done
+        </button>
+      </div>
+    </aside>
   }
 
   <!-- Loading skeleton -->

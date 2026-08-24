@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, inject, signal, computed
+  Component, OnInit, OnDestroy, HostListener, ElementRef, inject, signal, computed, effect, viewChildren
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -15,6 +15,8 @@ import { MasterDataService, MasterState, MasterCity } from '../../../core/servic
 import { GeographyService } from '../../../core/services/geography.service';
 import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
@@ -87,7 +89,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
-    SearchableSelectComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
+    SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
     ImageErrorHandlerDirective, InfiniteScrollDirective,
   ],
   templateUrl: './jobs.component.html',
@@ -116,6 +118,37 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   // ─── Page tab — 'all' = public browse, 'pending' = the caller's own submissions ──
   pageTab             = signal<'all' | 'pending'>('all');
   myPendingJobsCount  = signal(0);
+
+  // ── All/Pending tabs — sliding active-pill indicator, position/width
+  // read from the real active button (same approach as the User Community
+  // page's .uc-tab-indicator) instead of a fixed 50%/translateX(100%) split,
+  // which ignores the row's flex gap and bleeds onto the neighbouring tab. ──
+  private tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabBtn');
+  tabIndicatorLeft  = signal(0);
+  tabIndicatorWidth = signal(0);
+  tabIndicatorReady = signal(false);
+
+  constructor() {
+    effect(() => {
+      this.tabButtons();
+      this.pageTab();
+      this.updateTabIndicator();
+    });
+  }
+
+  @HostListener('window:resize')
+  onTabRowResize(): void {
+    this.updateTabIndicator();
+  }
+
+  private updateTabIndicator(): void {
+    const idx = this.pageTab() === 'all' ? 0 : 1;
+    const btn = this.tabButtons()[idx]?.nativeElement;
+    if (!btn) return;
+    this.tabIndicatorLeft.set(btn.offsetLeft);
+    this.tabIndicatorWidth.set(btn.offsetWidth);
+    this.tabIndicatorReady.set(true);
+  }
 
   // ─── Pagination ─────────────────────────────────────────────
   currentPage = signal(1);
@@ -405,12 +438,12 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own jobs across every status (Pending/Approved/Rejected). */
+  /** "Pending Approval" tab — the caller's own jobs awaiting admin approval only. */
   loadMyJobs(): void {
     this.loading.set(true);
     this.currentPage.set(1);
     this.activeJobId.set(null);
-    this.jobService.getMyJobs({ page: 1, limit: 100 }).subscribe({
+    this.jobService.getMyJobs({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
       next: (res: PaginatedResponse<Job>) => {
         this.jobs.set(res.data);
         this.totalItems.set(res.total);

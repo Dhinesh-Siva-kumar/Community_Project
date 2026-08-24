@@ -14,36 +14,40 @@
 </div>
 
 <!-- ── STATS BAR ────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="admin-stats-bar">
-    <div class="admin-stat-card">
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === ''"
+      (click)="setJobTypeFilter('')" aria-label="Show all jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-briefcase-fill"></i></div>
       <div class="admin-stat-card__body">
-        <span class="admin-stat-card__value">{{ totalItems() }}</span>
+        <span class="admin-stat-card__value">{{ totalJobsCount() }}</span>
         <span class="admin-stat-card__label">Total Jobs</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Full-time'"
+      (click)="setJobTypeFilter('Full-time')" aria-label="Filter by full-time jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-person-workspace"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Full-time'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Full-time</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Part-time'"
+      (click)="setJobTypeFilter('Part-time')" aria-label="Filter by part-time jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-hourglass-split"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Part-time'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Part-time</span>
       </div>
-    </div>
-    <div class="admin-stat-card">
+    </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="filterJobType() === 'Contract'"
+      (click)="setJobTypeFilter('Contract')" aria-label="Filter by contract jobs">
       <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-file-earmark-text"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ jobTypeCounts()['Contract'] ?? 0 }}</span>
         <span class="admin-stat-card__label">Contract</span>
       </div>
-    </div>
+    </button>
   </div>
 }
 
@@ -80,17 +84,31 @@
       <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
         <i class="bi bi-sliders2"></i>
         Advanced Filters
-        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }
-        <i class="bi bi-chevron-down jb-advanced-chevron" [class.jb-advanced-chevron--open]="showAdvancedFilters()"></i>
-      </button>
+        @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }      </button>
       @if (activeFilterCount() > 0) {
         <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
       }
     </div>
   </div>
 
-  @if (showAdvancedFilters()) {
-    <div class="jb-advanced-panel animate-slide-in-up">
+
+</div>
+
+<!-- Advanced Filters — right-side drawer, matches the User Jobs page's
+     .jb-adv-drawer. No backdrop: the job list stays fully visible and
+     clickable behind it (only the sidebar auto-minimizes, via
+     LayoutService, to make room) — this is a docked panel, not a
+     blocking modal. -->
+@if (showAdvancedFilters()) {
+  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+    <div class="jb-adv-drawer__header">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="jb-adv-drawer__body">
 
       <!-- ── Type ─────────────────────────────────────────────── -->
       <div class="jb-adv-section">
@@ -103,31 +121,32 @@
         </div>
       </div>
 
-      <!-- ── Mode + Location ──────────────────────────────────── -->
+      <!-- ── Mode ─────────────────────────────────────────────── -->
       <div class="jb-adv-section">
-        <div class="jb-filter-row jb-filter-row--split">
-          <div class="jb-filter-group">
-            <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
-            <div class="jb-chip-group" role="group">
-              <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
-              @for (mode of workModes; track mode) {
-                <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
-              }
-            </div>
-          </div>
-          <div class="jb-location-row">
-            <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
-              (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
-              (ngModelChange)="onFilterStateChange($event)"
-              [placeholder]="filterStatesLoading() ? 'Loading…' : (filterStates().length ? 'State / Region' : 'Select country first')">
-            </app-searchable-select>
-            <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
-              (ngModelChange)="onFilterCityChange($event)"
-              [placeholder]="filterCitiesLoading() ? 'Loading…' : (filterCities().length ? 'City' : 'Select state first')">
-            </app-searchable-select>
-          </div>
+        <span class="jb-filter-section-label"><i class="bi bi-building"></i> Mode</span>
+        <div class="jb-chip-group" role="group">
+          <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === ''" (click)="setWorkModeFilter('')">Any</button>
+          @for (mode of workModes; track mode) {
+            <button class="jb-chip" [class.jb-chip--active]="filterWorkMode() === mode" (click)="setWorkModeFilter(mode)">{{ mode }}</button>
+          }
+        </div>
+      </div>
+
+      <!-- ── Location ─────────────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location</span>
+        <div class="jb-location-row">
+          <app-searchable-select [options]="countryOptions()" [ngModel]="filterCountry()"
+            (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterStateOptions()" [ngModel]="filterState()"
+            (ngModelChange)="onFilterStateChange($event)"
+            [placeholder]="filterStatesLoading() ? 'Loading…' : (filterStates().length ? 'State / Region' : 'Select country first')">
+          </app-searchable-select>
+          <app-searchable-select [options]="filterCityOptions()" [ngModel]="filterCity()"
+            (ngModelChange)="onFilterCityChange($event)"
+            [placeholder]="filterCitiesLoading() ? 'Loading…' : (filterCities().length ? 'City' : 'Select state first')">
+          </app-searchable-select>
         </div>
       </div>
 
@@ -208,27 +227,34 @@
           </div>
           <div class="jb-adv-field">
             <label class="jb-adv-label" for="jobFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
-            <input id="jobFilterDateFrom" type="date" class="jb-adv-input" [value]="filterDateFrom()"
-              (change)="onFilterDateFromChange($event)" />
+            <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="onFilterDateFromChange($event)" [ngModelOptions]="{ standalone: true }" ariaLabel="From date" placeholder="From date"></app-date-input>
           </div>
           <div class="jb-adv-field">
             <label class="jb-adv-label" for="jobFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
-            <input id="jobFilterDateTo" type="date" class="jb-adv-input" [value]="filterDateTo()"
-              (change)="onFilterDateToChange($event)" />
+            <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="onFilterDateToChange($event)" [ngModelOptions]="{ standalone: true }" ariaLabel="To date" placeholder="To date"></app-date-input>
           </div>
         </div>
       </div>
 
     </div>
-  }
+
+    <div class="jb-adv-drawer__footer">
+      <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
+        <i class="bi bi-x-circle"></i> Clear All
+      </button>
+      <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
+        Done
+      </button>
+    </div>
+  </aside>
+}
 
 <!-- Image Viewer Modal -->
-<app-image-viewer 
+<app-image-viewer
   [images]="imageViewerImages()"
   [isOpen]="imageViewerOpen()"
   [initialIndex]="imageViewerInitialIndex()"
   (close)="closeImageViewer()"></app-image-viewer>
-</div>
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterChips().length > 0) {
@@ -245,7 +271,7 @@
 }
 
 <!-- ── RESULTS META ──────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
   <div class="jb-meta">
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'job' : 'jobs' }}
@@ -254,13 +280,17 @@
       }
     </span>
   </div>
-  <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBarField()" [sortDir]="sortBarDir()"
-    (sortChange)="onSortBarChange($event)">
-  </app-sort-bar>
+  @if (viewMode() === 'list') {
+    <app-sort-bar class="mb-3 d-block" [fields]="sortFields" [sortBy]="sortBarField()" [sortDir]="sortBarDir()"
+      (sortChange)="onSortBarChange($event)">
+    </app-sort-bar>
+  }
 }
 
-<!-- ── SKELETON ──────────────────────────────────────────────── -->
-@if (loading()) {
+<!-- ── SKELETON — only the very first load; later fetches (stat-card
+     click, search, filter, sort) just dim the still-mounted list below
+     instead of swapping it out, so the page doesn't blink. ──────────── -->
+@if (loading() && !pageReady()) {
   <div class="jb-list" aria-busy="true">
     @for (_ of skeletonItems; track $index) {
       <div class="jb-skeleton">
@@ -388,9 +418,13 @@
 
   <!-- S6+S7+S8+S9: Description (main) / Skills + Hiring Manager + Gallery (side) -->
   @if (hasDescription(job) || (job.skills && job.skills.length) || job.contactPerson || job.contactEmail || job.contactPhone || job.contactInfo || (job.images && job.images.length)) {
-    <div class="jbd-content-split">
-      <div class="jbd-content-split__main">
-        @if (hasDescription(job)) {
+    <!-- Collapses to a single (side-only) column when there's no
+         description — otherwise an empty .jbd-content-split__main still
+         reserved its ~68% grid column, leaving a large blank gap next to
+         a short sidebar. -->
+    <div class="jbd-content-split" [class.jbd-content-split--single]="!hasDescription(job)">
+      @if (hasDescription(job)) {
+        <div class="jbd-content-split__main">
           <div class="jbd-section">
             <div class="jbd-section__header"><i class="bi bi-file-earmark-text-fill"></i><span>Job Description</span></div>
 
@@ -436,8 +470,8 @@
               }
             }
           </div>
-        }
-      </div>
+        </div>
+      }
 
       <div class="jbd-content-split__side">
         @if (job.skills && job.skills.length) {
@@ -510,7 +544,8 @@
 </ng-template>
 
 <!-- ── JOB LIST ──────────────────────────────────────────────── -->
-@if (!loading()) {
+@if (pageReady()) {
+  <div [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
   @if (filteredJobs().length === 0) {
     <div class="jb-empty">
       <div class="jb-empty__illustration" aria-hidden="true">
@@ -568,6 +603,13 @@
                 <span class="jbd-status-badge" [class.jbd-status-badge--active]="job.isActive" [class.jbd-status-badge--closed]="!job.isActive">
                   <i class="bi bi-circle-fill"></i>{{ job.isActive ? 'Active' : 'Inactive' }}
                 </span>
+                @if (job.status === 'PENDING') {
+                  <a class="jbd-status-badge jbd-status-badge--pending"
+                     [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'jobs' }"
+                     (click)="$event.stopPropagation()" title="Go to Approval page">
+                    <i class="bi bi-hourglass-split"></i> Pending Approval
+                  </a>
+                }
                 <div class="jb-card__badges">
                   @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
                   @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
@@ -637,103 +679,8 @@
         </article>
       }
     </div>
-    } @else {
-    <!-- ── TABLE VIEW ────────────────────────────────────────── -->
-    <div class="um-table-card um-table-card--fixed mb-3">
-      <div class="table-responsive">
-        <table class="um-table">
-          <thead>
-            <tr>
-              <th class="um-th" style="width:64px"></th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'title'"
-                (click)="toggleColumnSort('title')" role="button" tabindex="0">
-                Job
-                @if (sortBarField() === 'title') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'location'"
-                (click)="toggleColumnSort('location')" role="button" tabindex="0">
-                Location
-                @if (sortBarField() === 'location') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'type'"
-                (click)="toggleColumnSort('type')" role="button" tabindex="0">
-                Type / Mode
-                @if (sortBarField() === 'type') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'salary'"
-                (click)="toggleColumnSort('salary')" role="button" tabindex="0">
-                Salary
-                @if (sortBarField() === 'salary') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'status'"
-                (click)="toggleColumnSort('status')" role="button" tabindex="0">
-                Status
-                @if (sortBarField() === 'status') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'date'"
-                (click)="toggleColumnSort('date')" role="button" tabindex="0">
-                Posted
-                @if (sortBarField() === 'date') {
-                  <i class="bi um-th__sort-icon" [class.bi-arrow-up]="sortBarDir() === 'asc'" [class.bi-arrow-down]="sortBarDir() === 'desc'"></i>
-                }
-              </th>
-              <th class="um-th" style="width:120px">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (job of filteredJobs(); track job.id) {
-              <tr class="jb-table-row">
-                <td class="um-td">
-                  <div class="jb-table-logo" [style.background-color]="getAvatarColor(job)">
-                    @if (getCompanyLogoSrc(job)) {
-                      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title" appImageError />
-                    } @else {
-                      <span>{{ getPosterInitials(job) }}</span>
-                    }
-                  </div>
-                </td>
-                <td class="um-td">
-                  <div class="jb-table-title">{{ job.title }}</div>
-                  @if (job.companyName) { <div class="jb-table-sub">{{ job.companyName }}</div> }
-                </td>
-                <td class="um-td">{{ getLocationDisplay(job) || '—' }}</td>
-                <td class="um-td">
-                  @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
-                  @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
-                </td>
-                <td class="um-td">{{ getSalaryDisplay(job) || '—' }}</td>
-                <td class="um-td">
-                  <span class="jb-table-status" [class.jb-table-status--active]="job.isActive" [class.jb-table-status--inactive]="!job.isActive">
-                    {{ job.isActive ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                <td class="um-td">{{ job.createdAt | date:'mediumDate' }}</td>
-                <td class="um-td um-td--actions">
-                  <div class="um-actions-row">
-                    <button class="um-iab um-iab--view" data-tip="View" (click)="openDetail(job)" type="button"><i class="bi bi-eye"></i></button>
-                    <button class="um-iab um-iab--edit" data-tip="Edit" (click)="openEditModal(job, $event)" type="button"><i class="bi bi-pencil"></i></button>
-                    <button class="um-iab um-iab--delete" data-tip="Delete" (click)="openDeleteConfirm(job, $event)" type="button"><i class="bi bi-trash3"></i></button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    }
 
-    <!-- ── PAGINATION ─────────────────────────────────────────── -->
+    <!-- ── Pagination — List view ──────────────────────────────── -->
     <div class="um-pagination">
       <div class="um-pagination__left">
         <span class="um-pagination__info">
@@ -773,7 +720,178 @@
         </div>
       }
     </div>
+    } @else {
+    <!-- ── TABLE VIEW ────────────────────────────────────────── -->
+    <div class="um-table-card um-table-card--fixed mb-3">
+      <div class="table-responsive">
+        <table class="um-table">
+          <thead>
+            <tr>
+              <th class="um-th" style="width:64px"></th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'title'"
+                (click)="toggleColumnSort('title')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('title')">
+                Job
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'title' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'title' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'title'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'location'"
+                (click)="toggleColumnSort('location')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('location')">
+                Location
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'location' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'location' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'location'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'type'"
+                (click)="toggleColumnSort('type')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('type')">
+                Type / Mode
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'type' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'type' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'type'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'salary'"
+                (click)="toggleColumnSort('salary')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('salary')">
+                Salary
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'salary' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'salary' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'salary'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'status'"
+                (click)="toggleColumnSort('status')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('status')">
+                Status
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'status' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'status' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'status'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'approval'"
+                (click)="toggleColumnSort('approval')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('approval')">
+                Approval
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'approval' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'approval' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'approval'"
+                ></i>
+              </th>
+              <th class="um-th um-th--sortable" [class.um-th--active]="sortBarField() === 'date'"
+                (click)="toggleColumnSort('date')" role="button" tabindex="0" (keydown.enter)="toggleColumnSort('date')">
+                Posted
+                <i class="bi um-th__sort-icon"
+                  [class.bi-arrow-up]="sortBarField() === 'date' && sortBarDir() === 'asc'"
+                  [class.bi-arrow-down]="sortBarField() === 'date' && sortBarDir() === 'desc'"
+                  [class.bi-arrow-down-up]="sortBarField() !== 'date'"
+                ></i>
+              </th>
+              <th class="um-th um-th--actions" style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (job of filteredJobs(); track job.id) {
+              <tr class="jb-table-row">
+                <td class="um-td">
+                  <div class="jb-table-logo" [style.background-color]="getAvatarColor(job)">
+                    @if (getCompanyLogoSrc(job)) {
+                      <img [src]="getCompanyLogoSrc(job)! | imageUrl" [alt]="job.companyName ?? job.title" appImageError />
+                    } @else {
+                      <span>{{ getPosterInitials(job) }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="um-td">
+                  <div class="jb-table-title">{{ job.title }}</div>
+                  @if (job.companyName) { <div class="jb-table-sub">{{ job.companyName }}</div> }
+                </td>
+                <td class="um-td">{{ getLocationDisplay(job) || '—' }}</td>
+                <td class="um-td">
+                  @if (job.jobType) { <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType }}</span> }
+                  @if (job.workMode) { <span class="{{ getWorkModeBadgeClass(job.workMode) }}">{{ job.workMode }}</span> }
+                </td>
+                <td class="um-td">{{ getSalaryDisplay(job) || '—' }}</td>
+                <td class="um-td">
+                  <span class="jb-table-status" [class.jb-table-status--active]="job.isActive" [class.jb-table-status--inactive]="!job.isActive">
+                    {{ job.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="um-td">
+                  @if (job.status === 'PENDING') {
+                    <a class="jbd-status-badge jbd-status-badge--pending"
+                       [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'jobs' }"
+                       (click)="$event.stopPropagation()" title="Go to Approval page">
+                      <i class="bi bi-hourglass-split"></i> Pending Approval
+                    </a>
+                  } @else {
+                    <span class="jbd-status-badge" [class.jbd-status-badge--approved]="job.status === 'APPROVED'" [class.jbd-status-badge--rejected]="job.status === 'REJECTED'">
+                      {{ job.status }}
+                    </span>
+                  }
+                </td>
+                <td class="um-td">{{ job.createdAt | date:'mediumDate' }}</td>
+                <td class="um-td um-td--actions">
+                  <div class="um-actions-row">
+                    <button class="um-iab um-iab--view" data-tip="View" (click)="openDetail(job)" type="button"><i class="bi bi-eye"></i></button>
+                    <button class="um-iab um-iab--edit" data-tip="Edit" (click)="openEditModal(job, $event)" type="button"><i class="bi bi-pencil"></i></button>
+                    <button class="um-iab um-iab--delete" data-tip="Delete" (click)="openDeleteConfirm(job, $event)" type="button"><i class="bi bi-trash3"></i></button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Pagination — Table view, nested inside the table card ── -->
+      <div class="um-pagination um-pagination--nested">
+        <div class="um-pagination__left">
+          <span class="um-pagination__info">
+            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            of <strong>{{ totalItems() }}</strong> jobs
+          </span>
+          <div class="um-pg-divider"></div>
+          <div class="um-pagination__size">
+            <span>Rows per page</span>
+            <div class="jb-select-wrap jb-select-wrap--xs">
+              <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
+                (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
+                aria-label="Rows per page">
+              </app-searchable-select>
+            </div>
+          </div>
+        </div>
+
+        @if (totalPages() > 1) {
+          <div class="um-pagination__pages">
+            <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(1)" title="First page">
+              <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" title="Previous page">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            @for (page of getPages(); track page) {
+              <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()"
+                (click)="goToPage(page)">{{ page }}</button>
+            }
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" title="Next page">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())" title="Last page">
+              <i class="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+    }
   }
+  </div>
 }
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->
@@ -931,10 +1049,7 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="salaryHidden" class="jb-checkbox" />
-                    <span class="jb-checkbox-text"><i class="bi bi-eye-slash me-1"></i>Hide salary — show "Not Disclosed"</span>
-                  </label>
+                  <app-toggle formControlName="salaryHidden" label="Hide salary — show &quot;Not Disclosed&quot;" ariaLabel="Hide salary"></app-toggle>
                 </div>
                 @if (!isSalaryHidden) {
                   <div class="col-12">
@@ -989,10 +1104,7 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-checkbox-label">
-                    <input type="checkbox" formControlName="isRemote" class="jb-checkbox" />
-                    <span class="jb-checkbox-text"><i class="bi bi-house-door me-1"></i>Fully remote position</span>
-                  </label>
+                  <app-toggle formControlName="isRemote" label="Fully remote position" ariaLabel="Fully remote position"></app-toggle>
                 </div>
                 @if (!isRemoteCtrl) {
                   <div class="col-md-4">
@@ -1072,12 +1184,12 @@
                 <div class="jb-time-range">
                   <div class="jb-time-range__field">
                     <i class="bi bi-sunrise"></i>
-                    <input id="aWorkStart" type="time" class="jb-input" formControlName="workStartTime" aria-label="Start time" />
+                    <app-time-input formControlName="workStartTime" ariaLabel="Start time" placeholder="Start"></app-time-input>
                   </div>
                   <i class="bi bi-arrow-right jb-time-range__sep"></i>
                   <div class="jb-time-range__field">
                     <i class="bi bi-sunset"></i>
-                    <input id="aWorkEnd" type="time" class="jb-input" formControlName="workEndTime" aria-label="End time" />
+                    <app-time-input formControlName="workEndTime" ariaLabel="End time" placeholder="End"></app-time-input>
                   </div>
                 </div>
               </div>

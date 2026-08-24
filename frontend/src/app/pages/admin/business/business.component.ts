@@ -5,16 +5,19 @@ import { Subject, takeUntil, combineLatest, map, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
 import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { TruncatedDirective } from '../../../shared/directives/truncated.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 // Remembers the last selected category view mode (grid/list) across navigations.
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
@@ -62,13 +65,18 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
+  // Pushes the page's own content left (see :host in the scss) while the
+  // Advanced Filters drawer is open, instead of letting the fixed-position
+  // drawer just sit on top of — and hide — the right edge of the business list.
+  host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminBusinessComponent implements OnInit, OnDestroy {
   private businessService   = inject(BusinessService);
   private authService       = inject(AuthService);
+  private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
@@ -94,6 +102,17 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   selectedCategory = signal<BusinessCategory | null>(null);
   selectedBusiness = signal<Business | null>(null);
 
+  // List view stat-card counts — fetched separately (see
+  // loadBusinessStatusCounts()) rather than derived from the currently
+  // loaded `businesses()` array. Deriving them from `businesses()` meant
+  // that clicking "Active" (which filters the list server-side) made the
+  // "Inactive" card's own count collapse to 0 — and vice versa — since the
+  // loaded page no longer contained any of the other status, making the
+  // stat bar look broken/inconsistent right after using it.
+  totalBusinessesStatCount = signal(0);
+  activeBusinessCount      = signal(0);
+  inactiveBusinessCount    = signal(0);
+
   // Computed options for the category dropdown
   categoryOptions = computed<SelectOption[]>(() =>
     this.categories().map(c => ({ value: c.id, label: c.name }))
@@ -101,6 +120,13 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // Loading
   loading = signal(true);
+  // Gates the top-level full-page spinner AND each view's own skeleton —
+  // true only until the very first fetch (categories or business list)
+  // resolves, then stays true forever after. Later fetches (stat-card
+  // click, search, filter, sort) still flip `loading`, but the page's own
+  // content stays mounted throughout instead of unmounting into a spinner/
+  // skeleton and back, which read as the whole page blinking.
+  pageReady = signal(false);
   submitting = signal(false);
   deletingId = signal<string | null>(null);
 
@@ -453,6 +479,17 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   catSortBy   = signal<'name'|'count'>('name');
   catSortDir  = signal<SortDir>('asc');
   catViewMode = signal<'grid'|'list'>('grid');
+  /** Stat-card filter — every card in the row drives this one signal, so
+   * exactly one card is ever selected at a time (radio-button behaviour)
+   * instead of the "Businesses"/"Avg per Category" cards living on a
+   * separate, independently-toggleable axis from "Empty Categories". */
+  catFilter = signal<'all' | 'nonEmpty' | 'empty' | 'aboveAvg'>('all');
+
+  /** Toggles off back to 'all' on a repeat click of the same filter. */
+  setCatFilter(value: 'all' | 'nonEmpty' | 'empty' | 'aboveAvg'): void {
+    this.catFilter.set(this.catFilter() === value ? 'all' : value);
+    this.catPage.set(1);
+  }
 
   // Grid-view sort — same pill-style sort-bar as the community grid, shown
   // above the grid only (the table view sorts via its own column headers).
@@ -550,6 +587,10 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   filteredCategories = computed(() => {
     const q = this.catSearch().toLowerCase();
     let list = q ? this.categories().filter(c => c.name.toLowerCase().includes(q)) : this.categories();
+    const catFilter = this.catFilter();
+    if (catFilter === 'empty')    list = list.filter(c => (c._count?.businesses ?? 0) === 0);
+    if (catFilter === 'nonEmpty') list = list.filter(c => (c._count?.businesses ?? 0) > 0);
+    if (catFilter === 'aboveAvg') { const avg = this.avgBusinessesPerCategory(); list = list.filter(c => (c._count?.businesses ?? 0) >= avg); }
     const dir = this.catSortDir() === 'asc' ? 1 : -1;
     switch (this.catSortBy()) {
       case 'count':  list = [...list].sort((a,b) => dir * ((a._count?.businesses??0) - (b._count?.businesses??0))); break;
@@ -612,6 +653,7 @@ getCategoryAccent(icon?: string): string {
   }
 
   ngOnDestroy(): void {
+    this.layoutService.forceSidebarCollapsed.set(false);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -1086,10 +1128,12 @@ private initForms(): void {
       next: (data) => {
         this.categories.set(data);
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
       error: () => {
         this.toast.error('Failed to load categories');
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
     });
   }
@@ -1107,6 +1151,7 @@ private initForms(): void {
       this.scrollToTop();
     }
     if (!silent) this.loading.set(true);
+    this.loadBusinessStatusCounts(category);
 
     const params: Record<string, any> = {
       categoryId: category.id,
@@ -1136,11 +1181,41 @@ private initForms(): void {
         this.totalPages.set(response.totalPages);
         this.totalItems.set(response.total);
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
       error: () => {
         this.toast.error('Failed to load businesses');
         if (!silent) this.loading.set(false);
+        this.pageReady.set(true);
       },
+    });
+  }
+
+  /** Powers the List view's Total/Active/Inactive stat cards — three
+   * lightweight `limit:1` calls scoped by category + every filter except
+   * `status` itself, so the counts stay accurate regardless of which
+   * status card (if any) is currently selected, instead of being derived
+   * from whatever page `businesses()`/`totalItems()` currently holds. */
+  private loadBusinessStatusCounts(category: BusinessCategory): void {
+    const baseParams: Record<string, any> = { categoryId: category.id, page: 1, limit: 1 };
+    if (this.filterSearch()) baseParams['search'] = this.filterSearch();
+    if (this.filterCountry()) baseParams['country'] = this.filterCountry();
+    if (this.filterPincode()) baseParams['pincode'] = this.filterPincode();
+    if (this.filterOpeningHours()) baseParams['openingHours'] = this.filterOpeningHours();
+    if (this.filterDateFrom()) baseParams['dateFrom'] = this.filterDateFrom();
+    if (this.filterDateTo()) baseParams['dateTo'] = this.filterDateTo();
+
+    this.businessService.getBusinesses(baseParams).subscribe({
+      next: (res) => this.totalBusinessesStatCount.set(res.total),
+      error: () => {},
+    });
+    this.businessService.getBusinesses({ ...baseParams, status: 'active' }).subscribe({
+      next: (res) => this.activeBusinessCount.set(res.total),
+      error: () => {},
+    });
+    this.businessService.getBusinesses({ ...baseParams, status: 'inactive' }).subscribe({
+      next: (res) => this.inactiveBusinessCount.set(res.total),
+      error: () => {},
     });
   }
 
@@ -1164,8 +1239,16 @@ private initForms(): void {
     if (cat) this.loadBusinesses(cat, true);
   }
 
+  /** Advanced Filters lives in a right-side drawer — while it's open, the
+   * app shell's sidebar auto-minimizes (via LayoutService) for extra width. */
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters.update(v => !v);
+    this.layoutService.forceSidebarCollapsed.set(this.showAdvancedFilters());
+  }
+
+  closeAdvancedFilters(): void {
+    this.showAdvancedFilters.set(false);
+    this.layoutService.forceSidebarCollapsed.set(false);
   }
 
   removeFilter(filterKey: 'search' | 'country' | 'pincode' | 'hours' | 'status' | 'dateFrom' | 'dateTo'): void {
@@ -1201,20 +1284,25 @@ private initForms(): void {
     this.applyFilters();
   }
 
+  /** Stat-card variant — toggles off on a repeat click of the same status. */
+  setStatusStatFilter(v: 'active' | 'inactive'): void {
+    this.setStatusFilter(this.filterStatus() === v ? '' : v);
+  }
+
   onFilterOpeningHoursChange(value: string | null): void {
     this.filterOpeningHours.set(value);
     this.applyFilters();
   }
 
-  onFilterDateFromChange(e: Event): void {
+  onFilterDateFromChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateFrom.set((e.target as HTMLInputElement).value);
+    this.filterDateFrom.set(value);
     this.applyFilters();
   }
 
-  onFilterDateToChange(e: Event): void {
+  onFilterDateToChange(value: string): void {
     this.activeQuickRange.set(null);
-    this.filterDateTo.set((e.target as HTMLInputElement).value);
+    this.filterDateTo.set(value);
     this.applyFilters();
   }
 

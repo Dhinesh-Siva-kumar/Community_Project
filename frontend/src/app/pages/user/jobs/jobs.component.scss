@@ -11,8 +11,17 @@
 // drawer's width so the job list stays fully visible next to it instead of
 // hidden behind the fixed-position drawer. Reverts on mobile, where the
 // drawer covers the full viewport anyway (see .jb-adv-drawer below). ────
+// display:flex + flex-direction:column + a min-height matching the
+// visible viewport below the sticky top header (see $header-height and
+// .main-content's own padding in user-layout.component.scss) — so that
+// when the "No submissions yet" empty state is the only content (the
+// Pending Approval tab hides the filter panel above it), it can flex:1
+// and truly center itself in the leftover page height instead of just
+// centering within its own fixed-height box near the top of the page.
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{$header-height} - 3rem);
   transition: padding-right 280ms cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -87,6 +96,61 @@
 
 .jb-head-controls { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
 
+// ── All / Pending Approval tabs — replicated from the Business page's
+// .biz-tabs-wrap (same class names, so the header stays visually identical
+// across User Business/Events/Jobs). ────────────────────────────────
+.biz-tabs-wrap {
+  position: relative; flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.2); border-radius: $radius-md;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  padding: 4px; backdrop-filter: blur(10px); display: inline-block;
+}
+
+.biz-tabs { display: flex; gap: 3px; position: relative; }
+
+// Width/translate are offset by half the row's 3px gap on each side —
+// a plain 50%/translateX(100%) ignores that gap entirely, so the indicator
+// (sized to the full 50%) bleeds ~1.5px past the real tab boundary and
+// its border visibly crosses onto the neighbouring, unselected tab.
+// Position/width are read from the real active button's box in JS (same
+// approach as the User Community page's .uc-tab-indicator) rather than
+// assumed from a 50%/translateX(100%) split — a plain CSS split ignores
+// the row's flex gap, so the indicator bleeds past the real tab boundary
+// and its border visibly crosses onto the neighbouring, unselected tab.
+.biz-tab-indicator {
+  position: absolute; top: 0; left: 0; height: 32px;
+  border-radius: $radius-sm; background: #fff;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1), width 320ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
+
+  &--ready { opacity: 1; }
+}
+
+.biz-tab {
+  position: relative; z-index: 1; flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 14px; border-radius: $radius-sm; border: 1px solid transparent;
+  background: transparent; color: $color-stone-500; font-size: 12px; font-weight: $font-weight-semibold;
+  cursor: pointer; white-space: nowrap; @include transition-quick(color);
+
+  i { font-size: 12px; }
+
+  &:hover:not(.active) { color: $color-stone-800; }
+  &.active { color: $color-primary-darker; font-weight: $font-weight-bold; }
+}
+
+.biz-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-extrabold;
+}
+
 .jb-add-btn {
   display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
   border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;
@@ -96,7 +160,6 @@
   @include transition-short(all);
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(251,191,36,0.40); }
 }
-
 
 // ── BUTTONS — Landing-Page Style ─────────────────────────────────
 // .jb-btn-neon mirrors .lp-btn-neon
@@ -158,7 +221,6 @@
     font-size: $font-size-xs;
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // FILTER PANEL — Community Tab-inspired design
@@ -374,54 +436,35 @@
   }
 }
 
-// ── Advanced Filters trigger — icon-only button living on Row 1 next to
-// Sort, tooltipped rather than labelled to stay compact. Its panel opens
-// further down, below the Type/Mode row, behind a divider (.jb-adv-hr). ─
-.jb-adv-icon-btn {
-  position: relative;
+// ── Advanced Filters trigger — labelled pill button on Row 1's right end,
+// matching the User Business page's .jb-advanced-toggle (icon + label +
+// count badge + chevron). Its panel opens further down, below the
+// Type/Mode row, behind a divider (.jb-adv-hr). ──────────────────────
+.jb-advanced-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
+  gap: 7px;
+  padding: 6px 14px;
   height: 40px;
   flex-shrink: 0;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
   background: $color-bg-light;
-  color: $color-stone-600;
-  font-size: 1rem;
+  color: $color-stone-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   @include transition-short(all);
 
-  &:hover { border-color: $color-primary; color: $color-primary-darker; }
+  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+}
 
-  &--active {
-    background: rgba($color-primary, 0.14);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    &:hover { background: rgba($color-primary, 0.20); border-color: $color-primary-dark; }
-  }
-
-  &[data-tooltip] { @include jb-tooltip; }
-
-  &__count {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 3px;
-    border-radius: $radius-full;
-    background: $color-primary;
-    color: $color-on-primary;
-    font-size: 9px;
-    font-weight: $font-weight-bold;
-    line-height: 1;
-    border: 1.5px solid $color-bg-card;
-  }
+.jb-advanced-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: 10px; font-weight: $font-weight-bold; line-height: 1;
 }
 
 // ── Clear All button ──────────────────────────────────────────
@@ -665,7 +708,6 @@
   margin-left: 4px;
 }
 
-
 // ═══════════════════════════════════════════════════════════════
 // ENHANCED CARD — company name above title, skill preview chips
 // ═══════════════════════════════════════════════════════════════
@@ -731,12 +773,13 @@
   }
 }
 
-
 // ── Empty state (new icon-based) ──────────────────────────────
 .jb-empty {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: $spacing-4xl $spacing-xl;
 
@@ -771,7 +814,6 @@
   }
 }
 
-
 // ── Responsive updates for new filter panel ───────────────────
 @include media-lg-max {
   .jb-filter-row--split { flex-direction: column; gap: $spacing-md; }
@@ -796,7 +838,6 @@
   .jb-head { flex-direction: column; align-items: stretch; }
   .jb-head-controls { justify-content: space-between; }
 }
-
 
 // ── RESULTS META ─────────────────────────────────────────────────
 .jb-meta {
@@ -855,9 +896,9 @@
     &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
 
     &--active {
-      background: rgba($color-primary, 0.18);
-      color: $color-primary-darker;
-      &:hover { background: rgba($color-primary, 0.24); color: $color-primary-darker; }
+      background: $color-stone-900;
+      color: #fff;
+      &:hover { background: $color-stone-900; color: #fff; }
     }
 
     &[data-tooltip] { @include jb-tooltip; }
@@ -914,7 +955,6 @@
   50%       { background-color: $color-stone-200; }
 }
 .skeleton-pulse { animation: skeletonPulse 1.6s ease-in-out infinite; }
-
 
 // ── JOB CARD — glass-card aesthetic ──────────────────────────────
 // No `overflow: hidden` here (deliberately — a tooltip on the header's
@@ -1125,10 +1165,11 @@
 // Staggered entrance
 .jb-list .jb-card {
   @for $i from 1 through 12 {
-    &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}ms; }
+    &:nth-child(#{$i}) { animation-delay: #{($i - 1) * 35}
+
+ms; }
   }
 }
-
 
 // ── JOB TYPE / WORK MODE BADGES ───────────────────────────────────
 .jb-badge {
@@ -1712,6 +1753,23 @@
   grid-template-columns: minmax(0, 1fr) minmax(220px, 32%);
   gap: $spacing-lg;
   align-items: start;
+
+  // No description entered — the main column would otherwise be an empty
+  // grid cell still reserving its ~68% width, leaving a large blank gap
+  // next to a much shorter sidebar.
+  &--single { grid-template-columns: 1fr; }
+}
+
+// Stacked sections (Skills Required / Hiring Manager / Gallery) inside the
+// side column had no gap of their own — they relied entirely on
+// .jbd-content-split's column gap, which only separates main from side,
+// so consecutive side sections butted directly against each other with a
+// section's header (and its divider) landing right under the previous
+// section's content.
+.jbd-content-split__side {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
 }
 
 .jbd-hiring-card {
@@ -1807,6 +1865,21 @@
 
     .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: span 2; }
     .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 16 / 9; }
+
+    // In the "minimal" job detail layout (no description — see
+    // .jbd-content-split--single), this side column stretches to the full
+    // page width, so the 2-wide grid above would blow each photo up to
+    // roughly half the page. Switch to small fixed-size tiles that just
+    // wrap to fit instead, and drop the odd-count "big cover" tile sizing
+    // that was tuned for the narrow 2-column sidebar.
+    .jbd-content-split--single & {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 120px));
+      justify-content: flex-start;
+
+      .jbd-gallery__btn { width: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) { grid-column: auto; }
+      .jbd-gallery__btn:first-child:nth-last-child(odd) .jbd-gallery__img { aspect-ratio: 1 / 1; }
+    }
   }
 }
 
@@ -1961,7 +2034,6 @@
   font-style: italic;
   .bi { font-size: 0.8em; color: #0284C7; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // POST JOB MODAL — Sticky header/footer, 10-section form
@@ -2187,7 +2259,6 @@
   strong { color: $color-stone-900; font-weight: $font-weight-semibold; }
 }
 
-
 // ── FORM SECTIONS ─────────────────────────────────────────────────
 .jb-form-section {
   margin-bottom: $spacing-xl;
@@ -2236,7 +2307,6 @@
   }
 }
 
-
 // ── FORM LABELS ───────────────────────────────────────────────────
 .jb-label {
   display: block;
@@ -2274,7 +2344,6 @@
   color: $color-stone-300;
   font-weight: $font-weight-light;
 }
-
 
 // ── FORM INPUTS — mirrors .cm-input on the Community Create/Edit
 // popup (community-form-modal.component.scss), so every text/url/
@@ -2362,7 +2431,6 @@
   .bi { font-size: 0.8rem; flex-shrink: 0; }
 }
 
-
 // ── RADIO MODE CHIPS — mirrors .cm-toggle-pill/.cm-toggle-group on the
 // Community Create/Edit popup's Visibility/Community Mode toggles. ──
 .jb-mode-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2391,7 +2459,6 @@
   }
 }
 
-
 // ── WORKING DAY TOGGLES ───────────────────────────────────────────
 .jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -2419,36 +2486,7 @@
     font-weight: $font-weight-bold;
     &:hover { background: rgba(251, 191, 36, 0.36); border-color: $color-primary-dark; }
   }
-}
-
-
-// ── CHECKBOX ─────────────────────────────────────────────────────
-.jb-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  cursor: pointer;
-  user-select: none;
-}
-
-.jb-checkbox {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid $color-border;
-  cursor: pointer;
-  accent-color: $color-primary;
-  flex-shrink: 0;
-}
-
-.jb-checkbox-text {
-  font-size: $font-size-sm;
-  color: $color-stone-700;
-  line-height: 1.4;
-}
-
-
-// ── PHONE FIELD ───────────────────────────────────────────────────
+}// ── PHONE FIELD ───────────────────────────────────────────────────
 .jb-phone-field {
   display: flex;
   gap: $spacing-sm;
@@ -2457,7 +2495,6 @@
   &__dial   { flex: 0 0 140px; }
   &__number { flex: 1; min-width: 0; }
 }
-
 
 // ── LOGO PREVIEW ─────────────────────────────────────────────────
 .jb-logo-preview {
@@ -2502,7 +2539,6 @@
   color: $color-stone-400;
 }
 
-
 // ── RESPONSIVE: modal form ────────────────────────────────────────
 @include media-md-max {
   .jb-modal            { width: calc(100vw - 24px); }
@@ -2512,7 +2548,6 @@
   .jb-form-section  { padding: $spacing-md; }
   .jb-phone-field   { flex-direction: column; &__dial { flex: none; } }
 }
-
 
 // ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
 // Same .um-iab icon-button style as the Community/Business admin pages,
@@ -2606,7 +2641,6 @@
 
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // DELETE CONFIRMATION MODAL
