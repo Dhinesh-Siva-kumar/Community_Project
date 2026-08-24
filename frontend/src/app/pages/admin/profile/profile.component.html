@@ -227,34 +227,10 @@
           <div class="prf-section-header">
             <span class="prf-section-badge"><i class="bi bi-key"></i></span>
             <span class="prf-section-title">Change Password</span>
-            <button class="btn btn-outline-secondary btn-sm ms-auto" (click)="togglePasswordSection()">
-              @if (showPasswordSection()) { Cancel } @else { <i class="bi bi-key me-1"></i>Change }
+            <button class="prf-btn prf-btn--ghost ms-auto" (click)="togglePasswordSection()">
+              <i class="bi bi-key"></i>Change Password
             </button>
           </div>
-          @if (showPasswordSection()) {
-            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-              <div class="row g-3" style="max-width: 400px;">
-                <div class="col-12">
-                  <label class="prf-label" for="adminCurrentPwd">Current Password</label>
-                  <input id="adminCurrentPwd" type="password" class="form-control" formControlName="currentPassword" />
-                </div>
-                <div class="col-12">
-                  <label class="prf-label" for="adminNewPwd">New Password</label>
-                  <input id="adminNewPwd" type="password" class="form-control" formControlName="newPassword" />
-                </div>
-                <div class="col-12">
-                  <label class="prf-label" for="adminConfirmPwd">Confirm Password</label>
-                  <input id="adminConfirmPwd" type="password" class="form-control" formControlName="confirmPassword" />
-                </div>
-                <div class="col-12">
-                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()">
-                    @if (changingPassword()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                    Update Password
-                  </button>
-                </div>
-              </div>
-            </form>
-          }
         </div>
       </app-profile-info-card>
       </div>
@@ -329,7 +305,8 @@
       <aside class="prf-sidebar">
         <app-profile-info-card title="Profile Completion" icon="bi-graph-up-arrow" [showEdit]="false">
           <div class="prf-completion">
-            <div class="prf-completion__ring" [ngClass]="completionRingClass()">
+            <div class="prf-completion__ring" [ngClass]="completionRingClass()"
+              [style.--ring-pct]="profileCompletion()" [style.--ring-clr]="completionRingColor()">
               <span class="prf-completion__percent">{{ profileCompletion() }}%</span>
             </div>
             <app-profile-progress [percentage]="profileCompletion()" [showLabel]="false"></app-profile-progress>
@@ -367,6 +344,84 @@
       </aside>
 
     </div><!-- /prf-layout -->
+
+    <!-- ── CHANGE PASSWORD MODAL — same design language as the Add Event
+         popup (.au-*/.cm-* shell, sections, inputs, validation). ────── -->
+    @if (showPasswordSection()) {
+      <div class="au-backdrop" (click)="togglePasswordSection()"></div>
+      <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="adminPwdModalTitle">
+
+        <!-- Modal Header -->
+        <div class="au-header cm-modal-header">
+          <div class="au-header__cover-shapes" aria-hidden="true">
+            <span class="shape shape--1"></span>
+            <span class="shape shape--2"></span>
+          </div>
+          <div class="au-header__icon cm-modal-icon">
+            <i class="bi bi-key-fill"></i>
+          </div>
+          <div class="au-header__text cm-modal-header-inner">
+            <h5 class="au-header__title cm-modal-title" id="adminPwdModalTitle">Change Password</h5>
+            <p class="au-header__sub cm-modal-subtitle">Update the password used to sign in</p>
+          </div>
+          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="au-body cm-modal-body">
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="au-form cm-form">
+            <div class="cm-section cm-section-last">
+              <div class="cm-field-group">
+                <label class="cm-label" for="adminCurrentPwd">Current Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-lock cm-input-icon"></i>
+                  <input id="adminCurrentPwd" type="password" formControlName="currentPassword" class="cm-input" placeholder="Enter current password" />
+                </div>
+              </div>
+              <div class="cm-field-group">
+                <label class="cm-label" for="adminNewPwd">New Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-shield-lock cm-input-icon"></i>
+                  <input id="adminNewPwd" type="password" formControlName="newPassword" class="cm-input" placeholder="At least 6 characters" />
+                </div>
+                @if (passwordForm.get('newPassword')?.hasError('minlength') && passwordForm.get('newPassword')?.dirty) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Must be at least 6 characters.</div>
+                }
+              </div>
+              <div class="cm-field-group">
+                <label class="cm-label" for="adminConfirmPwd">Confirm Password <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-shield-check cm-input-icon"></i>
+                  <input id="adminConfirmPwd" type="password" formControlName="confirmPassword" class="cm-input" placeholder="Re-enter new password" />
+                </div>
+                @if (passwordForm.get('confirmPassword')?.dirty && passwordForm.get('newPassword')?.value !== passwordForm.get('confirmPassword')?.value) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Passwords do not match.</div>
+                }
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="au-footer cm-modal-footer">
+          <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="togglePasswordSection()" [disabled]="changingPassword()">
+            Cancel
+          </button>
+          <button type="button" class="au-btn cm-btn-submit au-btn--primary"
+            [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()"
+            (click)="changePassword()">
+            @if (changingPassword()) {
+              <span class="spinner-border spinner-border-sm"></span> Updating...
+            } @else {
+              <i class="bi bi-check-lg"></i> Update Password
+            }
+          </button>
+        </div>
+
+      </div>
+    }
 
   }
 }
