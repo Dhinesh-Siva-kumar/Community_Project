@@ -1,0 +1,38 @@
+@use '../../../../assets/styles/index' as *;
+
+// Matches the top-header's other icon buttons (e.g. the notification
+// bell's .header-icon-btn in user-layout/admin-layout) so it drops in
+// as one more header action rather than a visually distinct control.
+.theme-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: $radius-sm;
+  background: none;
+  color: $navbar-icon-color;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background $transition-fast $transition-easing,
+              color $transition-fast $transition-easing;
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  i { transition: transform 0.2s ease; }
+  &:hover i { transform: rotate(-14deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-btn i { transition: none; }
+  .theme-toggle-btn:hover i { transform: none; }
+}

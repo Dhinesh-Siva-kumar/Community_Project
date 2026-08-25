@@ -24,6 +24,7 @@ import { RouterLink, Router } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { OnboardingService } from '../../../core/services/onboarding.service';
 import { Country, UserRegister } from '../../../core/models';
 import { environment } from '../../../../environments/environment';
@@ -305,27 +306,19 @@ export class RegisterComponent {
 
   @ViewChildren('otpBox') otpBoxes!: QueryList<ElementRef<HTMLInputElement>>;
 
-  // ── Theme ──────────────────────────────────────────────────────────────────
+  // ── Theme — delegates to the shared ThemeService (see theme.service.ts);
+  // this page still binds its own host attribute since _auth-shared.scss's
+  // --auth-* palette is :host[data-theme]-scoped. ────────────────────────
 
-  currentTheme: 'dark' | 'light' = 'dark';
+  get currentTheme(): 'dark' | 'light' { return this.themeService.theme(); }
 
   @HostBinding('attr.data-theme')
   get theme(): string { return this.currentTheme; }
 
   toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('landing-theme', this.currentTheme);
-    }
+    this.themeService.toggleTheme();
     if (this.googleBtnEl) {
       this.renderGoogleButton(this.googleBtnEl);
-    }
-  }
-
-  private loadTheme(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('landing-theme') as 'dark' | 'light' | null;
-      if (saved) this.currentTheme = saved;
     }
   }
 
@@ -362,11 +355,12 @@ export class RegisterComponent {
     private authService:      AuthService,
     private toastService:     ToastService,
     private onboardingService: OnboardingService,
+    private themeService:     ThemeService,
     private router:           Router,
   ) {}
 
   ngOnInit() {
-    this.loadTheme();
+    this.themeService.applyDefaultIfUnset('dark');
     this.loadLanguage();
     this.initializeForm();
     this.loadCountries();

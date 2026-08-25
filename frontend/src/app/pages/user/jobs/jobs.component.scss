@@ -54,7 +54,7 @@
     max-width: 220px;
     padding: 7px 11px;
     border-radius: $radius-sm;
-    background: $color-stone-900;
+    background: $color-dark;
     color: #fff;
     font-size: 11px;
     font-weight: $font-weight-medium;
@@ -68,7 +68,7 @@
     content: '';
     bottom: calc(100% + 3px);
     border: 5px solid transparent;
-    border-top-color: $color-stone-900;
+    border-top-color: $color-dark;
   }
 
   &:hover::after, &:hover::before,
@@ -101,7 +101,7 @@
 // across User Business/Events/Jobs). ────────────────────────────────
 .biz-tabs-wrap {
   position: relative; flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
   border: 1px solid rgba(148, 163, 184, 0.2); border-radius: $radius-md;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
   padding: 4px; backdrop-filter: blur(10px); display: inline-block;
@@ -120,7 +120,7 @@
 // and its border visibly crosses onto the neighbouring, unselected tab.
 .biz-tab-indicator {
   position: absolute; top: 0; left: 0; height: 32px;
-  border-radius: $radius-sm; background: #fff;
+  border-radius: $radius-sm; background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.35);
   box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
   opacity: 0;
@@ -304,7 +304,7 @@
     &:focus {
       border-color: $color-primary;
       box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
-      background: #fff;
+      background: $color-bg-card;
     }
 
     &::-webkit-search-cancel-button { display: none; }
@@ -377,11 +377,11 @@
   }
 
   // Job-type specific hovers (when not active)
-  &--full-time:not(.jb-chip--active):hover    { border-color: #16A34A; background: #DCFCE7; color: #15803D; }
-  &--part-time:not(.jb-chip--active):hover    { border-color: #0EA5E9; background: #E0F2FE; color: #0284C7; }
+  &--full-time:not(.jb-chip--active):hover    { border-color: $color-success; background: $color-success-light; color: $color-success-text; }
+  &--part-time:not(.jb-chip--active):hover    { border-color: $color-info; background: $color-info-light; color: $color-info-text; }
   &--contract:not(.jb-chip--active):hover     { border-color: $color-primary-dark; background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--freelance:not(.jb-chip--active):hover    { border-color: #8B5CF6; background: #EDE9FE; color: #7C3AED; }
-  &--internship:not(.jb-chip--active):hover   { border-color: #F97316; background: #FFEDD5; color: #EA580C; }
+  &--freelance:not(.jb-chip--active):hover    { border-color: $color-badge-violet-text; background: $color-badge-violet-bg; color: $color-badge-violet-text; }
+  &--internship:not(.jb-chip--active):hover   { border-color: $color-saffron; background: $color-badge-orange-bg; color: $color-badge-orange-text; }
   &--temporary:not(.jb-chip--active):hover    { border-color: $color-stone-500; background: $color-stone-100; color: $color-stone-700; }
 }
 
@@ -740,10 +740,10 @@
   // Per-field meta colours
   &__meta-item {
     &--loc      { .bi { color: #DC2626; } }
-    &--salary   { color: #15803D; font-weight: $font-weight-semibold; .bi { color: #16A34A; } }
-    &--exp      { .bi { color: #0284C7; } }
-    &--edu      { .bi { color: #8B5CF6; } }
-    &--openings { .bi { color: #F97316; } }
+    &--salary   { color: $color-success-text; font-weight: $font-weight-semibold; .bi { color: $color-success; } }
+    &--exp      { .bi { color: $color-info-text; } }
+    &--edu      { .bi { color: $color-badge-violet-text; } }
+    &--openings { .bi { color: $color-saffron; } }
   }
 
   // Skills preview row in card footer
@@ -896,9 +896,9 @@
     &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
 
     &--active {
-      background: $color-stone-900;
+      background: $color-dark;
       color: #fff;
-      &:hover { background: $color-stone-900; color: #fff; }
+      &:hover { background: $color-dark; color: #fff; }
     }
 
     &[data-tooltip] { @include jb-tooltip; }
@@ -935,7 +935,7 @@
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.15);
   border-radius: $radius-lg;
 
@@ -963,7 +963,7 @@
 // corners clipped (the grid cover photo, the active-state header tint)
 // round themselves instead — see .jbg-cover and &__header below.
 .jb-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   cursor: default;
@@ -1065,9 +1065,9 @@
     .bi { font-size: 0.8em; }
 
     &--salary {
-      color: #15803D;
+      color: $color-success-text;
       font-weight: $font-weight-semibold;
-      .bi { color: #16A34A; }
+      .bi { color: $color-success; }
     }
   }
 
@@ -1131,7 +1131,7 @@
 
     &[data-tip]::before {
       content: attr(data-tip);
-      background: $color-text-primary;
+      background: $color-dark;
       color: #fff;
       font-size: 0.68rem;
       font-weight: $font-weight-semibold;
@@ -1146,7 +1146,7 @@
       content: '';
       top: calc(100% + 2px);
       border: 4px solid transparent;
-      border-bottom-color: $color-text-primary;
+      border-bottom-color: $color-dark;
       border-top: none;
       width: 0;
       height: 0;
@@ -1183,15 +1183,15 @@ ms; }
   white-space: nowrap;
   flex-shrink: 0;
 
-  &--fulltime   { background: #DCFCE7; color: #15803D; }
-  &--parttime   { background: #E0F2FE; color: #0284C7; }
+  &--fulltime   { background: $color-success-light; color: $color-success-text; }
+  &--parttime   { background: $color-info-light; color: $color-info-text; }
   &--contract   { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
-  &--freelance  { background: #EDE9FE; color: #7C3AED; }
-  &--internship { background: #FFEDD5; color: #EA580C; }
+  &--freelance  { background: $color-badge-violet-bg; color: $color-badge-violet-text; }
+  &--internship { background: $color-badge-orange-bg; color: $color-badge-orange-text; }
   &--temporary  { background: $color-stone-100; color: $color-stone-700; }
   &--default    { background: $color-stone-100; color: $color-stone-600; }
-  &--remote     { background: #E0F2FE; color: #0284C7; }
-  &--hybrid     { background: #EDE9FE; color: #7C3AED; }
+  &--remote     { background: $color-info-light; color: $color-info-text; }
+  &--hybrid     { background: $color-badge-violet-bg; color: $color-badge-violet-text; }
   &--onsite     { background: $color-stone-100; color: $color-stone-700; }
   &--pending    { background: rgba(245, 158, 11, 0.94); color: #fff; }
   &--rejected   { background: rgba(220, 38, 38, 0.94); color: #fff; }
@@ -1199,7 +1199,7 @@ ms; }
 
 .jb-card__rejection-reason {
   display: flex; align-items: flex-start; gap: 5px;
-  font-size: 11.5px; color: #dc2626; background: rgba(220, 38, 38, 0.08);
+  font-size: 11.5px; color: $color-danger; background: rgba(220, 38, 38, 0.08);
   border-radius: $radius-sm; padding: 6px 8px; margin: 4px 0 0;
   .bi { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
 }
@@ -1491,11 +1491,11 @@ ms; }
     font-size: 0.9rem;
 
     &--type     { background: rgba(251,191,36,0.12); color: $color-primary-darker; }
-    &--mode     { background: #EDE9FE; color: #7C3AED; }
-    &--exp      { background: #FFEDD5; color: #EA580C; }
-    &--edu      { background: #DCFCE7; color: #15803D; }
-    &--openings { background: #E0F2FE; color: #0284C7; }
-    &--shift    { background: rgba(22,163,74,0.10); color: #15803D; }
+    &--mode     { background: $color-badge-violet-bg; color: $color-badge-violet-text; }
+    &--exp      { background: $color-badge-orange-bg; color: $color-badge-orange-text; }
+    &--edu      { background: $color-success-light; color: $color-success-text; }
+    &--openings { background: $color-info-light; color: $color-info-text; }
+    &--shift    { background: rgba(22,163,74,0.10); color: $color-success-text; }
   }
 
   &__body {
@@ -1540,7 +1540,7 @@ ms; }
   padding: $spacing-sm $spacing-md;
   background: linear-gradient(135deg,
     rgba(22, 163, 74, 0.06) 0%,
-    rgba(255, 255, 255, 0.90) 100%);
+    $color-bg-card 100%);
   border: 1px solid rgba(22, 163, 74, 0.20);
   border-radius: $radius-md;
   display: flex;
@@ -1552,7 +1552,7 @@ ms; }
     font-family: $font-family-header;
     font-size: $font-size-lg;
     font-weight: $font-weight-bold;
-    color: #15803D;
+    color: $color-success-text;
     margin: 0;
     line-height: 1.2;
 
@@ -1603,7 +1603,7 @@ ms; }
     height: 32px;
     border-radius: 50%;
     background: rgba(2, 132, 199, 0.10);
-    color: #0284C7;
+    color: $color-info-text;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1912,26 +1912,26 @@ ms; }
 .jb-acc-company__name { font-family: $font-family-header; font-size: $font-size-md; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0 0 2px; }
 .jb-acc-company__website { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } .bi { font-size: 0.8em; } }
 .jb-acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: $spacing-sm; margin-bottom: $spacing-md; @include media-sm-max { grid-template-columns: 1fr; } }
-.jb-acc-panel { padding: $spacing-md; background: rgba(255,255,255,0.80); border: 1px solid rgba(251,191,36,0.18); border-radius: $radius-md; &__title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.07em; color: $color-stone-500; margin-bottom: $spacing-sm; .bi { color: $color-primary-dark; } } }
+.jb-acc-panel { padding: $spacing-md; background: $color-bg-card; border: 1px solid rgba(251,191,36,0.18); border-radius: $radius-md; &__title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.07em; color: $color-stone-500; margin-bottom: $spacing-sm; .bi { color: $color-primary-dark; } } }
 .jb-acc-rows { display: flex; flex-direction: column; gap: 6px; }
 .jb-acc-row { display: flex; justify-content: space-between; align-items: center; gap: $spacing-sm; &__lbl { font-size: $font-size-xs; color: $color-stone-400; white-space: nowrap; } &__val { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; text-align: right; } }
-.jb-acc-salary { &__amount { font-size: $font-size-lg; font-weight: $font-weight-bold; color: #15803D; line-height: 1.2; } }
+.jb-acc-salary { &__amount { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-success-text; line-height: 1.2; } }
 .jb-acc-not-disclosed { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-sm; color: $color-stone-500; font-style: italic; .bi { font-size: 0.9em; } }
 .jb-acc-na { font-size: $font-size-sm; color: $color-stone-400; }
-.jb-acc-strip { display: flex; align-items: flex-start; gap: $spacing-sm; padding: 10px $spacing-md; background: rgba(255,255,255,0.80); border: 1px solid rgba(251,191,36,0.15); border-radius: $radius-md; margin-bottom: $spacing-sm; &__icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 2px; &--loc { color: #DC2626; } &--time { color: #0284C7; } } &__lbl { display: block; font-size: 10px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-stone-400; margin-bottom: 2px; } &__val { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; } &__sub { display: block; font-size: $font-size-xs; color: $color-stone-400; margin-top: 2px; } }
+.jb-acc-strip { display: flex; align-items: flex-start; gap: $spacing-sm; padding: 10px $spacing-md; background: $color-bg-card; border: 1px solid rgba(251,191,36,0.15); border-radius: $radius-md; margin-bottom: $spacing-sm; &__icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 2px; &--loc { color: #DC2626; } &--time { color: $color-info-text; } } &__lbl { display: block; font-size: 10px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-stone-400; margin-bottom: 2px; } &__val { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; } &__sub { display: block; font-size: $font-size-xs; color: $color-stone-400; margin-top: 2px; } }
 .jb-day-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .jb-day-pill { padding: 2px 8px; border-radius: $radius-full; font-size: 11px; font-weight: $font-weight-semibold; background: $color-stone-100; color: $color-stone-400; border: 1px solid $color-stone-200; &--on { background: rgba(251,191,36,0.15); color: $color-primary-darker; border-color: rgba(251,191,36,0.40); } }
 .jb-skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .jb-skill-chip { padding: 4px 12px; border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold; background: rgba(251,191,36,0.12); color: $color-primary-darker; border: 1px solid rgba(251,191,36,0.30); }
 .jb-acc-section { margin-bottom: $spacing-md; &:last-of-type { margin-bottom: 0; } &__title { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-stone-700; margin-bottom: $spacing-sm; padding-bottom: 8px; border-bottom: 1px solid rgba(251,191,36,0.15); .bi { color: $color-primary-dark; } } &__text { font-size: $font-size-sm; color: $color-text-body; line-height: 1.75; white-space: pre-wrap; margin: 0; } }
-.jb-acc-contact { padding: $spacing-md; background: rgba(255,255,255,0.80); border: 1px solid rgba(251,191,36,0.15); border-radius: $radius-md; margin-bottom: $spacing-md; &__title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.07em; color: $color-stone-500; margin-bottom: $spacing-sm; .bi { color: $color-primary-dark; } } &__list { display: flex; flex-direction: column; gap: 6px; } &__item { display: flex; align-items: center; gap: $spacing-sm; font-size: $font-size-sm; color: $color-stone-700; .bi { color: $color-stone-400; font-size: 0.85rem; flex-shrink: 0; } a { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } } }
+.jb-acc-contact { padding: $spacing-md; background: $color-bg-card; border: 1px solid rgba(251,191,36,0.15); border-radius: $radius-md; margin-bottom: $spacing-md; &__title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.07em; color: $color-stone-500; margin-bottom: $spacing-sm; .bi { color: $color-primary-dark; } } &__list { display: flex; flex-direction: column; gap: 6px; } &__item { display: flex; align-items: center; gap: $spacing-sm; font-size: $font-size-sm; color: $color-stone-700; .bi { color: $color-stone-400; font-size: 0.85rem; flex-shrink: 0; } a { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } } }
 .jb-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
 .jb-gallery__img { width: 100px; height: 70px; object-fit: cover; border-radius: $radius-sm; border: 1px solid rgba(251,191,36,0.20); cursor: zoom-in; @include transition-short(all); &:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
 .jb-acc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: $spacing-sm; padding-top: $spacing-md; margin-top: $spacing-md; border-top: 1px solid rgba(251,191,36,0.18); }
 .jb-acc-owner-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .jb-acc-posted { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-stone-400; margin-left: auto; .bi { font-size: 0.8em; } }
 .jb-acc-posted-by { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-stone-400; .bi { font-size: 0.8em; } }
-.jb-acc-updated { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-stone-400; font-style: italic; .bi { font-size: 0.8em; color: #0284C7; } }
+.jb-acc-updated { display: inline-flex; align-items: center; gap: 4px; font-size: $font-size-xs; color: $color-stone-400; font-style: italic; .bi { font-size: 0.8em; color: $color-info-text; } }
 .jb-acc-audit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-left: auto; }
 
 // ── Responsive ────────────────────────────────────────────────────
@@ -1957,12 +1957,12 @@ ms; }
 .jb-btn--edit {
   background: rgba(14, 165, 233, 0.10);
   border: 1.5px solid rgba(14, 165, 233, 0.35);
-  color: #0284C7;
+  color: $color-info-text;
   @include transition-short(all);
 
   &:hover {
     background: rgba(14, 165, 233, 0.18);
-    border-color: #0284C7;
+    border-color: $color-info-text;
     transform: translateY(-1px);
   }
 }
@@ -2032,7 +2032,7 @@ ms; }
   font-size: $font-size-xs;
   color: $color-stone-400;
   font-style: italic;
-  .bi { font-size: 0.8em; color: #0284C7; }
+  .bi { font-size: 0.8em; color: $color-info-text; }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2466,7 +2466,7 @@ ms; }
   padding: 6px 14px;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
-  background: rgba(255, 255, 255, 0.7);
+  background: $color-bg-card;
   color: $color-stone-600;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
@@ -2520,7 +2520,7 @@ ms; }
     height: 22px;
     border-radius: 50%;
     border: 1.5px solid $color-border;
-    background: #fff;
+    background: $color-bg-card;
     color: $color-danger;
     font-size: 0.6rem;
     cursor: pointer;
@@ -2596,7 +2596,7 @@ ms; }
 
   &[data-tip]::before {
     content: attr(data-tip);
-    background: $color-text-primary;
+    background: $color-dark;
     color: #fff;
     font-size: 0.68rem;
     font-weight: $font-weight-semibold;
@@ -2611,7 +2611,7 @@ ms; }
     content: '';
     top: calc(100% + 2px);
     border: 4px solid transparent;
-    border-bottom-color: $color-text-primary;
+    border-bottom-color: $color-dark;
     border-top: none;
     width: 0;
     height: 0;
@@ -2628,8 +2628,8 @@ ms; }
   &--edit {
     background: rgba(2,132,199,0.08);
     border-color: rgba(2,132,199,0.22);
-    color: #0284C7;
-    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+    color: $color-info-text;
+    &:hover { background: $color-info-text; border-color: $color-info-text; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {

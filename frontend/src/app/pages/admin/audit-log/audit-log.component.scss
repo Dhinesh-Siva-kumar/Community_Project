@@ -145,7 +145,7 @@ $_t:  0.2s ease;
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 @mixin sk-base {
-  background: linear-gradient(90deg, #F5F5F4 25%, #FAFAF9 50%, #F5F5F4 75%);
+  background: linear-gradient(90deg, $color-stone-100 25%, $color-stone-50 50%, $color-stone-100 75%);
   background-size: 1600px 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: $_rs;
@@ -192,7 +192,7 @@ $_t:  0.2s ease;
   color: $color-stone-800;
   outline: none;
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
-  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: $color-bg-card; }
 }
 
 .al-section { display: flex; flex-direction: column; flex: 1; min-height: 0; }
@@ -367,9 +367,9 @@ $_t:  0.2s ease;
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 
   &--active {
-    background: $color-text-primary;
+    background: $color-dark;
     color: $color-white;
-    border-color: $color-text-primary;
+    border-color: $color-dark;
   }
 }
 

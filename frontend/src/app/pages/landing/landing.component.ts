@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
+import { ThemeService } from '../../core/services/theme.service';
 import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select/searchable-select.component';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1121,7 +1122,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: object,
     private el: ElementRef,
     private zone: NgZone,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private themeService: ThemeService,
   ) {}
 
   // ── Language ──
@@ -1150,8 +1152,10 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ── Theme ──
-  currentTheme: 'dark' | 'light' = 'light';
+  // ── Theme — delegates to the shared ThemeService (see theme.service.ts);
+  // this page still binds its own host attribute since landing.component.scss's
+  // --lp-* palette is :host[data-theme]-scoped. ──────────────────────────
+  get currentTheme(): 'dark' | 'light' { return this.themeService.theme(); }
 
   @HostBinding('attr.data-theme')
   get theme(): string { return this.currentTheme; }
@@ -1161,17 +1165,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   get langAttr(): string { return this.currentLang; }
 
   toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('landing-theme', this.currentTheme);
-    }
-  }
-
-  private loadTheme(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('landing-theme') as 'dark' | 'light' | null;
-      if (saved) this.currentTheme = saved;
-    }
+    this.themeService.toggleTheme();
   }
 
   // ── Navbar ──
@@ -1266,7 +1260,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly sectionIds = ['home', 'features', 'communities', 'how-it-works', 'testimonials', 'about', 'blog', 'contact'];
 
   ngOnInit(): void {
-    this.loadTheme();
+    this.themeService.applyDefaultIfUnset('light');
     this.loadLanguage();
   }
 

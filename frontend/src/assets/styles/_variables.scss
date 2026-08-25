@@ -67,12 +67,12 @@ $transition-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
 // COMPONENT TOKENS — NAVBAR
 // ============================================================
 $navbar-height:          $header-height;
-$navbar-bg:              rgba(255, 255, 255, 0.95);
+$navbar-bg:              var(--navbar-bg, rgba(255, 255, 255, 0.95));
 $navbar-backdrop:        blur(12px);
-$navbar-border:          1px solid rgba(231, 229, 228, 0.9);
-$navbar-shadow:          0 1px 0 rgba(231, 229, 228, 1), 0 4px 16px rgba(28, 25, 23, 0.04);
-$navbar-brand-color:     #1C1917;
-$navbar-icon-color:      #78716C;
+$navbar-border:          1px solid var(--navbar-border-color, rgba(231, 229, 228, 0.9));
+$navbar-shadow:          var(--navbar-shadow, 0 1px 0 rgba(231, 229, 228, 1), 0 4px 16px rgba(28, 25, 23, 0.04));
+$navbar-brand-color:     var(--navbar-brand-color, #1C1917);
+$navbar-icon-color:      var(--color-text-muted, #78716C);
 
 // ============================================================
 // COMPONENT TOKENS — SIDEBAR (Dark warm)
@@ -139,9 +139,9 @@ $btn-primary-shadow-hover: 0 4px 14px rgba(251, 191, 36, 0.45);
 // ============================================================
 // COMPONENT TOKENS — CARDS
 // ============================================================
-$card-bg:           #FFFFFF;
+$card-bg:           var(--card-bg, #FFFFFF);
 $card-radius:       $radius-lg;
-$card-border:       1px solid #E7E5E4;
+$card-border:       1px solid var(--card-border-color, #E7E5E4);
 $card-padding:      20px;
 $card-padding-sm:   14px;
 $card-padding-lg:   28px;
@@ -152,10 +152,10 @@ $card-padding-lg:   28px;
 $input-height:          42px;
 $input-height-sm:       36px;
 $input-height-lg:       48px;
-$input-border:          1.5px solid #E7E5E4;
+$input-border:          1.5px solid var(--input-border-color, #E7E5E4);
 $input-border-focus:    1.5px solid #FBBF24;
 $input-radius:          $radius-md;
-$input-bg:              #FFFFFF;
+$input-bg:              var(--input-bg, #FFFFFF);
 $input-focus-shadow:    0 0 0 3px rgba(251, 191, 36, 0.18);
 
 // ============================================================
@@ -171,8 +171,8 @@ $tab-radius:            $radius-md;
 // ============================================================
 $scrollbar-width:          5px;
 $scrollbar-track-bg:       transparent;
-$scrollbar-thumb-bg:       #D6D3D1;
-$scrollbar-thumb-bg-hover: #A8A29E;
+$scrollbar-thumb-bg:       var(--scrollbar-thumb-bg, #D6D3D1);
+$scrollbar-thumb-bg-hover: var(--scrollbar-thumb-bg-hover, #A8A29E);
 $scrollbar-thumb-radius:   4px;
 
 // ============================================================

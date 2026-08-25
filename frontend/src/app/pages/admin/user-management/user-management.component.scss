@@ -25,7 +25,7 @@ $_t:  0.2s ease;
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   flex: 1;
@@ -110,7 +110,7 @@ $_t:  0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffbeb;
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
   cursor: pointer;
@@ -122,9 +122,9 @@ $_t:  0.2s ease;
   i { font-size: 1.2rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(217, 119, 6, 0.6);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
   }
 
@@ -170,15 +170,15 @@ $_t:  0.2s ease;
   }
 
   &.jb-btn--neon {
-    background: #fffbeb;
+    background: $color-primary-lighter;
     border: 1.5px solid rgba(245, 158, 11, 0.45);
     color: $color-primary-darker;
     box-shadow: 0 2px 8px rgba(28, 25, 23, 0.08);
 
     &:hover:not(:disabled) {
-      background: #fef3c7;
+      background: $color-warning-light;
       border-color: rgba(217, 119, 6, 0.6);
-      color: #78350f;
+      color: $color-warning-text;
       box-shadow: 0 4px 14px rgba(28, 25, 23, 0.12);
 
       i {
@@ -294,7 +294,7 @@ $_t:  0.2s ease;
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
   &::placeholder { color: $color-stone-400; }
-  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+  &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: $color-bg-card; }
   &::-webkit-search-cancel-button { display: none; }
 }
 
@@ -339,7 +339,7 @@ $_t:  0.2s ease;
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
   &.active {
-    background: $color-text-primary;
+    background: $color-dark;
     color: $color-white;
   }
 }
@@ -412,7 +412,7 @@ $_t:  0.2s ease;
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 @mixin sk-base {
-  background: linear-gradient(90deg, #F5F5F4 25%, #FAFAF9 50%, #F5F5F4 75%);
+  background: linear-gradient(90deg, $color-stone-100 25%, $color-stone-50 50%, $color-stone-100 75%);
   background-size: 1600px 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: $_rs;
@@ -587,9 +587,9 @@ $_t:  0.2s ease;
   font-size: 1.4rem;
   margin: 0 auto 16px;
 
-  &--danger  { background: #fef2f2; color: $color-danger;  box-shadow: 0 0 0 8px rgba($color-danger, 0.06); }
-  &--warning { background: #fffbeb; color: $color-warning; box-shadow: 0 0 0 8px rgba($color-warning, 0.06); }
-  &--success { background: #ecfdf5; color: $color-success; box-shadow: 0 0 0 8px rgba($color-success, 0.06); }
+  &--danger  { background: $color-error-bg; color: $color-danger;  box-shadow: 0 0 0 8px rgba($color-danger, 0.06); }
+  &--warning { background: $color-primary-lighter; color: $color-warning; box-shadow: 0 0 0 8px rgba($color-warning, 0.06); }
+  &--success { background: $color-success-light; color: $color-success; box-shadow: 0 0 0 8px rgba($color-success, 0.06); }
   &--primary { background: $color-primary-light; color: $color-primary-dark; box-shadow: 0 0 0 8px rgba($color-primary, 0.08); }
 }
 
@@ -658,7 +658,7 @@ $_t:  0.2s ease;
     border-color: $color-success;
     color: #fff;
     box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-    &:not(:disabled):hover { background: #15803d; border-color: #15803d; }
+    &:not(:disabled):hover { background: $color-success-text; border-color: $color-success-text; }
   }
 
   &--danger {
@@ -823,12 +823,12 @@ $_t:  0.2s ease;
   font-weight: $font-semibold;
   white-space: nowrap;
 
-  &--admin    { background: #f5f3ff; color: #5b21b6; }
+  &--admin    { background: var(--cd-f5f3ff, #f5f3ff); color: var(--cd-5b21b6, #5b21b6); }
   &--user     { background: $color-primary-light; color: $color-primary-dark; }
-  &--active   { background: #ecfdf3; color: #166534; }
-  &--blocked  { background: #fef2f2; color: $color-danger; }
-  &--inactive { background: #f3f4f6; color: #6b7280; }
-  &--trusted  { background: #fffbeb; color: $color-warning; }
+  &--active   { background: var(--cd-ecfdf3, #ecfdf3); color: var(--cd-166534, #166534); }
+  &--blocked  { background: $color-error-bg; color: $color-danger; }
+  &--inactive { background: $color-badge-gray-bg; color: $color-badge-gray-text; }
+  &--trusted  { background: $color-primary-lighter; color: $color-warning; }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -876,7 +876,7 @@ $_t:  0.2s ease;
   // Tooltip bubble
   &[data-tip]::before {
     content: attr(data-tip);
-    background: $color-text-primary;
+    background: $color-dark;
     color: #fff;
     font-size: 0.68rem;
     font-weight: $font-semibold;
@@ -892,7 +892,7 @@ $_t:  0.2s ease;
     content: '';
     top: calc(100% + 2px);
     border: 4px solid transparent;
-    border-bottom-color: $color-text-primary;
+    border-bottom-color: $color-dark;
     border-top: none;
     width: 0;
     height: 0;
@@ -922,57 +922,57 @@ $_t:  0.2s ease;
 
   // ── Block ────────────────────────────────────────────────
   &--block {
-    background: #fef2f2;
-    border-color: rgba(#dc2626, 0.25);
-    color: #dc2626;
+    background: $color-error-bg;
+    border-color: rgba($color-danger, 0.25);
+    color: $color-danger;
 
     &:hover {
-      background: #dc2626;
-      border-color: #dc2626;
+      background: $color-danger;
+      border-color: $color-danger;
       color: #fff;
-      box-shadow: 0 4px 10px rgba(#dc2626, 0.3);
+      box-shadow: 0 4px 10px rgba($color-danger, 0.3);
     }
   }
 
   // ── Unblock ──────────────────────────────────────────────
   &--unblock {
-    background: #ecfdf5;
-    border-color: rgba(#16a34a, 0.25);
-    color: #16a34a;
+    background: $color-success-light;
+    border-color: rgba($color-success, 0.25);
+    color: $color-success;
 
     &:hover {
-      background: #16a34a;
-      border-color: #16a34a;
+      background: $color-success;
+      border-color: $color-success;
       color: #fff;
-      box-shadow: 0 4px 10px rgba(#16a34a, 0.3);
+      box-shadow: 0 4px 10px rgba($color-success, 0.3);
     }
   }
 
   // ── Trust ────────────────────────────────────────────────
   &--trust {
-    background: #fffbeb;
-    border-color: rgba(#d97706, 0.25);
-    color: #d97706;
+    background: $color-primary-lighter;
+    border-color: rgba($color-warning, 0.25);
+    color: $color-warning;
 
     &:hover {
-      background: #d97706;
-      border-color: #d97706;
+      background: $color-warning;
+      border-color: $color-warning;
       color: #fff;
-      box-shadow: 0 4px 10px rgba(#d97706, 0.3);
+      box-shadow: 0 4px 10px rgba($color-warning, 0.3);
     }
   }
 
   // ── Delete ───────────────────────────────────────────────
   &--delete {
-    background: #fef2f2;
-    border-color: rgba(#dc2626, 0.2);
-    color: #dc2626;
+    background: $color-error-bg;
+    border-color: rgba($color-danger, 0.2);
+    color: $color-danger;
 
     &:hover {
-      background: #dc2626;
-      border-color: #dc2626;
+      background: $color-danger;
+      border-color: $color-danger;
       color: #fff;
-      box-shadow: 0 4px 10px rgba(#dc2626, 0.3);
+      box-shadow: 0 4px 10px rgba($color-danger, 0.3);
     }
   }
 

@@ -24,6 +24,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { computePasswordStrength } from '../../../shared/utils/password-strength';
 import {
@@ -195,6 +196,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   private fb           = inject(FormBuilder);
   private authService  = inject(AuthService);
   private toastService = inject(ToastService);
+  private themeService = inject(ThemeService);
   private router       = inject(Router);
   private platformId   = inject(PLATFORM_ID) as object;
 
@@ -233,24 +235,16 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   fpForm!: FormGroup;
   otpForm!: FormGroup;
 
-  // ── Theme ────────────────────────────────────────────────────────────────────
-  currentTheme: 'dark' | 'light' = 'dark';
+  // ── Theme — delegates to the shared ThemeService (see theme.service.ts);
+  // this page still binds its own host attribute since _auth-shared.scss's
+  // --auth-* palette is :host[data-theme]-scoped. ────────────────────────
+  get currentTheme(): 'dark' | 'light' { return this.themeService.theme(); }
 
   @HostBinding('attr.data-theme')
   get theme(): string { return this.currentTheme; }
 
   toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('landing-theme', this.currentTheme);
-    }
-  }
-
-  private loadTheme(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('landing-theme') as 'dark' | 'light' | null;
-      if (saved) this.currentTheme = saved;
-    }
+    this.themeService.toggleTheme();
   }
 
   // ── Language ───────────────────────────────────────────────────────────────
@@ -276,7 +270,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadTheme();
+    this.themeService.applyDefaultIfUnset('dark');
     this.loadLanguage();
     this.initForms();
     this.setupLookup();

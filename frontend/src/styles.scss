@@ -529,6 +529,208 @@ body {
   --th-placeholder-color: #A8A29E;
   --th-search-icon-color: #A8A29E;
   --th-caret-color:       #78716C;
+
+  // ── App-wide design tokens — light (defaults, mirror the existing
+  // hardcoded values in assets/styles/_colors.scss etc.) ────────────
+  --color-text-primary:   #1C1917;
+  --color-text-body:      #44403C;
+  --color-text-muted:     #78716C;
+  --color-text-muted-alt: #57534E;
+  --color-text-secondary: #A8A29E;
+
+  // Raw stone scale — mirrors the $color-text-*/$color-bg-*/$color-border
+  // values above 1:1 (same underlying palette), kept as its own set since
+  // ~24 component files reference $color-stone-N directly by scale number
+  // rather than through the semantic aliases.
+  --color-stone-50:       #FAFAF9;
+  --color-stone-100:      #F5F5F4;
+  --color-stone-200:      #E7E5E4;
+  --color-stone-300:      #D6D3D1;
+  --color-stone-400:      #A8A29E;
+  --color-stone-500:      #78716C;
+  --color-stone-600:      #57534E;
+  --color-stone-700:      #44403C;
+  --color-stone-800:      #292524;
+  --color-stone-900:      #1C1917;
+
+  --color-bg-page:        #FAFAF9;
+  --color-bg-light:       #F5F5F4;
+  --color-bg-card:        #FFFFFF;
+  --color-bg-hover:       #F5F5F4;
+  --color-bg-hover-light: #FAFAF9;
+
+  --color-border:         #E7E5E4;
+  --color-border-strong:  #D6D3D1;
+
+  --color-success-light:  #DCFCE7;
+  --color-error-bg:       #FEF2F2;
+  --color-warning-light:  #FEF3C7;
+  --color-info-light:     #E0F2FE;
+
+  // Paired text colors for the status-light backgrounds above (e.g. amber-900
+  // text on --color-warning-light) — kept as their own tokens since the
+  // backgrounds already flip dark in dark mode and these dark-on-light text
+  // colors would otherwise go illegible against a dark-tinted background.
+  --color-success-text:   #15803D;
+  --color-danger-text:    #991B1B;
+  --color-warning-text:   #78350F;
+  --color-info-text:      #0284C7;
+
+  --color-badge-green-bg:     #D1FAE5;
+  --color-badge-green-text:   #065F46;
+  --color-badge-gray-bg:      #F3F4F6;
+  --color-badge-gray-text:    #6B7280;
+  --color-badge-offline-bg:   #E5E7EB;
+  --color-badge-offline-text: #374151;
+  --color-badge-blue-bg:      #DBEAFE;
+  --color-badge-blue-text:    #1E40AF;
+  --color-badge-purple-bg:    #EDE9FE;
+  --color-badge-purple-text:  #6B21A8;
+  --color-badge-pink-bg:      #FCE7F3;
+  --color-badge-pink-text:    #BE185D;
+  --color-badge-violet-bg:    #EDE9FE;
+  --color-badge-violet-text:  #7C3AED;
+  --color-badge-orange-bg:    #FFEDD5;
+  --color-badge-orange-text:  #EA580C;
+
+  // Admin Dashboard's recent-activity feed — icon/text/border color per
+  // activity type, chosen for contrast against a light card; swapped for
+  // brighter equivalents in dark mode since these are used directly as
+  // text/icon/border color (not just a background tint).
+  // User Dashboard's animated stat rail — 5 deliberately distinct accent
+  // hues (see user-dashboard.component.ts) driving both the icon color and
+  // its light tint background via inline custom properties.
+  --stat-communities:     #16A34A;
+  --stat-communities-bg:  #DCFCE7;
+  --stat-posts:           #F59E0B;
+  --stat-posts-bg:        #FEF3C7;
+  --stat-businesses:      #2563EB;
+  --stat-businesses-bg:   #DBEAFE;
+  --stat-events:          #7C3AED;
+  --stat-events-bg:       #EDE9FE;
+  --stat-jobs:            #0D9488;
+  --stat-jobs-bg:         #CCFBF1;
+
+  // User Dashboard feed-filter tabs — active-tab sliding indicator bg for
+  // the two hues without an existing exact-match token (yellow, rose-red).
+  --tab-help-bg:      #FEF9C3;
+  --tab-emergency-bg: #FEE2E2;
+
+  // Admin Dashboard's Quick Actions cards — solid pastel bg per action.
+  --qa-community-bg:  #fff3e0;
+  --qa-approval-bg:   #fdecea;
+  --qa-users-bg:      #e6faf3;
+  --qa-business-bg:   #e8f0ff;
+  --qa-users-text:    #006c49;
+
+  --activity-user:            #f59e0b;
+  --activity-pending-post:    #855300;
+  --activity-emergency-post:  #ba1a1a;
+  --activity-post:            #005ac2;
+  --activity-business:        #7c3aed;
+  --activity-event:           #d97706;
+  --activity-job:             #78716c;
+  --activity-default:         #a8a29e;
+
+  // Admin Dashboard's "Platform composition" row surface — a deliberate cool
+  // blue-gray tint distinct from the rest of the app's warm amber/stone
+  // palette (see admin-dashboard.component.scss's $_comp-bg comment).
+  --color-comp-bg:     #EEF1FB;
+  --color-comp-border: #DCE1F5;
+
+  --color-primary-light:   #FEF3C7;
+  --color-primary-lighter: #FFFBEB;
+
+  --navbar-bg:             rgba(255, 255, 255, 0.95);
+  --navbar-border-color:   rgba(231, 229, 228, 0.9);
+  --navbar-shadow:         0 1px 0 rgba(231, 229, 228, 1), 0 4px 16px rgba(28, 25, 23, 0.04);
+  --navbar-brand-color:    #1C1917;
+
+  --card-bg:               #FFFFFF;
+  --card-border-color:     #E7E5E4;
+  --input-bg:              #FFFFFF;
+  --input-border-color:    #E7E5E4;
+
+  --scrollbar-thumb-bg:       #D6D3D1;
+  --scrollbar-thumb-bg-hover: #A8A29E;
+
+  --shadow-1:   0 1px 2px rgba(28, 25, 23, 0.05);
+  --shadow-2:   0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-3:   0 4px 6px rgba(28, 25, 23, 0.07), 0 2px 4px rgba(28, 25, 23, 0.04);
+  --shadow-4:   0 10px 15px rgba(28, 25, 23, 0.08), 0 4px 6px rgba(28, 25, 23, 0.04);
+  --shadow-5:   0 20px 25px rgba(28, 25, 23, 0.10), 0 8px 10px rgba(28, 25, 23, 0.04);
+  --shadow-6:   0 25px 50px rgba(28, 25, 23, 0.18);
+  --shadow-sm:  0 1px 2px rgba(28, 25, 23, 0.06);
+  --shadow-md:  0 4px 8px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04);
+  --shadow-lg:  0 8px 16px rgba(28, 25, 23, 0.09), 0 4px 8px rgba(28, 25, 23, 0.04);
+  --shadow-xl:  0 16px 32px rgba(28, 25, 23, 0.12), 0 8px 16px rgba(28, 25, 23, 0.04);
+  --shadow-2xl: 0 24px 48px rgba(28, 25, 23, 0.16), 0 12px 24px rgba(28, 25, 23, 0.06);
+  --shadow-inner: inset 0 2px 4px rgba(28, 25, 23, 0.06);
+
+  // ── Community Detail page — its own category-colored chip palette
+  // (Category=violet, Country=blue, teal/amber/red/slate accents). Named
+  // after the light-mode hex they replace so the mapping in
+  // community-detail.component.scss stays traceable. Light values here
+  // just mirror the existing literals (the var() fallback already covers
+  // light mode) — kept explicit for consistency with the rest of this
+  // token block. ─────────────────────────────────────────────────────
+  --cd-6d28d9: #6d28d9; // violet-700 text
+  --cd-1d4ed8: #1d4ed8; // blue-700 text
+  --cd-2563eb: #2563eb; // blue-600 accent
+  --cd-eff6ff: #eff6ff; // blue-50 bg
+  --cd-dbeafe: #dbeafe; // blue-100 bg
+  --cd-f5f3ff: #f5f3ff; // violet-50 bg
+  --cd-f8fafc: #f8fafc; // slate-50 bg
+  --cd-334155: #334155; // slate-700 text
+  --cd-0f766e: #0f766e; // teal-700 text
+  --cd-fffbeb: #fffbeb; // amber-50 bg
+  --cd-92400e: #92400e; // amber-800 text
+  --cd-fef2f2: #fef2f2; // red-50 bg
+  --cd-dc2626: #dc2626; // red-600 text
+  --cd-b91c1c: #b91c1c; // red-700 text
+  --cd-5b21b6: #5b21b6; // violet-800 text (category chip only — its button/hover use of the same hex is left literal, an always-saturated interactive surface)
+
+  // ── Community Detail — second batch (tab badges, share buttons,
+  // post/status chips, action-button hover states). ─────────────────
+  --cd-e2e8f0: #e2e8f0; // slate-200 bg
+  --cd-475569: #475569; // slate-600 text
+  --cd-1e3a8a: #1e3a8a; // blue-900 text
+  --cd-115e59: #115e59; // teal-900 text
+  --cd-fff7ed: #fff7ed; // orange-50 bg
+  --cd-78350f: #78350f; // amber-900 text
+  --cd-7c2d12: #7c2d12; // orange-900 text
+  --cd-f0fdf4: #f0fdf4; // green-50 bg
+  --cd-0f9f5e: #0f9f5e; // green text (whatsapp)
+  --cd-111827: #111827; // near-black text (X brand)
+  --cd-f0f9ff: #f0f9ff; // sky-50 bg
+  --cd-0284c7: #0284c7; // sky-600 text (telegram)
+  --cd-f1f5f9: #f1f5f9; // slate-100 hover bg
+  --cd-fff1f2: #fff1f2; // rose-50 bg
+  --cd-ecfeff: #ecfeff; // cyan-50 bg
+  --cd-a16207: #a16207; // yellow-700 text
+  --cd-ecfdf5: #ecfdf5; // green-50 bg (alt)
+  --cd-15803d: #15803d; // green-700 text
+  --cd-991b1b: #991b1b; // red-800 text
+  --cd-1e40af: #1e40af; // blue-800 text
+  --cd-fff5f5: #fff5f5; // red-50 bg (alt)
+  --cd-b02a37: #b02a37; // danger-dark text
+
+  // ── Community Detail — third batch (remaining chip family + email share) ──
+  --cd-9a3412: #9a3412; // orange-800 text
+  --cd-ecfdf3: #ecfdf3; // green-50 bg (alt)
+  --cd-166534: #166534; // green-800 text
+  --cd-f0fdfa: #f0fdfa; // teal-50 bg
+  --cd-fdf4ff: #fdf4ff; // fuchsia-50 bg
+  --cd-a21caf: #a21caf; // fuchsia-700 text
+  --cd-854d0e: #854d0e; // amber-800 text (alt)
+
+  // ── Community Detail — About-section info-row icon colors ──
+  --cd-7c3aed: #7c3aed; // violet-600 icon (category)
+  --cd-16a34a: #16a34a; // green-600 icon (status)
+  --cd-b45309: #b45309; // amber-700 icon (pincode)
+  --cd-0369a1: #0369a1; // sky-700 icon (created)
+  --cd-0e7490: #0e7490; // cyan-700 icon (updated)
+  --cd-9333ea: #9333ea; // purple-600 icon (owner username)
 }
 
 // ── Dark-mode tokens — Amber brand palette ────────────────────
@@ -548,6 +750,180 @@ body {
   --th-placeholder-color: #78716C;
   --th-search-icon-color: #78716C;
   --th-caret-color:       #A8A29E;
+
+  // ── App-wide design tokens — dark ──────────────────────────────
+  --color-text-primary:   #F5F5F4;
+  --color-text-body:      #D6D3D1;
+  --color-text-muted:     #A8A29E;
+  --color-text-muted-alt: #A8A29E;
+  --color-text-secondary: #78716C;
+
+  --color-stone-50:       #17140F;
+  --color-stone-100:      #221D17;
+  --color-stone-200:      #3D362C;
+  --color-stone-300:      #4A4038;
+  --color-stone-400:      #78716C;
+  --color-stone-500:      #A8A29E;
+  --color-stone-600:      #A8A29E;
+  --color-stone-700:      #D6D3D1;
+  --color-stone-800:      #E7E5E4;
+  --color-stone-900:      #F5F5F4;
+
+  --color-bg-page:        #17140F;
+  --color-bg-light:       #221D17;
+  --color-bg-card:        #1C1917;
+  --color-bg-hover:       #292524;
+  --color-bg-hover-light: #221D17;
+
+  --color-border:         #3D362C;
+  --color-border-strong:  #4A4038;
+
+  --color-success-light:  #123a29;
+  --color-error-bg:       #3a1b15;
+  --color-warning-light:  #33260f;
+  --color-info-light:     #132c4d;
+
+  --color-success-text:   #86EFAC;
+  --color-danger-text:    #FCA5A5;
+  --color-warning-text:   #FCD34D;
+  --color-info-text:      #7DD3FC;
+
+  --color-badge-green-bg:     #123a29;
+  --color-badge-green-text:   #6EE7B7;
+  --color-badge-gray-bg:      #27272A;
+  --color-badge-gray-text:    #A1A1AA;
+  --color-badge-offline-bg:   #24242B;
+  --color-badge-offline-text: #D1D5DB;
+  --color-badge-blue-bg:      #16233D;
+  --color-badge-blue-text:    #93C5FD;
+  --color-badge-purple-bg:    #2A1F3D;
+  --color-badge-purple-text:  #D8B4FE;
+  --color-badge-pink-bg:      #3D1F30;
+  --color-badge-pink-text:    #F9A8D4;
+  --color-badge-violet-bg:    #2A2050;
+  --color-badge-violet-text:  #C4B5FD;
+  --color-badge-orange-bg:    #3D2410;
+  --color-badge-orange-text:  #FDBA74;
+
+  --stat-communities:     #4ade80;
+  --stat-communities-bg:  #123a29;
+  --stat-posts:           #fbbf24;
+  --stat-posts-bg:        #33260f;
+  --stat-businesses:      #93c5fd;
+  --stat-businesses-bg:   #1a2740;
+  --stat-events:          #c4b5fd;
+  --stat-events-bg:       #2A2050;
+  --stat-jobs:            #5eead4;
+  --stat-jobs-bg:         #12302c;
+
+  --tab-help-bg:      #332a0a;
+  --tab-emergency-bg: #3a1b1b;
+
+  --qa-community-bg:  #3a2f1a;
+  --qa-approval-bg:   #3a2020;
+  --qa-users-bg:      #16332b;
+  --qa-business-bg:   #1a2740;
+  --qa-users-text:    #6ee7b7;
+
+  --activity-user:            #fbbf24;
+  --activity-pending-post:    #fbbf24;
+  --activity-emergency-post:  #fca5a5;
+  --activity-post:            #7dd3fc;
+  --activity-business:        #c4b5fd;
+  --activity-event:           #fbbf24;
+  --activity-job:             #a8a29e;
+  --activity-default:         #78716c;
+
+  --color-comp-bg:     #1A1F30;
+  --color-comp-border: #2A3149;
+
+  --color-primary-light:   #33260f;
+  --color-primary-lighter: #241b0c;
+
+  --navbar-bg:             rgba(28, 25, 23, 0.95);
+  --navbar-border-color:   rgba(61, 54, 44, 0.9);
+  --navbar-shadow:         0 1px 0 rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --navbar-brand-color:    #F5F5F4;
+
+  --card-bg:               #1C1917;
+  --card-border-color:     #3D362C;
+  --input-bg:              #221D17;
+  --input-border-color:    #3D362C;
+
+  --scrollbar-thumb-bg:       #4A4038;
+  --scrollbar-thumb-bg-hover: #57534E;
+
+  --shadow-1:   0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-2:   0 1px 3px rgba(0, 0, 0, 0.36), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-3:   0 4px 6px rgba(0, 0, 0, 0.34), 0 2px 4px rgba(0, 0, 0, 0.24);
+  --shadow-4:   0 10px 15px rgba(0, 0, 0, 0.38), 0 4px 6px rgba(0, 0, 0, 0.26);
+  --shadow-5:   0 20px 25px rgba(0, 0, 0, 0.42), 0 8px 10px rgba(0, 0, 0, 0.28);
+  --shadow-6:   0 25px 50px rgba(0, 0, 0, 0.55);
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-md:  0 4px 8px rgba(0, 0, 0, 0.36), 0 2px 4px rgba(0, 0, 0, 0.24);
+  --shadow-lg:  0 8px 16px rgba(0, 0, 0, 0.38), 0 4px 8px rgba(0, 0, 0, 0.26);
+  --shadow-xl:  0 16px 32px rgba(0, 0, 0, 0.44), 0 8px 16px rgba(0, 0, 0, 0.28);
+  --shadow-2xl: 0 24px 48px rgba(0, 0, 0, 0.50), 0 12px 24px rgba(0, 0, 0, 0.30);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.30);
+
+  // ── Community Detail page — dark equivalents (see the light block for
+  // context). Pastel light backgrounds become dark, desaturated tints;
+  // saturated dark-mode text colors lighten enough to read on them. ───
+  --cd-6d28d9: #c4b5fd; // violet-300 (was violet-700 text)
+  --cd-1d4ed8: #93c5fd; // blue-300 (was blue-700 text)
+  --cd-2563eb: #60a5fa; // blue-400 (was blue-600 accent)
+  --cd-eff6ff: #1e293b; // dark blue-tinted bg (was blue-50)
+  --cd-dbeafe: #1e3a5f; // dark blue-tinted bg, stronger (was blue-100)
+  --cd-f5f3ff: #2e2249; // dark violet-tinted bg (was violet-50)
+  --cd-f8fafc: #232833; // dark slate-tinted bg (was slate-50)
+  --cd-334155: #cbd5e1; // slate-300 (was slate-700 text)
+  --cd-0f766e: #5eead4; // teal-300 (was teal-700 text)
+  --cd-fffbeb: #3d2f10; // dark amber-tinted bg (was amber-50)
+  --cd-92400e: #fbbf7a; // light amber (was amber-800 text)
+  --cd-fef2f2: #3a1b1b; // dark red-tinted bg (was red-50)
+  --cd-dc2626: #f87171; // red-400 (was red-600 text)
+  --cd-b91c1c: #fca5a5; // red-300 (was red-700 text)
+  --cd-5b21b6: #ddd6fe; // violet-200 (was violet-800 text)
+
+  // ── Community Detail — second batch dark equivalents ───────────────
+  --cd-e2e8f0: #2a2f3a; // dark slate-tinted bg (was slate-200)
+  --cd-475569: #94a3b8; // slate-400 (was slate-600 text)
+  --cd-1e3a8a: #93c5fd; // blue-300 (was blue-900 text)
+  --cd-115e59: #5eead4; // teal-300 (was teal-900 text)
+  --cd-fff7ed: #3a2410; // dark orange-tinted bg (was orange-50)
+  --cd-78350f: #fcd34d; // amber-300 (was amber-900 text)
+  --cd-7c2d12: #fdba74; // orange-300 (was orange-900 text)
+  --cd-f0fdf4: #142e1f; // dark green-tinted bg (was green-50)
+  --cd-0f9f5e: #4ade80; // green-400 (was green text)
+  --cd-111827: #e5e7eb; // near-white (was near-black X brand text)
+  --cd-f0f9ff: #14293d; // dark sky-tinted bg (was sky-50)
+  --cd-0284c7: #7dd3fc; // sky-300 (was sky-600 text)
+  --cd-f1f5f9: #262b35; // dark slate hover bg (was slate-100)
+  --cd-fff1f2: #3a1720; // dark rose-tinted bg (was rose-50)
+  --cd-ecfeff: #123138; // dark cyan-tinted bg (was cyan-50)
+  --cd-a16207: #fbbf24; // amber-400 (was yellow-700 text)
+  --cd-ecfdf5: #12291d; // dark green-tinted bg alt (was green-50)
+  --cd-15803d: #4ade80; // green-400 (was green-700 text)
+  --cd-991b1b: #fca5a5; // red-300 (was red-800 text)
+  --cd-1e40af: #93c5fd; // blue-300 (was blue-800 text)
+  --cd-fff5f5: #3a1b1b; // dark red-tinted bg (was red-50 alt)
+  --cd-b02a37: #f87171; // red-400 (was danger-dark text)
+
+  // ── Community Detail — third batch dark equivalents ────────────────
+  --cd-9a3412: #fdba74; // orange-300 (was orange-800 text)
+  --cd-ecfdf3: #12291d; // dark green-tinted bg (was green-50 alt)
+  --cd-166534: #4ade80; // green-400 (was green-800 text)
+  --cd-f0fdfa: #12302c; // dark teal-tinted bg (was teal-50)
+  --cd-fdf4ff: #33203a; // dark fuchsia-tinted bg (was fuchsia-50)
+  --cd-a21caf: #e879f9; // fuchsia-400 (was fuchsia-700 text)
+  --cd-854d0e: #fcd34d; // amber-300 (was amber-800 text alt)
+
+  --cd-7c3aed: #c4b5fd; // violet-300 (was violet-600 icon)
+  --cd-16a34a: #4ade80; // green-400 (was green-600 icon)
+  --cd-b45309: #fbbf24; // amber-400 (was amber-700 icon)
+  --cd-0369a1: #7dd3fc; // sky-300 (was sky-700 icon)
+  --cd-0e7490: #67e8f9; // cyan-300 (was cyan-700 icon)
+  --cd-9333ea: #d8b4fe; // purple-300 (was purple-600 icon)
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1058,7 +1434,11 @@ body {
 }
 
 // ── Bootstrap dropdown-menu polish ────────────────────────────
+// Explicit background/text here — Bootstrap's own stock CSS (loaded
+// precompiled, not built from our Sass) otherwise wins with a hardcoded
+// white background regardless of theme.
 .dropdown-menu {
+  background-color: $color-bg-card;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   box-shadow: $shadow-4;
@@ -1069,6 +1449,7 @@ body {
     padding: 0.5rem 0.75rem;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
+    color: $color-text-body;
     transition: background $transition-fast $transition-easing,
                 color $transition-fast $transition-easing;
 
@@ -1082,6 +1463,10 @@ body {
       background: $color-primary-light;
       color: $color-primary-darker;
     }
+  }
+
+  .dropdown-divider {
+    border-top: 1px solid $color-border;
   }
 }
 

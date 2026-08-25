@@ -19,7 +19,7 @@
   <!-- Welcome header -->
   <div class="db-welcome">
     <div class="db-welcome__left">
-      <span class="db-welcome__icon" [style.background]="getGreetingColor() + '1a'" [style.color]="getGreetingColor()">
+      <span class="db-welcome__icon" [style.background]="'color-mix(in srgb, ' + getGreetingColor() + ' 10%, transparent)'" [style.color]="getGreetingColor()">
         <i class="bi" [ngClass]="getGreetingIcon()"></i>
       </span>
       <div class="db-welcome__text">
@@ -144,7 +144,7 @@
       <h3 class="panel__title">Quick Actions</h3>
       <div class="qa-list">
         @for (a of quickActions; track a.label) {
-          <a [routerLink]="a.route" class="qa-item" [style.background]="a.bg" [style.border-color]="a.color + '22'">
+          <a [routerLink]="a.route" class="qa-item" [style.background]="a.bg" [style.border-color]="'color-mix(in srgb, ' + a.color + ' 13%, transparent)'">
             <div class="qa-item__icon"><i class="bi" [class]="a.icon" [style.color]="a.color"></i></div>
             <span class="qa-item__label">{{ a.label }}</span>
             <i class="bi bi-chevron-right qa-item__chevron"></i>
@@ -405,7 +405,7 @@
                 <p class="activity-message">{{ item.message }}</p>
                 <span class="activity-time">{{ getTimeAgo(item.createdAt) }}</span>
               </div>
-              <span class="activity-badge" [style.background]="activityColor(item.type) + '14'" [style.color]="activityColor(item.type)" [style.border-color]="activityColor(item.type) + '33'">
+              <span class="activity-badge" [style.background]="'color-mix(in srgb, ' + activityColor(item.type) + ' 14%, transparent)'" [style.color]="activityColor(item.type)" [style.border-color]="'color-mix(in srgb, ' + activityColor(item.type) + ' 33%, transparent)'">
                 {{ activityLabel(item.type) }}
               </span>
             </div>

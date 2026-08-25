@@ -13,6 +13,7 @@ import { JobService } from '../../core/services/job.service';
 import { EventService } from '../../core/services/event.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 
 interface NavItem {
   label: string;
@@ -37,7 +38,7 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
 })

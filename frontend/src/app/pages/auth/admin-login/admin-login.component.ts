@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 type Lang = 'en' | 'ta';
 
@@ -65,30 +66,23 @@ export class AdminLoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private themeService = inject(ThemeService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID) as object;
 
   loading = signal(false);
   showPassword = signal(false);
 
-  // ── Theme ──────────────────────────────────────────────────────────────────
-  currentTheme: 'dark' | 'light' = 'dark';
+  // ── Theme — delegates to the shared ThemeService (see theme.service.ts);
+  // this page still binds its own host attribute since _auth-shared.scss's
+  // --auth-* palette is :host[data-theme]-scoped. ────────────────────────
+  get currentTheme(): 'dark' | 'light' { return this.themeService.theme(); }
 
   @HostBinding('attr.data-theme')
   get theme(): string { return this.currentTheme; }
 
   toggleTheme(): void {
-    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('landing-theme', this.currentTheme);
-    }
-  }
-
-  private loadTheme(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('landing-theme') as 'dark' | 'light' | null;
-      if (saved) this.currentTheme = saved;
-    }
+    this.themeService.toggleTheme();
   }
 
   // ── Language ───────────────────────────────────────────────────────────────
@@ -118,7 +112,7 @@ export class AdminLoginComponent {
   });
 
   ngOnInit(): void {
-    this.loadTheme();
+    this.themeService.applyDefaultIfUnset('dark');
     this.loadLanguage();
   }
 

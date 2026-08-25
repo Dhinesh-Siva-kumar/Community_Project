@@ -7,22 +7,24 @@
 // ELEVATION LEVELS (6 levels — neutral)
 // ============================================================
 
-$shadow-1:    0 1px 2px rgba(28, 25, 23, 0.05);
-$shadow-2:    0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
-$shadow-3:    0 4px 6px rgba(28, 25, 23, 0.07), 0 2px 4px rgba(28, 25, 23, 0.04);
-$shadow-4:    0 10px 15px rgba(28, 25, 23, 0.08), 0 4px 6px rgba(28, 25, 23, 0.04);
-$shadow-5:    0 20px 25px rgba(28, 25, 23, 0.10), 0 8px 10px rgba(28, 25, 23, 0.04);
-$shadow-6:    0 25px 50px rgba(28, 25, 23, 0.18);
+// Theme-reactive — var(--x, <light-fallback>) driven by the global
+// :root / [data-theme='dark'] block in styles.scss (see ThemeService).
+$shadow-1:    var(--shadow-1, 0 1px 2px rgba(28, 25, 23, 0.05));
+$shadow-2:    var(--shadow-2, 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04));
+$shadow-3:    var(--shadow-3, 0 4px 6px rgba(28, 25, 23, 0.07), 0 2px 4px rgba(28, 25, 23, 0.04));
+$shadow-4:    var(--shadow-4, 0 10px 15px rgba(28, 25, 23, 0.08), 0 4px 6px rgba(28, 25, 23, 0.04));
+$shadow-5:    var(--shadow-5, 0 20px 25px rgba(28, 25, 23, 0.10), 0 8px 10px rgba(28, 25, 23, 0.04));
+$shadow-6:    var(--shadow-6, 0 25px 50px rgba(28, 25, 23, 0.18));
 
 // ============================================================
 // NAMED SHADOW SCALE
 // ============================================================
 
-$shadow-sm:   0 1px 2px rgba(28, 25, 23, 0.06);
-$shadow-md:   0 4px 8px rgba(28, 25, 23, 0.08),  0 2px 4px rgba(28, 25, 23, 0.04);
-$shadow-lg:   0 8px 16px rgba(28, 25, 23, 0.09),  0 4px 8px rgba(28, 25, 23, 0.04);
-$shadow-xl:   0 16px 32px rgba(28, 25, 23, 0.12), 0 8px 16px rgba(28, 25, 23, 0.04);
-$shadow-2xl:  0 24px 48px rgba(28, 25, 23, 0.16), 0 12px 24px rgba(28, 25, 23, 0.06);
+$shadow-sm:   var(--shadow-sm, 0 1px 2px rgba(28, 25, 23, 0.06));
+$shadow-md:   var(--shadow-md, 0 4px 8px rgba(28, 25, 23, 0.08), 0 2px 4px rgba(28, 25, 23, 0.04));
+$shadow-lg:   var(--shadow-lg, 0 8px 16px rgba(28, 25, 23, 0.09), 0 4px 8px rgba(28, 25, 23, 0.04));
+$shadow-xl:   var(--shadow-xl, 0 16px 32px rgba(28, 25, 23, 0.12), 0 8px 16px rgba(28, 25, 23, 0.04));
+$shadow-2xl:  var(--shadow-2xl, 0 24px 48px rgba(28, 25, 23, 0.16), 0 12px 24px rgba(28, 25, 23, 0.06));
 
 // ============================================================
 // AMBER / PRIMARY BRAND SHADOWS
@@ -73,7 +75,7 @@ $shadow-navbar:         0 1px 0 rgba(231, 229, 228, 0.9), 0 4px 16px rgba(28, 25
 $shadow-sidebar:        2px 0 8px rgba(28, 25, 23, 0.12);
 
 // Inner shadow — pressed / inset states
-$shadow-inner:          inset 0 2px 4px rgba(28, 25, 23, 0.06);
+$shadow-inner:          var(--shadow-inner, inset 0 2px 4px rgba(28, 25, 23, 0.06));
 
 // ============================================================
 // SHADOW MIXINS

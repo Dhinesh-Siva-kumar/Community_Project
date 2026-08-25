@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 
 interface NavItem {
   label: string;
@@ -27,7 +28,7 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent],
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
 })

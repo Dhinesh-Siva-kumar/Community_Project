@@ -221,10 +221,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // moderation task is still one click away now that Post Approval no
   // longer has its own standalone page.
   quickActions = [
-    { label: 'Create Community',      icon: 'bi-plus-circle',     bg: '#fff3e0', color: '#855300', route: '/admin/community'       },
-    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: '#fdecea', color: '#ba1a1a', route: '/admin/approval'        },
-    { label: 'Manage Users',          icon: 'bi-person-gear',     bg: '#e6faf3', color: '#006c49', route: '/admin/user-management' },
-    { label: 'Business Listings',     icon: 'bi-building',        bg: '#e8f0ff', color: '#005ac2', route: '/admin/business'        },
+    { label: 'Create Community',      icon: 'bi-plus-circle',     bg: 'var(--qa-community-bg, #fff3e0)', color: 'var(--activity-pending-post, #855300)', route: '/admin/community'       },
+    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: 'var(--qa-approval-bg, #fdecea)',  color: 'var(--activity-emergency-post, #ba1a1a)', route: '/admin/approval'        },
+    { label: 'Manage Users',          icon: 'bi-person-gear',     bg: 'var(--qa-users-bg, #e6faf3)',     color: 'var(--qa-users-text, #006c49)', route: '/admin/user-management' },
+    { label: 'Business Listings',     icon: 'bi-building',        bg: 'var(--qa-business-bg, #e8f0ff)',  color: 'var(--activity-post, #005ac2)', route: '/admin/business'        },
   ];
 
   ngOnInit(): void {
@@ -341,10 +341,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   activityColor(type: string): string {
     const map: Record<string, string> = {
-      user: '#f59e0b', pending_post: '#855300', emergency_post: '#ba1a1a',
-      post: '#005ac2', business: '#7c3aed', event: '#d97706', job: '#78716c',
+      user: 'var(--activity-user, #f59e0b)',
+      pending_post: 'var(--activity-pending-post, #855300)',
+      emergency_post: 'var(--activity-emergency-post, #ba1a1a)',
+      post: 'var(--activity-post, #005ac2)',
+      business: 'var(--activity-business, #7c3aed)',
+      event: 'var(--activity-event, #d97706)',
+      job: 'var(--activity-job, #78716c)',
     };
-    return map[type] ?? '#a8a29e';
+    return map[type] ?? 'var(--activity-default, #a8a29e)';
   }
 
   activityLabel(type: string): string {
@@ -456,7 +461,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     } else if (hour >= 12 && hour < 17) {
       return '#FBBF24'; // Bright amber (afternoon brightness)
     } else {
-      return '#78716C'; // Muted stone (evening calm)
+      return 'var(--color-text-muted, #78716C)'; // Muted stone (evening calm)
     }
   }
 

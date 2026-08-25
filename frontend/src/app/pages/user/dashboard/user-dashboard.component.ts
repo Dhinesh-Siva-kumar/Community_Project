@@ -214,11 +214,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Events all in the amber family, which made the icons hard to tell
   // apart at a glance in a short list.
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A', route: '/user/community' },
-    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FEF3C7', accentColor: '#F59E0B', route: '/user/profile', queryParams: { tab: 'posts' } },
-    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: '#2563EB', bgColor: '#DBEAFE', accentColor: '#2563EB', route: '/user/business' },
-    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: '#7C3AED', bgColor: '#EDE9FE', accentColor: '#7C3AED', route: '/user/events' },
-    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: '#0D9488', bgColor: '#CCFBF1', accentColor: '#0D9488', route: '/user/jobs' },
+    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: 'var(--stat-communities, #16A34A)', bgColor: 'var(--stat-communities-bg, #DCFCE7)', accentColor: 'var(--stat-communities, #16A34A)', route: '/user/community' },
+    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: 'var(--stat-posts, #F59E0B)', bgColor: 'var(--stat-posts-bg, #FEF3C7)', accentColor: 'var(--stat-posts, #F59E0B)', route: '/user/profile', queryParams: { tab: 'posts' } },
+    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: 'var(--stat-businesses, #2563EB)', bgColor: 'var(--stat-businesses-bg, #DBEAFE)', accentColor: 'var(--stat-businesses, #2563EB)', route: '/user/business' },
+    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: 'var(--stat-events, #7C3AED)', bgColor: 'var(--stat-events-bg, #EDE9FE)', accentColor: 'var(--stat-events, #7C3AED)', route: '/user/events' },
+    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: 'var(--stat-jobs, #0D9488)', bgColor: 'var(--stat-jobs-bg, #CCFBF1)', accentColor: 'var(--stat-jobs, #0D9488)', route: '/user/jobs' },
   ]);
 
   private animationFrameId: number | null = null;
@@ -241,12 +241,17 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   completedItems = computed(() => this.profileItems().filter((item) => item.completed));
   incompleteItems = computed(() => this.profileItems().filter((item) => !item.completed));
 
+  // `color` is used both as text-on-tint (hover) AND as a solid icon-chip
+  // fill with a white icon on top (active) — kept as a fixed literal so
+  // that white-on-fill contrast can't degrade if it were ever swapped for
+  // a dark-mode-lightened variant. `bgColor` (the sliding active-tab
+  // indicator, a pure light tint) is reactive.
   tabs: ProfileTab[] = [
-    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: '#E0F2FE' },
-    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: '#FFEDD5' },
-    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: '#FEF9C3' },
-    { id: 'EMERGENCY', label: 'Emergency Assistance', icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: '#FEE2E2' },
-    { id: 'ENQUIRY',   label: 'Enquire',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: '#EDE9FE' },
+    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: 'var(--color-info-light, #E0F2FE)' },
+    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: 'var(--color-badge-orange-bg, #FFEDD5)' },
+    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: 'var(--tab-help-bg, #FEF9C3)' },
+    { id: 'EMERGENCY', label: 'Emergency Assistance', icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: 'var(--tab-emergency-bg, #FEE2E2)' },
+    { id: 'ENQUIRY',   label: 'Enquire',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: 'var(--color-badge-violet-bg, #EDE9FE)' },
   ];
 
   ngOnInit(): void {
