@@ -46,12 +46,25 @@ export const AUDIT_RESOURCE_OPTIONS: string[] = [
   'business_categories', 'businesses', 'events', 'jobs', 'notifications',
 ];
 
-export function formatAuditAction(action: string): string {
-  return action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+/**
+ * Catalog keys for audit action/resource codes. These used to be derived by
+ * title-casing the enum ("USER_CREATED" -> "User Created"), which only ever
+ * produced English; the display now goes through the translation catalog
+ * while the stored code is untouched.
+ *
+ * Codes with no catalog entry fall back to the old title-cased form so a new
+ * backend action still reads sensibly before anyone adds a translation.
+ */
+export function auditActionKey(action: string): string {
+  return `audit.action.${action}`;
 }
 
-export function formatAuditResource(resource: string): string {
-  return resource.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+export function auditResourceKey(resource: string): string {
+  return `audit.resource.${resource}`;
+}
+
+export function titleCaseCode(code: string): string {
+  return code.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function getAuditActionColor(action: string): string {

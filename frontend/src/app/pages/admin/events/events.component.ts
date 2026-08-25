@@ -15,6 +15,8 @@ import { TimeInputComponent } from '../../../shared/components/time-input/time-i
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 // Remembers the last selected view mode (grid/table) across navigations.
 const VIEW_STORAGE_KEY = 'admin-events:viewMode';
@@ -56,7 +58,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -127,9 +129,9 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   filterCountryOptions: SelectOption[] = [];
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',          label: 'All Status' },
-    { value: 'upcoming',  label: 'Upcoming' },
-    { value: 'completed', label: 'Completed' },
+    { value: '',          label: 'admin.events.label.allStatus' },
+    { value: 'upcoming',  label: 'admin.events.label.upcoming' },
+    { value: 'completed', label: 'admin.events.label.completed' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -140,9 +142,9 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   // ── Sort — driven by the sort-bar above the grid ────────────
   readonly sortFields: SortField[] = [
-    { key: 'joined',    label: 'Created' },
-    { key: 'eventDate', label: 'Event Date' },
-    { key: 'name',      label: 'Name' },
+    { key: 'joined',    label: 'admin.events.label.created' },
+    { key: 'eventDate', label: 'admin.events.label.eventDate' },
+    { key: 'name',      label: 'admin.events.label.name' },
   ];
   sortBy  = signal<EventSortField>('joined');
   sortDir = signal<SortDir>('desc');
@@ -211,9 +213,9 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   /** Event Mode radio group in the create/edit modal (app-radio-group). */
   readonly eventModeOptions: RadioOption[] = [
-    { value: 'Offline', label: 'Offline', icon: 'bi-geo-alt-fill' },
-    { value: 'Online',  label: 'Online',  icon: 'bi-camera-video-fill' },
-    { value: 'Hybrid',  label: 'Hybrid',  icon: 'bi-diagram-2-fill' },
+    { value: 'Offline', label: 'admin.events.label.offline', icon: 'bi-geo-alt-fill' },
+    { value: 'Online',  label: 'admin.events.label.online',  icon: 'bi-camera-video-fill' },
+    { value: 'Hybrid',  label: 'admin.events.label.hybrid',  icon: 'bi-diagram-2-fill' },
   ];
   readonly TIMEZONES   = [
     'UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney',
@@ -312,7 +314,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
         this.totalItems.set(res.total); this.loading.set(false);
         this.pageReady.set(true);
       },
-      error: () => { this.toast.error('Failed to load events'); this.loading.set(false); this.pageReady.set(true); },
+      error: () => { this.toast.error('admin.events.toast.failedLoadEvents'); this.loading.set(false); this.pageReady.set(true); },
     });
   }
 
@@ -514,8 +516,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
       : this.eventService.createEvent(data, images);
     req.subscribe({
       next: (evt) => {
-        if (editing) { this.events.update(l => l.map(e => e.id === evt.id ? evt : e)); this.toast.success('Event updated'); }
-        else { this.events.update(l => [evt, ...l]); this.totalItems.update(v => v + 1); this.toast.success('Event created'); }
+        if (editing) { this.events.update(l => l.map(e => e.id === evt.id ? evt : e)); this.toast.success('admin.events.toast.eventUpdated'); }
+        else { this.events.update(l => [evt, ...l]); this.totalItems.update(v => v + 1); this.toast.success('admin.events.toast.eventCreated'); }
         this.closeAddModal(); this.submitting.set(false);
       },
       error: (err) => { this.toast.error(err?.error?.message ?? 'Failed to save event'); this.submitting.set(false); },
@@ -540,8 +542,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     const evt = this.eventToDelete(); if (!evt) return;
     this.deleting.set(true);
     this.eventService.deleteEvent(evt.id).subscribe({
-      next: () => { this.events.update(l => l.filter(e => e.id !== evt.id)); this.totalItems.update(v => v - 1); this.toast.success('Event deleted'); this.closeDeleteConfirm(); this.deleting.set(false); },
-      error: () => { this.toast.error('Failed to delete event'); this.deleting.set(false); },
+      next: () => { this.events.update(l => l.filter(e => e.id !== evt.id)); this.totalItems.update(v => v - 1); this.toast.success('admin.events.toast.eventDeleted'); this.closeDeleteConfirm(); this.deleting.set(false); },
+      error: () => { this.toast.error('admin.events.toast.failedDeleteEvent'); this.deleting.set(false); },
     });
   }
   // backward compat
@@ -570,9 +572,9 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     const eventDate = new Date(evt.eventDate);
     
     if (eventDate >= today) {
-      return { label: 'Upcoming', type: 'upcoming' };
+      return { label: 'admin.events.label.upcoming', type: 'upcoming' };
     } else {
-      return { label: 'Completed', type: 'completed' };
+      return { label: 'admin.events.label.completed', type: 'completed' };
     }
   }
 

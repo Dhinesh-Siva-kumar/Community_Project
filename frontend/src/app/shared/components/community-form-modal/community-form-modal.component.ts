@@ -14,6 +14,7 @@ import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../community-rules-input/community-rules-input.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /** Fails when the trimmed value is empty (catches whitespace-only strings). */
 function noWhitespace(control: AbstractControl): ValidationErrors | null {
@@ -47,7 +48,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-community-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe, TranslatePipe],
   templateUrl: './community-form-modal.component.html',
   styleUrls: ['./community-form-modal.component.scss'],
 })
@@ -72,19 +73,19 @@ export class CommunityFormModalComponent implements OnChanges {
 
   isAdminUser = computed(() => this.authService.currentUser()?.role === 'ADMIN');
   isEditing = computed(() => !!this.editingCommunity());
-  modalTitle = computed(() => this.isEditing() ? 'Edit Community' : 'Create Community');
+  modalTitle = computed(() => this.isEditing() ? 'components.communityForm.editTitle' : 'components.communityForm.createTitle');
 
   // ── Radio group options (app-radio-group) ────────────────────
   /** Non-admins only ever get Private — Global is admin-only. */
   visibilityOptions = computed<RadioOption[]>(() => {
-    const opts: RadioOption[] = [{ value: 'private', label: 'Private', icon: 'bi-lock-fill' }];
-    if (this.isAdminUser()) opts.push({ value: 'global', label: 'Global', icon: 'bi-globe2' });
+    const opts: RadioOption[] = [{ value: 'private', label: 'components.communityForm.visibility.private', icon: 'bi-lock-fill' }];
+    if (this.isAdminUser()) opts.push({ value: 'global', label: 'components.communityForm.visibility.global', icon: 'bi-globe2' });
     return opts;
   });
 
   readonly communityModeOptions: RadioOption[] = [
-    { value: 'HELP_EMERGENCY', label: 'Help & Emergency Assistance', icon: 'bi-life-preserver' },
-    { value: 'ENQUIRE',        label: 'Enquire',                     icon: 'bi-question-circle-fill' },
+    { value: 'HELP_EMERGENCY', label: 'components.communityForm.mode.helpEmergency', icon: 'bi-life-preserver' },
+    { value: 'ENQUIRE',        label: 'components.communityForm.mode.enquire',             icon: 'bi-question-circle-fill' },
   ];
 
   countries: Country[] = [];
@@ -140,7 +141,7 @@ export class CommunityFormModalComponent implements OnChanges {
           return { value: c.id, label: `${flag} ${c.name}` };
         });
       },
-      error: () => this.toast.error('Failed to load countries'),
+      error: () => this.toast.error('components.communityForm.toast.countriesFailed'),
     });
   }
 
@@ -152,7 +153,7 @@ export class CommunityFormModalComponent implements OnChanges {
         this.interests = res.data ?? res ?? [];
         this.interestOptions = this.interests.map((i) => ({ value: i.interest_id, label: i.interest_name }));
       },
-      error: () => this.toast.error('Failed to load categories'),
+      error: () => this.toast.error('components.communityForm.toast.categoriesFailed'),
     });
   }
 
@@ -162,7 +163,7 @@ export class CommunityFormModalComponent implements OnChanges {
     this.formSubmitAttempted.set(false);
 
     const patches: Record<string, unknown> = {};
-    const defaultCountry = this.countries.find((c) => c.name === 'India');
+    const defaultCountry = this.countries.find((c) => c.iso2 === 'IN');
     if (defaultCountry) patches['countryId'] = defaultCountry.id;
     patches['communityMode'] = 'HELP_EMERGENCY';
     patches['rules'] = [];
@@ -177,7 +178,7 @@ export class CommunityFormModalComponent implements OnChanges {
   private loadForEdit(id: string): void {
     this.communityService.getCommunity(id).subscribe({
       next: (community) => this.applyEditFormData(community),
-      error: () => { this.toast.error('Failed to load community details'); this.closed.emit(); },
+      error: () => { this.toast.error('components.communityForm.toast.detailsFailed'); this.closed.emit(); },
     });
   }
 
@@ -240,9 +241,9 @@ export class CommunityFormModalComponent implements OnChanges {
         next: (community) => {
           const editing = this.editingCommunity();
           if (community.status === 'PENDING') {
-            this.toast.success(editing ? 'Community resubmitted for admin approval' : 'Community submitted for admin approval');
+            this.toast.success(editing ? 'components.communityForm.toast.resubmitted' : 'components.communityForm.toast.submitted');
           } else {
-            this.toast.success(editing ? 'Community updated successfully' : 'Community created successfully');
+            this.toast.success(editing ? 'components.communityForm.toast.updated' : 'components.communityForm.toast.created');
           }
           this.submitting.set(false);
           this.saved.emit(community);
@@ -250,7 +251,7 @@ export class CommunityFormModalComponent implements OnChanges {
         },
         error: (err) => {
           const editing = this.editingCommunity();
-          this.toast.error(err?.error?.message ?? (editing ? 'Failed to update community' : 'Failed to create community'));
+          this.toast.error(editing ? 'components.communityForm.toast.updateFailed' : 'components.communityForm.toast.createFailed');
           this.submitting.set(false);
         },
       });

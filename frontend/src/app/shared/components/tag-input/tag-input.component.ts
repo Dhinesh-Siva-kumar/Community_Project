@@ -9,11 +9,12 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tag-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -36,7 +37,7 @@ import { CommonModule } from '@angular/common';
           <button
             type="button"
             class="tag-chip__remove"
-            [attr.aria-label]="'Remove ' + tag"
+            [attr.aria-label]="'components.tagInput.remove' | translate:{ tag: tag }"
             (click)="removeTag(tag, $event)"
           >
             <i class="bi bi-x"></i>
@@ -173,7 +174,7 @@ import { CommonModule } from '@angular/common';
 export class TagInputComponent implements ControlValueAccessor {
 
   // ── Inputs ────────────────────────────────────────────────────
-  readonly placeholder = input<string>('Type a skill and press Enter…');
+  readonly placeholder = input<string>('components.tagInput.placeholder');
   readonly maxLength = input<number | null>(null);
   readonly itemLabel = input<string>('skill');
   readonly commitOnComma = input<boolean>(true);

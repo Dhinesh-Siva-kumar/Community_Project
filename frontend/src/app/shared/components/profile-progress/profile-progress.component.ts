@@ -1,16 +1,17 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-profile-progress',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="profile-progress">
       <div class="progress-track" role="progressbar"
            [attr.aria-valuenow]="percentage" aria-valuemin="0" aria-valuemax="100"
-           [attr.aria-label]="'Profile ' + percentage + '% complete'">
+           [attr.aria-label]="'components.profileProgress.complete' | translate:{ percentage: percentage }">
         <div class="progress-fill" [ngClass]="colorClass" [style.width.%]="percentage"></div>
       </div>
       @if (showLabel) {

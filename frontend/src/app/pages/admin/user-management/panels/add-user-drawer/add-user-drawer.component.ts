@@ -6,11 +6,12 @@ import { UserService, AdminCreateUserPayload } from '../../../../../core/service
 import { AuthService } from '../../../../../core/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { SearchableSelectComponent, SelectOption } from '../../../../../shared/components/searchable-select/searchable-select.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-add-user-drawer',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, TranslatePipe],
   templateUrl: './add-user-drawer.component.html',
   styleUrls: ['./add-user-drawer.component.scss'],
 })
@@ -85,11 +86,11 @@ export class AddUserDrawerComponent implements OnInit {
     if (/[0-9]/.test(p))           score++;
     if (/[^A-Za-z0-9]/.test(p))   score++;
     const map = [
-      { label: 'Too short', level: 0, color: '#e5e7eb' },
-      { label: 'Weak',      level: 1, color: '#ef4444' },
-      { label: 'Fair',      level: 2, color: '#f59e0b' },
-      { label: 'Good',      level: 3, color: '#3b82f6' },
-      { label: 'Strong',    level: 4, color: '#22c55e' },
+      { label: 'admin.addUser.label.tooShort', level: 0, color: '#e5e7eb' },
+      { label: 'admin.addUser.label.weak',      level: 1, color: '#ef4444' },
+      { label: 'admin.addUser.label.fair',      level: 2, color: '#f59e0b' },
+      { label: 'admin.addUser.label.good',      level: 3, color: '#3b82f6' },
+      { label: 'admin.addUser.label.strong',    level: 4, color: '#22c55e' },
     ];
     return p.length < 8 ? map[0] : map[score];
   }

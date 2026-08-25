@@ -6,13 +6,15 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ALL_NOTIFICATION_TYPES, Notification, NotificationType } from '../../../core/models';
 import { notificationIcon, notificationColor, notificationBgColor, notificationRoute, notificationTypeLabel } from '../../../shared/utils/notification-display';
 import { timeAgo } from '../../../shared/utils/time-ago';
+import { TranslatePipe } from '@ngx-translate/core';
+import { NotificationTextPipe } from '../../../shared/pipes/notification-text.pipe';
 
 type ReadFilter = 'all' | 'unread';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [FormsModule, ToggleComponent],
+  imports: [FormsModule, ToggleComponent, TranslatePipe, NotificationTextPipe],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
 })

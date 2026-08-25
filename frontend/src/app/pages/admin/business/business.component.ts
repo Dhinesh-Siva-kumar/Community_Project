@@ -19,6 +19,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 // Remembers the last selected category view mode (grid/list) across navigations.
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
@@ -68,7 +69,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -77,6 +78,7 @@ interface BusinessNavState {
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminBusinessComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
   private businessService   = inject(BusinessService);
   private authService       = inject(AuthService);
   private layoutService     = inject(LayoutService);
@@ -88,7 +90,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   // ── Countries for filter dropdown ──────────────────────────
   filterCountryOptions: SelectOption[] = [];
   filterOpeningHoursOptions: SelectOption[] = [
-    { value: '9-5',  label: '9 AM - 5 PM' },
+    { value: '9-5',  label: 'admin.business.label.k9Am5Pm' },
     { value: '24/7', label: '24/7' },
   ];
 
@@ -287,9 +289,9 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   /** Display a time value in a user-friendly 12h format for the trigger button */
   displayTime(time24: string): string {
-    if (!time24) return 'Select';
+    if (!time24) return this.translate.instant('components.businessForm.selectTime2');
     const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return 'Select';
+    if (isNaN(h) || isNaN(m)) return this.translate.instant('components.businessForm.selectTime2');
     const period = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 || 12;
     return `${h12}:${String(m).padStart(2, '0')} ${period}`;
@@ -385,16 +387,16 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // Icon configuration for category modal
   categoryIcons = [
-    { icon: 'bi-shop', bgColor: '#fff4e6', iconColor: '#ff9500', label: 'Retail' },
-    { icon: 'bi-cup', bgColor: '#fff3cd', iconColor: '#ff8c00', label: 'Restaurants' },
-    { icon: 'bi-hospital', bgColor: '#ffe5e5', iconColor: '#e74c3c', label: 'Healthcare' },
-    { icon: 'bi-tools', bgColor: '#e0f7f4', iconColor: '#17a2b8', label: 'Services' },
-    { icon: 'bi-laptop', bgColor: '#f3e5f5', iconColor: '#7b3ff2', label: 'Technology' },
-    { icon: 'bi-palette', bgColor: '#fce4ec', iconColor: '#e91e63', label: 'Design' },
-    { icon: 'bi-book', bgColor: '#e3f2fd', iconColor: '#2196f3', label: 'Education' },
-    { icon: 'bi-briefcase', bgColor: '#e8eaf6', iconColor: '#3f51b5', label: 'Business' },
-    { icon: 'bi-house', bgColor: '#e8f5e9', iconColor: '#4caf50', label: 'Real Estate' },
-    { icon: 'bi-car-front', bgColor: '#ecf0f1', iconColor: '#34495e', label: 'Automotive' },
+    { icon: 'bi-shop', bgColor: '#fff4e6', iconColor: '#ff9500', label: 'admin.business.label.retail' },
+    { icon: 'bi-cup', bgColor: '#fff3cd', iconColor: '#ff8c00', label: 'admin.business.label.restaurants' },
+    { icon: 'bi-hospital', bgColor: '#ffe5e5', iconColor: '#e74c3c', label: 'admin.business.label.healthcare' },
+    { icon: 'bi-tools', bgColor: '#e0f7f4', iconColor: '#17a2b8', label: 'admin.business.label.services' },
+    { icon: 'bi-laptop', bgColor: '#f3e5f5', iconColor: '#7b3ff2', label: 'admin.business.label.technology' },
+    { icon: 'bi-palette', bgColor: '#fce4ec', iconColor: '#e91e63', label: 'admin.business.label.design' },
+    { icon: 'bi-book', bgColor: '#e3f2fd', iconColor: '#2196f3', label: 'admin.business.label.education' },
+    { icon: 'bi-briefcase', bgColor: '#e8eaf6', iconColor: '#3f51b5', label: 'admin.business.label.business' },
+    { icon: 'bi-house', bgColor: '#e8f5e9', iconColor: '#4caf50', label: 'admin.business.label.realEstate' },
+    { icon: 'bi-car-front', bgColor: '#ecf0f1', iconColor: '#34495e', label: 'admin.business.label.automotive' },
   ];
 
   // Advanced filters - match admin-community pattern
@@ -412,9 +414,9 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   listViewMode = signal<'grid' | 'table'>('grid');
 
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',         label: 'All Status' },
-    { value: 'active',   label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: '',         label: 'admin.business.label.allStatus' },
+    { value: 'active',   label: 'admin.business.label.active' },
+    { value: 'inactive', label: 'admin.business.label.inactive' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -425,8 +427,8 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // ── Sort — driven by the sort-bar above the grid ────────────
   readonly sortFields: SortField[] = [
-    { key: 'name',   label: 'Name' },
-    { key: 'joined', label: 'Created' },
+    { key: 'name',   label: 'admin.business.label.name' },
+    { key: 'joined', label: 'admin.business.label.created' },
   ];
   sortBy  = signal<'name' | 'joined'>('joined');
   sortDir = signal<SortDir>('desc');
@@ -504,8 +506,8 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   // Grid-view sort — same pill-style sort-bar as the community grid, shown
   // above the grid only (the table view sorts via its own column headers).
   readonly catSortFields: SortField[] = [
-    { key: 'name',  label: 'Name' },
-    { key: 'count', label: 'Businesses' },
+    { key: 'name',  label: 'admin.business.label.name' },
+    { key: 'count', label: 'admin.business.label.businesses' },
   ];
 
   onCatSortBarChange(change: SortChange): void {
@@ -833,7 +835,7 @@ getCategoryAccent(icon?: string): string {
   loadGeoCountries(): void {
     this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
       next: data => this.geoCountries.set(data),
-      error: () => this.toast.error('Failed to load countries'),
+      error: () => this.toast.error('admin.business.toast.failedLoadCountries'),
     });
   }
 
@@ -912,7 +914,7 @@ getCategoryAccent(icon?: string): string {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('admin.business.toast.failedLoadCountryAddressDetails'),
     });
   }
 
@@ -972,7 +974,7 @@ getCategoryAccent(icon?: string): string {
           label: c.name,
         }));
       },
-      error: () => this.toast.error('Failed to load countries'),
+      error: () => this.toast.error('admin.business.toast.failedLoadCountries'),
     });
   }
 
@@ -1153,7 +1155,7 @@ private initForms(): void {
         this.pageReady.set(true);
       },
       error: () => {
-        this.toast.error('Failed to load categories');
+        this.toast.error('admin.business.toast.failedLoadCategories');
         if (!silent) this.loading.set(false);
         this.pageReady.set(true);
       },
@@ -1207,7 +1209,7 @@ private initForms(): void {
         this.pageReady.set(true);
       },
       error: () => {
-        this.toast.error('Failed to load businesses');
+        this.toast.error('admin.business.toast.failedLoadBusinesses');
         if (!silent) this.loading.set(false);
         this.pageReady.set(true);
       },
@@ -1453,10 +1455,10 @@ private initForms(): void {
       next: (cat) => {
         if (editing) {
           this.categories.update(list => list.map(c => c.id === cat.id ? cat : c));
-          this.toast.success('Category updated');
+          this.toast.success('admin.business.toast.categoryUpdated');
         } else {
           this.categories.update(cats => [...cats, cat]);
-          this.toast.success('Category created successfully');
+          this.toast.success('admin.business.toast.categoryCreatedSuccessfully');
         }
         this.closeAddCategory();
         this.submitting.set(false);
@@ -1486,7 +1488,7 @@ private initForms(): void {
     this.businessService.deleteCategory(cat.id).subscribe({
       next: () => {
         this.categories.update(list => list.filter(c => c.id !== cat.id));
-        this.toast.success('Category deleted');
+        this.toast.success('admin.business.toast.categoryDeleted');
         this.closeDeleteCategory();
         this.deletingCategoryId.set(null);
       },
@@ -1533,7 +1535,7 @@ private initForms(): void {
     // never resurrect on edit. Fetch the full record before populating the form.
     this.businessService.getBusiness(biz.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (fullBiz) => this.applyEditFormData(fullBiz),
-      error: () => this.toast.error('Failed to load business details'),
+      error: () => this.toast.error('admin.business.toast.failedLoadBusinessDetails'),
     });
   }
 
@@ -1766,9 +1768,9 @@ private initForms(): void {
       next: (biz) => {
         if (editing) {
           if (this.selectedBusiness()?.id === biz.id) this.selectedBusiness.set(biz);
-          this.toast.success('Business updated successfully');
+          this.toast.success('admin.business.toast.businessUpdatedSuccessfully');
         } else {
-          this.toast.success('Business created successfully');
+          this.toast.success('admin.business.toast.businessCreatedSuccessfully');
         }
         this.closeAddBusiness();
         this.submitting.set(false);
@@ -1806,7 +1808,7 @@ private initForms(): void {
     this.deletingId.set(biz.id);
     this.businessService.deleteBusiness(biz.id).subscribe({
       next: () => {
-        this.toast.success('Business deleted');
+        this.toast.success('admin.business.toast.businessDeleted');
         this.closeDeleteBusiness();
         this.deletingId.set(null);
         // Refetch instead of splicing locally — keeps pagination totals and

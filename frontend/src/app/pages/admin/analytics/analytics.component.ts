@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ApexChartComponent } from '../../../shared/components/apex-chart/apex-chart.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 type ApexOptions = ApexCharts.ApexOptions;
 type DatePreset = '7d' | '30d' | '90d' | '365d' | 'custom';
@@ -27,7 +28,7 @@ const RED     = '#DC2626';
 @Component({
   selector: 'app-admin-analytics',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, ApexChartComponent, SearchableSelectComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, ApexChartComponent, SearchableSelectComponent, TranslatePipe],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss'],
 })
@@ -47,10 +48,10 @@ export class AdminAnalyticsComponent implements OnInit {
   rangeMax    = this.isoDaysAgo(0);
 
   readonly granularityOptions: SelectOption[] = [
-    { value: 'daily',   label: 'Daily' },
-    { value: 'weekly',  label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'yearly',  label: 'Yearly' },
+    { value: 'daily',   label: 'admin.analytics.label.daily' },
+    { value: 'weekly',  label: 'admin.analytics.label.weekly' },
+    { value: 'monthly', label: 'admin.analytics.label.monthly' },
+    { value: 'yearly',  label: 'admin.analytics.label.yearly' },
   ];
 
   ngOnInit(): void {
@@ -75,7 +76,7 @@ export class AdminAnalyticsComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load analytics');
+        this.toast.error('admin.analytics.toast.failedLoadAnalytics');
         this.loading.set(false);
       },
     });
@@ -123,12 +124,12 @@ export class AdminAnalyticsComponent implements OnInit {
     const topCountry = ov.countryDistribution[0];
     const fmt = (n: number) => n.toLocaleString('en-GB');
     return [
-      { icon: 'bi-person-plus-fill',    label: 'New Users',           value: fmt(newUsers),                   accent: 'amber'  },
-      { icon: 'bi-person-check-fill',   label: 'Active Today',        value: fmt(ov.activeUsers.today),       accent: 'indigo' },
-      { icon: 'bi-arrow-repeat',        label: 'Retention Rate',      value: `${ov.retentionRate.rate}%`,     accent: 'green'  },
-      { icon: 'bi-briefcase-fill',      label: 'Active Jobs',         value: fmt(ov.jobActivity.active),      accent: 'cyan'   },
-      { icon: 'bi-patch-check-fill',    label: 'Verified Businesses', value: fmt(ov.businessGrowth.verified), accent: 'rose'   },
-      { icon: 'bi-globe-americas',      label: 'Top Country',         value: topCountry?.country ?? '—',      accent: 'purple', sub: topCountry ? `${fmt(topCountry.count)} users` : '' },
+      { icon: 'bi-person-plus-fill',    label: 'admin.analytics.label.newUsers',           value: fmt(newUsers),                   accent: 'amber'  },
+      { icon: 'bi-person-check-fill',   label: 'admin.analytics.label.activeToday',        value: fmt(ov.activeUsers.today),       accent: 'indigo' },
+      { icon: 'bi-arrow-repeat',        label: 'admin.analytics.label.retentionRate',      value: `${ov.retentionRate.rate}%`,     accent: 'green'  },
+      { icon: 'bi-briefcase-fill',      label: 'admin.analytics.label.activeJobs',         value: fmt(ov.jobActivity.active),      accent: 'cyan'   },
+      { icon: 'bi-patch-check-fill',    label: 'admin.analytics.label.verifiedBusinesses', value: fmt(ov.businessGrowth.verified), accent: 'rose'   },
+      { icon: 'bi-globe-americas',      label: 'admin.analytics.label.topCountry',         value: topCountry?.country ?? '—',      accent: 'purple', sub: topCountry ? `${fmt(topCountry.count)} users` : '' },
     ];
   });
 
@@ -350,9 +351,9 @@ export class AdminAnalyticsComponent implements OnInit {
       }
 
       doc.save(`analytics-${ov.range.from}_to_${ov.range.to}.pdf`);
-      this.toast.success('PDF report downloaded');
+      this.toast.success('admin.analytics.toast.pdfReportDownloaded');
     } catch {
-      this.toast.error('Failed to generate PDF');
+      this.toast.error('admin.analytics.toast.failedGeneratePdf');
     } finally {
       this.exporting.set(null);
     }
@@ -382,9 +383,9 @@ export class AdminAnalyticsComponent implements OnInit {
       a.download = `analytics-${ov.range.from}_to_${ov.range.to}.xls`;
       a.click();
       URL.revokeObjectURL(url);
-      this.toast.success('Excel report downloaded');
+      this.toast.success('admin.analytics.toast.excelReportDownloaded');
     } catch {
-      this.toast.error('Failed to generate Excel file');
+      this.toast.error('admin.analytics.toast.failedGenerateExcelFile');
     } finally {
       this.exporting.set(null);
     }

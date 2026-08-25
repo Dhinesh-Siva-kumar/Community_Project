@@ -9,15 +9,18 @@ export interface CurrencyOption {
   label: string;
 }
 
+// `label` holds a catalog key — the symbol and ISO code are international
+// notation and stay verbatim inside the translation, only the currency name
+// changes. Consumers render it through `| translate`.
 export const CURRENCIES: CurrencyOption[] = [
-  { code: 'INR', symbol: '₹',   label: '₹ INR — Indian Rupee'      },
-  { code: 'GBP', symbol: '£',   label: '£ GBP — British Pound'     },
-  { code: 'USD', symbol: '$',   label: '$ USD — US Dollar'          },
-  { code: 'EUR', symbol: '€',   label: '€ EUR — Euro'               },
-  { code: 'AED', symbol: 'AED', label: 'AED — UAE Dirham'           },
-  { code: 'SGD', symbol: 'S$',  label: 'S$ SGD — Singapore Dollar'  },
-  { code: 'CAD', symbol: 'C$',  label: 'C$ CAD — Canadian Dollar'   },
-  { code: 'AUD', symbol: 'A$',  label: 'A$ AUD — Australian Dollar' },
+  { code: 'INR', symbol: '₹',   label: 'currency.INR' },
+  { code: 'GBP', symbol: '£',   label: 'currency.GBP' },
+  { code: 'USD', symbol: '$',   label: 'currency.USD' },
+  { code: 'EUR', symbol: '€',   label: 'currency.EUR' },
+  { code: 'AED', symbol: 'AED', label: 'currency.AED' },
+  { code: 'SGD', symbol: 'S$',  label: 'currency.SGD' },
+  { code: 'CAD', symbol: 'C$',  label: 'currency.CAD' },
+  { code: 'AUD', symbol: 'A$',  label: 'currency.AUD' },
 ];
 
 /** Returns the currency symbol for a given currency code, e.g. 'INR' → '₹' */

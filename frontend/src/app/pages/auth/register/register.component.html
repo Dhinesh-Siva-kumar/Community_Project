@@ -1,19 +1,15 @@
 <div class="auth-page">
   <!-- Back to landing page -->
-  <a routerLink="/landing" class="home-toggle" [attr.aria-label]="t.backToHome">
+  <a routerLink="/landing" class="home-toggle" [attr.aria-label]="('auth.register.backToHome' | translate)">
     <i class="bi bi-house-door-fill"></i>
   </a>
 
   <div class="auth-toggle-group">
     <!-- Language toggle -->
-    <button class="lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? t.switchToTamil : t.switchToEnglish">
-      <span class="lang-toggle-seg" [class.active]="currentLang === 'en'">EN</span>
-      <span class="lang-toggle-divider"></span>
-      <span class="lang-toggle-seg" [class.active]="currentLang === 'ta'">தமிழ்</span>
-    </button>
+    <app-language-toggle></app-language-toggle>
 
     <!-- Theme toggle -->
-    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? t.switchToLight : t.switchToDark">
+    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? ('common.switchToLight' | translate) : ('common.switchToDark' | translate)">
       <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
     </button>
   </div>
@@ -31,11 +27,11 @@
           <!-- Step-reactive headline -->
           <div class="step-brand-text step-enter">
             <h1 class="brand-headline">
-              {{ t.formHeadlinePre }}<br />
-              <span class="brand-headline-sub">{{ t.formHeadlineSub }}</span>
+              {{ 'auth.register.formHeadlinePre' | translate }}<br />
+              <span class="brand-headline-sub">{{ 'auth.register.formHeadlineSub' | translate }}</span>
             </h1>
             <p class="brand-desc">
-              {{ t.formBrandDesc }}
+              {{ 'auth.register.formBrandDesc' | translate }}
             </p>
           </div>
 
@@ -44,19 +40,19 @@
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.formFeature1 }}</span>
+              <span>{{ 'auth.register.formFeature1' | translate }}</span>
             </li>
             <li>
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.formFeature2 }}</span>
+              <span>{{ 'auth.register.formFeature2' | translate }}</span>
             </li>
             <li>
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.formFeature3 }}</span>
+              <span>{{ 'auth.register.formFeature3' | translate }}</span>
             </li>
           </ul>
 
@@ -68,18 +64,18 @@
               <div class="av av-4">D</div>
             </div>
             <span class="avatar-row-text"
-              >{{ t.avatarRowText }}</span
+              >{{ 'auth.register.avatarRowText' | translate }}</span
             >
           </div>
         }
         @if (step() === "otp") {
           <div class="step-brand-text step-enter">
             <h1 class="brand-headline">
-              {{ t.otpHeadlinePre }}<br />
-              <span class="brand-headline-sub">{{ t.otpHeadlineSub }}</span>
+              {{ 'auth.register.otpHeadlinePre' | translate }}<br />
+              <span class="brand-headline-sub">{{ 'auth.register.otpHeadlineSub' | translate }}</span>
             </h1>
             <p class="brand-desc">
-              {{ t.otpBrandDesc }}
+              {{ 'auth.register.otpBrandDesc' | translate }}
             </p>
           </div>
 
@@ -88,19 +84,19 @@
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.otpFeature1 }}</span>
+              <span>{{ 'auth.register.otpFeature1' | translate }}</span>
             </li>
             <li>
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.otpFeature2 }}</span>
+              <span>{{ 'auth.register.otpFeature2' | translate }}</span>
             </li>
             <li>
               <span class="feature-icon"
                 ><i class="bi bi-check-circle-fill"></i
               ></span>
-              <span>{{ t.otpFeature3 }}</span>
+              <span>{{ 'auth.register.otpFeature3' | translate }}</span>
             </li>
           </ul>
         }
@@ -112,11 +108,11 @@
       <div class="auth-card">
         <div class="auth-card-header">
           @if (step() === "form") {
-            <h2>{{ t.cardTitleForm }}</h2>
-            <p class="subtitle">{{ t.cardSubtitleForm }}</p>
+            <h2>{{ 'auth.register.cardTitleForm' | translate }}</h2>
+            <p class="subtitle">{{ 'auth.register.cardSubtitleForm' | translate }}</p>
           } @else if (step() === "otp") {
-            <h2>{{ t.cardTitleOtp }}</h2>
-            <p class="subtitle">{{ t.cardSubtitleOtp }}</p>
+            <h2>{{ 'auth.register.cardTitleOtp' | translate }}</h2>
+            <p class="subtitle">{{ 'auth.register.cardSubtitleOtp' | translate }}</p>
           }
         </div>
 
@@ -125,7 +121,7 @@
             @if (tooManyAttemptsAlert()) {
               <div class="reg-alert">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                {{ t.tooManyAttempts }}
+                {{ 'auth.register.tooManyAttempts' | translate }}
               </div>
             }
             <form
@@ -138,7 +134,7 @@
               <div class="field-row">
                 <div class="field-group">
                   <label class="field-label" for="reg-userName"
-                    >{{ t.usernameLabel }}</label
+                    >{{ 'auth.register.usernameLabel' | translate }}</label
                   >
                   <div class="field-input-wrap">
                     <i class="bi bi-person field-icon"></i>
@@ -147,7 +143,7 @@
                       type="text"
                       maxlength="20"
                       formControlName="userName"
-                      [placeholder]="t.usernamePlaceholder"
+                      [placeholder]="('auth.register.usernamePlaceholder' | translate)"
                       autocomplete="given-name"
                       class="field-input"
                       (input)="sanitizeUsername($event)"
@@ -165,15 +161,15 @@
                   @if (!usernameChecking() && f1["userName"].touched && f1["userName"].invalid) {
                     <div class="field-error">
                       @if (f1["userName"].errors?.["required"]) {
-                        {{ t.errUsernameRequired }}
+                        {{ 'auth.register.errUsernameRequired' | translate }}
                       } @else if (f1["userName"].errors?.["minlength"]) {
-                        {{ t.errUsernameMinlength }}
+                        {{ 'auth.register.errUsernameMinlength' | translate }}
                       } @else if (f1["userName"].errors?.["maxlength"]) {
-                        {{ t.errUsernameMaxlength }}
+                        {{ 'auth.register.errUsernameMaxlength' | translate }}
                       } @else if (f1["userName"].errors?.["pattern"]) {
-                        {{ t.errUsernamePattern }}
+                        {{ 'auth.register.errUsernamePattern' | translate }}
                       } @else if (f1["userName"].errors?.["usernameTaken"]) {
-                        {{ t.errUsernameTaken }}
+                        {{ 'auth.register.errUsernameTaken' | translate }}
                       }
                     </div>
                   }
@@ -181,7 +177,7 @@
 
                 <div class="field-group">
                   <label class="field-label" for="reg-displayName"
-                    >{{ t.displayNameLabel }}</label
+                    >{{ 'auth.register.displayNameLabel' | translate }}</label
                   >
                   <div class="field-input-wrap">
                     <i class="bi bi-person-badge field-icon"></i>
@@ -190,7 +186,7 @@
                       type="text"
                       maxlength="50"
                       formControlName="displayName"
-                      [placeholder]="t.displayNamePlaceholder"
+                      [placeholder]="('auth.register.displayNamePlaceholder' | translate)"
                       autocomplete="family-name"
                       class="field-input"
                       (blur)="trimDisplayName()"
@@ -202,13 +198,13 @@
                   @if (f1["displayName"].touched && f1["displayName"].invalid) {
                     <div class="field-error">
                       @if (f1["displayName"].errors?.["required"]) {
-                        {{ t.errDisplayNameRequired }}
+                        {{ 'auth.register.errDisplayNameRequired' | translate }}
                       } @else if (f1["displayName"].errors?.["minlength"]) {
-                        {{ t.errDisplayNameMinlength }}
+                        {{ 'auth.register.errDisplayNameMinlength' | translate }}
                       } @else if (f1["displayName"].errors?.["maxlength"]) {
-                        {{ t.errDisplayNameMaxlength }}
+                        {{ 'auth.register.errDisplayNameMaxlength' | translate }}
                       } @else if (f1["displayName"].errors?.["pattern"]) {
-                        {{ t.errDisplayNamePattern }}
+                        {{ 'auth.register.errDisplayNamePattern' | translate }}
                       }
                     </div>
                   }
@@ -218,17 +214,17 @@
               <div class="field-row custom-mobile-row">
                 <!-- Country -->
                 <div class="field-group">
-                  <label class="field-label">{{ t.countryLabel }}</label>
+                  <label class="field-label">{{ 'auth.register.countryLabel' | translate }}</label>
                   <app-searchable-select
                     formControlName="countryID"
                     [options]="countryOptions"
-                    [placeholder]="t.countryPlaceholder"
+                    [placeholder]="('auth.register.countryPlaceholder' | translate)"
                   ></app-searchable-select>
                 </div>
 
                 <!-- Mobile -->
                 <div class="field-group">
-                  <label class="field-label">{{ t.mobileLabel }}</label>
+                  <label class="field-label">{{ 'auth.register.mobileLabel' | translate }}</label>
                   <div class="field-input-wrap">
                     <i class="bi bi-phone field-icon"></i>
                      <input
@@ -237,7 +233,7 @@
                       inputmode="numeric"
                       (input)="sanitizeMobile($event)"
                       formControlName="mobile"
-                      [placeholder]="t.mobilePlaceholder"
+                      [placeholder]="('auth.register.mobilePlaceholder' | translate)"
                       class="field-input"
                       [class.is-invalid]="
                         (f1['mobile'].touched && f1['mobile'].invalid) || mobileAlreadyExists()
@@ -248,12 +244,12 @@
                   @if (mobileAlreadyExists()) {
                     <div class="field-error">
                       <i class="bi bi-exclamation-circle-fill"></i>
-                      {{ t.errMobileTaken }}
+                      {{ 'auth.register.errMobileTaken' | translate }}
                     </div>
                   } @else if (f1["mobile"].touched && f1["mobile"].invalid) {
                     <div class="field-error">
                       @if (f1["mobile"].errors?.["required"]) {
-                        {{ t.errMobileRequired }}
+                        {{ 'auth.register.errMobileRequired' | translate }}
                       } @else if (f1["mobile"].errors?.["phoneInvalid"]) {
                         <i class="bi bi-exclamation-circle-fill"></i>
                         {{ f1["mobile"].errors?.["phoneInvalid"] }}
@@ -265,7 +261,7 @@
 
               <!-- Password -->
               <div class="field-group">
-                <label class="field-label" for="reg-password">{{ t.passwordLabel }}</label>
+                <label class="field-label" for="reg-password">{{ 'auth.register.passwordLabel' | translate }}</label>
                 <div class="field-input-wrap">
                   <i class="bi bi-lock field-icon"></i>
                   <input
@@ -273,7 +269,7 @@
                     maxlength="64"
                     [type]="showPassword() ? 'text' : 'password'"
                     formControlName="password"
-                    [placeholder]="t.passwordPlaceholder"
+                    [placeholder]="('auth.register.passwordPlaceholder' | translate)"
                     autocomplete="new-password"
                     class="field-input"
                     [class.is-invalid]="
@@ -285,7 +281,7 @@
                     class="toggle-pw-btn"
                     (click)="showPassword.set(!showPassword())"
                     tabindex="-1"
-                    [attr.aria-label]="t.togglePasswordVisibility"
+                    [attr.aria-label]="('auth.register.togglePasswordVisibility' | translate)"
                   >
                     <i
                       class="bi"
@@ -295,7 +291,7 @@
                   </button>
                 </div>
                 @if (f1["password"].touched && f1["password"].errors?.["required"]) {
-                  <div class="field-error">{{ t.errPasswordRequired }}</div>
+                  <div class="field-error">{{ 'auth.register.errPasswordRequired' | translate }}</div>
                 }
                 @if (f1["password"].value) {
                   <div class="pw-strength-bar">
@@ -304,23 +300,23 @@
                   <ul class="pw-criteria">
                     <li [class.met]="passwordStrength().minLength">
                       <i class="bi" [class.bi-check-circle-fill]="passwordStrength().minLength" [class.bi-circle]="!passwordStrength().minLength"></i>
-                      {{ t.criteriaMinLength }}
+                      {{ 'auth.register.criteriaMinLength' | translate }}
                     </li>
                     <li [class.met]="passwordStrength().uppercase">
                       <i class="bi" [class.bi-check-circle-fill]="passwordStrength().uppercase" [class.bi-circle]="!passwordStrength().uppercase"></i>
-                      {{ t.criteriaUppercase }}
+                      {{ 'auth.register.criteriaUppercase' | translate }}
                     </li>
                     <li [class.met]="passwordStrength().lowercase">
                       <i class="bi" [class.bi-check-circle-fill]="passwordStrength().lowercase" [class.bi-circle]="!passwordStrength().lowercase"></i>
-                      {{ t.criteriaLowercase }}
+                      {{ 'auth.register.criteriaLowercase' | translate }}
                     </li>
                     <li [class.met]="passwordStrength().number">
                       <i class="bi" [class.bi-check-circle-fill]="passwordStrength().number" [class.bi-circle]="!passwordStrength().number"></i>
-                      {{ t.criteriaNumber }}
+                      {{ 'auth.register.criteriaNumber' | translate }}
                     </li>
                     <li [class.met]="passwordStrength().special">
                       <i class="bi" [class.bi-check-circle-fill]="passwordStrength().special" [class.bi-circle]="!passwordStrength().special"></i>
-                      {{ t.criteriaSpecial }}
+                      {{ 'auth.register.criteriaSpecial' | translate }}
                     </li>
                   </ul>
                 }
@@ -329,7 +325,7 @@
               <!-- Confirm Password -->
               <div class="field-group">
                 <label class="field-label" for="reg-confirmPassword"
-                  >{{ t.confirmPasswordLabel }}</label
+                  >{{ 'auth.register.confirmPasswordLabel' | translate }}</label
                 >
                 <div class="field-input-wrap">
                   <i class="bi bi-lock field-icon"></i>
@@ -338,7 +334,7 @@
                     maxlength="64"
                     [type]="showPassword() ? 'text' : 'password'"
                     formControlName="confirmPassword"
-                    [placeholder]="t.confirmPasswordPlaceholder"
+                    [placeholder]="('auth.register.confirmPasswordPlaceholder' | translate)"
                     autocomplete="new-password"
                     class="field-input"
                     [class.is-invalid]="
@@ -349,18 +345,18 @@
                 </div>
                 @if (f1["confirmPassword"].touched) {
                   @if (f1["confirmPassword"].errors?.["required"]) {
-                    <div class="field-error">{{ t.errConfirmRequired }}</div>
+                    <div class="field-error">{{ 'auth.register.errConfirmRequired' | translate }}</div>
                   } @else if (registerForm.errors?.['passwordMismatch']) {
-                    <div class="field-error">{{ t.errPasswordMismatch }}</div>
+                    <div class="field-error">{{ 'auth.register.errPasswordMismatch' | translate }}</div>
                   }
                 }
               </div>
               <div class="btn-row">
                 <button type="submit" class="submit-btn" [disabled]="loading()">
                   @if (loading()) {
-                    {{ t.sendingOtp }}
+                    {{ 'auth.register.sendingOtp' | translate }}
                   } @else {
-                    {{ t.register }} <i class="bi bi-arrow-right ms-1"></i>
+                    {{ 'auth.register.register' | translate }} <i class="bi bi-arrow-right ms-1"></i>
                   }
                 </button>
               </div>
@@ -368,7 +364,7 @@
 
             <!-- OR divider + Google Sign-In (only shown when Client ID is configured) -->
             @if (googleConfigured) {
-              <div class="google-divider"><span>{{ t.or }}</span></div>
+              <div class="google-divider"><span>{{ 'auth.register.or' | translate }}</span></div>
               <div class="google-btn-container">
                 <div id="google-btn-container"></div>
               </div>
@@ -381,7 +377,7 @@
                   <div class="otp-shield-icon">
                     <i class="bi bi-shield-lock-fill"></i>
                   </div>
-                  <p class="otp-hint">{{ t.otpHint }}</p>
+                  <p class="otp-hint">{{ 'auth.register.otpHint' | translate }}</p>
                 </div>
                 <div class="otp-field-group">
                   <div class="otp-boxes" [class.otp-error]="otpError()">
@@ -403,20 +399,20 @@
                     }
                   </div>
                   <p class="otp-expire-note">
-                    <i class="bi bi-clock"></i> {{ t.codeExpiresIn }} {{ otpCountdown() }}
+                    <i class="bi bi-clock"></i> {{ 'auth.register.codeExpiresIn' | translate }} {{ otpCountdown() }}
                   </p>
                 </div>
               </div>
               @if (devOtp()) {
                 <div class="dev-otp-card">
-                  <span class="dev-otp-label"><i class="bi bi-terminal"></i> {{ t.devOtpLabel }}</span>
+                  <span class="dev-otp-label"><i class="bi bi-terminal"></i> {{ 'auth.register.devOtpLabel' | translate }}</span>
                   <span class="dev-otp-value">{{ devOtp() }}</span>
                 </div>
               }
               @if (otpError()) {
                 <div class="otp-error-msg">
                   <i class="bi bi-x-circle-fill"></i>
-                  {{ t.otpIncorrect }}
+                  {{ 'auth.register.otpIncorrect' | translate }}
                 </div>
               }
               <div class="resend-row">
@@ -427,9 +423,9 @@
                   (click)="onResendOtp()"
                 >
                   @if (resendCooldown() > 0) {
-                    {{ t.resendOtpIn(resendCooldown()) }}
+                    {{ 'auth.register.resendOtpIn' | translate:{ seconds: resendCooldown() } }}
                   } @else {
-                    <i class="bi bi-arrow-clockwise"></i> {{ t.resendOtp }}
+                    <i class="bi bi-arrow-clockwise"></i> {{ 'auth.register.resendOtp' | translate }}
                   }
                 </button>
               </div>
@@ -438,13 +434,13 @@
                   @if (loading()) {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     @if (registeringStage() === 'registering') {
-                      {{ t.creatingAccount }}
+                      {{ 'auth.register.creatingAccount' | translate }}
                     } @else {
-                      {{ t.verifyingOtp }}
+                      {{ 'auth.register.verifyingOtp' | translate }}
                     }
                   } @else {
                     <i class="bi bi-check2-circle"></i>
-                    {{ t.verifyOtp }}
+                    {{ 'auth.register.verifyOtp' | translate }}
                   }
                 </button>
               </div>
@@ -455,8 +451,8 @@
         <!-- Switch auth -->
          @if (step() === 'form') {
         <p class="switch-auth">
-          {{ t.alreadyHaveAccount }}
-          <a routerLink="/auth/login" class="switch-link">{{ t.signIn }} &rarr;</a>
+          {{ 'auth.register.alreadyHaveAccount' | translate }}
+          <a routerLink="/auth/login" class="switch-link">{{ 'auth.register.signIn' | translate }} &rarr;</a>
         </p>
         }
       </div>
@@ -470,11 +466,11 @@
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
         <p class="reg-loading-text">
           @if (googleLoading()) {
-            {{ t.googleSigningIn }}
+            {{ 'auth.register.googleSigningIn' | translate }}
           } @else if (registeringStage() === 'registering') {
-            {{ t.creatingYourAccount }}
+            {{ 'auth.register.creatingYourAccount' | translate }}
           } @else {
-            {{ t.verifyingOtp }}
+            {{ 'auth.register.verifyingOtp' | translate }}
           }
         </p>
       </div>
@@ -488,8 +484,8 @@
         <div class="reg-success-icon">
           <i class="bi bi-check-circle-fill"></i>
         </div>
-        <h3 class="reg-success-title">{{ t.successTitle }}</h3>
-        <p class="reg-success-sub">{{ t.successSub }}</p>
+        <h3 class="reg-success-title">{{ 'auth.register.successTitle' | translate }}</h3>
+        <p class="reg-success-sub">{{ 'auth.register.successSub' | translate }}</p>
         <div class="reg-success-progress">
           <div class="reg-success-progress-fill"></div>
         </div>
@@ -501,19 +497,19 @@
   @if (googleNeedsUsername()) {
     <div class="google-username-overlay">
       <div class="google-username-card">
-        <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="t.modalClose">
+        <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="('auth.register.modalClose' | translate)">
           <i class="bi bi-x-lg"></i>
         </button>
         <div class="google-username-icon">
           <i class="bi bi-person-check-fill"></i>
         </div>
-        <h3 class="google-username-title">{{ t.modalTitle }}</h3>
+        <h3 class="google-username-title">{{ 'auth.register.modalTitle' | translate }}</h3>
         <p class="google-username-desc">
-          {{ t.modalDesc }}
+          {{ 'auth.register.modalDesc' | translate }}
         </p>
 
         <div class="field-group">
-          <label class="field-label">{{ t.modalUsernameLabel }}</label>
+          <label class="field-label">{{ 'auth.register.modalUsernameLabel' | translate }}</label>
           <div class="field-input-wrap">
             <i class="bi bi-person field-icon"></i>
             <input
@@ -522,7 +518,7 @@
               class="field-input"
               [value]="usernameModalValue()"
               (input)="onGoogleUsernameInput($any($event.target).value)"
-              placeholder="username"
+              [placeholder]="'auth.login.usernamePlaceholder2' | translate"
               [class.is-invalid]="usernameModalTaken()"
               autocomplete="off"
             />
@@ -530,14 +526,14 @@
           @if (usernameModalChecking()) {
             <div class="field-hint">
               <span class="spinner-border spinner-border-sm" role="status"></span>
-              {{ t.checkingAvailability }}
+              {{ 'auth.register.checkingAvailability' | translate }}
             </div>
           } @else if (usernameModalTaken()) {
-            <div class="field-error">{{ t.usernameTaken }}</div>
+            <div class="field-error">{{ 'auth.register.usernameTaken' | translate }}</div>
           } @else if (usernameModalValue().length >= 3) {
             <div class="field-success">
               <i class="bi bi-check-circle-fill"></i>
-              {{ t.usernameAvailable }}
+              {{ 'auth.register.usernameAvailable' | translate }}
             </div>
           }
         </div>
@@ -551,10 +547,10 @@
         >
           @if (googleLoading()) {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            {{ t.creatingAccount }}
+            {{ 'auth.register.creatingAccount' | translate }}
           } @else {
             <i class="bi bi-check2-circle"></i>
-            {{ t.confirmUsername }}
+            {{ 'auth.register.confirmUsername' | translate }}
           }
         </button>
       </div>

@@ -215,7 +215,7 @@ export async function findOne(id: string) {
     .select('e.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.email as user_email', 'u.avatar')
     .first();
 
-  if (!event) throw new AppError(404, 'Event not found');
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   const e = event as Record<string, unknown>;
   return {
@@ -326,19 +326,19 @@ export async function findPendingOnly(options: FindPendingEventsOptions) {
 
 export async function approve(id: string, adminId: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!event) throw new AppError(404, 'Event not found');
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   if (event['status'] === 'APPROVED') return findOne(id);
 
   await db('events').where({ id }).update({ status: 'APPROVED' });
-  await notificationsService.create(event['user_id'] as string, 'EVENT_APPROVED', `Your event "${event['title']}" has been approved.`, id);
+  await notificationsService.create(event['user_id'] as string, 'EVENT_APPROVED', `Your event "${event['title']}" has been approved.`, id, undefined, { name: event['title'] });
   await logAudit(adminId, 'EVENT_APPROVED', { previousStatus: event['status'], title: event['title'] }, 'events', id);
   return findOne(id);
 }
 
 export async function reject(id: string, adminId: string, reason?: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!event) throw new AppError(404, 'Event not found');
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   if (event['status'] === 'REJECTED') return findOne(id);
 
@@ -351,12 +351,12 @@ export async function reject(id: string, adminId: string, reason?: string) {
 
 export async function update(id: string, data: UpdateEventDtoType, userId: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!event) throw new AppError(404, 'Event not found');
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   const byAdmin = event['user_id'] !== userId;
   if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own events');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own events', 'ONLY_UPDATE_OWN_EVENTS');
   }
 
   const updateData: Record<string, unknown> = {};
@@ -406,12 +406,12 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
 
 export async function deleteEvent(id: string, userId: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!event) throw new AppError(404, 'Event not found');
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   const byAdmin = event['user_id'] !== userId;
   if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own events');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own events', 'ONLY_DELETE_OWN_EVENTS');
   }
 
   await db('events').where({ id }).delete();

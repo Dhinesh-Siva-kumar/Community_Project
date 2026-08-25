@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { Event as AppEvent } from '../../../core/models';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface EventStatus {
   label: string;
@@ -27,7 +28,16 @@ interface CalendarCell {
   ariaLabel: string;
 }
 
-const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Catalog keys — the template pipes each through `| translate`.
+const WEEKDAY_LABELS = [
+  'components.calendar.weekday.mon',
+  'components.calendar.weekday.tue',
+  'components.calendar.weekday.wed',
+  'components.calendar.weekday.thu',
+  'components.calendar.weekday.fri',
+  'components.calendar.weekday.sat',
+  'components.calendar.weekday.sun',
+];
 
 function toDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -43,12 +53,14 @@ function startOfDay(d: Date): Date {
 @Component({
   selector: 'app-event-calendar',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [CommonModule, RouterLink, DatePipe, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './event-calendar.component.html',
   styleUrls: ['./event-calendar.component.scss'],
 })
 export class EventCalendarComponent implements OnInit {
+  private translate = inject(TranslateService);
+
   private eventService = inject(EventService);
   private hostRef = inject(ElementRef<HTMLElement>);
 
@@ -219,10 +231,10 @@ export class EventCalendarComponent implements OnInit {
   private relTime(dateStr: string): EventStatus {
     const eventDay = startOfDay(new Date(dateStr));
     const days = Math.round((eventDay.getTime() - this.today.getTime()) / 86400000);
-    if (days < 0) return { label: 'Completed', cls: 'is-past', isPast: true };
-    if (days === 0) return { label: 'Today', cls: 'is-soon', isPast: false };
-    if (days === 1) return { label: 'Tomorrow', cls: 'is-soon', isPast: false };
-    if (days <= 14) return { label: `In ${days} days`, cls: '', isPast: false };
-    return { label: 'Upcoming', cls: '', isPast: false };
+    if (days < 0) return { label: this.translate.instant('components.calendar.status.completed'), cls: 'is-past', isPast: true };
+    if (days === 0) return { label: this.translate.instant('components.calendar.status.today'), cls: 'is-soon', isPast: false };
+    if (days === 1) return { label: this.translate.instant('components.calendar.status.tomorrow'), cls: 'is-soon', isPast: false };
+    if (days <= 14) return { label: this.translate.instant('components.calendar.status.inDays', { days }), cls: '', isPast: false };
+    return { label: this.translate.instant('components.calendar.status.upcoming'), cls: '', isPast: false };
   }
 }

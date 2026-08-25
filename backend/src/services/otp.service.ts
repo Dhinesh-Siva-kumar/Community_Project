@@ -34,13 +34,13 @@ export async function deliverOtp(mobile: string, otp: string): Promise<void> {
     env.TWILIO_AUTH_TOKEN &&
     env.TWILIO_WHATSAPP_FROM
   ) {
-    // TODO: swap Twilio client in here
-    // const client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
-    // await client.messages.create({
-    //   body: `Your OTP is ${otp}. Valid for ${env.OTP_EXPIRES_MINUTES} minutes.`,
-    //   from: env.TWILIO_WHATSAPP_FROM,
-    //   to: mobile,
-    // });
+    // TODO: swap Twilio client in here. Use sendWhatsAppMessage() from
+    // whatsapp.service.ts and take the body from the i18n catalog so the code
+    // arrives in the requester's language:
+    //
+    //   await sendWhatsAppMessage(mobile, t('otp.whatsapp', {
+    //     otp, minutes: env.OTP_EXPIRES_MINUTES,
+    //   }));
   } else {
     console.log(`[OTP] ${mobile} → ${otp}`);
   }

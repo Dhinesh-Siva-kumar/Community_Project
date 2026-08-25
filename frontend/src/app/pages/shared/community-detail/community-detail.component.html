@@ -69,10 +69,10 @@
             <i class="bi bi-pencil-square"></i>
           </div>
           <div class="au-header__text cm-modal-header-inner ep-modal-header-inner">
-            <h5 class="au-header__title cm-modal-title ep-modal-title" id="cdEditPostModalTitle">Edit Post</h5>
-            <p class="au-header__sub cm-modal-subtitle ep-modal-subtitle">Update post content, type, and images</p>
+            <h5 class="au-header__title cm-modal-title ep-modal-title" id="cdEditPostModalTitle">{{ 'shared.communityDetail.editPost' | translate }}</h5>
+            <p class="au-header__sub cm-modal-subtitle ep-modal-subtitle">{{ 'shared.communityDetail.updatePostContentTypeImages' | translate }}</p>
           </div>
-          <button type="button" class="au-close cm-close-btn ep-close-btn" (click)="closeEditModal()" [disabled]="savingEdit()" aria-label="Close dialog">
+          <button type="button" class="au-close cm-close-btn ep-close-btn" (click)="closeEditModal()" [disabled]="savingEdit()" [attr.aria-label]="'shared.communityDetail.closeDialog' | translate">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -84,59 +84,59 @@
             <div class="cm-section cm-section-last ep-section">
               <div class="cm-section-header ep-section-header">
                 <span class="cm-section-badge ep-section-badge"><i class="bi bi-card-text"></i></span>
-                <span class="cm-section-title ep-section-title">Post Details</span>
+                <span class="cm-section-title ep-section-title">{{ 'shared.communityDetail.postDetails' | translate }}</span>
               </div>
 
             <!-- Content textarea -->
             <div class="mb-3">
-              <label class="cm-label">Content <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'shared.communityDetail.content' | translate }} <span class="cm-required">*</span></label>
               <textarea
                 class="form-control cd-edit-textarea"
                 formControlName="content"
                 rows="5"
-                placeholder="What's on your mind?"
+                [placeholder]="'shared.communityDetail.whatSMind' | translate"
                 [class.is-invalid]="editPostForm.get('content')?.touched && editPostForm.get('content')?.invalid"
               ></textarea>
               @if (editPostForm.get('content')?.touched && editPostForm.get('content')?.errors?.['required']) {
-                <div class="text-danger small mt-1">Post content is required.</div>
+                <div class="text-danger small mt-1">{{ 'shared.communityDetail.postContentRequired' | translate }}</div>
               }
             </div>
 
             <!-- Post type selector -->
             <div class="mb-3">
-              <label class="cm-label">Post Type</label>
+              <label class="cm-label">{{ 'shared.communityDetail.postType' | translate }}</label>
               <div class="cd-type-selector">
                 @if (!isEnquireMode()) {
                   <button type="button" class="cd-type-btn"
                     [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
                     (click)="setEditPostType('GENERAL')">
                     <i class="bi bi-chat-dots-fill"></i>
-                    <span>General</span>
+                    <span>{{ 'shared.communityDetail.general' | translate }}</span>
                   </button>
                   <button type="button" class="cd-type-btn cd-type-btn--help"
                     [class.cd-type-btn--active]="selectedEditType() === 'HELP'"
                     (click)="setEditPostType('HELP')">
                     <i class="bi bi-life-preserver"></i>
-                    <span>Help</span>
+                    <span>{{ 'shared.communityDetail.help' | translate }}</span>
                   </button>
                   <button type="button" class="cd-type-btn cd-type-btn--emergency"
                     [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
                     (click)="setEditPostType('EMERGENCY')">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Emergency Assistance</span>
+                    <span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
                   </button>
                 } @else {
                   <button type="button" class="cd-type-btn"
                     [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
                     (click)="setEditPostType('GENERAL')">
                     <i class="bi bi-chat-dots-fill"></i>
-                    <span>General</span>
+                    <span>{{ 'shared.communityDetail.general' | translate }}</span>
                   </button>
                   <button type="button" class="cd-type-btn cd-type-btn--enquire"
                     [class.cd-type-btn--active]="selectedEditType() === 'ENQUIRY'"
                     (click)="setEditPostType('ENQUIRY')">
                     <i class="bi bi-question-circle-fill"></i>
-                    <span>Enquire</span>
+                    <span>{{ 'shared.communityDetail.enquire' | translate }}</span>
                   </button>
                 }
               </div>
@@ -145,7 +145,7 @@
             <!-- Existing images -->
             @if (editExistingImages().length > 0) {
               <div class="mb-3">
-                <label class="cm-label">Current Images</label>
+                <label class="cm-label">{{ 'shared.communityDetail.currentImages' | translate }}</label>
                 <div class="cd-edit-existing-images">
                   @for (img of editExistingImages(); track img; let ei = $index) {
                     <div class="cd-edit-existing-thumb">
@@ -154,8 +154,8 @@
                         type="button"
                         class="cd-edit-existing-remove"
                         (click)="removeEditExistingImage(ei)"
-                        aria-label="Remove current image"
-                        title="Remove image"
+                        [attr.aria-label]="'shared.communityDetail.removeCurrentImage' | translate"
+                        [title]="'shared.communityDetail.removeImage' | translate"
                       >
                         <i class="bi bi-x"></i>
                       </button>
@@ -167,12 +167,12 @@
 
             <!-- Add images (optional) -->
             <div class="mb-1">
-              <label class="cm-label">Add Images <span class="text-muted fw-normal">(optional)</span></label>
+              <label class="cm-label">{{ 'shared.communityDetail.addImages' | translate }} <span class="text-muted fw-normal">(optional)</span></label>
               <app-file-upload
                 mode="multi"
                 accept="image/*"
                 [maxSizeMb]="5"
-                label="Click or drag to add photos"
+                [label]="'components.fileUpload.clickOrDragPhotos' | translate"
                 [resetCounter]="editImageResetCounter()"
                 (filesChange)="onEditImagesChange($event)"
               ></app-file-upload>
@@ -186,7 +186,7 @@
         <!-- Modal Footer -->
         <div class="au-footer cm-modal-footer ep-modal-footer">
           <button type="button" class="au-btn au-btn--ghost cm-btn-cancel ep-btn-cancel" (click)="closeEditModal()" [disabled]="savingEdit()">
-            Cancel
+            {{ 'common.cancel' | translate }}
           </button>
           <button type="button" class="au-btn au-btn--primary cm-btn-submit ep-btn-submit" (click)="saveEditPost()" [disabled]="savingEdit() || editPostForm.invalid">
             @if (savingEdit()) {
@@ -217,7 +217,7 @@
 
     <!-- Back button inside hero -->
     <div class="cd-hero-top-actions">
-      <a [routerLink]="backRoute()" class="cd-back-btn cd-back-btn--in-hero" aria-label="Back to Communities" title="Back to Communities">
+      <a [routerLink]="backRoute()" class="cd-back-btn cd-back-btn--in-hero" [attr.aria-label]="'shared.communityDetail.backCommunities' | translate" [title]="'shared.communityDetail.backCommunities' | translate">
         <i class="bi bi-arrow-left"></i>
       </a>
     </div>
@@ -255,33 +255,33 @@
             @if (community()!.status === 'APPROVED') {
               <span class="cd-status-badge {{ getCommunityStatus().cls }}">
                 <span class="cd-status-dot"></span>
-                {{ getCommunityStatus().label }}
+                {{ getCommunityStatus().label | translate }}
               </span>
             }
             @if (getApprovalStatus(); as approval) {
               @if (isAdmin()) {
-                <a class="cd-status-badge cd-status-badge--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" title="Go to Approval page">
+                <a class="cd-status-badge cd-status-badge--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                   <i class="bi {{ approval.icon }}"></i>
-                  {{ approval.label }}
+                  {{ approval.label | translate }}
                 </a>
               } @else if (isOwnerOfCommunity()) {
                 <span class="cd-status-badge {{ approval.cls }}">
                   <i class="bi {{ approval.icon }}"></i>
-                  {{ approval.label }}
+                  {{ approval.label | translate }}
                 </span>
               }
             }
             <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
               <i class="bi {{ getVisibilityInfo().icon }}"></i>
-              {{ getVisibilityInfo().label }}
+              {{ getVisibilityInfo().label | translate }}
             </span>
             <!-- Admin/owner compact icon actions -->
             @if (isAdmin() || isOwnerOfCommunity()) {
               <div class="cd-admin-actions">
-                <button type="button" class="cd-icon-btn cd-icon-btn--edit" (click)="openEditCommunityModal()" title="Edit community" aria-label="Edit community">
+                <button type="button" class="cd-icon-btn cd-icon-btn--edit" (click)="openEditCommunityModal()" [title]="'shared.communityDetail.editCommunity' | translate" [attr.aria-label]="'shared.communityDetail.editCommunity' | translate">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button type="button" class="cd-icon-btn cd-icon-btn--delete" (click)="openDeleteModal()" title="Delete community" aria-label="Delete community">
+                <button type="button" class="cd-icon-btn cd-icon-btn--delete" (click)="openDeleteModal()" [title]="'shared.communityDetail.deleteCommunity' | translate" [attr.aria-label]="'shared.communityDetail.deleteCommunity' | translate">
                   <i class="bi bi-trash3-fill"></i>
                 </button>
               </div>
@@ -353,7 +353,7 @@
         <button class="cd-tab-btn cd-tab-btn--posts" role="tab" [class.cd-tab-btn--active]="displayTab() === 'posts'"
           (click)="setTab('posts')" [attr.aria-selected]="displayTab() === 'posts'">
           <i class="bi bi-card-text"></i>
-          <span class="cd-tab-label">Posts</span>
+          <span class="cd-tab-label">{{ 'shared.communityDetail.posts' | translate }}</span>
           @if (postCount() > 0) {
             <span class="cd-tab-badge cd-tab-badge--posts">{{ postCount() }}</span>
           }
@@ -363,7 +363,7 @@
           <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="displayTab() === 'help'"
             (click)="setTab('help')" [attr.aria-selected]="displayTab() === 'help'">
             <i class="bi bi-life-preserver"></i>
-            <span class="cd-tab-label">Help</span>
+            <span class="cd-tab-label">{{ 'shared.communityDetail.help' | translate }}</span>
             @if (helpCount() > 0) {
               <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
             }
@@ -372,7 +372,7 @@
           <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="displayTab() === 'emergency'"
             (click)="setTab('emergency')" [attr.aria-selected]="displayTab() === 'emergency'">
             <i class="bi bi-exclamation-triangle-fill"></i>
-            <span class="cd-tab-label">Emergency Assistance</span>
+            <span class="cd-tab-label">{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
             @if (emergencyCount() > 0) {
               <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
             }
@@ -381,7 +381,7 @@
           <button class="cd-tab-btn cd-tab-btn--enquire" role="tab" [class.cd-tab-btn--active]="displayTab() === 'enquire'"
             (click)="setTab('enquire')" [attr.aria-selected]="displayTab() === 'enquire'">
             <i class="bi bi-question-circle-fill"></i>
-            <span class="cd-tab-label">Enquire</span>
+            <span class="cd-tab-label">{{ 'shared.communityDetail.enquire' | translate }}</span>
             @if (enquiryCount() > 0) {
               <span class="cd-tab-badge cd-tab-badge--enquire">{{ enquiryCount() }}</span>
             }
@@ -392,7 +392,7 @@
           <button class="cd-tab-btn cd-tab-btn--myposts" role="tab" [class.cd-tab-btn--active]="displayTab() === 'myposts'"
             (click)="setTab('myposts')" [attr.aria-selected]="displayTab() === 'myposts'">
             <i class="bi bi-file-post"></i>
-            <span class="cd-tab-label">My Posts</span>
+            <span class="cd-tab-label">{{ 'shared.communityDetail.myPosts' | translate }}</span>
             @if (myPostsInCommunity().length > 0) {
               <span class="cd-tab-badge cd-tab-badge--posts">{{ myPostsInCommunity().length }}</span>
             }
@@ -403,7 +403,7 @@
           <button type="button" class="cd-tab-btn cd-tab-btn--more" [class.cd-tab-btn--active]="isMoreTabActive()"
             (click)="toggleMoreTabsMenu($event)" aria-haspopup="true" [attr.aria-expanded]="moreTabsMenuOpen()">
             <i class="bi bi-three-dots-vertical"></i>
-            <span class="cd-tab-label">More</span>
+            <span class="cd-tab-label">{{ 'shared.communityDetail.more' | translate }}</span>
           </button>
 
           @if (moreTabsMenuOpen()) {
@@ -415,7 +415,7 @@
               </button>
               <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'about'"
                 (click)="setTab('about'); closeMoreTabsMenu()">
-                <i class="bi bi-info-circle"></i>About
+                <i class="bi bi-info-circle"></i>{{ 'shared.communityDetail.about' | translate }}
               </button>
             </div>
           }
@@ -448,15 +448,15 @@
           @if (loadingPosts()) {
             <div class="cd-posts-loading">
               <div class="spinner-border spinner-border-sm cd-spinner-amber me-2"></div>
-              <span class="cd-loading-text">Loading posts...</span>
+              <span class="cd-loading-text">{{ 'shared.communityDetail.loadingPosts' | translate }}</span>
             </div>
           } @else if (filteredPosts().length === 0) {
             <div class="cd-empty-state">
               <div class="cd-empty-icon">
                 <i class="bi bi-chat-square-text"></i>
               </div>
-              <h6 class="cd-empty-title">No posts yet</h6>
-              <p class="cd-empty-text">Be the first to share something with this community!</p>
+              <h6 class="cd-empty-title">{{ 'shared.communityDetail.noPostsYet' | translate }}</h6>
+              <p class="cd-empty-text">{{ 'shared.communityDetail.firstShareSomethingCommunity' | translate }}</p>
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
@@ -482,13 +482,13 @@
                       [class.post-type-chip--help]="post.type === 'HELP'"
                       [class.post-type-chip--emergency]="post.type === 'EMERGENCY'"
                       [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
-                      <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
+                      <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label | translate }}
                     </span>
                     @if (isAdmin() && post.status !== 'APPROVED') {
                       <a class="post-status-chip post-status-chip--link"
                         [class.post-status-chip--pending]="post.status === 'PENDING'"
                         [class.post-status-chip--rejected]="post.status === 'REJECTED'"
-                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                         <i class="bi"
                           [class.bi-hourglass-split]="post.status === 'PENDING'"
                           [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
@@ -497,7 +497,7 @@
                     }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
-                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" [title]="'shared.communityDetail.postOptions' | translate" [attr.aria-label]="'shared.communityDetail.postOptions' | translate">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
@@ -505,15 +505,15 @@
                             @if (canManagePost(post)) {
                               @if (isAdmin()) {
                                 <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                  <i class="bi bi-pencil-fill"></i>Edit
+                                  <i class="bi bi-pencil-fill"></i>{{ 'common.edit' | translate }}
                                 </button>
                               }
                               <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                                <i class="bi bi-trash3-fill"></i>Delete
+                                <i class="bi bi-trash3-fill"></i>{{ 'common.delete' | translate }}
                               </button>
                             } @else {
                               <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
-                                <i class="bi bi-flag-fill"></i>Report
+                                <i class="bi bi-flag-fill"></i>{{ 'shared.communityDetail.report' | translate }}
                               </button>
                             }
                           </div>
@@ -537,7 +537,7 @@
                       <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                         @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                           <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                            <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
+                            <img [src]="img | imageUrl" [alt]="'shared.communityDetail.postImage' | translate" loading="lazy" decoding="async" appImageError />
                             @if (post.images.length > 4 && imgIndex === 3) {
                               <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                             }
@@ -560,7 +560,7 @@
                       <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--share" (click)="sharePost(post)">
-                      <i class="bi bi-share me-1"></i>Share
+                      <i class="bi bi-share me-1"></i>{{ 'shared.communityDetail.share' | translate }}
                     </button>
                   </div>
 
@@ -589,7 +589,7 @@
                                   <div class="comment-meta-row">
                                     <span class="comment-author-name">{{ getUserFullName(comment.user) }}</span>
                                     @if (isCommentByPostAuthor(post, comment)) {
-                                      <span class="comment-author-tag">Author</span>
+                                      <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
                                   </div>
@@ -599,7 +599,7 @@
                             </div>
                           }
                           @if (getComments(post.id).length === 0) {
-                            <p class="text-muted small text-center mb-0">No comments yet. Be the first!</p>
+                            <p class="text-muted small text-center mb-0">{{ 'shared.communityDetail.noCommentsYetFirst' | translate }}</p>
                           }
                         </div>
                         <div class="d-flex gap-2 comment-compose-row">
@@ -616,9 +616,9 @@
                             <div class="row g-2 w-100 align-items-start comment-compose-grid">
                               <div class="col-8 comment-input-col">
                                 <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" placeholder="Write a comment..." />
+                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
                                   @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">Maximum 300 characters reached.</small>
+                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
                                   }
                                 </div>
                               </div>
@@ -682,7 +682,7 @@
                     </div>
                     <div class="cd-compose-user-meta">
                       <span class="cd-compose-username">{{ getUserFullName(currentUser()) }}</span>
-                      <span class="cd-compose-hint">Share something with the community</span>
+                      <span class="cd-compose-hint">{{ 'shared.communityDetail.shareSomethingCommunity' | translate }}</span>
                     </div>
                   </div>
 
@@ -695,7 +695,7 @@
                         formControlName="content"
                         rows="3"
                         [attr.maxlength]="postContentMaxLength"
-                        placeholder="What's on your mind?"
+                        [placeholder]="'shared.communityDetail.whatSMind' | translate"
                         [class.is-invalid]="postForm.get('content')?.touched && postForm.get('content')?.invalid"
                       ></textarea>
                       <div class="cd-input-meta-row">
@@ -721,7 +721,7 @@
                         mode="multi"
                         accept="image/*"
                         [maxSizeMb]="5"
-                        label="Click or drag to add photos"
+                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
                         [resetCounter]="postImageResetCounter()"
                         (filesChange)="onPostImagesChange($event)"
                       ></app-file-upload>
@@ -737,32 +737,32 @@
                             [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
                             (click)="setPostType('GENERAL')">
                             <i class="bi bi-chat-dots-fill"></i>
-                            <span>General</span>
+                            <span>{{ 'shared.communityDetail.general' | translate }}</span>
                           </button>
                           <button type="button" class="cd-type-btn cd-type-btn--help"
                             [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
                             (click)="setPostType('HELP')">
                             <i class="bi bi-life-preserver"></i>
-                            <span>Help</span>
+                            <span>{{ 'shared.communityDetail.help' | translate }}</span>
                           </button>
                           <button type="button" class="cd-type-btn cd-type-btn--emergency"
                             [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
                             (click)="setPostType('EMERGENCY')">
                             <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Emergency Assistance</span>
+                            <span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
                           </button>
                         } @else {
                           <button type="button" class="cd-type-btn cd-type-btn--general"
                             [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
                             (click)="setPostType('GENERAL')">
                             <i class="bi bi-chat-dots-fill"></i>
-                            <span>General</span>
+                            <span>{{ 'shared.communityDetail.general' | translate }}</span>
                           </button>
                           <button type="button" class="cd-type-btn cd-type-btn--enquire"
                             [class.cd-type-btn--active]="selectedPostType() === 'ENQUIRY'"
                             (click)="setPostType('ENQUIRY')">
                             <i class="bi bi-question-circle-fill"></i>
-                            <span>Enquire</span>
+                            <span>{{ 'shared.communityDetail.enquire' | translate }}</span>
                           </button>
                         }
                       </div>
@@ -790,7 +790,7 @@
                 } @else {
                 <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
                   <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
-                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__title">{{ (getApprovalStatus()?.label ?? 'shared.communityDetail.status.pending') | translate }}</p>
                   <p class="cd-compose-locked__text">
                     @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
                       This community was rejected by an admin. Posting is disabled.
@@ -831,8 +831,8 @@
               <div class="cd-empty-icon cd-empty-icon--help">
                 <i class="bi bi-life-preserver"></i>
               </div>
-              <h6 class="cd-empty-title">No help requests yet</h6>
-              <p class="cd-empty-text">Post a help request to get assistance from the community.</p>
+              <h6 class="cd-empty-title">{{ 'shared.communityDetail.noHelpRequestsYet' | translate }}</h6>
+              <p class="cd-empty-text">{{ 'shared.communityDetail.postHelpRequestGetAssistance' | translate }}</p>
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
@@ -851,13 +851,13 @@
                       <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
                     </div>
                     <span class="post-type-chip post-type-chip--help">
-                      <i class="bi bi-life-preserver"></i>Help
+                      <i class="bi bi-life-preserver"></i>{{ 'shared.communityDetail.help' | translate }}
                     </span>
                     @if (isAdmin() && post.status !== 'APPROVED') {
                       <a class="post-status-chip post-status-chip--link"
                         [class.post-status-chip--pending]="post.status === 'PENDING'"
                         [class.post-status-chip--rejected]="post.status === 'REJECTED'"
-                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                         <i class="bi"
                           [class.bi-hourglass-split]="post.status === 'PENDING'"
                           [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
@@ -866,7 +866,7 @@
                     }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
-                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" [title]="'shared.communityDetail.postOptions' | translate" [attr.aria-label]="'shared.communityDetail.postOptions' | translate">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
@@ -874,15 +874,15 @@
                             @if (canManagePost(post)) {
                               @if (isAdmin()) {
                                 <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                  <i class="bi bi-pencil-fill"></i>Edit
+                                  <i class="bi bi-pencil-fill"></i>{{ 'common.edit' | translate }}
                                 </button>
                               }
                               <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                                <i class="bi bi-trash3-fill"></i>Delete
+                                <i class="bi bi-trash3-fill"></i>{{ 'common.delete' | translate }}
                               </button>
                             } @else {
                               <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
-                                <i class="bi bi-flag-fill"></i>Report
+                                <i class="bi bi-flag-fill"></i>{{ 'shared.communityDetail.report' | translate }}
                               </button>
                             }
                           </div>
@@ -903,7 +903,7 @@
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                         <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
+                          <img [src]="img | imageUrl" [alt]="'shared.communityDetail.postImage' | translate" loading="lazy" decoding="async" appImageError />
                           @if (post.images.length > 4 && imgIndex === 3) {
                             <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                           }
@@ -920,7 +920,7 @@
                       <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--share" (click)="sharePost(post)">
-                      <i class="bi bi-share me-1"></i>Share
+                      <i class="bi bi-share me-1"></i>{{ 'shared.communityDetail.share' | translate }}
                     </button>
                   </div>
                   @if (isCommentsExpanded(post.id)) {
@@ -943,7 +943,7 @@
                                   <div class="comment-meta-row">
                                     <span class="comment-author-name">{{ getUserFullName(comment.user) }}</span>
                                     @if (isCommentByPostAuthor(post, comment)) {
-                                      <span class="comment-author-tag">Author</span>
+                                      <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
                                   </div>
@@ -965,9 +965,9 @@
                             <div class="row g-2 w-100 align-items-start comment-compose-grid">
                               <div class="col-8 comment-input-col">
                                 <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" placeholder="Write a comment..." />
+                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
                                   @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">Maximum 300 characters reached.</small>
+                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
                                   }
                                 </div>
                               </div>
@@ -1000,7 +1000,7 @@
                 <div class="cd-compose-card cd-compose-card--help">
                   <div class="cd-compose-card-label cd-compose-card-label--help">
                     <i class="bi bi-life-preserver"></i>
-                    <span>Ask for Help</span>
+                    <span>{{ 'shared.communityDetail.askHelp' | translate }}</span>
                   </div>
                   <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
@@ -1010,7 +1010,7 @@
                         formControlName="content"
                         rows="3"
                         [attr.maxlength]="postContentMaxLength"
-                        placeholder="Describe what you need help with..."
+                        [placeholder]="'shared.communityDetail.describeWhatNeedHelp' | translate"
                       ></textarea>
                       <div class="cd-input-meta-row">
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
@@ -1035,7 +1035,7 @@
                         mode="multi"
                         accept="image/*"
                         [maxSizeMb]="5"
-                        label="Click or drag to add photos"
+                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
                         [resetCounter]="postImageResetCounter()"
                         (filesChange)="onPostImagesChange($event)"
                       ></app-file-upload>
@@ -1055,7 +1055,7 @@
                 } @else {
                 <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
                   <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
-                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__title">{{ (getApprovalStatus()?.label ?? 'shared.communityDetail.status.pending') | translate }}</p>
                   <p class="cd-compose-locked__text">
                     @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
                       This community was rejected by an admin. Posting is disabled.
@@ -1095,8 +1095,8 @@
               <div class="cd-empty-icon cd-empty-icon--emergency">
                 <i class="bi bi-exclamation-triangle"></i>
               </div>
-              <h6 class="cd-empty-title">No emergency posts</h6>
-              <p class="cd-empty-text">There are no active emergency reports in this community.</p>
+              <h6 class="cd-empty-title">{{ 'shared.communityDetail.noEmergencyPosts' | translate }}</h6>
+              <p class="cd-empty-text">{{ 'shared.communityDetail.thereNoActiveEmergencyReports' | translate }}</p>
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
@@ -1115,13 +1115,13 @@
                       <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
                     </div>
                     <span class="post-type-chip post-type-chip--emergency">
-                      <i class="bi bi-exclamation-triangle-fill"></i>Emergency Assistance
+                      <i class="bi bi-exclamation-triangle-fill"></i>{{ 'shared.communityDetail.emergencyAssistance' | translate }}
                     </span>
                     @if (isAdmin() && post.status !== 'APPROVED') {
                       <a class="post-status-chip post-status-chip--link"
                         [class.post-status-chip--pending]="post.status === 'PENDING'"
                         [class.post-status-chip--rejected]="post.status === 'REJECTED'"
-                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                         <i class="bi"
                           [class.bi-hourglass-split]="post.status === 'PENDING'"
                           [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
@@ -1130,7 +1130,7 @@
                     }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
-                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" [title]="'shared.communityDetail.postOptions' | translate" [attr.aria-label]="'shared.communityDetail.postOptions' | translate">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
@@ -1138,15 +1138,15 @@
                             @if (canManagePost(post)) {
                               @if (isAdmin()) {
                                 <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                  <i class="bi bi-pencil-fill"></i>Edit
+                                  <i class="bi bi-pencil-fill"></i>{{ 'common.edit' | translate }}
                                 </button>
                               }
                               <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                                <i class="bi bi-trash3-fill"></i>Delete
+                                <i class="bi bi-trash3-fill"></i>{{ 'common.delete' | translate }}
                               </button>
                             } @else {
                               <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
-                                <i class="bi bi-flag-fill"></i>Report
+                                <i class="bi bi-flag-fill"></i>{{ 'shared.communityDetail.report' | translate }}
                               </button>
                             }
                           </div>
@@ -1167,7 +1167,7 @@
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                         <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
+                          <img [src]="img | imageUrl" [alt]="'shared.communityDetail.postImage' | translate" loading="lazy" decoding="async" appImageError />
                           @if (post.images.length > 4 && imgIndex === 3) {
                             <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                           }
@@ -1184,7 +1184,7 @@
                       <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--share" (click)="sharePost(post)">
-                      <i class="bi bi-share me-1"></i>Share
+                      <i class="bi bi-share me-1"></i>{{ 'shared.communityDetail.share' | translate }}
                     </button>
                   </div>
                   @if (isCommentsExpanded(post.id)) {
@@ -1207,7 +1207,7 @@
                                   <div class="comment-meta-row">
                                     <span class="comment-author-name">{{ getUserFullName(comment.user) }}</span>
                                     @if (isCommentByPostAuthor(post, comment)) {
-                                      <span class="comment-author-tag">Author</span>
+                                      <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
                                   </div>
@@ -1229,9 +1229,9 @@
                             <div class="row g-2 w-100 align-items-start comment-compose-grid">
                               <div class="col-8 comment-input-col">
                                 <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" placeholder="Write a comment..." />
+                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
                                   @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">Maximum 300 characters reached.</small>
+                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
                                   }
                                 </div>
                               </div>
@@ -1264,7 +1264,7 @@
                 <div class="cd-compose-card cd-compose-card--emergency">
                   <div class="cd-compose-card-label cd-compose-card-label--emergency">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>Request Emergency Assistance</span>
+                    <span>{{ 'shared.communityDetail.requestEmergencyAssistance' | translate }}</span>
                   </div>
                   <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
@@ -1274,7 +1274,7 @@
                         formControlName="content"
                         rows="3"
                         [attr.maxlength]="postContentMaxLength"
-                        placeholder="Describe the emergency situation clearly..."
+                        [placeholder]="'shared.communityDetail.describeEmergencySituationClearly' | translate"
                       ></textarea>
                       <div class="cd-input-meta-row">
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
@@ -1299,7 +1299,7 @@
                         mode="multi"
                         accept="image/*"
                         [maxSizeMb]="5"
-                        label="Click or drag to add photos"
+                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
                         [resetCounter]="postImageResetCounter()"
                         (filesChange)="onPostImagesChange($event)"
                       ></app-file-upload>
@@ -1319,7 +1319,7 @@
                 } @else {
                 <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
                   <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
-                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__title">{{ (getApprovalStatus()?.label ?? 'shared.communityDetail.status.pending') | translate }}</p>
                   <p class="cd-compose-locked__text">
                     @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
                       This community was rejected by an admin. Posting is disabled.
@@ -1359,8 +1359,8 @@
               <div class="cd-empty-icon cd-empty-icon--enquire">
                 <i class="bi bi-question-circle-fill"></i>
               </div>
-              <h6 class="cd-empty-title">No enquiries yet</h6>
-              <p class="cd-empty-text">Raise an enquiry and the community will get back to you.</p>
+              <h6 class="cd-empty-title">{{ 'shared.communityDetail.noEnquiriesYet' | translate }}</h6>
+              <p class="cd-empty-text">{{ 'shared.communityDetail.raiseEnquiryCommunityWillGet' | translate }}</p>
             </div>
           } @else {
             @for (post of filteredPosts(); track post.id; let i = $index) {
@@ -1379,13 +1379,13 @@
                       <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
                     </div>
                     <span class="post-type-chip post-type-chip--enquire">
-                      <i class="bi bi-question-circle-fill"></i>Enquire
+                      <i class="bi bi-question-circle-fill"></i>{{ 'shared.communityDetail.enquire' | translate }}
                     </span>
                     @if (isAdmin() && post.status !== 'APPROVED') {
                       <a class="post-status-chip post-status-chip--link"
                         [class.post-status-chip--pending]="post.status === 'PENDING'"
                         [class.post-status-chip--rejected]="post.status === 'REJECTED'"
-                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                         <i class="bi"
                           [class.bi-hourglass-split]="post.status === 'PENDING'"
                           [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
@@ -1394,7 +1394,7 @@
                     }
                     @if (canManagePost(post) || currentUserId()) {
                       <div class="cd-post-options-wrap">
-                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" title="Post options" aria-label="Post options">
+                        <button class="cd-post-options-btn" (click)="togglePostMenu(post.id, $event)" [title]="'shared.communityDetail.postOptions' | translate" [attr.aria-label]="'shared.communityDetail.postOptions' | translate">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         @if (postMenuOpenId() === post.id) {
@@ -1402,15 +1402,15 @@
                             @if (canManagePost(post)) {
                               @if (isAdmin()) {
                                 <button class="cd-post-menu-item" role="menuitem" (click)="openEditPostModal(post)">
-                                  <i class="bi bi-pencil-fill"></i>Edit
+                                  <i class="bi bi-pencil-fill"></i>{{ 'common.edit' | translate }}
                                 </button>
                               }
                               <button class="cd-post-menu-item cd-post-menu-item--danger" role="menuitem" (click)="openDeletePostModal(post)">
-                                <i class="bi bi-trash3-fill"></i>Delete
+                                <i class="bi bi-trash3-fill"></i>{{ 'common.delete' | translate }}
                               </button>
                             } @else {
                               <button class="cd-post-menu-item" role="menuitem" (click)="reportPost(post)">
-                                <i class="bi bi-flag-fill"></i>Report
+                                <i class="bi bi-flag-fill"></i>{{ 'shared.communityDetail.report' | translate }}
                               </button>
                             }
                           </div>
@@ -1431,7 +1431,7 @@
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
                         <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
-                          <img [src]="img | imageUrl" alt="Post image" loading="lazy" decoding="async" appImageError />
+                          <img [src]="img | imageUrl" [alt]="'shared.communityDetail.postImage' | translate" loading="lazy" decoding="async" appImageError />
                           @if (post.images.length > 4 && imgIndex === 3) {
                             <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
                           }
@@ -1448,7 +1448,7 @@
                       <i class="bi bi-chat me-1"></i>{{ post._count?.comments ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--share" (click)="sharePost(post)">
-                      <i class="bi bi-share me-1"></i>Share
+                      <i class="bi bi-share me-1"></i>{{ 'shared.communityDetail.share' | translate }}
                     </button>
                   </div>
                   @if (isCommentsExpanded(post.id)) {
@@ -1471,7 +1471,7 @@
                                   <div class="comment-meta-row">
                                     <span class="comment-author-name">{{ getUserFullName(comment.user) }}</span>
                                     @if (isCommentByPostAuthor(post, comment)) {
-                                      <span class="comment-author-tag">Author</span>
+                                      <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
                                   </div>
@@ -1493,9 +1493,9 @@
                             <div class="row g-2 w-100 align-items-start comment-compose-grid">
                               <div class="col-8 comment-input-col">
                                 <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" placeholder="Write a comment..." />
+                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
                                   @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">Maximum 300 characters reached.</small>
+                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
                                   }
                                 </div>
                               </div>
@@ -1540,7 +1540,7 @@
                 <div class="cd-compose-card cd-compose-card--enquire">
                   <div class="cd-compose-card-label cd-compose-card-label--enquire">
                     <i class="bi bi-question-circle-fill"></i>
-                    <span>Raise an Enquiry</span>
+                    <span>{{ 'shared.communityDetail.raiseEnquiry' | translate }}</span>
                   </div>
                   <form [formGroup]="postForm" (ngSubmit)="submitPost()">
 
@@ -1550,7 +1550,7 @@
                         formControlName="content"
                         rows="3"
                         [attr.maxlength]="postContentMaxLength"
-                        placeholder="Describe your enquiry..."
+                        [placeholder]="'shared.communityDetail.describeEnquiry' | translate"
                       ></textarea>
                       <div class="cd-input-meta-row">
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
@@ -1575,7 +1575,7 @@
                         mode="multi"
                         accept="image/*"
                         [maxSizeMb]="5"
-                        label="Click or drag to add photos"
+                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
                         [resetCounter]="postImageResetCounter()"
                         (filesChange)="onPostImagesChange($event)"
                       ></app-file-upload>
@@ -1595,7 +1595,7 @@
                 } @else {
                 <div class="cd-compose-locked" [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'">
                   <div class="cd-compose-locked__icon"><i class="bi {{ getApprovalStatus()?.icon ?? 'bi-hourglass-split' }}"></i></div>
-                  <p class="cd-compose-locked__title">{{ getApprovalStatus()?.label ?? 'Pending Approval' }}</p>
+                  <p class="cd-compose-locked__title">{{ (getApprovalStatus()?.label ?? 'shared.communityDetail.status.pending') | translate }}</p>
                   <p class="cd-compose-locked__text">
                     @if (getApprovalStatus()?.cls === 'cd-status-rejected') {
                       This community was rejected by an admin. Posting is disabled.
@@ -1634,8 +1634,8 @@
                   <i class="bi bi-people-fill"></i>
                 </div>
                 <div class="cd-members-head-meta">
-                  <span class="cd-section-title">Community Members</span>
-                  <span class="cd-members-subtitle">Active members in this community</span>
+                  <span class="cd-section-title">{{ 'shared.communityDetail.communityMembers' | translate }}</span>
+                  <span class="cd-members-subtitle">{{ 'shared.communityDetail.activeMembersCommunity' | translate }}</span>
                 </div>
               </div>
             </div>
@@ -1661,9 +1661,9 @@
                 <div class="cd-empty-icon cd-empty-icon--sm">
                   <i class="bi bi-exclamation-circle"></i>
                 </div>
-                <h6 class="cd-empty-title">Failed to load members</h6>
-                <p class="cd-empty-text">Something went wrong. Please try again.</p>
-                <button class="btn cd-load-more-btn mt-3" (click)="loadMembers()">Retry</button>
+                <h6 class="cd-empty-title">{{ 'shared.communityDetail.failedLoadMembers' | translate }}</h6>
+                <p class="cd-empty-text">{{ 'shared.communityDetail.somethingWentWrongPleaseTry' | translate }}</p>
+                <button class="btn cd-load-more-btn mt-3" (click)="loadMembers()">{{ 'common.retry' | translate }}</button>
               </div>
 
             <!-- Empty state -->
@@ -1672,8 +1672,8 @@
                 <div class="cd-empty-icon cd-empty-icon--sm">
                   <i class="bi bi-people"></i>
                 </div>
-                <h6 class="cd-empty-title">No members yet</h6>
-                <p class="cd-empty-text">Be the first to join this community!</p>
+                <h6 class="cd-empty-title">{{ 'shared.communityDetail.noMembersYet' | translate }}</h6>
+                <p class="cd-empty-text">{{ 'shared.communityDetail.firstJoinCommunity' | translate }}</p>
               </div>
 
             <!-- Member list -->
@@ -1697,7 +1697,7 @@
                         <div class="cd-member-name-wrap">
                           <span class="cd-member-name text-truncate">{{ getUserFullName(member.user) }}</span>
                           @if (isCommunityCreator(member)) {
-                            <span class="cd-member-author-chip">Author</span>
+                            <span class="cd-member-author-chip">{{ 'shared.communityDetail.author' | translate }}</span>
                           }
                         </div>
                         <span class="cd-member-joined-pill">Joined {{ getTimeAgo(member.joinedAt) }}</span>
@@ -1748,7 +1748,7 @@
                 </div>
                 <div class="cd-stat-body">
                   <div class="cd-stat-value">{{ memberCount() }}</div>
-                  <div class="cd-stat-label">Members</div>
+                  <div class="cd-stat-label">{{ 'shared.communityDetail.members' | translate }}</div>
                 </div>
               </div>
             </div>
@@ -1759,7 +1759,7 @@
                 </div>
                 <div class="cd-stat-body">
                   <div class="cd-stat-value">{{ postCount() }}</div>
-                  <div class="cd-stat-label">Posts</div>
+                  <div class="cd-stat-label">{{ 'shared.communityDetail.posts' | translate }}</div>
                 </div>
               </div>
             </div>
@@ -1771,7 +1771,7 @@
                   </div>
                   <div class="cd-stat-body">
                     <div class="cd-stat-value">{{ helpCount() }}</div>
-                    <div class="cd-stat-label">Help</div>
+                    <div class="cd-stat-label">{{ 'shared.communityDetail.help' | translate }}</div>
                   </div>
                 </div>
               </div>
@@ -1782,7 +1782,7 @@
                   </div>
                   <div class="cd-stat-body">
                     <div class="cd-stat-value">{{ emergencyCount() }}</div>
-                    <div class="cd-stat-label">Emergency Assistance</div>
+                    <div class="cd-stat-label">{{ 'shared.communityDetail.emergencyAssistance' | translate }}</div>
                   </div>
                 </div>
               </div>
@@ -1794,7 +1794,7 @@
                   </div>
                   <div class="cd-stat-body">
                     <div class="cd-stat-value">{{ enquiryCount() }}</div>
-                    <div class="cd-stat-label">Enquiries</div>
+                    <div class="cd-stat-label">{{ 'shared.communityDetail.enquiries' | translate }}</div>
                   </div>
                 </div>
               </div>
@@ -1806,7 +1806,7 @@
                 </div>
                 <div class="cd-stat-body">
                   <div class="cd-stat-value">{{ daysActive() }}</div>
-                  <div class="cd-stat-label">Days Active</div>
+                  <div class="cd-stat-label">{{ 'shared.communityDetail.daysActive' | translate }}</div>
                 </div>
               </div>
             </div>
@@ -1820,7 +1820,7 @@
                 <div class="cd-section-badge">
                   <i class="bi bi-info-circle-fill"></i>
                 </div>
-                <span class="cd-section-title">Community Information</span>
+                <span class="cd-section-title">{{ 'shared.communityDetail.communityInformation' | translate }}</span>
               </div>
 
               <div class="cd-info-grid cd-info-grid--about">
@@ -1829,7 +1829,7 @@
                 <div class="cd-info-row cd-info-row--full cd-info-row--description info-item-animate" style="animation-delay:0ms">
                   <div class="cd-info-icon"><i class="bi bi-card-text"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Description</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.description' | translate }}</span>
                     <p class="cd-info-value">{{ community()!.description || 'No description provided.' }}</p>
                   </div>
                 </div>
@@ -1839,7 +1839,7 @@
                   <div class="cd-info-row cd-info-row--full cd-info-row--rules info-item-animate" style="animation-delay:20ms">
                     <div class="cd-info-icon"><i class="bi bi-shield-check"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Community Rules</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.communityRules' | translate }}</span>
                       <ol class="cd-rules-list">
                         @for (rule of community()!.rules; track $index) {
                           <li>{{ rule }}</li>
@@ -1853,7 +1853,7 @@
                 <div class="cd-info-row cd-info-row--category info-item-animate" style="animation-delay:40ms">
                   <div class="cd-info-icon"><i class="bi bi-tag-fill"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Category</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.category' | translate }}</span>
                     <p class="cd-info-value">{{ community()!.category_name || 'Uncategorized' }}</p>
                   </div>
                 </div>
@@ -1862,7 +1862,7 @@
                 <div class="cd-info-row cd-info-row--country info-item-animate" style="animation-delay:50ms">
                   <div class="cd-info-icon"><i class="bi bi-globe2"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Country</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.country' | translate }}</span>
                     <p class="cd-info-value">{{ community()!.country || 'Not Specified' }}</p>
                   </div>
                 </div>
@@ -1872,11 +1872,11 @@
                   <div class="cd-info-row cd-info-row--status info-item-animate" style="animation-delay:60ms">
                     <div class="cd-info-icon"><i class="bi bi-shield-fill-check"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Status</span>
+                      <span class="cd-info-label">{{ 'common.status' | translate }}</span>
 
                       <span class="cd-inline-status {{ getCommunityStatus().cls }}">
                         <i class="bi" [class.bi-check-circle-fill]="getCommunityStatus().cls === 'cd-status-active'" [class.bi-pause-circle-fill]="getCommunityStatus().cls === 'cd-status-inactive'"></i>
-                        {{ getCommunityStatus().label }}
+                        {{ getCommunityStatus().label | translate }}
                       </span>
                     </div>
                   </div>
@@ -1887,16 +1887,16 @@
                   <div class="cd-info-row cd-info-row--approval info-item-animate" style="animation-delay:65ms">
                     <div class="cd-info-icon"><i class="bi bi-patch-check-fill"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Approval</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.approval' | translate }}</span>
                       @if (isAdmin()) {
-                        <a class="cd-inline-status cd-inline-status--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" title="Go to Approval page">
+                        <a class="cd-inline-status cd-inline-status--link {{ approval.cls }}" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                           <i class="bi {{ approval.icon }}"></i>
-                          {{ approval.label }}
+                          {{ approval.label | translate }}
                         </a>
                       } @else {
                         <span class="cd-inline-status {{ approval.cls }}">
                           <i class="bi {{ approval.icon }}"></i>
-                          {{ approval.label }}
+                          {{ approval.label | translate }}
                         </span>
                       }
                       @if (approval.cls === 'cd-status-rejected' && community()!.rejectionReason) {
@@ -1912,10 +1912,10 @@
                 <div class="cd-info-row cd-info-row--visibility info-item-animate" style="animation-delay:70ms">
                   <div class="cd-info-icon"><i class="bi {{ getVisibilityInfo().icon }}"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Visibility</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.visibility' | translate }}</span>
                     <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
                       <i class="bi {{ getVisibilityInfo().icon }}"></i>
-                      {{ getVisibilityInfo().label }}
+                      {{ getVisibilityInfo().label | translate }}
                     </span>
                   </div>
                 </div>
@@ -1925,7 +1925,7 @@
                   <div class="cd-info-row cd-info-row--location info-item-animate" style="animation-delay:120ms">
                     <div class="cd-info-icon"><i class="bi bi-geo-alt-fill"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Location</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.location' | translate }}</span>
                       <p class="cd-info-value">{{ community()!.location }}</p>
                     </div>
                   </div>
@@ -1936,7 +1936,7 @@
                   <div class="cd-info-row cd-info-row--pincode info-item-animate" style="animation-delay:180ms">
                     <div class="cd-info-icon"><i class="bi bi-mailbox"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Pincode</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.pincode' | translate }}</span>
                       <p class="cd-info-value">{{ community()!.pincode }}</p>
                     </div>
                   </div>
@@ -1946,7 +1946,7 @@
                 <div class="cd-info-row cd-info-row--created info-item-animate" style="animation-delay:240ms">
                   <div class="cd-info-icon"><i class="bi bi-calendar3"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Created</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.created' | translate }}</span>
                     <p class="cd-info-value">{{ formatDate(community()!.created_at || community()!.createdAt) }}</p>
                   </div>
                 </div>
@@ -1955,7 +1955,7 @@
                 <div class="cd-info-row cd-info-row--updated info-item-animate" style="animation-delay:300ms">
                   <div class="cd-info-icon"><i class="bi bi-arrow-clockwise"></i></div>
                   <div class="cd-info-content">
-                    <span class="cd-info-label">Last Updated</span>
+                    <span class="cd-info-label">{{ 'shared.communityDetail.lastUpdated' | translate }}</span>
                     <p class="cd-info-value">{{ formatDate(community()!.updated_at || community()!.updatedAt) }}</p>
                   </div>
                 </div>
@@ -1973,7 +1973,7 @@
                   <div class="cd-section-badge cd-section-badge--owner">
                     <i class="bi bi-person-badge-fill"></i>
                   </div>
-                  <span class="cd-section-title">Owner Information</span>
+                  <span class="cd-section-title">{{ 'shared.communityDetail.ownerInformation' | translate }}</span>
                 </div>
 
                 <div class="cd-owner-profile">
@@ -1990,14 +1990,14 @@
                   <div class="cd-info-row cd-info-row--owner-name info-item-animate" style="animation-delay:160ms">
                     <div class="cd-info-icon"><i class="bi bi-person-fill"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Display Name</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.displayName' | translate }}</span>
                       <p class="cd-info-value">{{ community()!.createdBy!.displayName || '—' }}</p>
                     </div>
                   </div>
                   <div class="cd-info-row cd-info-row--owner-username info-item-animate" style="animation-delay:220ms">
                     <div class="cd-info-icon"><i class="bi bi-at"></i></div>
                     <div class="cd-info-content">
-                      <span class="cd-info-label">Username</span>
+                      <span class="cd-info-label">{{ 'shared.communityDetail.username' | translate }}</span>
                       <p class="cd-info-value">{{ community()!.createdBy!.userName }}</p>
                     </div>
                   </div>
@@ -2023,25 +2023,25 @@
           <div class="cd-type-selector mb-3">
             <button type="button" class="cd-type-btn" [class.cd-type-btn--active]="myPostsFilterType() === 'ALL'"
               (click)="setMyPostsFilterType('ALL')">
-              <i class="bi bi-collection"></i><span>All</span>
+              <i class="bi bi-collection"></i><span>{{ 'common.all' | translate }}</span>
             </button>
             <button type="button" class="cd-type-btn cd-type-btn--general" [class.cd-type-btn--active]="myPostsFilterType() === 'GENERAL'"
               (click)="setMyPostsFilterType('GENERAL')">
-              <i class="bi bi-chat-dots-fill"></i><span>General</span>
+              <i class="bi bi-chat-dots-fill"></i><span>{{ 'shared.communityDetail.general' | translate }}</span>
             </button>
             @if (!isEnquireMode()) {
               <button type="button" class="cd-type-btn cd-type-btn--help" [class.cd-type-btn--active]="myPostsFilterType() === 'HELP'"
                 (click)="setMyPostsFilterType('HELP')">
-                <i class="bi bi-life-preserver"></i><span>Help</span>
+                <i class="bi bi-life-preserver"></i><span>{{ 'shared.communityDetail.help' | translate }}</span>
               </button>
               <button type="button" class="cd-type-btn cd-type-btn--emergency" [class.cd-type-btn--active]="myPostsFilterType() === 'EMERGENCY'"
                 (click)="setMyPostsFilterType('EMERGENCY')">
-                <i class="bi bi-exclamation-triangle-fill"></i><span>Emergency Assistance</span>
+                <i class="bi bi-exclamation-triangle-fill"></i><span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
               </button>
             } @else {
               <button type="button" class="cd-type-btn cd-type-btn--enquire" [class.cd-type-btn--active]="myPostsFilterType() === 'ENQUIRY'"
                 (click)="setMyPostsFilterType('ENQUIRY')">
-                <i class="bi bi-question-circle-fill"></i><span>Enquire</span>
+                <i class="bi bi-question-circle-fill"></i><span>{{ 'shared.communityDetail.enquire' | translate }}</span>
               </button>
             }
           </div>
@@ -2049,15 +2049,15 @@
           @if (loadingMyPosts()) {
             <div class="cd-posts-loading">
               <div class="spinner-border spinner-border-sm cd-spinner-amber me-2"></div>
-              <span class="cd-loading-text">Loading your posts...</span>
+              <span class="cd-loading-text">{{ 'shared.communityDetail.loadingPosts2' | translate }}</span>
             </div>
           } @else if (!filteredMyPosts().length) {
             <div class="cd-empty-state">
               <div class="cd-empty-icon">
                 <i class="bi bi-file-post"></i>
               </div>
-              <h6 class="cd-empty-title">No posts yet</h6>
-              <p class="cd-empty-text">You haven't posted here yet — switch to the Posts tab to share something.</p>
+              <h6 class="cd-empty-title">{{ 'shared.communityDetail.noPostsYet' | translate }}</h6>
+              <p class="cd-empty-text">{{ 'shared.communityDetail.havenTPostedHereYet' | translate }}</p>
             </div>
           } @else {
             @for (post of filteredMyPosts(); track post.id; let i = $index) {
@@ -2069,13 +2069,13 @@
                       [class.post-type-chip--help]="post.type === 'HELP'"
                       [class.post-type-chip--emergency]="post.type === 'EMERGENCY'"
                       [class.post-type-chip--enquire]="post.type === 'ENQUIRY'">
-                      <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label }}
+                      <i class="bi {{ getPostTypeBadge(post.type).icon }}"></i>{{ getPostTypeBadge(post.type).label | translate }}
                     </span>
                     @if (isAdmin() && post.status !== 'APPROVED') {
                       <a class="post-status-chip post-status-chip--link"
                         [class.post-status-chip--pending]="post.status === 'PENDING'"
                         [class.post-status-chip--rejected]="post.status === 'REJECTED'"
-                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" title="Go to Approval page">
+                        [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'posts' }" [title]="'shared.communityDetail.goApprovalPage' | translate">
                         <i class="bi"
                           [class.bi-hourglass-split]="post.status === 'PENDING'"
                           [class.bi-x-circle-fill]="post.status === 'REJECTED'"></i>
@@ -2108,7 +2108,7 @@
                   @if (post.status === 'REJECTED') {
                     <div class="mt-3">
                       <button type="button" class="mp-resubmit-btn" (click)="openEditPostModal(post)">
-                        <i class="bi bi-arrow-repeat"></i>Edit &amp; Resubmit
+                        <i class="bi bi-arrow-repeat"></i>{{ 'shared.communityDetail.editAmpResubmit' | translate }}
                       </button>
                     </div>
                   }
@@ -2123,23 +2123,23 @@
   </div>
 
   @if (lightboxOpen()) {
-    <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+    <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'shared.communityDetail.imagePreview' | translate">
       <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
-        <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+        <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'shared.communityDetail.closeImagePreview' | translate">
           <i class="bi bi-x-lg"></i>
         </button>
 
         @if (lightboxImages().length > 1) {
-          <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+          <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" [attr.aria-label]="'shared.communityDetail.previousImage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
-          <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+          <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" [attr.aria-label]="'shared.communityDetail.nextImage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
         }
 
         @if (getActivePreviewImage()) {
-          <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" appImageError />
+          <img [src]="getActivePreviewImage()! | imageUrl" [alt]="'shared.communityDetail.previewImage' | translate" class="cd-lightbox-image" appImageError />
         }
 
         <div class="cd-lightbox-footer">
@@ -2158,10 +2158,10 @@
               <i class="bi bi-share-fill"></i>
             </div>
             <div class="cd-modal-header-text">
-              <h5 class="cd-modal-title" id="cdShareModalTitle">Share Post</h5>
-              <p class="cd-modal-subtitle">Choose where to share this post</p>
+              <h5 class="cd-modal-title" id="cdShareModalTitle">{{ 'shared.communityDetail.sharePost' | translate }}</h5>
+              <p class="cd-modal-subtitle">{{ 'shared.communityDetail.chooseWhereSharePost' | translate }}</p>
             </div>
-            <button type="button" class="cd-modal-close" (click)="closeShareModal()" aria-label="Close dialog">
+            <button type="button" class="cd-modal-close" (click)="closeShareModal()" [attr.aria-label]="'shared.communityDetail.closeDialog' | translate">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
@@ -2169,7 +2169,7 @@
           <div class="cd-modal-body">
             @if (sharePostData.images?.length) {
               <div class="cd-share-preview-image-wrap mb-2">
-                <img [src]="sharePostData.images[0] | imageUrl" alt="Post share preview" class="cd-share-preview-image" appImageError />
+                <img [src]="sharePostData.images[0] | imageUrl" [alt]="'shared.communityDetail.postSharePreview' | translate" class="cd-share-preview-image" appImageError />
               </div>
             }
             <p class="cd-share-preview-text mb-3">{{ getShareText(sharePostData) }}</p>
@@ -2180,47 +2180,47 @@
                   <i class="bi bi-window"></i>
                 </div>
                 <div class="cd-share-popup-warning__content">
-                  <p class="cd-share-popup-warning__title">Popup blocked by browser</p>
-                  <p class="cd-share-popup-warning__text">Allow popups for this site and try again, or continue in the same tab.</p>
-                  <p class="cd-share-popup-warning__steps">Click the blocked popup icon near the address bar and choose <strong>Always allow pop-ups from this site</strong>.</p>
+                  <p class="cd-share-popup-warning__title">{{ 'shared.communityDetail.popupBlockedByBrowser' | translate }}</p>
+                  <p class="cd-share-popup-warning__text">{{ 'shared.communityDetail.allowPopupsSiteTryAgain' | translate }}</p>
+                  <p class="cd-share-popup-warning__steps">{{ 'shared.communityDetail.clickBlockedPopupIconNear' | translate }} <strong>{{ 'shared.communityDetail.alwaysAllowPopUpsFrom' | translate }}</strong>.</p>
                 </div>
                 <button type="button" class="cd-share-popup-warning__action" (click)="openShareInSameTab()">
-                  Open Here
+                  {{ 'shared.communityDetail.openHere' | translate }}
                 </button>
               </div>
             }
 
             <div class="cd-share-grid">
               <button type="button" class="cd-share-btn cd-share-btn--whatsapp" (click)="shareVia('whatsapp')">
-                <i class="bi bi-whatsapp"></i><span>WhatsApp</span>
+                <i class="bi bi-whatsapp"></i><span>{{ 'shared.communityDetail.whatsapp' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--facebook" (click)="shareVia('facebook')">
-                <i class="bi bi-facebook"></i><span>Facebook</span>
+                <i class="bi bi-facebook"></i><span>{{ 'shared.communityDetail.facebook' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--x" (click)="shareVia('x')">
                 <i class="bi bi-twitter-x"></i><span>X</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--telegram" (click)="shareVia('telegram')">
-                <i class="bi bi-telegram"></i><span>Telegram</span>
+                <i class="bi bi-telegram"></i><span>{{ 'shared.communityDetail.telegram' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--linkedin" (click)="shareVia('linkedin')">
-                <i class="bi bi-linkedin"></i><span>LinkedIn</span>
+                <i class="bi bi-linkedin"></i><span>{{ 'shared.communityDetail.linkedin' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--pinterest" (click)="shareVia('pinterest')">
-                <i class="bi bi-pinterest"></i><span>Pinterest</span>
+                <i class="bi bi-pinterest"></i><span>{{ 'shared.communityDetail.pinterest' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--email" (click)="shareVia('email')">
-                <i class="bi bi-envelope-fill"></i><span>Email</span>
+                <i class="bi bi-envelope-fill"></i><span>{{ 'shared.communityDetail.email' | translate }}</span>
               </button>
               <button type="button" class="cd-share-btn cd-share-btn--copy" (click)="copyShareLink()">
-                <i class="bi bi-link-45deg"></i><span>Copy Link</span>
+                <i class="bi bi-link-45deg"></i><span>{{ 'shared.communityDetail.copyLink' | translate }}</span>
               </button>
             </div>
           </div>
 
           <div class="cd-modal-footer">
             <button type="button" class="cd-modal-btn cd-modal-btn--cancel" (click)="closeShareModal()">
-              Close
+              {{ 'common.close' | translate }}
             </button>
           </div>
         </div>

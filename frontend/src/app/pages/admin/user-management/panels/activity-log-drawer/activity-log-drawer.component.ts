@@ -3,16 +3,19 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../../../core/services/user.service';
 import { AuditLog, AuditLogResponse } from '../../../../../core/models';
-import { getAuditActionColor, getAuditActionIcon, formatAuditAction } from '../../../../../core/constants/audit-actions';
+import { getAuditActionColor, getAuditActionIcon, auditActionKey, titleCaseCode } from '../../../../../core/constants/audit-actions';
+import { TranslatePipe } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-activity-log-drawer',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, TranslatePipe],
   templateUrl: './activity-log-drawer.component.html',
   styleUrls: ['./activity-log-drawer.component.scss'],
 })
 export class ActivityLogDrawerComponent implements OnInit {
+  private translate = inject(TranslateService);
   @Input() embedded = false;
   @Output() close = new EventEmitter<void>();
 
@@ -62,15 +65,17 @@ export class ActivityLogDrawerComponent implements OnInit {
   getMetaDesc(log: AuditLog): string {
     if (!log.metadata) return '';
     const m = log.metadata as any;
-    if (m.createdUser)  return `Created user: ${m.createdUser}`;
-    if (m.deletedUser)  return `Deleted user: ${m.deletedUser}`;
+    if (m.createdUser)  return this.translate.instant('audit.meta.createdUser', { name: m.createdUser });
+    if (m.deletedUser)  return this.translate.instant('audit.meta.deletedUser', { name: m.deletedUser });
     if (m.targetUser)   return `Target: ${m.targetUser}`;
-    if (m.from && m.to) return `Role ${m.from} → ${m.to}`;
-    if (m.count)        return `Sent to ${m.count} users`;
+    if (m.from && m.to) return this.translate.instant('audit.meta.roleChange', { from: m.from, to: m.to });
+    if (m.count)        return this.translate.instant('audit.meta.sentToUsers', { count: m.count });
     return '';
   }
 
   formatAction(action: string): string {
-    return formatAuditAction(action);
+    const key = auditActionKey(action);
+    const text = this.translate.instant(key);
+    return text === key ? titleCaseCode(action) : (text as string);
   }
 }

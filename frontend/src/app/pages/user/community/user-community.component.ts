@@ -10,6 +10,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -24,7 +25,7 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent],
+  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, TranslatePipe],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
@@ -106,10 +107,10 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
   // ── Filter-tab definitions (segmented control) ──────────────
   pageTabs = computed<FilterTab[]>(() => [
-    { id: 'all',      label: 'All',      icon: 'bi-grid-3x3-gap', badge: this.overallStats()?.total || undefined },
-    { id: 'joined',   label: 'Joined',   icon: 'bi-person-check', badge: this.joinedTotalCount() || undefined },
-    { id: 'trending', label: 'Trending', icon: 'bi-lightning-fill' },
-    { id: 'pending',  label: 'Pending Approval', icon: 'bi-hourglass-split', badge: this.myPendingCount() || undefined },
+    { id: 'all',      label: 'user.community.tab.all',      icon: 'bi-grid-3x3-gap', badge: this.overallStats()?.total || undefined },
+    { id: 'joined',   label: 'user.community.tab.joined',   icon: 'bi-person-check', badge: this.joinedTotalCount() || undefined },
+    { id: 'trending', label: 'user.community.tab.trending', icon: 'bi-lightning-fill' },
+    { id: 'pending',  label: 'user.community.tab.pending', icon: 'bi-hourglass-split', badge: this.myPendingCount() || undefined },
   ]);
 
   // ── Joined community ID tracker ───────────────────────────
@@ -302,7 +303,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
         this.pageReady.set(true);
       },
       error: () => {
-        this.toast.error('Failed to load communities');
+        this.toast.error('user.community.toast.failedLoadCommunities');
         this.loading.set(false);
         this.pageReady.set(true);
       },
@@ -325,7 +326,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
         this.loadingMore.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load more communities');
+        this.toast.error('user.community.toast.failedLoadMoreCommunities');
         this.loadingMore.set(false);
       },
     });
@@ -439,7 +440,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
     this.communityService.joinCommunity(communityId).subscribe({
       next: () => {
-        this.toast.success('Joined the community!');
+        this.toast.success('user.community.toast.joinedCommunity');
         // Optimistically patch is_joined on the local object
         this.communities.update(list =>
           list.map(c => c.id === communityId ? { ...c, is_joined: true } : c)
@@ -453,7 +454,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
         this.joiningId.set(null);
       },
       error: () => {
-        this.toast.error('Failed to join community');
+        this.toast.error('user.community.toast.failedJoinCommunity');
         this.joiningId.set(null);
       },
     });
@@ -465,7 +466,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
     this.communityService.leaveCommunity(communityId).subscribe({
       next: () => {
-        this.toast.success('Left the community');
+        this.toast.success('user.community.toast.leftCommunity');
         // Optimistically patch is_joined on the local object so UI updates instantly
         this.communities.update(list =>
           list.map(c => c.id === communityId ? { ...c, is_joined: false } : c)
@@ -479,7 +480,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
         this.leavingId.set(null);
       },
       error: () => {
-        this.toast.error('Failed to leave community');
+        this.toast.error('user.community.toast.failedLeaveCommunity');
         this.leavingId.set(null);
       },
     });

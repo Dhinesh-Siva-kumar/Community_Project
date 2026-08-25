@@ -26,6 +26,9 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 // ─── Validators ──────────────────────────────────────────────
 function urlValidator(control: AbstractControl): ValidationErrors | null {
@@ -91,8 +94,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
     SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
-    ImageErrorHandlerDirective, InfiniteScrollDirective,
-  ],
+    ImageErrorHandlerDirective, InfiniteScrollDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -101,6 +103,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class UserJobsComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
   private jobService        = inject(JobService);
   private authService       = inject(AuthService);
   private layoutService     = inject(LayoutService);
@@ -337,24 +340,29 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     const chips: FilterChip[] = [];
     const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
 
-    if (this.searchQuery())           add('search',       `"${this.searchQuery()}"`, this.searchQuery());
-    if (this.filterJobType())         add('jobType',      this.filterJobType(), this.filterJobType());
-    if (this.filterWorkMode())        add('workMode',     this.filterWorkMode(), this.filterWorkMode());
+    if (this.searchQuery())           add('search',       this.translate.instant('filters.search', { value: this.searchQuery() }), this.searchQuery());
+    if (this.filterJobType())         add('jobType',      this.translate.instant(enumLabelKey('jobType', this.filterJobType())), this.filterJobType());
+    if (this.filterWorkMode())        add('workMode',     this.translate.instant(enumLabelKey('workMode', this.filterWorkMode())), this.filterWorkMode());
     if (this.filterCountry())         add('country',      this.filterCountry(), this.filterCountry());
     if (this.filterState())           add('state',        this.filterState(), this.filterState());
     if (this.filterCity())            add('city',         this.filterCity(), this.filterCity());
     if (this.filterCompanyName())     add('companyName',  this.filterCompanyName(), this.filterCompanyName());
-    if (this.filterShiftType())       add('shiftType',    this.filterShiftType(), this.filterShiftType());
-    if (this.filterEducation())       add('education',    this.filterEducation(), this.filterEducation());
-    if (this.filterExpMin() != null)  add('expMin',       `Min ${this.filterExpMin()} yr`, this.filterExpMin());
-    if (this.filterExpMax() != null)  add('expMax',       `Max ${this.filterExpMax()} yr`, this.filterExpMax());
-    if (this.filterSalaryMin() != null) add('salaryMin',  `Salary ≥ ${this.filterSalaryMin()}`, this.filterSalaryMin());
-    if (this.filterSalaryMax() != null) add('salaryMax',  `Salary ≤ ${this.filterSalaryMax()}`, this.filterSalaryMax());
-    if (this.filterSalaryHidden() === true)  add('salaryHidden', 'Not Disclosed', true);
-    if (this.filterSalaryHidden() === false) add('salaryHidden', 'Salary shown', false);
+    if (this.filterShiftType())       add('shiftType',    this.translate.instant(enumLabelKey('shiftType', this.filterShiftType())), this.filterShiftType());
+    if (this.filterEducation())       add('education',    this.translate.instant(enumLabelKey('education', this.filterEducation())), this.filterEducation());
+    if (this.filterExpMin() != null)  add('expMin',       this.translate.instant('filters.expMin', { years: this.filterExpMin() }), this.filterExpMin());
+    if (this.filterExpMax() != null)  add('expMax',       this.translate.instant('filters.expMax', { years: this.filterExpMax() }), this.filterExpMax());
+    if (this.filterSalaryMin() != null) add('salaryMin',  this.translate.instant('filters.salaryMin', { amount: this.filterSalaryMin() }), this.filterSalaryMin());
+    if (this.filterSalaryMax() != null) add('salaryMax',  this.translate.instant('filters.salaryMax', { amount: this.filterSalaryMax() }), this.filterSalaryMax());
+    if (this.filterSalaryHidden() === true)  add('salaryHidden', this.translate.instant('filters.salaryHidden'), true);
+    if (this.filterSalaryHidden() === false) add('salaryHidden', this.translate.instant('filters.salaryShown'), false);
     if (this.filterPostedWithin() != null) {
-      const labels: Record<number, string> = { 1: 'Today', 7: 'Last 7 days', 30: 'Last 30 days' };
-      add('postedWithin', labels[this.filterPostedWithin()!] ?? `Last ${this.filterPostedWithin()} days`, this.filterPostedWithin());
+      const keys: Record<number, string> = {
+        1: 'filters.postedToday', 7: 'filters.postedDays7', 30: 'filters.postedDays30',
+      };
+      const days = this.filterPostedWithin()!;
+      add('postedWithin', keys[days]
+        ? this.translate.instant(keys[days])
+        : this.translate.instant('filters.postedDaysN', { days }), days);
     }
     return chips;
   });
@@ -363,7 +371,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   // ─── Static Options ─────────────────────────────────────────
   readonly jobTypes    = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'];
-  readonly jobTypeOptions: SelectOption[] = this.jobTypes.map(t => ({ value: t, label: t }));
+  readonly jobTypeOptions: SelectOption[] = enumSelectOptions('jobType', this.jobTypes);
   readonly workModes   = ['Remote', 'Hybrid', 'On-site'] as const;
   readonly shiftTypes  = ['Day', 'Night', 'Rotational', 'Flexible'] as const;
   readonly salaryTypes = ['Fixed', 'Hourly', 'Monthly', 'Annual'] as const;
@@ -372,53 +380,53 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   readonly currencyOptions: SelectOption[] = getCurrencySelectOptions();
 
   readonly educationOptions: SelectOption[] = [
-    { value: 'None',       label: 'No education needed' },
-    { value: '8th',        label: '8th'                  },
-    { value: '10th',       label: '10th'                 },
-    { value: '12th',       label: '12th'                 },
-    { value: 'Diploma',    label: 'Diploma'              },
-    { value: 'ITI',        label: 'ITI'                  },
-    { value: 'Any',        label: 'Any Graduate'         },
-    { value: "Bachelor's", label: "Bachelor's Degree"    },
-    { value: "Master's",   label: "Master's Degree"      },
-    { value: 'PhD',        label: 'PhD'                  },
+    { value: 'None',       label: 'user.jobs.educationOption.none' },
+    { value: '8th',        label: 'user.jobs.educationOption.8th' },
+    { value: '10th',       label: 'user.jobs.educationOption.10th' },
+    { value: '12th',       label: 'user.jobs.educationOption.12th' },
+    { value: 'Diploma',    label: 'user.jobs.educationOption.diploma' },
+    { value: 'ITI',        label: 'user.jobs.educationOption.iti' },
+    { value: 'Any',        label: 'user.jobs.educationOption.any' },
+    { value: "Bachelor's", label: 'enums.education.bachelors' },
+    { value: "Master's",   label: 'enums.education.masters' },
+    { value: 'PhD',        label: 'user.jobs.educationOption.phd' },
   ];
 
   readonly expOptions: SelectOption[] = [
-    { value: 0,  label: 'Fresher (0 yrs)' },
-    { value: 1,  label: '1 Year'          },
-    { value: 2,  label: '2 Years'         },
-    { value: 3,  label: '3 Years'         },
-    { value: 4,  label: '4 Years'         },
-    { value: 5,  label: '5 Years'         },
-    { value: 7,  label: '7 Years'         },
-    { value: 10, label: '10 Years'        },
-    { value: 15, label: '15+ Years'       },
+    { value: 0,  label: 'user.jobs.exp.fresher0' },
+    { value: 1,  label: 'user.jobs.exp.y1' },
+    { value: 2,  label: 'user.jobs.exp.y2' },
+    { value: 3,  label: 'user.jobs.exp.y3' },
+    { value: 4,  label: 'user.jobs.exp.y4' },
+    { value: 5,  label: 'user.jobs.exp.y5' },
+    { value: 7,  label: 'user.jobs.exp.y7' },
+    { value: 10, label: 'user.jobs.exp.y10' },
+    { value: 15, label: 'user.jobs.exp.y15' },
   ];
 
   readonly sortOptions: SelectOption[] = [
-    { value: 'newest',      label: 'Newest First'     },
-    { value: 'oldest',      label: 'Oldest First'     },
-    { value: 'salary_high', label: 'Highest Salary'   },
-    { value: 'salary_low',  label: 'Lowest Salary'    },
-    { value: 'company_az',  label: 'Company (A → Z)'  },
+    { value: 'newest',      label: 'user.jobs.sortOption.newest' },
+    { value: 'oldest',      label: 'user.jobs.sortOption.oldest' },
+    { value: 'salary_high', label: 'user.jobs.sortOption.salaryHigh' },
+    { value: 'salary_low',  label: 'user.jobs.sortOption.salaryLow' },
+    { value: 'company_az',  label: 'user.jobs.sortOption.companyAz' },
   ];
 
   readonly postedWithinOptions: SelectOption[] = [
-    { value: 1,  label: 'Today'        },
-    { value: 7,  label: 'Last 7 Days'  },
-    { value: 30, label: 'Last 30 Days' },
+    { value: 1,  label: 'user.jobs.dateRange.today' },
+    { value: 7,  label: 'user.jobs.dateRange.days7' },
+    { value: 30, label: 'user.jobs.dateRange.days30' },
   ];
 
   readonly filterExpOptions: SelectOption[] = [
-    { value: 0,  label: 'Fresher' },
-    { value: 1,  label: '1 yr'   },
-    { value: 2,  label: '2 yrs'  },
-    { value: 3,  label: '3 yrs'  },
-    { value: 5,  label: '5 yrs'  },
-    { value: 7,  label: '7 yrs'  },
-    { value: 10, label: '10 yrs' },
-    { value: 15, label: '15+ yrs'},
+    { value: 0,  label: 'user.jobs.expShort.fresher' },
+    { value: 1,  label: 'user.jobs.expShort.y1' },
+    { value: 2,  label: 'user.jobs.expShort.y2' },
+    { value: 3,  label: 'user.jobs.expShort.y3' },
+    { value: 5,  label: 'user.jobs.expShort.y5' },
+    { value: 7,  label: 'user.jobs.expShort.y7' },
+    { value: 10, label: 'user.jobs.expShort.y10' },
+    { value: 15, label: 'user.jobs.expShort.y15' },
   ];
 
   // ─── Lifecycle ───────────────────────────────────────────────
@@ -459,7 +467,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         }
         setTimeout(() => this.toggleAccordion(id), 60);
       },
-      error: () => this.toast.error('Job not found or no longer available'),
+      error: () => this.toast.error('user.jobs.toast.jobNotFoundNoLonger'),
     });
     this.router.navigate([], {
       relativeTo: this.route,
@@ -492,7 +500,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load your jobs');
+        this.toast.error('user.jobs.toast.failedLoadJobs');
         this.loading.set(false);
       },
     });
@@ -602,7 +610,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('user.jobs.toast.failedLoadCountryAddressDetails'),
     });
   }
 
@@ -788,7 +796,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.totalItems.set(response.total);
         this.loading.set(false);
       },
-      error: () => { this.toast.error('Failed to load jobs'); this.loading.set(false); },
+      error: () => { this.toast.error('user.jobs.toast.failedLoadJobs2'); this.loading.set(false); },
     });
   }
 
@@ -806,7 +814,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.totalItems.set(response.total);
         this.loadingMore.set(false);
       },
-      error: () => { this.toast.error('Failed to load more jobs'); this.loadingMore.set(false); },
+      error: () => { this.toast.error('user.jobs.toast.failedLoadMoreJobs'); this.loadingMore.set(false); },
     });
   }
 
@@ -1071,7 +1079,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         next: (job) => {
           if (job.status === 'PENDING') {
             this.loadMyPendingJobsCount();
-            this.toast.success('Job submitted for admin approval');
+            this.toast.success('user.jobs.toast.jobSubmittedAdminApproval');
             if (this.pageTab() === 'pending') {
               this.jobs.update(list => [job, ...list]);
               this.totalItems.update(v => v + 1);
@@ -1079,14 +1087,14 @@ export class UserJobsComponent implements OnInit, OnDestroy {
           } else {
             this.jobs.update(list => [job, ...list]);
             this.totalItems.update(v => v + 1);
-            this.toast.success('Job posted successfully!');
+            this.toast.success('user.jobs.toast.jobPostedSuccessfully');
           }
           // Keep the popup (and its disabled/spinner button, so it can't be
           // double-submitted) up just long enough for the confirmation toast
           // to be visible above it, then close.
           setTimeout(() => { this.closeAddModal(); this.submitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
-        error: () => { this.toast.error('Failed to post job. Please try again.'); this.submitting.set(false); },
+        error: () => { this.toast.error('user.jobs.toast.failedPostJobPleaseTry'); this.submitting.set(false); },
       });
   }
 
@@ -1103,13 +1111,13 @@ export class UserJobsComponent implements OnInit, OnDestroy {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
           if (updated.status === 'PENDING' && job.status === 'REJECTED') {
             this.loadMyPendingJobsCount();
-            this.toast.success('Job resubmitted for admin approval');
+            this.toast.success('user.jobs.toast.jobResubmittedAdminApproval');
           } else {
-            this.toast.success('Job updated successfully!');
+            this.toast.success('user.jobs.toast.jobUpdatedSuccessfully');
           }
           setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
-        error: () => { this.toast.error('Failed to update job. Please try again.'); this.editSubmitting.set(false); },
+        error: () => { this.toast.error('user.jobs.toast.failedUpdateJobPleaseTry'); this.editSubmitting.set(false); },
       });
   }
 
@@ -1135,10 +1143,10 @@ export class UserJobsComponent implements OnInit, OnDestroy {
         this.jobs.update(list => list.filter(j => j.id !== job.id));
         this.totalItems.update(v => v - 1);
         if (this.activeJobId() === job.id) this.activeJobId.set(null);
-        this.toast.success('Job deleted successfully');
+        this.toast.success('user.jobs.toast.jobDeletedSuccessfully');
         setTimeout(() => { this.closeDeleteConfirm(); this.deleting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
       },
-      error: () => { this.toast.error('Failed to delete job'); this.deleting.set(false); },
+      error: () => { this.toast.error('user.jobs.toast.failedDeleteJob'); this.deleting.set(false); },
     });
   }
 
@@ -1179,7 +1187,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     const dialCode = this.jobForm.get('contactDialCode')?.value ?? '';
     const phone    = this.jobForm.get('contactPhone')?.value ?? '';
     if (!phone) return null;
-    if (!dialCode) return 'Please select a dial code first';
+    if (!dialCode) return this.translate.instant('jobs.value.selectDialCodeFirst');
     const rule = getPhoneRule(dialCode);
     if (rule.pattern && !rule.pattern.test(phone)) return rule.hint;
     return null;
@@ -1189,35 +1197,35 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   getCurrencySymbol(code: string | undefined): string { return getCurrencySymbol(code); }
 
   getSalaryDisplay(job: Job): string {
-    if (job.salaryHidden) return 'Not Disclosed';
+    if (job.salaryHidden) return this.translate.instant('jobs.value.notDisclosed');
     const sym  = getCurrencySymbol(job.salaryCurrency);
     const type = job.salaryType ? ` / ${job.salaryType}` : '';
     if (job.salaryMin != null && job.salaryMax != null) {
       return `${sym}${job.salaryMin.toLocaleString()} – ${sym}${job.salaryMax.toLocaleString()}${type}`;
     }
-    if (job.salaryMin != null) return `From ${sym}${job.salaryMin.toLocaleString()}${type}`;
-    if (job.salaryMax != null) return `Up to ${sym}${job.salaryMax.toLocaleString()}${type}`;
+    if (job.salaryMin != null) return this.translate.instant('jobs.value.salaryFrom', { amount: `${sym}${job.salaryMin.toLocaleString()}${type}` });
+    if (job.salaryMax != null) return this.translate.instant('jobs.value.salaryUpTo', { amount: `${sym}${job.salaryMax.toLocaleString()}${type}` });
     return job.salary ?? '';
   }
 
   getExperienceLabel(job: Job): string {
     if (job.expMin == null && job.expMax == null) return '';
-    if (job.expMin === 0 && job.expMax == null) return 'Fresher';
-    if (job.expMin != null && job.expMax != null) return `${job.expMin}–${job.expMax} yrs`;
-    if (job.expMin != null) return `${job.expMin}+ yrs`;
-    return `Up to ${job.expMax} yrs`;
+    if (job.expMin === 0 && job.expMax == null) return this.translate.instant('jobs.value.expFresher');
+    if (job.expMin != null && job.expMax != null) return this.translate.instant('jobs.value.expRange', { min: job.expMin, max: job.expMax });
+    if (job.expMin != null) return this.translate.instant('jobs.value.expMinPlus', { min: job.expMin });
+    return this.translate.instant('jobs.value.expUpTo', { max: job.expMax });
   }
 
   getLocationDisplay(job: Job): string {
-    if (job.isRemote) return 'Remote';
+    if (job.isRemote) return this.translate.instant('jobs.value.remote');
     const parts = [job.city, job.state, job.country].filter(Boolean);
     return parts.join(', ') || job.location || '';
   }
 
   getLocationSubtext(job: Job): string {
-    if (job.isRemote) return job.country ? `${job.country} applicants only` : '';
+    if (job.isRemote) return job.country ? this.translate.instant('jobs.value.applicantsOnly', { country: job.country }) : '';
     if (job.fullAddress) return job.fullAddress;
-    if (job.pincode) return `Postcode ${job.pincode}`;
+    if (job.pincode) return this.translate.instant('jobs.value.postcode', { code: job.pincode });
     return '';
   }
 
@@ -1243,7 +1251,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (navigator.share) {
       navigator.share({ title: job.title, text }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(text).then(() => this.toast.success('Copied to clipboard')).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => this.toast.success('user.jobs.toast.copiedClipboard')).catch(() => {});
     }
   }
 

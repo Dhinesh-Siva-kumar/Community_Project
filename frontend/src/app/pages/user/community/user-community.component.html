@@ -8,7 +8,7 @@
      mounted and just dim the results area (see .uc-main--loading below)
      instead of tearing the page down and rebuilding it. ──────────── -->
 @if (!pageReady()) {
-  <div class="uc-loading" aria-live="polite" aria-label="Loading communities">
+  <div class="uc-loading" aria-live="polite" [attr.aria-label]="'user.community.loadingCommunities' | translate">
     <div class="uc-loading-inner">
       <div class="uc-loading-ring">
         <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -18,7 +18,7 @@
                   class="uc-loading-arc"/>
         </svg>
       </div>
-      <p class="uc-loading-text">Loading communities…</p>
+      <p class="uc-loading-text">{{ 'user.community.loadingCommunities' | translate }}</p>
     </div>
   </div>
 
@@ -27,7 +27,7 @@
 <!-- ── HEAD ─────────────────────────────────────────────────── -->
 <div class="uc-head">
   <div>
-    <h1 class="uc-title">Communities</h1>
+    <h1 class="uc-title">{{ 'user.community.communities' | translate }}</h1>
     <p class="uc-subtitle">{{ overallStats()?.total ?? 0 }} {{ overallStats()?.total === 1 ? 'community' : 'communities' }} · {{ (overallStats()?.totalMembers ?? 0) | number }} members</p>
   </div>
 
@@ -52,7 +52,7 @@
             (click)="setTab(tab.id)"
           >
             <i [class]="'bi ' + tab.icon" aria-hidden="true"></i>
-            {{ tab.label }}
+            {{ tab.label | translate }}
             @if (tab.badge) {
               <span class="uc-tab-count">{{ tab.badge }}</span>
             }
@@ -61,13 +61,13 @@
       </div>
     </div>
 
-    <div class="uc-view-toggle" role="group" aria-label="Switch view mode">
+    <div class="uc-view-toggle" role="group" [attr.aria-label]="'user.community.switchViewMode' | translate">
       <button
         class="uc-view-btn"
         type="button"
         [class.active]="viewMode() === 'grid'"
         (click)="setViewMode('grid')"
-        aria-label="Grid view"
+        [attr.aria-label]="'user.community.gridView' | translate"
       >
         <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
       </button>
@@ -76,7 +76,7 @@
         type="button"
         [class.active]="viewMode() === 'list'"
         (click)="setViewMode('list')"
-        aria-label="List view"
+        [attr.aria-label]="'user.community.listView' | translate"
       >
         <i class="bi bi-list-ul" aria-hidden="true"></i>
       </button>
@@ -89,33 +89,33 @@
         [value]="searchTerm()"
         (input)="onSearch($event)"
         [placeholder]="'Search ' + (activeTab() === 'joined' ? 'your ' : '') + 'communities…'"
-        aria-label="Search communities"
+        [attr.aria-label]="'user.community.searchCommunities' | translate"
         autocomplete="off"
       />
       @if (searchTerm()) {
-        <button class="uc-search-clear" (click)="clearSearch()" type="button" aria-label="Clear search">
+        <button class="uc-search-clear" (click)="clearSearch()" type="button" [attr.aria-label]="'user.community.clearSearch' | translate">
           <i class="bi bi-x" aria-hidden="true"></i>
         </button>
       }
     </div>
 
     <button type="button" class="uc-add-btn" (click)="openAddCommunity()">
-      <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Community
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> {{ 'user.community.addCommunity' | translate }}
     </button>
   </div>
 </div>
 
 <!-- ── SUGGESTED FOR YOU ────────────────────────────────────── -->
 @if (activeTab() === 'all' && !searchTerm() && suggestedCommunities().length > 1) {
-  <section class="uc-spotlight" aria-label="Suggested communities for you">
+  <section class="uc-spotlight" [attr.aria-label]="'user.community.suggestedCommunities' | translate">
     <div class="uc-spotlight-head">
       <span class="uc-spotlight-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
-      <h2>Suggested for You<span class="uc-spotlight-sub">matched to your country, interests &amp; popularity</span></h2>
+      <h2>{{ 'user.community.suggested' | translate }}<span class="uc-spotlight-sub">{{ 'user.community.matchedCountryInterestsAmpPopularity' | translate }}</span></h2>
     </div>
 
     <div class="uc-spotlight-rail-wrap">
       <button type="button" class="uc-spotlight-nav uc-spotlight-nav--prev"
-        (click)="scrollSpotlight('left')" [disabled]="!canScrollSpotlightLeft()" aria-label="Scroll spotlight left">
+        (click)="scrollSpotlight('left')" [disabled]="!canScrollSpotlightLeft()" [attr.aria-label]="'user.community.scrollSpotlightLeft' | translate">
         <i class="bi bi-chevron-left" aria-hidden="true"></i>
       </button>
 
@@ -164,17 +164,17 @@
                 }
                 @if (community.matchesCountry) {
                   <span class="uc-spot-glass-chip">
-                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Your country
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> {{ 'user.community.country' | translate }}
                   </span>
                 }
                 @if (community.matchesInterest) {
                   <span class="uc-spot-glass-chip">
-                    <i class="bi bi-heart-fill" aria-hidden="true"></i> Your interest
+                    <i class="bi bi-heart-fill" aria-hidden="true"></i> {{ 'user.community.interest' | translate }}
                   </span>
                 }
                 @if (isOwner(community)) {
                   <span class="uc-spot-glass-chip uc-spot-glass-chip--owner">
-                    <i class="bi bi-person-check-fill" aria-hidden="true"></i> Your Community
+                    <i class="bi bi-person-check-fill" aria-hidden="true"></i> {{ 'user.community.community' | translate }}
                   </span>
                 }
               </div>
@@ -183,7 +183,7 @@
                 @if (community.is_joined || isJoined(community.id)) {
                   <div class="uc-spot-cta-row">
                     <span class="uc-spot-joined-pill">
-                      <i class="bi bi-check-lg" aria-hidden="true"></i> Joined
+                      <i class="bi bi-check-lg" aria-hidden="true"></i> {{ 'user.community.joined' | translate }}
                     </span>
                     <button
                       class="uc-spot-leave-btn"
@@ -221,7 +221,7 @@
       </div>
 
       <button type="button" class="uc-spotlight-nav uc-spotlight-nav--next"
-        (click)="scrollSpotlight('right')" [disabled]="!canScrollSpotlightRight()" aria-label="Scroll spotlight right">
+        (click)="scrollSpotlight('right')" [disabled]="!canScrollSpotlightRight()" [attr.aria-label]="'user.community.scrollSpotlightRight' | translate">
         <i class="bi bi-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
@@ -265,9 +265,9 @@
         <p class="uc-empty-text">
           @if (searchTerm()) {
             Try different keywords or
-            <button class="uc-empty-link" (click)="clearSearch()" type="button">clear your search</button>.
+            <button class="uc-empty-link" (click)="clearSearch()" type="button">{{ 'user.community.clearSearch2' | translate }}</button>.
           } @else if (activeTab() === 'joined') {
-            Explore the <button class="uc-empty-link" (click)="setTab('all')" type="button">All tab</button>
+            Explore the <button class="uc-empty-link" (click)="setTab('all')" type="button">{{ 'user.community.allTab' | translate }}</button>
             and join communities that interest you.
           } @else if (activeTab() === 'pending') {
             Communities you create will show up here with their approval status.
@@ -298,7 +298,7 @@
       </div>
 
       <!-- ── GRID VIEW ───────────────────────────── -->
-      <div class="uc-grid" [class.active]="viewMode() === 'grid'" role="list" aria-label="Communities">
+      <div class="uc-grid" [class.active]="viewMode() === 'grid'" role="list" [attr.aria-label]="'user.community.communities' | translate">
         @for (community of filteredCommunities(); track community.id) {
           <article
             class="uc-g-card"
@@ -319,15 +319,15 @@
               @if (((community._count?.members ?? 0) > 50) || isOwner(community) || community.status !== 'APPROVED') {
                 <div class="uc-g-cover-badges">
                   @if (community.status === 'PENDING') {
-                    <span class="uc-g-badge uc-g-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Pending Approval</span>
+                    <span class="uc-g-badge uc-g-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ 'user.community.pendingApproval' | translate }}</span>
                   } @else if (community.status === 'REJECTED') {
-                    <span class="uc-g-badge uc-g-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>Rejected</span>
+                    <span class="uc-g-badge uc-g-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ 'common.rejected' | translate }}</span>
                   }
                   @if ((community._count?.members ?? 0) > 50) {
-                    <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>Popular</span>
+                    <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>{{ 'user.community.popular' | translate }}</span>
                   }
                   @if (isOwner(community)) {
-                    <span class="uc-g-badge uc-g-badge--owner"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Your Community</span>
+                    <span class="uc-g-badge uc-g-badge--owner"><i class="bi bi-person-check-fill" aria-hidden="true"></i>{{ 'user.community.community' | translate }}</span>
                   }
                 </div>
               }
@@ -342,10 +342,10 @@
                 @if (openMenuId() === community.id) {
                   <div class="uc-card-menu-panel">
                     <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
-                      <i class="bi bi-pencil-fill"></i> Edit
+                      <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
                     </button>
                     <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
-                      <i class="bi bi-trash-fill"></i> Delete
+                      <i class="bi bi-trash-fill"></i> {{ 'common.delete' | translate }}
                     </button>
                   </div>
                 }
@@ -393,8 +393,8 @@
                 @if (!isOwner(community)) {
                   @if (community.is_joined || isJoined(community.id)) {
                     <div class="uc-g-cta-group">
-                      <span class="uc-g-joined-pill" title="You're a member">
-                        <i class="bi bi-check-lg" aria-hidden="true"></i>Joined
+                      <span class="uc-g-joined-pill" [title]="'user.community.reMember' | translate">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>{{ 'user.community.joined' | translate }}
                       </span>
                       <button
                         class="uc-g-cta uc-g-cta--leave"
@@ -433,7 +433,7 @@
       </div>
 
       <!-- ── LIST VIEW ───────────────────────────── -->
-      <div class="uc-list" [class.active]="viewMode() === 'list'" role="list" aria-label="Communities">
+      <div class="uc-list" [class.active]="viewMode() === 'list'" role="list" [attr.aria-label]="'user.community.communities' | translate">
         @for (community of filteredCommunities(); track community.id) {
           <article
             class="uc-l-card"
@@ -455,12 +455,12 @@
               <div class="uc-l-top-row">
                 <span class="uc-l-name">{{ community.name }}</span>
                 @if (isOwner(community)) {
-                  <span class="uc-l-owner-badge"><i class="bi bi-person-check-fill" aria-hidden="true"></i>Yours</span>
+                  <span class="uc-l-owner-badge"><i class="bi bi-person-check-fill" aria-hidden="true"></i>{{ 'user.community.yours' | translate }}</span>
                 }
                 @if (community.status === 'PENDING') {
-                  <span class="uc-l-owner-badge uc-l-owner-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Pending Approval</span>
+                  <span class="uc-l-owner-badge uc-l-owner-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ 'user.community.pendingApproval' | translate }}</span>
                 } @else if (community.status === 'REJECTED') {
-                  <span class="uc-l-owner-badge uc-l-owner-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>Rejected</span>
+                  <span class="uc-l-owner-badge uc-l-owner-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ 'common.rejected' | translate }}</span>
                 }
               </div>
               <div class="uc-l-desc">{{ community.description }}</div>
@@ -486,7 +486,7 @@
             @if (!isOwner(community)) {
               @if (community.is_joined || isJoined(community.id)) {
                 <div class="uc-l-cta-group">
-                  <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>Joined</span>
+                  <span class="uc-l-joined-pill"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ 'user.community.joined' | translate }}</span>
                   <button
                     class="uc-l-btn uc-l-btn--leave"
                     type="button"
@@ -526,10 +526,10 @@
                 @if (openMenuId() === community.id) {
                   <div class="uc-card-menu-panel">
                     <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
-                      <i class="bi bi-pencil-fill"></i> Edit
+                      <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
                     </button>
                     <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
-                      <i class="bi bi-trash-fill"></i> Delete
+                      <i class="bi bi-trash-fill"></i> {{ 'common.delete' | translate }}
                     </button>
                   </div>
                 }
@@ -543,7 +543,7 @@
       @if (loadingMore()) {
         <div class="uc-load-more" aria-live="polite">
           <span class="uc-load-more-spinner" aria-hidden="true"></span>
-          Loading more communities…
+          {{ 'user.community.loadingMoreCommunities' | translate }}
         </div>
       } @else if (!hasMore() && totalItems() > pageSize()) {
         <p class="uc-load-more-end">You&rsquo;ve reached the end — {{ totalItems() }} communities total.</p>
@@ -554,11 +554,11 @@
   </div><!-- /uc-main -->
 
   <!-- ── SIDEBAR ────────────────────────────────────────────── -->
-  <aside class="uc-side" aria-label="Community sidebar">
+  <aside class="uc-side" [attr.aria-label]="'user.community.communitySidebar' | translate">
 
     @if (postsLoading()) {
       <div class="uc-rail-card">
-        <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>Popular posts</div>
+        <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ 'user.community.popularPosts' | translate }}</div>
         @for (_ of [1,2,3]; track $index) {
           <div class="uc-post-skeleton">
             <div class="uc-skeleton" style="width:38px;height:38px;border-radius:9px;flex-shrink:0;"></div>
@@ -573,7 +573,7 @@
     } @else if (popularPosts().length > 0) {
       <div class="uc-rail-card" aria-labelledby="uc-popular-posts-heading">
         <div class="uc-rail-title" id="uc-popular-posts-heading">
-          <i class="bi bi-star-fill" aria-hidden="true"></i>Popular posts
+          <i class="bi bi-star-fill" aria-hidden="true"></i>{{ 'user.community.popularPosts' | translate }}
         </div>
 
         @for (post of popularPosts(); track post.id) {
@@ -620,8 +620,8 @@
       </div>
     } @else {
       <div class="uc-rail-card uc-rail-card--empty">
-        <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>Popular posts</div>
-        <p class="uc-post-empty">No popular posts yet — check back once your communities get active.</p>
+        <div class="uc-rail-title"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ 'user.community.popularPosts' | translate }}</div>
+        <p class="uc-post-empty">{{ 'user.community.noPopularPostsYetCheck' | translate }}</p>
       </div>
     }
 
@@ -634,30 +634,30 @@
   class="uc-scroll-top"
   [class.uc-scroll-top--visible]="showScrollTop()"
   (click)="scrollToTop()"
-  aria-label="Back to top"
+  [attr.aria-label]="'user.community.backTop' | translate"
   [tabindex]="showScrollTop() ? 0 : -1"
 >
   <i class="bi bi-arrow-up" aria-hidden="true"></i>
 </button>
 
 @if (lightboxOpen()) {
-  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'user.community.imagePreview' | translate">
     <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
-      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'user.community.closeImagePreview' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
 
       @if (lightboxImages().length > 1) {
-        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" [attr.aria-label]="'user.community.previousImage' | translate">
           <i class="bi bi-chevron-left"></i>
         </button>
-        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" [attr.aria-label]="'user.community.nextImage' | translate">
           <i class="bi bi-chevron-right"></i>
         </button>
       }
 
       @if (getActivePreviewImage()) {
-        <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" appImageError />
+        <img [src]="getActivePreviewImage()! | imageUrl" [alt]="'user.community.previewImage' | translate" class="cd-lightbox-image" appImageError />
       }
 
       <div class="cd-lightbox-footer">

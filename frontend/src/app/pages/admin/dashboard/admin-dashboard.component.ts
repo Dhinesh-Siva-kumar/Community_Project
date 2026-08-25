@@ -9,15 +9,19 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CommunityService } from '../../../core/services/community.service';
 import { DashboardStats, Post, AuditLog, ChartData, CommunityAnalyticsCounts } from '../../../core/models';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, RouterLink],
+  imports: [DateInputComponent, CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
+  private relativeTime  = inject(RelativeTimeService);
+  private translate = inject(TranslateService);
   private userService = inject(UserService);
   private postService = inject(PostService);
   private authService = inject(AuthService);
@@ -164,9 +168,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   chartRangeLabel = computed(() => {
     switch (this.chartPreset()) {
-      case '7d':  return 'Last 7 days';
-      case '30d': return 'Last 30 days';
-      case '90d': return 'Last 90 days';
+      case '7d':  return this.translate.instant('admin.dashboard.range7');
+      case '30d': return this.translate.instant('admin.dashboard.range30');
+      case '90d': return this.translate.instant('admin.dashboard.range90');
       default: {
         const from = this.chartFrom(), to = this.chartTo();
         if (!from || !to) return '';
@@ -221,10 +225,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // moderation task is still one click away now that Post Approval no
   // longer has its own standalone page.
   quickActions = [
-    { label: 'Create Community',      icon: 'bi-plus-circle',     bg: 'var(--qa-community-bg, #fff3e0)', color: 'var(--activity-pending-post, #855300)', route: '/admin/community'       },
-    { label: 'Review Pending Posts',  icon: 'bi-hourglass-split', bg: 'var(--qa-approval-bg, #fdecea)',  color: 'var(--activity-emergency-post, #ba1a1a)', route: '/admin/approval'        },
-    { label: 'Manage Users',          icon: 'bi-person-gear',     bg: 'var(--qa-users-bg, #e6faf3)',     color: 'var(--qa-users-text, #006c49)', route: '/admin/user-management' },
-    { label: 'Business Listings',     icon: 'bi-building',        bg: 'var(--qa-business-bg, #e8f0ff)',  color: 'var(--activity-post, #005ac2)', route: '/admin/business'        },
+    { label: 'admin.dashboard.label.createCommunity',      icon: 'bi-plus-circle',     bg: 'var(--qa-community-bg, #fff3e0)', color: 'var(--activity-pending-post, #855300)', route: '/admin/community'       },
+    { label: 'admin.dashboard.label.reviewPendingPosts',  icon: 'bi-hourglass-split', bg: 'var(--qa-approval-bg, #fdecea)',  color: 'var(--activity-emergency-post, #ba1a1a)', route: '/admin/approval'        },
+    { label: 'admin.dashboard.label.manageUsers',          icon: 'bi-person-gear',     bg: 'var(--qa-users-bg, #e6faf3)',     color: 'var(--qa-users-text, #006c49)', route: '/admin/user-management' },
+    { label: 'admin.dashboard.label.businessListings',     icon: 'bi-building',        bg: 'var(--qa-business-bg, #e8f0ff)',  color: 'var(--activity-post, #005ac2)', route: '/admin/business'        },
   ];
 
   ngOnInit(): void {
@@ -366,8 +370,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const now = new Date();
     const startOfDay = (dt: Date) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
     const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86_400_000);
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
+    if (diffDays === 0) return this.translate.instant('time.today');
+    if (diffDays === 1) return this.translate.instant('time.yesterday');
     return d.toLocaleDateString('en-US', {
       month: 'short', day: 'numeric',
       year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
@@ -391,14 +395,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getTimeAgo(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const m = Math.floor(diff / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
-    if (m < 1)  return 'just now';
-    if (m < 60) return `${m}m ago`;
-    if (h < 24) return `${h}h ago`;
-    if (d === 1) return 'yesterday';
-    if (d < 7)  return `${d}d ago`;
-    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return this.relativeTime.format(dateStr);
   }
 
   formatTs(dateStr: string): string {
@@ -410,7 +407,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   getAdminFirstName(): string {
     const user = this.authService.currentUser();
-    if (!user) return 'Admin';
+    if (!user) return this.translate.instant('enums.role.admin');
     return (user.displayName || user.userName || 'Admin').split(' ')[0];
   }
 
@@ -421,11 +418,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const firstName = this.getAdminFirstName();
     
     if (hour >= 5 && hour < 12) {
-      return `Good Morning, ${firstName}!`;
+      return this.translate.instant('admin.dashboard.greetingMorning', { name: firstName });
     } else if (hour >= 12 && hour < 17) {
-      return `Good Afternoon, ${firstName}!`;
+      return this.translate.instant('admin.dashboard.greetingAfternoon', { name: firstName });
     } else {
-      return `Good Evening, ${firstName}!`;
+      return this.translate.instant('admin.dashboard.greetingEvening', { name: firstName });
     }
   }
 
@@ -474,13 +471,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   getAdminFullName(): string {
     const user = this.authService.currentUser();
-    if (!user) return 'Admin';
+    if (!user) return this.translate.instant('enums.role.admin');
     return user.displayName || user.userName || 'Admin';
   }
 
   getAdminRole(): string {
     const user = this.authService.currentUser();
-    if (!user) return 'Administrator';
+    if (!user) return this.translate.instant('nav.administrator');
     // Assuming user object has a role property, adjust as needed
     return user.role || 'Administrator';
   }

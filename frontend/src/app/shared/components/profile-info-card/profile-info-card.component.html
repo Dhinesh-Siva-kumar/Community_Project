@@ -27,7 +27,7 @@
         </button>
       } @else if (actionLabel) {
         <button type="button" class="btn btn-sm btn-edit" (click)="action.emit()">
-          <i class="bi {{ actionIcon }} me-1"></i>{{ actionLabel }}
+          <i class="bi {{ actionIcon }} me-1"></i>{{ actionLabel | translate }}
         </button>
       }
     </div>

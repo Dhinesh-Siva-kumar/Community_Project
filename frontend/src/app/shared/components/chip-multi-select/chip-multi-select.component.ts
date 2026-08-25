@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface SelectOption {
   value: string | number;
@@ -99,7 +99,7 @@ export interface SelectOption {
               <span class="cms-checkbox" [class.cms-checkbox-checked]="isSelected(opt.value)">
                 <i class="bi bi-check"></i>
               </span>
-              <span class="cms-option-label">{{ opt.label }}</span>
+              <span class="cms-option-label">{{ tr(opt.label) }}</span>
             </li>
           } @empty {
             <li class="cms-no-results">{{ 'dropdown.no_results' | translate }}</li>
@@ -111,6 +111,12 @@ export interface SelectOption {
   `,
 })
 export class ChipMultiSelectComponent implements ControlValueAccessor {
+  private translate = inject(TranslateService);
+
+  /** Option labels are catalog keys; unknown keys pass through unchanged. */
+  protected tr(label: string): string {
+    return this.translate.instant(label) as string;
+  }
 
   // ── Inputs ────────────────────────────────────────────────────
   readonly options      = input<SelectOption[]>([]);
@@ -132,7 +138,7 @@ export class ChipMultiSelectComponent implements ControlValueAccessor {
   protected filteredOptions = computed(() => {
     const q = this._querySig().trim().toLowerCase();
     return q
-      ? this.options().filter(o => o.label.toLowerCase().includes(q))
+      ? this.options().filter(o => this.tr(o.label).toLowerCase().includes(q))
       : this.options();
   });
 
@@ -162,7 +168,8 @@ export class ChipMultiSelectComponent implements ControlValueAccessor {
   }
 
   protected labelFor(v: string | number): string {
-    return this.options().find(o => o.value === v)?.label ?? String(v);
+    const found = this.options().find(o => o.value === v)?.label;
+    return found ? this.tr(found) : String(v);
   }
 
   // ── Interaction ───────────────────────────────────────────────

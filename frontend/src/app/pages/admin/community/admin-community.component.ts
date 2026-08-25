@@ -18,6 +18,7 @@ import { CommunityRulesInputComponent } from '../../../shared/components/communi
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -51,7 +52,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -60,6 +61,7 @@ function minLengthTrimmed(min: number) {
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminCommunityComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
@@ -82,19 +84,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterCountryOptions:    SelectOption[] = [];
   filterCategoryOptions:   SelectOption[] = [];
   filterVisibilityOptions: SelectOption[] = [
-    { value: 'global',  label: 'Global'  },
-    { value: 'private', label: 'Private' },
+    { value: 'global',  label: 'admin.community.label.global'  },
+    { value: 'private', label: 'admin.community.label.private' },
   ];
 
   // ── Radio group options (app-radio-group, create/edit modal) ──
   readonly visibilityOptions: RadioOption[] = [
-    { value: 'private', label: 'Private', icon: 'bi-lock-fill' },
-    { value: 'global',  label: 'Global',  icon: 'bi-globe2' },
+    { value: 'private', label: 'admin.community.label.private', icon: 'bi-lock-fill' },
+    { value: 'global',  label: 'admin.community.label.global',  icon: 'bi-globe2' },
   ];
 
   readonly communityModeOptions: RadioOption[] = [
-    { value: 'HELP_EMERGENCY', label: 'Help & Emergency Assistance', icon: 'bi-life-preserver' },
-    { value: 'ENQUIRE',        label: 'Enquire',                     icon: 'bi-question-circle-fill' },
+    { value: 'HELP_EMERGENCY', label: 'admin.community.label.helpEmergencyAssistance', icon: 'bi-life-preserver' },
+    { value: 'ENQUIRE',        label: 'admin.community.label.enquire',                     icon: 'bi-question-circle-fill' },
   ];
 
   // ── Signals ──────────────────────────────────────────────────
@@ -137,9 +139,9 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0, totalMembers: 0 });
 
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',         label: 'All Status' },
-    { value: 'active',   label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: '',         label: 'admin.community.label.allStatus' },
+    { value: 'active',   label: 'admin.community.label.active' },
+    { value: 'inactive', label: 'admin.community.label.inactive' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -150,8 +152,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   // ── Sort — driven by the sort-bar above the grid (grid only) and by
   // clickable column headers in the table view (all columns but Actions) ──
   readonly sortFields: SortField[] = [
-    { key: 'name',   label: 'Name' },
-    { key: 'joined', label: 'Created' },
+    { key: 'name',   label: 'admin.community.label.name' },
+    { key: 'joined', label: 'admin.community.label.created' },
   ];
   sortBy  = signal<CommunitySortField>('joined');
   sortDir = signal<SortDir>('desc');
@@ -201,8 +203,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterIsDefault() !== null) {
       add('isDefault', this.filterIsDefault() ? 'Default Only' : 'Non-Default', this.filterIsDefault());
     }
-    if (this.filterFromDate())   add('fromDate',  `From ${this.filterFromDate()}`, this.filterFromDate());
-    if (this.filterToDate())     add('toDate',    `To ${this.filterToDate()}`, this.filterToDate());
+    if (this.filterFromDate())   add('fromDate',  this.translate.instant('admin.community.chipFrom', { date: this.filterFromDate() }), this.filterFromDate());
+    if (this.filterToDate())     add('toDate',    this.translate.instant('admin.community.chipTo', { date: this.filterToDate() }), this.filterToDate());
     if (this.filterStatus())     add('status',    this.filterStatus() === 'active' ? 'Active' : 'Inactive', this.filterStatus());
     return chips;
   });
@@ -304,7 +306,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
           this.communityForm.patchValue({ countryId: defaultCountry.id });
         }
       },
-      error: () => this.toastService.error('Failed to load countries'),
+      error: () => this.toastService.error('admin.community.toast.failedLoadCountries'),
     });
   }
 
@@ -321,7 +323,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
           label: i.interest_name,
         }));
       },
-      error: () => this.toastService.error('Failed to load interests'),
+      error: () => this.toastService.error('admin.community.toast.failedLoadInterests'),
     });
   }
 
@@ -373,7 +375,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.pageReady.set(true);
       },
       error: () => {
-        this.toast.error('Failed to load communities');
+        this.toast.error('admin.community.toast.failedLoadCommunities');
         if (!silent) this.loading.set(false);
         this.pageReady.set(true);
       },
@@ -682,13 +684,13 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.deletingCommunity.set(true);
     this.communityService.deleteCommunity(community.id).subscribe({
       next: () => {
-        this.toast.success('Community deleted successfully');
+        this.toast.success('admin.community.toast.communityDeletedSuccessfully');
         this.communityToDelete.set(null);
         this.deletingCommunity.set(false);
         this.loadCommunities(true);
       },
       error: () => {
-        this.toast.error('Failed to delete community');
+        this.toast.error('admin.community.toast.failedDeleteCommunity');
         this.deletingCommunity.set(false);
       },
     });
@@ -705,9 +707,9 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   }
 
   getVisibility(community: Community): 'Private' | 'Global' | 'Default' | null {
-    if (community.is_private) return 'Private';
-    if (community.is_global)  return 'Global';
-    if (community.is_default) return 'Default';
+    if (community.is_private) return this.translate.instant('admin.community.visibilityPrivate');
+    if (community.is_global)  return this.translate.instant('admin.community.visibilityGlobal');
+    if (community.is_default) return this.translate.instant('admin.community.visibilityDefault');
     return null;
   }
 

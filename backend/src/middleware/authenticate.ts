@@ -34,7 +34,7 @@ export function authenticate(
   const authHeader = req.headers['authorization'];
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(new AppError(401, 'Authorization header missing or malformed'));
+    return next(new AppError(401, 'Authorization header missing or malformed', 'AUTHORIZATION_HEADER_MISSING_MALFORMED'));
   }
 
   const token = authHeader.slice(7);
@@ -53,7 +53,7 @@ export function authenticate(
     if (err instanceof jwt.TokenExpiredError) {
       next(new AppError(401, 'Token expired', 'TOKEN_EXPIRED'));
     } else {
-      next(new AppError(401, 'Invalid token'));
+      next(new AppError(401, 'Invalid token', 'INVALID_TOKEN'));
     }
   }
 }

@@ -17,7 +17,7 @@
     <span class="fc-trigger__text">{{ displayText() || placeholder() }}</span>
 
     @if (clearable() && displayText() && !isDisabled()) {
-      <span class="di-clear" role="button" tabindex="-1" aria-label="Clear date" (click)="clear($event)">
+      <span class="di-clear" role="button" tabindex="-1" [attr.aria-label]="'components.dateInput.clear' | translate" (click)="clear($event)">
         <i class="bi bi-x" aria-hidden="true"></i>
       </span>
     }
@@ -30,12 +30,12 @@
       <!-- Month pager -->
       <div class="di-head">
         <button type="button" class="di-nav" [disabled]="prevDisabled()"
-          (click)="shiftMonth(-1)" aria-label="Previous month">
+          (click)="shiftMonth(-1)" [attr.aria-label]="'components.dateInput.previousMonth' | translate">
           <i class="bi bi-chevron-left" aria-hidden="true"></i>
         </button>
         <span class="di-month" aria-live="polite">{{ monthLabel() }}</span>
         <button type="button" class="di-nav" [disabled]="nextDisabled()"
-          (click)="shiftMonth(1)" aria-label="Next month">
+          (click)="shiftMonth(1)" [attr.aria-label]="'components.dateInput.nextMonth' | translate">
           <i class="bi bi-chevron-right" aria-hidden="true"></i>
         </button>
       </div>

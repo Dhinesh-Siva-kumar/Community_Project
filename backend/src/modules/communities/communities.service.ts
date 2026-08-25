@@ -50,13 +50,13 @@ async function autoJoinExistingUsers(community: Record<string, unknown>): Promis
 
 export async function create(data: CreateCommunityDtoType, adminId: string) {
   const existing = await db('communities').where({ name: data.name }).first();
-  if (existing) throw new AppError(409, 'Community with this name already exists');
+  if (existing) throw new AppError(409, 'Community with this name already exists', 'COMMUNITY_NAME_ALREADY_EXISTS');
 
   const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
 
   if (data.is_global || data.is_default) {
     if (!caller || caller['role'] !== 'ADMIN') {
-      throw new AppError(403, 'Only admins can create Global or Default communities');
+      throw new AppError(403, 'Only admins can create Global or Default communities', 'ONLY_ADMINS_CREATE_GLOBAL');
     }
   }
 
@@ -503,7 +503,7 @@ export async function findOne(id: string) {
     )
     .first();
 
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const counts = await db('community_members').where({ community_id: id }).count({ total: '*' }).first();
   const postCounts = await db('posts').where({ community_id: id }).count({ total: '*' }).first();
@@ -598,19 +598,19 @@ export async function findPendingOnly(options: FindPendingCommunitiesOptions) {
 
 export async function approve(id: string, adminId: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   if (community['status'] === 'APPROVED') return findOne(id);
 
   await db('communities').where({ id }).update({ status: 'APPROVED' });
-  await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_APPROVED', `Your community "${community['name']}" has been approved.`, id);
+  await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_APPROVED', `Your community "${community['name']}" has been approved.`, id, undefined, { name: community['name'] });
   await logAudit(adminId, 'COMMUNITY_APPROVED', { previousStatus: community['status'], name: community['name'] }, 'communities', id);
   return findOne(id);
 }
 
 export async function reject(id: string, adminId: string, reason?: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   if (community['status'] === 'REJECTED') return findOne(id);
 
@@ -623,16 +623,16 @@ export async function reject(id: string, adminId: string, reason?: string) {
 
 export async function update(id: string, data: UpdateCommunityDtoType, adminId: string) {
   const before = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!before) throw new AppError(404, 'Community not found');
+  if (!before) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const byAdmin = before['created_by_id'] !== adminId;
   const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
   const callerIsAdmin = !!caller && caller['role'] === 'ADMIN';
   if (byAdmin && !callerIsAdmin) {
-    throw new AppError(403, 'You can only update your own community');
+    throw new AppError(403, 'You can only update your own community', 'ONLY_UPDATE_OWN_COMMUNITY');
   }
   if (!callerIsAdmin && (data.is_global || data.is_default)) {
-    throw new AppError(403, 'Only admins can set a community to Global or Default');
+    throw new AppError(403, 'Only admins can set a community to Global or Default', 'ONLY_ADMINS_SET_COMMUNITY');
   }
 
   const updateData: Record<string, unknown> = { ...data };
@@ -690,13 +690,13 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
 
 export async function deleteCommunity(id: string, adminId: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const byAdmin = community['created_by_id'] !== adminId;
   if (byAdmin) {
     const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
     if (!caller || caller['role'] !== 'ADMIN') {
-      throw new AppError(403, 'You can only delete your own community');
+      throw new AppError(403, 'You can only delete your own community', 'ONLY_DELETE_OWN_COMMUNITY');
     }
   }
 
@@ -714,10 +714,10 @@ export async function deleteCommunity(id: string, adminId: string) {
 
 export async function join(communityId: string, userId: string) {
   const community = await db('communities').where({ id: communityId }).first() as Record<string, unknown> | undefined;
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const existing = await db('community_members').where({ user_id: userId, community_id: communityId }).first();
-  if (existing) throw new AppError(409, 'You are already a member of this community');
+  if (existing) throw new AppError(409, 'You are already a member of this community', 'ALREADY_MEMBER_COMMUNITY');
 
   await db('community_members').insert({ user_id: userId, community_id: communityId });
   await logAudit(userId, 'COMMUNITY_JOINED', undefined, 'communities', communityId);
@@ -742,7 +742,7 @@ export async function leave(communityId: string, userId: string) {
     .where({ user_id: userId, community_id: communityId })
     .first();
 
-  if (!membership) throw new AppError(404, 'You are not a member of this community');
+  if (!membership) throw new AppError(404, 'You are not a member of this community', 'MEMBER_COMMUNITY');
 
   await db('community_members').where({ id: (membership as Record<string, unknown>)['id'] }).delete();
   await logAudit(userId, 'COMMUNITY_LEFT', undefined, 'communities', communityId);

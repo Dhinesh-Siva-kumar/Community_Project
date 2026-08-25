@@ -34,6 +34,29 @@ body {
   color: $color-text-primary;
 }
 
+// ── Tamil script adjustments ─────────────────────────────────
+// Tamil has no letter case, so `text-transform: uppercase` is a no-op that
+// only leaves the oversized tracking that usually accompanies it. Tamil also
+// reads poorly with negative tracking, and runs roughly 20-30% wider than the
+// equivalent English, so lines need more room to breathe.
+// Per-page metric tweaks still belong in each component's own
+// `:host[lang="ta"]` block — see landing.component.scss.
+html[lang='ta'] {
+  body {
+    line-height: 1.65;
+  }
+
+  [class*='label'],
+  [class*='badge'],
+  [class*='chip'],
+  .text-uppercase,
+  button,
+  th {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+}
+
 // ── Scrollbar ─────────────────────────────────────────────────
 ::-webkit-scrollbar {
   width: $scrollbar-width;

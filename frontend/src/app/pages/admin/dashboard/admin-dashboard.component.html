@@ -29,7 +29,7 @@
     </div>
     <span class="db-welcome__status">
       <span class="db-welcome__status-dot"></span>
-      Online
+      {{ 'admin.dashboard.online' | translate }}
     </span>
   </div>
 
@@ -43,7 +43,7 @@
       <a routerLink="/admin/user-management" class="ov-card ov-card--accent ov-card--blue">
         <span class="ov-card__icon"><i class="bi bi-people-fill"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Total Users</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.totalUsers' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().users | number }}</div>
         </div>
       </a>
@@ -52,7 +52,7 @@
       <a routerLink="/admin/community" class="ov-card ov-card--accent ov-card--indigo">
         <span class="ov-card__icon"><i class="bi bi-diagram-3-fill"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Total Communities</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.totalCommunities' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().communities | number }}</div>
         </div>
       </a>
@@ -61,7 +61,7 @@
       <a routerLink="/admin/jobs" class="ov-card ov-card--accent ov-card--green">
         <span class="ov-card__icon"><i class="bi bi-briefcase-fill"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Total Jobs</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.totalJobs' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().jobs | number }}</div>
         </div>
       </a>
@@ -70,7 +70,7 @@
       <a routerLink="/admin/business" class="ov-card ov-card--accent ov-card--rose">
         <span class="ov-card__icon"><i class="bi bi-building"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Total Businesses</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.totalBusinesses' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().business | number }}</div>
         </div>
       </a>
@@ -79,7 +79,7 @@
       <a routerLink="/admin/user-management" class="ov-card ov-card--accent ov-card--amber">
         <span class="ov-card__icon"><i class="bi bi-person-badge"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Users Pending</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.usersPending' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().userVerification | number }}</div>
         </div>
       </a>
@@ -88,7 +88,7 @@
       <a routerLink="/admin/approval" class="ov-card ov-card--accent ov-card--purple">
         <span class="ov-card__icon"><i class="bi bi-shop"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Business Pending</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.businessPending' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().businessVerification | number }}</div>
         </div>
       </a>
@@ -97,7 +97,7 @@
       <a routerLink="/admin/approval" class="ov-card ov-card--accent ov-card--jade">
         <span class="ov-card__icon"><i class="bi bi-clipboard-check"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Jobs Pending</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.jobsPending' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().jobApproval | number }}</div>
         </div>
       </a>
@@ -106,25 +106,25 @@
       <a routerLink="/admin/approval" class="ov-card ov-card--accent ov-card--fuchsia">
         <span class="ov-card__icon"><i class="bi bi-hourglass-split"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Posts Pending</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.postsPending' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().postApproval | number }}</div>
         </div>
       </a>
 
       <!-- Reports to Review — no admin review page yet -->
-      <div class="ov-card ov-card--accent ov-card--orange ov-card--disabled" title="Coming soon">
+      <div class="ov-card ov-card--accent ov-card--orange ov-card--disabled" [title]="'admin.dashboard.comingSoon' | translate">
         <span class="ov-card__icon"><i class="bi bi-flag-fill"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Reports Pending</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.reportsPending' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().reports | number }}</div>
         </div>
       </div>
 
       <!-- Community Emergency Assistance Requests — no dedicated admin page yet -->
-      <div class="ov-card ov-card--accent ov-card--red ov-card--disabled" title="Coming soon">
+      <div class="ov-card ov-card--accent ov-card--red ov-card--disabled" [title]="'admin.dashboard.comingSoon' | translate">
         <span class="ov-card__icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Emergency Assistance</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.emergencyAssistance' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().emergency | number }}</div>
         </div>
       </div>
@@ -133,7 +133,7 @@
       <a routerLink="/admin/user-management" class="ov-card ov-card--accent ov-card--slate">
         <span class="ov-card__icon"><i class="bi bi-person-fill-slash"></i></span>
         <div class="ov-card__body">
-          <span class="ov-card__label">Blocked Users</span>
+          <span class="ov-card__label">{{ 'admin.dashboard.blockedUsers' | translate }}</span>
           <div class="ov-card__value">{{ animatedOverview().blocked | number }}</div>
         </div>
       </a>
@@ -141,12 +141,12 @@
 
     <!-- Quick Actions -->
     <div class="panel panel--qa">
-      <h3 class="panel__title">Quick Actions</h3>
+      <h3 class="panel__title">{{ 'admin.dashboard.quickActions' | translate }}</h3>
       <div class="qa-list">
         @for (a of quickActions; track a.label) {
           <a [routerLink]="a.route" class="qa-item" [style.background]="a.bg" [style.border-color]="'color-mix(in srgb, ' + a.color + ' 13%, transparent)'">
             <div class="qa-item__icon"><i class="bi" [class]="a.icon" [style.color]="a.color"></i></div>
-            <span class="qa-item__label">{{ a.label }}</span>
+            <span class="qa-item__label">{{ a.label | translate }}</span>
             <i class="bi bi-chevron-right qa-item__chevron"></i>
           </a>
         }
@@ -162,28 +162,28 @@
     <div class="panel panel--chart">
       <div class="panel__head panel__head--chart">
       <div class="panel__head-top">
-        <h3 class="panel__title">Growth Trends <span class="panel__title-sub">({{ chartRangeLabel() }})</span></h3>
+        <h3 class="panel__title">{{ 'admin.dashboard.growthTrends' | translate }} <span class="panel__title-sub">({{ chartRangeLabel() }})</span></h3>
         <div class="chart-legend">
-          <span class="legend-item"><span class="legend-swatch legend-swatch--users"></span>Users</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--communities"></span>Communities</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--posts"></span>Posts</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--users"></span>{{ 'admin.dashboard.users' | translate }}</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--communities"></span>{{ 'admin.dashboard.communities' | translate }}</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--posts"></span>{{ 'admin.dashboard.posts' | translate }}</span>
         </div>
       </div>
 
       <div class="chart-filters">
-        <div class="chart-presets" role="group" aria-label="Date range preset">
+        <div class="chart-presets" role="group" [attr.aria-label]="'admin.dashboard.dateRangePreset' | translate">
           <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='7d'" (click)="setChartPreset('7d')">7D</button>
           <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='30d'" (click)="setChartPreset('30d')">30D</button>
           <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='90d'" (click)="setChartPreset('90d')">90D</button>
-          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='custom'" (click)="showCustomRange()">Custom</button>
+          <button type="button" class="chart-preset-btn" [class.active]="chartPreset()==='custom'" (click)="showCustomRange()">{{ 'admin.dashboard.custom' | translate }}</button>
         </div>
 
         @if (chartPreset() === 'custom') {
           <div class="chart-custom-range">
-            <app-date-input [ngModel]="chartFrom()" (ngModelChange)="onChartFromInput($event)" [ngModelOptions]="{ standalone: true }" [max]="chartTo() || chartRangeMax" ariaLabel="From date" placeholder="From date"></app-date-input>
+            <app-date-input [ngModel]="chartFrom()" (ngModelChange)="onChartFromInput($event)" [ngModelOptions]="{ standalone: true }" [max]="chartTo() || chartRangeMax" [ariaLabel]="'admin.dashboard.fromDate' | translate" [placeholder]="'admin.dashboard.fromDate' | translate"></app-date-input>
             <span class="chart-range-sep">–</span>
-            <app-date-input [ngModel]="chartTo()" (ngModelChange)="onChartToInput($event)" [ngModelOptions]="{ standalone: true }" [min]="chartFrom()" [max]="chartRangeMax" ariaLabel="To date" placeholder="To date"></app-date-input>
-            <button type="button" class="chart-apply-btn" [disabled]="loadingChart()" (click)="applyCustomChartRange()">Apply</button>
+            <app-date-input [ngModel]="chartTo()" (ngModelChange)="onChartToInput($event)" [ngModelOptions]="{ standalone: true }" [min]="chartFrom()" [max]="chartRangeMax" [ariaLabel]="'admin.dashboard.date' | translate" [placeholder]="'admin.dashboard.date' | translate"></app-date-input>
+            <button type="button" class="chart-apply-btn" [disabled]="loadingChart()" (click)="applyCustomChartRange()">{{ 'common.apply' | translate }}</button>
           </div>
         }
 
@@ -225,17 +225,17 @@
             <strong class="linechart__tooltip-day">{{ chartLabels()[hoveredIndex()!] }}</strong>
             <div class="linechart__tooltip-row">
               <span class="linechart__tooltip-key linechart__tooltip-key--users"></span>
-              <span class="linechart__tooltip-name">Users</span>
+              <span class="linechart__tooltip-name">{{ 'admin.dashboard.users' | translate }}</span>
               <span class="linechart__tooltip-value">{{ userValues()[hoveredIndex()!] ?? 0 }}</span>
             </div>
             <div class="linechart__tooltip-row">
               <span class="linechart__tooltip-key linechart__tooltip-key--communities"></span>
-              <span class="linechart__tooltip-name">Communities</span>
+              <span class="linechart__tooltip-name">{{ 'admin.dashboard.communities' | translate }}</span>
               <span class="linechart__tooltip-value">{{ communityValues()[hoveredIndex()!] ?? 0 }}</span>
             </div>
             <div class="linechart__tooltip-row">
               <span class="linechart__tooltip-key linechart__tooltip-key--posts"></span>
-              <span class="linechart__tooltip-name">Posts</span>
+              <span class="linechart__tooltip-name">{{ 'admin.dashboard.posts' | translate }}</span>
               <span class="linechart__tooltip-value">{{ postValues()[hoveredIndex()!] ?? 0 }}</span>
             </div>
           </div>
@@ -261,8 +261,8 @@
 
     <!-- Accessible data-table equivalent of the chart above -->
     <table class="sr-only">
-      <caption>Daily growth for the last 7 days: new users, communities, and posts</caption>
-      <thead><tr><th scope="col">Day</th><th scope="col">Users</th><th scope="col">Communities</th><th scope="col">Posts</th></tr></thead>
+      <caption>{{ 'admin.dashboard.dailyGrowthLast7Days' | translate }}</caption>
+      <thead><tr><th scope="col">{{ 'admin.dashboard.day' | translate }}</th><th scope="col">{{ 'admin.dashboard.users' | translate }}</th><th scope="col">{{ 'admin.dashboard.communities' | translate }}</th><th scope="col">{{ 'admin.dashboard.posts' | translate }}</th></tr></thead>
       <tbody>
         @for (label of chartLabels(); track label; let i = $index) {
           <tr>
@@ -279,7 +279,7 @@
     <!-- Platform composition: breakdowns that don't overlap the totals above -->
     <div class="panel panel--composition">
       <div class="panel__head">
-        <h3 class="panel__title">Platform Composition</h3>
+        <h3 class="panel__title">{{ 'admin.dashboard.platformComposition' | translate }}</h3>
       </div>
 
       <div class="composition-row">
@@ -288,27 +288,27 @@
         <div class="comp-row comp-row--community">
           <span class="comp-row__icon"><i class="bi bi-diagram-3-fill"></i></span>
           <div class="comp-row__main">
-            <p class="comp-row__label">Community Mix</p>
+            <p class="comp-row__label">{{ 'admin.dashboard.communityMix' | translate }}</p>
             <div class="comp-row__hero">
               <span class="comp-row__num">{{ communityCounts()?.total ?? 0 }}</span>
-              <span class="comp-row__unit">communities</span>
+              <span class="comp-row__unit">{{ 'admin.dashboard.communities2' | translate }}</span>
             </div>
           </div>
           <div class="comp-row__divider"></div>
           <div class="comp-row__detail comp-stat-rows">
             <div class="comp-stat-row">
               <span class="comp-stat-row__dot comp-stat-row__dot--a"></span>
-              <span class="comp-stat-row__label">Global</span>
+              <span class="comp-stat-row__label">{{ 'admin.dashboard.global' | translate }}</span>
               <span class="comp-stat-row__value">{{ communityCounts()?.global ?? 0 }}</span>
             </div>
             <div class="comp-stat-row">
               <span class="comp-stat-row__dot comp-stat-row__dot--b"></span>
-              <span class="comp-stat-row__label">Private</span>
+              <span class="comp-stat-row__label">{{ 'admin.dashboard.private' | translate }}</span>
               <span class="comp-stat-row__value">{{ communityCounts()?.private ?? 0 }}</span>
             </div>
             <div class="comp-stat-row">
               <span class="comp-stat-row__dot comp-stat-row__dot--c"></span>
-              <span class="comp-stat-row__label">Default</span>
+              <span class="comp-stat-row__label">{{ 'admin.dashboard.default' | translate }}</span>
               <span class="comp-stat-row__value">{{ communityCounts()?.default ?? 0 }}</span>
             </div>
           </div>
@@ -318,10 +318,10 @@
         <div class="comp-row comp-row--activity">
           <span class="comp-row__icon"><i class="bi bi-pie-chart-fill"></i></span>
           <div class="comp-row__main">
-            <p class="comp-row__label">Activity Mix</p>
+            <p class="comp-row__label">{{ 'admin.dashboard.activityMix' | translate }}</p>
             <div class="comp-row__hero">
               <span class="comp-row__num">{{ stats()?.recentActivity?.length ?? 0 }}</span>
-              <span class="comp-row__unit">events</span>
+              <span class="comp-row__unit">{{ 'admin.dashboard.events' | translate }}</span>
             </div>
           </div>
           <div class="comp-row__divider"></div>
@@ -329,18 +329,18 @@
             @if (activityMix().length > 0) {
               <div class="comp-meter comp-meter--mix">
                 @for (m of activityMix(); track m.type) {
-                  <div class="comp-meter__seg" [style.flex-grow]="m.count" [style.background]="m.color" [attr.data-tip]="m.label + ': ' + m.count"></div>
+                  <div class="comp-meter__seg" [style.flex-grow]="m.count" [style.background]="m.color" [attr.data-tip]="(m.label | translate) + ': ' + m.count"></div>
                 }
               </div>
               <div class="comp-mix-legend">
                 @for (m of activityMix().slice(0, 4); track m.type) {
                   <span class="comp-mix-legend__item">
-                    <span class="comp-mix-legend__dot" [style.background]="m.color"></span>{{ m.label }} <b>{{ m.count }}</b>
+                    <span class="comp-mix-legend__dot" [style.background]="m.color"></span>{{ m.label | translate }} <b>{{ m.count }}</b>
                   </span>
                 }
               </div>
             } @else {
-              <p class="comp-card__empty">No recent activity yet.</p>
+              <p class="comp-card__empty">{{ 'admin.dashboard.noRecentActivityYet' | translate }}</p>
             }
           </div>
         </div>
@@ -349,23 +349,23 @@
         <div class="comp-row comp-row--events">
           <span class="comp-row__icon"><i class="bi bi-calendar-event-fill"></i></span>
           <div class="comp-row__main">
-            <p class="comp-row__label">Events</p>
+            <p class="comp-row__label">{{ 'admin.dashboard.events2' | translate }}</p>
             <div class="comp-row__hero">
               <span class="comp-row__num">{{ chartData()?.eventsUpcoming ?? 0 }}</span>
-              <span class="comp-row__unit">upcoming</span>
+              <span class="comp-row__unit">{{ 'admin.dashboard.upcoming' | translate }}</span>
             </div>
           </div>
           <div class="comp-row__divider"></div>
           <div class="comp-row__detail">
             <div class="comp-card__row-line">
-              <span>Last 30 days</span>
+              <span>{{ 'admin.dashboard.last30Days' | translate }}</span>
               <strong>{{ chartData()?.eventsPast30d ?? 0 }}</strong>
             </div>
             <div class="comp-meter">
               <div class="comp-meter__fill" [style.width.%]="100 - eventUpcomingSharePct()"></div>
             </div>
             @if ((chartData()?.eventsUpcoming ?? 0) === 0 && (chartData()?.eventsPast30d ?? 0) === 0) {
-              <p class="comp-card__empty comp-card__empty--italic">No active events scheduled</p>
+              <p class="comp-card__empty comp-card__empty--italic">{{ 'admin.dashboard.noActiveEventsScheduled' | translate }}</p>
             }
           </div>
         </div>
@@ -379,11 +379,11 @@
   @if ((stats()?.recentActivity?.length ?? 0) > 0) {
     <div class="panel panel--table">
       <div class="panel__head">
-        <h3 class="panel__title">Recent Activity</h3>
+        <h3 class="panel__title">{{ 'admin.dashboard.recentActivity' | translate }}</h3>
         <!-- Filter Dropdown -->
         <div class="activity-filter">
           <select class="activity-filter__select" #filterSelect (change)="setActivityFilter(filterSelect.value)" [value]="activitySelectedFilter()">
-            <option value="all">All Activities</option>
+            <option value="all">{{ 'admin.dashboard.allActivities' | translate }}</option>
             @for (type of activityTypes(); track type) {
               <option [value]="type">{{ activityLabel(type) }}</option>
             }
@@ -412,7 +412,7 @@
           }
         } @else {
           <div class="activity-empty">
-            <p>No activities found for the selected filter.</p>
+            <p>{{ 'admin.dashboard.noActivitiesFoundSelectedFilter' | translate }}</p>
           </div>
         }
       </div>
@@ -425,13 +425,13 @@
             (click)="goToActivityPreviousPage()" 
             [disabled]="activityCurrentPage() === 1"
             type="button"
-            aria-label="Previous page">
+            [attr.aria-label]="'admin.dashboard.previousPage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
 
           <div class="pagination-info">
             <span class="pagination-pages">
-              Page <strong>{{ activityCurrentPage() }}</strong> of <strong>{{ activityTotalPages() }}</strong>
+              {{ 'admin.dashboard.page' | translate }} <strong>{{ activityCurrentPage() }}</strong> {{ 'admin.dashboard.of' | translate }} <strong>{{ activityTotalPages() }}</strong>
             </span>
             <div class="pagination-dots">
               @for (pageNum of getPageNumbers(); track pageNum) {
@@ -451,7 +451,7 @@
             (click)="goToActivityNextPage()" 
             [disabled]="activityCurrentPage() === activityTotalPages()"
             type="button"
-            aria-label="Next page">
+            [attr.aria-label]="'admin.dashboard.nextPage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
         </div>
@@ -463,19 +463,19 @@
   @if (auditLogs().length > 0) {
     <div class="panel panel--table">
       <div class="panel__head">
-        <h3 class="panel__title">Recent Admin Actions</h3>
+        <h3 class="panel__title">{{ 'admin.dashboard.recentAdminActions' | translate }}</h3>
         <div class="table-actions">
-          <button class="icon-btn" type="button" aria-label="Download"><i class="bi bi-download"></i></button>
+          <button class="icon-btn" type="button" [attr.aria-label]="'admin.dashboard.download' | translate"><i class="bi bi-download"></i></button>
         </div>
       </div>
       <div class="table-wrap">
         <table class="act-table">
           <thead>
             <tr>
-              <th>OPERATOR</th>
-              <th>ACTION</th>
-              <th>TARGET</th>
-              <th>TIMESTAMP</th>
+              <th>{{ 'admin.dashboard.operator' | translate }}</th>
+              <th>{{ 'admin.dashboard.action' | translate }}</th>
+              <th>{{ 'admin.dashboard.target' | translate }}</th>
+              <th>{{ 'admin.dashboard.timestamp' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -496,7 +496,7 @@
         </table>
       </div>
       <div class="panel__table-footer">
-        <a routerLink="/admin/user-management" class="footer-link">VIEW COMPLETE LOG HISTORY</a>
+        <a routerLink="/admin/user-management" class="footer-link">{{ 'admin.dashboard.viewCompleteLogHistory' | translate }}</a>
       </div>
     </div>
   }

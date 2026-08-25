@@ -109,18 +109,18 @@ export async function checkPhoneExists(phone: string): Promise<boolean> {
 export async function register(dto: RegisterDtoType) {
   // Check username uniqueness
   const existingUser = await db('users').where({ user_name: dto.user_name }).first();
-  if (existingUser) throw new AppError(409, 'Username already taken');
+  if (existingUser) throw new AppError(409, 'Username already taken', 'USERNAME_ALREADY_TAKEN');
 
   // Check email uniqueness if provided
   if (dto.email) {
     const existingEmail = await db('users').where({ email: dto.email }).first();
-    if (existingEmail) throw new AppError(409, 'Email already registered');
+    if (existingEmail) throw new AppError(409, 'Email already registered', 'EMAIL_ALREADY_REGISTERED');
   }
 
   // Check phone uniqueness (safety net — primary check is in send-otp)
   if (dto.phone_no) {
     const existingPhone = await db('users').where({ phone_no: dto.phone_no }).first();
-    if (existingPhone) throw new AppError(409, 'Mobile number already registered with another account');
+    if (existingPhone) throw new AppError(409, 'Mobile number already registered with another account', 'MOBILE_NUMBER_ALREADY_REGISTERED');
   }
 
   const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -150,6 +150,9 @@ export async function register(dto: RegisterDtoType) {
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
     'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    undefined,
+    undefined,
+    {},
   );
 
   return {
@@ -169,17 +172,17 @@ export async function login(dto: LoginDtoType) {
     })
     .first() as UserRow | undefined;
 
-  if (!user) throw new AppError(401, 'Invalid credentials');
+  if (!user) throw new AppError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
 
   // Guard: Google-only accounts have no password
   if (!user.password) {
-    throw new AppError(401, 'This account uses Google sign-in. Please use the "Continue with Google" button to sign in.');
+    throw new AppError(401, 'This account uses Google sign-in. Please use the "Continue with Google" button to sign in.', 'ACCOUNT_USES_GOOGLE_SIGN');
   }
 
   const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-  if (!isPasswordValid) throw new AppError(401, 'Invalid credentials');
+  if (!isPasswordValid) throw new AppError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
 
-  if (user.is_blocked) throw new AppError(403, 'Your account has been blocked');
+  if (user.is_blocked) throw new AppError(403, 'Your account has been blocked', 'ACCOUNT_HAS_BEEN_BLOCKED');
 
   const tokens = generateTokenPair(toJwtPayload(user));
   await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
@@ -202,16 +205,16 @@ export async function adminLogin(dto: LoginDtoType) {
     })
     .first() as UserRow | undefined;
 
-  if (!user) throw new AppError(401, 'Invalid credentials');
+  if (!user) throw new AppError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
 
   if (!user.password) {
-    throw new AppError(401, 'This account uses Google sign-in and cannot access the admin panel.');
+    throw new AppError(401, 'This account uses Google sign-in and cannot access the admin panel.', 'ACCOUNT_USES_GOOGLE_SIGN_2');
   }
 
   const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-  if (!isPasswordValid) throw new AppError(401, 'Invalid credentials');
+  if (!isPasswordValid) throw new AppError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
 
-  if (user.role !== 'ADMIN') throw new AppError(403, 'Access denied. Admin only.');
+  if (user.role !== 'ADMIN') throw new AppError(403, 'Access denied. Admin only.', 'ACCESS_DENIED_ADMIN_ONLY');
 
   const tokens = generateTokenPair(toJwtPayload(user));
   await db('users').where({ id: user.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
@@ -264,7 +267,7 @@ export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise
     .andWhere({ phone_no: dto.phoneNumber })
     .first() as UserRow | undefined;
 
-  if (!user) throw new AppError(404, 'User not found. Please check your details and try again.');
+  if (!user) throw new AppError(404, 'User not found. Please check your details and try again.', 'USER_FOUND_CHECK_DETAILS');
 
   const otp = sendOtp(dto.phoneNumber, user.id);
   await deliverOtp(dto.phoneNumber, otp);
@@ -288,11 +291,11 @@ export async function resetPasswordVerify(dto: ResetPasswordDtoType): Promise<{ 
   // Retrieve userId before verifyOtp — verifyOtp deletes the store entry on
   // success, so getUserIdByPhone would return null if called afterwards.
   const userId = getUserIdByPhone(dto.phoneNumber);
-  if (!userId) throw new AppError(400, 'OTP session expired. Please request a new OTP.');
+  if (!userId) throw new AppError(400, 'OTP session expired. Please request a new OTP.', 'OTP_SESSION_EXPIRED_REQUEST');
 
   const otpResult = verifyOtp(dto.phoneNumber, dto.otp);
   if (!otpResult.success) {
-    throw new AppError(400, otpResult.message);
+    throw new AppError(400, otpResult.message, 'OTP_VERIFICATION_FAILED');
   }
 
   const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
@@ -315,7 +318,7 @@ export async function refreshToken(rawToken: string) {
     const user = await db('users').where({ id: payload.sub }).first() as UserRow | undefined;
 
     if (!user || user.refresh_token !== rawToken) {
-      throw new AppError(401, 'Invalid refresh token');
+      throw new AppError(401, 'Invalid refresh token', 'INVALID_REFRESH_TOKEN');
     }
 
     const tokens = generateTokenPair(toJwtPayload(user));
@@ -324,7 +327,7 @@ export async function refreshToken(rawToken: string) {
     return tokens;
   } catch (err) {
     if (err instanceof AppError) throw err;
-    throw new AppError(401, 'Invalid refresh token');
+    throw new AppError(401, 'Invalid refresh token', 'INVALID_REFRESH_TOKEN');
   }
 }
 
@@ -342,7 +345,7 @@ export async function logout(userId: string): Promise<void> {
 export async function getProfile(userId: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
 
-  if (!user) throw new AppError(401, 'User not found');
+  if (!user) throw new AppError(401, 'User not found', 'USER_FOUND');
 
   return toClientUser(user);
 }
@@ -355,7 +358,7 @@ let googleClient: OAuth2Client | null = null;
 
 function getGoogleClient(): OAuth2Client {
   if (!env.GOOGLE_CLIENT_ID) {
-    throw new AppError(500, 'Google authentication is not configured on this server.');
+    throw new AppError(500, 'Google authentication is not configured on this server.', 'GOOGLE_AUTHENTICATION_CONFIGURED_SERVER');
   }
   if (!googleClient) {
     googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
@@ -371,13 +374,13 @@ async function verifyGoogleToken(credential: string) {
       audience: env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    if (!payload) throw new AppError(400, 'Invalid Google credential. Please try again.');
+    if (!payload) throw new AppError(400, 'Invalid Google credential. Please try again.', 'INVALID_GOOGLE_CREDENTIAL');
     return payload;
   } catch (err) {
     if (err instanceof AppError) throw err;
     // Log the raw error so it's visible in server logs for debugging
     console.error('[Google OAuth] Token verification failed:', (err as Error).message);
-    throw new AppError(401, 'Google sign-in failed. Please try again.');
+    throw new AppError(401, 'Google sign-in failed. Please try again.', 'GOOGLE_SIGN_FAILED');
   }
 }
 
@@ -450,7 +453,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   // (a) Existing Google account → login
   const existingGoogle = await db('users').where({ google_id: googleId }).first() as UserRow | undefined;
   if (existingGoogle) {
-    if (existingGoogle.is_blocked) throw new AppError(403, 'Your account has been blocked.');
+    if (existingGoogle.is_blocked) throw new AppError(403, 'Your account has been blocked.', 'ACCOUNT_HAS_BEEN_BLOCKED_2');
     const tokens = generateTokenPair(toJwtPayload(existingGoogle));
     await db('users').where({ id: existingGoogle.id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
     await logAudit(existingGoogle.id, 'USER_LOGIN', { google: true }, 'users', existingGoogle.id);
@@ -466,7 +469,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   if (email) {
     const existingEmail = await db('users').where({ email }).first() as UserRow | undefined;
     if (existingEmail && !existingEmail.is_google) {
-      throw new AppError(409, 'An account with this email already exists. Please sign in with your password.');
+      throw new AppError(409, 'An account with this email already exists. Please sign in with your password.', 'ACCOUNT_EMAIL_ALREADY_EXISTS');
     }
   }
 
@@ -510,6 +513,9 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
     'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    undefined,
+    undefined,
+    {},
   );
 
   return {
@@ -546,12 +552,12 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
 
   // Username uniqueness check
   const existingUsername = await db('users').where({ user_name: dto.username }).first();
-  if (existingUsername) throw new AppError(409, 'Username already taken. Please choose a different one.');
+  if (existingUsername) throw new AppError(409, 'Username already taken. Please choose a different one.', 'USERNAME_ALREADY_TAKEN_CHOOSE');
 
   // Email conflict (should have been caught in initiate, but double-check)
   if (email) {
     const existingEmail = await db('users').where({ email }).first() as UserRow | undefined;
-    if (existingEmail) throw new AppError(409, 'An account with this email already exists.');
+    if (existingEmail) throw new AppError(409, 'An account with this email already exists.', 'ACCOUNT_EMAIL_ALREADY_EXISTS_2');
   }
 
   const countryName = await lookupCountryName(dto.country_id);
@@ -579,6 +585,9 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
     'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    undefined,
+    undefined,
+    {},
   );
 
   return {

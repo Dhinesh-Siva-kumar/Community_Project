@@ -427,7 +427,7 @@ export async function findOne(id: string) {
     .select('j.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.email as user_email', 'u.avatar')
     .first();
 
-  if (!job) throw new AppError(404, 'Job not found');
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   const jb = job as Record<string, unknown>;
   return shapeJob(jb, {
@@ -503,19 +503,19 @@ export async function findPendingOnly(options: FindPendingJobsOptions) {
 
 export async function approve(id: string, adminId: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!job) throw new AppError(404, 'Job not found');
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   if (job['status'] === 'APPROVED') return findOne(id);
 
   await db('jobs').where({ id }).update({ status: 'APPROVED' });
-  await notificationsService.create(job['user_id'] as string, 'JOB_APPROVED', `Your job "${job['title']}" has been approved.`, id);
+  await notificationsService.create(job['user_id'] as string, 'JOB_APPROVED', `Your job "${job['title']}" has been approved.`, id, undefined, { name: job['title'] });
   await logAudit(adminId, 'JOB_APPROVED', { previousStatus: job['status'], title: job['title'] }, 'jobs', id);
   return findOne(id);
 }
 
 export async function reject(id: string, adminId: string, reason?: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!job) throw new AppError(404, 'Job not found');
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   if (job['status'] === 'REJECTED') return findOne(id);
 
@@ -531,12 +531,12 @@ export async function reject(id: string, adminId: string, reason?: string) {
 // ─────────────────────────────────────────────────────────────
 export async function update(id: string, data: UpdateJobDtoType, userId: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!job) throw new AppError(404, 'Job not found');
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   const byAdmin = job['user_id'] !== userId;
   if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own jobs');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only update your own jobs', 'ONLY_UPDATE_OWN_JOBS');
   }
 
   const updateData: Record<string, unknown> = {};
@@ -594,12 +594,12 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
 // ─────────────────────────────────────────────────────────────
 export async function deleteJob(id: string, userId: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
-  if (!job) throw new AppError(404, 'Job not found');
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   const byAdmin = job['user_id'] !== userId;
   if (byAdmin) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own jobs');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own jobs', 'ONLY_DELETE_OWN_JOBS');
   }
 
   await db('jobs').where({ id }).delete();

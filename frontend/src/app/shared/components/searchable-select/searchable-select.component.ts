@@ -12,7 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 
 export interface SelectOption {
@@ -63,7 +63,7 @@ export interface SelectOption {
               (ngModelChange)="onQueryChange($event)"
               [placeholder]="searchPlaceholder() || ('dropdown.search' | translate)"
               autocomplete="off"
-              aria-label="Search options"
+              [attr.aria-label]="'components.searchableSelect.searchOptions' | translate"
             />
             @if (query) {
               <button type="button" class="ss-clear-search" (click)="clearSearch()">
@@ -85,7 +85,7 @@ export interface SelectOption {
                   [attr.aria-selected]="opt.value === value()"
                   (click)="selectOption(opt)"
                 >
-                  <span class="ss-option-label">{{ opt.label }}</span>
+                  <span class="ss-option-label">{{ tr(opt.label) }}</span>
                   @if (opt.value === value()) {
                     <i class="bi bi-check2 ss-check"></i>
                   }
@@ -103,6 +103,12 @@ export interface SelectOption {
   `,
 })
 export class SearchableSelectComponent implements ControlValueAccessor {
+  private translate = inject(TranslateService);
+
+  /** Option labels are catalog keys; unknown keys pass through unchanged. */
+  protected tr(label: string): string {
+    return this.translate.instant(label) as string;
+  }
 
   // ── Inputs ────────────────────────────────────────────────────
   readonly options           = input<SelectOption[]>([]);
@@ -175,7 +181,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   protected filteredOptions = computed(() => {
     const q = this._querySig().trim().toLowerCase();
     return q
-      ? this.options().filter(o => o.label.toLowerCase().includes(q))
+      ? this.options().filter(o => this.tr(o.label).toLowerCase().includes(q))
       : this.options();
   });
 
@@ -188,11 +194,11 @@ export class SearchableSelectComponent implements ControlValueAccessor {
     const v = this.value();
     if (v == null) return '';
     const fromOptions = this.options().find(o => o.value === v)?.label;
-    if (fromOptions) return fromOptions;
+    if (fromOptions) return this.tr(fromOptions);
     const fromRemote = this.remoteOptions().find(o => o.value === v)?.label;
-    if (fromRemote) return fromRemote;
+    if (fromRemote) return this.tr(fromRemote);
     const seeded = this.selectedOption();
-    if (seeded && seeded.value === v) return seeded.label;
+    if (seeded && seeded.value === v) return this.tr(seeded.label);
     return '';
   });
 

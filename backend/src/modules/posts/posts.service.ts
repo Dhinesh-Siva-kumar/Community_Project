@@ -82,10 +82,10 @@ export async function countPending() {
 
 export async function create(data: CreatePostDtoType, userId: string) {
   const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const community = await db('communities').where({ id: data.communityId }).first();
-  if (!community) throw new AppError(404, 'Community not found');
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const isAutoApproved = user['role'] === 'ADMIN';
   const status = isAutoApproved ? 'APPROVED' : 'PENDING';
@@ -194,7 +194,7 @@ export async function findOne(postId: string, currentUserId?: string) {
     .where('p.id', postId)
     .select('p.*', ...POST_USER_SELECT, ...POST_COMMUNITY_SELECT)
     .first() as Record<string, unknown> | undefined;
-  if (!row) throw new AppError(404, 'Post not found');
+  if (!row) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const [{ total: commentCount }] = await db('comments').where({ post_id: postId }).count({ total: '*' });
   const [{ total: likeCount }]    = await db('likes').where({ post_id: postId }).count({ total: '*' });
@@ -296,7 +296,7 @@ export async function findPendingOnly(options: FindPendingOnlyOptions) {
 
 export async function approve(postId: string, adminId: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   if (post['status'] === 'APPROVED') {
     const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
@@ -306,7 +306,7 @@ export async function approve(postId: string, adminId: string) {
   const [updated] = await db('posts').where({ id: postId }).update({ status: 'APPROVED' }).returning('*');
   const updatedRow = updated as Record<string, unknown>;
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
-  await notificationsService.create(updatedRow['user_id'] as string, 'POST_APPROVED', 'Your post has been approved.', postId);
+  await notificationsService.create(updatedRow['user_id'] as string, 'POST_APPROVED', 'Your post has been approved.', postId, undefined, {});
   await notifyCommunityMembersOfNewPost(postId, updatedRow['community_id'] as string, updatedRow['user_id'] as string);
   await logAudit(adminId, 'POST_APPROVED', { previousStatus: post['status'], author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
   return { ...updatedRow, user };
@@ -314,7 +314,7 @@ export async function approve(postId: string, adminId: string) {
 
 export async function reject(postId: string, adminId: string, reason?: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   if (post['status'] === 'REJECTED') {
     const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
@@ -374,11 +374,11 @@ export async function findMine(userId: string, options: { page: number; limit: n
 
 export async function deletePost(postId: string, userId: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   if (post['user_id'] !== userId) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own posts');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own posts', 'ONLY_DELETE_OWN_POSTS');
   }
 
   await db('posts').where({ id: postId }).delete();
@@ -387,7 +387,7 @@ export async function deletePost(postId: string, userId: string) {
   const byAdmin = post['user_id'] !== userId;
   await logAudit(userId, 'POST_DELETED', { byAdmin, communityId: post['community_id'] }, 'posts', postId);
   if (byAdmin) {
-    await notificationsService.create(post['user_id'] as string, 'POST_REMOVED', 'Your post was removed by an administrator.');
+    await notificationsService.create(post['user_id'] as string, 'POST_REMOVED', 'Your post was removed by an administrator.', undefined, undefined, {});
   }
 
   return { message: 'Post deleted successfully' };
@@ -395,12 +395,12 @@ export async function deletePost(postId: string, userId: string) {
 
 export async function updatePost(postId: string, userId: string, data: UpdatePostBodyDtoType) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const isOwner = post['user_id'] === userId;
   const editor = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
   if (!isOwner && (!editor || editor['role'] !== 'ADMIN')) {
-    throw new AppError(403, 'You can only edit your own posts');
+    throw new AppError(403, 'You can only edit your own posts', 'ONLY_EDIT_OWN_POSTS');
   }
 
   const updateFields: Record<string, unknown> = {};
@@ -417,7 +417,7 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
     updateFields['rejection_reason'] = null;
   }
 
-  if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update');
+  if (Object.keys(updateFields).length === 0) throw new AppError(400, 'No fields to update', 'FIELDS_UPDATE');
 
   await db('posts').where({ id: postId }).update(updateFields);
 
@@ -448,10 +448,10 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
 
 export async function like(postId: string, userId: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const existing = await db('likes').where({ post_id: postId, user_id: userId }).first();
-  if (existing) throw new AppError(409, 'You have already liked this post');
+  if (existing) throw new AppError(409, 'You have already liked this post', 'HAVE_ALREADY_LIKED_POST');
 
   await db('likes').insert({ post_id: postId, user_id: userId });
   const [{ total: likeCount }] = await db('likes').where({ post_id: postId }).count({ total: '*' });
@@ -472,7 +472,7 @@ export async function like(postId: string, userId: string) {
 
 export async function unlike(postId: string, userId: string) {
   const likeRow = await db('likes').where({ post_id: postId, user_id: userId }).first() as Record<string, unknown> | undefined;
-  if (!likeRow) throw new AppError(404, 'You have not liked this post');
+  if (!likeRow) throw new AppError(404, 'You have not liked this post', 'HAVE_LIKED_POST');
 
   await db('likes').where({ id: likeRow['id'] }).delete();
   const [{ total: likeCount }] = await db('likes').where({ post_id: postId }).count({ total: '*' });
@@ -481,10 +481,10 @@ export async function unlike(postId: string, userId: string) {
 
 export async function savePost(postId: string, userId: string) {
   const post = await db('posts').where({ id: postId }).first();
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const existing = await db('post_saves').where({ post_id: postId, user_id: userId }).first();
-  if (existing) throw new AppError(409, 'You have already saved this post');
+  if (existing) throw new AppError(409, 'You have already saved this post', 'HAVE_ALREADY_SAVED_POST');
 
   await db('post_saves').insert({ post_id: postId, user_id: userId });
   return { message: 'Post saved successfully' };
@@ -492,7 +492,7 @@ export async function savePost(postId: string, userId: string) {
 
 export async function unsavePost(postId: string, userId: string) {
   const saveRow = await db('post_saves').where({ post_id: postId, user_id: userId }).first() as Record<string, unknown> | undefined;
-  if (!saveRow) throw new AppError(404, 'You have not saved this post');
+  if (!saveRow) throw new AppError(404, 'You have not saved this post', 'HAVE_SAVED_POST');
 
   await db('post_saves').where({ id: saveRow['id'] }).delete();
   return { message: 'Post unsaved successfully' };
@@ -527,7 +527,7 @@ export async function getComments(postId: string, page: number, limit: number) {
 
 export async function addComment(postId: string, userId: string, content: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
-  if (!post) throw new AppError(404, 'Post not found');
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const [comment] = await db('comments')
     .insert({ content, post_id: postId, user_id: userId })
@@ -565,11 +565,11 @@ export async function addComment(postId: string, userId: string, content: string
 
 export async function deleteComment(commentId: string, userId: string) {
   const comment = await db('comments').where({ id: commentId }).first() as Record<string, unknown> | undefined;
-  if (!comment) throw new AppError(404, 'Comment not found');
+  if (!comment) throw new AppError(404, 'Comment not found', 'COMMENT_FOUND');
 
   if (comment['user_id'] !== userId) {
     const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
-    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own comments');
+    if (!user || user['role'] !== 'ADMIN') throw new AppError(403, 'You can only delete your own comments', 'ONLY_DELETE_OWN_COMMENTS');
   }
 
   await db('comments').where({ id: commentId }).delete();

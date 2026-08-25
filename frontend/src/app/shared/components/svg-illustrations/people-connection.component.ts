@@ -1,8 +1,10 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-people-connection',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <svg
       [attr.width]="width()"
@@ -12,7 +14,7 @@ import { Component, input } from '@angular/core';
       xmlns="http://www.w3.org/2000/svg"
       class="people-connection-svg"
       role="img"
-      aria-label="People connecting illustration"
+      [attr.aria-label]="'components.illustration.peopleConnecting' | translate"
     >
       <!-- Animated connection lines -->
       <g class="connection-lines" opacity="0.3">

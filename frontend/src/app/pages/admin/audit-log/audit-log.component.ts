@@ -8,19 +8,21 @@ import { AuditLog, AuditLogResponse } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import {
   AUDIT_ACTION_OPTIONS, AUDIT_RESOURCE_OPTIONS,
-  formatAuditAction, formatAuditResource, getAuditActionColor, getAuditActionIcon,
+  auditActionKey, auditResourceKey, titleCaseCode, getAuditActionColor, getAuditActionIcon,
 } from '../../../core/constants/audit-actions';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-audit-log',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, TranslatePipe],
   templateUrl: './audit-log.component.html',
   styleUrls: ['./audit-log.component.scss'],
 })
 export class AuditLogComponent implements OnInit {
+  private translate = inject(TranslateService);
   private auditService = inject(AuditService);
   private toast        = inject(ToastService);
   private router        = inject(Router);
@@ -46,12 +48,12 @@ export class AuditLogComponent implements OnInit {
   );
 
   readonly actionFilterOptions: SelectOption[] = [
-    { value: '', label: 'All Actions' },
-    ...AUDIT_ACTION_OPTIONS.map((a) => ({ value: a, label: formatAuditAction(a) })),
+    { value: '', label: 'admin.auditLog.label.allActions' },
+    ...AUDIT_ACTION_OPTIONS.map((a) => ({ value: a, label: auditActionKey(a) })),
   ];
   readonly resourceFilterOptions: SelectOption[] = [
-    { value: '', label: 'All Resources' },
-    ...AUDIT_RESOURCE_OPTIONS.map((r) => ({ value: r, label: formatAuditResource(r) })),
+    { value: '', label: 'admin.auditLog.label.allResources' },
+    ...AUDIT_RESOURCE_OPTIONS.map((r) => ({ value: r, label: auditResourceKey(r) })),
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -63,20 +65,20 @@ export class AuditLogComponent implements OnInit {
   // audit history, rather than every platform user.
   actors = signal<AuditLogActor[]>([]);
   actorFilterOptions = computed<SelectOption[]>(() => [
-    { value: '', label: 'All Actors' },
+    { value: '', label: 'admin.auditLog.label.allActors' },
     ...this.actors().map((a) => ({ value: a.id, label: a.displayName || a.userName })),
   ]);
 
   activeFilterChips = computed<{ key: string; label: string }[]>(() => {
     const chips: { key: string; label: string }[] = [];
-    if (this.filterAction())   chips.push({ key: 'action',   label: formatAuditAction(this.filterAction()) });
-    if (this.filterResource()) chips.push({ key: 'resource', label: formatAuditResource(this.filterResource()) });
+    if (this.filterAction())   chips.push({ key: 'action',   label: this.formatAction(this.filterAction()) });
+    if (this.filterResource()) chips.push({ key: 'resource', label: this.formatResource(this.filterResource()) });
     if (this.filterActorId()) {
       const actor = this.actors().find((a) => a.id === this.filterActorId());
-      chips.push({ key: 'actorId', label: `Actor: ${actor?.displayName ?? actor?.userName ?? '…'}` });
+      chips.push({ key: 'actorId', label: this.translate.instant('filters.actor', { name: actor?.displayName ?? actor?.userName ?? '…' }) });
     }
-    if (this.filterDateFrom()) chips.push({ key: 'dateFrom', label: `From ${this.filterDateFrom()}` });
-    if (this.filterDateTo())   chips.push({ key: 'dateTo',   label: `To ${this.filterDateTo()}` });
+    if (this.filterDateFrom()) chips.push({ key: 'dateFrom', label: this.translate.instant('filters.dateFrom', { date: this.filterDateFrom() }) });
+    if (this.filterDateTo())   chips.push({ key: 'dateTo',   label: this.translate.instant('filters.dateTo', { date: this.filterDateTo() }) });
     return chips;
   });
 
@@ -113,7 +115,7 @@ export class AuditLogComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load audit logs');
+        this.toast.error('admin.auditLog.toast.failedLoadAuditLogs');
         this.loading.set(false);
       },
     });
@@ -194,8 +196,18 @@ export class AuditLogComponent implements OnInit {
   // ── Row helpers ───────────────────────────────────────────────────────────
   getColor(action: string): string { return getAuditActionColor(action); }
   getIcon(action: string):  string { return getAuditActionIcon(action); }
-  formatAction(action: string): string { return formatAuditAction(action); }
-  formatResource(resource: string | null): string { return resource ? formatAuditResource(resource) : ''; }
+  /** Translated action name, falling back to the title-cased code. */
+  formatAction(action: string): string {
+    const key = auditActionKey(action);
+    const text = this.translate.instant(key);
+    return text === key ? titleCaseCode(action) : (text as string);
+  }
+  formatResource(resource: string | null): string {
+    if (!resource) return '';
+    const key = auditResourceKey(resource);
+    const text = this.translate.instant(key);
+    return text === key ? titleCaseCode(resource) : (text as string);
+  }
 
   getInitials(log: AuditLog): string {
     return (log.actor?.displayName ?? log.actor?.userName ?? '?').charAt(0).toUpperCase();
@@ -204,18 +216,18 @@ export class AuditLogComponent implements OnInit {
   getMetaDesc(log: AuditLog): string {
     if (!log.metadata) return '';
     const m = log.metadata as Record<string, unknown>;
-    if (m['createdUser'])  return `Created user: ${m['createdUser']}`;
-    if (m['deletedUser'])  return `Deleted user: ${m['deletedUser']}`;
-    if (m['targetUser'])   return `Target: ${m['targetUser']}`;
-    if (m['from'] && m['to']) return `Role ${m['from']} → ${m['to']}`;
-    if (m['count'])        return `Sent to ${m['count']} users`;
+    if (m['createdUser'])  return this.translate.instant('audit.meta.createdUser', { name: m['createdUser'] });
+    if (m['deletedUser'])  return this.translate.instant('audit.meta.deletedUser', { name: m['deletedUser'] });
+    if (m['targetUser'])   return this.translate.instant('audit.meta.targetUser', { name: m['targetUser'] });
+    if (m['from'] && m['to']) return this.translate.instant('audit.meta.roleChange', { from: m['from'], to: m['to'] });
+    if (m['count'])        return this.translate.instant('audit.meta.sentToUsers', { count: m['count'] });
     if (m['name'])         return `${m['name']}`;
     if (m['title'])        return `${m['title']}`;
-    if (m['fields'])       return `Fields: ${(m['fields'] as string[]).join(', ')}`;
-    if (m['byAdmin'])      return 'Performed by admin';
-    if (m['adminPanel'])   return 'Admin panel sign-in';
-    if (m['selfService'])  return 'Self-service';
-    if (m['google'])       return 'Via Google sign-in';
+    if (m['fields'])       return this.translate.instant('audit.meta.fields', { fields: (m['fields'] as string[]).join(', ') });
+    if (m['byAdmin'])      return this.translate.instant('audit.meta.byAdmin');
+    if (m['adminPanel'])   return this.translate.instant('audit.meta.adminPanel');
+    if (m['selfService'])  return this.translate.instant('audit.meta.selfService');
+    if (m['google'])       return this.translate.instant('audit.meta.viaGoogle');
     return '';
   }
 
@@ -233,7 +245,7 @@ export class AuditLogComponent implements OnInit {
 
   /** Best-effort browser/OS summary from a raw user-agent string. */
   describeUserAgent(ua: string | null): string {
-    if (!ua) return 'Unknown device';
+    if (!ua) return this.translate.instant('admin.auditLog.unknownDevice');
     const os =
       /Windows/.test(ua) ? 'Windows' :
       /Mac OS/.test(ua) ? 'macOS' :
@@ -282,7 +294,7 @@ export class AuditLogComponent implements OnInit {
 
   private buildExportRows(logs: AuditLog[]): (string | number)[][] {
     return logs.map((l) => [
-      l.createdAt, formatAuditAction(l.action),
+      l.createdAt, this.formatAction(l.action),
       l.actor?.displayName ?? l.actor?.userName ?? 'System',
       l.resource ?? '', l.resourceId ?? '', this.getMetaDesc(l), l.ipAddress ?? '',
     ]);
@@ -300,7 +312,7 @@ export class AuditLogComponent implements OnInit {
         this.toast.success(`Exported ${logs.length} log${logs.length === 1 ? '' : 's'} to CSV`);
         this.exporting.set(false);
       },
-      error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
+      error: () => { this.toast.error('admin.auditLog.toast.exportFailed'); this.exporting.set(false); },
     });
   }
 

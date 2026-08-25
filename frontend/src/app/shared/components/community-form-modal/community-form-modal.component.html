@@ -14,10 +14,10 @@
       <div class="au-header__text cm-modal-header-inner">
         <h5 class="au-header__title cm-modal-title">{{ modalTitle() }}</h5>
         <p class="au-header__sub cm-modal-subtitle">
-          {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
+          {{ (isEditing() ? 'components.communityForm.editSubtitle' : 'components.communityForm.createSubtitle') | translate }}
         </p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -30,20 +30,20 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-info-circle-fill"></i></span>
-            <span class="cm-section-title">Basic Information</span>
+            <span class="cm-section-title">{{ 'components.communityForm.basicInformation' | translate }}</span>
           </div>
 
           <div class="cm-field-row">
             <!-- Community Name -->
             <div class="cm-field-group">
-              <label class="cm-label">Community Name <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'components.communityForm.nameLabel' | translate }} <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
                 <i class="bi bi-people cm-input-icon"></i>
                 <input
                   type="text"
                   formControlName="communityName"
                   maxlength="150"
-                  placeholder="e.g. Developers India"
+                  [placeholder]="'components.communityForm.namePlaceholder' | translate"
                   class="cm-input"
                   [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
                 />
@@ -52,7 +52,7 @@
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>
                   @if (f['communityName'].errors?.['required'] || f['communityName'].errors?.['whitespace']) {
-                    Community Name is required.
+                    {{ 'components.communityForm.nameRequired' | translate }}
                   } @else if (f['communityName'].errors?.['minlengthTrimmed']) {
                     Community Name must contain at least 3 characters.
                   } @else if (f['communityName'].errors?.['maxlength']) {
@@ -64,11 +64,11 @@
 
             <!-- Category -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
-              <label class="cm-label">Category <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'components.communityForm.categoryLabel' | translate }} <span class="cm-required">*</span></label>
               <app-searchable-select
                 formControlName="interests"
                 [options]="interestOptions"
-                placeholder="Select a category"
+                [placeholder]="'components.communityForm.categoryPlaceholder' | translate"
               ></app-searchable-select>
               @if (f['interests'].touched && f['interests'].invalid) {
                 <div class="cm-error-msg">
@@ -81,7 +81,7 @@
           <!-- Description -->
           <div class="cm-field-group">
             <div class="cm-label-row">
-              <label class="cm-label">Description <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'components.communityForm.descriptionLabel' | translate }} <span class="cm-required">*</span></label>
               <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/500</span>
             </div>
             <div class="cm-input-wrap cm-textarea-wrap">
@@ -90,7 +90,7 @@
                 formControlName="description"
                 rows="3"
                 maxlength="500"
-                placeholder="Tell people what this community is about..."
+                [placeholder]="'components.communityForm.descriptionPlaceholder' | translate"
                 class="cm-input cm-textarea"
                 [class.cm-input-error]="f['description'].touched && f['description'].invalid"
               ></textarea>
@@ -99,7 +99,7 @@
               <div class="cm-error-msg">
                 <i class="bi bi-exclamation-circle me-1"></i>
                 @if (f['description'].errors?.['required'] || f['description'].errors?.['whitespace']) {
-                  Description is required.
+                  {{ 'components.communityForm.descriptionRequired' | translate }}
                 } @else if (f['description'].errors?.['maxlength']) {
                   Maximum 500 characters allowed.
                 }
@@ -112,17 +112,17 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-gear-fill"></i></span>
-            <span class="cm-section-title">Settings</span>
+            <span class="cm-section-title">{{ 'components.communityForm.settings' | translate }}</span>
           </div>
 
           <div class="cm-field-row">
             <!-- Country -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['countryId'].touched && f['countryId'].invalid">
-              <label class="cm-label">Country <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'components.communityForm.countryLabel' | translate }} <span class="cm-required">*</span></label>
               <app-searchable-select
                 formControlName="countryId"
                 [options]="countryOptions"
-                placeholder="Select country"
+                [placeholder]="'components.communityForm.countryPlaceholder' | translate"
               ></app-searchable-select>
               @if (f['countryId'].touched && f['countryId'].invalid) {
                 <div class="cm-error-msg">
@@ -133,15 +133,15 @@
 
             <!-- Visibility Toggles — non-admins only ever get Private -->
             <div class="cm-field-group">
-              <label class="cm-label">Visibility <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'components.communityForm.visibilityLabel' | translate }} <span class="cm-required">*</span></label>
               <app-radio-group
                 formControlName="visibility"
                 [options]="visibilityOptions()"
                 [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
-                ariaLabel="Visibility">
+                [ariaLabel]="'components.communityForm.visibilityAria' | translate">
               </app-radio-group>
               @if (!isAdminUser()) {
-                <div class="cm-default-hint">Your communities are always Private, scoped to your own country.</div>
+                <div class="cm-default-hint">{{ 'components.communityForm.privateNote' | translate }}</div>
               }
               @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                 <div class="cm-error-msg">
@@ -153,11 +153,11 @@
 
           <!-- Community Mode -->
           <div class="cm-field-group">
-            <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
+            <label class="cm-label">{{ 'components.communityForm.modeLabel' | translate }} <span class="cm-required">*</span></label>
             <app-radio-group
               formControlName="communityMode"
               [options]="communityModeOptions"
-              ariaLabel="Community mode">
+              [ariaLabel]="'components.communityForm.modeAria' | translate">
             </app-radio-group>
             <div class="cm-default-hint">
               @if (f['communityMode'].value === 'ENQUIRE') {
@@ -173,10 +173,10 @@
             <div class="cm-default-row">
               <div class="cm-default-label">
                 <i class="bi bi-star-fill"></i>
-                <span>Default Community</span>
-                <span class="cm-default-hint">Mark this as the default community for new users</span>
+                <span>{{ 'components.communityForm.defaultCommunity' | translate }}</span>
+                <span class="cm-default-hint">{{ 'components.communityForm.defaultHint' | translate }}</span>
               </div>
-              <app-toggle formControlName="isDefault" ariaLabel="Default community"></app-toggle>
+              <app-toggle formControlName="isDefault" [ariaLabel]="'components.communityForm.defaultAria' | translate"></app-toggle>
             </div>
           }
         </div>
@@ -185,7 +185,7 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-shield-check"></i></span>
-            <span class="cm-section-title">Community Rules</span>
+            <span class="cm-section-title">{{ 'components.rulesInput.label' | translate }}</span>
           </div>
 
           <div class="cm-field-group">
@@ -197,17 +197,17 @@
         <div class="cm-section cm-section-last">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
-            <span class="cm-section-title">Community Image</span>
+            <span class="cm-section-title">{{ 'components.communityForm.imageLabel' | translate }}</span>
           </div>
 
           <app-file-upload
             mode="single"
             accept="image/*"
             [maxSizeMb]="5"
-            label="Community Image"
+            [label]="'components.communityForm.imageLabel' | translate"
             [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
             [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
-            errorMessage="Community image is required."
+            [errorMessage]="'components.communityForm.imageRequired' | translate"
             (filesChange)="onCommunityImageChange($event)"
           ></app-file-upload>
         </div>
@@ -217,7 +217,7 @@
     <!-- Modal Footer -->
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button
         type="button"
@@ -227,10 +227,10 @@
       >
         @if (submitting()) {
           <span class="spinner-border spinner-border-sm me-1"></span>
-          {{ isEditing() ? 'Updating...' : 'Creating...' }}
+          {{ (isEditing() ? 'components.communityForm.updating' : 'components.communityForm.creating') | translate }}
         } @else {
           <i class="bi me-1" [class.bi-check-lg]="isEditing()" [class.bi-plus-lg]="!isEditing()"></i>
-          {{ isEditing() ? 'Update Community' : 'Create Community' }}
+          {{ (isEditing() ? 'components.communityForm.updateAction' : 'components.communityForm.createAction') | translate }}
         }
       </button>
     </div>

@@ -75,6 +75,10 @@ function toClientNotification(row: Record<string, unknown>) {
     isRead: row['is_read'],
     count: row['count'],
     relatedEntityId: (row['related_entity_id'] as string | null) ?? undefined,
+    // Interpolation values for the client's `notification.<TYPE>` catalog
+    // entry. Null on rows written before params existed — the client falls
+    // back to `message` for those.
+    params: (row['params'] as Record<string, unknown> | null) ?? undefined,
     userId: row['user_id'],
     createdAt: row['created_at'],
   };
@@ -86,6 +90,7 @@ export async function create(
   message: string,
   relatedEntityId?: string,
   aggregate?: AggregateOptions,
+  params?: Record<string, unknown>,
 ) {
   const recipient = await db('users').where({ id: userId }).select('muted_notification_types').first() as
     { muted_notification_types: string[] | null } | undefined;
@@ -103,12 +108,31 @@ export async function create(
       const othersLabel = newCount - 1 === 1 ? '1 other' : `${newCount - 1} others`;
       const aggregatedMessage = `${aggregate.actorName} and ${othersLabel} ${aggregate.aggregateLabel}`;
 
+      // The aggregated form is a different sentence, so it gets its own key
+      // and its own params rather than reusing the single-actor ones.
+      const aggregatedParams = {
+        ...(params ?? {}),
+        actorName: aggregate.actorName,
+        othersCount: newCount - 1,
+        aggregated: true,
+      };
+
       const [updated] = await db('notifications')
         .where({ id: existing.id })
-        .update({ count: newCount, message: aggregatedMessage, created_at: db.fn.now() })
+        .update({
+          count: newCount,
+          message: aggregatedMessage,
+          params: JSON.stringify(aggregatedParams),
+          created_at: db.fn.now(),
+        })
         .returning('*');
 
-      sendNotification(userId, { type, message: aggregatedMessage, relatedEntityId });
+      sendNotification(userId, {
+        type,
+        message: aggregatedMessage,
+        relatedEntityId,
+        params: aggregatedParams,
+      });
       return toClientNotification(updated);
     }
   }
@@ -118,12 +142,13 @@ export async function create(
       user_id: userId,
       type,
       message,
+      params: params ? JSON.stringify(params) : null,
       related_entity_id: relatedEntityId ?? null,
     })
     .returning('*');
 
   // Emit in real-time via Socket.IO (fire-and-forget)
-  sendNotification(userId, { type, message, relatedEntityId });
+  sendNotification(userId, { type, message, relatedEntityId, params });
 
   return toClientNotification(notification);
 }
@@ -151,7 +176,7 @@ export async function findAll(userId: string, page: number, limit: number) {
 
 export async function markAsRead(notificationId: string) {
   const notification = await db('notifications').where({ id: notificationId }).first();
-  if (!notification) throw new AppError(404, 'Notification not found');
+  if (!notification) throw new AppError(404, 'Notification not found', 'NOTIFICATION_FOUND');
 
   const [updated] = await db('notifications')
     .where({ id: notificationId })
@@ -187,7 +212,7 @@ export async function getPreferences(userId: string) {
   const row = await db('users').where({ id: userId })
     .select('muted_notification_types', 'email_digest_enabled')
     .first() as { muted_notification_types: string[] | null; email_digest_enabled: boolean } | undefined;
-  if (!row) throw new AppError(404, 'User not found');
+  if (!row) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   return {
     mutedTypes: row.muted_notification_types ?? [],

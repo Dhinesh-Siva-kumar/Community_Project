@@ -13,7 +13,7 @@ export async function getCountries(_req: Request, res: Response, next: NextFunct
 export async function getCountryConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const countryId = Number(req.params['id']);
-    if (!countryId || Number.isNaN(countryId)) throw new AppError(400, 'A valid country id is required');
+    if (!countryId || Number.isNaN(countryId)) throw new AppError(400, 'A valid country id is required', 'VALID_COUNTRY_ID_REQUIRED');
     const result = await geographyService.getCountryConfig(countryId);
     res.json(result);
   } catch (err) { next(err); }
@@ -22,7 +22,7 @@ export async function getCountryConfig(req: Request, res: Response, next: NextFu
 export async function getDivisions(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const countryId = Number(req.params['countryId']);
-    if (!countryId || Number.isNaN(countryId)) throw new AppError(400, 'A valid country id is required');
+    if (!countryId || Number.isNaN(countryId)) throw new AppError(400, 'A valid country id is required', 'VALID_COUNTRY_ID_REQUIRED');
     const query = DivisionsQueryDto.parse(req.query);
     const data = await geographyService.getDivisions(countryId, query.parentId);
     res.json({ data });

@@ -13,9 +13,9 @@
       </div>
       <div class="au-header__text cm-modal-header-inner">
         <h5 class="au-header__title cm-modal-title" id="bizFormModalTitle">{{ editingBusiness() ? 'Edit Business' : 'Add Business' }}</h5>
-        <p class="au-header__sub cm-modal-subtitle">Fields marked <span class="text-danger">*</span> are required.</p>
+        <p class="au-header__sub cm-modal-subtitle">{{ 'components.businessForm.fieldsMarkedPre' | translate }} <span class="text-danger">*</span> {{ 'components.businessForm.fieldsMarkedPost' | translate }}</p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -28,12 +28,12 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-shop"></i></div>
-            <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">Business Information</span></div>
+            <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">{{ 'components.businessForm.businessInformation' | translate }}</span></div>
           </div>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="jb-label" for="bizFormName">Business Name <span class="text-danger">*</span></label>
-              <input id="bizFormName" type="text" class="jb-input" formControlName="name" placeholder="e.g. Sunrise Coffee" maxlength="100"
+              <label class="jb-label" for="bizFormName">{{ 'components.businessForm.nameLabel' | translate }} <span class="text-danger">*</span></label>
+              <input id="bizFormName" type="text" class="jb-input" formControlName="name" [placeholder]="'components.businessForm.namePlaceholder' | translate" maxlength="100"
                 [class.jb-input--error]="businessForm.get('name')?.invalid && businessForm.get('name')?.touched" />
               @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
                 <span class="jb-field-error">
@@ -49,17 +49,17 @@
               }
             </div>
             <div class="col-md-6" [class.cm-field-group--error]="businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched">
-              <label class="jb-label">Category <span class="text-danger">*</span></label>
-              <app-searchable-select formControlName="categoryId" [options]="categoryOptions()" placeholder="Select category"></app-searchable-select>
+              <label class="jb-label">{{ 'components.businessForm.categoryLabel' | translate }} <span class="text-danger">*</span></label>
+              <app-searchable-select formControlName="categoryId" [options]="categoryOptions()" [placeholder]="'components.businessForm.categoryPlaceholder' | translate"></app-searchable-select>
               @if (businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Category is required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.categoryRequired' | translate }}</span>
               }
             </div>
             <div class="col-12">
-              <label class="jb-label" for="bizFormDesc">Description <span class="text-danger">*</span></label>
+              <label class="jb-label" for="bizFormDesc">{{ 'components.businessForm.descriptionLabel' | translate }} <span class="text-danger">*</span></label>
               <div class="jb-textarea-wrap">
                 <textarea id="bizFormDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
-                  placeholder="Describe the business… (min 10 characters)" maxlength="1000"
+                  [placeholder]="'components.businessForm.descriptionPlaceholder' | translate" maxlength="1000"
                   [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
                 <span class="jb-char-count jb-char-count--overlay">{{ businessForm.get('description')?.value?.length ?? 0 }}/1000</span>
               </div>
@@ -78,17 +78,17 @@
             </div>
             <!-- Business Logo -->
             <div class="col-12">
-              <label class="jb-label">Business Logo <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.logoLabel' | translate }} <span class="text-danger">*</span></label>
               @if (logoPreview()) {
                 <div class="jb-logo-preview">
-                  <img [src]="logoPreview() | imageUrl" alt="Logo preview" class="jb-logo-preview__img" />
+                  <img [src]="logoPreview() | imageUrl" [alt]="'components.fileUpload.logoAlt' | translate" class="jb-logo-preview__img" />
                   <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                 </div>
               } @else {
                 <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
-                  [resetCounter]="logoUploadReset()" label="Upload business logo (JPG, PNG, WEBP)"
+                  [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadBusinessLogo' | translate"
                   [showError]="businessSubmitAttempted() && !logoPreview()"
-                  errorMessage="Business logo is required."
+                  [errorMessage]="'components.businessForm.logoRequired' | translate"
                   (filesChange)="onLogoChange($event)"></app-file-upload>
               }
             </div>
@@ -98,12 +98,12 @@
               <div class="cm-default-row">
                 <div class="cm-default-label">
                   <i class="bi" [ngClass]="businessForm.get('isActive')?.value ? 'bi-check-circle-fill' : 'bi-dash-circle-fill'"></i>
-                  <span>Business Status</span>
+                  <span>{{ 'components.businessForm.statusLabel' | translate }}</span>
                   <span class="cm-default-hint">
                     {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
                   </span>
                 </div>
-                <app-toggle formControlName="isActive" ariaLabel="Active"></app-toggle>
+                <app-toggle formControlName="isActive" [ariaLabel]="'components.businessForm.statusAria' | translate"></app-toggle>
               </div>
             </div>
           </div>
@@ -113,23 +113,23 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-telephone"></i></div>
-            <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">Contact Details</span></div>
+            <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">{{ 'components.businessForm.contactDetails' | translate }}</span></div>
           </div>
           <div class="row g-3">
             <!-- Row 1: Phone Country + Phone -->
             <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched">
-              <label class="jb-label">Phone Country <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.phoneCountryLabel' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select formControlName="phoneCountryId" [options]="phoneCountryOptions()"
-                placeholder="Select country code"></app-searchable-select>
+                [placeholder]="'components.businessForm.countryCodePlaceholder' | translate"></app-searchable-select>
               @if (businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country code is required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.countryCodeRequired' | translate }}</span>
               }
             </div>
             <div class="col-md-8">
-              <label class="jb-label" for="bizFormPhone">Phone <span class="text-danger">*</span></label>
+              <label class="jb-label" for="bizFormPhone">{{ 'components.businessForm.phoneLabel' | translate }} <span class="text-danger">*</span></label>
               <div class="jb-input-group">
                 <i class="bi bi-telephone jb-input-group__icon"></i>
-                <input id="bizFormPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" placeholder="7700 900000" maxlength="15"
+                <input id="bizFormPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" [placeholder]="'components.businessForm.phonePlaceholder' | translate" maxlength="15"
                   [class.jb-input--error]="businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched" />
               </div>
               @if (businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched) {
@@ -139,7 +139,7 @@
 
             <!-- Row 2: Same-as-phone toggle -->
             <div class="col-12">
-              <app-toggle formControlName="sameAsPhone" label="WhatsApp number is same as phone" ariaLabel="WhatsApp number is same as phone"></app-toggle>
+              <app-toggle formControlName="sameAsPhone" [label]="'components.businessForm.sameAsPhoneAria' | translate" [ariaLabel]="'components.businessForm.sameAsPhoneAria' | translate"></app-toggle>
             </div>
 
             <!-- Row 3: WhatsApp — its own Country dropdown only when NOT
@@ -147,15 +147,15 @@
                  local digits, never a country code. -->
             @if (!businessForm.get('sameAsPhone')?.value) {
               <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('whatsappCountryId')?.invalid && businessForm.get('whatsappCountryId')?.touched">
-                <label class="jb-label">WhatsApp Country</label>
+                <label class="jb-label">{{ 'components.businessForm.whatsappCountryLabel' | translate }}</label>
                 <app-searchable-select formControlName="whatsappCountryId" [options]="phoneCountryOptions()"
-                  placeholder="Select country code"></app-searchable-select>
+                  [placeholder]="'components.businessForm.countryCodePlaceholder' | translate"></app-searchable-select>
               </div>
               <div class="col-md-8">
-                <label class="jb-label" for="bizFormWa">WhatsApp</label>
+                <label class="jb-label" for="bizFormWa">{{ 'components.businessForm.whatsappLabel' | translate }}</label>
                 <div class="jb-input-group">
                   <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                  <input id="bizFormWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="7700 900000" maxlength="15"
+                  <input id="bizFormWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" [placeholder]="'components.businessForm.phonePlaceholder' | translate" maxlength="15"
                     [class.jb-input--error]="businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched" />
                 </div>
                 @if (businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched) {
@@ -164,51 +164,51 @@
               </div>
             } @else {
               <div class="col-12">
-                <label class="jb-label" for="bizFormWa">WhatsApp <span class="jb-optional">(same as phone)</span></label>
+                <label class="jb-label" for="bizFormWa">{{ 'components.businessForm.whatsappLabel' | translate }} <span class="jb-optional">(same as phone)</span></label>
                 <div class="jb-input-group">
                   <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                  <input id="bizFormWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="7700 900000" maxlength="15" />
+                  <input id="bizFormWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" [placeholder]="'components.businessForm.phonePlaceholder' | translate" maxlength="15" />
                 </div>
               </div>
             }
 
             <!-- Row 4: Email + Website (6+6 = 12) -->
             <div class="col-md-6">
-              <label class="jb-label" for="bizFormEmail">Email</label>
+              <label class="jb-label" for="bizFormEmail">{{ 'components.businessForm.emailLabel' | translate }}</label>
               <div class="jb-input-group">
                 <i class="bi bi-envelope jb-input-group__icon"></i>
-                <input id="bizFormEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" placeholder="info@business.com" maxlength="255"
+                <input id="bizFormEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" [placeholder]="'components.businessForm.emailPlaceholder' | translate" maxlength="255"
                   [class.jb-input--error]="businessForm.get('email')?.invalid && businessForm.get('email')?.touched" />
               </div>
               @if (businessForm.get('email')?.invalid && businessForm.get('email')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Valid email required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.emailInvalid' | translate }}</span>
               }
             </div>
             <div class="col-md-6">
-              <label class="jb-label" for="bizFormWeb">Website</label>
+              <label class="jb-label" for="bizFormWeb">{{ 'components.businessForm.websiteLabel' | translate }}</label>
               <div class="jb-input-group">
                 <i class="bi bi-globe2 jb-input-group__icon"></i>
-                <input id="bizFormWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" placeholder="https://business.com" maxlength="500"
+                <input id="bizFormWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" [placeholder]="'components.businessForm.websitePlaceholder' | translate" maxlength="500"
                   [class.jb-input--error]="businessForm.get('website')?.invalid && businessForm.get('website')?.touched" />
               </div>
               @if (businessForm.get('website')?.errors?.['invalidUrl'] && businessForm.get('website')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.urlInvalid' | translate }}</span>
               }
             </div>
 
             <!-- Maps link gets the full width — it's usually a long URL -->
             <div class="col-12">
-              <label class="jb-label" for="bizFormMaps">Google Maps Link</label>
+              <label class="jb-label" for="bizFormMaps">{{ 'components.businessForm.mapsLinkLabel' | translate }}</label>
               <div class="jb-input-group">
                 <i class="bi bi-pin-map jb-input-group__icon"></i>
-                <input id="bizFormMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" placeholder="Auto-generated from address" maxlength="2000"
+                <input id="bizFormMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" [placeholder]="'components.businessForm.mapsLinkPlaceholder' | translate" maxlength="2000"
                   [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
               </div>
               @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
-                <span class="jb-field-hint"><i class="bi bi-robot"></i> Auto-generated from location fields</span>
+                <span class="jb-field-hint"><i class="bi bi-robot"></i> {{ 'components.businessForm.mapsAutoHint' | translate }}</span>
               }
               @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Enter a valid URL</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.urlInvalid' | translate }}</span>
               }
             </div>
           </div>
@@ -218,18 +218,18 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-geo-alt"></i></div>
-            <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">Location</span></div>
+            <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">{{ 'components.businessForm.location' | translate }}</span></div>
           </div>
           <div class="row g-3">
             <!-- Country — selecting it loads that country's own address
                  hierarchy (division levels, labels, postal rules) below. -->
             <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched">
-              <label class="jb-label">Country <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.countryLabel' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                placeholder="Select country" searchPlaceholder="Search countries…"
+                [placeholder]="'components.businessForm.countryPlaceholder' | translate" [searchPlaceholder]="'components.search.countries' | translate"
                 (ngModelChange)="onCountryChange($event)"></app-searchable-select>
               @if (businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Country is required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.countryRequired' | translate }}</span>
               }
             </div>
 
@@ -273,20 +273,20 @@
                  division level at all) instead of loading a whole
                  worldwide list into the browser. -->
             <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('cityId')?.invalid && businessForm.get('cityId')?.touched">
-              <label class="jb-label">City <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.cityLabel' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select formControlName="cityId"
                 [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
                 [placeholder]="businessForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
-                searchPlaceholder="Type to search cities…"
+                [searchPlaceholder]="'components.search.cities' | translate"
                 (ngModelChange)="onCityChange($event)"></app-searchable-select>
               @if (businessForm.get('cityId')?.invalid && businessForm.get('cityId')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> City is required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.cityRequired' | translate }}</span>
               }
             </div>
 
             <div class="col-md-8">
-              <label class="jb-label" for="bizFormAddr">Address <span class="text-danger">*</span></label>
-              <input id="bizFormAddr" type="text" class="jb-input" formControlName="address" placeholder="Street, building no…" maxlength="500"
+              <label class="jb-label" for="bizFormAddr">{{ 'components.businessForm.addressLabel' | translate }} <span class="text-danger">*</span></label>
+              <input id="bizFormAddr" type="text" class="jb-input" formControlName="address" [placeholder]="'components.businessForm.addressPlaceholder' | translate" maxlength="500"
                 [class.jb-input--error]="businessForm.get('address')?.invalid && businessForm.get('address')?.touched" />
               @if (businessForm.get('address')?.invalid && businessForm.get('address')?.touched) {
                 <span class="jb-field-error">
@@ -336,21 +336,21 @@
           </div>
           <div class="row g-3">
             <div class="col-12">
-              <label class="jb-label">Opening Days <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.openingDaysLabel' | translate }} <span class="text-danger">*</span></label>
               <div class="jb-day-toggles">
                 @for (day of DAYS; track day) {
                   <button type="button" class="jb-day-toggle"
                     [class.jb-day-toggle--on]="selectedDays().includes(day)"
                     [attr.aria-pressed]="selectedDays().includes(day)"
-                    (click)="toggleDay(day)">{{ day.slice(0,3) }}</button>
+                    (click)="toggleDay(day)">{{ DAY_SHORT[day] | translate }}</button>
                 }
               </div>
               @if (businessForm.get('openingDays')?.invalid && businessForm.get('openingDays')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Select at least one day</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.openingDaysRequired' | translate }}</span>
               }
             </div>
             <div class="col-12">
-              <label class="jb-label">Opening Hours <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.openingHoursLabel' | translate }} <span class="text-danger">*</span></label>
               <div class="row g-2 align-items-center">
                 <div class="col-5">
                   <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'from'"
@@ -401,7 +401,7 @@
                 </div>
               </div>
               @if (openingHoursTouched() && (!businessForm.get('openingHoursFrom')?.value || !businessForm.get('openingHoursTo')?.value)) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Opening hours required</span>
+                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.openingHoursRequired' | translate }}</span>
               }
             </div>
           </div>
@@ -411,29 +411,29 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-            <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">Gallery Photos <span class="jb-form-section__optional">(optional)</span></span></div>
+            <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'components.businessForm.galleryLabel' | translate }} <span class="jb-form-section__optional">(optional)</span></span></div>
           </div>
           <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
-            label="Drag & drop or click to upload gallery images"
+            [label]="'components.fileUpload.dragGalleryImages' | translate"
             [resetCounter]="fileUploadReset()"
             (filesChange)="onBusinessImagesChange($event)"></app-file-upload>
           @if (editingBusiness() && editingBusiness()!.images && editingBusiness()!.images.length) {
             <div class="biz-gallery-existing">
-              <p class="biz-gallery-existing__label">Existing photos</p>
+              <p class="biz-gallery-existing__label">{{ 'components.businessForm.existingPhotos' | translate }}</p>
               @if (existingGalleryImages().length) {
                 <div class="biz-gallery-existing__grid">
                   @for (img of existingGalleryImages(); track img) {
                     <div class="biz-gallery-existing__item">
-                      <img [src]="img | imageUrl" alt="Gallery image" class="biz-gallery-existing__img" loading="lazy" />
-                      <button type="button" class="biz-gallery-existing__remove" (click)="removeExistingImage(img)" aria-label="Remove this photo">
+                      <img [src]="img | imageUrl" [alt]="'components.fileUpload.galleryAlt' | translate" class="biz-gallery-existing__img" loading="lazy" />
+                      <button type="button" class="biz-gallery-existing__remove" (click)="removeExistingImage(img)" [attr.aria-label]="'components.businessForm.removePhoto' | translate">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     </div>
                   }
                 </div>
-                <p class="biz-gallery-existing__hint">Click <i class="bi bi-x-lg"></i> to remove a photo. Upload new images above to add more.</p>
+                <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryHintPre' | translate }} <i class="bi bi-x-lg"></i> {{ 'components.businessForm.galleryHintPost' | translate }}</p>
               } @else {
-                <p class="biz-gallery-existing__hint">All existing photos removed. Upload new images above, or save to leave the gallery empty.</p>
+                <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryCleared' | translate }}</p>
               }
             </div>
           }
@@ -444,7 +444,7 @@
 
     <!-- Modal Footer -->
     <div class="au-footer cm-modal-footer">
-      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">Cancel</button>
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">{{ 'common.cancel' | translate }}</button>
       <button type="button" class="au-btn au-btn--primary cm-btn-submit"
         [disabled]="businessForm.invalid || !logoPreview() || submitting()"
         (click)="submitBusiness()">

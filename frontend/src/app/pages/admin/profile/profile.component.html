@@ -3,9 +3,9 @@
   <div class="d-flex justify-content-center align-items-center py-5">
     <div class="text-center">
       <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
       </div>
-      <p class="text-muted">Loading profile...</p>
+      <p class="text-muted">{{ 'admin.profile.loadingProfile' | translate }}</p>
     </div>
   </div>
 } @else {
@@ -33,7 +33,7 @@
     @if (activeTab() === 'personal') {
       <div class="tab-enter">
       <app-profile-info-card
-        title="Personal Information"
+        [title]="'admin.profile.personalInformation' | translate"
         icon="bi-person"
         [editMode]="editMode()"
         [loading]="saving()"
@@ -47,21 +47,21 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-person-vcard"></i></span>
-              <span class="prf-section-title">Basic Information</span>
+              <span class="prf-section-title">{{ 'admin.profile.basicInformation' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="prf-label-row">
-                  <label class="prf-label" for="adminDisplayName">Display Name</label>
+                  <label class="prf-label" for="adminDisplayName">{{ 'admin.profile.displayName' | translate }}</label>
                   @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('displayName')?.value?.length || 0 }}/60</span> }
                 </div>
                 <input id="adminDisplayName" type="text" class="form-control" formControlName="displayName" maxlength="60" [readonly]="!editMode()" />
                 @if (profileForm.get('displayName')?.hasError('minlength') && profileForm.get('displayName')?.dirty) {
-                  <div class="invalid-feedback d-block">Display name must be at least 2 characters.</div>
+                  <div class="invalid-feedback d-block">{{ 'admin.profile.displayNameMustLeast2' | translate }}</div>
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminEmail">Email</label>
+                <label class="prf-label" for="adminEmail">{{ 'admin.profile.email' | translate }}</label>
                 <input
                   id="adminEmail" type="email" class="form-control"
                   [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.dirty"
@@ -70,12 +70,12 @@
                   [placeholder]="u.email ? '' : 'Add your email address'"
                 />
                 @if (profileForm.get('email')?.hasError('email') && profileForm.get('email')?.dirty) {
-                  <div class="invalid-feedback">Enter a valid email address.</div>
+                  <div class="invalid-feedback">{{ 'admin.profile.enterValidEmailAddress' | translate }}</div>
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminPhone">Phone</label>
-                <input id="adminPhone" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" placeholder="Phone number" />
+                <label class="prf-label" for="adminPhone">{{ 'admin.profile.phone' | translate }}</label>
+                <input id="adminPhone" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" [placeholder]="'admin.profile.phoneNumber' | translate" />
               </div>
             </div>
           </div>
@@ -84,20 +84,20 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-card-text"></i></span>
-              <span class="prf-section-title">About</span>
+              <span class="prf-section-title">{{ 'admin.profile.about' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-12">
                 <div class="prf-label-row">
-                  <label class="prf-label" for="adminBio">Bio</label>
+                  <label class="prf-label" for="adminBio">{{ 'admin.profile.bio' | translate }}</label>
                   @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('bio')?.value?.length || 0 }}/300</span> }
                 </div>
-                <textarea id="adminBio" class="form-control" formControlName="bio" rows="3" maxlength="300" [readonly]="!editMode()" placeholder="Tell us about yourself"></textarea>
+                <textarea id="adminBio" class="form-control" formControlName="bio" rows="3" maxlength="300" [readonly]="!editMode()" [placeholder]="'admin.profile.tellUsAboutYourself' | translate"></textarea>
               </div>
               <div class="col-md-6">
-                <label class="prf-label">Professional Category</label>
+                <label class="prf-label">{{ 'admin.profile.professionalCategory' | translate }}</label>
                 @if (editMode()) {
-                  <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" placeholder="Select category"></app-searchable-select>
+                  <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" [placeholder]="'admin.profile.selectCategory' | translate"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.professionalCategory || 'Not set'" readonly />
                 }
@@ -105,7 +105,7 @@
 
               <!-- Interests -->
               <div class="col-12">
-                <label class="prf-label">Interests</label>
+                <label class="prf-label">{{ 'admin.profile.interests' | translate }}</label>
                 <div class="d-flex flex-wrap gap-2 mb-2">
                   @for (interest of u.interests; track $index) {
                     <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 py-2 px-3">
@@ -116,14 +116,14 @@
                     </span>
                   }
                   @if (!u.interests.length) {
-                    <span class="text-muted small">No interests added yet</span>
+                    <span class="text-muted small">{{ 'admin.profile.noInterestsAddedYet' | translate }}</span>
                   }
                 </div>
                 @if (editMode()) {
                   <div class="input-group input-group-sm" style="max-width: 300px;">
-                    <input type="text" class="form-control" placeholder="Add interest" [value]="newInterest()"
-                           (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" aria-label="New interest" />
-                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()" aria-label="Add interest">
+                    <input type="text" class="form-control" [placeholder]="'admin.profile.addInterest' | translate" [value]="newInterest()"
+                           (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" [attr.aria-label]="'admin.profile.newInterest' | translate" />
+                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()" [attr.aria-label]="'admin.profile.addInterest' | translate">
                       <i class="bi bi-plus"></i>
                     </button>
                   </div>
@@ -136,14 +136,14 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-geo-alt"></i></span>
-              <span class="prf-section-title">Location</span>
+              <span class="prf-section-title">{{ 'admin.profile.location' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-md-4">
-                <label class="prf-label">Country</label>
+                <label class="prf-label">{{ 'admin.profile.country' | translate }}</label>
                 @if (editMode()) {
                   <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                    placeholder="Select country" searchPlaceholder="Search countries…"
+                    [placeholder]="'admin.profile.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
                     (ngModelChange)="onCountryChange($event)"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.country || 'Not set'" readonly />
@@ -151,10 +151,12 @@
               </div>
               @if (adminLevels().length >= 1) {
                 <div class="col-md-4">
-                  <label class="prf-label">{{ adminLevels()[0].label }}</label>
+                  <label class="prf-label">{{ adminLevels()[0].label | translate }}</label>
                   @if (editMode()) {
                     <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
-                      [placeholder]="division1Loading() ? 'Loading…' : ('Select ' + adminLevels()[0].label.toLowerCase())"
+                      [placeholder]="division1Loading()
+                        ? ('admin.geo.loading' | translate)
+                        : ('admin.geo.selectLevel' | translate:{ level: adminLevels()[0].label })"
                       (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
                   } @else {
                     <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
@@ -163,10 +165,12 @@
               }
               @if (adminLevels().length >= 2) {
                 <div class="col-md-4">
-                  <label class="prf-label">{{ adminLevels()[1].label }}</label>
+                  <label class="prf-label">{{ adminLevels()[1].label | translate }}</label>
                   @if (editMode()) {
                     <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
-                      [placeholder]="division2Loading() ? 'Loading…' : ('Select ' + adminLevels()[1].label.toLowerCase())"
+                      [placeholder]="division2Loading()
+                        ? ('admin.geo.loading' | translate)
+                        : ('admin.geo.selectLevel' | translate:{ level: adminLevels()[1].label })"
                       (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
                   } @else {
                     <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
@@ -174,19 +178,19 @@
                 </div>
               }
               <div class="col-md-6">
-                <label class="prf-label">City</label>
+                <label class="prf-label">{{ 'admin.profile.city' | translate }}</label>
                 @if (editMode()) {
                   <app-searchable-select formControlName="cityId"
                     [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
                     [placeholder]="profileForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
-                    searchPlaceholder="Type to search cities…"
+                    [searchPlaceholder]="'components.search.cities' | translate"
                     (ngModelChange)="onCityChange($event)"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.location || 'Not set'" readonly />
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminPincode">Pincode</label>
+                <label class="prf-label" for="adminPincode">{{ 'admin.profile.pincode' | translate }}</label>
                 <input id="adminPincode" type="text" class="form-control" formControlName="pincode" maxlength="12" [readonly]="!editMode()" [placeholder]="countryConfig()?.postalCode?.format || ''" />
                 @if (profileForm.get('pincode')?.hasError('postalFormat') && profileForm.get('pincode')?.dirty) {
                   <div class="invalid-feedback d-block">Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}.</div>
@@ -199,24 +203,24 @@
           <div class="prf-section prf-section-last">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-briefcase"></i></span>
-              <span class="prf-section-title">Professional &amp; Links</span>
+              <span class="prf-section-title">{{ 'admin.profile.professionalAmpLinks' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="prf-label" for="adminOccupation">Occupation</label>
-                <input id="adminOccupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Software Engineer" />
+                <label class="prf-label" for="adminOccupation">{{ 'admin.profile.occupation' | translate }}</label>
+                <input id="adminOccupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" [placeholder]="'admin.profile.eGSoftwareEngineer' | translate" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminCompany">Company</label>
-                <input id="adminCompany" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Acme Inc." />
+                <label class="prf-label" for="adminCompany">{{ 'admin.profile.company' | translate }}</label>
+                <input id="adminCompany" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" [placeholder]="'admin.profile.eGAcmeInc' | translate" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminWebsite">Website</label>
-                <input id="adminWebsite" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" placeholder="https://example.com" />
+                <label class="prf-label" for="adminWebsite">{{ 'admin.profile.website' | translate }}</label>
+                <input id="adminWebsite" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" [placeholder]="'admin.profile.httpsExampleCom' | translate" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="adminLinkedin">LinkedIn</label>
-                <input id="adminLinkedin" type="url" class="form-control" formControlName="linkedinUrl" maxlength="200" [readonly]="!editMode()" placeholder="https://linkedin.com/in/username" />
+                <label class="prf-label" for="adminLinkedin">{{ 'admin.profile.linkedin' | translate }}</label>
+                <input id="adminLinkedin" type="url" class="form-control" formControlName="linkedinUrl" maxlength="200" [readonly]="!editMode()" [placeholder]="'admin.profile.httpsLinkedinComUsername' | translate" />
               </div>
             </div>
           </div>
@@ -226,9 +230,9 @@
         <div class="prf-section prf-section-last">
           <div class="prf-section-header">
             <span class="prf-section-badge"><i class="bi bi-key"></i></span>
-            <span class="prf-section-title">Change Password</span>
+            <span class="prf-section-title">{{ 'admin.profile.changePassword' | translate }}</span>
             <button class="prf-btn prf-btn--ghost ms-auto" (click)="togglePasswordSection()">
-              <i class="bi bi-key"></i>Change Password
+              <i class="bi bi-key"></i>{{ 'admin.profile.changePassword' | translate }}
             </button>
           </div>
         </div>
@@ -239,25 +243,25 @@
     <!-- ==================== ADMIN INFO TAB ==================== -->
     @if (activeTab() === 'admin-info') {
       <div class="tab-enter">
-      <app-profile-info-card title="Admin Information" icon="bi-shield" [showEdit]="false">
+      <app-profile-info-card [title]="'admin.profile.adminInformation' | translate" icon="bi-shield" [showEdit]="false">
         <div class="prf-section prf-section-last">
           <div class="prf-section-header">
             <span class="prf-section-badge"><i class="bi bi-info-circle"></i></span>
-            <span class="prf-section-title">Account Details</span>
+            <span class="prf-section-title">{{ 'admin.profile.accountDetails' | translate }}</span>
           </div>
           <div class="row g-3">
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">Role</small>
-                  <span class="badge bg-danger">{{ u.role }}</span>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.role' | translate }}</small>
+                  <span class="badge bg-danger">{{ u.role | enumLabel:'role' }}</span>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">Account Status</small>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.accountStatus' | translate }}</small>
                   <span class="prf-badge" [class.prf-badge--active]="u.isActive" [class.prf-badge--inactive]="!u.isActive">{{ u.isActive ? 'Active' : 'Inactive' }}</span>
                 </div>
               </div>
@@ -265,7 +269,7 @@
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">Trust Status</small>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.trustStatus' | translate }}</small>
                   <span class="prf-badge" [class.prf-badge--active]="u.isTrusted" [class.prf-badge--pending]="!u.isTrusted">{{ u.isTrusted ? 'Trusted' : 'Untrusted' }}</span>
                 </div>
               </div>
@@ -273,7 +277,7 @@
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">Member Since</small>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.memberSince' | translate }}</small>
                   <span>{{ u.createdAt | date:'longDate' }}</span>
                 </div>
               </div>
@@ -281,7 +285,7 @@
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">User ID</small>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.userId' | translate }}</small>
                   <code class="small">{{ u.id }}</code>
                 </div>
               </div>
@@ -289,7 +293,7 @@
             <div class="col-md-6">
               <div class="prf-item prf-item--static">
                 <div class="prf-item__body">
-                  <small class="prf-item__meta d-block mb-1">Last Updated</small>
+                  <small class="prf-item__meta d-block mb-1">{{ 'admin.profile.lastUpdated' | translate }}</small>
                   <span>{{ u.updatedAt | date:'medium' }}</span>
                 </div>
               </div>
@@ -303,7 +307,7 @@
       </div><!-- /prf-main -->
 
       <aside class="prf-sidebar">
-        <app-profile-info-card title="Profile Completion" icon="bi-graph-up-arrow" [showEdit]="false">
+        <app-profile-info-card [title]="'admin.profile.profileCompletion' | translate" icon="bi-graph-up-arrow" [showEdit]="false">
           <div class="prf-completion">
             <div class="prf-completion__ring" [ngClass]="completionRingClass()"
               [style.--ring-pct]="profileCompletion()" [style.--ring-clr]="completionRingColor()">
@@ -320,10 +324,10 @@
 
             @if (completedItems().length) {
               <div class="prf-completion__list">
-                <span class="prf-completion__list-title">Completed</span>
+                <span class="prf-completion__list-title">{{ 'admin.profile.completed' | translate }}</span>
                 <ul>
                   @for (item of completedItems(); track item.label) {
-                    <li class="is-done"><i class="bi bi-check-circle-fill"></i>{{ item.label }}</li>
+                    <li class="is-done"><i class="bi bi-check-circle-fill"></i>{{ item.label | translate }}</li>
                   }
                 </ul>
               </div>
@@ -331,10 +335,10 @@
 
             @if (pendingItems().length) {
               <div class="prf-completion__list">
-                <span class="prf-completion__list-title">Pending</span>
+                <span class="prf-completion__list-title">{{ 'common.pending' | translate }}</span>
                 <ul>
                   @for (item of pendingItems(); track item.label) {
-                    <li class="is-pending"><i class="bi bi-circle"></i>{{ item.label }}</li>
+                    <li class="is-pending"><i class="bi bi-circle"></i>{{ item.label | translate }}</li>
                   }
                 </ul>
               </div>
@@ -361,10 +365,10 @@
             <i class="bi bi-key-fill"></i>
           </div>
           <div class="au-header__text cm-modal-header-inner">
-            <h5 class="au-header__title cm-modal-title" id="adminPwdModalTitle">Change Password</h5>
-            <p class="au-header__sub cm-modal-subtitle">Update the password used to sign in</p>
+            <h5 class="au-header__title cm-modal-title" id="adminPwdModalTitle">{{ 'admin.profile.changePassword' | translate }}</h5>
+            <p class="au-header__sub cm-modal-subtitle">{{ 'admin.profile.updatePasswordUsedSign' | translate }}</p>
           </div>
-          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" aria-label="Close">
+          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" [attr.aria-label]="'common.close' | translate">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -374,30 +378,30 @@
           <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="au-form cm-form">
             <div class="cm-section cm-section-last">
               <div class="cm-field-group">
-                <label class="cm-label" for="adminCurrentPwd">Current Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="adminCurrentPwd">{{ 'admin.profile.currentPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-lock cm-input-icon"></i>
-                  <input id="adminCurrentPwd" type="password" formControlName="currentPassword" class="cm-input" placeholder="Enter current password" />
+                  <input id="adminCurrentPwd" type="password" formControlName="currentPassword" class="cm-input" [placeholder]="'admin.profile.enterCurrentPassword' | translate" />
                 </div>
               </div>
               <div class="cm-field-group">
-                <label class="cm-label" for="adminNewPwd">New Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="adminNewPwd">{{ 'admin.profile.newPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-shield-lock cm-input-icon"></i>
-                  <input id="adminNewPwd" type="password" formControlName="newPassword" class="cm-input" placeholder="At least 6 characters" />
+                  <input id="adminNewPwd" type="password" formControlName="newPassword" class="cm-input" [placeholder]="'admin.profile.least6Characters' | translate" />
                 </div>
                 @if (passwordForm.get('newPassword')?.hasError('minlength') && passwordForm.get('newPassword')?.dirty) {
-                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Must be at least 6 characters.</div>
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.profile.mustLeast6Characters' | translate }}</div>
                 }
               </div>
               <div class="cm-field-group">
-                <label class="cm-label" for="adminConfirmPwd">Confirm Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="adminConfirmPwd">{{ 'admin.profile.confirmPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-shield-check cm-input-icon"></i>
-                  <input id="adminConfirmPwd" type="password" formControlName="confirmPassword" class="cm-input" placeholder="Re-enter new password" />
+                  <input id="adminConfirmPwd" type="password" formControlName="confirmPassword" class="cm-input" [placeholder]="'admin.profile.reEnterNewPassword' | translate" />
                 </div>
                 @if (passwordForm.get('confirmPassword')?.dirty && passwordForm.get('newPassword')?.value !== passwordForm.get('confirmPassword')?.value) {
-                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Passwords do not match.</div>
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.profile.passwordsDoNotMatch' | translate }}</div>
                 }
               </div>
             </div>
@@ -407,7 +411,7 @@
         <!-- Modal Footer -->
         <div class="au-footer cm-modal-footer">
           <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="togglePasswordSection()" [disabled]="changingPassword()">
-            Cancel
+            {{ 'common.cancel' | translate }}
           </button>
           <button type="button" class="au-btn cm-btn-submit au-btn--primary"
             [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()"

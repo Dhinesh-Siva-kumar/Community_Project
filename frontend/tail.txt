@@ -1,0 +1,38 @@
+admin.jobs.label.allStatus|All Status
+admin.jobs.label.active|Active
+admin.jobs.label.inactive|Inactive
+admin.jobs.label.date|Date
+admin.jobs.label.salary|Salary
+admin.jobs.label.noEducationNeeded|No education needed
+admin.jobs.label.k8th|8th
+admin.jobs.label.k10th|10th
+admin.jobs.label.k12th|12th
+admin.jobs.label.diploma|Diploma
+admin.jobs.label.iti|ITI
+admin.jobs.label.graduate|Any Graduate
+admin.jobs.label.phd|PhD
+admin.jobs.label.fresher0Yrs|Fresher (0 yrs)
+admin.jobs.label.k1Year|1 Year
+admin.jobs.label.k2Years|2 Years
+admin.jobs.label.k3Years|3 Years
+admin.jobs.label.k4Years|4 Years
+admin.jobs.label.k5Years|5 Years
+admin.jobs.label.k7Years|7 Years
+admin.jobs.label.k10Years|10 Years
+admin.jobs.label.k15Years|15+ Years
+admin.jobs.label.newestFirst|Newest First
+admin.jobs.label.oldestFirst|Oldest First
+admin.jobs.label.highestSalary|Highest Salary
+admin.jobs.label.lowestSalary|Lowest Salary
+admin.jobs.label.companyZ|Company (A→Z)
+admin.jobs.label.today|Today
+admin.jobs.label.last7Days|Last 7 Days
+admin.jobs.label.last30Days|Last 30 Days
+admin.jobs.label.fresher|Fresher
+admin.jobs.label.k1Yr|1 yr
+admin.jobs.label.k2Yrs|2 yrs
+admin.jobs.label.k3Yrs|3 yrs
+admin.jobs.label.k5Yrs|5 yrs
+admin.jobs.label.k7Yrs|7 yrs
+admin.jobs.label.k10Yrs|10 yrs
+admin.jobs.label.k15Yrs|15+ yrs

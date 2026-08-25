@@ -15,6 +15,8 @@ import { RadioGroupComponent, RadioOption } from '../../../shared/components/rad
 import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 function futureDateValidator(c: AbstractControl): ValidationErrors | null {
   if (!c.value) return null;
@@ -69,7 +71,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, InfiniteScrollDirective],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, InfiniteScrollDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -78,6 +80,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class UserEventsComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
   private eventService = inject(EventService);
   private authService  = inject(AuthService);
   private layoutService = inject(LayoutService);
@@ -154,9 +157,9 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   private searchDebounce: any = null;
 
   readonly sortOptions: SelectOption[] = [
-    { value: 'near',    label: 'Near you first' },
-    { value: 'soonest', label: 'Soonest first' },
-    { value: 'latest',  label: 'Latest first' },
+    { value: 'near',    label: 'user.events.sortOption.near' },
+    { value: 'soonest', label: 'user.events.sortOption.soonest' },
+    { value: 'latest',  label: 'user.events.sortOption.latest' },
   ];
 
   // ── Advanced filters — Country + Event Date range (mirrors the Business
@@ -197,9 +200,9 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
   /** Event Mode radio group in the create/edit modal (app-radio-group). */
   readonly eventModeOptions: RadioOption[] = [
-    { value: 'Offline', label: 'Offline', icon: 'bi-geo-alt-fill' },
-    { value: 'Online',  label: 'Online',  icon: 'bi-camera-video-fill' },
-    { value: 'Hybrid',  label: 'Hybrid',  icon: 'bi-diagram-2-fill' },
+    { value: 'Offline', label: 'user.events.modeOption.offline', icon: 'bi-geo-alt-fill' },
+    { value: 'Online',  label: 'user.events.modeOption.online',  icon: 'bi-camera-video-fill' },
+    { value: 'Hybrid',  label: 'user.events.modeOption.hybrid',  icon: 'bi-diagram-2-fill' },
   ];
   readonly TIMEZONES   = ['UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney'];
 
@@ -284,7 +287,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load your events');
+        this.toast.error('user.events.toast.failedLoadEvents');
         this.loading.set(false);
       },
     });
@@ -313,7 +316,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
         }, 60);
         setTimeout(() => this.highlightedEventId.set(null), 3000);
       },
-      error: () => this.toast.error('Event not found or no longer available'),
+      error: () => this.toast.error('user.events.toast.eventNotFoundNoLonger'),
     });
     this.router.navigate([], {
       relativeTo: this.route,
@@ -396,7 +399,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
         this.totalItems.set(res.total);
         this.loading.set(false);
       },
-      error: () => { this.toast.error('Failed to load events'); this.loading.set(false); },
+      error: () => { this.toast.error('user.events.toast.failedLoadEvents2'); this.loading.set(false); },
     });
   }
 
@@ -413,7 +416,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
         this.totalItems.set(res.total);
         this.loadingMore.set(false);
       },
-      error: () => { this.toast.error('Failed to load more events'); this.loadingMore.set(false); },
+      error: () => { this.toast.error('user.events.toast.failedLoadMoreEvents'); this.loadingMore.set(false); },
     });
   }
 
@@ -524,10 +527,10 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const eventDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const days = Math.round((eventDay.getTime() - today.getTime()) / 86400000);
-    if (days < 0) return { label: 'Past event', cls: 'is-past', isPast: true };
-    if (days === 0) return { label: 'Today', cls: 'is-soon', isPast: false };
-    if (days === 1) return { label: 'Tomorrow', cls: 'is-soon', isPast: false };
-    if (days <= 14) return { label: `In ${days} days`, cls: 'is-soon', isPast: false };
+    if (days < 0) return { label: 'user.events.countdown.past', cls: 'is-past', isPast: true };
+    if (days === 0) return { label: 'user.events.countdown.today', cls: 'is-soon', isPast: false };
+    if (days === 1) return { label: 'user.events.countdown.tomorrow', cls: 'is-soon', isPast: false };
+    if (days <= 14) return { label: this.translate.instant('components.calendar.status.inDays', { days }), cls: 'is-soon', isPast: false };
     return { label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'long' }), cls: '', isPast: false };
   }
   /** "09:11" → "9:11 AM" — same formatting as the Admin Events card. */
@@ -640,11 +643,11 @@ export class UserEventsComponent implements OnInit, OnDestroy {
           }
         } else if (id) {
           this.events.update(list => list.map(e => e.id === id ? evt : e));
-          this.toast.success('Event updated');
+          this.toast.success('user.events.toast.eventUpdated');
         } else {
           this.events.update(list => [evt, ...list]);
           this.totalItems.update(v => v + 1);
-          this.toast.success('Event created');
+          this.toast.success('user.events.toast.eventCreated');
         }
         this.closeAddModal(); this.submitting.set(false);
       },
@@ -673,7 +676,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
     this.eventService.deleteEvent(evt.id).subscribe({
       next: () => {
-        this.toast.success('Event deleted');
+        this.toast.success('user.events.toast.eventDeleted');
         this.eventToDelete.set(null);
         this.deleting.set(false);
         // Reset to a fresh page 1 rather than trying to patch the
@@ -682,7 +685,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
         // consistency with the server.
         this.loadEvents();
       },
-      error: () => { this.toast.error('Failed to delete event'); this.deleting.set(false); },
+      error: () => { this.toast.error('user.events.toast.failedDeleteEvent'); this.deleting.set(false); },
     });
   }
 }

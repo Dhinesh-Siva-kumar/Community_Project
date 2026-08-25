@@ -13,6 +13,8 @@ import { ProfileHeaderComponent } from '../../../shared/components/profile-heade
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 import { ProfileInfoCardComponent } from '../../../shared/components/profile-info-card/profile-info-card.component';
 import { ProfileProgressComponent } from '../../../shared/components/profile-progress/profile-progress.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -30,8 +32,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   imports: [
     CommonModule, ReactiveFormsModule, DatePipe,
     SearchableSelectComponent,
-    ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent,
-  ],
+    ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent, TranslatePipe, EnumLabelPipe],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -123,16 +124,16 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     const u = this.user();
     if (!u) return [];
     return [
-      { label: 'Username',              done: !!u.userName },
-      { label: 'Display Name',          done: !!u.displayName },
-      { label: 'Email',                 done: !!u.email },
-      { label: 'Phone Number',          done: !!u.phoneNo },
-      { label: 'Profile Photo',         done: !!u.avatar },
-      { label: 'Bio',                   done: !!u.bio },
-      { label: 'Location',              done: !!u.location },
-      { label: 'Pincode',               done: !!u.pincode },
-      { label: 'Interests',             done: u.interests.length > 0 },
-      { label: 'Professional Category', done: !!u.professionalCategory },
+      { label: 'admin.profile.label.username',              done: !!u.userName },
+      { label: 'admin.profile.label.displayName',          done: !!u.displayName },
+      { label: 'admin.profile.label.email',                 done: !!u.email },
+      { label: 'admin.profile.label.phoneNumber',          done: !!u.phoneNo },
+      { label: 'admin.profile.label.profilePhoto',         done: !!u.avatar },
+      { label: 'admin.profile.label.bio',                   done: !!u.bio },
+      { label: 'admin.profile.label.location',              done: !!u.location },
+      { label: 'admin.profile.label.pincode',               done: !!u.pincode },
+      { label: 'admin.profile.label.interests',             done: u.interests.length > 0 },
+      { label: 'admin.profile.label.professionalCategory', done: !!u.professionalCategory },
     ];
   });
 
@@ -140,8 +141,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
   pendingItems    = computed(() => this.completionItems().filter(i => !i.done));
 
   tabs: ProfileTab[] = [
-    { id: 'personal',   label: 'Personal Info', icon: 'bi-person' },
-    { id: 'admin-info', label: 'Admin Info',     icon: 'bi-shield' },
+    { id: 'personal',   label: 'admin.profile.label.personalInfo', icon: 'bi-person' },
+    { id: 'admin-info', label: 'admin.profile.label.adminInfo',     icon: 'bi-shield' },
   ];
 
   profCatOptions: SelectOption[] = [
@@ -330,7 +331,7 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('admin.profile.toast.failedLoadCountryAddressDetails'),
     });
   }
 
@@ -412,9 +413,9 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       next: (user) => {
         this.user.set(user); this.authService.currentUser.set(user);
         this.editMode.set(false); this.avatarFile.set(null);
-        this.toast.success('Profile updated successfully'); this.saving.set(false);
+        this.toast.success('admin.profile.toast.profileUpdatedSuccessfully'); this.saving.set(false);
       },
-      error: () => { this.toast.error('Failed to update profile'); this.saving.set(false); },
+      error: () => { this.toast.error('admin.profile.toast.failedUpdateProfile'); this.saving.set(false); },
     });
   }
 
@@ -423,11 +424,11 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
   changePassword(): void {
     if (this.passwordForm.invalid) return;
     const { newPassword, confirmPassword } = this.passwordForm.value;
-    if (newPassword !== confirmPassword) { this.toast.error('Passwords do not match'); return; }
+    if (newPassword !== confirmPassword) { this.toast.error('admin.profile.toast.passwordsDoNotMatch'); return; }
     this.changingPassword.set(true);
     this.userService.updateProfile({ password: newPassword }).subscribe({
-      next: () => { this.toast.success('Password changed successfully'); this.showPasswordSection.set(false); this.passwordForm.reset(); this.changingPassword.set(false); },
-      error: () => { this.toast.error('Failed to change password'); this.changingPassword.set(false); },
+      next: () => { this.toast.success('admin.profile.toast.passwordChangedSuccessfully'); this.showPasswordSection.set(false); this.passwordForm.reset(); this.changingPassword.set(false); },
+      error: () => { this.toast.error('admin.profile.toast.failedChangePassword'); this.changingPassword.set(false); },
     });
   }
 }

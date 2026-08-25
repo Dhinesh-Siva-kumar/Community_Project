@@ -1,21 +1,21 @@
 <div class="cal">
   <div class="cal-header">
-    <button type="button" class="cal-nav" (click)="prevMonth()" aria-label="Previous month">
+    <button type="button" class="cal-nav" (click)="prevMonth()" [attr.aria-label]="'components.calendar.previousMonth' | translate">
       <i class="bi bi-chevron-left"></i>
     </button>
     <span class="cal-month">{{ monthLabel() }}</span>
-    <button type="button" class="cal-nav" (click)="nextMonth()" aria-label="Next month">
+    <button type="button" class="cal-nav" (click)="nextMonth()" [attr.aria-label]="'components.calendar.nextMonth' | translate">
       <i class="bi bi-chevron-right"></i>
     </button>
   </div>
 
   @if (!isCurrentMonth()) {
-    <button type="button" class="cal-today-btn" (click)="goToday()">Today</button>
+    <button type="button" class="cal-today-btn" (click)="goToday()">{{ 'components.calendar.today' | translate }}</button>
   }
 
   <div class="cal-weekdays" aria-hidden="true">
     @for (w of weekdayLabels; track w) {
-      <span>{{ w }}</span>
+      <span>{{ w | translate }}</span>
     }
   </div>
 
@@ -26,7 +26,7 @@
       }
     </div>
   } @else {
-    <div class="cal-grid" role="grid" [attr.aria-label]="monthLabel() + ' calendar'">
+    <div class="cal-grid" role="grid" [attr.aria-label]="'components.calendar.gridLabel' | translate:{ month: monthLabel() }">
       @for (week of weeks(); track $index) {
         <div class="cal-week" role="row">
           @for (cell of week; track cell.key) {

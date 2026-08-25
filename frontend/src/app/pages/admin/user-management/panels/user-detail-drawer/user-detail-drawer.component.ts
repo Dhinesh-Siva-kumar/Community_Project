@@ -5,6 +5,8 @@ import { UserService } from '../../../../../core/services/user.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { UserDetail, User, AuditLog, AuditLogResponse } from '../../../../../core/models';
 import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../../../shared/pipes/enum-label.pipe';
 
 type DrawerTab = 'overview' | 'activity' | 'actions';
 
@@ -26,11 +28,12 @@ const ACTION_ICONS: Record<string, string> = {
 @Component({
   selector: 'app-user-detail-drawer',
   standalone: true,
-  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe],
+  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './user-detail-drawer.component.html',
   styleUrls: ['./user-detail-drawer.component.scss'],
 })
 export class UserDetailDrawerComponent implements OnInit {
+  private translate = inject(TranslateService);
   @Input({ required: true }) userId!: string;
   @Output() close       = new EventEmitter<void>();
   @Output() userUpdated = new EventEmitter<User>();
@@ -92,8 +95,8 @@ export class UserDetailDrawerComponent implements OnInit {
   getAuditDesc(log: AuditLog): string {
     const m = log.metadata as any;
     if (!m) return '';
-    if (m.from && m.to) return `Role changed from ${m.from} to ${m.to}`;
-    if (m.role)         return `Created as ${m.role}`;
+    if (m.from && m.to) return this.translate.instant('audit.meta.roleChangeLong', { from: m.from, to: m.to });
+    if (m.role)         return this.translate.instant('audit.meta.createdAs', { role: m.role });
     return '';
   }
 
@@ -101,7 +104,7 @@ export class UserDetailDrawerComponent implements OnInit {
     this.loading.set(true);
     this.userService.getUserById(this.userId).subscribe({
       next: (u) => { this.user.set(u); this.loading.set(false); },
-      error: () => { this.toast.error('Failed to load user'); this.loading.set(false); },
+      error: () => { this.toast.error('admin.userDetail.toast.failedLoadUser'); this.loading.set(false); },
     });
   }
 
@@ -118,7 +121,7 @@ export class UserDetailDrawerComponent implements OnInit {
         this.toast.success(u.isBlocked ? 'User unblocked' : 'User blocked');
         this.working.set(null);
       },
-      error: () => { this.toast.error('Action failed'); this.working.set(null); },
+      error: () => { this.toast.error('admin.userDetail.toast.actionFailed'); this.working.set(null); },
     });
   }
 
@@ -135,19 +138,19 @@ export class UserDetailDrawerComponent implements OnInit {
         this.toast.success(u.isTrusted ? 'Trust removed' : 'User trusted');
         this.working.set(null);
       },
-      error: () => { this.toast.error('Action failed'); this.working.set(null); },
+      error: () => { this.toast.error('admin.userDetail.toast.actionFailed'); this.working.set(null); },
     });
   }
 
   resetPassword(): void {
     const pw = this.newPassword().trim();
-    if (!pw || pw.length < 8) { this.toast.error('Password must be at least 8 characters'); return; }
+    if (!pw || pw.length < 8) { this.toast.error('admin.userDetail.toast.passwordMustLeast8Characters'); return; }
     const u = this.user();
     if (!u) return;
     this.working.set('reset');
     this.userService.adminResetPassword(u.id, pw).subscribe({
-      next: () => { this.toast.success('Password reset successfully'); this.newPassword.set(''); this.showResetPw.set(false); this.working.set(null); },
-      error: () => { this.toast.error('Failed to reset password'); this.working.set(null); },
+      next: () => { this.toast.success('admin.userDetail.toast.passwordResetSuccessfully'); this.newPassword.set(''); this.showResetPw.set(false); this.working.set(null); },
+      error: () => { this.toast.error('admin.userDetail.toast.failedResetPassword'); this.working.set(null); },
     });
   }
 
@@ -157,8 +160,8 @@ export class UserDetailDrawerComponent implements OnInit {
     if (!confirm(`Delete "${u.displayName}"? This will deactivate their account.`)) return;
     this.working.set('delete');
     this.userService.softDeleteUser(u.id).subscribe({
-      next: () => { this.toast.success('User deactivated'); this.userDeleted.emit(); this.close.emit(); },
-      error: () => { this.toast.error('Failed to delete user'); this.working.set(null); },
+      next: () => { this.toast.success('admin.userDetail.toast.userDeactivated'); this.userDeleted.emit(); this.close.emit(); },
+      error: () => { this.toast.error('admin.userDetail.toast.failedDeleteUser'); this.working.set(null); },
     });
   }
 
@@ -167,8 +170,8 @@ export class UserDetailDrawerComponent implements OnInit {
   }
 
   getStatusLabel(u: UserDetail): string {
-    if (u.isBlocked) return 'Blocked';
-    if (!u.isActive) return 'Inactive';
-    return 'Active';
+    if (u.isBlocked) return this.translate.instant('admin.userStatus.blocked');
+    if (!u.isActive) return this.translate.instant('admin.userStatus.inactive');
+    return this.translate.instant('admin.userStatus.active');
   }
 }

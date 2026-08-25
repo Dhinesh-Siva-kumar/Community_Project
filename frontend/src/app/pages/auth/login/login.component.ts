@@ -22,7 +22,10 @@ import { RouterLink, Router } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ThemeService } from '../../../core/services/theme.service';
+import { LanguageService } from '../../../core/services/language.service';
+import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
 import { environment } from '../../../../environments/environment';
 import {
   Subject,
@@ -34,109 +37,6 @@ import {
   takeUntil,
 } from 'rxjs';
 
-type Lang = 'en' | 'ta';
-
-const TRANSLATIONS = {
-  en: {
-    switchToTamil: 'Switch to Tamil',
-    switchToEnglish: 'Switch to English',
-    switchToLight: 'Switch to light mode',
-    switchToDark: 'Switch to dark mode',
-    backToHome: 'Back to home',
-    headlinePre: 'Welcome back!',
-    headlineSub: 'Reconnect with your Tamil community.',
-    brandDesc: 'Sign in to reconnect with your communities, catch up on discussions, and keep the conversation going.',
-    feature1: '10,000+ active members across the UK',
-    feature2: '500+ communities across every topic',
-    feature3: 'Free to Join — No Credit Card Required',
-    avatarRowText: 'Join thousands already connected',
-    cardTitle: 'Sign in to your account',
-    cardSubtitle: '',
-    usernameLabel: 'User Name',
-    usernamePlaceholder: 'User name',
-    errIdentifierRequired: 'Username is required.',
-    errIdentifierInvalid: 'Please enter a valid username.',
-    passwordLabel: 'Password',
-    passwordPlaceholder: 'Enter your password',
-    errPasswordRequired: 'Password is required.',
-    errPasswordMinlength: 'Password must be at least 6 characters.',
-    togglePasswordVisibility: 'Toggle password visibility',
-    forgotPassword: 'Forgot password?',
-    signingIn: 'Signing in...',
-    signIn: 'Sign In',
-    orContinueWith: 'or continue with',
-    noAccount: "Don't have an account?",
-    createOne: 'Create one free',
-    googleSigningIn: 'Signing in with Google...',
-    modalTitle: 'Choose a Username',
-    modalDesc: 'Your suggested username is already taken. Pick a unique username to complete sign-in.',
-    modalUsernameLabel: 'Username',
-    modalClose: 'Close',
-    checkingAvailability: 'Checking availability...',
-    usernameTaken: 'Username already taken. Please choose another.',
-    usernameAvailable: 'Username is available',
-    creatingAccount: 'Creating account...',
-    confirmUsername: 'Confirm Username',
-    toastAdminLoginSuccess: 'Admin login successful! Welcome back.',
-    toastLoginSuccess: 'Login successful! Welcome back.',
-    toastLoginFailed: 'Login failed. Please check your credentials.',
-    toastGoogleAdminSuccess: 'Admin login successful! Welcome back.',
-    toastGoogleSuccess: 'Signed in with Google! Welcome back.',
-    toastGoogleAccountCreated: 'Account created! Welcome to Community.',
-    toastGoogleUnavailable: 'Google sign-in is currently unavailable. Please try signing in manually.',
-    toastGoogleSomethingWrong: 'Something went wrong. Please close this dialog and try again.',
-  },
-  ta: {
-    switchToTamil: 'தமிழுக்கு மாறவும்',
-    switchToEnglish: 'ஆங்கிலத்திற்கு மாறவும்',
-    switchToLight: 'லைட் மோடிற்கு மாறவும்',
-    switchToDark: 'டார்க் மோடிற்கு மாறவும்',
-    backToHome: 'முகப்புக்குச் செல்ல',
-    headlinePre: 'மீண்டும் வரவேற்கிறோம்!',
-    headlineSub: 'உங்கள் தமிழ் சமூகத்துடன் மீண்டும் இணையுங்கள்.',
-    brandDesc: 'உங்கள் சமூகங்களுடன் மீண்டும் இணைந்து, விவாதங்களைப் பின்தொடர, உள்நுழையுங்கள்.',
-    feature1: 'UK முழுவதும் 10,000+ செயலில் உள்ள உறுப்பினர்கள்',
-    feature2: 'ஒவ்வொரு தலைப்பிலும் 500+ சமூகங்கள்',
-    feature3: 'இலவசமாக இணையுங்கள் — கிரெடிட் கார்டு தேவையில்லை',
-    avatarRowText: 'ஆயிரக்கணக்கானோர் ஏற்கனவே இணைந்துள்ளனர்',
-    cardTitle: 'உங்கள் கணக்கில் உள்நுழைக',
-    cardSubtitle: '',
-    usernameLabel: 'பயனர் பெயர்',
-    usernamePlaceholder: 'பயனர் பெயர்',
-    errIdentifierRequired: 'பயனர் பெயர்.',
-    errIdentifierInvalid: 'சரியான பயனர் பெயர் உள்ளிடவும்.',
-    passwordLabel: 'கடவுச்சொல்',
-    passwordPlaceholder: 'உங்கள் கடவுச்சொல்லை உள்ளிடவும்',
-    errPasswordRequired: 'கடவுச்சொல் தேவை.',
-    errPasswordMinlength: 'கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்.',
-    togglePasswordVisibility: 'கடவுச்சொல் காட்சியை மாற்று',
-    forgotPassword: 'கடவுச்சொல் மறந்துவிட்டதா?',
-    signingIn: 'உள்நுழைகிறது...',
-    signIn: 'உள்நுழைக',
-    orContinueWith: 'அல்லது இதன் மூலம் தொடரவும்',
-    noAccount: 'கணக்கு இல்லையா?',
-    createOne: 'இலவசமாக ஒன்றை உருவாக்குங்கள்',
-    googleSigningIn: 'Google மூலம் உள்நுழைகிறது...',
-    modalTitle: 'பயனர் பெயரைத் தேர்ந்தெடுக்கவும்',
-    modalDesc: 'உங்கள் பரிந்துரைக்கப்பட்ட பயனர் பெயர் ஏற்கனவே எடுக்கப்பட்டுள்ளது. உள்நுழைவை முடிக்க தனித்துவமான பயனர் பெயரைத் தேர்ந்தெடுக்கவும்.',
-    modalUsernameLabel: 'பயனர் பெயர்',
-    modalClose: 'மூடு',
-    checkingAvailability: 'கிடைக்கிறதா என சரிபார்க்கிறது...',
-    usernameTaken: 'பயனர் பெயர் ஏற்கனவே உள்ளது. வேறு ஒன்றைத் தேர்ந்தெடுக்கவும்.',
-    usernameAvailable: 'பயனர் பெயர் கிடைக்கிறது',
-    creatingAccount: 'கணக்கு உருவாக்கப்படுகிறது...',
-    confirmUsername: 'பயனர் பெயரை உறுதிசெய்',
-    toastAdminLoginSuccess: 'நிர்வாக உள்நுழைவு வெற்றி! மீண்டும் வரவேற்கிறோம்.',
-    toastLoginSuccess: 'உள்நுழைவு வெற்றி! மீண்டும் வரவேற்கிறோம்.',
-    toastLoginFailed: 'உள்நுழைவு தோல்வியடைந்தது. உங்கள் விவரங்களைச் சரிபார்க்கவும்.',
-    toastGoogleAdminSuccess: 'நிர்வாக உள்நுழைவு வெற்றி! மீண்டும் வரவேற்கிறோம்.',
-    toastGoogleSuccess: 'Google மூலம் உள்நுழைந்தீர்கள்! மீண்டும் வரவேற்கிறோம்.',
-    toastGoogleAccountCreated: 'கணக்கு உருவாக்கப்பட்டது! Community-க்கு வரவேற்கிறோம்.',
-    toastGoogleUnavailable: 'Google உள்நுழைவு தற்போது கிடைக்கவில்லை. கைமுறையாக உள்நுழைய முயற்சிக்கவும்.',
-    toastGoogleSomethingWrong: 'ஏதோ தவறு நடந்தது. இந்த சாளரத்தை மூடிவிட்டு மீண்டும் முயற்சிக்கவும்.',
-  },
-};
-
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -145,6 +45,8 @@ const TRANSLATIONS = {
     ReactiveFormsModule,
     RouterLink,
     A11yModule,
+    TranslatePipe,
+    LanguageToggleComponent,
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
@@ -154,6 +56,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   private authService  = inject(AuthService);
   private toastService = inject(ToastService);
   private themeService = inject(ThemeService);
+  private languageService = inject(LanguageService);
   private router       = inject(Router);
   private platformId   = inject(PLATFORM_ID) as object;
   private ngZone       = inject(NgZone);
@@ -196,33 +99,17 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ── Language ───────────────────────────────────────────────────────────────
-  currentLang: Lang = 'en';
-
-  get t() {
-    return this.currentLang === 'en' ? TRANSLATIONS.en : TRANSLATIONS.ta;
-  }
-
-  toggleLanguage(): void {
-    this.currentLang = this.currentLang === 'en' ? 'ta' : 'en';
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('landing-lang', this.currentLang);
-    }
-  }
-
-  private loadLanguage(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('landing-lang') as Lang | null;
-      if (saved === 'en' || saved === 'ta') this.currentLang = saved;
-    }
-  }
+  // ── Language — owned by the shared LanguageService; this page only binds
+  // the host attribute, since _auth-shared.scss's Tamil metric tweaks are
+  // :host[lang]-scoped. ────────────────────────────────────────────
+  @HostBinding('attr.lang')
+  get langAttr(): string { return this.languageService.currentLang(); }
 
   private destroy$            = new Subject<void>();
   private usernameModalCheck$ = new Subject<string>();
 
   ngOnInit(): void {
     this.themeService.applyDefaultIfUnset('dark');
-    this.loadLanguage();
 
     // Google username modal — debounced availability check
     this.usernameModalCheck$.pipe(
@@ -279,16 +166,16 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (resp: any) => {
         if (resp.user.roleLevel >= 50) {
           this.router.navigate(['/admin/dashboard']);
-          this.toastService.success(this.t.toastAdminLoginSuccess);
+          this.toastService.success('auth.login.toastAdminLoginSuccess');
           return;
         }
         this.loading.set(false);
-        this.toastService.success(this.t.toastLoginSuccess);
+        this.toastService.success('auth.login.toastLoginSuccess');
         this.router.navigate(['/user/dashboard']);
       },
       error: (err) => {
         this.loading.set(false);
-        this.toastService.error(err?.error?.message || this.t.toastLoginFailed);
+        this.toastService.error('auth.login.toastLoginFailed');
       },
     });
   }
@@ -393,9 +280,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           if (res.user?.roleLevel >= 50) {
             this.router.navigate(['/admin/dashboard']);
-            this.toastService.success(this.t.toastGoogleAdminSuccess);
+            this.toastService.success('auth.login.toastGoogleAdminSuccess');
           } else {
-            this.toastService.success(this.t.toastGoogleSuccess);
+            this.toastService.success('auth.login.toastGoogleSuccess');
             this.router.navigate(['/user/dashboard']);
           }
         }
@@ -404,7 +291,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
         this.googleLoading.set(false);
         // errorInterceptor handles 4xx toasts; show one manually for 5xx / network errors
         if (!err?.status || err.status >= 500) {
-          this.toastService.error(this.t.toastGoogleUnavailable);
+          this.toastService.error('auth.login.toastGoogleUnavailable');
         }
       },
     });
@@ -435,9 +322,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           this.googleNeedsUsername.set(false);
           if (res.user?.roleLevel >= 50) {
             this.router.navigate(['/admin/dashboard']);
-            this.toastService.success(this.t.toastGoogleAdminSuccess);
+            this.toastService.success('auth.login.toastGoogleAdminSuccess');
           } else {
-            this.toastService.success(this.t.toastGoogleAccountCreated);
+            this.toastService.success('auth.login.toastGoogleAccountCreated');
             this.router.navigate(['/user/dashboard']);
           }
         },
@@ -449,7 +336,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           }
           // errorInterceptor handles 4xx toasts; handle 5xx manually
           if (!err?.status || err.status >= 500) {
-            this.toastService.error(this.t.toastGoogleSomethingWrong);
+            this.toastService.error('auth.login.toastGoogleSomethingWrong');
           }
         },
       });

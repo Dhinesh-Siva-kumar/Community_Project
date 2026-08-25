@@ -1,6 +1,6 @@
 <div class="ud-backdrop" (click)="close.emit()"></div>
 
-<aside class="ud-drawer" role="dialog" aria-label="User details">
+<aside class="ud-drawer" role="dialog" [attr.aria-label]="'admin.userDetail.userDetails' | translate">
 
   <!-- ══════════ SKELETON ══════════ -->
   @if (loading()) {
@@ -32,7 +32,7 @@
     <!-- Cover + Close -->
     <div class="ud-cover">
       <div class="ud-cover__gradient"></div>
-      <button class="ud-close" (click)="close.emit()" aria-label="Close drawer">
+      <button class="ud-close" (click)="close.emit()" [attr.aria-label]="'admin.userDetail.closeDrawer' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -47,7 +47,7 @@
         }
         <!-- Online indicator (active users) -->
         @if (u.isActive && !u.isBlocked) {
-          <span class="ud-online-dot" title="Active account"></span>
+          <span class="ud-online-dot" [title]="'admin.userDetail.activeAccount' | translate"></span>
         }
       </div>
 
@@ -59,7 +59,7 @@
             [class.ud-pill--admin]="u.role === 'ADMIN'"
             [class.ud-pill--user]="u.role === 'USER'">
             <i class="bi" [class.bi-shield-fill-check]="u.role === 'ADMIN'" [class.bi-person-fill]="u.role === 'USER'"></i>
-            {{ u.role }}
+            {{ u.role | enumLabel:'role' }}
           </span>
           <span class="ud-pill"
             [class.ud-pill--active]="!u.isBlocked && u.isActive"
@@ -74,7 +74,7 @@
           </span>
           @if (u.isTrusted) {
             <span class="ud-pill ud-pill--trusted">
-              <i class="bi bi-star-fill"></i> Trusted
+              <i class="bi bi-star-fill"></i> {{ 'admin.userDetail.trusted' | translate }}
             </span>
           }
         </div>
@@ -84,7 +84,7 @@
     <!-- Profile completion bar -->
     <div class="ud-completion">
       <div class="ud-completion__header">
-        <span class="ud-completion__label">Profile Completion</span>
+        <span class="ud-completion__label">{{ 'admin.userDetail.profileCompletion' | translate }}</span>
         <span class="ud-completion__pct"
           [class.ud-completion__pct--low]="u.profileCompletion < 40"
           [class.ud-completion__pct--mid]="u.profileCompletion >= 40 && u.profileCompletion < 80"
@@ -108,19 +108,19 @@
         [class.ud-tab--active]="activeTab() === 'overview'"
         (click)="selectTab('overview')">
         <i class="bi bi-person-lines-fill"></i>
-        <span>Overview</span>
+        <span>{{ 'admin.userDetail.overview' | translate }}</span>
       </button>
       <button class="ud-tab" role="tab"
         [class.ud-tab--active]="activeTab() === 'activity'"
         (click)="selectTab('activity')">
         <i class="bi bi-clock-history"></i>
-        <span>Activity Log</span>
+        <span>{{ 'admin.userDetail.activityLog' | translate }}</span>
       </button>
       <button class="ud-tab" role="tab"
         [class.ud-tab--active]="activeTab() === 'actions'"
         (click)="selectTab('actions')">
         <i class="bi bi-sliders"></i>
-        <span>Actions</span>
+        <span>{{ 'common.actions' | translate }}</span>
       </button>
     </div>
 
@@ -129,7 +129,7 @@
 
       <!-- ──────────── OVERVIEW ──────────── -->
       @if (activeTab() === 'overview') {
-        <div class="ud-section-label">Contact Information</div>
+        <div class="ud-section-label">{{ 'admin.userDetail.contactInformation' | translate }}</div>
 
         <div class="ud-info-grid">
           <div class="ud-info-tile">
@@ -137,7 +137,7 @@
               <i class="bi bi-envelope-fill"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Email</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.email' | translate }}</span>
               <span class="ud-info-tile__val">{{ u.email || '—' }}</span>
             </div>
           </div>
@@ -147,7 +147,7 @@
               <i class="bi bi-telephone-fill"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Phone</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.phone' | translate }}</span>
               <span class="ud-info-tile__val">{{ u.phoneNo || '—' }}</span>
             </div>
           </div>
@@ -157,7 +157,7 @@
               <i class="bi bi-geo-alt-fill"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Location</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.location' | translate }}</span>
               <span class="ud-info-tile__val">
                 {{ u.location ? (u.location + ', ' + u.country) : (u.country || '—') }}
               </span>
@@ -169,13 +169,13 @@
               <i class="bi bi-briefcase-fill"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Professional Category</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.professionalCategory' | translate }}</span>
               <span class="ud-info-tile__val">{{ u.professionalCategory || '—' }}</span>
             </div>
           </div>
         </div>
 
-        <div class="ud-section-label" style="margin-top:20px">Account Information</div>
+        <div class="ud-section-label" style="margin-top:20px">{{ 'admin.userDetail.accountInformation' | translate }}</div>
 
         <div class="ud-info-grid">
           <div class="ud-info-tile">
@@ -183,7 +183,7 @@
               <i class="bi bi-calendar-check-fill"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Member Since</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.memberSince' | translate }}</span>
               <span class="ud-info-tile__val">{{ u.createdAt | date:'d MMMM yyyy' }}</span>
             </div>
           </div>
@@ -193,7 +193,7 @@
               <i class="bi bi-arrow-repeat"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">Last Updated</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.lastUpdated' | translate }}</span>
               <span class="ud-info-tile__val">{{ u.updatedAt | date:'d MMM yyyy' }}</span>
             </div>
           </div>
@@ -203,7 +203,7 @@
               <i class="bi bi-fingerprint"></i>
             </div>
             <div class="ud-info-tile__content">
-              <span class="ud-info-tile__key">User ID</span>
+              <span class="ud-info-tile__key">{{ 'admin.userDetail.userId' | translate }}</span>
               <span class="ud-info-tile__val ud-info-tile__val--mono">{{ u.id | slice:0:18 }}…</span>
             </div>
           </div>
@@ -217,7 +217,7 @@
         }
 
         @if (u.interests && u.interests.length > 0) {
-          <div class="ud-section-label" style="margin-top:20px">Interests</div>
+          <div class="ud-section-label" style="margin-top:20px">{{ 'admin.userDetail.interests' | translate }}</div>
           <div class="ud-chips">
             @for (tag of u.interests; track tag) {
               <span class="ud-chip">{{ tag }}</span>
@@ -235,7 +235,7 @@
         } @else if (auditLogs().length === 0) {
           <div class="ud-log-empty">
             <i class="bi bi-clock-history"></i>
-            <p>No recorded activity for this user yet.</p>
+            <p>{{ 'admin.userDetail.noRecordedActivityUserYet' | translate }}</p>
           </div>
         } @else {
           <div class="ud-timeline">
@@ -299,7 +299,7 @@
               <i class="bi bi-star-fill"></i>
             </div>
             <div>
-              <p class="ud-action-card__title">Trust Status</p>
+              <p class="ud-action-card__title">{{ 'admin.userDetail.trustStatus' | translate }}</p>
               <p class="ud-action-card__desc">
                 {{ u.isTrusted ? 'User is marked as trusted — highlighted to others' : 'Mark this user as trusted on the platform' }}
               </p>
@@ -357,19 +357,19 @@
               <i class="bi bi-key-fill"></i>
             </div>
             <div>
-              <p class="ud-action-card__title">Reset Password</p>
-              <p class="ud-action-card__desc">Set a new password for this user</p>
+              <p class="ud-action-card__title">{{ 'admin.userDetail.resetPassword' | translate }}</p>
+              <p class="ud-action-card__desc">{{ 'admin.userDetail.setNewPasswordUser' | translate }}</p>
             </div>
           </div>
 
           @if (!showResetPw()) {
             <button class="ud-btn ud-btn--ghost" (click)="showResetPw.set(true)">
-              <i class="bi bi-key"></i> Reset
+              <i class="bi bi-key"></i> {{ 'common.reset' | translate }}
             </button>
           } @else {
             <div class="ud-pw-row">
               <input type="password" class="ud-action-input"
-                placeholder="New password (min 8 chars)"
+                [placeholder]="'admin.userDetail.newPasswordMin8Chars' | translate"
                 [(ngModel)]="newPassword" [ngModelOptions]="{standalone: true}" />
               <div class="ud-pw-btns">
                 <button class="ud-btn ud-btn--primary"
@@ -382,7 +382,7 @@
                   }
                 </button>
                 <button class="ud-btn ud-btn--ghost" (click)="showResetPw.set(false)">
-                  Cancel
+                  {{ 'common.cancel' | translate }}
                 </button>
               </div>
             </div>
@@ -397,10 +397,10 @@
             </div>
             <div>
               <p class="ud-action-card__title ud-action-card__title--danger">
-                Deactivate Account
+                {{ 'admin.userDetail.deactivateAccount' | translate }}
               </p>
               <p class="ud-action-card__desc">
-                Disables login and hides all content. Reversible.
+                {{ 'admin.userDetail.disablesLoginHidesAllContent' | translate }}
               </p>
             </div>
           </div>

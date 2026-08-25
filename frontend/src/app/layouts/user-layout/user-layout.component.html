@@ -8,7 +8,7 @@
   class="sidebar"
   [class.collapsed]="!isMobile() && sidebarCollapsed()"
   [class.mobile-open]="isMobile() && mobileSidebarOpen()"
-  aria-label="User navigation"
+  [attr.aria-label]="'nav.userNavigation' | translate"
 >
   <!-- Brand -->
   <div class="sidebar-header">
@@ -18,16 +18,16 @@
     @if (!sidebarCollapsed() || isMobile()) {
       <div class="sidebar-brand">
         <span class="sidebar-brand-name">TamilConnect</span>
-        <span class="sidebar-brand-sub">Platform</span>
+        <span class="sidebar-brand-sub">{{ 'nav.platform' | translate }}</span>
       </div>
     }
   </div>
 
   <!-- Navigation -->
-  <nav class="sidebar-nav" aria-label="User navigation links">
+  <nav class="sidebar-nav" [attr.aria-label]="'nav.navigationLinks' | translate">
     @for (item of navItems; track item.route) {
       @if (item.sectionLabel && (!sidebarCollapsed() || isMobile())) {
-        <span class="nav-section-label" aria-hidden="true">{{ item.sectionLabel }}</span>
+        <span class="nav-section-label" aria-hidden="true">{{ item.sectionLabel | translate }}</span>
       }
       <a
         class="nav-item"
@@ -35,12 +35,12 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.route === '/user/dashboard' }"
         (click)="onNavClick()"
-        [title]="sidebarCollapsed() && !isMobile() ? item.label : ''"
-        [attr.aria-label]="item.label"
+        [title]="sidebarCollapsed() && !isMobile() ? (item.label | translate) : ''"
+        [attr.aria-label]="item.label | translate"
       >
         <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
         @if (!sidebarCollapsed() || isMobile()) {
-          <span class="nav-label">{{ item.label }}</span>
+          <span class="nav-label">{{ item.label | translate }}</span>
         }
       </a>
     }
@@ -65,7 +65,7 @@
         </div>
         <div class="sidebar-user-info">
           <span class="sidebar-user-name">{{ getUserFullName() }}</span>
-          <span class="sidebar-user-role">Member</span>
+          <span class="sidebar-user-role">{{ 'nav.member' | translate }}</span>
         </div>
       </div>
     </div>
@@ -78,7 +78,7 @@
     class="sidebar-edge-toggle"
     (click)="toggleSidebar()"
     type="button"
-    [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    [attr.aria-label]="(sidebarCollapsed() ? 'nav.expandSidebar' : 'nav.collapseSidebar') | translate"
     [style.left]="sidebarLeft"
   >
     <i
@@ -100,14 +100,17 @@
   <header class="top-header" role="banner">
     <div class="header-left">
       @if (isMobile()) {
-        <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" type="button">
+        <button class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="'nav.toggleSidebar' | translate" type="button">
           <i class="bi bi-list" aria-hidden="true"></i>
         </button>
       }
-      <span class="header-title">{{ pageTitle() }}</span>
+      <span class="header-title">{{ pageTitle() | translate }}</span>
     </div>
 
     <div class="header-right">
+      <!-- EN / தமிழ் language toggle -->
+      <app-language-toggle></app-language-toggle>
+
       <!-- Light/Dark theme toggle -->
       <app-theme-toggle></app-theme-toggle>
 
@@ -123,7 +126,7 @@
           (click)="toggleUserDropdown()"
           type="button"
           [attr.aria-expanded]="userDropdownOpen()"
-          [attr.aria-label]="'User menu — ' + getUserFullName()"
+          [attr.aria-label]="'nav.userMenu' | translate:{ name: getUserFullName() }"
           aria-haspopup="menu"
         >
           @if (authService.currentUser()?.avatar) {
@@ -136,7 +139,7 @@
         </button>
 
         @if (userDropdownOpen()) {
-          <div class="user-dropdown-menu" role="menu" aria-label="User account options">
+          <div class="user-dropdown-menu" role="menu" [attr.aria-label]="'nav.accountOptions' | translate">
             <div class="dropdown-user-info" role="none">
               <div class="dropdown-avatar" aria-hidden="true">{{ getUserInitials() }}</div>
               <div class="dropdown-user-text">
@@ -148,13 +151,13 @@
             <div class="dropdown-divider" role="separator"></div>
 
             <a class="dropdown-item" routerLink="/user/profile" (click)="userDropdownOpen.set(false)" role="menuitem">
-              <i class="bi bi-person" aria-hidden="true"></i> Profile
+              <i class="bi bi-person" aria-hidden="true"></i> {{ 'common.profile' | translate }}
             </a>
 
             <div class="dropdown-divider" role="separator"></div>
 
             <button class="dropdown-item text-danger" (click)="logout()" type="button" role="menuitem">
-              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> {{ 'common.logout' | translate }}
             </button>
           </div>
         }

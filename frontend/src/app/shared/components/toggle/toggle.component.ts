@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * Themed on/off switch — the single implementation replacing the two
@@ -22,7 +23,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 @Component({
   selector: 'app-toggle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ToggleComponent), multi: true },
@@ -36,14 +37,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       [class.tg-switch--sm]="size() === 'sm'"
       [disabled]="isDisabled()"
       [attr.aria-checked]="checked()"
-      [attr.aria-label]="ariaLabel() || label() || 'Toggle'"
+      [attr.aria-label]="ariaLabel() || label() || ('components.toggle.default' | translate)"
       (click)="toggle()"
     >
       <span class="tg-track" aria-hidden="true">
         <span class="tg-thumb"></span>
       </span>
       @if (label()) {
-        <span class="tg-label">{{ label() }}</span>
+        <span class="tg-label">{{ label() | translate }}</span>
       }
     </button>
   `,

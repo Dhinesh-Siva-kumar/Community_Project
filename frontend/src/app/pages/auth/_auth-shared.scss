@@ -218,55 +218,21 @@
 }
 
 // ============================================================
-// LANGUAGE TOGGLE — EN / தமிழ் pill (mirrors landing page's
-// .lp-lang-toggle, restyled with the auth pages' own tokens)
+// LANGUAGE TOGGLE — EN / தமிழ் pill
+// The markup now lives in <app-language-toggle> (shared with the app shell
+// headers). Its own styles read `--lang-toggle-*` custom properties, so all
+// this needs to do is map them onto the auth pages' --auth-* palette; custom
+// properties set on the host element inherit into the component.
 // ============================================================
-.lang-toggle {
-  display: inline-flex;
-  align-items: center;
-  height: 42px;
-  border-radius: 100px;
-  background: var(--auth-toggle-bg);
-  border: 1.5px solid var(--auth-border);
-  padding: 3px;
-  gap: 0;
-  cursor: pointer;
-  transition: background 0.25s, border-color 0.25s;
-  backdrop-filter: blur(8px);
-  flex-shrink: 0;
-
-  &:hover {
-    background: var(--auth-toggle-hover-bg);
-  }
-}
-
-.lang-toggle-seg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 11px;
-  height: 34px;
-  border-radius: 100px;
-  font-size: .75rem;
-  font-weight: 700;
-  letter-spacing: .03em;
-  color: var(--auth-toggle-color);
-  background: transparent;
-  transition: background .22s ease, color .22s ease;
-  white-space: nowrap;
-  line-height: 1;
-
-  &.active {
-    background: linear-gradient(180deg, var(--auth-amber), var(--auth-amber-deep));
-    color: var(--auth-amber-ink);
-  }
-}
-
-.lang-toggle-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--auth-border);
-  flex-shrink: 0;
+app-language-toggle {
+  --lang-toggle-height: 42px;
+  --lang-toggle-border-width: 1.5px;
+  --lang-toggle-bg: var(--auth-toggle-bg);
+  --lang-toggle-hover-bg: var(--auth-toggle-hover-bg);
+  --lang-toggle-border: var(--auth-border);
+  --lang-toggle-color: var(--auth-toggle-color);
+  --lang-toggle-active-bg: linear-gradient(180deg, var(--auth-amber), var(--auth-amber-deep));
+  --lang-toggle-active-color: var(--auth-amber-ink);
 }
 
 // ============================================================

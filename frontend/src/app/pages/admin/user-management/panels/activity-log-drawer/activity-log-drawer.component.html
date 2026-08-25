@@ -8,7 +8,7 @@
     <div class="drawer-header">
       <div class="drawer-header__icon"><i class="bi bi-clock-history"></i></div>
       <div>
-        <h5 class="drawer-header__title">Activity Log</h5>
+        <h5 class="drawer-header__title">{{ 'admin.activityLog.activityLog' | translate }}</h5>
         <p class="drawer-header__sub">{{ total() }} admin action{{ total() === 1 ? '' : 's' }} recorded</p>
       </div>
       <button class="drawer-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
@@ -19,7 +19,7 @@
   <div class="al-filter-bar">
     <select class="al-select" [ngModel]="actionFilter()"
       (ngModelChange)="actionFilter.set($event); onFilterChange()">
-      <option value="">All Actions</option>
+      <option value="">{{ 'admin.activityLog.allActions' | translate }}</option>
       @for (a of actionOptions.slice(1); track a) {
         <option [value]="a">{{ formatAction(a) }}</option>
       }
@@ -41,7 +41,7 @@
     } @else if (logs().length === 0) {
       <div class="al-empty">
         <i class="bi bi-clipboard2-x"></i>
-        <p>No activity logs found</p>
+        <p>{{ 'admin.activityLog.noActivityLogsFound' | translate }}</p>
       </div>
     } @else {
       <div class="al-list">

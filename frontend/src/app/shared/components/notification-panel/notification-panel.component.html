@@ -6,12 +6,14 @@
     (click)="toggle()"
     [attr.aria-expanded]="isOpen()"
     aria-haspopup="true"
-    [title]="notificationService.unreadCount() > 0 ? notificationService.unreadCount() + ' unread notifications' : 'Notifications'"
-    aria-label="Notifications"
+    [title]="notificationService.unreadCount() > 0
+      ? ('components.notifications.unreadCount' | translate:{ count: notificationService.unreadCount() })
+      : ('components.notifications.title' | translate)"
+    [attr.aria-label]="'components.notifications.title' | translate"
   >
     <i class="bi bi-bell" aria-hidden="true"></i>
     @if (notificationService.unreadCount() > 0) {
-      <span class="np-badge" [attr.aria-label]="notificationService.unreadCount() + ' unread'">
+      <span class="np-badge" [attr.aria-label]="'components.notifications.unread' | translate:{ count: notificationService.unreadCount() }">
         {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
       </span>
     }
@@ -20,9 +22,9 @@
   @if (isOpen()) {
     <div class="np-panel" role="menu">
       <div class="np-panel-header">
-        <span class="np-panel-title">Notifications</span>
+        <span class="np-panel-title">{{ 'components.notifications.title' | translate }}</span>
         @if (notificationService.unreadCount() > 0) {
-          <button type="button" class="np-mark-all" (click)="markAllRead($event)">Mark all as read</button>
+          <button type="button" class="np-mark-all" (click)="markAllRead($event)">{{ 'components.notifications.markAllRead' | translate }}</button>
         }
       </div>
 
@@ -33,7 +35,7 @@
               <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
             </span>
             <span class="np-item-body">
-              <span class="np-item-message">{{ n.message }}</span>
+              <span class="np-item-message">{{ n | notificationText }}</span>
               <span class="np-item-time">{{ relativeTime(n) }}</span>
             </span>
             @if (!n.isRead) {
@@ -43,12 +45,12 @@
         } @empty {
           <div class="np-empty">
             <i class="bi bi-bell-slash" aria-hidden="true"></i>
-            <span>You're all caught up</span>
+            <span>{{ 'components.notifications.allCaughtUp' | translate }}</span>
           </div>
         }
       </div>
 
-      <button type="button" class="np-view-all" (click)="viewAll()">View all notifications</button>
+      <button type="button" class="np-view-all" (click)="viewAll()">{{ 'components.notifications.viewAll' | translate }}</button>
     </div>
   }
 </div>

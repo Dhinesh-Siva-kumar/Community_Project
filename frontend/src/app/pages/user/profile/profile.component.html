@@ -3,9 +3,9 @@
   <div class="d-flex justify-content-center align-items-center py-5">
     <div class="text-center">
       <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
       </div>
-      <p class="text-muted">Loading profile...</p>
+      <p class="text-muted">{{ 'user.profile.loadingProfile' | translate }}</p>
     </div>
   </div>
 } @else {
@@ -33,7 +33,7 @@
     @if (activeTab() === 'personal') {
       <div class="tab-enter">
       <app-profile-info-card
-        title="Personal Information"
+        [title]="'user.profile.personalInformation' | translate"
         icon="bi-person"
         [editMode]="editMode()"
         [loading]="saving()"
@@ -47,21 +47,21 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-person-vcard"></i></span>
-              <span class="prf-section-title">Basic Information</span>
+              <span class="prf-section-title">{{ 'user.profile.basicInformation' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="prf-label-row">
-                  <label class="prf-label" for="displayName">Display Name</label>
+                  <label class="prf-label" for="displayName">{{ 'user.profile.displayName' | translate }}</label>
                   @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('displayName')?.value?.length || 0 }}/60</span> }
                 </div>
                 <input id="displayName" type="text" class="form-control" formControlName="displayName" maxlength="60" [readonly]="!editMode()" />
                 @if (profileForm.get('displayName')?.hasError('minlength') && profileForm.get('displayName')?.dirty) {
-                  <div class="invalid-feedback d-block">Display name must be at least 2 characters.</div>
+                  <div class="invalid-feedback d-block">{{ 'user.profile.displayNameMustLeast2' | translate }}</div>
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="email">Email</label>
+                <label class="prf-label" for="email">{{ 'user.profile.email' | translate }}</label>
                 <input
                   id="email" type="email" class="form-control"
                   [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.dirty"
@@ -71,19 +71,19 @@
                   aria-describedby="email-hint"
                 />
                 @if (profileForm.get('email')?.hasError('email') && profileForm.get('email')?.dirty) {
-                  <div class="invalid-feedback">Enter a valid email address.</div>
+                  <div class="invalid-feedback">{{ 'user.profile.enterValidEmailAddress' | translate }}</div>
                 }
                 @if (editMode() && !u.email) {
-                  <small id="email-hint" class="form-text text-muted">You can add an email to enable email login.</small>
+                  <small id="email-hint" class="form-text text-muted">{{ 'user.profile.canAddEmailEnableEmail' | translate }}</small>
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="phoneNo">Phone</label>
-                <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" placeholder="Phone number" />
+                <label class="prf-label" for="phoneNo">{{ 'user.profile.phone' | translate }}</label>
+                <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" [placeholder]="'user.profile.phoneNumber' | translate" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="whatsappNo">WhatsApp</label>
-                <input id="whatsappNo" type="text" class="form-control" formControlName="whatsappNo" maxlength="20" [readonly]="!editMode()" placeholder="WhatsApp number" />
+                <label class="prf-label" for="whatsappNo">{{ 'user.profile.whatsapp' | translate }}</label>
+                <input id="whatsappNo" type="text" class="form-control" formControlName="whatsappNo" maxlength="20" [readonly]="!editMode()" [placeholder]="'user.profile.whatsappNumber' | translate" />
               </div>
             </div>
           </div>
@@ -92,20 +92,20 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-card-text"></i></span>
-              <span class="prf-section-title">About</span>
+              <span class="prf-section-title">{{ 'user.profile.about' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-12">
                 <div class="prf-label-row">
-                  <label class="prf-label" for="bio">Bio</label>
+                  <label class="prf-label" for="bio">{{ 'user.profile.bio' | translate }}</label>
                   @if (editMode()) { <span class="cm-char-count">{{ profileForm.get('bio')?.value?.length || 0 }}/300</span> }
                 </div>
-                <textarea id="bio" class="form-control" formControlName="bio" rows="3" maxlength="300" [readonly]="!editMode()" placeholder="Tell us about yourself"></textarea>
+                <textarea id="bio" class="form-control" formControlName="bio" rows="3" maxlength="300" [readonly]="!editMode()" [placeholder]="'user.profile.tellUsAboutYourself' | translate"></textarea>
               </div>
               <div class="col-md-6">
-                <label class="prf-label">Professional Category</label>
+                <label class="prf-label">{{ 'user.profile.professionalCategory' | translate }}</label>
                 @if (editMode()) {
-                  <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" placeholder="Select category"></app-searchable-select>
+                  <app-searchable-select formControlName="professionalCategory" [options]="profCatOptions" [placeholder]="'user.profile.selectCategory' | translate"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.professionalCategory || 'Not set'" readonly />
                 }
@@ -113,7 +113,7 @@
 
               <!-- Interests -->
               <div class="col-12">
-                <label class="prf-label">Interests</label>
+                <label class="prf-label">{{ 'user.profile.interests' | translate }}</label>
                 <div class="d-flex flex-wrap gap-2 mb-2">
                   @for (interest of u.interests; track $index) {
                     <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1 py-2 px-3">
@@ -124,14 +124,14 @@
                     </span>
                   }
                   @if (!u.interests.length) {
-                    <span class="text-muted small">No interests added yet</span>
+                    <span class="text-muted small">{{ 'user.profile.noInterestsAddedYet' | translate }}</span>
                   }
                 </div>
                 @if (editMode()) {
                   <div class="input-group input-group-sm" style="max-width: 300px;">
-                    <input type="text" class="form-control" placeholder="Add interest" [value]="newInterest()"
-                           (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" aria-label="New interest" />
-                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()" aria-label="Add interest">
+                    <input type="text" class="form-control" [placeholder]="'user.profile.addInterest' | translate" [value]="newInterest()"
+                           (input)="onInterestInput($event)" (keydown)="onInterestKeydown($event)" [attr.aria-label]="'user.profile.newInterest' | translate" />
+                    <button class="btn btn-outline-primary" type="button" (click)="addInterest()" [attr.aria-label]="'user.profile.addInterest' | translate">
                       <i class="bi bi-plus"></i>
                     </button>
                   </div>
@@ -144,14 +144,14 @@
           <div class="prf-section">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-geo-alt"></i></span>
-              <span class="prf-section-title">Location</span>
+              <span class="prf-section-title">{{ 'user.profile.location' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-md-4">
-                <label class="prf-label">Country</label>
+                <label class="prf-label">{{ 'user.profile.country' | translate }}</label>
                 @if (editMode()) {
                   <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                    placeholder="Select country" searchPlaceholder="Search countries…"
+                    [placeholder]="'user.profile.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
                     (ngModelChange)="onCountryChange($event)"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.country || 'Not set'" readonly />
@@ -162,7 +162,9 @@
                   <label class="prf-label">{{ adminLevels()[0].label }}</label>
                   @if (editMode()) {
                     <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
-                      [placeholder]="division1Loading() ? 'Loading…' : ('Select ' + adminLevels()[0].label.toLowerCase())"
+                      [placeholder]="division1Loading()
+                        ? ('user.profile.loadingEllipsis' | translate)
+                        : ('user.profile.selectLevel' | translate:{ level: adminLevels()[0].label })"
                       (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
                   } @else {
                     <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
@@ -174,7 +176,9 @@
                   <label class="prf-label">{{ adminLevels()[1].label }}</label>
                   @if (editMode()) {
                     <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
-                      [placeholder]="division2Loading() ? 'Loading…' : ('Select ' + adminLevels()[1].label.toLowerCase())"
+                      [placeholder]="division2Loading()
+                        ? ('user.profile.loadingEllipsis' | translate)
+                        : ('user.profile.selectLevel' | translate:{ level: adminLevels()[1].label })"
                       (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
                   } @else {
                     <input type="text" class="form-control" [value]="u.state || 'Not set'" readonly />
@@ -182,19 +186,19 @@
                 </div>
               }
               <div class="col-md-6">
-                <label class="prf-label">City</label>
+                <label class="prf-label">{{ 'user.profile.city' | translate }}</label>
                 @if (editMode()) {
                   <app-searchable-select formControlName="cityId"
                     [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
                     [placeholder]="profileForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
-                    searchPlaceholder="Type to search cities…"
+                    [searchPlaceholder]="'components.search.cities' | translate"
                     (ngModelChange)="onCityChange($event)"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="u.location || 'Not set'" readonly />
                 }
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="pincode">Pincode</label>
+                <label class="prf-label" for="pincode">{{ 'user.profile.pincode' | translate }}</label>
                 <input id="pincode" type="text" class="form-control" formControlName="pincode" maxlength="12" [readonly]="!editMode()" [placeholder]="countryConfig()?.postalCode?.format || ''" />
                 @if (profileForm.get('pincode')?.hasError('postalFormat') && profileForm.get('pincode')?.dirty) {
                   <div class="invalid-feedback d-block">Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}.</div>
@@ -207,13 +211,13 @@
           <div class="prf-section prf-section-last">
             <div class="prf-section-header">
               <span class="prf-section-badge"><i class="bi bi-briefcase"></i></span>
-              <span class="prf-section-title">Professional &amp; Links</span>
+              <span class="prf-section-title">{{ 'user.profile.professionalAmpLinks' | translate }}</span>
             </div>
             <div class="row g-3">
               <div class="col-12">
-                <label class="prf-label">Profession / Student Status</label>
+                <label class="prf-label">{{ 'user.profile.professionStudentStatus' | translate }}</label>
                 @if (editMode()) {
-                  <app-searchable-select formControlName="occupationType" [options]="occupationTypeOptions" placeholder="Select status"></app-searchable-select>
+                  <app-searchable-select formControlName="occupationType" [options]="occupationTypeOptions" [placeholder]="'user.profile.selectStatus' | translate"></app-searchable-select>
                 } @else {
                   <input type="text" class="form-control" [value]="occupationType() === 'STUDENT' ? 'Student' : 'Professional'" readonly />
                 }
@@ -221,35 +225,35 @@
 
               @if (occupationType() !== 'STUDENT') {
                 <div class="col-md-6">
-                  <label class="prf-label" for="occupation">Occupation</label>
-                  <input id="occupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Software Engineer" />
+                  <label class="prf-label" for="occupation">{{ 'user.profile.occupation' | translate }}</label>
+                  <input id="occupation" type="text" class="form-control" formControlName="occupation" maxlength="100" [readonly]="!editMode()" [placeholder]="'user.profile.eGSoftwareEngineer' | translate" />
                 </div>
                 <div class="col-md-6">
-                  <label class="prf-label" for="company">Company</label>
-                  <input id="company" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" placeholder="e.g. Acme Inc." />
+                  <label class="prf-label" for="company">{{ 'user.profile.company' | translate }}</label>
+                  <input id="company" type="text" class="form-control" formControlName="company" maxlength="100" [readonly]="!editMode()" [placeholder]="'user.profile.eGAcmeInc' | translate" />
                 </div>
               } @else {
                 <div class="col-md-6">
-                  <label class="prf-label" for="institution">Institution</label>
-                  <input id="institution" type="text" class="form-control" formControlName="institution" maxlength="150" [readonly]="!editMode()" placeholder="e.g. Anna University" />
+                  <label class="prf-label" for="institution">{{ 'user.profile.institution' | translate }}</label>
+                  <input id="institution" type="text" class="form-control" formControlName="institution" maxlength="150" [readonly]="!editMode()" [placeholder]="'user.profile.eGAnnaUniversity' | translate" />
                 </div>
                 <div class="col-md-6">
-                  <label class="prf-label" for="course">Course / Major</label>
-                  <input id="course" type="text" class="form-control" formControlName="course" maxlength="150" [readonly]="!editMode()" placeholder="e.g. B.Tech Computer Science" />
+                  <label class="prf-label" for="course">{{ 'user.profile.courseMajor' | translate }}</label>
+                  <input id="course" type="text" class="form-control" formControlName="course" maxlength="150" [readonly]="!editMode()" [placeholder]="'user.profile.eGBTechComputer' | translate" />
                 </div>
                 <div class="col-md-6">
-                  <label class="prf-label" for="graduationYear">Graduation Year</label>
-                  <input id="graduationYear" type="number" class="form-control" formControlName="graduationYear" min="1950" max="2100" [readonly]="!editMode()" placeholder="e.g. 2027" />
+                  <label class="prf-label" for="graduationYear">{{ 'user.profile.graduationYear' | translate }}</label>
+                  <input id="graduationYear" type="number" class="form-control" formControlName="graduationYear" min="1950" max="2100" [readonly]="!editMode()" [placeholder]="'user.profile.graduationYearPlaceholder' | translate" />
                 </div>
               }
 
               <div class="col-md-6">
-                <label class="prf-label" for="website">Website</label>
-                <input id="website" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" placeholder="https://example.com" />
+                <label class="prf-label" for="website">{{ 'user.profile.website' | translate }}</label>
+                <input id="website" type="url" class="form-control" formControlName="website" maxlength="200" [readonly]="!editMode()" [placeholder]="'user.profile.httpsExampleCom' | translate" />
               </div>
               <div class="col-md-6">
-                <label class="prf-label" for="linkedinUrl">LinkedIn</label>
-                <input id="linkedinUrl" type="url" class="form-control" formControlName="linkedinUrl" maxlength="200" [readonly]="!editMode()" placeholder="https://linkedin.com/in/username" />
+                <label class="prf-label" for="linkedinUrl">{{ 'user.profile.linkedin' | translate }}</label>
+                <input id="linkedinUrl" type="url" class="form-control" formControlName="linkedinUrl" maxlength="200" [readonly]="!editMode()" [placeholder]="'user.profile.httpsLinkedinComUsername' | translate" />
               </div>
             </div>
           </div>
@@ -259,9 +263,9 @@
         <div class="prf-section prf-section-last">
           <div class="prf-section-header">
             <span class="prf-section-badge"><i class="bi bi-key"></i></span>
-            <span class="prf-section-title">Change Password</span>
+            <span class="prf-section-title">{{ 'user.profile.changePassword' | translate }}</span>
             <button class="prf-btn prf-btn--ghost ms-auto" (click)="togglePasswordSection()">
-              <i class="bi bi-key"></i>Change Password
+              <i class="bi bi-key"></i>{{ 'user.profile.changePassword' | translate }}
             </button>
           </div>
         </div>
@@ -272,17 +276,17 @@
     <!-- ==================== MY BUSINESSES TAB ==================== -->
     @if (activeTab() === 'businesses') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Businesses" icon="bi-shop" [showEdit]="false"
-        actionLabel="Add Business" actionIcon="bi-plus-lg" (action)="openAddBusiness()">
+      <app-profile-info-card [title]="'user.profile.myBusinesses' | translate" icon="bi-shop" [showEdit]="false"
+        [actionLabel]="'components.emptyState.addBusiness' | translate" actionIcon="bi-plus-lg" (action)="openAddBusiness()">
         @if (loadingBusinesses()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
-            <p class="text-muted small mt-2">Loading businesses...</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.loadingBusinesses' | translate }}</p>
           </div>
         } @else if (!myBusinesses().length) {
           <div class="text-center py-4">
             <i class="bi bi-shop text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
-            <p class="text-muted small mt-2">You haven't listed any businesses yet.</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.havenTListedAnyBusinesses' | translate }}</p>
           </div>
         } @else {
           <div class="d-flex flex-column gap-3">
@@ -301,19 +305,19 @@
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ biz.name }}</h6>
                       @if (biz.isActive) {
-                        <span class="prf-badge prf-badge--active">Active</span>
+                        <span class="prf-badge prf-badge--active">{{ 'common.active' | translate }}</span>
                       } @else {
-                        <span class="prf-badge prf-badge--inactive">Inactive</span>
+                        <span class="prf-badge prf-badge--inactive">{{ 'common.inactive' | translate }}</span>
                       }
                     </div>
                     @if (biz.address) { <small class="prf-item__meta">{{ biz.address }}</small> }
                   </div>
                 </div>
                 <div class="prf-item__actions" (click)="$event.stopPropagation()">
-                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditBusiness(biz.id)" aria-label="Edit business">
+                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditBusiness(biz.id)" [attr.aria-label]="'user.profile.editBusiness' | translate">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteBusiness(biz)" aria-label="Delete business">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteBusiness(biz)" [attr.aria-label]="'user.profile.deleteBusiness' | translate">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -328,17 +332,17 @@
     <!-- ==================== MY COMMUNITIES TAB ==================== -->
     @if (activeTab() === 'communities') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Communities" icon="bi-people" [showEdit]="false"
-        actionLabel="Add Community" actionIcon="bi-plus-lg" (action)="openAddCommunity()">
+      <app-profile-info-card [title]="'user.profile.myCommunities' | translate" icon="bi-people" [showEdit]="false"
+        [actionLabel]="'components.emptyState.addCommunity' | translate" actionIcon="bi-plus-lg" (action)="openAddCommunity()">
         @if (loadingCommunities()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
-            <p class="text-muted small mt-2">Loading communities...</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.loadingCommunities' | translate }}</p>
           </div>
         } @else if (!myCommunities().length) {
           <div class="text-center py-4">
             <i class="bi bi-people text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
-            <p class="text-muted small mt-2">You haven't created any communities yet.</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.havenTCreatedAnyCommunities' | translate }}</p>
           </div>
         } @else {
           <div class="d-flex flex-column gap-3">
@@ -357,19 +361,19 @@
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ community.name }}</h6>
                       @if (community.isActive ?? community.is_active) {
-                        <span class="prf-badge prf-badge--active">Active</span>
+                        <span class="prf-badge prf-badge--active">{{ 'common.active' | translate }}</span>
                       } @else {
-                        <span class="prf-badge prf-badge--inactive">Inactive</span>
+                        <span class="prf-badge prf-badge--inactive">{{ 'common.inactive' | translate }}</span>
                       }
                     </div>
                     <small class="prf-item__meta">{{ community._count?.members ?? 0 }} members</small>
                   </div>
                 </div>
                 <div class="prf-item__actions" (click)="$event.stopPropagation()">
-                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditCommunity(community.id)" aria-label="Edit community">
+                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditCommunity(community.id)" [attr.aria-label]="'user.profile.editCommunity' | translate">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteCommunity(community)" aria-label="Delete community">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteCommunity(community)" [attr.aria-label]="'user.profile.deleteCommunity' | translate">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -384,17 +388,17 @@
     <!-- ==================== MY JOBS TAB ==================== -->
     @if (activeTab() === 'jobs') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Jobs" icon="bi-briefcase" [showEdit]="false"
-        actionLabel="Add Job" actionIcon="bi-plus-lg" (action)="goToAddJob()">
+      <app-profile-info-card [title]="'user.profile.myJobs' | translate" icon="bi-briefcase" [showEdit]="false"
+        [actionLabel]="'components.emptyState.addJob' | translate" actionIcon="bi-plus-lg" (action)="goToAddJob()">
         @if (loadingJobs()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
-            <p class="text-muted small mt-2">Loading jobs...</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.loadingJobs' | translate }}</p>
           </div>
         } @else if (!myJobs().length) {
           <div class="text-center py-4">
             <i class="bi bi-briefcase text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
-            <p class="text-muted small mt-2">You haven't posted any jobs yet.</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.havenTPostedAnyJobs' | translate }}</p>
           </div>
         } @else {
           <div class="d-flex flex-column gap-3">
@@ -412,14 +416,14 @@
                   <div class="prf-item__body">
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ job.title }}</h6>
-                      @if (job.jobType) { <span class="prf-badge prf-badge--neutral">{{ job.jobType }}</span> }
+                      @if (job.jobType) { <span class="prf-badge prf-badge--neutral">{{ job.jobType | enumLabel:'jobType' }}</span> }
                     </div>
                     @if (job.companyName) { <small class="prf-item__meta prf-item__meta--company"><i class="bi bi-building"></i>{{ job.companyName }}</small> }
                     <small class="prf-item__meta">{{ job.location }} &middot; Posted {{ job.createdAt | date:'mediumDate' }}</small>
                   </div>
                 </div>
                 <div class="prf-item__actions" (click)="$event.stopPropagation()">
-                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" aria-label="Delete job">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingJobId() === job.id" (click)="deleteJob(job.id)" [attr.aria-label]="'user.profile.deleteJob' | translate">
                     @if (deletingJobId() === job.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -434,16 +438,16 @@
     <!-- ==================== MY POSTS TAB ==================== -->
     @if (activeTab() === 'posts') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Posts" icon="bi-file-post" [showEdit]="false">
+      <app-profile-info-card [title]="'user.profile.myPosts' | translate" icon="bi-file-post" [showEdit]="false">
         @if (loadingPosts()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
-            <p class="text-muted small mt-2">Loading posts...</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.loadingPosts' | translate }}</p>
           </div>
         } @else if (!myPosts().length) {
           <div class="text-center py-4">
             <i class="bi bi-file-post text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
-            <p class="text-muted small mt-2">You haven't created any posts yet.</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.havenTCreatedAnyPosts' | translate }}</p>
           </div>
         } @else {
           <div class="d-flex flex-wrap gap-2 mb-3">
@@ -456,17 +460,17 @@
               <div class="prf-item">
                 <div class="prf-item__lead">
                   @if (post.images?.length) {
-                    <img [src]="post.images[0] | imageUrl" class="prf-item__thumb" alt="Post image" loading="lazy" fetchpriority="auto" />
+                    <img [src]="post.images[0] | imageUrl" class="prf-item__thumb" [alt]="'user.profile.postImage' | translate" loading="lazy" fetchpriority="auto" />
                   }
                   <div class="prf-item__body">
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ post.community?.name }}</h6>
                       @if (post.status === 'PENDING') {
-                        <span class="prf-badge prf-badge--pending">Pending approval</span>
+                        <span class="prf-badge prf-badge--pending">{{ 'user.profile.pendingApproval' | translate }}</span>
                       } @else if (post.status === 'APPROVED') {
-                        <span class="prf-badge prf-badge--active">Approved</span>
+                        <span class="prf-badge prf-badge--active">{{ 'common.approved' | translate }}</span>
                       } @else if (post.status === 'REJECTED') {
-                        <span class="prf-badge prf-badge--rejected">Rejected</span>
+                        <span class="prf-badge prf-badge--rejected">{{ 'common.rejected' | translate }}</span>
                       }
                     </div>
                     <p class="prf-item__desc">{{ post.content }}</p>
@@ -477,7 +481,7 @@
                   </div>
                 </div>
                 <div class="prf-item__actions">
-                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" aria-label="Delete post">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingPostId() === post.id" (click)="deletePost(post.id)" [attr.aria-label]="'user.profile.deletePost' | translate">
                     @if (deletingPostId() === post.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -492,17 +496,17 @@
     <!-- ==================== MY EVENTS TAB ==================== -->
     @if (activeTab() === 'events') {
       <div class="tab-enter">
-      <app-profile-info-card title="My Events" icon="bi-calendar-event" [showEdit]="false"
-        actionLabel="Add Event" actionIcon="bi-plus-lg" (action)="goToAddEvent()">
+      <app-profile-info-card [title]="'user.profile.myEvents' | translate" icon="bi-calendar-event" [showEdit]="false"
+        [actionLabel]="'components.emptyState.addEvent' | translate" actionIcon="bi-plus-lg" (action)="goToAddEvent()">
         @if (loadingEvents()) {
           <div class="text-center py-4">
             <div class="spinner-border spinner-border-sm text-primary"></div>
-            <p class="text-muted small mt-2">Loading events...</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.loadingEvents' | translate }}</p>
           </div>
         } @else if (!myEvents().length) {
           <div class="text-center py-4">
             <i class="bi bi-calendar-event text-muted" style="font-size: 2rem; opacity: 0.3;"></i>
-            <p class="text-muted small mt-2">You haven't created any events yet.</p>
+            <p class="text-muted small mt-2">{{ 'user.profile.havenTCreatedAnyEvents' | translate }}</p>
           </div>
         } @else {
           <div class="d-flex flex-column gap-3">
@@ -521,11 +525,11 @@
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ event.title }}</h6>
                       @if (event.status === 'PENDING') {
-                        <span class="prf-badge prf-badge--pending">Pending approval</span>
+                        <span class="prf-badge prf-badge--pending">{{ 'user.profile.pendingApproval' | translate }}</span>
                       } @else if (event.status === 'APPROVED') {
-                        <span class="prf-badge prf-badge--active">Approved</span>
+                        <span class="prf-badge prf-badge--active">{{ 'common.approved' | translate }}</span>
                       } @else if (event.status === 'REJECTED') {
-                        <span class="prf-badge prf-badge--rejected">Rejected</span>
+                        <span class="prf-badge prf-badge--rejected">{{ 'common.rejected' | translate }}</span>
                       }
                     </div>
                     <small class="prf-item__meta">{{ event.eventDate | date:'mediumDate' }} &middot; {{ event.location || event.address || event.country }}</small>
@@ -535,7 +539,7 @@
                   </div>
                 </div>
                 <div class="prf-item__actions" (click)="$event.stopPropagation()">
-                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingEventId() === event.id" (click)="deleteEvent(event.id)" aria-label="Delete event">
+                  <button class="prf-btn prf-btn--icon prf-btn--danger" [disabled]="deletingEventId() === event.id" (click)="deleteEvent(event.id)" [attr.aria-label]="'user.profile.deleteEvent' | translate">
                     @if (deletingEventId() === event.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash"></i> }
                   </button>
                 </div>
@@ -550,7 +554,7 @@
       </div><!-- /prf-main -->
 
       <aside class="prf-sidebar">
-        <app-profile-info-card title="Profile Completion" icon="bi-graph-up-arrow" [showEdit]="false">
+        <app-profile-info-card [title]="'user.profile.profileCompletion' | translate" icon="bi-graph-up-arrow" [showEdit]="false">
           <div class="prf-completion">
             <div class="prf-completion__ring" [ngClass]="completionRingClass()"
               [style.--ring-pct]="profileCompletion()" [style.--ring-clr]="completionRingColor()">
@@ -567,10 +571,10 @@
 
             @if (completedItems().length) {
               <div class="prf-completion__list">
-                <span class="prf-completion__list-title">Completed</span>
+                <span class="prf-completion__list-title">{{ 'user.profile.completed' | translate }}</span>
                 <ul>
                   @for (item of completedItems(); track item.label) {
-                    <li class="is-done"><i class="bi bi-check-circle-fill"></i>{{ item.label }}</li>
+                    <li class="is-done"><i class="bi bi-check-circle-fill"></i>{{ item.label | translate }}</li>
                   }
                 </ul>
               </div>
@@ -578,10 +582,10 @@
 
             @if (pendingItems().length) {
               <div class="prf-completion__list">
-                <span class="prf-completion__list-title">Pending</span>
+                <span class="prf-completion__list-title">{{ 'common.pending' | translate }}</span>
                 <ul>
                   @for (item of pendingItems(); track item.label) {
-                    <li class="is-pending"><i class="bi bi-circle"></i>{{ item.label }}</li>
+                    <li class="is-pending"><i class="bi bi-circle"></i>{{ item.label | translate }}</li>
                   }
                 </ul>
               </div>
@@ -608,10 +612,10 @@
             <i class="bi bi-key-fill"></i>
           </div>
           <div class="au-header__text cm-modal-header-inner">
-            <h5 class="au-header__title cm-modal-title" id="pwdModalTitle">Change Password</h5>
-            <p class="au-header__sub cm-modal-subtitle">Update the password used to sign in</p>
+            <h5 class="au-header__title cm-modal-title" id="pwdModalTitle">{{ 'user.profile.changePassword' | translate }}</h5>
+            <p class="au-header__sub cm-modal-subtitle">{{ 'user.profile.updatePasswordUsedSign' | translate }}</p>
           </div>
-          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" aria-label="Close">
+          <button type="button" class="au-close cm-close-btn" (click)="togglePasswordSection()" [attr.aria-label]="'common.close' | translate">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -621,30 +625,30 @@
           <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="au-form cm-form">
             <div class="cm-section cm-section-last">
               <div class="cm-field-group">
-                <label class="cm-label" for="currentPwd">Current Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="currentPwd">{{ 'user.profile.currentPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-lock cm-input-icon"></i>
-                  <input id="currentPwd" type="password" formControlName="currentPassword" class="cm-input" placeholder="Enter current password" />
+                  <input id="currentPwd" type="password" formControlName="currentPassword" class="cm-input" [placeholder]="'user.profile.enterCurrentPassword' | translate" />
                 </div>
               </div>
               <div class="cm-field-group">
-                <label class="cm-label" for="newPwd">New Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="newPwd">{{ 'user.profile.newPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-shield-lock cm-input-icon"></i>
-                  <input id="newPwd" type="password" formControlName="newPassword" class="cm-input" placeholder="At least 6 characters" />
+                  <input id="newPwd" type="password" formControlName="newPassword" class="cm-input" [placeholder]="'user.profile.least6Characters' | translate" />
                 </div>
                 @if (passwordForm.get('newPassword')?.hasError('minlength') && passwordForm.get('newPassword')?.dirty) {
-                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Must be at least 6 characters.</div>
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ 'user.profile.mustLeast6Characters' | translate }}</div>
                 }
               </div>
               <div class="cm-field-group">
-                <label class="cm-label" for="confirmPwd">Confirm Password <span class="cm-required">*</span></label>
+                <label class="cm-label" for="confirmPwd">{{ 'user.profile.confirmPassword' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-shield-check cm-input-icon"></i>
-                  <input id="confirmPwd" type="password" formControlName="confirmPassword" class="cm-input" placeholder="Re-enter new password" />
+                  <input id="confirmPwd" type="password" formControlName="confirmPassword" class="cm-input" [placeholder]="'user.profile.reEnterNewPassword' | translate" />
                 </div>
                 @if (passwordForm.get('confirmPassword')?.dirty && passwordForm.get('newPassword')?.value !== passwordForm.get('confirmPassword')?.value) {
-                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>Passwords do not match.</div>
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ 'user.profile.passwordsDoNotMatch' | translate }}</div>
                 }
               </div>
             </div>
@@ -654,7 +658,7 @@
         <!-- Modal Footer -->
         <div class="au-footer cm-modal-footer">
           <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="togglePasswordSection()" [disabled]="changingPassword()">
-            Cancel
+            {{ 'common.cancel' | translate }}
           </button>
           <button type="button" class="au-btn cm-btn-submit au-btn--primary"
             [disabled]="passwordForm.invalid || changingPassword()" [attr.aria-busy]="changingPassword()"

@@ -22,17 +22,17 @@
   <!-- ── Page Header ──────────────────────────────────────── -->
   <div class="jb-page-header">
     <div class="jb-page-header__left">
-      <h2 class="jb-page-header__title">Audit Log</h2>
-      <p class="jb-page-header__sub">A complete record of admin and user actions taken across the platform.</p>
+      <h2 class="jb-page-header__title">{{ 'admin.auditLog.auditLog' | translate }}</h2>
+      <p class="jb-page-header__sub">{{ 'admin.auditLog.completeRecordAdminUserActions' | translate }}</p>
     </div>
     <div class="jb-page-header__actions">
-      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportCSV()" [disabled]="exporting()" aria-label="Export audit log">
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportCSV()" [disabled]="exporting()" [attr.aria-label]="'admin.auditLog.exportAuditLog' | translate">
         @if (exporting()) {
           <span class="spinner-border spinner-border-sm me-1"></span>
         } @else {
           <i class="bi bi-download"></i>
         }
-        <span>Export CSV</span>
+        <span>{{ 'admin.auditLog.exportCsv' | translate }}</span>
       </button>
     </div>
   </div>
@@ -41,39 +41,39 @@
   <div class="jb-filter-panel">
     <div class="jb-select-wrap">
       <app-searchable-select [options]="actionFilterOptions" [ngModel]="filterAction()"
-        (ngModelChange)="setActionFilter($event)" placeholder="All Actions"
-        aria-label="Filter by action">
+        (ngModelChange)="setActionFilter($event)" [placeholder]="'admin.auditLog.allActions' | translate"
+        [attr.aria-label]="'admin.auditLog.filterByAction' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="resourceFilterOptions" [ngModel]="filterResource()"
-        (ngModelChange)="setResourceFilter($event)" placeholder="All Resources"
-        aria-label="Filter by resource">
+        (ngModelChange)="setResourceFilter($event)" [placeholder]="'admin.auditLog.allResources' | translate"
+        [attr.aria-label]="'admin.auditLog.filterByResource' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="actorFilterOptions()" [ngModel]="filterActorId()"
-        (ngModelChange)="setActorFilter($event)" placeholder="All Actors"
-        searchPlaceholder="Search actors…" aria-label="Filter by actor">
+        (ngModelChange)="setActorFilter($event)" [placeholder]="'admin.auditLog.allActors' | translate"
+        [searchPlaceholder]="'components.search.actors' | translate" [attr.aria-label]="'admin.auditLog.filterByActor' | translate">
       </app-searchable-select>
     </div>
 
     <div class="al-date-wrap">
-      <label class="al-date-label">From</label>
-      <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); onFilterChange()" [ngModelOptions]="{ standalone: true }" ariaLabel="From date" placeholder="From date"></app-date-input>
+      <label class="al-date-label">{{ 'admin.auditLog.from' | translate }}</label>
+      <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); onFilterChange()" [ngModelOptions]="{ standalone: true }" [ariaLabel]="'admin.auditLog.fromDate' | translate" [placeholder]="'admin.auditLog.fromDate' | translate"></app-date-input>
     </div>
 
     <div class="al-date-wrap">
-      <label class="al-date-label">To</label>
-      <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); onFilterChange()" [ngModelOptions]="{ standalone: true }" ariaLabel="To date" placeholder="To date"></app-date-input>
+      <label class="al-date-label">{{ 'admin.auditLog.to' | translate }}</label>
+      <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); onFilterChange()" [ngModelOptions]="{ standalone: true }" [ariaLabel]="'admin.auditLog.date' | translate" [placeholder]="'admin.auditLog.date' | translate"></app-date-input>
     </div>
 
     @if (activeFilterCount() > 0) {
-      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()" aria-label="Clear all filters">
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()" [attr.aria-label]="'admin.auditLog.clearAllFilters' | translate">
         <i class="bi bi-x-circle"></i>
-        <span>Clear</span>
+        <span>{{ 'common.clear' | translate }}</span>
         <span class="jb-badge-sm">{{ activeFilterCount() }}</span>
       </button>
     }
@@ -84,9 +84,9 @@
     <div class="jb-active-chips">
       @for (chip of activeFilterChips(); track chip.key) {
         <div class="jb-chip">
-          <span class="jb-chip__label">{{ chip.label }}</span>
+          <span class="jb-chip__label">{{ chip.label | translate }}</span>
           <button class="jb-chip__remove" (click)="removeFilter(chip.key)"
-            [attr.aria-label]="'Remove ' + chip.label + ' filter'">
+            [attr.aria-label]="'admin.auditLog.removeFilter' | translate:{ name: chip.label | translate }">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -112,14 +112,14 @@
           }
         </div>
         @if (activeFilterCount() > 0) {
-          <h5 class="al-empty__title">No results found</h5>
-          <p class="al-empty__desc">Try adjusting your filters.</p>
+          <h5 class="al-empty__title">{{ 'common.noResults' | translate }}</h5>
+          <p class="al-empty__desc">{{ 'admin.auditLog.tryAdjustingFilters' | translate }}</p>
           <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()">
-            <i class="bi bi-x-circle"></i> Clear all filters
+            <i class="bi bi-x-circle"></i> {{ 'admin.auditLog.clearAllFilters' | translate }}
           </button>
         } @else {
-          <h5 class="al-empty__title">No activity yet</h5>
-          <p class="al-empty__desc">Actions taken across the platform will appear here.</p>
+          <h5 class="al-empty__title">{{ 'admin.auditLog.noActivityYet' | translate }}</h5>
+          <p class="al-empty__desc">{{ 'admin.auditLog.actionsTakenAcrossPlatformWill' | translate }}</p>
         }
       </div>
     } @else {
@@ -128,18 +128,18 @@
           <table class="al-table">
             <thead>
               <tr>
-                <th class="al-th">Action</th>
-                <th class="al-th">Actor</th>
-                <th class="al-th d-none d-md-table-cell">Resource</th>
-                <th class="al-th d-none d-lg-table-cell">Details</th>
-                <th class="al-th">Time</th>
+                <th class="al-th">{{ 'admin.auditLog.action' | translate }}</th>
+                <th class="al-th">{{ 'admin.auditLog.actor' | translate }}</th>
+                <th class="al-th d-none d-md-table-cell">{{ 'admin.auditLog.resource' | translate }}</th>
+                <th class="al-th d-none d-lg-table-cell">{{ 'admin.auditLog.details' | translate }}</th>
+                <th class="al-th">{{ 'admin.auditLog.time' | translate }}</th>
                 <th class="al-th"></th>
               </tr>
             </thead>
             <tbody>
               @for (log of logs(); track log.id) {
                 <tr class="al-tr" (click)="openDetail(log)" tabindex="0"
-                  (keydown.enter)="openDetail(log)" role="button" aria-label="View log details">
+                  (keydown.enter)="openDetail(log)" role="button" [attr.aria-label]="'admin.auditLog.viewLogDetails' | translate">
                   <td class="al-td">
                     <div class="al-action-cell">
                       <span class="al-action-icon" [style.background]="getColor(log.action) + '18'">
@@ -161,7 +161,7 @@
                         <span class="al-actor-name">{{ log.actor.displayName || log.actor.userName }}</span>
                       </div>
                     } @else {
-                      <span class="al-actor-system">System</span>
+                      <span class="al-actor-system">{{ 'admin.auditLog.system' | translate }}</span>
                     }
                   </td>
                   <td class="al-td d-none d-md-table-cell">
@@ -183,16 +183,16 @@
       <div class="al-pagination">
         <div class="al-pagination__left">
           <span class="al-pagination__info">
-            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-            of <strong>{{ total() }}</strong> logs
+            {{ 'admin.auditLog.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            {{ 'admin.auditLog.of' | translate }} <strong>{{ total() }}</strong> {{ 'admin.auditLog.logs' | translate }}
           </span>
           <div class="al-pg-divider"></div>
           <div class="al-pagination__size">
-            <span>Rows per page</span>
+            <span>{{ 'admin.auditLog.rowsPerPage' | translate }}</span>
             <div class="jb-select-wrap jb-select-wrap--xs">
               <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
                 (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-                aria-label="Rows per page">
+                [attr.aria-label]="'admin.auditLog.rowsPerPage' | translate">
               </app-searchable-select>
             </div>
           </div>
@@ -200,11 +200,11 @@
 
         <div class="al-pagination__pages">
           <button class="al-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(1)" title="First page">
+            (click)="goToPage(1)" [title]="'admin.auditLog.firstPage' | translate">
             <i class="bi bi-chevron-double-left"></i>
           </button>
           <button class="al-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            (click)="goToPage(currentPage() - 1)" [title]="'admin.auditLog.previousPage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
           @for (p of getPages(); track p) {
@@ -213,11 +213,11 @@
               (click)="goToPage(p)">{{ p }}</button>
           }
           <button class="al-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(currentPage() + 1)" title="Next page">
+            (click)="goToPage(currentPage() + 1)" [title]="'admin.auditLog.nextPage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
           <button class="al-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(totalPages())" title="Last page">
+            (click)="goToPage(totalPages())" [title]="'admin.auditLog.lastPage' | translate">
             <i class="bi bi-chevron-double-right"></i>
           </button>
         </div>
@@ -233,7 +233,7 @@
 ══════════════════════════════════════════════════════════════ -->
 @if (selectedLog(); as log) {
   <div class="al-drawer-backdrop" (click)="closeDetail()"></div>
-  <div class="al-drawer" role="dialog" aria-label="Audit log details">
+  <div class="al-drawer" role="dialog" [attr.aria-label]="'admin.auditLog.auditLogDetails' | translate">
     <div class="al-drawer__header">
       <div class="al-action-icon al-action-icon--lg" [style.background]="getColor(log.action) + '18'">
         <i class="bi {{ getIcon(log.action) }}" [style.color]="getColor(log.action)"></i>
@@ -242,7 +242,7 @@
         <h5 class="al-drawer__title">{{ formatAction(log.action) }}</h5>
         <p class="al-drawer__sub">{{ log.createdAt | date:'medium' }}</p>
       </div>
-      <button class="al-drawer__close" (click)="closeDetail()" aria-label="Close">
+      <button class="al-drawer__close" (click)="closeDetail()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -250,7 +250,7 @@
     <div class="al-drawer__body">
 
       <div class="al-drawer__row">
-        <span class="al-drawer__label">Actor</span>
+        <span class="al-drawer__label">{{ 'admin.auditLog.actor' | translate }}</span>
         @if (log.actor) {
           <div class="al-actor-cell">
             @if (log.actor.avatar) {
@@ -262,12 +262,12 @@
             <span class="al-actor-handle">&#64;{{ log.actor.userName }}</span>
           </div>
         } @else {
-          <span class="al-actor-system">System</span>
+          <span class="al-actor-system">{{ 'admin.auditLog.system' | translate }}</span>
         }
       </div>
 
       <div class="al-drawer__row">
-        <span class="al-drawer__label">Resource</span>
+        <span class="al-drawer__label">{{ 'admin.auditLog.resource' | translate }}</span>
         <div class="al-drawer__value">
           @if (log.resource) {
             <span class="al-resource-chip">{{ formatResource(log.resource) }}</span>
@@ -277,25 +277,25 @@
           }
           @if (hasResourceLink(log)) {
             <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="viewResource(log)">
-              <i class="bi bi-box-arrow-up-right"></i> View Record
+              <i class="bi bi-box-arrow-up-right"></i> {{ 'admin.auditLog.viewRecord' | translate }}
             </button>
           }
         </div>
       </div>
 
       <div class="al-drawer__row">
-        <span class="al-drawer__label">IP Address</span>
+        <span class="al-drawer__label">{{ 'admin.auditLog.ipAddress' | translate }}</span>
         <span class="al-drawer__value">{{ log.ipAddress || 'Unknown' }}</span>
       </div>
 
       <div class="al-drawer__row">
-        <span class="al-drawer__label">Device</span>
+        <span class="al-drawer__label">{{ 'admin.auditLog.device' | translate }}</span>
         <span class="al-drawer__value">{{ describeUserAgent(log.userAgent) }}</span>
       </div>
 
       @if (metadataEntries(log).length > 0) {
         <div class="al-drawer__row al-drawer__row--block">
-          <span class="al-drawer__label">Details</span>
+          <span class="al-drawer__label">{{ 'admin.auditLog.details' | translate }}</span>
           <div class="al-meta-table">
             @for (entry of metadataEntries(log); track entry.key) {
               <div class="al-meta-table__row">

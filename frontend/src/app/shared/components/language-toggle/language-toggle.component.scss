@@ -1,0 +1,76 @@
+@use '../../../../assets/styles/index' as *;
+
+// Sized to sit alongside the top-header's other actions (the 36px
+// .theme-toggle-btn and the notification bell) rather than read as a
+// visually distinct control.
+//
+// Colours resolve through `--lang-toggle-*` custom properties so the landing
+// page and the auth stage — which run their own `--lp-*` / `--auth-*`
+// palettes, independent of the global tokens — can restyle the pill without
+// forking the markup. Defaults are the global design tokens.
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: var(--lang-toggle-height, 36px);
+  padding: 3px;
+  border-radius: 100px;
+  background: var(--lang-toggle-bg, transparent);
+  border: var(--lang-toggle-border-width, 1px) solid var(--lang-toggle-border, #{$color-border});
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background $transition-fast $transition-easing,
+              border-color $transition-fast $transition-easing;
+
+  &:hover {
+    background: var(--lang-toggle-hover-bg, #{$color-bg-hover});
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--lang-toggle-active-bg, #{$color-primary});
+    outline-offset: 2px;
+  }
+
+  // Full-width variant for mobile nav drawers.
+  &--block {
+    width: 100%;
+    justify-content: center;
+    height: var(--lang-toggle-height-block, 48px);
+    padding: 4px;
+  }
+}
+
+.lang-toggle-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 11px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--lang-toggle-color, #{$navbar-icon-color});
+  background: transparent;
+  transition: background $transition-fast $transition-easing,
+              color $transition-fast $transition-easing;
+
+  .lang-toggle--block & {
+    font-size: 0.88rem;
+    padding: 0 22px;
+  }
+
+  &.active {
+    // Always dark ink on the amber pill, in both themes.
+    background: var(--lang-toggle-active-bg, #{$color-primary});
+    color: var(--lang-toggle-active-color, #1C1917);
+  }
+}
+
+.lang-toggle-divider {
+  width: 1px;
+  height: 16px;
+  flex-shrink: 0;
+  background: var(--lang-toggle-border, #{$color-border});
+}

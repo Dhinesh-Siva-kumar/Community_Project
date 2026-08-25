@@ -24,6 +24,8 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { TranslatePipe } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -44,8 +46,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
     ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent,
     BusinessFormModalComponent, BusinessDeleteModalComponent,
     CommunityFormModalComponent, CommunityDeleteModalComponent,
-    ImageUrlPipe,
-  ],
+    ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -170,16 +171,16 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     const u = this.user();
     if (!u) return [];
     return [
-      { label: 'Username',              done: !!u.userName },
-      { label: 'Display Name',          done: !!u.displayName },
-      { label: 'Email',                 done: !!u.email },
-      { label: 'Phone Number',          done: !!u.phoneNo },
-      { label: 'Profile Photo',         done: !!u.avatar },
-      { label: 'Bio',                   done: !!u.bio },
-      { label: 'Location',              done: !!u.location },
-      { label: 'Pincode',               done: !!u.pincode },
-      { label: 'Interests',             done: u.interests.length > 0 },
-      { label: 'Professional Category', done: !!u.professionalCategory },
+      { label: 'user.profile.checklist.username',    done: !!u.userName },
+      { label: 'user.profile.checklist.displayName', done: !!u.displayName },
+      { label: 'user.profile.checklist.email',       done: !!u.email },
+      { label: 'user.profile.checklist.phone',       done: !!u.phoneNo },
+      { label: 'user.profile.checklist.photo',       done: !!u.avatar },
+      { label: 'user.profile.checklist.bio',         done: !!u.bio },
+      { label: 'user.profile.checklist.location',    done: !!u.location },
+      { label: 'user.profile.checklist.pincode',     done: !!u.pincode },
+      { label: 'user.profile.checklist.interests',   done: u.interests.length > 0 },
+      { label: 'user.profile.checklist.category',    done: !!u.professionalCategory },
     ];
   });
 
@@ -202,12 +203,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   // dashboard equivalent, so it's left to fall back to the tab bar's
   // default brand amber.
   tabs: ProfileTab[] = [
-    { id: 'personal',    label: 'Personal Info',   icon: 'bi-person' },
-    { id: 'communities', label: 'My Communities',  icon: 'bi-people',         color: '#16A34A', bgColor: '#DCFCE7' },
-    { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop',           color: '#2563EB', bgColor: '#DBEAFE' },
-    { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase',     color: '#0D9488', bgColor: '#CCFBF1' },
-    { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post',     color: '#F59E0B', bgColor: '#FEF3C7' },
-    { id: 'events',      label: 'My Events',        icon: 'bi-calendar-event', color: '#7C3AED', bgColor: '#EDE9FE' },
+    { id: 'personal',    label: 'user.profile.tab.personal',   icon: 'bi-person' },
+    { id: 'communities', label: 'user.profile.tab.communities',  icon: 'bi-people',         color: '#16A34A', bgColor: '#DCFCE7' },
+    { id: 'businesses',  label: 'user.profile.tab.businesses',   icon: 'bi-shop',           color: '#2563EB', bgColor: '#DBEAFE' },
+    { id: 'jobs',        label: 'user.profile.tab.jobs',          icon: 'bi-briefcase',     color: '#0D9488', bgColor: '#CCFBF1' },
+    { id: 'posts',       label: 'user.profile.tab.posts',         icon: 'bi-file-post',     color: '#F59E0B', bgColor: '#FEF3C7' },
+    { id: 'events',      label: 'user.profile.tab.events',        icon: 'bi-calendar-event', color: '#7C3AED', bgColor: '#EDE9FE' },
   ];
 
   profCatOptions: SelectOption[] = [
@@ -217,8 +218,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   ].map(c => ({ value: c, label: c }));
 
   occupationTypeOptions: SelectOption[] = [
-    { value: 'PROFESSIONAL', label: 'Professional' },
-    { value: 'STUDENT',      label: 'Student' },
+    { value: 'PROFESSIONAL', label: 'user.profile.occupationOption.professional' },
+    { value: 'STUDENT',      label: 'user.profile.occupationOption.student' },
   ];
 
   constructor() {
@@ -432,7 +433,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('user.profile.toast.failedLoadCountryAddressDetails'),
     });
   }
 
@@ -565,9 +566,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       next: (user) => {
         this.user.set(user); this.authService.currentUser.set(user);
         this.editMode.set(false); this.avatarFile.set(null);
-        this.toast.success('Profile updated successfully'); this.saving.set(false);
+        this.toast.success('user.profile.toast.profileUpdatedSuccessfully'); this.saving.set(false);
       },
-      error: () => { this.toast.error('Failed to update profile'); this.saving.set(false); },
+      error: () => { this.toast.error('user.profile.toast.failedUpdateProfile'); this.saving.set(false); },
     });
   }
 
@@ -576,11 +577,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   changePassword(): void {
     if (this.passwordForm.invalid) return;
     const { newPassword, confirmPassword } = this.passwordForm.value;
-    if (newPassword !== confirmPassword) { this.toast.error('Passwords do not match'); return; }
+    if (newPassword !== confirmPassword) { this.toast.error('user.profile.toast.passwordsDoNotMatch'); return; }
     this.changingPassword.set(true);
     this.userService.updateProfile({ password: newPassword }).subscribe({
-      next: () => { this.toast.success('Password changed successfully'); this.showPasswordSection.set(false); this.passwordForm.reset(); this.changingPassword.set(false); },
-      error: () => { this.toast.error('Failed to change password'); this.changingPassword.set(false); },
+      next: () => { this.toast.success('user.profile.toast.passwordChangedSuccessfully'); this.showPasswordSection.set(false); this.passwordForm.reset(); this.changingPassword.set(false); },
+      error: () => { this.toast.error('user.profile.toast.failedChangePassword'); this.changingPassword.set(false); },
     });
   }
 
@@ -680,8 +681,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (!confirm('Delete this job?')) return;
     this.deletingJobId.set(id);
     this.jobService.deleteJob(id).subscribe({
-      next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('Job deleted'); this.deletingJobId.set(null); },
-      error: () => { this.toast.error('Failed to delete job'); this.deletingJobId.set(null); },
+      next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('user.profile.toast.jobDeleted'); this.deletingJobId.set(null); },
+      error: () => { this.toast.error('user.profile.toast.failedDeleteJob'); this.deletingJobId.set(null); },
     });
   }
 
@@ -713,8 +714,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (!confirm('Delete this post?')) return;
     this.deletingPostId.set(id);
     this.postService.deletePost(id).subscribe({
-      next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('Post deleted'); this.deletingPostId.set(null); },
-      error: () => { this.toast.error('Failed to delete post'); this.deletingPostId.set(null); },
+      next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('user.profile.toast.postDeleted'); this.deletingPostId.set(null); },
+      error: () => { this.toast.error('user.profile.toast.failedDeletePost'); this.deletingPostId.set(null); },
     });
   }
 
@@ -730,8 +731,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (!confirm('Delete this event?')) return;
     this.deletingEventId.set(id);
     this.eventService.deleteEvent(id).subscribe({
-      next: () => { this.myEvents.update(l => l.filter(e => e.id !== id)); this.toast.success('Event deleted'); this.deletingEventId.set(null); },
-      error: () => { this.toast.error('Failed to delete event'); this.deletingEventId.set(null); },
+      next: () => { this.myEvents.update(l => l.filter(e => e.id !== id)); this.toast.success('user.profile.toast.eventDeleted'); this.deletingEventId.set(null); },
+      error: () => { this.toast.error('user.profile.toast.failedDeleteEvent'); this.deletingEventId.set(null); },
     });
   }
 }
