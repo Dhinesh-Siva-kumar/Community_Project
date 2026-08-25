@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { User } from '../../../core/models';
 import { ProfileAvatarComponent } from '../profile-avatar/profile-avatar.component';
 
 @Component({
   selector: 'app-profile-header',
   standalone: true,
-  imports: [CommonModule, ProfileAvatarComponent],
+  imports: [CommonModule, DatePipe, ProfileAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile-header.component.html',
   styleUrls: ['./profile-header.component.scss'],

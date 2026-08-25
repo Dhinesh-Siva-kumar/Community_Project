@@ -1,5 +1,6 @@
 ﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, map, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -23,6 +24,8 @@ import { DateInputComponent } from '../../../shared/components/date-input/date-i
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
 // Remembers the last selected business-list view mode (grid/table) across navigations.
 const LIST_VIEW_STORAGE_KEY = 'admin-business:listViewMode';
+// Remembers the last selected Category View / Business View scope across navigations.
+const SCOPE_STORAGE_KEY = 'admin-business:scope';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -65,7 +68,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -91,6 +94,13 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
 
   // View state
   currentView = signal<ViewState>('categories');
+  // "Category View" (browse via category cards) vs "Business View" (flat
+  // list of every business, regardless of category) — the toggle that sits
+  // in the search card before the Grid/List (or Grid/Table) switch. Drilling
+  // into a specific category (loadBusinesses with a category) still counts
+  // as "categories" scope for this toggle; only the flat cross-category
+  // list (loadBusinesses(null, ...)) counts as "business" scope.
+  businessScope = signal<'categories' | 'business'>('categories');
 
   // Floating header action (shows once scrolled past the page header)
   showHeaderFab = signal(false);
@@ -623,11 +633,16 @@ getCategoryAccent(icon?: string): string {
   ngOnInit(): void {
     this.restoreSavedViewMode();
     this.restoreSavedListViewMode();
+    this.restoreSavedBusinessScope();
     this.initForms();
     this.loadCountries();
     this.loadCategories();
     this.loadGeoCountries();
     this.loadPhoneCountries();
+    // Resume straight into the flat Business View if that's what was last
+    // selected — the default 'categories' currentView already covers the
+    // other case, so nothing extra is needed there.
+    if (this.businessScope() === 'business') this.loadBusinesses(null, true, false);
   }
 
   /** Resume the last selected grid/list view across navigations. */
@@ -650,6 +665,12 @@ getCategoryAccent(icon?: string): string {
   setListViewMode(mode: 'grid' | 'table'): void {
     this.listViewMode.set(mode);
     sessionStorage.setItem(LIST_VIEW_STORAGE_KEY, mode);
+  }
+
+  /** Resume the last selected Category View / Business View scope across navigations. */
+  private restoreSavedBusinessScope(): void {
+    const saved = sessionStorage.getItem(SCOPE_STORAGE_KEY);
+    if (saved === 'categories' || saved === 'business') this.businessScope.set(saved);
   }
 
   ngOnDestroy(): void {
@@ -688,14 +709,15 @@ getCategoryAccent(icon?: string): string {
       return;
     }
 
-    if (state?.view === 'list' && state.category) {
+    if (state?.view === 'list') {
       this.selectedBusiness.set(null);
-      this.loadBusinesses(state.category, true, false);
+      this.loadBusinesses(state.category ?? null, true, false);
       return;
     }
 
     // Fallback: categories view (also covers the initial entry, whose state is null).
     this.currentView.set('categories');
+    this.businessScope.set('categories');
     this.selectedCategory.set(null);
     this.selectedBusiness.set(null);
     this.businesses.set([]);
@@ -1138,12 +1160,13 @@ private initForms(): void {
     });
   }
 
-  loadBusinesses(category: BusinessCategory, resetPage = false, pushHistory = false, silent = false): void {
+  loadBusinesses(category: BusinessCategory | null, resetPage = false, pushHistory = false, silent = false): void {
     this.selectedCategory.set(category);
     this.currentView.set('list');
+    this.businessScope.set(category ? 'categories' : 'business');
     if (resetPage) this.currentPage.set(1);
     if (pushHistory) {
-      history.pushState({ view: 'list', category } satisfies BusinessNavState, '');
+      history.pushState({ view: 'list', category: category ?? undefined } satisfies BusinessNavState, '');
       // Only a genuine categories → list navigation (not an in-place filter/
       // sort/pagination refresh, which also calls this method) should reset
       // scroll — otherwise re-filtering while scrolled through results would
@@ -1154,12 +1177,12 @@ private initForms(): void {
     this.loadBusinessStatusCounts(category);
 
     const params: Record<string, any> = {
-      categoryId: category.id,
       page: this.currentPage(),
       limit: this.pageSize(),
       sortBy: this.sortBy(),
       sortDir: this.sortDir(),
     };
+    if (category) params['categoryId'] = category.id;
     if (this.filterSearch()) params['search'] = this.filterSearch();
     if (this.filterCountry()) params['country'] = this.filterCountry();
     if (this.filterPincode()) params['pincode'] = this.filterPincode();
@@ -1191,13 +1214,33 @@ private initForms(): void {
     });
   }
 
+  /** Switches between "Category View" (categories grid) and "Business View"
+   * (flat list of every business, regardless of category) — the toggle
+   * placed in the search card before the Grid/List switch. */
+  setBusinessScope(mode: 'categories' | 'business'): void {
+    sessionStorage.setItem(SCOPE_STORAGE_KEY, mode);
+    if (mode === 'categories') {
+      if (this.currentView() === 'categories') return;
+      this.businessScope.set('categories');
+      this.currentView.set('categories');
+      this.selectedCategory.set(null);
+      this.selectedBusiness.set(null);
+      history.pushState({ view: 'categories' } satisfies BusinessNavState, '');
+      this.scrollToTop();
+    } else {
+      if (this.currentView() === 'list' && !this.selectedCategory()) return;
+      this.loadBusinesses(null, true, true);
+    }
+  }
+
   /** Powers the List view's Total/Active/Inactive stat cards — three
    * lightweight `limit:1` calls scoped by category + every filter except
    * `status` itself, so the counts stay accurate regardless of which
    * status card (if any) is currently selected, instead of being derived
    * from whatever page `businesses()`/`totalItems()` currently holds. */
-  private loadBusinessStatusCounts(category: BusinessCategory): void {
-    const baseParams: Record<string, any> = { categoryId: category.id, page: 1, limit: 1 };
+  private loadBusinessStatusCounts(category: BusinessCategory | null): void {
+    const baseParams: Record<string, any> = { page: 1, limit: 1 };
+    if (category) baseParams['categoryId'] = category.id;
     if (this.filterSearch()) baseParams['search'] = this.filterSearch();
     if (this.filterCountry()) baseParams['country'] = this.filterCountry();
     if (this.filterPincode()) baseParams['pincode'] = this.filterPincode();
@@ -1235,8 +1278,8 @@ private initForms(): void {
   }
 
   applyFilters(): void {
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat, true);
+    if (this.currentView() !== 'list') return;
+    this.loadBusinesses(this.selectedCategory(), true);
   }
 
   /** Advanced Filters lives in a right-side drawer — while it's open, the
@@ -1337,8 +1380,7 @@ private initForms(): void {
   onPageSizeChange(size: number): void {
     this.pageSize.set(size);
     this.currentPage.set(1);
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat);
+    if (this.currentView() === 'list') this.loadBusinesses(this.selectedCategory());
   }
 
   clearAllFilters(): void {
@@ -1351,8 +1393,7 @@ private initForms(): void {
     this.filterDateTo.set('');
     this.activeQuickRange.set(null);
     this.showAdvancedFilters.set(false);
-    const cat = this.selectedCategory();
-    if (cat) this.loadBusinesses(cat, true);
+    if (this.currentView() === 'list') this.loadBusinesses(this.selectedCategory(), true);
   }
 
   clearFilters(): void {

@@ -1801,6 +1801,30 @@
   overflow: hidden;
 }
 
+// ── Category View / Business View scope toggle — sits before the Grid/List
+// (or Grid/Table) switch in the search card, same shell as .biz-view-toggle
+// but sized for a text + icon label instead of an icon-only square button. ──
+.biz-scope-toggle {
+  display: flex;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.biz-scope-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px; border: none;
+  background: $color-bg-light; color: $color-stone-500; font-size: 12.5px; font-weight: $font-weight-semibold;
+  cursor: pointer; white-space: nowrap;
+  @include transition-quick(all);
+  & + & { border-left: 1.5px solid $color-border; }
+  .bi { font-size: 0.85rem; }
+  &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &--active { background: $color-stone-900; color: #fff; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+}
+
 .biz-view-btn {
   width: 36px; height: 36px; border: none;
   background: $color-bg-light; color: $color-stone-500; font-size: 0.85rem;
@@ -1994,6 +2018,16 @@
   &--blocked { background: #fef2f2; color: $color-danger; }
   &--pending { background: $amber-50; color: #92400e; }
   &--rejected { background: rgba($color-danger, 0.1); color: $color-danger; }
+
+  // Pending badge doubles as a link to the Approval page — no underline,
+  // and a subtle hover so it still reads as clickable.
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+    @include transition-quick(all);
+    &:hover { background: rgba($amber-500, 0.22); color: #78350f; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
 }
 
 .um-actions-row {
@@ -2613,6 +2647,13 @@ $accents: (
     &--inactive { background: rgba(28,25,23,0.75);  color: rgba(255,255,255,0.9); }
     &--pending  { background: rgba(217,119,6,0.9);  color: #fff; }
     &--rejected { background: rgba($color-danger,0.9); color: #fff; }
+    // Pending badge doubles as a link to the Approval page.
+    &--link {
+      text-decoration: none; cursor: pointer;
+      @include transition-quick(all);
+      &:hover { background: rgba(180,83,9,0.95); }
+      &:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+    }
   }
   &__body { flex: 1; padding: $spacing-md $spacing-lg 0; display: flex; flex-direction: column; gap: 6px; }
   &__name { font-family: $font-family-header; font-size: 1.05rem; font-weight: $font-weight-bold; color: $color-stone-900; margin: 0; line-height: 1.3; }
@@ -2772,6 +2813,15 @@ $accents: (
   &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
   &--pending  { background: $amber-50; border: 1.5px solid $color-amber-200; color: #92400e; .bi { font-size: 7px; } }
   &--rejected { background: rgba($color-danger,0.10); border: 1.5px solid rgba($color-danger,0.25); color: $color-danger; .bi { font-size: 7px; } }
+
+  // Pending badge doubles as a link to the Approval page.
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+    @include transition-quick(all);
+    &:hover { background: rgba($amber-500, 0.22); color: #78350f; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  }
 }
 
 .bd-rejection-reason {

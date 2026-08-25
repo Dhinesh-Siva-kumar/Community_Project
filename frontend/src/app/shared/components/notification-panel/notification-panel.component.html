@@ -29,7 +29,7 @@
       <div class="np-list">
         @for (n of notificationService.notifications().slice(0, 8); track n.id) {
           <button type="button" class="np-item" [class.np-item-unread]="!n.isRead" (click)="open(n)">
-            <span class="np-item-icon" [style.background]="color(n) + '1F'" [style.color]="color(n)">
+            <span class="np-item-icon" [style.background]="bgColor(n)" [style.color]="color(n)">
               <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
             </span>
             <span class="np-item-body">

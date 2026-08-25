@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -51,6 +52,8 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   private authService       = inject(AuthService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
+  private route             = inject(ActivatedRoute);
+  private router            = inject(Router);
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -314,6 +317,29 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.requestGeolocation();
     this.loadMyPendingBusinessCount();
+
+    // Deep-link support — e.g. the Profile page's "My Businesses" tab
+    // navigates here with ?businessId=xxx to jump straight to that
+    // business's detail view.
+    this.route.queryParams.subscribe(params => {
+      const businessId = params['businessId'];
+      if (businessId) this.openBusinessFromQueryParam(businessId);
+    });
+  }
+
+  /** The target business may not be part of the currently loaded/filtered
+   * list — fetched directly rather than looked up in businesses(). */
+  private openBusinessFromQueryParam(id: string): void {
+    this.svc.getBusiness(id).subscribe({
+      next: biz => this.loadBusinessDetail(biz),
+      error: () => this.toast.error('Business not found or no longer available'),
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { businessId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   ngOnDestroy(): void {

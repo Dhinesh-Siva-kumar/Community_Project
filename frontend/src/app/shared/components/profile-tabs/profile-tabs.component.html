@@ -20,9 +20,9 @@
       (click)="select(tab)"
     >
       @if (tab.icon) {
-        <i [class]="'bi ' + tab.icon"></i>
+        <span class="tab-icon-chip"><i [class]="'bi ' + tab.icon"></i></span>
       }
-      {{ tab.label }}
+      <span class="tab-label">{{ tab.label }}</span>
       @if (tab.badge) {
         <span class="tab-badge">{{ tab.badge }}</span>
       }

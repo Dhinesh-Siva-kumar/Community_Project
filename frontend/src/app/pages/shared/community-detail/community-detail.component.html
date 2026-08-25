@@ -252,7 +252,7 @@
         <div class="cd-hero-info">
           <div class="cd-hero-title-row">
             <h4 class="cd-community-name">{{ community()!.name }}</h4>
-            @if (community()!.status !== 'REJECTED') {
+            @if (community()!.status === 'APPROVED') {
               <span class="cd-status-badge {{ getCommunityStatus().cls }}">
                 <span class="cd-status-dot"></span>
                 {{ getCommunityStatus().label }}
@@ -1867,8 +1867,8 @@
                   </div>
                 </div>
 
-                <!-- Status (not relevant once a community has been rejected) -->
-                @if (community()!.status !== 'REJECTED') {
+                <!-- Status (only relevant once a community has been approved — pending/rejected communities show the Approval row instead) -->
+                @if (community()!.status === 'APPROVED') {
                   <div class="cd-info-row cd-info-row--status info-item-animate" style="animation-delay:60ms">
                     <div class="cd-info-icon"><i class="bi bi-shield-fill-check"></i></div>
                     <div class="cd-info-content">

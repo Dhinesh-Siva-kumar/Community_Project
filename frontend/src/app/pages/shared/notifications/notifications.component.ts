@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ALL_NOTIFICATION_TYPES, Notification, NotificationType } from '../../../core/models';
-import { notificationIcon, notificationColor, notificationRoute, notificationTypeLabel } from '../../../shared/utils/notification-display';
+import { notificationIcon, notificationColor, notificationBgColor, notificationRoute, notificationTypeLabel } from '../../../shared/utils/notification-display';
 import { timeAgo } from '../../../shared/utils/time-ago';
 
 type ReadFilter = 'all' | 'unread';
@@ -94,6 +94,10 @@ export class NotificationsComponent implements OnInit {
 
   color(n: Notification): string {
     return notificationColor(n.type);
+  }
+
+  bgColor(n: Notification): string {
+    return notificationBgColor(n.type);
   }
 
   relativeTime(n: Notification): string {

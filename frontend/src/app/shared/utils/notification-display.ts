@@ -127,6 +127,20 @@ export function notificationColor(type: NotificationType): string {
   return COLORS[type] ?? '#78716C';
 }
 
+/**
+ * Icon badge background — the type color at low alpha, so it reads as a
+ * soft tint behind the (full-opacity) icon glyph rather than a solid fill.
+ * The green "approved" family (#16A34A) uses a fixed light-green pastel
+ * instead — the same one already used for "Active" status badges/stat
+ * tiles elsewhere in the app — rather than an alpha-blend of the base
+ * green, which still read as too saturated/dark against the white list.
+ */
+export function notificationBgColor(type: NotificationType): string {
+  const color = notificationColor(type);
+  if (color === '#16A34A') return '#DCFCE7';
+  return color + '1F'; // ~12%
+}
+
 export interface NotificationRoute {
   path: string[];
   queryParams?: Record<string, string>;

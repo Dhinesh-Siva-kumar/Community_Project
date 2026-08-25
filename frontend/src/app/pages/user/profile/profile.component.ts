@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserService } from '../../../core/services/user.service';
@@ -49,7 +49,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private businessService = inject(BusinessService);
@@ -60,6 +60,7 @@ export class UserProfileComponent implements OnInit {
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private geographyService = inject(GeographyService);
 
   user = signal<User | null>(null);
@@ -151,6 +152,20 @@ export class UserProfileComponent implements OnInit {
     return 'ring--start';
   });
 
+  /** Hex twin of completionRingClass()'s bands — feeds the conic-gradient
+   * progress ring's --ring-clr custom property (a CSS custom property can't
+   * resolve a SCSS variable, so the same stepped scale is duplicated here
+   * as literal hex from _colors.scss). */
+  completionRingColor = computed(() => {
+    const pct = this.profileCompletion();
+    if (pct >= 100) return '#16A34A'; // $color-success
+    if (pct >= 80)  return '#059669'; // $color-emerald-600
+    if (pct >= 60)  return '#0EA5E9'; // $color-info
+    if (pct >= 40)  return '#D97706'; // $color-primary-darker
+    if (pct >= 20)  return '#D97706'; // $color-warning
+    return '#DC2626';                 // $color-danger
+  });
+
   completionItems = computed(() => {
     const u = this.user();
     if (!u) return [];
@@ -180,13 +195,19 @@ export class UserProfileComponent implements OnInit {
     };
   });
 
+  // Per-tab accent (icon-chip fill + sliding indicator tint) — reuses the
+  // exact same colors as the User Dashboard's activity stat tiles
+  // (user-dashboard.component.ts's animatedStats) so a given feature reads
+  // as the same color everywhere in the app. Personal Info has no
+  // dashboard equivalent, so it's left to fall back to the tab bar's
+  // default brand amber.
   tabs: ProfileTab[] = [
     { id: 'personal',    label: 'Personal Info',   icon: 'bi-person' },
-    { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop' },
-    { id: 'communities', label: 'My Communities',  icon: 'bi-people' },
-    { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase' },
-    { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post' },
-    { id: 'events',      label: 'My Events',        icon: 'bi-calendar-event' },
+    { id: 'communities', label: 'My Communities',  icon: 'bi-people',         color: '#16A34A', bgColor: '#DCFCE7' },
+    { id: 'businesses',  label: 'My Businesses',   icon: 'bi-shop',           color: '#2563EB', bgColor: '#DBEAFE' },
+    { id: 'jobs',        label: 'My Jobs',          icon: 'bi-briefcase',     color: '#0D9488', bgColor: '#CCFBF1' },
+    { id: 'posts',       label: 'My Posts',         icon: 'bi-file-post',     color: '#F59E0B', bgColor: '#FEF3C7' },
+    { id: 'events',      label: 'My Events',        icon: 'bi-calendar-event', color: '#7C3AED', bgColor: '#EDE9FE' },
   ];
 
   profCatOptions: SelectOption[] = [
@@ -199,6 +220,22 @@ export class UserProfileComponent implements OnInit {
     { value: 'PROFESSIONAL', label: 'Professional' },
     { value: 'STUDENT',      label: 'Student' },
   ];
+
+  constructor() {
+    // Lock background scroll while any popup on this page is open — the
+    // Business/Community add & delete modals, and the Change Password
+    // popup.
+    effect(() => {
+      const open = this.showBusinessModal() || this.showDeleteBusinessModal()
+        || this.showCommunityModal() || this.showDeleteCommunityModal()
+        || this.showPasswordSection();
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
 
   ngOnInit(): void {
     this.profileForm = this.fb.group({
@@ -444,6 +481,46 @@ export class UserProfileComponent implements OnInit {
     if (id === 'events'      && !this.myEvents().length)      this.loadMyEvents();
   }
 
+  // ── Row-click navigation — Businesses/Communities/Jobs/Events rows jump
+  // to that item's own detail view rather than doing anything inline here. ──
+
+  /** Communities have a real detail route. */
+  goToCommunity(id: string): void {
+    this.router.navigate(['/user/community', id]);
+  }
+
+  /** Businesses have no standalone route — the list page's own "detail"
+   * is an in-page view switch, opened via a ?businessId= deep link it
+   * already knows how to consume. */
+  goToBusiness(id: string): void {
+    this.router.navigate(['/user/business'], { queryParams: { businessId: id } });
+  }
+
+  /** Jobs have no standalone route either — the list page expands the
+   * matching card's own inline detail accordion via a ?jobId= deep link. */
+  goToJob(id: string): void {
+    this.router.navigate(['/user/jobs'], { queryParams: { jobId: id } });
+  }
+
+  /** Events list everything inline — the list page scrolls to and briefly
+   * highlights the matching card via the ?eventId= deep link it already
+   * supports (e.g. from the dashboard calendar). */
+  goToEvent(id: string): void {
+    this.router.navigate(['/user/events'], { queryParams: { eventId: id } });
+  }
+
+  /** "Add Job"/"Add Event" — Jobs and Events don't have their own add
+   * forms here (they're sizeable, page-specific forms), so these hand off
+   * to the respective list page's own Add modal via a ?openAdd=1 deep
+   * link it already knows how to consume. */
+  goToAddJob(): void {
+    this.router.navigate(['/user/jobs'], { queryParams: { openAdd: 1 } });
+  }
+
+  goToAddEvent(): void {
+    this.router.navigate(['/user/events'], { queryParams: { openAdd: 1 } });
+  }
+
   toggleEdit(): void {
     this.editMode.update(v => !v);
     if (!this.editMode()) { const u = this.user(); if (u) this.patchForm(u); }
@@ -606,6 +683,22 @@ export class UserProfileComponent implements OnInit {
       next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('Job deleted'); this.deletingJobId.set(null); },
       error: () => { this.toast.error('Failed to delete job'); this.deletingJobId.set(null); },
     });
+  }
+
+  /** Fallback avatar for a job with no company logo/image — same hash-based
+   * palette as the main Jobs page's getAvatarColor(), so the two read as
+   * the same visual system. */
+  getJobAvatarColor(job: Job): string {
+    const colors = ['#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#F97316', '#06B6D4', '#EC4899', '#6366F1'];
+    const name = job.companyName ?? job.user?.userName ?? job.id ?? '';
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  getJobInitials(job: Job): string {
+    const name = job.companyName ?? job.user?.displayName ?? job.user?.userName ?? '?';
+    return name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   }
 
   loadMyPosts(): void {

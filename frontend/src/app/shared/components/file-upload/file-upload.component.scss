@@ -1,3 +1,5 @@
+@use '../../../../assets/styles/index' as *;
+
 :host {
   display: block;
 }
@@ -190,55 +192,87 @@
   align-items: center;
 }
 
+// Sized/colored to match the profile page's brand hero treatment (see
+// profile-header.component.scss) — this is the only consumer of the
+// "avatar" variant (profile-avatar.component.html), so it's safe to theme
+// with the app's amber tokens instead of the generic Bootstrap-blue
+// styling the other file-upload variants (drop-zone/gallery) still use.
+// No overflow:hidden here — the corner badge below deliberately hangs
+// past this element's edge, so circular clipping happens one level down
+// (on the image/overlay themselves) instead of on this container.
 .fu-avatar-ring {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  overflow: hidden;
   cursor: pointer;
-  border: 3px solid #dee2e6;
-  background: #f8f9fa;
+  border: 4px solid $color-bg-card;
+  background: $color-primary-light;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.2s;
+  box-shadow: $shadow-5;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 
   &:hover,
-  &:focus {
-    border-color: #0d6efd;
+  &:focus-visible {
     outline: none;
+    box-shadow: $shadow-5, 0 0 0 4px rgba($color-primary, 0.35);
+    transform: translateY(-1px);
   }
 }
 
 .fu-avatar-img {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
   display: block;
 }
 
 .fu-avatar-fallback {
-  font-size: 2.5rem;
-  color: #adb5bd;
+  font-size: 3rem;
+  color: $color-primary-darker;
 }
 
 .fu-avatar-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  background: rgba(28, 25, 23, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease;
 
   .fu-avatar-ring:hover &,
-  .fu-avatar-ring:focus & {
+  .fu-avatar-ring:focus-visible & {
     opacity: 1;
   }
+}
+
+// Persistent "editable" affordance — a small camera badge pinned to the
+// ring's corner so it's obvious the picture can be changed even before
+// hovering, instead of relying solely on the hover-only overlay above.
+.fu-avatar-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-saffron 100%);
+  color: $color-on-primary;
+  border: 3px solid $color-bg-card;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  box-shadow: $shadow-primary-sm;
+  pointer-events: none;
 }
 
 // ── Error ──────────────────────────────────────────────────────────

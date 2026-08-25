@@ -232,6 +232,17 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       const eventId = params['eventId'];
       if (eventId) this.openEventFromQueryParam(eventId);
+      // Deep-link support — e.g. the Profile page's "My Events" tab
+      // navigates here with ?openAdd=1 to jump straight into Add Event.
+      if (params['openAdd']) {
+        this.openAddModal();
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { openAdd: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
     });
     this.loadMyPendingEventsCount();
   }

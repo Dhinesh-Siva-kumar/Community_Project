@@ -33,10 +33,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: $radius-sm;
-        background: rgba($color-primary, 0.16);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba($color-primary, 0.22), rgba($color-saffron, 0.14));
+        border: 1px solid rgba($color-primary-dark, 0.22);
         color: $color-amber-700;
         font-size: 0.95rem;
       }

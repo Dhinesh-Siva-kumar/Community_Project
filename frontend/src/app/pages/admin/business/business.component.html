@@ -78,6 +78,17 @@
           }
         </div>
         <div class="biz-cat-toolbar-right">
+          <!-- Category View / Business View scope toggle -->
+          <div class="biz-scope-toggle" role="group" aria-label="Switch business scope">
+            <button class="biz-scope-btn" [class.biz-scope-btn--active]="businessScope() === 'categories'"
+              (click)="setBusinessScope('categories')" aria-label="Category View" title="Category View">
+              <i class="bi bi-grid-3x2-gap"></i> Category View
+            </button>
+            <button class="biz-scope-btn" [class.biz-scope-btn--active]="businessScope() === 'business'"
+              (click)="setBusinessScope('business')" aria-label="Business View" title="Business View">
+              <i class="bi bi-shop"></i> Business View
+            </button>
+          </div>
           <div class="biz-view-toggle" role="group" aria-label="View mode">
             <button class="biz-view-btn" [class.biz-view-btn--active]="catViewMode() === 'grid'"
               (click)="setCatViewMode('grid')" title="Grid view" aria-label="Grid view">
@@ -360,30 +371,44 @@
   <!-- ==================== BUSINESS LIST VIEW ==================== -->
   @if (currentView() === 'list') {
 
-    <!-- ── BREADCRUMB ─────────────────────────────────────────── -->
-    <nav aria-label="breadcrumb">
-      <ol class="bl-breadcrumb">
-        <li class="bl-breadcrumb__item">
-          <button class="bl-breadcrumb__link" (click)="goToCategories()">
-            <i class="bi bi-grid-3x2-gap"></i> Categories
-          </button>
-        </li>
-        <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-        <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ selectedCategory()?.name }}</li>
-      </ol>
-    </nav>
+    <!-- ── BREADCRUMB — only meaningful when a specific category was
+         drilled into; the flat "Business View" is a top-level view, same
+         as Categories, so it carries no breadcrumb. ──────────────────── -->
+    @if (selectedCategory(); as cat) {
+      <nav aria-label="breadcrumb">
+        <ol class="bl-breadcrumb">
+          <li class="bl-breadcrumb__item">
+            <button class="bl-breadcrumb__link" (click)="goToCategories()">
+              <i class="bi bi-grid-3x2-gap"></i> Categories
+            </button>
+          </li>
+          <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+          <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ cat.name }}</li>
+        </ol>
+      </nav>
+    }
 
     <!-- ── PAGE HEADER ────────────────────────────────────────── -->
     <div class="jb-page-header">
       <div class="jb-page-header__left">
         <div class="bl-header__title-row">
-          <div class="bl-header__icon biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}">
-            <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
-          </div>
-          <div>
-            <h2 class="jb-page-header__title">{{ selectedCategory()?.name }}</h2>
-            <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</p>
-          </div>
+          @if (selectedCategory(); as cat) {
+            <div class="bl-header__icon biz-cat-card--{{ getCategoryAccent(cat.icon) }}">
+              <i class="bi {{ getCategoryIcon(cat.icon) }}"></i>
+            </div>
+            <div>
+              <h2 class="jb-page-header__title">{{ cat.name }}</h2>
+              <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }}</p>
+            </div>
+          } @else {
+            <div class="bl-header__icon biz-cat-card--orange">
+              <i class="bi bi-shop"></i>
+            </div>
+            <div>
+              <h2 class="jb-page-header__title">All Businesses</h2>
+              <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }} across every category</p>
+            </div>
+          }
         </div>
       </div>
       <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddBusiness()"><i class="bi bi-plus-lg"></i> Add Business</button>
@@ -430,6 +455,17 @@
           @if (filterSearch()) {
             <button class="jb-search-wrap__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
           }
+        </div>
+        <!-- Category View / Business View scope toggle -->
+        <div class="biz-scope-toggle" role="group" aria-label="Switch business scope">
+          <button class="biz-scope-btn" [class.biz-scope-btn--active]="businessScope() === 'categories'"
+            (click)="setBusinessScope('categories')" aria-label="Category View" title="Category View">
+            <i class="bi bi-grid-3x2-gap"></i> Category View
+          </button>
+          <button class="biz-scope-btn" [class.biz-scope-btn--active]="businessScope() === 'business'"
+            (click)="setBusinessScope('business')" aria-label="Business View" title="Business View">
+            <i class="bi bi-shop"></i> Business View
+          </button>
         </div>
         <!-- View toggle -->
         <div class="biz-view-toggle" role="group" aria-label="Switch view">
@@ -666,7 +702,7 @@
       <div class="biz-empty">
         <div class="biz-empty__icon"><i class="bi bi-shop-window"></i></div>
         <h5 class="biz-empty__title">{{ filterSearch() ? 'No matching businesses' : 'No Businesses Yet' }}</h5>
-        <p class="biz-empty__sub">{{ filterSearch() ? 'Try a different search term.' : 'Be the first to add a business in this category.' }}</p>
+        <p class="biz-empty__sub">{{ filterSearch() ? 'Try a different search term.' : (selectedCategory() ? 'Be the first to add a business in this category.' : 'No businesses have been added yet.') }}</p>
         @if (!filterSearch()) {
           <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddBusiness()">
             <i class="bi bi-plus-lg"></i> Add Business
@@ -688,13 +724,15 @@
                 <img [src]="biz.logo | imageUrl" [alt]="biz.name + ' logo'" class="bl-card__img" loading="lazy" />
               } @else {
                 <div class="bl-card__img-placeholder">
-                  <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
+                  <i class="bi {{ getCategoryIcon(biz.category?.icon ?? selectedCategory()?.icon) }}"></i>
                 </div>
               }
               @if (biz.status === 'PENDING') {
-                <span class="bl-card__status-badge bl-card__status-badge--pending">
+                <a class="bl-card__status-badge bl-card__status-badge--pending bl-card__status-badge--link"
+                  [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }"
+                  title="Go to Business Approval" (click)="$event.stopPropagation()">
                   <i class="bi bi-hourglass-split"></i> Pending Approval
-                </span>
+                </a>
               } @else if (biz.status === 'REJECTED') {
                 <span class="bl-card__status-badge bl-card__status-badge--rejected" [title]="biz.rejectionReason || 'Rejected'">
                   <i class="bi bi-x-circle-fill"></i> Rejected
@@ -723,6 +761,9 @@
               }
               @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
               <div class="bl-card__meta">
+                @if (!selectedCategory() && biz.category?.name) {
+                  <span class="bl-card__meta-item"><i class="bi bi-tags-fill"></i>{{ biz.category?.name }}</span>
+                }
                 @if (biz.address || $any(biz).city || $any(biz).state) {
                   <span class="bl-card__meta-item">
                     <i class="bi bi-geo-alt-fill"></i>
@@ -822,6 +863,9 @@
                     [class.bi-arrow-down-up]="sortBy() !== 'name'"
                   ></i>
                 </th>
+                @if (!selectedCategory()) {
+                  <th class="um-th d-none d-md-table-cell">Category</th>
+                }
                 <th class="um-th d-none d-md-table-cell">Location</th>
                 <th class="um-th d-none d-lg-table-cell">Phone</th>
                 <th class="um-th">Status</th>
@@ -845,17 +889,21 @@
                     @if ($any(biz).logo) {
                       <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="um-avatar" />
                     } @else {
-                      <div class="um-avatar um-avatar--initials"><i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i></div>
+                      <div class="um-avatar um-avatar--initials"><i class="bi {{ getCategoryIcon(biz.category?.icon ?? selectedCategory()?.icon) }}"></i></div>
                     }
                   </td>
                   <td class="um-td">
                     <span class="um-user-name">{{ biz.name }}</span>
                   </td>
+                  @if (!selectedCategory()) {
+                    <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ biz.category?.name || '—' }}</span></td>
+                  }
                   <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ getLocation(biz) || '—' }}</span></td>
                   <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ biz.phone || '—' }}</span></td>
                   <td class="um-td">
                     @if (biz.status === 'PENDING') {
-                      <span class="um-badge um-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                      <a class="um-badge um-badge--pending um-badge--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }"
+                        title="Go to Business Approval" (click)="$event.stopPropagation()"><i class="bi bi-hourglass-split"></i> Pending Approval</a>
                     } @else if (biz.status === 'REJECTED') {
                       <span class="um-badge um-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
                     } @else {
@@ -940,9 +988,13 @@
 
       <nav aria-label="breadcrumb">
         <ol class="bl-breadcrumb">
-          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
-          <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
-          <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ selectedCategory()?.name }}</button></li>
+          @if (selectedCategory(); as cat) {
+            <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToCategories()"><i class="bi bi-grid-3x2-gap"></i> Categories</button></li>
+            <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+            <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()">{{ cat.name }}</button></li>
+          } @else {
+            <li class="bl-breadcrumb__item"><button class="bl-breadcrumb__link" (click)="goToList()"><i class="bi bi-shop"></i> All Businesses</button></li>
+          }
           <li class="bl-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
           <li class="bl-breadcrumb__item bl-breadcrumb__item--active">{{ biz.name }}</li>
         </ol>
@@ -950,7 +1002,7 @@
 
       <div class="bd-hero">
          <div class="bd-hero__profile">
-           <button type="button" class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(selectedCategory()?.icon) }}"
+           <button type="button" class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}"
              [class.bd-hero__avatar--clickable]="!!$any(biz).logo"
              [disabled]="!$any(biz).logo"
              (click)="$any(biz).logo && openImagePreview([$any(biz).logo], 0)"
@@ -958,14 +1010,14 @@
              @if ($any(biz).logo) {
                <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="w-100 h-100 object-fit-cover rounded-circle" loading="eager" />
              } @else {
-               <i class="bi {{ getCategoryIcon(selectedCategory()?.icon) }}"></i>
+               <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
              }
            </button>
            <div class="bd-hero__info">
             <div class="bd-hero__name-row">
               <h1 class="bd-hero__name">{{ biz.name }}</h1>
               @if (biz.status === 'PENDING') {
-                <span class="bd-badge bd-badge--pending"><i class="bi bi-hourglass-split"></i> Pending Approval</span>
+                <a class="bd-badge bd-badge--pending bd-badge--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }" title="Go to Business Approval"><i class="bi bi-hourglass-split"></i> Pending Approval</a>
               } @else if (biz.status === 'REJECTED') {
                 <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> Rejected</span>
               } @else if (biz.isActive) {
@@ -974,7 +1026,7 @@
                 <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> Inactive</span>
               }
             </div>
-            <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ selectedCategory()?.name }}</span>
+            <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
             @if ($any(biz).city || $any(biz).state || biz.country) {
               <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getLocation(biz) }}</span>
             }

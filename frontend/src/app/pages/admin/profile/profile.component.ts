@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Observable, of } from 'rxjs';
@@ -35,7 +35,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
-export class AdminProfileComponent implements OnInit {
+export class AdminProfileComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
@@ -106,6 +106,19 @@ export class AdminProfileComponent implements OnInit {
     return 'ring--start';
   });
 
+  /** Hex twin of completionRingClass()'s bands — feeds the conic-gradient
+   * progress ring's --ring-clr custom property (mirrors the user profile
+   * page's identical helper). */
+  completionRingColor = computed(() => {
+    const pct = this.profileCompletion();
+    if (pct >= 100) return '#16A34A'; // $color-success
+    if (pct >= 80)  return '#059669'; // $color-emerald-600
+    if (pct >= 60)  return '#0EA5E9'; // $color-info
+    if (pct >= 40)  return '#D97706'; // $color-primary-darker
+    if (pct >= 20)  return '#D97706'; // $color-warning
+    return '#DC2626';                 // $color-danger
+  });
+
   completionItems = computed(() => {
     const u = this.user();
     if (!u) return [];
@@ -136,6 +149,17 @@ export class AdminProfileComponent implements OnInit {
     'Marketing', 'Design', 'Engineering', 'Sales', 'Construction',
     'Hospitality', 'Retail', 'Real Estate', 'Other',
   ].map(c => ({ value: c, label: c }));
+
+  constructor() {
+    // Lock background scroll while the Change Password popup is open.
+    effect(() => {
+      document.body.style.overflow = this.showPasswordSection() ? 'hidden' : '';
+    });
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
 
   ngOnInit(): void {
     this.profileForm = this.fb.group({

@@ -18,4 +18,11 @@ export class ProfileInfoCardComponent {
   @Output() edit = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+
+  /** Generic header action button (e.g. "Add Business") — same .btn-edit
+   * styling as the Edit button, shown instead of it when showEdit is
+   * false. Set actionLabel to enable it. */
+  @Input() actionLabel?: string;
+  @Input() actionIcon = 'bi-plus-lg';
+  @Output() action = new EventEmitter<void>();
 }

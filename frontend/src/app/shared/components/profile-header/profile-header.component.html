@@ -1,12 +1,21 @@
 @if (user; as u) {
   <div class="profile-header-card">
+    <!-- Cover banner — same dark→amber gradient as the app's Add
+         Business/Community modal headers, so the profile hero reads as
+         part of the same brand system. -->
+    <div class="header-banner" aria-hidden="true">
+      <span class="banner-shape banner-shape--1"></span>
+      <span class="banner-shape banner-shape--2"></span>
+      <span class="banner-shape banner-shape--3"></span>
+    </div>
+
     <div class="header-body">
       <!-- Avatar overlapping the banner -->
       <div class="avatar-slot">
         <app-profile-avatar
           [src]="u.avatar"
           [displayName]="displayName"
-          size="sm"
+          size="lg"
           [editable]="editMode"
           (fileSelected)="avatarChange.emit($event)"
         ></app-profile-avatar>
@@ -34,7 +43,14 @@
           @if (u.location || u.country) {
             <span class="meta-item"><i class="bi bi-geo-alt"></i>{{ u.location || u.country }}</span>
           }
+          @if (u.createdAt) {
+            <span class="meta-item"><i class="bi bi-calendar3"></i>Joined {{ u.createdAt | date:'mediumDate' }}</span>
+          }
         </div>
+
+        @if (u.bio) {
+          <p class="header-bio">{{ u.bio }}</p>
+        }
       </div>
     </div>
   </div>
