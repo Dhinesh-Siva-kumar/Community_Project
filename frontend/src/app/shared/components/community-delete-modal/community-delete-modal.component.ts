@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CommunityService } from '../../../core/services/community.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community } from '../../../core/models';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * The single Delete-Community confirmation popup — a straight port of the
@@ -14,7 +15,7 @@ import { Community } from '../../../core/models';
 @Component({
   selector: 'app-community-delete-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './community-delete-modal.component.html',
   styleUrls: ['./community-delete-modal.component.scss'],
 })
@@ -42,13 +43,13 @@ export class CommunityDeleteModalComponent {
     this.deleting.set(true);
     this.svc.deleteCommunity(community.id).subscribe({
       next: () => {
-        this.toast.success('Community deleted successfully');
+        this.toast.success('components.communityDelete.toastDeleted');
         this.deleting.set(false);
         this.deleted.emit(community.id);
         this.closed.emit();
       },
       error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Failed to delete community');
+        this.toast.error('components.communityDelete.toastFailed');
         this.deleting.set(false);
       },
     });

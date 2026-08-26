@@ -130,7 +130,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffbeb;
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
   cursor: pointer;
@@ -142,9 +142,9 @@
   i { font-size: 1.2rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(217, 119, 6, 0.6);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
   }
 
@@ -214,7 +214,7 @@
     transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
     &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: $color-bg-card; }
     &::-webkit-search-cancel-button { display: none; }
   }
 
@@ -397,7 +397,7 @@
 
   &[data-tip]::before {
     content: attr(data-tip);
-    background: $color-text-primary;
+    background: $color-dark;
     color: #fff;
     font-size: 0.68rem;
     font-weight: $font-weight-semibold;
@@ -412,7 +412,7 @@
     content: '';
     top: calc(100% + 2px);
     border: 4px solid transparent;
-    border-bottom-color: $color-text-primary;
+    border-bottom-color: $color-dark;
     border-top: none;
     width: 0;
     height: 0;
@@ -458,7 +458,7 @@
     &[data-tip]::after {
       bottom: calc(100% + 2px);
       border-bottom-color: transparent;
-      border-top-color: $color-text-primary;
+      border-top-color: $color-dark;
     }
     &:hover[data-tip]::before, &:hover[data-tip]::after {
       transform: translateX(-50%) translateY(0);
@@ -968,7 +968,7 @@
 
 // ── TABLE ────────────────────────────────────────────────────
 .um-table-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);

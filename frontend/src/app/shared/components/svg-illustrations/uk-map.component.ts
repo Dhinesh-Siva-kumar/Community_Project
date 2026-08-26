@@ -1,8 +1,10 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-uk-map',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <svg
       [attr.width]="width()"
@@ -12,7 +14,7 @@ import { Component, input } from '@angular/core';
       xmlns="http://www.w3.org/2000/svg"
       class="uk-map-svg"
       role="img"
-      aria-label="UK map illustration"
+      [attr.aria-label]="'components.illustration.ukMap' | translate"
     >
       <!-- UK Simplified silhouette -->
       <path

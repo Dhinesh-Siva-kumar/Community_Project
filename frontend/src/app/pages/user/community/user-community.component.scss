@@ -25,21 +25,22 @@ $_side-rail-w:  268px;
 
 // Tab accent colors — lifted from the real .cd-tab-btn / .cd-tab-badge system
 // (community-detail.component.scss) so this page's tabs read as the same UI language.
-$_tab-all-text:      #1d4ed8;
+$_tab-all-text:      var(--cd-1d4ed8, #1d4ed8);
 $_tab-all-badge:     rgba(37, 99, 235, .14);
 $_tab-all-shadow:    rgba(37, 99, 235, .16);
-$_tab-joined-text:   #0f766e;
+$_tab-joined-text:   var(--cd-0f766e, #0f766e);
 $_tab-joined-badge:  rgba(15, 118, 110, .14);
 $_tab-joined-shadow: rgba(15, 118, 110, .14);
 $_tab-trend-text:    #c2410c;
 $_tab-trend-badge:   rgba(194, 65, 12, .13);
 $_tab-trend-shadow:  rgba(194, 65, 12, .16);
 
-// Meta chip colors — lifted from the real .cd-chip-* classes
-$_chip-members-bg:     #fff7ed; $_chip-members-text:     #9a3412; $_chip-members-border:  rgba(251, 146, 60, .36);
-$_chip-posts-bg:       #ecfdf3; $_chip-posts-text:       #166534; $_chip-posts-border:    rgba(34, 197, 94, .32);
-$_chip-category-bg:    #f5f3ff; $_chip-category-text:    #5b21b6; $_chip-category-border: rgba(139, 92, 246, .34);
-$_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-location-border: rgba(20, 184, 166, .34);
+// Meta chip colors — lifted from the real .cd-chip-* classes, reusing the
+// same reactive --cd-* tokens community-detail.component.scss defines.
+$_chip-members-bg:     var(--cd-fff7ed, #fff7ed); $_chip-members-text:     var(--cd-9a3412, #9a3412); $_chip-members-border:  rgba(251, 146, 60, .36);
+$_chip-posts-bg:       var(--cd-ecfdf3, #ecfdf3); $_chip-posts-text:       var(--cd-166534, #166534); $_chip-posts-border:    rgba(34, 197, 94, .32);
+$_chip-category-bg:    var(--cd-f5f3ff, #f5f3ff); $_chip-category-text:    var(--cd-5b21b6, #5b21b6); $_chip-category-border: rgba(139, 92, 246, .34);
+$_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(--cd-0f766e, #0f766e); $_chip-location-border: rgba(20, 184, 166, .34);
 
 // ============================================================
 // LOADING STATE
@@ -144,7 +145,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   &:hover { background: rgba($color-stone-900, 0.04); }
 
   &.active {
-    background: $color-text-primary;
+    background: $color-dark;
     color: $color-white;
   }
 }
@@ -221,7 +222,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
 .uc-tabs-wrap {
   position: relative;
   flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+  background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: $radius-md;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
@@ -950,7 +951,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   align-items: flex-start;
   gap: 5px;
   font-size: 11.5px;
-  color: #dc2626;
+  color: $color-danger-text;
   background: rgba(220, 38, 38, 0.08);
   border-radius: $radius-sm;
   padding: 6px 8px;
@@ -1548,7 +1549,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
   width: 28px; height: 28px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: $radius-full; border: 1.5px solid $color-border;
-  background: #fff; color: $color-text-muted; cursor: pointer;
+  background: $color-bg-card; color: $color-text-muted; cursor: pointer;
   transition: background-color .15s ease, color .15s ease, border-color .15s ease;
   &:hover, &:focus-visible { background: $color-bg-page; color: $color-text-body; border-color: $color-amber-200; }
 
@@ -1561,7 +1562,7 @@ $_chip-location-bg:    #f0fdfa; $_chip-location-text:    #0f766e; $_chip-locatio
     &:hover, &:focus-visible { background: rgba(28, 25, 23, 0.75); border-color: #fff; color: #fff; }
   }
 }
-.uc-card-menu--open .uc-card-menu-trigger { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
+.uc-card-menu--open .uc-card-menu-trigger { background: $color-dark; border-color: $color-dark; color: #fff; }
 
 .uc-card-menu-panel {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;

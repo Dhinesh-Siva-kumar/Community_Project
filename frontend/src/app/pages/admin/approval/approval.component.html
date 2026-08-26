@@ -1,8 +1,8 @@
 <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
-    <h2 class="jb-page-header__title">Approval</h2>
-    <p class="jb-page-header__sub">Review and approve pending Posts, Community, Business, Jobs and Events submissions.</p>
+    <h2 class="jb-page-header__title">{{ 'admin.approval.approval' | translate }}</h2>
+    <p class="jb-page-header__sub">{{ 'admin.approval.reviewApprovePendingPostsCommunity' | translate }}</p>
   </div>
 </div>
 
@@ -11,7 +11,7 @@
   @for (tab of entityTabs; track tab.id) {
     <button role="tab" type="button" class="ap-tab" [class.active]="activeEntity() === tab.id"
       [attr.aria-selected]="activeEntity() === tab.id" (click)="switchEntity(tab.id)">
-      <i class="bi {{ tab.icon }}"></i> {{ tab.label }}
+      <i class="bi {{ tab.icon }}"></i> {{ tab.label | translate }}
       @if (pendingCounts()[tab.id]) {
         <span class="ap-tab-count">{{ pendingCounts()[tab.id] }}</span>
       }
@@ -24,28 +24,28 @@
   <div class="jb-filter-row jb-filter-row--top">
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
-      <input type="search" class="jb-search-wrap__input" [placeholder]="'Search ' + currentTab().label.toLowerCase() + ' submissions…'"
+      <input type="search" class="jb-search-wrap__input" [placeholder]="'admin.approval.searchSubmissions' | translate:{ tab: currentTab().label | translate }"
         [value]="filterSearch()" (input)="onSearchInput($any($event.target).value)" autocomplete="off" />
       @if (filterSearch()) {
-        <button class="jb-search-wrap__clear" (click)="filterSearch.set(''); applyFilters()" aria-label="Clear"><i class="bi bi-x"></i></button>
+        <button class="jb-search-wrap__clear" (click)="filterSearch.set(''); applyFilters()" [attr.aria-label]="'common.clear' | translate"><i class="bi bi-x"></i></button>
       }
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-        (ngModelChange)="filterCountry.set($event); applyFilters()" placeholder="All Countries" aria-label="Filter by country">
+        (ngModelChange)="filterCountry.set($event); applyFilters()" [placeholder]="'admin.approval.allCountries' | translate" [attr.aria-label]="'admin.approval.filterByCountry' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-filter-group">
-      <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" ariaLabel="From date" placeholder="From date"></app-date-input>
+      <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" [ariaLabel]="'admin.approval.fromDate' | translate" [placeholder]="'admin.approval.fromDate' | translate"></app-date-input>
     </div>
     <div class="jb-filter-group">
-      <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" ariaLabel="To date" placeholder="To date"></app-date-input>
+      <app-date-input [ngModel]="filterDateTo()" (ngModelChange)="filterDateTo.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" [ariaLabel]="'admin.approval.date' | translate" [placeholder]="'admin.approval.date' | translate"></app-date-input>
     </div>
 
     @if (hasActiveFilters()) {
-      <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+      <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> {{ 'admin.approval.clearAll' | translate }}</button>
     }
   </div>
 </div>
@@ -60,7 +60,7 @@
         Approve
       </button>
       <button class="ap-bulk-btn ap-bulk-btn--reject" [disabled]="bulkProcessing()" (click)="requestBulkReject()">
-        <i class="bi bi-x-lg"></i> Reject
+        <i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}
       </button>
     </div>
   </div>
@@ -69,7 +69,7 @@
 <!-- ── LOADING ──────────────────────────────────────────────── -->
 @if (loading()) {
   <div class="ap-loading" aria-live="polite">
-    <span class="spinner-border spinner-border-sm"></span> Loading…
+    <span class="spinner-border spinner-border-sm"></span> {{ 'admin.approval.loading' | translate }}
   </div>
 } @else if (items().length === 0) {
   <!-- ── EMPTY STATE ────────────────────────────────────────── -->
@@ -82,7 +82,7 @@
       @if (hasActiveFilters()) {
         Try adjusting or clearing some filters.
       } @else {
-        All {{ currentTab().label.toLowerCase() }} submissions have been reviewed.
+        {{ 'admin.approval.allReviewed' | translate:{ tab: currentTab().label | translate } }}
       }
     </p>
   </div>
@@ -95,10 +95,10 @@
         <thead>
           <tr>
             <th class="um-th" style="width:36px">
-              <input type="checkbox" class="form-check-input" [checked]="selectAll()" (change)="toggleSelectAll()" aria-label="Select all" />
+              <input type="checkbox" class="form-check-input" [checked]="selectAll()" (change)="toggleSelectAll()" [attr.aria-label]="'admin.approval.selectAll' | translate" />
             </th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'name'" (click)="toggleSort('name')" role="button" tabindex="0" (keydown.enter)="toggleSort('name')">
-              {{ currentTab().singular }}
+              {{ currentTab().singular | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
@@ -106,7 +106,7 @@
               ></i>
             </th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'submitter'" (click)="toggleSort('submitter')" role="button" tabindex="0" (keydown.enter)="toggleSort('submitter')">
-              Submitted By
+              {{ 'admin.approval.submittedBy' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'submitter' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'submitter' && sortDir() === 'desc'"
@@ -122,14 +122,14 @@
               ></i>
             </th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
-              Submitted
+              {{ 'admin.approval.submitted' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
                 [class.bi-arrow-down-up]="sortBy() !== 'joined'"
               ></i>
             </th>
-            <th class="um-th um-th--actions">Actions</th>
+            <th class="um-th um-th--actions">{{ 'common.actions' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -182,14 +182,14 @@
     <div class="um-pagination um-pagination--nested">
       <div class="um-pagination__left">
         <span class="um-pagination__info">
-          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong> of <strong>{{ totalItems() }}</strong>
+          {{ 'admin.approval.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong> {{ 'admin.approval.of' | translate }} <strong>{{ totalItems() }}</strong>
         </span>
         <div class="um-pg-divider"></div>
         <div class="um-pagination__size">
-          <span>Rows per page</span>
+          <span>{{ 'admin.approval.rowsPerPage' | translate }}</span>
           <div class="jb-select-wrap jb-select-wrap--xs">
             <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
-              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''" aria-label="Rows per page">
+              (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''" [attr.aria-label]="'admin.approval.rowsPerPage' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -197,13 +197,13 @@
 
       @if (totalPages() > 1) {
         <div class="um-pagination__pages">
-          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(1)" title="First page"><i class="bi bi-chevron-double-left"></i></button>
-          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" title="Previous page"><i class="bi bi-chevron-left"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(1)" [title]="'admin.approval.firstPage' | translate"><i class="bi bi-chevron-double-left"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)" [title]="'admin.approval.previousPage' | translate"><i class="bi bi-chevron-left"></i></button>
           @for (page of getPages(); track page) {
             <button class="um-pg-btn um-pg-btn--num" [class.um-pg-btn--active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
           }
-          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" title="Next page"><i class="bi bi-chevron-right"></i></button>
-          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())" title="Last page"><i class="bi bi-chevron-double-right"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)" [title]="'admin.approval.nextPage' | translate"><i class="bi bi-chevron-right"></i></button>
+          <button class="um-pg-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())" [title]="'admin.approval.lastPage' | translate"><i class="bi bi-chevron-double-right"></i></button>
         </div>
       }
     </div>
@@ -212,7 +212,7 @@
 
 <!-- ── Floating refresh button ──────────────────────────────── -->
 <button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
-  (click)="loadPending()" aria-label="Refresh pending list" title="Refresh">
+  (click)="loadPending()" [attr.aria-label]="'admin.approval.refreshPendingList' | translate" [title]="'admin.approval.refresh' | translate">
   <i class="bi bi-arrow-clockwise"></i>
 </button>
 
@@ -227,17 +227,17 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Approve {{ currentTab().singular }}</h5>
-        <button type="button" class="pa-confirm-close" (click)="cancelApproveConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <h5 class="pa-confirm-header__title">Approve {{ currentTab().singular | translate }}</h5>
+        <button type="button" class="pa-confirm-close" (click)="cancelApproveConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          Are you sure you want to approve <strong>{{ itemName(item) }}</strong>? It will become visible to everyone.
+          {{ 'admin.approval.sureWantApprove' | translate }} <strong>{{ itemName(item) }}</strong>? It will become visible to everyone.
         </p>
       </div>
       <div class="pa-confirm-footer">
-        <button class="um-btn um-btn--ghost" (click)="cancelApproveConfirm()">Cancel</button>
-        <button class="um-btn um-btn--success" (click)="confirmApproveExecute()"><i class="bi bi-check-lg"></i> Approve</button>
+        <button class="um-btn um-btn--ghost" (click)="cancelApproveConfirm()">{{ 'common.cancel' | translate }}</button>
+        <button class="um-btn um-btn--success" (click)="confirmApproveExecute()"><i class="bi bi-check-lg"></i> {{ 'admin.approval.approve' | translate }}</button>
       </div>
     </div>
   </div>
@@ -253,19 +253,19 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Reject {{ currentTab().singular }}</h5>
-        <button type="button" class="pa-confirm-close" (click)="cancelRejectConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <h5 class="pa-confirm-header__title">Reject {{ currentTab().singular | translate }}</h5>
+        <button type="button" class="pa-confirm-close" (click)="cancelRejectConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          Are you sure you want to reject <strong>{{ itemName(item) }}</strong>? The submitter will be notified.
+          {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ itemName(item) }}</strong>? The submitter will be notified.
         </p>
-        <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to the submitter"
+        <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownSubmitter' | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
       </div>
       <div class="pa-confirm-footer">
-        <button class="um-btn um-btn--ghost" (click)="cancelRejectConfirm()">Cancel</button>
-        <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> Reject</button>
+        <button class="um-btn um-btn--ghost" (click)="cancelRejectConfirm()">{{ 'common.cancel' | translate }}</button>
+        <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
       </div>
     </div>
   </div>
@@ -282,13 +282,13 @@
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
         <h5 class="pa-confirm-header__title">Approve {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
-        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
-        <p class="pa-confirm-desc">These will become visible to everyone.</p>
+        <p class="pa-confirm-desc">{{ 'admin.approval.theseWillBecomeVisibleEveryone' | translate }}</p>
       </div>
       <div class="pa-confirm-footer">
-        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">Cancel</button>
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">{{ 'common.cancel' | translate }}</button>
         <button class="um-btn um-btn--success" [disabled]="bulkProcessing()" (click)="confirmBulkApproveExecute()">
           @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i> Approve All }
         </button>
@@ -308,15 +308,15 @@
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
         <h5 class="pa-confirm-header__title">Reject {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
-        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
-        <p class="pa-confirm-desc">Submitters will be notified.</p>
-        <textarea class="pa-reason-input" rows="3" maxlength="500" placeholder="Reason (optional) — shown to every submitter"
+        <p class="pa-confirm-desc">{{ 'admin.approval.submittersWillNotified' | translate }}</p>
+        <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownEverySubmitter' | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
       </div>
       <div class="pa-confirm-footer">
-        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">Cancel</button>
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">{{ 'common.cancel' | translate }}</button>
         <button class="um-btn um-btn--danger" [disabled]="bulkProcessing()" (click)="confirmBulkRejectExecute()">
           @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-x-lg"></i> Reject All }
         </button>
@@ -339,10 +339,10 @@
         </div>
         <div class="pa-view-header__icon"><i class="bi {{ currentTab().icon }}"></i></div>
         <div class="pa-view-header__text">
-          <h5 class="pa-view-header__title">{{ currentTab().singular }} Approval</h5>
+          <h5 class="pa-view-header__title">{{ currentTab().singular | translate }} Approval</h5>
           <span class="pa-view-status-badge" [class]="'is-' + (vi['status'] ?? 'pending').toLowerCase()">{{ vi['status'] ?? 'PENDING' }}</span>
         </div>
-        <button type="button" class="pa-view-close" (click)="closeViewItem()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="pa-view-close" (click)="closeViewItem()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="pa-view-body">
@@ -366,7 +366,7 @@
           @if (vi['status'] === 'REJECTED' && vi['rejectionReason']) {
             <div class="pa-view-rejection">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>Rejected</strong> — {{ vi['rejectionReason'] }}</span>
+              <span><strong>{{ 'common.rejected' | translate }}</strong> — {{ vi['rejectionReason'] }}</span>
             </div>
           }
         </div>
@@ -375,7 +375,7 @@
           <div class="pa-view-section">
             <div class="pa-view-section-header">
               <span class="pa-view-section-badge"><i class="bi bi-file-text"></i></span>
-              <span class="pa-view-section-title">Description</span>
+              <span class="pa-view-section-title">{{ 'admin.approval.description' | translate }}</span>
             </div>
             <p class="pa-view-content">{{ itemDescription(vi) }}</p>
           </div>
@@ -390,7 +390,7 @@
             <div class="pa-view-grid">
               @for (f of section.fields; track f.label) {
                 <div class="pa-view-field">
-                  <span class="pa-view-field__label">{{ f.label }}</span>
+                  <span class="pa-view-field__label">{{ f.label | translate }}</span>
                   <span class="pa-view-field__value">{{ f.value }}</span>
                 </div>
               }
@@ -433,8 +433,8 @@
         @if (approvingId() === vi.id || rejectingId() === vi.id) {
           <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
         } @else {
-          <button class="um-btn um-btn--success" (click)="closeViewItem(); requestApprove(vi)"><i class="bi bi-check-lg"></i> Approve</button>
-          <button class="um-btn um-btn--danger" (click)="closeViewItem(); requestReject(vi)"><i class="bi bi-x-lg"></i> Reject</button>
+          <button class="um-btn um-btn--success" (click)="closeViewItem(); requestApprove(vi)"><i class="bi bi-check-lg"></i> {{ 'admin.approval.approve' | translate }}</button>
+          <button class="um-btn um-btn--danger" (click)="closeViewItem(); requestReject(vi)"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
         }
       </div>
     </div>
@@ -444,23 +444,23 @@
 <!-- ── IMAGE LIGHTBOX — same cd-lightbox used for post images on the
      Community Detail page, not the generic <app-image-viewer>. ────── -->
 @if (lightboxOpen()) {
-  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" aria-label="Image preview">
+  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'admin.approval.imagePreview' | translate">
     <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
-      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" aria-label="Close image preview">
+      <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'admin.approval.closeImagePreview' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
 
       @if (lightboxImages().length > 1) {
-        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" aria-label="Previous image">
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--prev" (click)="prevPreviewImage()" [attr.aria-label]="'admin.approval.previousImage' | translate">
           <i class="bi bi-chevron-left"></i>
         </button>
-        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" aria-label="Next image">
+        <button type="button" class="cd-lightbox-nav cd-lightbox-nav--next" (click)="nextPreviewImage()" [attr.aria-label]="'admin.approval.nextImage' | translate">
           <i class="bi bi-chevron-right"></i>
         </button>
       }
 
       @if (getActivePreviewImage()) {
-        <img [src]="getActivePreviewImage()! | imageUrl" alt="Preview image" class="cd-lightbox-image" appImageError />
+        <img [src]="getActivePreviewImage()! | imageUrl" [alt]="'admin.approval.previewImage' | translate" class="cd-lightbox-image" appImageError />
       }
 
       <div class="cd-lightbox-footer">

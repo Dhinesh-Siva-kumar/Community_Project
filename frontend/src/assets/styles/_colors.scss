@@ -13,7 +13,8 @@ $color-primary:             #FBBF24;   // Amber 400 — premium bright gold
 $color-primary-rgb:         251, 191, 36;
 $color-primary-dark:        #F59E0B;   // Amber 500 — hover / pressed
 $color-primary-darker:      #D97706;   // Amber 600 — active / focus ring
-$color-primary-light:       #FEF3C7;   // Amber 50  — tinted backgrounds
+$color-primary-light:       var(--color-primary-light, #FEF3C7);   // Amber 100 — tinted backgrounds
+$color-primary-lighter:     var(--color-primary-lighter, #FFFBEB); // Amber 50  — subtlest tinted backgrounds
 $color-primary-medium:      #FDE68A;   // Amber 200 — subtle fills
 $color-primary-muted:       #FCD34D;   // Amber 300 — mid-tone accent
 
@@ -42,16 +43,19 @@ $color-amber-900:           #78350F;
 // WARM STONE NEUTRALS (replaces cold slate/gray)
 // ============================================================
 
-$color-stone-50:            #FAFAF9;   // Page background
-$color-stone-100:           #F5F5F4;   // Subtle section alt
-$color-stone-200:           #E7E5E4;   // Border / divider
-$color-stone-300:           #D6D3D1;   // Disabled border
-$color-stone-400:           #A8A29E;   // Placeholder text
-$color-stone-500:           #78716C;   // Muted text
-$color-stone-600:           #57534E;   // Secondary text
-$color-stone-700:           #44403C;   // Body text
-$color-stone-800:           #292524;   // Heading text
-$color-stone-900:           #1C1917;   // Primary text / sidebar bg
+// Used pervasively across component files as direct text/background/border
+// colors (not just via the semantic $color-text-*/$color-bg-*/$color-border
+// aliases above) — var()-wrapped so those direct usages stay theme-reactive too.
+$color-stone-50:            var(--color-stone-50, #FAFAF9);   // Page background
+$color-stone-100:           var(--color-stone-100, #F5F5F4);  // Subtle section alt
+$color-stone-200:           var(--color-stone-200, #E7E5E4);  // Border / divider
+$color-stone-300:           var(--color-stone-300, #D6D3D1);  // Disabled border
+$color-stone-400:           var(--color-stone-400, #A8A29E);  // Placeholder text
+$color-stone-500:           var(--color-stone-500, #78716C);  // Muted text
+$color-stone-600:           var(--color-stone-600, #57534E);  // Secondary text
+$color-stone-700:           var(--color-stone-700, #44403C);  // Body text
+$color-stone-800:           var(--color-stone-800, #292524);  // Heading text
+$color-stone-900:           var(--color-stone-900, #1C1917);  // Primary text / sidebar bg
 
 // ============================================================
 // SIDEBAR & DARK SURFACE PALETTE
@@ -118,16 +122,43 @@ $color-admin-dark-accent:   #0f3460;
 // ============================================================
 
 $color-success:             #16A34A;   // Green 600
-$color-success-light:       #DCFCE7;   // Green 100
+$color-success-light:       var(--color-success-light, #DCFCE7);
 $color-emerald-600:         #059669;   // Emerald (kept for landing page)
 $color-danger:              #DC2626;   // Red 600
 $color-error:               #DC2626;
 $color-error-dark:          #B91C1C;
-$color-error-bg:            #FEF2F2;
+$color-error-bg:            var(--color-error-bg, #FEF2F2);
 $color-warning:             #D97706;   // Amber 600 (aligned with brand)
-$color-warning-light:       #FEF3C7;
+$color-warning-light:       var(--color-warning-light, #FEF3C7);
 $color-info:                #0EA5E9;   // Sky 500 (complementary to amber)
-$color-info-light:          #E0F2FE;
+$color-info-light:          var(--color-info-light, #E0F2FE);
+
+// Paired text colors for the *-light backgrounds above (e.g. amber-900 text
+// on $color-warning-light) — see styles.scss for why these are separate.
+$color-success-text:        var(--color-success-text, #15803D);
+$color-danger-text:         var(--color-danger-text, #991B1B);
+$color-warning-text:        var(--color-warning-text, #78350F);
+$color-info-text:           var(--color-info-text, #0284C7);
+
+// Additional pastel-badge bg/text pairs — status/mode pills (event
+// upcoming/completed/offline/online/hybrid, category icon chips) shared
+// verbatim between the User and Admin Events pages.
+$color-badge-green-bg:      var(--color-badge-green-bg, #D1FAE5);
+$color-badge-green-text:    var(--color-badge-green-text, #065F46);
+$color-badge-gray-bg:       var(--color-badge-gray-bg, #F3F4F6);
+$color-badge-gray-text:     var(--color-badge-gray-text, #6B7280);
+$color-badge-offline-bg:    var(--color-badge-offline-bg, #E5E7EB);
+$color-badge-offline-text:  var(--color-badge-offline-text, #374151);
+$color-badge-blue-bg:       var(--color-badge-blue-bg, #DBEAFE);
+$color-badge-blue-text:     var(--color-badge-blue-text, #1E40AF);
+$color-badge-purple-bg:     var(--color-badge-purple-bg, #EDE9FE);
+$color-badge-purple-text:   var(--color-badge-purple-text, #6B21A8);
+$color-badge-pink-bg:       var(--color-badge-pink-bg, #FCE7F3);
+$color-badge-pink-text:     var(--color-badge-pink-text, #BE185D);
+$color-badge-violet-bg:     var(--color-badge-violet-bg, #EDE9FE);
+$color-badge-violet-text:   var(--color-badge-violet-text, #7C3AED);
+$color-badge-orange-bg:     var(--color-badge-orange-bg, #FFEDD5);
+$color-badge-orange-text:   var(--color-badge-orange-text, #EA580C);
 
 // ============================================================
 // TOAST COLORS (Bootstrap-compatible)
@@ -142,12 +173,14 @@ $color-toast-info:          #0284c7;
 // SEMANTIC TEXT COLORS
 // ============================================================
 
-$color-text-primary:        #1C1917;   // Warm stone-900
-$color-text-body:           #44403C;   // Stone-700
-$color-text-muted:          #78716C;   // Stone-500
-$color-text-muted-alt:      #57534E;   // Stone-600
-$color-text-muted-dark:     #44403C;   // Stone-700
-$color-text-secondary:      #A8A29E;   // Stone-400
+// Theme-reactive — var(--x, <light-fallback>) driven by the global
+// :root / [data-theme='dark'] block in styles.scss (see ThemeService).
+$color-text-primary:        var(--color-text-primary, #1C1917);
+$color-text-body:           var(--color-text-body, #44403C);
+$color-text-muted:          var(--color-text-muted, #78716C);
+$color-text-muted-alt:      var(--color-text-muted-alt, #57534E);
+$color-text-muted-dark:     var(--color-text-body, #44403C);
+$color-text-secondary:      var(--color-text-secondary, #A8A29E);
 $color-text-inverse:        $color-white;
 $color-text-on-amber:       #1C1917;   // Dark text on amber bg
 
@@ -155,20 +188,20 @@ $color-text-on-amber:       #1C1917;   // Dark text on amber bg
 // SEMANTIC BACKGROUND COLORS
 // ============================================================
 
-$color-bg-page:             #FAFAF9;   // Warm off-white
-$color-bg-light:            #F5F5F4;   // Stone-100
-$color-bg-muted:            #FAFAF9;
-$color-bg-neutral:          #FAFAF9;
-$color-bg-card:             #FFFFFF;
-$color-bg-hover:            #F5F5F4;   // Stone-100
-$color-bg-hover-light:      #FAFAF9;
+$color-bg-page:             var(--color-bg-page, #FAFAF9);
+$color-bg-light:            var(--color-bg-light, #F5F5F4);
+$color-bg-muted:            var(--color-bg-page, #FAFAF9);
+$color-bg-neutral:          var(--color-bg-page, #FAFAF9);
+$color-bg-card:             var(--color-bg-card, #FFFFFF);
+$color-bg-hover:            var(--color-bg-hover, #F5F5F4);
+$color-bg-hover-light:      var(--color-bg-hover-light, #FAFAF9);
 
 // ============================================================
 // SEMANTIC BORDER COLORS
 // ============================================================
 
-$color-border:              #E7E5E4;   // Stone-200
-$color-border-strong:       #D6D3D1;   // Stone-300
+$color-border:              var(--color-border, #E7E5E4);
+$color-border-strong:       var(--color-border-strong, #D6D3D1);
 
 // ============================================================
 // GRADIENT DEFINITIONS

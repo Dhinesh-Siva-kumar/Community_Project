@@ -16,17 +16,17 @@
   <!-- ── Page Header ─────────────────────────────────────────── -->
   <div class="jb-page-header">
     <div class="jb-page-header__left">
-      <h2 class="jb-page-header__title">Advanced Analytics</h2>
+      <h2 class="jb-page-header__title">{{ 'admin.analytics.advancedAnalytics' | translate }}</h2>
       <p class="jb-page-header__sub">Platform-wide growth, engagement and retention insights · {{ rangeLabel() }}</p>
     </div>
     <div class="jb-page-header__actions">
-      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportExcel()" [disabled]="exporting() !== null" aria-label="Export as Excel">
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportExcel()" [disabled]="exporting() !== null" [attr.aria-label]="'admin.analytics.exportAsExcel' | translate">
         @if (exporting() === 'excel') { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-file-earmark-excel"></i> }
-        <span>Excel</span>
+        <span>{{ 'admin.analytics.excel' | translate }}</span>
       </button>
-      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="exportPdf()" [disabled]="exporting() !== null" aria-label="Export as PDF">
+      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="exportPdf()" [disabled]="exporting() !== null" [attr.aria-label]="'admin.analytics.exportAsPdf' | translate">
         @if (exporting() === 'pdf') { <span class="spinner-border spinner-border-sm me-1"></span> } @else { <i class="bi bi-file-earmark-pdf"></i> }
-        <span>PDF</span>
+        <span>{{ 'admin.analytics.pdf' | translate }}</span>
       </button>
     </div>
   </div>
@@ -38,7 +38,7 @@
         <span class="an-kpi__icon"><i class="bi {{ card.icon }}"></i></span>
         <div class="an-kpi__body">
           <span class="an-kpi__value">{{ card.value }}</span>
-          <span class="an-kpi__label">{{ card.label }}</span>
+          <span class="an-kpi__label">{{ card.label | translate }}</span>
           @if (card.sub) { <span class="an-kpi__extra">{{ card.sub }}</span> }
         </div>
       </div>
@@ -47,7 +47,7 @@
 
   <!-- ── Date range + granularity filter ────────────────────────── -->
   <div class="an-filter-bar">
-    <div class="an-quick-dates" role="group" aria-label="Quick date presets">
+    <div class="an-quick-dates" role="group" [attr.aria-label]="'admin.analytics.quickDatePresets' | translate">
       <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '7d'" (click)="applyPreset('7d')">7D</button>
       <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '30d'" (click)="applyPreset('30d')">30D</button>
       <button type="button" class="an-quick-btn" [class.an-quick-btn--active]="datePreset() === '90d'" (click)="applyPreset('90d')">90D</button>
@@ -55,14 +55,14 @@
     </div>
 
     <div class="an-date-inputs">
-      <app-date-input [ngModel]="dateFrom()" (ngModelChange)="onDateFromChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" ariaLabel="From date" placeholder="From date"></app-date-input>
-      <span class="an-date-sep">to</span>
-      <app-date-input [ngModel]="dateTo()" (ngModelChange)="onDateToChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" ariaLabel="To date" placeholder="To date"></app-date-input>
+      <app-date-input [ngModel]="dateFrom()" (ngModelChange)="onDateFromChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" [ariaLabel]="'admin.analytics.fromDate' | translate" [placeholder]="'admin.analytics.fromDate' | translate"></app-date-input>
+      <span class="an-date-sep">{{ 'admin.analytics.to' | translate }}</span>
+      <app-date-input [ngModel]="dateTo()" (ngModelChange)="onDateToChange($event)" [ngModelOptions]="{ standalone: true }" [max]="rangeMax" [ariaLabel]="'admin.analytics.date' | translate" [placeholder]="'admin.analytics.date' | translate"></app-date-input>
     </div>
 
     <div class="an-granularity jb-select-wrap jb-select-wrap--xs">
       <app-searchable-select [options]="granularityOptions" [ngModel]="granularity()"
-        (ngModelChange)="onGranularityChange($event)" aria-label="Granularity">
+        (ngModelChange)="onGranularityChange($event)" [attr.aria-label]="'admin.analytics.granularity' | translate">
       </app-searchable-select>
     </div>
   </div>
@@ -76,8 +76,8 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--amber"><i class="bi bi-graph-up-arrow"></i></span>
         <div>
-          <h3 class="an-panel__title">User Growth</h3>
-          <span class="an-panel__sub">New user registrations over time</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.userGrowth' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.newUserRegistrationsOverTime' | translate }}</span>
         </div>
       </div>
       @if (userGrowthChart(); as opts) {
@@ -90,22 +90,22 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--indigo"><i class="bi bi-person-check"></i></span>
         <div>
-          <h3 class="an-panel__title">Active Users</h3>
-          <span class="an-panel__sub">Users seen in the platform recently</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.activeUsers' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.usersSeenPlatformRecently' | translate }}</span>
         </div>
       </div>
       <div class="an-stat-row">
         <div class="an-stat-card">
           <span class="an-stat-card__value">{{ ov.activeUsers.today | number }}</span>
-          <span class="an-stat-card__label">Today</span>
+          <span class="an-stat-card__label">{{ 'admin.analytics.today' | translate }}</span>
         </div>
         <div class="an-stat-card">
           <span class="an-stat-card__value">{{ ov.activeUsers.thisWeek | number }}</span>
-          <span class="an-stat-card__label">This Week</span>
+          <span class="an-stat-card__label">{{ 'admin.analytics.week' | translate }}</span>
         </div>
         <div class="an-stat-card">
           <span class="an-stat-card__value">{{ ov.activeUsers.thisMonth | number }}</span>
-          <span class="an-stat-card__label">This Month</span>
+          <span class="an-stat-card__label">{{ 'admin.analytics.month' | translate }}</span>
         </div>
       </div>
     </section>
@@ -115,8 +115,8 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--green"><i class="bi bi-arrow-repeat"></i></span>
         <div>
-          <h3 class="an-panel__title">Retention Rate</h3>
-          <span class="an-panel__sub">Users active 30+ days after joining</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.retentionRate' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.usersActive30DaysAfter' | translate }}</span>
         </div>
       </div>
       <div class="an-retention">
@@ -137,8 +137,8 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--purple"><i class="bi bi-globe-americas"></i></span>
         <div>
-          <h3 class="an-panel__title">Country Distribution</h3>
-          <span class="an-panel__sub">Users by country (top 10)</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.countryDistribution' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.usersByCountryTop10' | translate }}</span>
         </div>
       </div>
       <div class="an-split">
@@ -149,7 +149,7 @@
         </div>
         <div class="an-split__table">
           <table class="an-table">
-            <thead><tr><th>Country</th><th>Users</th></tr></thead>
+            <thead><tr><th>{{ 'admin.analytics.country' | translate }}</th><th>{{ 'admin.analytics.users' | translate }}</th></tr></thead>
             <tbody>
               @for (row of ov.countryDistribution; track row.country) {
                 <tr><td>{{ row.country }}</td><td>{{ row.count | number }}</td></tr>
@@ -165,13 +165,13 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--cyan"><i class="bi bi-briefcase"></i></span>
         <div>
-          <h3 class="an-panel__title">Job Activity</h3>
-          <span class="an-panel__sub">Posted over time</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.jobActivity' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.postedOverTime' | translate }}</span>
         </div>
       </div>
       <div class="an-stat-row an-stat-row--compact">
-        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.active | number }}</span><span class="an-stat-card__label">Active</span></div>
-        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.inactive | number }}</span><span class="an-stat-card__label">Inactive</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.active | number }}</span><span class="an-stat-card__label">{{ 'common.active' | translate }}</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.jobActivity.inactive | number }}</span><span class="an-stat-card__label">{{ 'common.inactive' | translate }}</span></div>
       </div>
       @if (jobPostedChart(); as opts) {
         <app-apex-chart [options]="opts"></app-apex-chart>
@@ -183,13 +183,13 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--rose"><i class="bi bi-shop"></i></span>
         <div>
-          <h3 class="an-panel__title">Business Growth</h3>
-          <span class="an-panel__sub">Registered over time</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.businessGrowth' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.registeredOverTime' | translate }}</span>
         </div>
       </div>
       <div class="an-stat-row an-stat-row--compact">
-        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.verified | number }}</span><span class="an-stat-card__label">Verified</span></div>
-        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.active | number }}</span><span class="an-stat-card__label">Active</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.verified | number }}</span><span class="an-stat-card__label">{{ 'admin.analytics.verified' | translate }}</span></div>
+        <div class="an-stat-card"><span class="an-stat-card__value">{{ ov.businessGrowth.active | number }}</span><span class="an-stat-card__label">{{ 'common.active' | translate }}</span></div>
       </div>
       @if (businessGrowthChart(); as opts) {
         <app-apex-chart [options]="opts"></app-apex-chart>
@@ -201,8 +201,8 @@
       <div class="an-panel__head">
         <span class="an-panel__icon an-panel__icon--jade"><i class="bi bi-chat-square-heart"></i></span>
         <div>
-          <h3 class="an-panel__title">Community Engagement</h3>
-          <span class="an-panel__sub">Posts, comments and reactions over time</span>
+          <h3 class="an-panel__title">{{ 'admin.analytics.communityEngagement' | translate }}</h3>
+          <span class="an-panel__sub">{{ 'admin.analytics.postsCommentsReactionsOverTime' | translate }}</span>
         </div>
       </div>
       @if (engagementChart(); as opts) {

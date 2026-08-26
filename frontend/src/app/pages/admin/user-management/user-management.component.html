@@ -36,36 +36,36 @@
   <!-- ── Page Header ──────────────────────────────────────── -->
   <div class="jb-page-header">
     <div class="jb-page-header__left">
-      <h2 class="jb-page-header__title">User Management</h2>
-      <p class="jb-page-header__sub">Manage user accounts, roles and access across the platform.</p>
+      <h2 class="jb-page-header__title">{{ 'admin.userManagement.userManagement' | translate }}</h2>
+      <p class="jb-page-header__sub">{{ 'admin.userManagement.manageUserAccountsRolesAccess' | translate }}</p>
     </div>
     <div class="jb-page-header__actions">
       <!-- Export -->
       <div class="um-export-wrap" (click)="$event.stopPropagation()">
         <button class="jb-btn jb-btn--ghost jb-btn--sm" 
-          (click)="toggleExportMenu($event)" [disabled]="exporting()" aria-label="Export users">
+          (click)="toggleExportMenu($event)" [disabled]="exporting()" [attr.aria-label]="'admin.userManagement.exportUsers' | translate">
           @if (exporting()) {
             <span class="spinner-border spinner-border-sm me-1"></span>
           } @else {
             <i class="bi bi-download"></i>
           }
-          <span>Export</span>
+          <span>{{ 'admin.userManagement.export' | translate }}</span>
         </button>
         @if (exportMenuOpen()) {
           <div class="um-export-menu">
             <button class="um-export-item" (click)="exportCSV()">
-              <i class="bi bi-filetype-csv"></i> Download CSV
+              <i class="bi bi-filetype-csv"></i> {{ 'admin.userManagement.downloadCsv' | translate }}
             </button>
             <button class="um-export-item" (click)="exportExcel()">
-              <i class="bi bi-file-earmark-excel"></i> Download Excel
+              <i class="bi bi-file-earmark-excel"></i> {{ 'admin.userManagement.downloadExcel' | translate }}
             </button>
           </div>
         }
       </div>
       <!-- Add User -->
-      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="showAddDrawer.set(true)" aria-label="Add new user">
+      <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="showAddDrawer.set(true)" [attr.aria-label]="'admin.userManagement.addNewUser' | translate">
         <i class="bi bi-person-plus-fill"></i>
-        <span>Add User</span>
+        <span>{{ 'admin.userManagement.addUser' | translate }}</span>
       </button>
     </div>
   </div>
@@ -73,46 +73,46 @@
   <!-- Stats Bar (outside scroll container) -->
   <div class="admin-stats-bar">
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === ''"
-      (click)="setStatFilter('')" aria-label="Filter by all users">
+      (click)="setStatFilter('')" [attr.aria-label]="'admin.userManagement.filterByAllUsers' | translate">
       <div class="admin-stat-card__icon" style="--ic:#4f46e5;--bg:#eef2ff">
         <i class="bi bi-people-fill"></i>
       </div>
       <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ stats().total }}</span>
-        <span class="admin-stat-card__label">Total Users</span>
+        <span class="admin-stat-card__label">{{ 'admin.userManagement.totalUsers' | translate }}</span>
       </div>
     </button>
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'active'"
-      (click)="setStatFilter('active')" aria-label="Filter by active users">
+      (click)="setStatFilter('active')" [attr.aria-label]="'admin.userManagement.filterByActiveUsers' | translate">
       <div class="admin-stat-card__icon" style="--ic:#059669;--bg:#ecfdf5">
         <i class="bi bi-check-circle-fill"></i>
       </div>
       <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ stats().active }}</span>
-        <span class="admin-stat-card__label">Active</span>
+        <span class="admin-stat-card__label">{{ 'common.active' | translate }}</span>
       </div>
     </button>
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'blocked'"
-      (click)="setStatFilter('blocked')" aria-label="Filter by blocked users">
+      (click)="setStatFilter('blocked')" [attr.aria-label]="'admin.userManagement.filterByBlockedUsers' | translate">
       <div class="admin-stat-card__icon" style="--ic:#dc2626;--bg:#fef2f2">
         <i class="bi bi-slash-circle-fill"></i>
       </div>
       <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ stats().blocked }}</span>
-        <span class="admin-stat-card__label">Blocked</span>
+        <span class="admin-stat-card__label">{{ 'admin.userManagement.blocked' | translate }}</span>
       </div>
     </button>
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'trusted'"
-      (click)="setStatFilter('trusted')" aria-label="Filter by trusted users">
+      (click)="setStatFilter('trusted')" [attr.aria-label]="'admin.userManagement.filterByTrustedUsers' | translate">
       <div class="admin-stat-card__icon" style="--ic:#d97706;--bg:#fffbeb">
         <i class="bi bi-shield-fill-check"></i>
       </div>
       <div class="admin-stat-card__content">
         <span class="admin-stat-card__value">{{ stats().trusted }}</span>
-        <span class="admin-stat-card__label">Trusted</span>
+        <span class="admin-stat-card__label">{{ 'admin.userManagement.trusted' | translate }}</span>
       </div>
     </button>
   </div>
@@ -123,64 +123,64 @@
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-icon"></i>
       <input type="text" class="jb-search-input"
-        placeholder="Search by name, email or phone…"
+        [placeholder]="'admin.userManagement.searchByNameEmailPhone' | translate"
         [ngModel]="searchInput()"
         (ngModelChange)="searchInput.set($event)"
         (keydown)="onSearchKeydown($event)"
-        aria-label="Search users" />
+        [attr.aria-label]="'admin.userManagement.searchUsers' | translate" />
     </div>
 
     <!-- Basic Filters -->
     <div class="jb-select-wrap">
       <app-searchable-select [options]="roleFilterOptions" [ngModel]="filterRole()"
-        (ngModelChange)="setRoleFilter($event)" placeholder="All Roles"
-        aria-label="Filter by role">
+        (ngModelChange)="setRoleFilter($event)" [placeholder]="'admin.userManagement.allRoles' | translate"
+        [attr.aria-label]="'admin.userManagement.filterByRole' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
-        (ngModelChange)="setStatusFilter($event)" placeholder="All Status"
-        aria-label="Filter by status">
+        (ngModelChange)="setStatusFilter($event)" [placeholder]="'admin.userManagement.allStatus' | translate"
+        [attr.aria-label]="'admin.userManagement.filterByStatus' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="joinedFilterOptions" [ngModel]="filterJoined()"
-        (ngModelChange)="setJoinedFilter($event)" placeholder="All Time"
-        aria-label="Filter by join date">
+        (ngModelChange)="setJoinedFilter($event)" [placeholder]="'admin.userManagement.allTime' | translate"
+        [attr.aria-label]="'admin.userManagement.filterByJoinDate' | translate">
       </app-searchable-select>
     </div>
 
     <div class="jb-select-wrap">
       <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-        (ngModelChange)="setCountryFilter($event)" placeholder="All Countries"
-        aria-label="Filter by country">
+        (ngModelChange)="setCountryFilter($event)" [placeholder]="'admin.userManagement.allCountries' | translate"
+        [attr.aria-label]="'admin.userManagement.filterByCountry' | translate">
       </app-searchable-select>
     </div>
 
     <!-- View mode toggle (table / grid) -->
-    <div class="um-view-toggle" role="group" aria-label="Switch view mode">
+    <div class="um-view-toggle" role="group" [attr.aria-label]="'admin.userManagement.switchViewMode' | translate">
       <button class="um-view-btn" type="button" [class.active]="viewMode() === 'table'"
-        (click)="setViewMode('table')" aria-label="Table view">
+        (click)="setViewMode('table')" [attr.aria-label]="'admin.userManagement.tableView' | translate">
         <i class="bi bi-list-ul"></i>
       </button>
       <button class="um-view-btn" type="button" [class.active]="viewMode() === 'grid'"
-        (click)="setViewMode('grid')" aria-label="Grid view">
+        (click)="setViewMode('grid')" [attr.aria-label]="'admin.userManagement.gridView' | translate">
         <i class="bi bi-grid-3x3-gap-fill"></i>
       </button>
     </div>
 
     <!-- Search & Clear Actions -->
-    <button class="jb-btn jb-btn--solid jb-btn--sm" (click)="applyFilters()" aria-label="Apply search">
+    <button class="jb-btn jb-btn--solid jb-btn--sm" (click)="applyFilters()" [attr.aria-label]="'admin.userManagement.applySearch' | translate">
       <i class="bi bi-search"></i>
-      <span>Search</span>
+      <span>{{ 'common.search' | translate }}</span>
     </button>
 
     @if (activeFilterCount() > 0) {
-      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()" aria-label="Clear all filters">
+      <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()" [attr.aria-label]="'admin.userManagement.clearAllFilters' | translate">
         <i class="bi bi-x-circle"></i>
-        <span>Clear</span>
+        <span>{{ 'common.clear' | translate }}</span>
         <span class="jb-badge-sm">{{ activeFilterCount() }}</span>
       </button>
     }
@@ -191,9 +191,9 @@
     <div class="jb-active-chips">
       @for (chip of activeFilterChips(); track chip.key) {
         <div class="jb-chip">
-          <span class="jb-chip__label">{{ chip.label }}</span>
+          <span class="jb-chip__label">{{ chip.label | translate }}</span>
           <button class="jb-chip__remove" (click)="removeFilter(chip.key)" 
-            [attr.aria-label]="'Remove ' + chip.label + ' filter'">
+            [attr.aria-label]="'admin.userManagement.removeFilter' | translate:{ name: chip.label | translate }">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -222,14 +222,14 @@
         }
       </div>
       @if (activeFilterCount() > 0 || appliedSearch()) {
-        <h5 class="um-empty__title">No results found</h5>
-        <p class="um-empty__desc">Try adjusting your search or filters.</p>
+        <h5 class="um-empty__title">{{ 'common.noResults' | translate }}</h5>
+        <p class="um-empty__desc">{{ 'admin.userManagement.tryAdjustingSearchFilters' | translate }}</p>
         <button class="jb-btn jb-btn--ghost jb-btn--sm um-empty__action" (click)="clearFilters()">
-          <i class="bi bi-x-circle"></i> Clear all filters
+          <i class="bi bi-x-circle"></i> {{ 'admin.userManagement.clearAllFilters' | translate }}
         </button>
       } @else {
-        <h5 class="um-empty__title">No users yet</h5>
-        <p class="um-empty__desc">Users who join the platform will appear here.</p>
+        <h5 class="um-empty__title">{{ 'admin.userManagement.noUsersYet' | translate }}</h5>
+        <p class="um-empty__desc">{{ 'admin.userManagement.usersWhoJoinPlatformWill' | translate }}</p>
       }
     </div>
   } @else {
@@ -240,7 +240,7 @@
           <thead>
             <tr>
               <th class="um-th um-th--sortable" (click)="toggleSort('name')">
-                User
+                {{ 'admin.userManagement.user' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
@@ -248,32 +248,32 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-md-table-cell" (click)="toggleSort('email')">
-                Email
+                {{ 'admin.userManagement.email' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'email' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'email' && sortDir() === 'desc'"
                   [class.bi-arrow-down-up]="sortBy() !== 'email'"
                 ></i>
               </th>
-              <th class="um-th d-none d-lg-table-cell">Phone</th>
+              <th class="um-th d-none d-lg-table-cell">{{ 'admin.userManagement.phone' | translate }}</th>
               <th class="um-th um-th--sortable" (click)="toggleSort('role')">
-                Role
+                {{ 'admin.userManagement.role' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'role' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'role' && sortDir() === 'desc'"
                   [class.bi-arrow-down-up]="sortBy() !== 'role'"
                 ></i>
               </th>
-              <th class="um-th">Status</th>
+              <th class="um-th">{{ 'common.status' | translate }}</th>
               <th class="um-th um-th--sortable d-none d-xl-table-cell" (click)="toggleSort('joined')">
-                Joined
+                {{ 'admin.userManagement.joined' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
                   [class.bi-arrow-down-up]="sortBy() !== 'joined'"
                 ></i>
               </th>
-              <th class="um-th um-th--actions">Actions</th>
+              <th class="um-th um-th--actions">{{ 'common.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -310,7 +310,7 @@
                   <span class="um-badge"
                     [class.um-badge--admin]="user.role === 'ADMIN'"
                     [class.um-badge--user]="user.role === 'USER'">
-                    {{ user.role }}
+                    {{ user.role | enumLabel:'role' }}
                   </span>
                 </td>
 
@@ -323,7 +323,7 @@
                     {{ getStatusLabel(user) }}
                   </span>
                   @if (user.isTrusted && !user.isBlocked) {
-                    <span class="um-badge um-badge--trusted ms-1">Trusted</span>
+                    <span class="um-badge um-badge--trusted ms-1">{{ 'admin.userManagement.trusted' | translate }}</span>
                   }
                 </td>
 
@@ -408,7 +408,7 @@
                   <span class="um-badge"
                     [class.um-badge--admin]="user.role === 'ADMIN'"
                     [class.um-badge--user]="user.role === 'USER'">
-                    {{ user.role }}
+                    {{ user.role | enumLabel:'role' }}
                   </span>
                   <span class="um-badge"
                     [class.um-badge--blocked]="user.isBlocked"
@@ -417,7 +417,7 @@
                     {{ getStatusLabel(user) }}
                   </span>
                   @if (user.isTrusted && !user.isBlocked) {
-                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i>Trusted</span>
+                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i>{{ 'admin.userManagement.trusted' | translate }}</span>
                   }
                 </div>
 
@@ -477,16 +477,16 @@
         <!-- Left: count + rows per page -->
         <div class="um-pagination__left">
           <span class="um-pagination__info">
-            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-            of <strong>{{ total() }}</strong> users
+            {{ 'admin.userManagement.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            {{ 'admin.userManagement.of' | translate }} <strong>{{ total() }}</strong> {{ 'admin.userManagement.users' | translate }}
           </span>
           <div class="um-pg-divider"></div>
           <div class="um-pagination__size">
-            <span>Rows per page</span>
+            <span>{{ 'admin.userManagement.rowsPerPage' | translate }}</span>
             <div class="jb-select-wrap jb-select-wrap--xs">
               <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
                 (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-                aria-label="Rows per page">
+                [attr.aria-label]="'admin.userManagement.rowsPerPage' | translate">
               </app-searchable-select>
             </div>
           </div>
@@ -495,11 +495,11 @@
         <!-- Right: page buttons -->
         <div class="um-pagination__pages">
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(1)" title="First page">
+            (click)="goToPage(1)" [title]="'admin.userManagement.firstPage' | translate">
             <i class="bi bi-chevron-double-left"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            (click)="goToPage(currentPage() - 1)" [title]="'admin.userManagement.previousPage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
           @for (p of getPages(); track p) {
@@ -508,11 +508,11 @@
               (click)="goToPage(p)">{{ p }}</button>
           }
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(currentPage() + 1)" title="Next page">
+            (click)="goToPage(currentPage() + 1)" [title]="'admin.userManagement.nextPage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(totalPages())" title="Last page">
+            (click)="goToPage(totalPages())" [title]="'admin.userManagement.lastPage' | translate">
             <i class="bi bi-chevron-double-right"></i>
           </button>
         </div>
@@ -529,7 +529,7 @@
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->
 <button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
-        (click)="showAddDrawer.set(true)" aria-label="Add a new user" title="Add User">
+        (click)="showAddDrawer.set(true)" [attr.aria-label]="'admin.userManagement.addNewUser2' | translate" [title]="'admin.userManagement.addUser' | translate">
   <i class="bi bi-person-plus-fill"></i>
 </button>
 
@@ -579,7 +579,7 @@
         Are you sure?
       </p>
       <div class="um-confirm-btns">
-        <button class="um-btn um-btn--ghost" (click)="cancelConfirm()">Cancel</button>
+        <button class="um-btn um-btn--ghost" (click)="cancelConfirm()">{{ 'common.cancel' | translate }}</button>
         <button class="um-btn"
           [class.um-btn--danger]="ca.type === 'delete' || ca.type === 'block'"
           [class.um-btn--warning]="ca.type === 'trust'"

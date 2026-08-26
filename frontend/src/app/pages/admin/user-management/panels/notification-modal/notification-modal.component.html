@@ -8,8 +8,8 @@
     <div class="nm-header">
       <div class="nm-header__icon"><i class="bi bi-bell-fill"></i></div>
       <div>
-        <h5 class="nm-header__title">Send Notification</h5>
-        <p class="nm-header__sub">Broadcast a message to platform users</p>
+        <h5 class="nm-header__title">{{ 'admin.notificationModal.sendNotification' | translate }}</h5>
+        <p class="nm-header__sub">{{ 'admin.notificationModal.broadcastMessagePlatformUsers' | translate }}</p>
       </div>
       <button class="nm-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -19,63 +19,63 @@
     @if (sent()) {
       <div class="nm-success">
         <div class="nm-success__icon"><i class="bi bi-check-lg"></i></div>
-        <h6 class="nm-success__title">Notification Sent!</h6>
+        <h6 class="nm-success__title">{{ 'admin.notificationModal.notificationSent' | translate }}</h6>
         <p class="nm-success__desc">
-          Delivered to <strong>{{ sentCount() }}</strong> user{{ sentCount() === 1 ? '' : 's' }} successfully.
+          {{ 'admin.notificationModal.delivered' | translate }} <strong>{{ sentCount() }}</strong> user{{ sentCount() === 1 ? '' : 's' }} successfully.
         </p>
         <div class="nm-footer">
-          <button class="btn btn-primary btn-sm" (click)="reset()">Send Another</button>
+          <button class="btn btn-primary btn-sm" (click)="reset()">{{ 'admin.notificationModal.sendAnother' | translate }}</button>
         </div>
       </div>
     } @else {
 
       <div class="nm-field">
-        <label class="nm-label">Send To</label>
+        <label class="nm-label">{{ 'admin.notificationModal.send2' | translate }}</label>
         <app-radio-group
           variant="card"
           [options]="recipientOptions"
           [ngModel]="recipient()"
           (ngModelChange)="recipient.set($any($event))"
           [ngModelOptions]="{ standalone: true }"
-          ariaLabel="Send to">
+          [ariaLabel]="'admin.notificationModal.send' | translate">
         </app-radio-group>
 
         @if (recipient() === 'role') {
           <div class="nm-inline-field">
-            <label class="nm-label-sm">Role</label>
+            <label class="nm-label-sm">{{ 'admin.notificationModal.role' | translate }}</label>
             <select class="nm-select" [ngModel]="roleTarget()" (ngModelChange)="roleTarget.set($event)">
-              <option value="USER">User</option>
-              <option value="ADMIN">Admin</option>
+              <option value="USER">{{ 'admin.notificationModal.user' | translate }}</option>
+              <option value="ADMIN">{{ 'admin.notificationModal.admin' | translate }}</option>
             </select>
           </div>
         }
 
         @if (recipient() === 'user') {
           <div class="nm-inline-field">
-            <label class="nm-label-sm">User ID</label>
-            <input type="text" class="nm-input" placeholder="Paste user UUID here"
+            <label class="nm-label-sm">{{ 'admin.notificationModal.userId' | translate }}</label>
+            <input type="text" class="nm-input" [placeholder]="'admin.notificationModal.pasteUserUuidHere' | translate"
               [ngModel]="userId()" (ngModelChange)="userId.set($event)" />
           </div>
         }
       </div>
 
       <div class="nm-field">
-        <label class="nm-label">Notification Type</label>
+        <label class="nm-label">{{ 'admin.notificationModal.notificationType' | translate }}</label>
         <select class="nm-select nm-select--full" [ngModel]="notifType()" (ngModelChange)="notifType.set($event)">
           @for (t of typeOptions; track t.value) {
-            <option [value]="t.value">{{ t.label }}</option>
+            <option [value]="t.value">{{ t.label | translate }}</option>
           }
         </select>
       </div>
 
       <div class="nm-field">
         <div class="nm-label-row">
-          <label class="nm-label">Message</label>
+          <label class="nm-label">{{ 'admin.notificationModal.message' | translate }}</label>
           <span class="nm-char-count" [class.nm-char-count--warn]="msgLength() > 450">
             {{ msgLength() }} / 500
           </span>
         </div>
-        <textarea class="nm-textarea" rows="5" placeholder="Type your notification message…"
+        <textarea class="nm-textarea" rows="5" [placeholder]="'admin.notificationModal.typeNotificationMessage' | translate"
           [ngModel]="message()" (ngModelChange)="message.set($event)"
           [class.nm-textarea--warn]="msgLength() > 500">
         </textarea>

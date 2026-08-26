@@ -1,19 +1,15 @@
 <div class="auth-page">
   <!-- Back to landing page -->
-  <a routerLink="/landing" class="home-toggle" [attr.aria-label]="t.backToHome">
+  <a routerLink="/landing" class="home-toggle" [attr.aria-label]="('auth.login.backToHome' | translate)">
     <i class="bi bi-house-door-fill"></i>
   </a>
 
   <div class="auth-toggle-group">
     <!-- Language toggle -->
-    <button class="lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? t.switchToTamil : t.switchToEnglish">
-      <span class="lang-toggle-seg" [class.active]="currentLang === 'en'">EN</span>
-      <span class="lang-toggle-divider"></span>
-      <span class="lang-toggle-seg" [class.active]="currentLang === 'ta'">தமிழ்</span>
-    </button>
+    <app-language-toggle></app-language-toggle>
 
     <!-- Theme toggle -->
-    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? t.switchToLight : t.switchToDark">
+    <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? ('common.switchToLight' | translate) : ('common.switchToDark' | translate)">
       <i class="bi" [class.bi-sun-fill]="currentTheme === 'dark'" [class.bi-moon-fill]="currentTheme === 'light'"></i>
     </button>
   </div>
@@ -24,25 +20,25 @@
     <div class="auth-branding">
       <div class="branding-content">
         <h1 class="brand-headline">
-          {{ t.headlinePre }}<br />
-          <span class="brand-headline-sub">{{ t.headlineSub }}</span>
+          {{ 'auth.login.headlinePre' | translate }}<br />
+          <span class="brand-headline-sub">{{ 'auth.login.headlineSub' | translate }}</span>
         </h1>
         <p class="brand-desc">
-          {{ t.brandDesc }}
+          {{ 'auth.login.brandDesc' | translate }}
         </p>
 
         <ul class="feature-list">
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>{{ t.feature1 }}</span>
+            <span>{{ 'auth.login.feature1' | translate }}</span>
           </li>
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>{{ t.feature2 }}</span>
+            <span>{{ 'auth.login.feature2' | translate }}</span>
           </li>
           <li>
             <span class="feature-icon"><i class="bi bi-check-circle-fill"></i></span>
-            <span>{{ t.feature3 }}</span>
+            <span>{{ 'auth.login.feature3' | translate }}</span>
           </li>
         </ul>
 
@@ -53,7 +49,7 @@
             <div class="av av-3">C</div>
             <div class="av av-4">D</div>
           </div>
-          <span class="avatar-row-text">{{ t.avatarRowText }}</span>
+          <span class="avatar-row-text">{{ 'auth.login.avatarRowText' | translate }}</span>
         </div>
       </div>
     </div>
@@ -63,22 +59,22 @@
 
       <div class="auth-card">
         <div class="auth-card-header">
-          <h2>{{ t.cardTitle }}</h2>
-          <p class="subtitle">{{ t.cardSubtitle }}</p>
+          <h2>{{ 'auth.login.cardTitle' | translate }}</h2>
+          <p class="subtitle">{{ 'auth.login.cardSubtitle' | translate }}</p>
         </div>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" autocomplete="on">
 
           <!-- Email -->
           <div class="field-group">
-            <label class="field-label" for="login-email">{{ t.usernameLabel }}</label>
+            <label class="field-label" for="login-email">{{ 'auth.login.usernameLabel' | translate }}</label>
             <div class="field-input-wrap">
               <i class="bi bi-person field-icon"></i>
               <input
                 id="login-email"
                 type="text"
                 formControlName="identifier"
-                [placeholder]="t.usernamePlaceholder"
+                [placeholder]="('auth.login.usernamePlaceholder' | translate)"
                 autocomplete="username"
                 class="field-input"
                 [class.is-invalid]="f['identifier'].touched && f['identifier'].invalid"
@@ -89,9 +85,9 @@
             @if (f['identifier'].touched && f['identifier'].invalid) {
               <div class="field-error" id="login-identifier-error" role="alert">
                 @if (f['identifier'].errors?.['required']) {
-                  {{ t.errIdentifierRequired }}
+                  {{ 'auth.login.errIdentifierRequired' | translate }}
                 } @else if (f['identifier'].errors?.['invalidUsernameOrEmail']) {
-                  {{ t.errIdentifierInvalid }}
+                  {{ 'auth.login.errIdentifierInvalid' | translate }}
                 }
               </div>
             }
@@ -99,14 +95,14 @@
 
           <!-- Password -->
           <div class="field-group">
-            <label class="field-label" for="login-password">{{ t.passwordLabel }}</label>
+            <label class="field-label" for="login-password">{{ 'auth.login.passwordLabel' | translate }}</label>
             <div class="field-input-wrap">
               <i class="bi bi-lock field-icon"></i>
               <input
                 id="login-password"
                 [type]="showPassword() ? 'text' : 'password'"
                 formControlName="password"
-                [placeholder]="t.passwordPlaceholder"
+                [placeholder]="('auth.login.passwordPlaceholder' | translate)"
                 autocomplete="current-password"
                 class="field-input"
                 [class.is-invalid]="f['password'].touched && f['password'].invalid"
@@ -118,7 +114,7 @@
                 class="toggle-pw-btn"
                 (click)="showPassword.set(!showPassword())"
                 tabindex="-1"
-                [attr.aria-label]="t.togglePasswordVisibility"
+                [attr.aria-label]="('auth.login.togglePasswordVisibility' | translate)"
               >
                 <i class="bi" [class.bi-eye-slash]="!showPassword()" [class.bi-eye]="showPassword()"></i>
               </button>
@@ -126,9 +122,9 @@
             @if (f['password'].touched && f['password'].invalid) {
               <div class="field-error" id="login-password-error" role="alert">
                 @if (f['password'].errors?.['required']) {
-                  {{ t.errPasswordRequired }}
+                  {{ 'auth.login.errPasswordRequired' | translate }}
                 } @else if (f['password'].errors?.['minlength']) {
-                  {{ t.errPasswordMinlength }}
+                  {{ 'auth.login.errPasswordMinlength' | translate }}
                 }
               </div>
             }
@@ -137,7 +133,7 @@
           <!-- Forgot Password Link -->
           <div class="forgot-password-link">
             <button type="button" class="text-link" (click)="forgotPassword()">
-              {{ t.forgotPassword }}
+              {{ 'auth.login.forgotPassword' | translate }}
             </button>
           </div>
 
@@ -145,10 +141,10 @@
           <button type="submit" class="submit-btn" [disabled]="loading()">
             @if (loading()) {
               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              {{ t.signingIn }}
+              {{ 'auth.login.signingIn' | translate }}
             } @else {
               <i class="bi bi-box-arrow-in-right"></i>
-              {{ t.signIn }}
+              {{ 'auth.login.signIn' | translate }}
             }
           </button>
         </form>
@@ -156,7 +152,7 @@
         @if (googleConfigured) {
           <div class="divider-row">
             <span class="divider-line"></span>
-            <span class="divider-text">{{ t.orContinueWith }}</span>
+            <span class="divider-text">{{ 'auth.login.orContinueWith' | translate }}</span>
             <span class="divider-line"></span>
           </div>
 
@@ -168,12 +164,12 @@
         }
 
         <p class="switch-auth">
-          {{ t.noAccount }}
-          <a routerLink="/auth/register" class="switch-link">{{ t.createOne }} &rarr;</a>
+          {{ 'auth.login.noAccount' | translate }}
+          <a routerLink="/auth/register" class="switch-link">{{ 'auth.login.createOne' | translate }} &rarr;</a>
         </p>
 
         <!-- <p class="admin-link">
-          <a routerLink="/auth/admin-login">Admin Login</a>
+          <a routerLink="/auth/admin-login">{{ 'auth.login.adminLogin' | translate }}</a>
         </p> -->
       </div>
     </div>
@@ -185,7 +181,7 @@
     <div class="reg-loading-overlay">
       <div class="reg-loading-card">
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
-        <p class="reg-loading-text">{{ t.googleSigningIn }}</p>
+        <p class="reg-loading-text">{{ 'auth.login.googleSigningIn' | translate }}</p>
       </div>
     </div>
   }
@@ -194,19 +190,19 @@
   @if (googleNeedsUsername()) {
     <div class="google-username-overlay" (keydown.escape)="closeGoogleModal()">
       <div class="google-username-card" role="dialog" aria-modal="true" aria-labelledby="google-username-title" cdkTrapFocus cdkTrapFocusAutoCapture>
-        <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="t.modalClose">
+        <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="('auth.login.modalClose' | translate)">
           <i class="bi bi-x-lg"></i>
         </button>
         <div class="google-username-icon">
           <i class="bi bi-person-check-fill"></i>
         </div>
-        <h3 class="google-username-title" id="google-username-title">{{ t.modalTitle }}</h3>
+        <h3 class="google-username-title" id="google-username-title">{{ 'auth.login.modalTitle' | translate }}</h3>
         <p class="google-username-desc">
-          {{ t.modalDesc }}
+          {{ 'auth.login.modalDesc' | translate }}
         </p>
 
         <div class="field-group">
-          <label class="field-label">{{ t.modalUsernameLabel }}</label>
+          <label class="field-label">{{ 'auth.login.modalUsernameLabel' | translate }}</label>
           <div class="field-input-wrap">
             <i class="bi bi-person field-icon"></i>
             <input
@@ -215,7 +211,7 @@
               class="field-input"
               [value]="usernameModalValue()"
               (input)="onGoogleUsernameInput($any($event.target).value)"
-              placeholder="username"
+              [placeholder]="'auth.login.usernamePlaceholder2' | translate"
               [class.is-invalid]="usernameModalTaken()"
               autocomplete="off"
             />
@@ -223,14 +219,14 @@
           @if (usernameModalChecking()) {
             <div class="field-hint">
               <span class="spinner-border spinner-border-sm" role="status"></span>
-              {{ t.checkingAvailability }}
+              {{ 'auth.login.checkingAvailability' | translate }}
             </div>
           } @else if (usernameModalTaken()) {
-            <div class="field-error">{{ t.usernameTaken }}</div>
+            <div class="field-error">{{ 'auth.login.usernameTaken' | translate }}</div>
           } @else if (usernameModalValue().length >= 3) {
             <div class="field-success">
               <i class="bi bi-check-circle-fill"></i>
-              {{ t.usernameAvailable }}
+              {{ 'auth.login.usernameAvailable' | translate }}
             </div>
           }
         </div>
@@ -244,10 +240,10 @@
         >
           @if (googleLoading()) {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            {{ t.creatingAccount }}
+            {{ 'auth.login.creatingAccount' | translate }}
           } @else {
             <i class="bi bi-check2-circle"></i>
-            {{ t.confirmUsername }}
+            {{ 'auth.login.confirmUsername' | translate }}
           }
         </button>
       </div>

@@ -26,6 +26,9 @@ import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/con
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
 export interface FilterChip { key: string; label: string; value: any; }
 
@@ -87,8 +90,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   imports: [DateInputComponent, 
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink,
     SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
-    SortBarComponent,
-  ],
+    SortBarComponent, TranslatePipe, EnumLabelPipe],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -97,6 +99,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
 export class AdminJobsComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
   private jobService        = inject(JobService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
@@ -150,9 +153,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   sortBy              = signal<string>('newest');
 
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',         label: 'All Status' },
-    { value: 'active',   label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
+    { value: '',         label: 'admin.jobs.label.allStatus' },
+    { value: 'active',   label: 'admin.jobs.label.active' },
+    { value: 'inactive', label: 'admin.jobs.label.inactive' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -169,8 +172,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // enum (newest/oldest/salary_high/salary_low/…), so the generic
   // {field, dir} used by the UI is translated to/from that enum here.
   readonly sortFields: SortField[] = [
-    { key: 'date',   label: 'Date' },
-    { key: 'salary', label: 'Salary' },
+    { key: 'date',   label: 'admin.jobs.label.date' },
+    { key: 'salary', label: 'admin.jobs.label.salary' },
   ];
 
   private readonly sortFieldMap: Record<string, { asc: string; desc: string }> = {
@@ -230,27 +233,32 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   activeFilterChips = computed<FilterChip[]>(() => {
     const chips: FilterChip[] = [];
     const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
-    if (this.searchQuery())           add('search',       `"${this.searchQuery()}"`, this.searchQuery());
-    if (this.filterJobType())         add('jobType',      this.filterJobType(), this.filterJobType());
-    if (this.filterWorkMode())        add('workMode',     this.filterWorkMode(), this.filterWorkMode());
+    if (this.searchQuery())           add('search',       this.translate.instant('filters.search', { value: this.searchQuery() }), this.searchQuery());
+    if (this.filterJobType())         add('jobType',      this.translate.instant(enumLabelKey('jobType', this.filterJobType())), this.filterJobType());
+    if (this.filterWorkMode())        add('workMode',     this.translate.instant(enumLabelKey('workMode', this.filterWorkMode())), this.filterWorkMode());
     if (this.filterCountry())         add('country',      this.filterCountry(), this.filterCountry());
     if (this.filterState())           add('state',        this.filterState(), this.filterState());
     if (this.filterCity())            add('city',         this.filterCity(), this.filterCity());
     if (this.filterCompanyName())     add('companyName',  this.filterCompanyName(), this.filterCompanyName());
-    if (this.filterShiftType())       add('shiftType',    this.filterShiftType(), this.filterShiftType());
-    if (this.filterEducation())       add('education',    this.filterEducation(), this.filterEducation());
-    if (this.filterExpMin() != null)  add('expMin',       `Min ${this.filterExpMin()} yr`, this.filterExpMin());
-    if (this.filterExpMax() != null)  add('expMax',       `Max ${this.filterExpMax()} yr`, this.filterExpMax());
-    if (this.filterSalaryMin() != null) add('salaryMin',  `Salary ≥ ${this.filterSalaryMin()}`, this.filterSalaryMin());
-    if (this.filterSalaryMax() != null) add('salaryMax',  `Salary ≤ ${this.filterSalaryMax()}`, this.filterSalaryMax());
-    if (this.filterSalaryHidden() === true)  add('salaryHidden', 'Not Disclosed', true);
+    if (this.filterShiftType())       add('shiftType',    this.translate.instant(enumLabelKey('shiftType', this.filterShiftType())), this.filterShiftType());
+    if (this.filterEducation())       add('education',    this.translate.instant(enumLabelKey('education', this.filterEducation())), this.filterEducation());
+    if (this.filterExpMin() != null)  add('expMin',       this.translate.instant('filters.expMin', { years: this.filterExpMin() }), this.filterExpMin());
+    if (this.filterExpMax() != null)  add('expMax',       this.translate.instant('filters.expMax', { years: this.filterExpMax() }), this.filterExpMax());
+    if (this.filterSalaryMin() != null) add('salaryMin',  this.translate.instant('filters.salaryMin', { amount: this.filterSalaryMin() }), this.filterSalaryMin());
+    if (this.filterSalaryMax() != null) add('salaryMax',  this.translate.instant('filters.salaryMax', { amount: this.filterSalaryMax() }), this.filterSalaryMax());
+    if (this.filterSalaryHidden() === true)  add('salaryHidden', this.translate.instant('filters.salaryHidden'), true);
     if (this.filterPostedWithin() != null) {
-      const labels: Record<number, string> = { 1: 'Today', 7: 'Last 7 days', 30: 'Last 30 days' };
-      add('postedWithin', labels[this.filterPostedWithin()!] ?? `Last ${this.filterPostedWithin()} days`, this.filterPostedWithin());
+      const keys: Record<number, string> = {
+        1: 'filters.postedToday', 7: 'filters.postedDays7', 30: 'filters.postedDays30',
+      };
+      const days = this.filterPostedWithin()!;
+      add('postedWithin', keys[days]
+        ? this.translate.instant(keys[days])
+        : this.translate.instant('filters.postedDaysN', { days }), days);
     }
-    if (this.filterStatus())   add('status',   this.filterStatus() === 'active' ? 'Active' : 'Inactive', this.filterStatus());
-    if (this.filterDateFrom()) add('dateFrom', `From ${this.filterDateFrom()}`, this.filterDateFrom());
-    if (this.filterDateTo())   add('dateTo',   `To ${this.filterDateTo()}`, this.filterDateTo());
+    if (this.filterStatus())   add('status',   this.translate.instant(enumLabelKey('activeStatus', this.filterStatus())), this.filterStatus());
+    if (this.filterDateFrom()) add('dateFrom', this.translate.instant('filters.dateFrom', { date: this.filterDateFrom() }), this.filterDateFrom());
+    if (this.filterDateTo())   add('dateTo',   this.translate.instant('filters.dateTo', { date: this.filterDateTo() }), this.filterDateTo());
     return chips;
   });
 
@@ -397,7 +405,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   // ─── Static Options ─────────────────────────────────────────
   readonly jobTypes    = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'];
-  readonly jobTypeOptions: SelectOption[] = this.jobTypes.map(t => ({ value: t, label: t }));
+  readonly jobTypeOptions: SelectOption[] = enumSelectOptions('jobType', this.jobTypes);
   readonly workModes   = ['Remote', 'Hybrid', 'On-site'] as const;
   readonly shiftTypes  = ['Day', 'Night', 'Rotational', 'Flexible'] as const;
   readonly salaryTypes = ['Fixed', 'Hourly', 'Monthly', 'Annual'] as const;
@@ -405,49 +413,49 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   readonly currencyOptions: SelectOption[] = getCurrencySelectOptions();
 
   readonly educationOptions: SelectOption[] = [
-    { value: 'None',       label: 'No education needed' },
-    { value: '8th',        label: '8th'                  },
-    { value: '10th',       label: '10th'                 },
-    { value: '12th',       label: '12th'                 },
-    { value: 'Diploma',    label: 'Diploma'              },
-    { value: 'ITI',        label: 'ITI'                  },
-    { value: 'Any',        label: 'Any Graduate'         },
-    { value: "Bachelor's", label: "Bachelor's Degree"    },
-    { value: "Master's",   label: "Master's Degree"      },
-    { value: 'PhD',        label: 'PhD'                  },
+    { value: 'None',       label: 'admin.jobs.label.noEducationNeeded' },
+    { value: '8th',        label: 'admin.jobs.label.k8th'                  },
+    { value: '10th',       label: 'admin.jobs.label.k10th'                 },
+    { value: '12th',       label: 'admin.jobs.label.k12th'                 },
+    { value: 'Diploma',    label: 'admin.jobs.label.diploma'              },
+    { value: 'ITI',        label: 'admin.jobs.label.iti'                  },
+    { value: 'Any',        label: 'admin.jobs.label.graduate'         },
+    { value: "Bachelor's", label: 'enums.education.bachelors' },
+    { value: "Master's",   label: 'enums.education.masters' },
+    { value: 'PhD',        label: 'admin.jobs.label.phd'                  },
   ];
 
   readonly expOptions: SelectOption[] = [
-    { value: 0,  label: 'Fresher (0 yrs)' },
-    { value: 1,  label: '1 Year'          },
-    { value: 2,  label: '2 Years'         },
-    { value: 3,  label: '3 Years'         },
-    { value: 4,  label: '4 Years'         },
-    { value: 5,  label: '5 Years'         },
-    { value: 7,  label: '7 Years'         },
-    { value: 10, label: '10 Years'        },
-    { value: 15, label: '15+ Years'       },
+    { value: 0,  label: 'admin.jobs.label.fresher0Yrs' },
+    { value: 1,  label: 'admin.jobs.label.k1Year'          },
+    { value: 2,  label: 'admin.jobs.label.k2Years'         },
+    { value: 3,  label: 'admin.jobs.label.k3Years'         },
+    { value: 4,  label: 'admin.jobs.label.k4Years'         },
+    { value: 5,  label: 'admin.jobs.label.k5Years'         },
+    { value: 7,  label: 'admin.jobs.label.k7Years'         },
+    { value: 10, label: 'admin.jobs.label.k10Years'        },
+    { value: 15, label: 'admin.jobs.label.k15Years'       },
   ];
 
   readonly sortOptions: SelectOption[] = [
-    { value: 'newest',      label: 'Newest First'   },
-    { value: 'oldest',      label: 'Oldest First'   },
-    { value: 'salary_high', label: 'Highest Salary' },
-    { value: 'salary_low',  label: 'Lowest Salary'  },
-    { value: 'company_az',  label: 'Company (A→Z)'  },
+    { value: 'newest',      label: 'admin.jobs.label.newestFirst'   },
+    { value: 'oldest',      label: 'admin.jobs.label.oldestFirst'   },
+    { value: 'salary_high', label: 'admin.jobs.label.highestSalary' },
+    { value: 'salary_low',  label: 'admin.jobs.label.lowestSalary'  },
+    { value: 'company_az',  label: 'admin.jobs.label.companyZ'  },
   ];
 
   readonly postedWithinOptions: SelectOption[] = [
-    { value: 1,  label: 'Today'        },
-    { value: 7,  label: 'Last 7 Days'  },
-    { value: 30, label: 'Last 30 Days' },
+    { value: 1,  label: 'admin.jobs.label.today'        },
+    { value: 7,  label: 'admin.jobs.label.last7Days'  },
+    { value: 30, label: 'admin.jobs.label.last30Days' },
   ];
 
   readonly filterExpOptions: SelectOption[] = [
-    { value: 0,  label: 'Fresher' }, { value: 1,  label: '1 yr'   },
-    { value: 2,  label: '2 yrs'  }, { value: 3,  label: '3 yrs'  },
-    { value: 5,  label: '5 yrs'  }, { value: 7,  label: '7 yrs'  },
-    { value: 10, label: '10 yrs' }, { value: 15, label: '15+ yrs'},
+    { value: 0,  label: 'admin.jobs.label.fresher' }, { value: 1,  label: 'admin.jobs.label.k1Yr'   },
+    { value: 2,  label: 'admin.jobs.label.k2Yrs'  }, { value: 3,  label: 'admin.jobs.label.k3Yrs'  },
+    { value: 5,  label: 'admin.jobs.label.k5Yrs'  }, { value: 7,  label: 'admin.jobs.label.k7Yrs'  },
+    { value: 10, label: 'admin.jobs.label.k10Yrs' }, { value: 15, label: 'admin.jobs.label.k15Yrs'},
   ];
 
   // ─── Stats ──────────────────────────────────────────────────
@@ -579,7 +587,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('admin.jobs.toast.failedLoadCountryAddressDetails'),
     });
   }
 
@@ -720,7 +728,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.pageReady.set(true);
       },
-      error: () => { this.toast.error('Failed to load jobs'); this.loading.set(false); this.pageReady.set(true); },
+      error: () => { this.toast.error('admin.jobs.toast.failedLoadJobs'); this.loading.set(false); this.pageReady.set(true); },
     });
   }
 
@@ -1077,13 +1085,13 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         next: (job) => {
           this.jobs.update(list => [job, ...list]);
           this.totalItems.update(v => v + 1);
-          this.toast.success('Job posted successfully!');
+          this.toast.success('admin.jobs.toast.jobPostedSuccessfully');
           // Keep the popup (and its disabled/spinner button, so it can't be
           // double-submitted) up just long enough for the confirmation toast
           // to be visible above it, then close.
           setTimeout(() => { this.closeAddModal(); this.submitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
-        error: () => { this.toast.error('Failed to post job. Please try again.'); this.submitting.set(false); },
+        error: () => { this.toast.error('admin.jobs.toast.failedPostJobPleaseTry'); this.submitting.set(false); },
       });
   }
 
@@ -1098,10 +1106,10 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (updated) => {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
-          this.toast.success('Job updated successfully!');
+          this.toast.success('admin.jobs.toast.jobUpdatedSuccessfully');
           setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
         },
-        error: () => { this.toast.error('Failed to update job.'); this.editSubmitting.set(false); },
+        error: () => { this.toast.error('admin.jobs.toast.failedUpdateJob'); this.editSubmitting.set(false); },
       });
   }
 
@@ -1127,7 +1135,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         this.jobs.update(list => list.filter(j => j.id !== job.id));
         this.totalItems.update(v => v - 1);
         if (this.activeJobId() === job.id) this.activeJobId.set(null);
-        this.toast.success('Job deleted successfully');
+        this.toast.success('admin.jobs.toast.jobDeletedSuccessfully');
         setTimeout(() => {
           this.closeDeleteConfirm();
           // If this delete was confirmed from within the still-open detail
@@ -1137,7 +1145,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
           this.deleting.set(false);
         }, CONFIRM_CLOSE_DELAY_MS);
       },
-      error: () => { this.toast.error('Failed to delete job'); this.deleting.set(false); },
+      error: () => { this.toast.error('admin.jobs.toast.failedDeleteJob'); this.deleting.set(false); },
     });
   }
 
@@ -1196,7 +1204,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     const dialCode = this.jobForm.get('contactDialCode')?.value ?? '';
     const phone    = this.jobForm.get('contactPhone')?.value ?? '';
     if (!phone) return null;
-    if (!dialCode) return 'Please select a dial code first';
+    if (!dialCode) return this.translate.instant('jobs.value.selectDialCodeFirst');
     const rule = getPhoneRule(dialCode);
     if (rule.pattern && !rule.pattern.test(phone)) return rule.hint;
     return null;
@@ -1206,38 +1214,38 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   getCurrencySymbol(code: string | undefined): string { return getCurrencySymbol(code); }
 
   getSalaryDisplay(job: Job): string {
-    if (job.salaryHidden) return 'Not Disclosed';
+    if (job.salaryHidden) return this.translate.instant('jobs.value.notDisclosed');
     const sym  = getCurrencySymbol(job.salaryCurrency);
     const type = job.salaryType ? ` / ${job.salaryType}` : '';
     if (job.salaryMin != null && job.salaryMax != null) {
       return `${sym}${job.salaryMin.toLocaleString()} – ${sym}${job.salaryMax.toLocaleString()}${type}`;
     }
-    if (job.salaryMin != null) return `From ${sym}${job.salaryMin.toLocaleString()}${type}`;
-    if (job.salaryMax != null) return `Up to ${sym}${job.salaryMax.toLocaleString()}${type}`;
+    if (job.salaryMin != null) return this.translate.instant('jobs.value.salaryFrom', { amount: `${sym}${job.salaryMin.toLocaleString()}${type}` });
+    if (job.salaryMax != null) return this.translate.instant('jobs.value.salaryUpTo', { amount: `${sym}${job.salaryMax.toLocaleString()}${type}` });
     return job.salary ?? '';
   }
 
   getExperienceLabel(job: Job): string {
     if (job.expMin == null && job.expMax == null) return '';
-    if (job.expMin === 0 && job.expMax == null) return 'Fresher';
-    if (job.expMin != null && job.expMax != null) return `${job.expMin}–${job.expMax} yrs`;
-    if (job.expMin != null) return `${job.expMin}+ yrs`;
-    return `Up to ${job.expMax} yrs`;
+    if (job.expMin === 0 && job.expMax == null) return this.translate.instant('jobs.value.expFresher');
+    if (job.expMin != null && job.expMax != null) return this.translate.instant('jobs.value.expRange', { min: job.expMin, max: job.expMax });
+    if (job.expMin != null) return this.translate.instant('jobs.value.expMinPlus', { min: job.expMin });
+    return this.translate.instant('jobs.value.expUpTo', { max: job.expMax });
   }
 
   getFirstSkills(job: Job, max = 3): string[] { return (job.skills ?? []).slice(0, max); }
   getExtraSkillsCount(job: Job, max = 3): number { return Math.max(0, (job.skills?.length ?? 0) - max); }
 
   getLocationDisplay(job: Job): string {
-    if (job.isRemote) return 'Remote';
+    if (job.isRemote) return this.translate.instant('jobs.value.remote');
     const parts = [job.city, job.state, job.country].filter(Boolean);
     return parts.join(', ') || job.location || '';
   }
 
   getLocationSubtext(job: Job): string {
-    if (job.isRemote) return job.country ? `${job.country} applicants only` : '';
+    if (job.isRemote) return job.country ? this.translate.instant('jobs.value.applicantsOnly', { country: job.country }) : '';
     if (job.fullAddress) return job.fullAddress;
-    if (job.pincode) return `Postcode ${job.pincode}`;
+    if (job.pincode) return this.translate.instant('jobs.value.postcode', { code: job.pincode });
     return '';
   }
 
@@ -1255,7 +1263,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     if (navigator.share) {
       navigator.share({ title: job.title, text }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(text).then(() => this.toast.success('Copied to clipboard')).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => this.toast.success('admin.jobs.toast.copiedClipboard')).catch(() => {});
     }
   }
 

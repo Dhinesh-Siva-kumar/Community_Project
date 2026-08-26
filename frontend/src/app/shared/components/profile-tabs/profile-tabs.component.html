@@ -1,4 +1,4 @@
-<nav class="profile-tabs" [class.profile-tabs--full]="fullWidth" role="tablist" aria-label="Profile sections">
+<nav class="profile-tabs" [class.profile-tabs--full]="fullWidth" role="tablist" [attr.aria-label]="'components.profileTabs.sections' | translate">
   @if (fullWidth && tabs.length > 0) {
     <span
       class="tab-indicator"
@@ -22,7 +22,7 @@
       @if (tab.icon) {
         <span class="tab-icon-chip"><i [class]="'bi ' + tab.icon"></i></span>
       }
-      <span class="tab-label">{{ tab.label }}</span>
+      <span class="tab-label">{{ tab.label | translate }}</span>
       @if (tab.badge) {
         <span class="tab-badge">{{ tab.badge }}</span>
       }

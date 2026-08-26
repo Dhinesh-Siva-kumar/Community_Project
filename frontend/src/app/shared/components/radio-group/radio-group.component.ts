@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface RadioOption {
   value: string | number;
@@ -33,7 +34,7 @@ export interface RadioOption {
 @Component({
   selector: 'app-radio-group',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RadioGroupComponent), multi: true },
@@ -61,7 +62,7 @@ export interface RadioOption {
           @if (opt.icon) {
             <i class="bi {{ opt.icon }} rg-opt__icon" aria-hidden="true"></i>
           }
-          <span class="rg-opt__label">{{ opt.label }}</span>
+          <span class="rg-opt__label">{{ opt.label | translate }}</span>
         </button>
       }
     </div>

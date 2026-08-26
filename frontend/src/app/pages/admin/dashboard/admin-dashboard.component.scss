@@ -145,7 +145,7 @@ $_muted:   $color-text-muted;       // was #534434
 
   &::before {
     content: attr(data-tip);
-    background: $_text;
+    background: $color-dark;
     color: #fff;
     font-size: 11px;
     font-weight: 600;
@@ -158,7 +158,7 @@ $_muted:   $color-text-muted;       // was #534434
     content: '';
     bottom: calc(100% + 2px);
     border: 4px solid transparent;
-    border-top-color: $_text;
+    border-top-color: $color-dark;
   }
 
   &:hover::before, &:hover::after,
@@ -849,7 +849,7 @@ $_muted:   $color-text-muted;       // was #534434
   padding: 6px 12px;
   border: 1px solid $_border;
   border-radius: $_rs;
-  background: #fff;
+  background: $_card;
   font-size: 12px;
   font-weight: 500;
   color: $_text;
@@ -890,7 +890,7 @@ $_muted:   $color-text-muted;       // was #534434
   width: 34px;
   height: 34px;
   border: 1px solid $_border;
-  background: #fff;
+  background: $_card;
   border-radius: $_rs;
   display: flex;
   align-items: center;
@@ -1106,7 +1106,7 @@ $_s-posts:       $_amber-c; // amber
   position: absolute;
   top: 0;
   transform: translate(-50%, -6px) translateY(-100%);
-  background: $_text;
+  background: $color-dark;
   color: #fff;
   border-radius: $_rs;
   padding: 8px 10px;
@@ -1185,8 +1185,8 @@ $_s-posts:       $_amber-c; // amber
 // accent-tinted) — only the icon badge, hero number, and bar/dots carry
 // each row's accent color. A deliberate, scoped departure from the app's
 // warm amber/stone palette for this one panel.
-$_comp-bg:     #EEF1FB;
-$_comp-border: #DCE1F5;
+$_comp-bg:     var(--color-comp-bg, #EEF1FB);
+$_comp-border: var(--color-comp-border, #DCE1F5);
 
 .composition-row {
   display: flex;

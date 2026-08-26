@@ -1,30 +1,20 @@
 import { inject } from '@angular/core';
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { TranslateService } from '@ngx-translate/core';
 import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
 
-const ERROR_MESSAGES: Record<number, string> = {
-  400: 'Bad request. Please check your input.',
-  401: 'Your session has expired. Please log in again.',
-  403: 'You do not have permission to perform this action.',
-  404: 'The requested resource was not found.',
-  408: 'Request timed out. Please try again.',
-  409: 'A conflict occurred. The resource may have been modified.',
-  422: 'The submitted data is invalid.',
-  429: 'Too many requests. Please try again later.',
-  500: 'An internal server error occurred. Please try again later.',
-  502: 'Bad gateway. The server is temporarily unavailable.',
-  503: 'Service unavailable. Please try again later.',
-  504: 'Gateway timeout. The server took too long to respond.',
-};
+/** Status codes with a translated fallback under `errors.http.*`. */
+const KNOWN_STATUSES = new Set([400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504]);
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastService = inject(ToastService);
+  const translate = inject(TranslateService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 0) {
-        toastService.error('Unable to connect to the server. Please check your internet connection.');
+        toastService.error('errors.http.offline');
         return throwError(() => error);
       }
 
@@ -33,13 +23,33 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      const serverMessage = error.error?.message;
-      const fallbackMessage = ERROR_MESSAGES[error.status] || `An unexpected error occurred (${error.status}).`;
-      const message = serverMessage || fallbackMessage;
-
-      toastService.error(message);
+      toastService.error(resolveMessage(error, translate));
 
       return throwError(() => error);
     })
   );
 };
+
+/**
+ * Precedence: the backend's error `code` (translatable) beats the status-code
+ * fallback, which beats the server's raw `message`. The raw message is English
+ * only, so it is a last resort rather than — as it used to be — the first
+ * choice.
+ */
+function resolveMessage(error: HttpErrorResponse, translate: TranslateService): string {
+  const code: unknown = error.error?.code;
+  if (typeof code === 'string' && code) {
+    const key = `errors.code.${code}`;
+    const translated = translate.instant(key);
+    if (typeof translated === 'string' && translated !== key) return translated;
+  }
+
+  if (KNOWN_STATUSES.has(error.status)) {
+    return translate.instant(`errors.http.${error.status}`) as string;
+  }
+
+  const serverMessage: unknown = error.error?.message;
+  if (typeof serverMessage === 'string' && serverMessage) return serverMessage;
+
+  return translate.instant('errors.http.unknown', { status: error.status }) as string;
+}

@@ -1,4 +1,4 @@
-<div class="toast-container" aria-label="Notifications">
+<div class="toast-container" [attr.aria-label]="'components.notifications.title' | translate">
   @for (toast of toastService.toasts(); track toast.id) {
     <div
       class="toast-item"
@@ -15,7 +15,7 @@
         type="button"
         class="toast-close"
         (click)="dismiss(toast.id)"
-        aria-label="Close"
+        [attr.aria-label]="'common.close' | translate"
       >
         <i class="bi bi-x-lg"></i>
       </button>

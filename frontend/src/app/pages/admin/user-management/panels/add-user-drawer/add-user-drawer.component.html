@@ -2,7 +2,7 @@
 <div class="au-backdrop" (click)="close.emit()"></div>
 
 <!-- Modal -->
-<div class="au-modal" role="dialog" aria-label="Add new user">
+<div class="au-modal" role="dialog" [attr.aria-label]="'admin.addUser.addNewUser' | translate">
 
   <!-- Header -->
   <div class="au-header">
@@ -14,10 +14,10 @@
       <i class="bi bi-person-plus-fill"></i>
     </div>
     <div class="au-header__text">
-      <h5 class="au-header__title">Add New User</h5>
-      <p class="au-header__sub">Create a new platform account</p>
+      <h5 class="au-header__title">{{ 'admin.addUser.addNewUser2' | translate }}</h5>
+      <p class="au-header__sub">{{ 'admin.addUser.createNewPlatformAccount' | translate }}</p>
     </div>
-    <button class="au-close" (click)="close.emit()" aria-label="Close">
+    <button class="au-close" (click)="close.emit()" [attr.aria-label]="'common.close' | translate">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -28,30 +28,30 @@
 
       <!-- Section: Identity -->
       <div class="au-section">
-        <p class="au-section__label">Identity</p>
+        <p class="au-section__label">{{ 'admin.addUser.identity' | translate }}</p>
         <div class="au-fields">
 
           <div class="au-field">
-            <label class="au-label">Display Name <span class="au-req">*</span></label>
+            <label class="au-label">{{ 'admin.addUser.displayName' | translate }} <span class="au-req">*</span></label>
             <div class="au-input-wrap">
               <i class="bi bi-person au-icon"></i>
               <input type="text" class="au-input"
                 formControlName="displayName"
-                placeholder="e.g. John Smith"
+                [placeholder]="'admin.addUser.eGJohnSmith' | translate"
                 [class.au-input--error]="hasError('displayName','required') || hasError('displayName','minlength')" />
             </div>
             @if (hasError('displayName','required') || hasError('displayName','minlength')) {
-              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Display name is required</span>
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> {{ 'admin.addUser.displayNameRequired' | translate }}</span>
             }
           </div>
 
           <div class="au-field">
-            <label class="au-label">Username <span class="au-req">*</span></label>
+            <label class="au-label">{{ 'admin.addUser.username' | translate }} <span class="au-req">*</span></label>
             <div class="au-input-wrap">
               <i class="bi bi-at au-icon"></i>
               <input type="text" class="au-input au-input--trailing"
                 formControlName="userName"
-                placeholder="e.g. johnsmith"
+                [placeholder]="'admin.addUser.eGJohnsmith' | translate"
                 [class.au-input--error]="hasError('userName','pattern') || usernameState() === 'taken'"
                 [class.au-input--success]="usernameState() === 'available'" />
               <span class="au-trailing">
@@ -65,11 +65,11 @@
               </span>
             </div>
             @if (hasError('userName','pattern')) {
-              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Only letters, numbers, underscores</span>
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> {{ 'admin.addUser.onlyLettersNumbersUnderscores' | translate }}</span>
             } @else if (usernameState() === 'taken') {
-              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Username already taken</span>
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> {{ 'admin.addUser.usernameAlreadyTaken' | translate }}</span>
             } @else if (usernameState() === 'available') {
-              <span class="au-success"><i class="bi bi-check-circle-fill"></i> Username available</span>
+              <span class="au-success"><i class="bi bi-check-circle-fill"></i> {{ 'admin.addUser.usernameAvailable' | translate }}</span>
             }
           </div>
 
@@ -78,25 +78,25 @@
 
       <!-- Section: Contact -->
       <div class="au-section">
-        <p class="au-section__label">Contact</p>
+        <p class="au-section__label">{{ 'admin.addUser.contact' | translate }}</p>
         <div class="au-fields">
 
           <div class="au-field">
-            <label class="au-label">Email</label>
+            <label class="au-label">{{ 'admin.addUser.email' | translate }}</label>
             <div class="au-input-wrap">
               <i class="bi bi-envelope au-icon"></i>
               <input type="email" class="au-input"
                 formControlName="email"
-                placeholder="john@example.com"
+                [placeholder]="'admin.addUser.johnExampleCom' | translate"
                 [class.au-input--error]="hasError('email','email')" />
             </div>
             @if (hasError('email','email')) {
-              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Enter a valid email</span>
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> {{ 'admin.addUser.enterValidEmail' | translate }}</span>
             }
           </div>
 
           <div class="au-field">
-            <label class="au-label">Phone</label>
+            <label class="au-label">{{ 'admin.addUser.phone' | translate }}</label>
             <div class="au-input-wrap">
               <i class="bi bi-phone au-icon"></i>
               <input type="text" class="au-input"
@@ -110,17 +110,17 @@
 
       <!-- Section: Security -->
       <div class="au-section au-section--last">
-        <p class="au-section__label">Security</p>
+        <p class="au-section__label">{{ 'admin.addUser.security' | translate }}</p>
         <div class="au-fields">
 
           <div class="au-field">
-            <label class="au-label">Password <span class="au-req">*</span></label>
+            <label class="au-label">{{ 'admin.addUser.password' | translate }} <span class="au-req">*</span></label>
             <div class="au-input-wrap">
               <i class="bi bi-lock au-icon"></i>
               <input [type]="showPassword() ? 'text' : 'password'"
                 class="au-input au-input--trailing"
                 formControlName="password"
-                placeholder="Min 8 characters"
+                [placeholder]="'admin.addUser.min8Characters' | translate"
                 [class.au-input--error]="hasError('password','required') || hasError('password','minlength')" />
               <button type="button" class="au-eye" (click)="toggleShowPassword()">
                 <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
@@ -134,27 +134,27 @@
                   </div>
                 }
                 <span class="au-strength__text" [style.color]="passwordStrength().color">
-                  {{ passwordStrength().label }}
+                  {{ passwordStrength().label | translate }}
                 </span>
               </div>
             }
           </div>
 
           <div class="au-field">
-            <label class="au-label">Confirm Password <span class="au-req">*</span></label>
+            <label class="au-label">{{ 'admin.addUser.confirmPassword' | translate }} <span class="au-req">*</span></label>
             <div class="au-input-wrap">
               <i class="bi bi-lock-fill au-icon"></i>
               <input [type]="showConfirm() ? 'text' : 'password'"
                 class="au-input au-input--trailing"
                 formControlName="confirmPassword"
-                placeholder="Repeat password"
+                [placeholder]="'admin.addUser.repeatPassword' | translate"
                 [class.au-input--error]="form.touched && form.hasError('mismatch')" />
               <button type="button" class="au-eye" (click)="toggleShowConfirm()">
                 <i class="bi" [class.bi-eye]="!showConfirm()" [class.bi-eye-slash]="showConfirm()"></i>
               </button>
             </div>
             @if (form.touched && form.hasError('mismatch')) {
-              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> Passwords do not match</span>
+              <span class="au-error"><i class="bi bi-exclamation-circle-fill"></i> {{ 'admin.addUser.passwordsDoNotMatch' | translate }}</span>
             }
           </div>
 
@@ -171,16 +171,16 @@
   -->
   <div class="au-account-setup au-form">
     <div class="au-section au-section--last">
-      <p class="au-section__label">Account Setup</p>
+      <p class="au-section__label">{{ 'admin.addUser.accountSetup' | translate }}</p>
       <div class="au-fields">
 
         <!-- Country — SearchableSelect needs to NOT be inside overflow:hidden/auto -->
         <div class="au-field">
-          <label class="au-label">Country</label>
+          <label class="au-label">{{ 'admin.addUser.country' | translate }}</label>
           <app-searchable-select
             [formControl]="$any(form.get('countryId'))"
             [options]="countryOptions()"
-            placeholder="Select country">
+            [placeholder]="'admin.addUser.selectCountry' | translate">
           </app-searchable-select>
         </div>
 
@@ -191,7 +191,7 @@
   <!-- Footer -->
   <div class="au-footer">
     <button type="button" class="au-btn au-btn--ghost" (click)="close.emit()">
-      Cancel
+      {{ 'common.cancel' | translate }}
     </button>
     <button type="button" class="au-btn au-btn--primary"
       [disabled]="form.invalid || submitting() || usernameState() === 'taken'"

@@ -36,7 +36,7 @@
     overflow: visible;
     padding: $full-tab-padding;
     border-radius: $radius-lg;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
     border-color: rgba(148, 163, 184, 0.2);
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(10px);

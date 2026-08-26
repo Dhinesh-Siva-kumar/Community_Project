@@ -16,6 +16,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -34,17 +35,17 @@ interface EntityTab {
 // 'posts' shares the exact same generic table/filters/actions as the other
 // four tabs — no separate card/grid view, no separate stats cards.
 const ENTITY_TABS: EntityTab[] = [
-  { id: 'posts',      label: 'Posts',      singular: 'Post',      icon: 'bi-file-earmark-text' },
-  { id: 'community',  label: 'Community',  singular: 'Community', icon: 'bi-people' },
-  { id: 'business',   label: 'Business',   singular: 'Business',  icon: 'bi-shop' },
-  { id: 'jobs',        label: 'Jobs',       singular: 'Job',       icon: 'bi-briefcase' },
-  { id: 'events',      label: 'Events',     singular: 'Event',     icon: 'bi-calendar-event' },
+  { id: 'posts',      label: 'admin.approval.label.posts',      singular: 'admin.approval.label.post',      icon: 'bi-file-earmark-text' },
+  { id: 'community',  label: 'admin.approval.label.community',  singular: 'admin.approval.label.community', icon: 'bi-people' },
+  { id: 'business',   label: 'admin.approval.label.business',   singular: 'admin.approval.label.business',  icon: 'bi-shop' },
+  { id: 'jobs',        label: 'admin.approval.label.jobs',       singular: 'admin.approval.label.job',       icon: 'bi-briefcase' },
+  { id: 'events',      label: 'admin.approval.label.events',     singular: 'admin.approval.label.event',     icon: 'bi-calendar-event' },
 ];
 
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -363,7 +364,7 @@ export class ApprovalComponent implements OnInit {
         this.refreshCountForActiveEntity();
       },
       error: () => {
-        this.toast.error('Failed to approve');
+        this.toast.error('admin.approval.toast.failedApprove');
         this.approvingId.set(null);
         this.confirmApproveTarget.set(null);
       },
@@ -390,7 +391,7 @@ export class ApprovalComponent implements OnInit {
         this.refreshCountForActiveEntity();
       },
       error: () => {
-        this.toast.error('Failed to reject');
+        this.toast.error('admin.approval.toast.failedReject');
         this.rejectingId.set(null);
         this.confirmRejectTarget.set(null);
       },
@@ -573,104 +574,104 @@ export class ApprovalComponent implements OnInit {
       case 'posts':
         return [
           { title: 'Post', icon: 'bi-file-earmark-text', fields: [
-            { label: 'Type', value: this.fmt(item['type']) },
-            { label: 'Community', value: this.fmt(item['community']?.name) },
+            { label: 'admin.approval.label.type', value: this.fmt(item['type']) },
+            { label: 'admin.approval.label.community', value: this.fmt(item['community']?.name) },
           ]},
         ];
 
       case 'community':
         return [
           { title: 'Overview', icon: 'bi-info-circle', fields: [
-            { label: 'Category', value: this.fmt(item['category_name']) },
-            { label: 'Country', value: this.fmt(item['country']) },
-            { label: 'Location', value: this.fmt(item['location']) },
-            { label: 'Pincode', value: this.fmt(item['pincode']) },
+            { label: 'admin.approval.label.category', value: this.fmt(item['category_name']) },
+            { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
+            { label: 'admin.approval.label.location', value: this.fmt(item['location']) },
+            { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
           ]},
           { title: 'Visibility', icon: 'bi-eye', fields: [
-            { label: 'Visibility', value: item['is_global'] ? 'Global' : item['is_private'] ? 'Private' : 'Standard' },
-            { label: 'Default Community', value: this.fmtBool(item['is_default']) },
-            { label: 'Mode', value: item['community_mode'] === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency' },
+            { label: 'admin.approval.label.visibility', value: item['is_global'] ? 'Global' : item['is_private'] ? 'Private' : 'Standard' },
+            { label: 'admin.approval.label.defaultCommunity', value: this.fmtBool(item['is_default']) },
+            { label: 'admin.approval.label.mode', value: item['community_mode'] === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency' },
           ]},
           { title: 'Rules', icon: 'bi-list-check', fields: [
-            { label: 'Community Rules', value: this.fmtList(item['rules']) },
+            { label: 'admin.approval.label.communityRules', value: this.fmtList(item['rules']) },
           ]},
         ];
 
       case 'business':
         return [
           { title: 'Overview', icon: 'bi-info-circle', fields: [
-            { label: 'Category', value: this.fmt(item['category']?.name) },
-            { label: 'Address', value: this.fmt(item['address']) },
-            { label: 'City', value: this.fmt(item['city']) },
-            { label: 'State', value: this.fmt(item['state']) },
-            { label: 'Country', value: this.fmt(item['country']) },
-            { label: 'Pincode', value: this.fmt(item['pincode']) },
+            { label: 'admin.approval.label.category', value: this.fmt(item['category']?.name) },
+            { label: 'admin.approval.label.address', value: this.fmt(item['address']) },
+            { label: 'admin.approval.label.city', value: this.fmt(item['city']) },
+            { label: 'admin.approval.label.state', value: this.fmt(item['state']) },
+            { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
+            { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
           ]},
           { title: 'Contact', icon: 'bi-telephone', fields: [
-            { label: 'Phone', value: this.fmt(item['phone']) },
-            { label: 'Email', value: this.fmt(item['email']) },
-            { label: 'Website', value: this.fmt(item['website']) },
-            { label: 'WhatsApp', value: this.fmt(item['whatsapp']) },
+            { label: 'admin.approval.label.phone', value: this.fmt(item['phone']) },
+            { label: 'admin.approval.label.email', value: this.fmt(item['email']) },
+            { label: 'admin.approval.label.website', value: this.fmt(item['website']) },
+            { label: 'admin.approval.label.whatsapp', value: this.fmt(item['whatsapp']) },
           ]},
           { title: 'Hours', icon: 'bi-clock', fields: [
-            { label: 'Opening Hours', value: this.fmt(item['opening_hours']) },
-            { label: 'Opening Days', value: this.fmt(item['opening_days']) },
+            { label: 'admin.approval.label.openingHours', value: this.fmt(item['opening_hours']) },
+            { label: 'admin.approval.label.openingDays', value: this.fmt(item['opening_days']) },
           ]},
         ];
 
       case 'jobs':
         return [
           { title: 'Company', icon: 'bi-building', fields: [
-            { label: 'Company Name', value: this.fmt(item['companyName']) },
-            { label: 'Website', value: this.fmt(item['companyWebsite']) },
+            { label: 'admin.approval.label.companyName', value: this.fmt(item['companyName']) },
+            { label: 'admin.approval.label.website', value: this.fmt(item['companyWebsite']) },
           ]},
           { title: 'Role', icon: 'bi-briefcase', fields: [
-            { label: 'Job Type', value: this.fmt(item['jobType']) },
-            { label: 'Work Mode', value: this.fmt(item['workMode']) },
-            { label: 'Experience', value: (item['expMin'] != null || item['expMax'] != null) ? `${item['expMin'] ?? 0}–${item['expMax'] ?? '∞'} yrs` : '—' },
-            { label: 'Education', value: this.fmt(item['education']) },
-            { label: 'Openings', value: this.fmt(item['openings']) },
-            { label: 'Shift', value: this.fmt(item['shiftType']) },
+            { label: 'admin.approval.label.jobType', value: this.fmt(item['jobType']) },
+            { label: 'admin.approval.label.workMode', value: this.fmt(item['workMode']) },
+            { label: 'admin.approval.label.experience', value: (item['expMin'] != null || item['expMax'] != null) ? `${item['expMin'] ?? 0}–${item['expMax'] ?? '∞'} yrs` : '—' },
+            { label: 'admin.approval.label.education', value: this.fmt(item['education']) },
+            { label: 'admin.approval.label.openings', value: this.fmt(item['openings']) },
+            { label: 'admin.approval.label.shift', value: this.fmt(item['shiftType']) },
           ]},
           { title: 'Salary', icon: 'bi-cash-stack', fields: [
-            { label: 'Salary', value: item['salaryHidden']
+            { label: 'admin.approval.label.salary', value: item['salaryHidden']
               ? 'Hidden'
               : (item['salaryMin'] || item['salaryMax'])
                 ? `${item['salaryCurrency'] ?? ''} ${item['salaryMin'] ?? '?'} – ${item['salaryMax'] ?? '?'} (${item['salaryType'] ?? ''})`
                 : this.fmt(item['salary']) },
           ]},
           { title: 'Location', icon: 'bi-geo-alt', fields: [
-            { label: 'City', value: this.fmt(item['city']) },
-            { label: 'State', value: this.fmt(item['state']) },
-            { label: 'Country', value: this.fmt(item['country']) },
-            { label: 'Address', value: this.fmt(item['fullAddress'] ?? item['location']) },
+            { label: 'admin.approval.label.city', value: this.fmt(item['city']) },
+            { label: 'admin.approval.label.state', value: this.fmt(item['state']) },
+            { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
+            { label: 'admin.approval.label.address', value: this.fmt(item['fullAddress'] ?? item['location']) },
           ]},
           { title: 'Contact', icon: 'bi-telephone', fields: [
-            { label: 'Contact Person', value: this.fmt(item['contactPerson']) },
-            { label: 'Email', value: this.fmt(item['contactEmail']) },
-            { label: 'Phone', value: this.fmt(item['contactPhone']) },
-            { label: 'Application URL', value: this.fmt(item['applicationUrl']) },
+            { label: 'admin.approval.label.contactPerson', value: this.fmt(item['contactPerson']) },
+            { label: 'admin.approval.label.email', value: this.fmt(item['contactEmail']) },
+            { label: 'admin.approval.label.phone', value: this.fmt(item['contactPhone']) },
+            { label: 'admin.approval.label.applicationUrl', value: this.fmt(item['applicationUrl']) },
           ]},
           { title: 'Skills', icon: 'bi-stars', fields: [
-            { label: 'Skills', value: this.fmtList(item['skills']) },
+            { label: 'admin.approval.label.skills', value: this.fmtList(item['skills']) },
           ]},
         ];
 
       case 'events':
         return [
           { title: 'Overview', icon: 'bi-info-circle', fields: [
-            { label: 'Category', value: this.fmt(item['eventCategory']) },
-            { label: 'Mode', value: this.fmt(item['eventMode']) },
-            { label: 'Date', value: this.fmt(item['eventDate']) },
-            { label: 'Time', value: item['eventTime'] ? `${item['eventTime']}${item['eventEndTime'] ? ' – ' + item['eventEndTime'] : ''}` : '—' },
-            { label: 'Timezone', value: this.fmt(item['timezone']) },
+            { label: 'admin.approval.label.category', value: this.fmt(item['eventCategory']) },
+            { label: 'admin.approval.label.mode', value: this.fmt(item['eventMode']) },
+            { label: 'admin.approval.label.date', value: this.fmt(item['eventDate']) },
+            { label: 'admin.approval.label.time', value: item['eventTime'] ? `${item['eventTime']}${item['eventEndTime'] ? ' – ' + item['eventEndTime'] : ''}` : '—' },
+            { label: 'admin.approval.label.timezone', value: this.fmt(item['timezone']) },
           ]},
           { title: 'Location', icon: 'bi-geo-alt', fields: [
-            { label: 'Country', value: this.fmt(item['country']) },
-            { label: 'Location', value: this.fmt(item['location']) },
-            { label: 'Address', value: this.fmt(item['address']) },
-            { label: 'Pincode', value: this.fmt(item['pincode']) },
-            { label: 'Link', value: this.fmt(item['locationLink']) },
+            { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
+            { label: 'admin.approval.label.location', value: this.fmt(item['location']) },
+            { label: 'admin.approval.label.address', value: this.fmt(item['address']) },
+            { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
+            { label: 'admin.approval.label.link', value: this.fmt(item['locationLink']) },
           ]},
         ];
     }

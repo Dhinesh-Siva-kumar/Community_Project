@@ -73,8 +73,8 @@
     font-size: 1.1rem;
     flex-shrink: 0;
     &--jobs     { background: rgba(220, 38, 38, 0.10); color: #DC2626; }
-    &--fulltime { background: #DCFCE7; color: #15803D; }
-    &--parttime { background: #E0F2FE; color: #0284C7; }
+    &--fulltime { background: $color-success-light; color: $color-success-text; }
+    &--parttime { background: $color-info-light; color: $color-info-text; }
     &--contract { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
   }
 
@@ -123,7 +123,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffbeb;
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
   cursor: pointer;
@@ -135,9 +135,9 @@
   i { font-size: 1.2rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(217, 119, 6, 0.6);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
   }
 
@@ -228,15 +228,15 @@
   }
 
   &.jb-btn--neon {
-    background: #fffbeb;
+    background: $color-primary-lighter;
     border: 1.5px solid rgba(245, 158, 11, 0.45);
     color: $color-primary-darker;
     box-shadow: 0 2px 8px rgba(28, 25, 23, 0.08);
 
     &:hover:not(:disabled) {
-      background: #fef3c7;
+      background: $color-warning-light;
       border-color: rgba(217, 119, 6, 0.6);
-      color: #78350f;
+      color: $color-warning-text;
       box-shadow: 0 4px 14px rgba(28, 25, 23, 0.12);
 
       i {
@@ -366,7 +366,7 @@
   @include transition-short(all);
 
   &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
-  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-white; }
+  &--active { background: $color-dark; border-color: $color-dark; color: $color-white; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 
@@ -556,9 +556,9 @@
   .bi { font-size: 0.85rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(245, 158, 11, 0.55);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
   }
 
@@ -630,7 +630,7 @@
     height: 42px;
     padding: 0 36px 0 36px;
     font-weight: $font-weight-medium;
-    background: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
 
     &::-webkit-calendar-picker-indicator {
       opacity: 0.72;
@@ -640,7 +640,7 @@
 
     &:hover {
       border-color: $color-amber-300;
-      background: #fffefb;
+      background: $color-bg-light;
 
       &::-webkit-calendar-picker-indicator {
         opacity: 1;
@@ -648,7 +648,7 @@
     }
 
     &:focus {
-      background: #ffffff;
+      background: $color-bg-card;
     }
   }
 }
@@ -736,9 +736,9 @@
   transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(245, 158, 11, 0.55);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
   }
 
@@ -955,7 +955,7 @@
   gap: 12px;
   margin-bottom: 1.1rem;
   padding: 1.2rem 1.5rem;
-  background: $white;
+  background: $color-bg-card;
   border: 1.5px solid $color-stone-200;
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
@@ -1014,7 +1014,7 @@
   border: 1.5px solid $border;
   border-radius: 10px;
   font-size: 13.5px;
-  color: $dark;
+  color: $color-text-primary;
   background: $bg-neutral;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -1023,7 +1023,7 @@
 
   &:focus {
     border-color: $primary;
-    background: $white;
+    background: $color-bg-card;
     box-shadow: 0 0 0 3px rgba($primary, 0.12);
   }
 }
@@ -1047,7 +1047,7 @@
       border: 1.5px solid $border !important;
       border-radius: 10px;
       font-size: 13.5px;
-      color: $dark;
+      color: $color-text-primary;
       background: $bg-neutral;
       outline: none;
       cursor: pointer;
@@ -1060,7 +1060,7 @@
       &:focus,
       &:focus-visible {
         border-color: $primary !important;
-        background: $white;
+        background: $color-bg-card;
         box-shadow: 0 0 0 3px rgba($primary, 0.12) !important;
         outline: none;
       }
@@ -1076,7 +1076,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 13.5px;
-      color: $dark;
+      color: $color-text-primary;
     }
 
     .ss-caret {
@@ -1101,7 +1101,7 @@
       left: 0;
       right: 0;
       z-index: 1060;
-      background: $white;
+      background: $color-bg-card;
       border: 1.5px solid $color-stone-200;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -1135,7 +1135,7 @@
       border: 1.5px solid $border;
       border-radius: 8px;
       font-size: 13px;
-      color: $dark;
+      color: $color-text-primary;
       background: $bg-neutral;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -1145,7 +1145,7 @@
       &:focus {
         border-color: $primary;
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
-        background: $white;
+        background: $color-bg-card;
       }
     }
 
@@ -1165,7 +1165,7 @@
       align-items: center;
       transition: color 0.15s;
 
-      &:hover { color: $dark; }
+      &:hover { color: $color-text-primary; }
     }
 
     // Options list
@@ -1188,7 +1188,7 @@
       padding: 7px 8px;
       border-radius: 8px;
       font-size: 13px;
-      color: $dark;
+      color: $color-text-primary;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       list-style: none;
@@ -1276,7 +1276,7 @@
   padding: 0 14px;
   border: 1.5px solid $border;
   border-radius: 10px;
-  background: $white;
+  background: $color-bg-card;
   color: $color-stone-500;
   font-size: 13px;
   font-weight: 500;
@@ -1466,7 +1466,7 @@
   border: 2px solid transparent;
   border-radius: 12px;
   background: var(--icon-bg, #f0f0f0);
-  color: var(--icon-color, $dark);
+  color: var(--icon-color, $color-text-primary);
   font-size: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1607,8 +1607,8 @@
   &--edit {
     background: rgba(14,165,233,0.08);
     border-color: rgba(14,165,233,0.25);
-    color: #0284C7;
-    &:hover { background: rgba(14,165,233,0.18); border-color: #0284C7; transform: translateY(-1px); }
+    color: $color-info-text;
+    &:hover { background: rgba(14,165,233,0.18); border-color: $color-info-text; transform: translateY(-1px); }
   }
 
   &--delete {
@@ -1821,7 +1821,7 @@
   & + & { border-left: 1.5px solid $color-border; }
   .bi { font-size: 0.85rem; }
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--active { background: $color-stone-900; color: #fff; }
+  &--active { background: $color-dark; color: #fff; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
 }
 
@@ -1831,7 +1831,7 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   @include transition-quick(all);
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--active { background: $color-stone-900; color: #fff; }
+  &--active { background: $color-dark; color: #fff; }
    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
 }
 
@@ -2014,9 +2014,9 @@
   font-weight: $font-weight-semibold;
   white-space: nowrap;
 
-  &--trusted { background: #fffbeb; color: $color-warning; }
-  &--blocked { background: #fef2f2; color: $color-danger; }
-  &--pending { background: $amber-50; color: #92400e; }
+  &--trusted { background: $color-primary-lighter; color: $color-warning; }
+  &--blocked { background: $color-error-bg; color: $color-danger; }
+  &--pending { background: $color-primary-lighter; color: $color-warning-text; }
   &--rejected { background: rgba($color-danger, 0.1); color: $color-danger; }
 
   // Pending badge doubles as a link to the Approval page — no underline,
@@ -2025,7 +2025,7 @@
     text-decoration: none;
     cursor: pointer;
     @include transition-quick(all);
-    &:hover { background: rgba($amber-500, 0.22); color: #78350f; }
+    &:hover { background: rgba($amber-500, 0.22); color: $color-warning-text; }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
 }
@@ -2068,7 +2068,7 @@
 
   &[data-tip]::before {
     content: attr(data-tip);
-    background: $color-text-primary;
+    background: $color-dark;
     color: #fff;
     font-size: 0.68rem;
     font-weight: $font-weight-semibold;
@@ -2083,7 +2083,7 @@
     content: '';
     top: calc(100% + 2px);
     border: 4px solid transparent;
-    border-bottom-color: $color-text-primary;
+    border-bottom-color: $color-dark;
     border-top: none;
     width: 0;
     height: 0;
@@ -2102,8 +2102,8 @@
   &--edit {
     background: rgba(2,132,199,0.08);
     border-color: rgba(2,132,199,0.22);
-    color: #0284C7;
-    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+    color: $color-info-text;
+    &:hover { background: $color-info-text; border-color: $color-info-text; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {
@@ -2230,7 +2230,7 @@
   flex-direction: column;
   gap: 8px;
   padding: $spacing-md;
-  background: #fff;
+  background: $color-bg-card;
   border: 1px solid $color-border;
   border-radius: $radius-md;
   cursor: pointer;
@@ -2330,7 +2330,7 @@
     right: -1px;
     top: 0;
     z-index: 5;
-    background: #fff;
+    background: $color-bg-card;
     color: $color-stone-700;
     font-size: $font-size-xs;
     line-height: 1.55;
@@ -2362,8 +2362,8 @@
     @include transition-short(all);
 
     &--edit {
-      background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.22); color: #0284C7;
-      &:hover { background: rgba(14,165,233,0.16); border-color: #0284C7; }
+      background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.22); color: $color-info-text;
+      &:hover { background: rgba(14,165,233,0.16); border-color: $color-info-text; }
     }
     &--delete {
       background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.2); color: $color-danger;
@@ -2380,7 +2380,7 @@ $accents: (
   'brown':  (#92400E, rgba(146,64,14,0.10),  rgba(146,64,14,0.20)),
   'purple': (#7C3AED, rgba(124,58,237,0.10), rgba(124,58,237,0.22)),
   'red':    (#DC2626, rgba(220,38,38,0.10),  rgba(220,38,38,0.22)),
-  'blue':   (#0284C7, rgba(2,132,199,0.10),  rgba(2,132,199,0.22)),
+  'blue':   ($color-info-text, rgba(2,132,199,0.10),  rgba(2,132,199,0.22)),
   'indigo': (#4338CA, rgba(67,56,202,0.10),  rgba(67,56,202,0.22)),
   'cyan':   (#0891B2, rgba(8,145,178,0.10),  rgba(8,145,178,0.22)),
   'green':  (#15803D, rgba(21,128,61,0.10),  rgba(21,128,61,0.22)),
@@ -2411,7 +2411,7 @@ $accents: (
   display: flex;
   flex-direction: column;
   padding: $spacing-md;
-  background: #fff;
+  background: $color-bg-card;
   border: 1px solid $color-border;
   border-radius: $radius-md;
   gap: 8px;
@@ -2482,7 +2482,7 @@ $accents: (
   bottom: 8px;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.85);
+  background: $color-bg-card;
   pointer-events: none;
 }
 
@@ -2520,7 +2520,7 @@ $accents: (
 
 .jb-day-toggle {
   padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
+  border: 1.5px solid $color-border; background: $color-bg-card;
   color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
   display: inline-flex; align-items: center; gap: 4px;
   @include transition-short(all);
@@ -2544,7 +2544,7 @@ $accents: (
 .jb-logo-preview {
   position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;
   &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
-  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
+  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: $color-bg-card; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
 }
 
 // ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
@@ -2607,7 +2607,7 @@ $accents: (
 }
 
 .bl-card {
-  display: flex; flex-direction: column; background: #fff;
+  display: flex; flex-direction: column; background: $color-bg-card;
   border: 1.5px solid $color-border; border-radius: $radius-lg;
   overflow: hidden; cursor: pointer;
   box-shadow: 0 1px 4px rgba(28,25,23,0.06);
@@ -2675,7 +2675,7 @@ $accents: (
     flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
     border-radius: $radius-sm; font-size: $font-size-xs; font-weight: $font-weight-semibold;
     cursor: pointer; border: 1.5px solid transparent; @include transition-short(all);
-    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #0284C7; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: #0284C7; } }
+    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: $color-info-text; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: $color-info-text; } }
     &--delete { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger; &:hover:not(:disabled) { background: rgba(220,38,38,0.15); border-color: $color-danger; } }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
@@ -2720,11 +2720,11 @@ $accents: (
 
 .bl-page-btn {
   min-width: 36px; height: 36px; padding: 0 8px; border-radius: $radius-sm;
-  border: 1.5px solid $color-border; background: #fff; color: $color-stone-600;
+  border: 1.5px solid $color-border; background: $color-bg-card; color: $color-stone-600;
   font-size: $font-size-xs; font-weight: $font-weight-medium; cursor: pointer;
   display: flex; align-items: center; justify-content: center; @include transition-short(all);
   &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.08); color: $color-primary-darker; }
-  &--active { background: $color-stone-900; border-color: $color-stone-900; color: #fff; }
+  &--active { background: $color-dark; border-color: $color-dark; color: #fff; }
   &:disabled { opacity: 0.38; cursor: not-allowed; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
@@ -2745,7 +2745,7 @@ $accents: (
   &__img { width: 80px; height: 60px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; }
   &__remove {
     position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
-    border: 1.5px solid $color-border; background: #fff; color: $color-danger; font-size: 0.6rem;
+    border: 1.5px solid $color-border; background: $color-bg-card; color: $color-danger; font-size: 0.6rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all);
     &:hover { background: $color-error-bg; border-color: $color-danger; }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
@@ -2759,7 +2759,7 @@ $accents: (
 
 .bd-hero {
   border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
-  background: #fff; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
+  background: $color-bg-card; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
 
   // No cover banner — just the logo + business details, so the profile row
   // sits flush at the top of the card.
@@ -2798,7 +2798,7 @@ $accents: (
     width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
     border-radius: $radius-md; font-size: 0.85rem; cursor: pointer;
     border: 1.5px solid transparent; @include transition-short(all);
-    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #0284C7; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: #0284C7; } }
+    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: $color-info-text; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: $color-info-text; } }
     &--delete { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger; &:hover:not(:disabled) { background: rgba(220,38,38,0.15); border-color: $color-danger; } }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
@@ -2809,9 +2809,9 @@ $accents: (
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
   border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
   text-transform: uppercase; letter-spacing: 0.04em;
-  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: #15803D; .bi { font-size: 7px; } }
+  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: $color-success-text; .bi { font-size: 7px; } }
   &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
-  &--pending  { background: $amber-50; border: 1.5px solid $color-amber-200; color: #92400e; .bi { font-size: 7px; } }
+  &--pending  { background: $color-primary-lighter; border: 1.5px solid $color-amber-200; color: $color-warning-text; .bi { font-size: 7px; } }
   &--rejected { background: rgba($color-danger,0.10); border: 1.5px solid rgba($color-danger,0.25); color: $color-danger; .bi { font-size: 7px; } }
 
   // Pending badge doubles as a link to the Approval page.
@@ -2819,7 +2819,7 @@ $accents: (
     text-decoration: none;
     cursor: pointer;
     @include transition-quick(all);
-    &:hover { background: rgba($amber-500, 0.22); color: #78350f; }
+    &:hover { background: rgba($amber-500, 0.22); color: $color-warning-text; }
     &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
 }
@@ -2831,9 +2831,9 @@ $accents: (
   margin: 4px 0 0;
   padding: 8px 12px;
   border-radius: 10px;
-  background: #fef2f2;
+  background: $color-error-bg;
   border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #991b1b;
+  color: $color-danger-text;
   font-size: 12.5px;
   line-height: 1.5;
   max-width: fit-content;
@@ -2846,9 +2846,9 @@ $accents: (
   border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
   text-decoration: none; white-space: nowrap; @include transition-short(all);
   &:hover { transform: translateY(-1px); }
-  &--green    { background: rgba(22,163,74,0.10);   color: #15803D; border: 1.5px solid rgba(22,163,74,0.28);   &:hover { background: rgba(22,163,74,0.18); } }
+  &--green    { background: rgba(22,163,74,0.10);   color: $color-success-text; border: 1.5px solid rgba(22,163,74,0.28);   &:hover { background: rgba(22,163,74,0.18); } }
   &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; border: 1.5px solid rgba(37,211,102,0.28);  &:hover { background: rgba(37,211,102,0.18); } }
-  &--blue     { background: rgba(14,165,233,0.10);  color: #0284C7; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
+  &--blue     { background: rgba(14,165,233,0.10);  color: $color-info-text; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
   &--orange   { background: rgba(249,115,22,0.10);  color: #C2410C; border: 1.5px solid rgba(249,115,22,0.28);  &:hover { background: rgba(249,115,22,0.18); } }
 }
 
@@ -2857,14 +2857,14 @@ $accents: (
 .bd-sidebar { display: flex; flex-direction: column; gap: $spacing-md; }
 
 .bd-section {
-  background: #fff; border: 1.5px solid $color-border; border-radius: $radius-lg;
+  background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg;
   padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
   &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; padding-bottom: $spacing-sm; border-bottom: 1.5px solid rgba(251,191,36,0.18); .bi { color: $color-primary-dark; } }
   &__body  { font-size: $font-size-sm; color: $color-text-body; line-height: 1.75; margin: 0; }
 }
 
 .bd-card {
-  background: #fff; border: 1.5px solid $color-border; border-radius: $radius-lg;
+  background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg;
   padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
   &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; .bi { color: $color-primary-dark; } }
 }
@@ -2874,8 +2874,8 @@ $accents: (
 .bd-info-row {
   display: flex; align-items: flex-start; gap: 10px;
   &__icon { width: 32px; height: 32px; border-radius: $radius-sm; background: rgba(251,191,36,0.10); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem; color: $color-primary-darker;
-    &--green    { background: rgba(22,163,74,0.10);   color: #15803D; }
-    &--blue     { background: rgba(14,165,233,0.10);  color: #0284C7; }
+    &--green    { background: rgba(22,163,74,0.10);   color: $color-success-text; }
+    &--blue     { background: rgba(14,165,233,0.10);  color: $color-info-text; }
     &--teal     { background: rgba(13,148,136,0.10);  color: #0D9488; }
     &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; }
   }
@@ -2905,7 +2905,7 @@ $accents: (
 .bd-day  {
   display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
   border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  background: rgba(255,255,255,0.7); color: $color-stone-500; border: 1.5px solid $color-border;
+  background: $color-bg-card; color: $color-stone-500; border: 1.5px solid $color-border;
   &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
 }
 .bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
@@ -3240,7 +3240,7 @@ $accents: (
   gap: 6px;
   font-size: $font-size-xs;
   color: $color-warning;
-  background: #fffbeb;
+  background: $color-primary-lighter;
   border: 1px solid rgba(217, 119, 6, 0.25);
   border-radius: $radius-md;
   padding: 8px 12px;
@@ -3303,7 +3303,7 @@ $accents: (
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 14px;
-      color: $dark;
+      color: $color-text-primary;
     }
 
     .ss-caret {
@@ -3360,7 +3360,7 @@ $accents: (
       border: 1.5px solid $border;
       border-radius: 8px;
       font-size: 13px;
-      color: $dark;
+      color: $color-text-primary;
       background: $bg-neutral;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -3372,7 +3372,7 @@ $accents: (
       &:focus {
         border-color: $primary;
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
-        background: $white;
+        background: $color-bg-card;
       }
     }
 
@@ -3393,7 +3393,7 @@ $accents: (
       transition: color 0.15s;
 
       &:hover {
-        color: $dark;
+        color: $color-text-primary;
       }
     }
 
@@ -3425,7 +3425,7 @@ $accents: (
       padding: 8px 10px;
       border-radius: 8px;
       font-size: 14px;
-      color: $dark;
+      color: $color-text-primary;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       list-style: none;

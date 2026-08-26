@@ -1,15 +1,15 @@
 <div class="ntf-page">
   <div class="ntf-header">
     <div>
-      <h1 class="ntf-title">Notifications</h1>
-      <p class="ntf-subtitle">Everything that needs your attention, in one place.</p>
+      <h1 class="ntf-title">{{ 'shared.notifications.notifications' | translate }}</h1>
+      <p class="ntf-subtitle">{{ 'shared.notifications.everythingNeedsAttentionOnePlace' | translate }}</p>
     </div>
     <div class="ntf-header-actions">
-      <button type="button" class="ntf-icon-btn" [class.ntf-icon-btn-active]="showPreferences()" (click)="togglePreferencesPanel()" title="Notification preferences" aria-label="Notification preferences">
+      <button type="button" class="ntf-icon-btn" [class.ntf-icon-btn-active]="showPreferences()" (click)="togglePreferencesPanel()" [title]="'shared.notifications.notificationPreferences' | translate" [attr.aria-label]="'shared.notifications.notificationPreferences' | translate">
         <i class="bi bi-gear-fill" aria-hidden="true"></i>
       </button>
       <button type="button" class="ntf-mark-all" (click)="markAllRead()">
-        <i class="bi bi-check2-all" aria-hidden="true"></i> Mark all as read
+        <i class="bi bi-check2-all" aria-hidden="true"></i> {{ 'shared.notifications.markAllAsRead' | translate }}
       </button>
     </div>
   </div>
@@ -24,11 +24,11 @@
             [ngModel]="emailDigestEnabled()"
             (ngModelChange)="toggleEmailDigest()"
             [ngModelOptions]="{ standalone: true }"
-            ariaLabel="Email me a daily summary">
+            [ariaLabel]="'shared.notifications.emailMeDailySummary' | translate">
           </app-toggle>
           <div>
-            <span class="ntf-prefs-digest-title">Email me a daily summary</span>
-            <span class="ntf-prefs-digest-sub">Get a once-a-day email of anything you missed.</span>
+            <span class="ntf-prefs-digest-title">{{ 'shared.notifications.emailMeDailySummary' | translate }}</span>
+            <span class="ntf-prefs-digest-sub">{{ 'shared.notifications.getOnceDayEmailAnything' | translate }}</span>
           </div>
         </div>
 
@@ -52,17 +52,17 @@
 
   <div class="ntf-filters" role="tablist">
     <button type="button" class="ntf-filter" [class.ntf-filter-active]="filter() === 'all'" (click)="setFilter('all')">
-      All
+      {{ 'common.all' | translate }}
     </button>
     <button type="button" class="ntf-filter" [class.ntf-filter-active]="filter() === 'unread'" (click)="setFilter('unread')">
-      Unread
+      {{ 'shared.notifications.unread' | translate }}
     </button>
   </div>
 
   @if (loading()) {
     <div class="ntf-loading">
       <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
       </div>
     </div>
   } @else {
@@ -73,7 +73,7 @@
             <i class="bi" [class]="icon(n)" aria-hidden="true"></i>
           </span>
           <span class="ntf-item-body">
-            <span class="ntf-item-message">{{ n.message }}</span>
+            <span class="ntf-item-message">{{ n | notificationText }}</span>
             <span class="ntf-item-time">{{ relativeTime(n) }}</span>
           </span>
           @if (!n.isRead) {

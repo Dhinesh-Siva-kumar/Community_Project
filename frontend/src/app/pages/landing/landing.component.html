@@ -11,56 +11,48 @@
   </a>
 
   <ul class="lp-nav-links">
-    <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">{{ t.nav_home }}</a></li>
-    <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">{{ t.nav_features }}</a></li>
-    <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">{{ t.nav_communities }}</a></li>
-    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">{{ t.nav_how_it_works }}</a></li>
-    <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">{{ t.nav_reviews }}</a></li>
-    <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">{{ t.nav_about }}</a></li>
-    <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">{{ t.nav_contact }}</a></li>
+    <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">{{ 'landing.nav_home' | translate }}</a></li>
+    <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">{{ 'landing.nav_features' | translate }}</a></li>
+    <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">{{ 'landing.nav_communities' | translate }}</a></li>
+    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">{{ 'landing.nav_how_it_works' | translate }}</a></li>
+    <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">{{ 'landing.nav_reviews' | translate }}</a></li>
+    <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">{{ 'landing.nav_about' | translate }}</a></li>
+    <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">{{ 'landing.nav_contact' | translate }}</a></li>
   </ul>
 
   <div class="lp-nav-right">
     <!-- Language toggle pill -->
-    <button class="lp-lang-toggle" (click)="toggleLanguage()" [attr.aria-label]="currentLang === 'en' ? 'Switch to Tamil' : 'Switch to English'">
-      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'en'">EN</span>
-      <span class="lp-lang-divider"></span>
-      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'ta'">தமிழ்</span>
-    </button>
-    <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+    <app-language-toggle></app-language-toggle>
+    <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="(currentTheme === 'dark' ? 'common.switchToLight' : 'common.switchToDark') | translate">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
     </button>
-    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">{{ t.nav_login }}</a>
-    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">{{ t.nav_get_started }}</a>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">{{ 'landing.nav_login' | translate }}</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">{{ 'landing.nav_get_started' | translate }}</a>
   </div>
 
-  <button class="lp-burger" [class.open]="mobileOpen" (click)="toggleMobile()" aria-label="Toggle menu">
+  <button class="lp-burger" [class.open]="mobileOpen" (click)="toggleMobile()" [attr.aria-label]="'common.toggleMenu' | translate">
     <span></span><span></span><span></span>
   </button>
 </nav>
 
 <!-- Mobile Menu -->
 <div class="lp-mobile" [class.open]="mobileOpen">
-  <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> {{ t.nav_home }}</a>
-  <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> {{ t.nav_features }}</a>
-  <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> {{ t.nav_communities }}</a>
-  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> {{ t.nav_how_it_works }}</a>
-  <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> {{ t.nav_reviews }}</a>
-  <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> {{ t.nav_about }}</a>
-  <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> {{ t.nav_contact }}</a>
+  <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> {{ 'landing.nav_home' | translate }}</a>
+  <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> {{ 'landing.nav_features' | translate }}</a>
+  <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> {{ 'landing.nav_communities' | translate }}</a>
+  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> {{ 'landing.nav_how_it_works' | translate }}</a>
+  <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> {{ 'landing.nav_reviews' | translate }}</a>
+  <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> {{ 'landing.nav_about' | translate }}</a>
+  <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> {{ 'landing.nav_contact' | translate }}</a>
   <div class="lp-mobile-actions">
     <!-- Language toggle (mobile) -->
-    <button class="lp-lang-toggle lp-lang-toggle--mobile" (click)="toggleLanguage()">
-      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'en'">EN</span>
-      <span class="lp-lang-divider"></span>
-      <span class="lp-lang-seg" [class.lp-lang-active]="currentLang === 'ta'">தமிழ்</span>
-    </button>
+    <app-language-toggle [block]="true"></app-language-toggle>
     <button class="lp-theme-btn lp-theme-btn-wide" (click)="toggleTheme()">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
-      <span>{{ currentTheme === 'dark' ? t.mobile_light_mode : t.mobile_dark_mode }}</span>
+      <span>{{ currentTheme === 'dark' ? ('landing.mobile_light_mode' | translate) : ('landing.mobile_dark_mode' | translate) }}</span>
     </button>
-    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-full" (click)="closeMobile()">{{ t.nav_login }}</a>
-    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-full" (click)="closeMobile()">{{ t.nav_get_started }}</a>
+    <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-full" (click)="closeMobile()">{{ 'landing.nav_login' | translate }}</a>
+    <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-full" (click)="closeMobile()">{{ 'landing.nav_get_started' | translate }}</a>
   </div>
 </div>
 
@@ -78,22 +70,22 @@
 
     <!-- Headline -->
     <h1 class="lp-hero-h1">
-      <span class="lp-hero-h1-line1">{{ t.hero_h1_pre }} <br><span class="lp-hero-h1-accent">{{ t.hero_h1_accent }}</span> {{ t.hero_h1_post }}</span><br>
-      <!-- <span class="lp-hero-h1-sub">{{ t.hero_h1_sub }}</span> -->
+      <span class="lp-hero-h1-line1">{{ 'landing.hero_h1_pre' | translate }} <br><span class="lp-hero-h1-accent">{{ 'landing.hero_h1_accent' | translate }}</span> {{ 'landing.hero_h1_post' | translate }}</span><br>
+      <!-- <span class="lp-hero-h1-sub">{{ 'landing.hero_h1_sub' | translate }}</span> -->
     </h1>
 
     <!-- Power Line -->
-    <!-- <p class="lp-hero-power-line">{{ t.hero_power_line }}</p> -->
+    <!-- <p class="lp-hero-power-line">{{ 'landing.hero_power_line' | translate }}</p> -->
 
     <!-- Motto with flanking lines -->
     <div class="lp-hero-motto">
       <span class="lp-hero-motto-line"></span>
-      <span class="lp-hero-motto-text">{{ t.hero_motto }}</span>
+      <span class="lp-hero-motto-text">{{ 'landing.hero_motto' | translate }}</span>
       <span class="lp-hero-motto-line"></span>
     </div>
 
     <!-- Supporting description line -->
-    <p class="lp-hero-support">{{ t.hero_support_line }}</p>
+    <p class="lp-hero-support">{{ 'landing.hero_support_line' | translate }}</p>
 
     <!-- Description -->
     <!-- <p class="lp-hero-desc">
@@ -115,11 +107,11 @@
     <div class="lp-hero-content">
       <div class="lp-hero-ctas">
         <a routerLink="/auth/register" class="lp-hbtn lp-hbtn-primary">
-          <i class="bi bi-people-fill"></i> {{ t.hero_join_community }}
+          <i class="bi bi-people-fill"></i> {{ 'landing.hero_join_community' | translate }}
         </a>
         <a href="landing#how-it-works" class="lp-hbtn lp-hbtn-outline"
            (click)="setActive('how-it-works')">
-          {{ t.hero_how_it_works }} <i class="bi bi-play-fill"></i>
+          {{ 'landing.hero_how_it_works' | translate }} <i class="bi bi-play-fill"></i>
         </a>
       </div>
     </div>
@@ -130,48 +122,48 @@
       <div class="lp-feature-pill lp-fp-jobs">
         <div class="lp-fp-icon"><i class="bi bi-briefcase-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_jobs_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_jobs_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_jobs_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_jobs_stat' | translate }}</span> -->
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-communities">
         <div class="lp-fp-icon"><i class="bi bi-people-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_communities_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_communities_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_communities_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_communities_stat' | translate }}</span> -->
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-events">
         <div class="lp-fp-icon"><i class="bi bi-calendar-event-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_events_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_events_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_events_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_events_stat' | translate }}</span> -->
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-support">
         <div class="lp-fp-icon"><i class="bi bi-headset"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_support_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_support_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_support_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_support_stat' | translate }}</span> -->
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-help">
         <div class="lp-fp-icon"><i class="bi bi-heart-fill"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_help_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_help_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_help_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_help_stat' | translate }}</span> -->
         </div>
       </div>
 
       <div class="lp-feature-pill lp-fp-business">
         <div class="lp-fp-icon"><i class="bi bi-shop"></i></div>
         <div class="lp-fp-text">
-          <span class="lp-fp-label">{{ t.pill_business_label }}</span>
-          <!-- <span class="lp-fp-stat">{{ t.pill_business_stat }}</span> -->
+          <span class="lp-fp-label">{{ 'landing.pill_business_label' | translate }}</span>
+          <!-- <span class="lp-fp-stat">{{ 'landing.pill_business_stat' | translate }}</span> -->
         </div>
       </div>
 
@@ -181,9 +173,9 @@
 
   <!-- ── Trust microcopy — end of hero section ── -->
   <div class="lp-hero-trust-line">
-    <span><i class="bi bi-shield-fill-check"></i> {{ t.trust_secure }}</span>
-    <span><i class="bi bi-globe2"></i> {{ t.trust_free }}</span>
-    <span><i class="bi bi-heart-fill"></i> {{ t.trust_worldwide }}</span>
+    <span><i class="bi bi-shield-fill-check"></i> {{ 'landing.trust_secure' | translate }}</span>
+    <span><i class="bi bi-globe2"></i> {{ 'landing.trust_free' | translate }}</span>
+    <span><i class="bi bi-heart-fill"></i> {{ 'landing.trust_worldwide' | translate }}</span>
   </div>
 
 </section>
@@ -193,14 +185,14 @@
 <!-- ═══ 3. MARQUEE TICKER ═══ -->
 <div class="lp-marquee">
   <div class="lp-marquee-track">
-    @for (item of t.marqueeItems; track $index) {
+    @for (item of ('landing.marqueeItems' | translate); track $index) {
       <div class="lp-marquee-item">
         <i class="bi" [ngClass]="item.icon"></i>
         <span>{{ item.text }}</span>
       </div>
     }
     <!-- Duplicate for seamless infinite scroll -->
-    @for (item of t.marqueeItems; track $index) {
+    @for (item of ('landing.marqueeItems' | translate); track $index) {
       <div class="lp-marquee-item">
         <i class="bi" [ngClass]="item.icon"></i>
         <span>{{ item.text }}</span>
@@ -215,13 +207,13 @@
 <section class="lp-section lp-who-section">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-people-fill"></i> {{ t.who_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.who_title }}</h2>
-      <p class="lp-sec-sub">{{ t.who_sub }}</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-people-fill"></i> {{ 'landing.who_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.who_title' | translate }}</h2>
+      <p class="lp-sec-sub">{{ 'landing.who_sub' | translate }}</p>
     </div>
 
     <div class="lp-who-grid rv">
-      @for (audience of t.whoIsThisFor; track $index; let i = $index) {
+      @for (audience of ('landing.whoIsThisFor' | translate); track $index; let i = $index) {
         <div class="lp-who-card glass-card" [attr.data-color]="audience.color" [style.transition-delay]="(i * 0.08) + 's'">
           <div class="lp-who-icon" [attr.data-color]="audience.color">
             <i class="bi" [ngClass]="audience.icon"></i>
@@ -238,12 +230,12 @@
 <section class="lp-section lp-opportunities-section">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-green"><i class="bi bi-briefcase-fill"></i> {{ t.opportunities_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.opportunities_heading }}</h2>
-      <p class="lp-sec-sub">{{ t.opportunities_sub }}</p>
+      <span class="lp-pill neon-pill-green"><i class="bi bi-briefcase-fill"></i> {{ 'landing.opportunities_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.opportunities_heading' | translate }}</h2>
+      <p class="lp-sec-sub">{{ 'landing.opportunities_sub' | translate }}</p>
     </div>
     <div class="lp-opps-grid rv">
-      @for (opp of t.opportunities; track $index; let i = $index) {
+      @for (opp of ('landing.opportunities' | translate); track $index; let i = $index) {
         <a routerLink="/auth/register" class="lp-opp-card glass-card"
            [attr.data-color]="opp.color"
            [style.transition-delay]="(i * 0.07) + 's'">
@@ -265,13 +257,13 @@
 <section class="lp-section lp-section-mesh" id="features">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ t.feat_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.feat_title1 }}<br/><span class="neon-text">{{ t.feat_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.feat_sub }}</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ 'landing.feat_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.feat_title1' | translate }}<br/><span class="neon-text">{{ 'landing.feat_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.feat_sub' | translate }}</p>
     </div>
 
     <div class="lp-bento">
-      @for (f of t.features; track $index; let i = $index) {
+      @for (f of ('landing.features' | translate); track $index; let i = $index) {
         <div class="lp-bento-card glass-card rv"
              [attr.data-color]="f.color"
              [style.transition-delay]="(i * 0.06) + 's'">
@@ -308,9 +300,9 @@
 
     <!-- Section header -->
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> {{ t.comm_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.comm_title1 }} <span class="neon-violet">{{ t.comm_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.comm_sub }}</p>
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> {{ 'landing.comm_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.comm_title1' | translate }} <span class="neon-violet">{{ 'landing.comm_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.comm_sub' | translate }}</p>
     </div>
 
     <!-- ── Feature highlights: Group Chat · Local Help · Guidance ── -->
@@ -320,24 +312,24 @@
         <div class="lp-comm-feat-icon lp-comm-feat-icon--chat">
           <i class="bi bi-chat-dots-fill"></i>
         </div>
-        <h4>{{ t.comm_group_chat_title }}</h4>
-        <p>{{ t.comm_group_chat_desc }}</p>
+        <h4>{{ 'landing.comm_group_chat_title' | translate }}</h4>
+        <p>{{ 'landing.comm_group_chat_desc' | translate }}</p>
       </div>
 
       <div class="lp-comm-feat-card glass-card">
         <div class="lp-comm-feat-icon lp-comm-feat-icon--help">
           <i class="bi bi-people-fill"></i>
         </div>
-        <h4>{{ t.comm_local_help_title }}</h4>
-        <p>{{ t.comm_local_help_desc }}</p>
+        <h4>{{ 'landing.comm_local_help_title' | translate }}</h4>
+        <p>{{ 'landing.comm_local_help_desc' | translate }}</p>
       </div>
 
       <div class="lp-comm-feat-card glass-card">
         <div class="lp-comm-feat-icon lp-comm-feat-icon--guide">
           <i class="bi bi-lightbulb-fill"></i>
         </div>
-        <h4>{{ t.comm_guidance_title }}</h4>
-        <p>{{ t.comm_guidance_desc }}</p>
+        <h4>{{ 'landing.comm_guidance_title' | translate }}</h4>
+        <p>{{ 'landing.comm_guidance_desc' | translate }}</p>
       </div>
 
     </div>
@@ -345,7 +337,7 @@
   </div>
 
   <div class="lp-comm-scroll-wrap">
-    <button class="lp-comm-arrow lp-comm-arrow-left" (click)="scrollCommunities('left')" aria-label="Scroll left">
+    <button class="lp-comm-arrow lp-comm-arrow-left" (click)="scrollCommunities('left')" [attr.aria-label]="'common.scrollLeft' | translate">
       <i class="bi bi-chevron-left"></i>
     </button>
 
@@ -377,7 +369,7 @@
             <!-- <div class="lp-comm-bottom">
               <span class="lp-comm-status">
                 <span class="lp-comm-dot"></span>
-                {{ t.comm_active }}
+                {{ 'landing.comm_active' | translate }}
               </span>
               <span class="lp-comm-members">
                 <i class="bi bi-people-fill"></i> {{ c.members | number }}
@@ -389,7 +381,7 @@
       </div>
     </div>
 
-    <button class="lp-comm-arrow lp-comm-arrow-right" (click)="scrollCommunities('right')" aria-label="Scroll right">
+    <button class="lp-comm-arrow lp-comm-arrow-right" (click)="scrollCommunities('right')" [attr.aria-label]="'common.scrollRight' | translate">
       <i class="bi bi-chevron-right"></i>
     </button>
   </div>
@@ -403,11 +395,11 @@
         <img class="lp-chat-flag"
              src="https://flagcdn.com/w40/gb.png"
              srcset="https://flagcdn.com/w80/gb.png 2x"
-             alt="UK flag" width="40" height="30" />
+             [alt]="'common.ukFlag' | translate" width="40" height="30" />
         <div class="lp-chat-header-info">
-          <span class="lp-chat-community-name">{{ t.comm_chat_community_name }}</span>
+          <span class="lp-chat-community-name">{{ 'landing.comm_chat_community_name' | translate }}</span>
           <span class="lp-chat-online-status">
-            <span class="lp-chat-dot"></span> {{ t.comm_chat_active_status }}
+            <span class="lp-chat-dot"></span> {{ 'landing.comm_chat_active_status' | translate }}
           </span>
         </div>
         <i class="bi bi-chat-dots-fill lp-chat-header-icon"></i>
@@ -420,11 +412,11 @@
         <!-- <div class="lp-chat-msg lp-chat-msg--sent">
           <div class="lp-chat-avatar lp-chat-avatar--primary">M</div>
           <div class="lp-chat-content">
-            <span class="lp-chat-name">{{ t.comm_chat_sender_name }}
-              <span class="lp-chat-badge lp-chat-badge--online">{{ t.comm_chat_online_badge }}</span>
+            <span class="lp-chat-name">{{ 'landing.comm_chat_sender_name' | translate }}
+              <span class="lp-chat-badge lp-chat-badge--online">{{ 'landing.comm_chat_online_badge' | translate }}</span>
             </span>
             <div class="lp-chat-bubble">
-              {{ t.comm_chat_murugan_msg }}
+              {{ 'landing.comm_chat_murugan_msg' | translate }}
             </div>
           </div>
         </div> -->
@@ -433,9 +425,9 @@
         <!-- <div class="lp-chat-msg lp-chat-msg--received">
           <div class="lp-chat-avatar lp-chat-avatar--member">C</div>
           <div class="lp-chat-content lp-chat-content--right">
-            <span class="lp-chat-name lp-chat-name--right">{{ t.comm_chat_member_name }}</span>
+            <span class="lp-chat-name lp-chat-name--right">{{ 'landing.comm_chat_member_name' | translate }}</span>
             <div class="lp-chat-bubble lp-chat-bubble--reply">
-              {{ t.comm_chat_reply_msg }}
+              {{ 'landing.comm_chat_reply_msg' | translate }}
             </div>
           </div>
         </div>
@@ -447,7 +439,7 @@
 
   <div class="lp-comm-browse">
     <a routerLink="/communities" class="lp-btn lp-btn-neon lp-btn-shimmer">
-      <i class="bi bi-grid-3x3-gap-fill"></i> {{ t.comm_browse_all }}
+      <i class="bi bi-grid-3x3-gap-fill"></i> {{ 'landing.comm_browse_all' | translate }}
     </a>
   </div>
 </section>
@@ -458,20 +450,20 @@
 <section class="lp-section lp-ask-section lp-section-mesh">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-green"><i class="bi bi-chat-dots-fill"></i> {{ t.ask_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.ask_heading }}</h2>
-      <p class="lp-sec-sub">{{ t.ask_subtitle }}</p>
+      <span class="lp-pill neon-pill-green"><i class="bi bi-chat-dots-fill"></i> {{ 'landing.ask_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.ask_heading' | translate }}</h2>
+      <p class="lp-sec-sub">{{ 'landing.ask_subtitle' | translate }}</p>
     </div>
 
     <div class="lp-ask-grid rv">
-      @for (q of t.ask_questions; track $index; let i = $index) {
+      @for (q of ('landing.ask_questions' | translate); track $index; let i = $index) {
         <div class="lp-ask-card glass-card" [attr.data-color]="q.color" [style.transition-delay]="(i * 0.1) + 's'">
           <div class="lp-ask-icon" [attr.data-color]="q.color">
             <i class="bi" [ngClass]="q.icon"></i>
           </div>
           <p class="lp-ask-question">{{ q.question }}</p>
           <div class="lp-ask-badge">
-            <i class="bi bi-people-fill"></i> {{ t.ask_answer_badge }}
+            <i class="bi bi-people-fill"></i> {{ 'landing.ask_answer_badge' | translate }}
           </div>
         </div>
       }
@@ -479,7 +471,7 @@
 
     <div class="lp-ask-cta rv">
       <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-btn-shimmer">
-        <i class="bi bi-pencil-fill"></i> {{ t.ask_btn }}
+        <i class="bi bi-pencil-fill"></i> {{ 'landing.ask_btn' | translate }}
       </a>
     </div>
   </div>
@@ -491,13 +483,13 @@
 <section class="lp-section lp-first30-section lp-section-mesh">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-yellow"><i class="bi bi-calendar-check-fill"></i> {{ t.first30_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.first30_title }}</h2>
-      <p class="lp-sec-sub">{{ t.first30_sub }}</p>
+      <span class="lp-pill neon-pill-yellow"><i class="bi bi-calendar-check-fill"></i> {{ 'landing.first30_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.first30_title' | translate }}</h2>
+      <p class="lp-sec-sub">{{ 'landing.first30_sub' | translate }}</p>
     </div>
 
     <div class="lp-first30-grid">
-      @for (card of t.first30Cards; track $index; let i = $index) {
+      @for (card of ('landing.first30Cards' | translate); track $index; let i = $index) {
         <div class="lp-first30-card glass-card rv"
              [attr.data-color]="card.color"
              [style.transition-delay]="(i * 0.1) + 's'">
@@ -518,14 +510,14 @@
 <section class="lp-section lp-timeline-section lp-section-mesh" id="how-it-works">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> {{ t.timeline_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.timeline_title1 }}<br/><span class="neon-green">{{ t.timeline_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.timeline_sub }}</p>
+      <span class="lp-pill neon-pill-green"><i class="bi bi-rocket-takeoff-fill"></i> {{ 'landing.timeline_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.timeline_title1' | translate }}<br/><span class="neon-green">{{ 'landing.timeline_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.timeline_sub' | translate }}</p>
     </div>
 
     <div class="lp-timeline">
       <div class="lp-timeline-line"></div>
-      @for (s of t.steps; track s.num; let i = $index) {
+      @for (s of ('landing.steps' | translate); track s.num; let i = $index) {
         <div class="lp-tl-item rv" [class.lp-tl-right]="i % 2 !== 0" [style.transition-delay]="(i * 0.1) + 's'">
           <div class="lp-tl-dot" [attr.data-color]="s.color">
             <span>{{ s.num }}</span>
@@ -547,21 +539,21 @@
 <section class="lp-section lp-testi-section lp-section-mesh" id="testimonials">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> {{ t.testi_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.testi_title_pre }} <span class="neon-pink">{{ t.testi_title_accent }}</span></h2>
-      <p class="lp-sec-sub">{{ t.testi_sub }}</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> {{ 'landing.testi_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.testi_title_pre' | translate }} <span class="neon-pink">{{ 'landing.testi_title_accent' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.testi_sub' | translate }}</p>
     </div>
   </div>
 
   <div class="lp-testi-scroll-wrap">
 
-    <button class="lp-testi-arrow lp-testi-arrow-left" (click)="scrollTestimonials('left')" aria-label="Scroll left">
+    <button class="lp-testi-arrow lp-testi-arrow-left" (click)="scrollTestimonials('left')" [attr.aria-label]="'common.scrollLeft' | translate">
       <i class="bi bi-chevron-left"></i>
     </button>
 
     <div class="lp-testi-scroll rv" #testiScroll>
       <div class="lp-testi-track">
-      @for (tst of t.testimonials; track $index) {
+      @for (tst of ('landing.testimonials' | translate); track $index) {
         <div class="lp-testi-card glass-card">
 
           <!-- Category tag + quote icon -->
@@ -593,7 +585,7 @@
     </div>
   </div>
 
-    <button class="lp-testi-arrow lp-testi-arrow-right" (click)="scrollTestimonials('right')" aria-label="Scroll right">
+    <button class="lp-testi-arrow lp-testi-arrow-right" (click)="scrollTestimonials('right')" [attr.aria-label]="'common.scrollRight' | translate">
       <i class="bi bi-chevron-right"></i>
     </button>
 
@@ -607,26 +599,26 @@
 <section class="lp-section lp-about-section" id="about">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-info-circle-fill"></i> {{ t.about_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.about_title1 }}<br/><span class="neon-text">{{ t.about_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.about_sub }}</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-info-circle-fill"></i> {{ 'landing.about_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.about_title1' | translate }}<br/><span class="neon-text">{{ 'landing.about_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.about_sub' | translate }}</p>
     </div>
 
     <div class="lp-about-split">
       <!-- Left: Mission + Stats + CTA -->
       <div class="lp-about-left rvl">
         <div class="lp-about-mission glass-card">
-          <h3>{{ t.about_mission_title }}</h3>
-          <p>{{ t.about_mission_text }}</p>
-          <p class="lp-about-closing">{{ t.about_mission_closing }}</p>
+          <h3>{{ 'landing.about_mission_title' | translate }}</h3>
+          <p>{{ 'landing.about_mission_text' | translate }}</p>
+          <p class="lp-about-closing">{{ 'landing.about_mission_closing' | translate }}</p>
           <div class="lp-about-chips">
-            @for (chip of t.aboutChips; track chip) {
+            @for (chip of ('landing.aboutChips' | translate); track chip) {
               <span class="lp-mini-tag">{{ chip }}</span>
             }
           </div>
           <div class="lp-about-contact">
             <div><i class="bi bi-envelope-fill"></i> hello&#64;tamilconnect.app</div>
-            <div><i class="bi bi-geo-alt-fill"></i> {{ t.about_location }}</div>
+            <div><i class="bi bi-geo-alt-fill"></i> {{ 'landing.about_location' | translate }}</div>
           </div>
         </div>
       </div>
@@ -634,7 +626,7 @@
       <!-- Right: Stats + CTA buttons -->
       <div class="lp-about-right rvr">
          <div class="lp-about-stats">
-          @for (stat of t.aboutStats; track stat.value; let i = $index) {
+          @for (stat of ('landing.aboutStats' | translate); track stat.value; let i = $index) {
             <div class="lp-about-stat-card glass-card"
                  [style.transition-delay]="(i * 0.1) + 's'">
               <span class="lp-stat-val">{{ getCounterValue(stat) }}</span>
@@ -644,10 +636,10 @@
         </div>
         <div class="lp-about-cta-row">
           <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-shimmer lp-btn-lg">
-            <i class="bi bi-rocket-takeoff-fill"></i> {{ t.about_join_now }}
+            <i class="bi bi-rocket-takeoff-fill"></i> {{ 'landing.about_join_now' | translate }}
           </a>
           <a routerLink="/auth/login" class="lp-btn lp-btn-glass lp-btn-lg">
-            <i class="bi bi-box-arrow-in-right"></i> {{ t.about_log_in }}
+            <i class="bi bi-box-arrow-in-right"></i> {{ 'landing.about_log_in' | translate }}
           </a>
         </div>
       </div>
@@ -660,11 +652,11 @@
           <i class="bi bi-exclamation-triangle-fill"></i>
         </div>
         <div class="lp-emergency-content">
-          <h3>{{ t.emergency_title }}</h3>
-          <p>{{ t.emergency_text }}</p>
+          <h3>{{ 'landing.emergency_title' | translate }}</h3>
+          <p>{{ 'landing.emergency_text' | translate }}</p>
         </div>
         <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-lg lp-emergency-btn">
-          <i class="bi bi-shield-fill-check"></i> {{ t.emergency_btn }}
+          <i class="bi bi-shield-fill-check"></i> {{ 'landing.emergency_btn' | translate }}
         </a>
       </div>
     </div>
@@ -674,14 +666,14 @@
 
       <div class="lp-trust-head">
         <span class="lp-trust-badge">
-          <i class="bi bi-shield-fill-check"></i> {{ t.trust_badge }}
+          <i class="bi bi-shield-fill-check"></i> {{ 'landing.trust_badge' | translate }}
         </span>
-        <h3 class="lp-trust-title">{{ t.trust_title }}</h3>
-        <p class="lp-trust-sub">{{ t.trust_sub }}</p>
+        <h3 class="lp-trust-title">{{ 'landing.trust_title' | translate }}</h3>
+        <p class="lp-trust-sub">{{ 'landing.trust_sub' | translate }}</p>
       </div>
 
       <div class="lp-trust-grid">
-        @for (c of t.trustCards; track $index; let i = $index) {
+        @for (c of ('landing.trustCards' | translate); track $index; let i = $index) {
           <div class="lp-trust-card glass-card rv"
                [attr.data-color]="c.color"
                [style.transition-delay]="(i * 0.08) + 's'">
@@ -696,7 +688,7 @@
 
       <p class="lp-trust-tagline">
         <i class="bi bi-shield-fill-check"></i>
-        {{ t.trust_tagline }}
+        {{ 'landing.trust_tagline' | translate }}
       </p>
 
     </div>
@@ -710,13 +702,13 @@
 <section class="lp-section lp-blog-section" id="blog">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-violet"><i class="bi bi-journal-richtext"></i> {{ t.blog_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.blog_title1 }}<br/><span class="neon-violet">{{ t.blog_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.blog_sub }}</p>
+      <span class="lp-pill neon-pill-violet"><i class="bi bi-journal-richtext"></i> {{ 'landing.blog_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.blog_title1' | translate }}<br/><span class="neon-violet">{{ 'landing.blog_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.blog_sub' | translate }}</p>
     </div>
 
     <div class="lp-blog-grid lp-blog-grid--equal">
-      @for (post of t.blogPosts; track $index; let i = $index) {
+      @for (post of ('landing.blogPosts' | translate); track $index; let i = $index) {
         <div class="lp-blog-card glass-card rv"
              [style.transition-delay]="(i * 0.1) + 's'">
           <div class="lp-blog-top">
@@ -727,7 +719,7 @@
           <p>{{ post.excerpt }}</p>
           <div class="lp-blog-footer">
             <span class="lp-blog-date">{{ post.date }}</span>
-            <a href="#" class="lp-blog-link">{{ t.blog_read_more }} <i class="bi bi-arrow-right"></i></a>
+            <a href="#" class="lp-blog-link">{{ 'landing.blog_read_more' | translate }} <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
       }
@@ -741,9 +733,9 @@
 <section class="lp-section lp-contact-section" id="contact">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill-pink"><i class="bi bi-headset"></i> {{ t.contact_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.contact_title1 }} <span class="neon-pink">{{ t.contact_title2 }}</span></h2>
-      <p class="lp-sec-sub">{{ t.contact_sub }}</p>
+      <span class="lp-pill neon-pill-pink"><i class="bi bi-headset"></i> {{ 'landing.contact_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.contact_title1' | translate }} <span class="neon-pink">{{ 'landing.contact_title2' | translate }}</span></h2>
+      <p class="lp-sec-sub">{{ 'landing.contact_sub' | translate }}</p>
     </div>
 
     <div class="lp-contact-grid">
@@ -753,10 +745,10 @@
 
         <div class="lp-cp-head">
           <span class="lp-cp-badge">
-            <i class="bi bi-shield-fill-check"></i> {{ t.contact_badge }}
+            <i class="bi bi-shield-fill-check"></i> {{ 'landing.contact_badge' | translate }}
           </span>
-          <h3>{{ t.contact_panel_title }}</h3>
-          <p>{{ t.contact_panel_desc }}</p>
+          <h3>{{ 'landing.contact_panel_title' | translate }}</h3>
+          <p>{{ 'landing.contact_panel_desc' | translate }}</p>
         </div>
 
         <div class="lp-cp-items">
@@ -766,9 +758,9 @@
               <i class="bi bi-envelope-fill"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">{{ t.contact_email_label }}</span>
+              <span class="lp-cp-label">{{ 'landing.contact_email_label' | translate }}</span>
               <span class="lp-cp-value">hello&#64;tamilconnect.app</span>
-              <span class="lp-cp-note">{{ t.contact_email_note }}</span>
+              <span class="lp-cp-note">{{ 'landing.contact_email_note' | translate }}</span>
             </div>
           </div>
 
@@ -777,9 +769,9 @@
               <i class="bi bi-whatsapp"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">{{ t.contact_whatsapp_label }}</span>
-              <span class="lp-cp-value">{{ t.contact_whatsapp_value }}</span>
-              <span class="lp-cp-note">{{ t.contact_whatsapp_note }}</span>
+              <span class="lp-cp-label">{{ 'landing.contact_whatsapp_label' | translate }}</span>
+              <span class="lp-cp-value">{{ 'landing.contact_whatsapp_value' | translate }}</span>
+              <span class="lp-cp-note">{{ 'landing.contact_whatsapp_note' | translate }}</span>
             </div>
           </div>
 
@@ -788,9 +780,9 @@
               <i class="bi bi-globe2"></i>
             </div>
             <div class="lp-cp-text">
-              <span class="lp-cp-label">{{ t.contact_worldwide_label }}</span>
-              <span class="lp-cp-value">{{ t.contact_worldwide_value }}</span>
-              <span class="lp-cp-note">{{ t.contact_worldwide_note }}</span>
+              <span class="lp-cp-label">{{ 'landing.contact_worldwide_label' | translate }}</span>
+              <span class="lp-cp-value">{{ 'landing.contact_worldwide_value' | translate }}</span>
+              <span class="lp-cp-note">{{ 'landing.contact_worldwide_note' | translate }}</span>
             </div>
           </div>
 
@@ -809,24 +801,24 @@
       <!-- ── Right: Contact form ── -->
       <div class="lp-contact-form-card rvr">
 
-        <h4 class="lp-form-title">{{ t.contact_form_title }}</h4>
+        <h4 class="lp-form-title">{{ 'landing.contact_form_title' | translate }}</h4>
 
         @if (contactSubmitted) {
           <div class="lp-contact-success">
             <div class="lp-success-icon">
               <i class="bi bi-check-circle-fill"></i>
             </div>
-            <h4>{{ t.contact_success_title }}</h4>
-            <p>{{ t.contact_success_desc }}</p>
+            <h4>{{ 'landing.contact_success_title' | translate }}</h4>
+            <p>{{ 'landing.contact_success_desc' | translate }}</p>
             <button class="lp-btn lp-btn-ghost" (click)="resetContactForm()">
-              {{ t.contact_send_another }}
+              {{ 'landing.contact_send_another' | translate }}
             </button>
           </div>
         } @else {
           <form (ngSubmit)="submitContact()" #contactForm="ngForm" novalidate>
             <div class="lp-form-row">
               <div class="lp-form-group">
-                <label class="lp-form-label">{{ t.contact_first_name }}</label>
+                <label class="lp-form-label">{{ 'landing.contact_first_name' | translate }}</label>
                 <input
                   type="text"
                   class="lp-form-control"
@@ -837,11 +829,11 @@
                   #firstName="ngModel"
                   [class.is-invalid]="firstName.invalid && firstName.touched">
                 @if (firstName.invalid && firstName.touched) {
-                  <div class="lp-form-error">{{ t.err_first_name }}</div>
+                  <div class="lp-form-error">{{ 'landing.err_first_name' | translate }}</div>
                 }
               </div>
               <div class="lp-form-group">
-                <label class="lp-form-label">{{ t.contact_last_name }}</label>
+                <label class="lp-form-label">{{ 'landing.contact_last_name' | translate }}</label>
                 <input
                   type="text"
                   class="lp-form-control"
@@ -852,13 +844,13 @@
                   #lastName="ngModel"
                   [class.is-invalid]="lastName.invalid && lastName.touched">
                 @if (lastName.invalid && lastName.touched) {
-                  <div class="lp-form-error">{{ t.err_last_name }}</div>
+                  <div class="lp-form-error">{{ 'landing.err_last_name' | translate }}</div>
                 }
               </div>
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">{{ t.contact_email_address }}</label>
+              <label class="lp-form-label">{{ 'landing.contact_email_address' | translate }}</label>
               <input
                 type="email"
                 class="lp-form-control"
@@ -870,31 +862,31 @@
                 #contactEmail="ngModel"
                 [class.is-invalid]="contactEmail.invalid && contactEmail.touched">
               @if (contactEmail.invalid && contactEmail.touched) {
-                <div class="lp-form-error">{{ t.err_email }}</div>
+                <div class="lp-form-error">{{ 'landing.err_email' | translate }}</div>
               }
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">{{ t.contact_subject_label }}</label>
+              <label class="lp-form-label">{{ 'landing.contact_subject_label' | translate }}</label>
               <app-searchable-select
                 [(ngModel)]="contact.subject"
                 name="subject"
                 required
                 #subject="ngModel"
-                [options]="t.contactSubjectOptions"
-                [placeholder]="t.contact_select_topic"
+                [options]="('landing.contactSubjectOptions' | translate)"
+                [placeholder]="('landing.contact_select_topic' | translate)"
               ></app-searchable-select>
               @if (subject.invalid && subject.touched) {
-                <div class="lp-form-error">{{ t.err_subject }}</div>
+                <div class="lp-form-error">{{ 'landing.err_subject' | translate }}</div>
               }
             </div>
 
             <div class="lp-form-group">
-              <label class="lp-form-label">{{ t.contact_message_label }}</label>
+              <label class="lp-form-label">{{ 'landing.contact_message_label' | translate }}</label>
               <textarea
                 class="lp-form-control"
                 rows="5"
-                [placeholder]="t.contact_tell_us"
+                [placeholder]="('landing.contact_tell_us' | translate)"
                 [(ngModel)]="contact.message"
                 name="message"
                 required
@@ -903,7 +895,7 @@
                 [class.is-invalid]="message.invalid && message.touched">
               </textarea>
               @if (message.invalid && message.touched) {
-                <div class="lp-form-error">{{ t.err_message }}</div>
+                <div class="lp-form-error">{{ 'landing.err_message' | translate }}</div>
               }
             </div>
 
@@ -911,7 +903,7 @@
               type="submit"
               class="lp-btn lp-btn-neon lp-btn-lg lp-btn-full lp-btn-submit"
               [disabled]="contactForm.invalid">
-              <i class="bi bi-send-fill"></i> {{ t.contact_send_message_btn }}
+              <i class="bi bi-send-fill"></i> {{ 'landing.contact_send_message_btn' | translate }}
             </button>
           </form>
         }
@@ -928,11 +920,11 @@
 <section class="lp-section lp-bizdir-section lp-section-mesh">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-shop"></i> {{ t.bizdir_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.bizdir_heading }}</h2>
+      <span class="lp-pill neon-pill"><i class="bi bi-shop"></i> {{ 'landing.bizdir_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.bizdir_heading' | translate }}</h2>
     </div>
     <div class="lp-bizdir-grid">
-      @for (cat of t.businessCategories; track $index; let i = $index) {
+      @for (cat of ('landing.businessCategories' | translate); track $index; let i = $index) {
         <a routerLink="/auth/register" class="lp-bizdir-card glass-card rv"
            [attr.data-color]="cat.color"
            [style.transition-delay]="(i * 0.06) + 's'">
@@ -955,11 +947,11 @@
 <section class="lp-section lp-why-join-section lp-section-mesh">
   <div class="lp-wrap">
     <div class="lp-sec-head rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ t.why_join_pill }}</span>
-      <h2 class="lp-sec-title">{{ t.why_join_heading }}</h2>
+      <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ 'landing.why_join_pill' | translate }}</span>
+      <h2 class="lp-sec-title">{{ 'landing.why_join_heading' | translate }}</h2>
     </div>
     <div class="lp-wj-grid">
-      @for (item of t.whyJoinItems; track $index; let i = $index) {
+      @for (item of ('landing.whyJoinItems' | translate); track $index; let i = $index) {
         <div class="lp-wj-card glass-card rv"
              [attr.data-color]="item.color"
              [style.transition-delay]="(i * 0.08) + 's'">
@@ -978,15 +970,15 @@
 <section class="lp-section lp-waitlist-section lp-section-mesh" id="waitlist">
   <div class="lp-wrap">
     <div class="lp-waitlist-card glass-card rv">
-      <span class="lp-pill neon-pill"><i class="bi bi-star-fill"></i> {{ t.waitlist_pill }}</span>
-      <h2 class="lp-waitlist-title">{{ t.waitlist_title }}</h2>
-      <p class="lp-waitlist-text">{{ t.waitlist_text }}</p>
+      <span class="lp-pill neon-pill"><i class="bi bi-star-fill"></i> {{ 'landing.waitlist_pill' | translate }}</span>
+      <h2 class="lp-waitlist-title">{{ 'landing.waitlist_title' | translate }}</h2>
+      <p class="lp-waitlist-text">{{ 'landing.waitlist_text' | translate }}</p>
 
       <!-- Benefits heading + checklist -->
       <div class="lp-waitlist-benefits">
-        <h3 class="lp-wb-heading">{{ t.waitlist_benefits_heading }}</h3>
+        <h3 class="lp-wb-heading">{{ 'landing.waitlist_benefits_heading' | translate }}</h3>
         <div class="lp-wb-grid">
-          @for (b of t.waitlistBenefits; track $index; let i = $index) {
+          @for (b of ('landing.waitlistBenefits' | translate); track $index; let i = $index) {
             <div class="lp-wb-item" [attr.data-color]="b.color" [style.transition-delay]="(i * 0.07) + 's'">
               <div class="lp-wb-icon" [attr.data-color]="b.color">
                 <i class="bi" [ngClass]="b.icon"></i>
@@ -1003,20 +995,20 @@
       @if (waitlistSubmitted) {
         <div class="lp-waitlist-success">
           <i class="bi bi-check-circle-fill"></i>
-          <span>{{ t.waitlist_success }}</span>
+          <span>{{ 'landing.waitlist_success' | translate }}</span>
         </div>
       } @else {
         <form class="lp-waitlist-form" (ngSubmit)="submitWaitlist()" #waitlistForm="ngForm" novalidate>
           <input
             type="email"
             class="lp-form-control lp-waitlist-input"
-            [placeholder]="t.waitlist_email_placeholder"
+            [placeholder]="('landing.waitlist_email_placeholder' | translate)"
             [(ngModel)]="waitlistEmail"
             name="waitlistEmail"
             required
             email>
           <button type="submit" class="lp-btn lp-btn-neon lp-btn-lg">
-            <i class="bi bi-envelope-fill"></i> {{ t.waitlist_btn }}
+            <i class="bi bi-envelope-fill"></i> {{ 'landing.waitlist_btn' | translate }}
           </button>
         </form>
       }
@@ -1034,30 +1026,30 @@
       <div class="lp-cta-gloss-inner">
 
         <div class="lp-cta-badge">
-          <i class="bi bi-globe2"></i> {{ t.cta_badge }}
+          <i class="bi bi-globe2"></i> {{ 'landing.cta_badge' | translate }}
         </div>
 
-        <h2 class="lp-cta-title">{{ t.cta_title1 }}<br/><span class="lp-cta-highlight">{{ t.cta_title2 }}</span></h2>
+        <h2 class="lp-cta-title">{{ 'landing.cta_title1' | translate }}<br/><span class="lp-cta-highlight">{{ 'landing.cta_title2' | translate }}</span></h2>
 
-        <p class="lp-cta-desc">{{ t.cta_desc }}</p>
+        <p class="lp-cta-desc">{{ 'landing.cta_desc' | translate }}</p>
 
         <div class="lp-cta-actions">
           <a routerLink="/auth/register" class="lp-btn lp-btn-cta-primary lp-btn-lg">
-            <i class="bi bi-people-fill"></i> {{ t.cta_join_free }}
+            <i class="bi bi-people-fill"></i> {{ 'landing.cta_join_free' | translate }}
           </a>
           <a routerLink="/auth/login" class="lp-btn lp-btn-cta-secondary lp-btn-lg">
-            {{ t.cta_already_member }}
+            {{ 'landing.cta_already_member' | translate }}
           </a>
         </div>
 
-        <p class="lp-cta-network-text">{{ t.cta_network_text }}</p>
+        <p class="lp-cta-network-text">{{ 'landing.cta_network_text' | translate }}</p>
 
         <div class="lp-cta-trust">
-          <span><i class="bi bi-globe2"></i> {{ t.cta_trust1 }}</span>
+          <span><i class="bi bi-globe2"></i> {{ 'landing.cta_trust1' | translate }}</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-people-fill"></i> {{ t.cta_trust2 }}</span>
+          <span><i class="bi bi-people-fill"></i> {{ 'landing.cta_trust2' | translate }}</span>
           <span class="lp-cta-trust-sep"></span>
-          <span><i class="bi bi-heart-fill"></i> {{ t.cta_trust3 }}</span>
+          <span><i class="bi bi-heart-fill"></i> {{ 'landing.cta_trust3' | translate }}</span>
         </div>
 
       </div>
@@ -1069,7 +1061,7 @@
 <div class="lp-footer-metrics">
   <div class="lp-wrap">
     <div class="lp-metrics-grid">
-      @for (m of t.footerMetrics; track m.label) {
+      @for (m of ('landing.footerMetrics' | translate); track m.label) {
         <div class="lp-metric-item">
           <div class="lp-metric-icon">
             <i class="bi" [ngClass]="m.icon"></i>
@@ -1101,22 +1093,22 @@
         </div>
       </div>
       <div class="lp-appbanner-content">
-        <span class="lp-appbanner-pill">{{ t.appbanner_pill }}</span>
-        <h3 class="lp-appbanner-title">{{ t.appbanner_title }}</h3>
-        <p class="lp-appbanner-text">{{ t.appbanner_text }}</p>
+        <span class="lp-appbanner-pill">{{ 'landing.appbanner_pill' | translate }}</span>
+        <h3 class="lp-appbanner-title">{{ 'landing.appbanner_title' | translate }}</h3>
+        <p class="lp-appbanner-text">{{ 'landing.appbanner_text' | translate }}</p>
       </div>
       <div class="lp-appbanner-badges">
         <button class="lp-appbanner-badge" disabled>
           <i class="bi bi-apple"></i>
-          <span>{{ t.appbanner_ios }}</span>
+          <span>{{ 'landing.appbanner_ios' | translate }}</span>
         </button>
         <button class="lp-appbanner-badge" disabled>
           <i class="bi bi-google-play"></i>
-          <span>{{ t.appbanner_android }}</span>
+          <span>{{ 'landing.appbanner_android' | translate }}</span>
         </button>
         <a href="#waitlist" class="lp-appbanner-waitlist-cta">
           <i class="bi bi-bell-fill"></i>
-          {{ t.appbanner_waitlist_cta }}
+          {{ 'landing.appbanner_waitlist_cta' | translate }}
         </a>
       </div>
     </div>
@@ -1134,8 +1126,8 @@
           <img src="logo.svg" alt="TamilConnect" class="lp-logo-img" />
           <span class="lp-logo-text">{{ applicationName }}</span>
         </a>
-        <p class="lp-footer-desc">{{ t.footer_desc }}</p>
-        <p class="lp-footer-tagline">{{ t.footer_tagline }}</p>
+        <p class="lp-footer-desc">{{ 'landing.footer_desc' | translate }}</p>
+        <p class="lp-footer-tagline">{{ 'landing.footer_tagline' | translate }}</p>
         <div class="lp-social">
           <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
           <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -1147,59 +1139,59 @@
 
       <!-- Platform -->
       <div class="lp-fcol">
-        <h4>{{ t.footer_platform }}</h4>
+        <h4>{{ 'landing.footer_platform' | translate }}</h4>
         <ul>
-          <li><a href="landing#communities">{{ t.footer_platform_communities }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_jobs }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_students }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_help }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_events }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_share }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_chat }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_platform_business }}</a></li>
+          <li><a href="landing#communities">{{ 'landing.footer_platform_communities' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_jobs' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_students' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_help' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_events' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_share' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_chat' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_platform_business' | translate }}</a></li>
         </ul>
       </div>
 
       <!-- Community -->
       <div class="lp-fcol">
-        <h4>{{ t.footer_community }}</h4>
+        <h4>{{ 'landing.footer_community' | translate }}</h4>
         <ul>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_uk }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_de }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_ca }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_au }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_sg }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_uae }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_nz }}</a></li>
-          <li><a routerLink="/auth/login">{{ t.footer_comm_ie }}</a></li>
-          <li><a href="landing#communities">{{ t.footer_comm_all }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_uk' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_de' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_ca' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_au' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_sg' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_uae' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_nz' | translate }}</a></li>
+          <li><a routerLink="/auth/login">{{ 'landing.footer_comm_ie' | translate }}</a></li>
+          <li><a href="landing#communities">{{ 'landing.footer_comm_all' | translate }}</a></li>
         </ul>
       </div>
 
       <!-- Support -->
       <div class="lp-fcol">
-        <h4>{{ t.footer_support }}</h4>
+        <h4>{{ 'landing.footer_support' | translate }}</h4>
         <ul>
-          <li><a href="landing#about">{{ t.footer_about_us }}</a></li>
-          <li><a href="landing#contact">{{ t.footer_contact_us }}</a></li>
-          <li><a href="#">{{ t.footer_privacy }}</a></li>
-          <li><a href="#">{{ t.footer_terms }}</a></li>
-          <li><a href="#">{{ t.footer_safety }}</a></li>
-          <li><a href="#">{{ t.footer_report }}</a></li>
+          <li><a href="landing#about">{{ 'landing.footer_about_us' | translate }}</a></li>
+          <li><a href="landing#contact">{{ 'landing.footer_contact_us' | translate }}</a></li>
+          <li><a href="#">{{ 'landing.footer_privacy' | translate }}</a></li>
+          <li><a href="#">{{ 'landing.footer_terms' | translate }}</a></li>
+          <li><a href="#">{{ 'landing.footer_safety' | translate }}</a></li>
+          <li><a href="#">{{ 'landing.footer_report' | translate }}</a></li>
         </ul>
       </div>
 
     </div>
 
     <div class="lp-footer-bottom">
-      <p>&copy; 2026 {{ applicationName }}. {{ t.footer_copyright }}</p>
+      <p>&copy; 2026 {{ applicationName }}. {{ 'landing.footer_copyright' | translate }}</p>
       <p class="lp-footer-made-with">
-        {{ t.footer_made_with }} <i class="bi bi-heart-fill"></i> {{ t.footer_made_for }}
+        {{ 'landing.footer_made_with' | translate }} <i class="bi bi-heart-fill"></i> {{ 'landing.footer_made_for' | translate }}
       </p>
       <div class="lp-footer-links">
-        <a href="#">{{ t.footer_privacy_link }}</a>
-        <a href="#">{{ t.footer_terms_link }}</a>
-        <a href="#">{{ t.footer_cookies_link }}</a>
+        <a href="#">{{ 'landing.footer_privacy_link' | translate }}</a>
+        <a href="#">{{ 'landing.footer_terms_link' | translate }}</a>
+        <a href="#">{{ 'landing.footer_cookies_link' | translate }}</a>
       </div>
     </div>
   </div>

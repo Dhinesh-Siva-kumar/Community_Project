@@ -1,5 +1,7 @@
 import nodemailer, { Transporter } from 'nodemailer';
 import { env } from '../config/env';
+import { t } from './i18n.service';
+import { Lang, FALLBACK_LANG } from './request-context';
 
 let transporter: Transporter | null = null;
 
@@ -53,18 +55,28 @@ export async function sendEmail(options: {
 }
 
 export async function sendOtpEmail(to: string, otp: string): Promise<void> {
+  // Language comes from the request context (Accept-Language), so the code
+  // arrives in whatever language the user is currently using the app in.
+  const params = { otp, minutes: env.OTP_EXPIRES_MINUTES };
   await sendEmail({
     to,
-    subject: 'Your OTP Code',
-    html: `<p>Your one-time password is: <strong>${otp}</strong></p><p>It expires in ${env.OTP_EXPIRES_MINUTES} minutes.</p>`,
-    text: `Your OTP is: ${otp}. It expires in ${env.OTP_EXPIRES_MINUTES} minutes.`,
+    subject: t('otp.subject'),
+    html: t('otp.html', params),
+    text: t('otp.text', params),
   });
 }
 
+/**
+ * `lang` is an explicit argument rather than being read from the request
+ * context: digests are sent from a scheduled job with no request in scope.
+ * Until a language preference is stored on the user record, callers have
+ * nothing better than the default to pass.
+ */
 export async function sendDigestEmail(
   to: string,
   displayName: string,
   items: { message: string; createdAt: Date }[],
+  lang: Lang = FALLBACK_LANG,
 ): Promise<void> {
   const notificationsUrl = `${env.FRONTEND_URL}/user/notifications`;
   const rows = items
@@ -73,14 +85,16 @@ export async function sendDigestEmail(
 
   await sendEmail({
     to,
-    subject: `Your notification summary (${items.length} update${items.length === 1 ? '' : 's'})`,
+    subject: items.length === 1
+      ? t('digest.subjectOne', {}, lang)
+      : t('digest.subjectMany', { count: items.length }, lang),
     html: `
-      <p>Hi ${displayName},</p>
-      <p>Here's what happened since your last summary:</p>
+      <p>${t('digest.greeting', { name: displayName }, lang)}</p>
+      <p>${t('digest.intro', {}, lang)}</p>
       <ul>${rows}</ul>
-      <p><a href="${notificationsUrl}">View all notifications</a></p>
-      <p style="color:#78716C;font-size:12px;">You're receiving this because you opted in to email digests. You can turn this off in your notification preferences.</p>
+      <p><a href="${notificationsUrl}">${t('digest.viewAll', {}, lang)}</a></p>
+      <p style="color:#78716C;font-size:12px;">${t('digest.footer', {}, lang)}</p>
     `,
-    text: `Hi ${displayName},\n\nHere's what happened since your last summary:\n${items.map((i) => `- ${i.message}`).join('\n')}\n\nView all: ${notificationsUrl}`,
+    text: `${t('digest.greeting', { name: displayName }, lang)}\n\n${t('digest.intro', {}, lang)}\n${items.map((i) => `- ${i.message}`).join('\n')}\n\n${t('digest.viewAll', {}, lang)}: ${notificationsUrl}`,
   });
 }

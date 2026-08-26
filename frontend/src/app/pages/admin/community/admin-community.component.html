@@ -2,11 +2,11 @@
 <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
-    <h2 class="jb-page-header__title">Communities Management</h2>
-    <p class="jb-page-header__sub">Review, moderate and manage all communities.</p>
+    <h2 class="jb-page-header__title">{{ 'admin.community.communitiesManagement' | translate }}</h2>
+    <p class="jb-page-header__sub">{{ 'admin.community.reviewModerateManageAllCommunities' | translate }}</p>
   </div>
-  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openCreateModal()" aria-label="Create a new community">
-    <i class="bi bi-plus-lg"></i> Create Community
+  <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openCreateModal()" [attr.aria-label]="'admin.community.createNewCommunity' | translate">
+    <i class="bi bi-plus-lg"></i> {{ 'admin.community.createCommunity' | translate }}
   </button>
 </div>
 
@@ -14,35 +14,35 @@
 @if (pageReady()) {
   <div class="admin-stats-bar">
     <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'all'"
-      (click)="setCommunityStatFilter('all')" aria-label="Show all communities">
+      (click)="setCommunityStatFilter('all')" [attr.aria-label]="'admin.community.showAllCommunities' | translate">
       <div class="admin-stat-card__icon admin-stat-card__icon--jobs"><i class="bi bi-people-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().total }}</span>
-        <span class="admin-stat-card__label">Total Communities</span>
+        <span class="admin-stat-card__label">{{ 'admin.community.totalCommunities' | translate }}</span>
       </div>
     </button>
     <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'global'"
-      (click)="setCommunityStatFilter('global')" aria-label="Filter by global communities">
+      (click)="setCommunityStatFilter('global')" [attr.aria-label]="'admin.community.filterByGlobalCommunities' | translate">
       <div class="admin-stat-card__icon admin-stat-card__icon--fulltime"><i class="bi bi-globe2"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().global }}</span>
-        <span class="admin-stat-card__label">Global</span>
+        <span class="admin-stat-card__label">{{ 'admin.community.global' | translate }}</span>
       </div>
     </button>
     <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'private'"
-      (click)="setCommunityStatFilter('private')" aria-label="Filter by private communities">
+      (click)="setCommunityStatFilter('private')" [attr.aria-label]="'admin.community.filterByPrivateCommunities' | translate">
       <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-lock-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().private }}</span>
-        <span class="admin-stat-card__label">Private</span>
+        <span class="admin-stat-card__label">{{ 'admin.community.private' | translate }}</span>
       </div>
     </button>
     <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'default'"
-      (click)="setCommunityStatFilter('default')" aria-label="Filter by default communities">
+      (click)="setCommunityStatFilter('default')" [attr.aria-label]="'admin.community.filterByDefaultCommunities' | translate">
       <div class="admin-stat-card__icon admin-stat-card__icon--contract"><i class="bi bi-star-fill"></i></div>
       <div class="admin-stat-card__body">
         <span class="admin-stat-card__value">{{ communityCounts().default }}</span>
-        <span class="admin-stat-card__label">Default</span>
+        <span class="admin-stat-card__label">{{ 'admin.community.default' | translate }}</span>
       </div>
     </button>
   </div>
@@ -54,19 +54,19 @@
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
        <input type="search" class="jb-search-wrap__input"
-         placeholder="Search by name, description…"
+         [placeholder]="'admin.community.searchByNameDescription' | translate"
          [value]="searchTerm()" (input)="onSearch($event)" autocomplete="off"
-         aria-label="Search communities" />
+         [attr.aria-label]="'admin.community.searchCommunities' | translate" />
       @if (searchTerm()) {
-        <button class="jb-search-wrap__clear" (click)="searchTerm.set('')" aria-label="Clear search"><i class="bi bi-x"></i></button>
+        <button class="jb-search-wrap__clear" (click)="searchTerm.set('')" [attr.aria-label]="'admin.community.clearSearch' | translate"><i class="bi bi-x"></i></button>
       }
     </div>
     <!-- View toggle -->
-    <div class="um-view-toggle" role="group" aria-label="Switch view">
-      <button class="um-view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" aria-label="Grid view" title="Grid view">
+    <div class="um-view-toggle" role="group" [attr.aria-label]="'admin.community.switchView' | translate">
+      <button class="um-view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" [attr.aria-label]="'admin.community.gridView' | translate" [title]="'admin.community.gridView' | translate">
         <i class="bi bi-grid-3x3-gap-fill"></i>
       </button>
-      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" aria-label="Table view" title="Table view">
+      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" [attr.aria-label]="'admin.community.tableView' | translate" [title]="'admin.community.tableView' | translate">
         <i class="bi bi-table"></i>
       </button>
     </div>
@@ -77,7 +77,7 @@
         Advanced Filters
         @if (activeFilterCount() > 0) { <span class="jb-advanced-count">{{ activeFilterCount() }}</span> }      </button>
       @if (activeFilterCount() > 0) {
-        <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+        <button class="jb-clear-all-btn" (click)="clearFilters()"><i class="bi bi-x-circle"></i> {{ 'admin.community.clearAll' | translate }}</button>
       }
     </div>
   </div>
@@ -91,10 +91,10 @@
      LayoutService, to make room) — this is a docked panel, not a
      blocking modal. -->
 @if (showAdvancedFilters()) {
-  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+  <aside class="jb-adv-drawer" role="complementary" [attr.aria-label]="'admin.community.advancedFilters' | translate">
     <div class="jb-adv-drawer__header">
-      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
-      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> {{ 'admin.community.advancedFilters2' | translate }}</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -103,109 +103,109 @@
 
       <!-- ── Location & Category ─────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location &amp; Category</span>
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> {{ 'admin.community.locationAmpCategory' | translate }}</span>
         <div class="jb-location-row">
           <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-            (ngModelChange)="onFilterCountryChange($event)" placeholder="Country" searchPlaceholder="Search countries…">
+            (ngModelChange)="onFilterCountryChange($event)" [placeholder]="'admin.community.country' | translate" [searchPlaceholder]="'components.search.countries' | translate">
           </app-searchable-select>
           <app-searchable-select [options]="filterCategoryOptions" [ngModel]="filterCategory()"
-            (ngModelChange)="onFilterCategoryChange($event)" placeholder="Category" searchPlaceholder="Search categories…">
+            (ngModelChange)="onFilterCategoryChange($event)" [placeholder]="'admin.community.category' | translate" [searchPlaceholder]="'components.search.categories' | translate">
           </app-searchable-select>
           <app-searchable-select [options]="filterVisibilityOptions" [ngModel]="filterVisibility()"
-            (ngModelChange)="onFilterVisibilityChange($event)" placeholder="Visibility">
+            (ngModelChange)="onFilterVisibilityChange($event)" [placeholder]="'admin.community.visibility' | translate">
           </app-searchable-select>
           <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
-            (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+            (ngModelChange)="setStatusFilter($event)" [placeholder]="'admin.community.allStatus' | translate">
           </app-searchable-select>
         </div>
       </div>
 
       <!-- ── Community Mode ───────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Community Mode</span>
-        <div class="jb-pill-row" role="group" aria-label="Filter by community mode">
+        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> {{ 'admin.community.communityMode2' | translate }}</span>
+        <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.community.filterByCommunityMode' | translate">
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterCommunityMode() === null"
                   (click)="onFilterCommunityModeChange(null)">
-            All
+            {{ 'common.all' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
                   (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
-            <i class="bi bi-life-preserver"></i> Help &amp; Emergency Assistance
+            <i class="bi bi-life-preserver"></i> {{ 'admin.community.helpAmpEmergencyAssistance' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
                   (click)="onFilterCommunityModeChange('ENQUIRE')">
-            <i class="bi bi-question-circle-fill"></i> Enquire
+            <i class="bi bi-question-circle-fill"></i> {{ 'admin.community.enquire' | translate }}
           </button>
         </div>
       </div>
 
       <!-- ── Default Community ────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-star"></i> Default Community</span>
-        <div class="jb-pill-row" role="group" aria-label="Filter by default status">
+        <span class="jb-filter-section-label"><i class="bi bi-star"></i> {{ 'admin.community.defaultCommunity2' | translate }}</span>
+        <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.community.filterByDefaultStatus' | translate">
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterIsDefault() === null"
                   (click)="onFilterIsDefaultChange(null)">
-            All
+            {{ 'common.all' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterIsDefault() === true"
                   (click)="onFilterIsDefaultChange(true)">
-            <i class="bi bi-star-fill"></i> Default Only
+            <i class="bi bi-star-fill"></i> {{ 'admin.community.defaultOnly' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterIsDefault() === false"
                   (click)="onFilterIsDefaultChange(false)">
-            <i class="bi bi-star"></i> Non-Default
+            <i class="bi bi-star"></i> {{ 'admin.community.nonDefault' | translate }}
           </button>
         </div>
       </div>
 
       <!-- ── Date Range ───────────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Range</span>
+        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> {{ 'admin.community.dateRange' | translate }}</span>
         <div class="jb-advanced-grid jb-advanced-grid--dates">
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterFromDate()">
             <div class="jb-adv-date-head">
-              <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> From Date</label>
-              <span class="jb-adv-date-help">Start date</span>
+              <label class="jb-adv-label" for="communityFilterFromDate"><i class="bi bi-calendar3"></i> {{ 'admin.community.fromDate2' | translate }}</label>
+              <span class="jb-adv-date-help">{{ 'admin.community.startDate' | translate }}</span>
             </div>
             <app-date-input
                   [ngModel]="filterFromDate()"
                   (ngModelChange)="onFilterFromDateChange($event)"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="From date"
-                  ariaLabel="From date"
+                  [placeholder]="'admin.community.fromDate' | translate"
+                  [ariaLabel]="'admin.community.fromDate' | translate"
                 ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterToDate()">
             <div class="jb-adv-date-head">
-              <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> To Date</label>
-              <span class="jb-adv-date-help">End date</span>
+              <label class="jb-adv-label" for="communityFilterToDate"><i class="bi bi-calendar3"></i> {{ 'admin.community.date2' | translate }}</label>
+              <span class="jb-adv-date-help">{{ 'admin.community.endDate' | translate }}</span>
             </div>
             <app-date-input
                   [ngModel]="filterToDate()"
                   (ngModelChange)="onFilterToDateChange($event)"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="To date"
-                  ariaLabel="To date"
+                  [placeholder]="'admin.community.date' | translate"
+                  [ariaLabel]="'admin.community.date' | translate"
                 ></app-date-input>
           </div>
         </div>
 
-        <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
-          <span class="jb-quick-date-row__label">Quick range:</span>
+        <div class="jb-quick-date-row" role="group" [attr.aria-label]="'admin.community.quickDatePresets' | translate">
+          <span class="jb-quick-date-row__label">{{ 'admin.community.quickRange' | translate }}</span>
           <button
             type="button"
             class="jb-quick-date-btn"
             [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
             (click)="applyQuickDatePreset('today')"
           >
-            Today
+            {{ 'admin.community.today' | translate }}
           </button>
           <button
             type="button"
@@ -213,7 +213,7 @@
             [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
             (click)="applyQuickDatePreset('7d')"
           >
-            Last 7 Days
+            {{ 'admin.community.last7Days' | translate }}
           </button>
           <button
             type="button"
@@ -221,7 +221,7 @@
             [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
             (click)="applyQuickDatePreset('30d')"
           >
-            Last 30 Days
+            {{ 'admin.community.last30Days' | translate }}
           </button>
         </div>
       </div>
@@ -230,10 +230,10 @@
 
     <div class="jb-adv-drawer__footer">
       <button type="button" class="jb-clear-all-btn" (click)="clearFilters()">
-        <i class="bi bi-x-circle"></i> Clear All
+        <i class="bi bi-x-circle"></i> {{ 'admin.community.clearAll' | translate }}
       </button>
       <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
-        Done
+        {{ 'admin.community.done' | translate }}
       </button>
     </div>
   </aside>
@@ -241,15 +241,15 @@
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterChips().length > 0) {
-  <div class="jb-active-chips" role="group" aria-label="Active filters">
-    <span class="jb-active-chips__label">Active:</span>
+  <div class="jb-active-chips" role="group" [attr.aria-label]="'admin.community.activeFilters' | translate">
+    <span class="jb-active-chips__label">{{ 'admin.community.active' | translate }}</span>
     @for (chip of activeFilterChips(); track chip.key) {
       <span class="jb-active-chip">
-        {{ chip.label }}
+        {{ chip.label | translate }}
         <button class="jb-active-chip__remove" (click)="removeFilter(chip.key)"><i class="bi bi-x"></i></button>
       </span>
     }
-    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearFilters()">Clear All</button>
+    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearFilters()">{{ 'admin.community.clearAll' | translate }}</button>
   </div>
 }
 
@@ -296,16 +296,16 @@
         </svg>
       </div>
       @if (activeFilterCount() > 0) {
-        <h5 class="jb-empty__title">No matching communities</h5>
-        <p class="jb-empty__text">No communities match your current search or filters.</p>
+        <h5 class="jb-empty__title">{{ 'admin.community.noMatchingCommunities' | translate }}</h5>
+        <p class="jb-empty__text">{{ 'admin.community.noCommunitiesMatchCurrentSearch' | translate }}</p>
         <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="clearFilters()">
-          <i class="bi bi-arrow-counterclockwise me-1"></i>Clear All Filters
+          <i class="bi bi-arrow-counterclockwise me-1"></i>{{ 'admin.community.clearAllFilters' | translate }}
         </button>
       } @else {
-        <h5 class="jb-empty__title">No communities created yet</h5>
-        <p class="jb-empty__text">No communities exist. Create the first one now.</p>
+        <h5 class="jb-empty__title">{{ 'admin.community.noCommunitiesCreatedYet' | translate }}</h5>
+        <p class="jb-empty__text">{{ 'admin.community.noCommunitiesExistCreateFirst' | translate }}</p>
         <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openCreateModal()">
-          <i class="bi bi-plus-lg me-1"></i>Create a Community
+          <i class="bi bi-plus-lg me-1"></i>{{ 'admin.community.createCommunity2' | translate }}
         </button>
       }
     </div>
@@ -330,12 +330,12 @@
                  [class.cc-head--img]="!!community.image"
                  [style.backgroundImage]="community.image ? 'url(' + (community.image | imageUrl) + ')' : null">
               @if (community.status === 'PENDING') {
-                <a class="cc-status-tag cc-status-tag--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
-                  <i class="bi bi-hourglass-split"></i> Pending Approval
+                <a class="cc-status-tag cc-status-tag--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
+                  <i class="bi bi-hourglass-split"></i> {{ 'admin.community.pendingApproval' | translate }}
                 </a>
               } @else if (community.status === 'REJECTED') {
-                <a class="cc-status-tag cc-status-tag--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
-                  <i class="bi bi-x-circle-fill"></i> Rejected
+                <a class="cc-status-tag cc-status-tag--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
+                  <i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}
                 </a>
               } @else {
                 <span class="cc-status-tag"
@@ -372,13 +372,13 @@
                 <span class="cc-stat">
                   <i class="bi bi-people-fill cc-stat-icon cc-stat-members"></i>
                   <span class="cc-stat-value">{{ community?._count?.members ?? 0 }}</span>
-                  <span class="cc-stat-label">members</span>
+                  <span class="cc-stat-label">{{ 'admin.community.members' | translate }}</span>
                 </span>
                 <span class="cc-stat-divider"></span>
                 <span class="cc-stat">
                   <i class="bi bi-file-earmark-text-fill cc-stat-icon cc-stat-posts"></i>
                   <span class="cc-stat-value">{{ community?._count?.posts ?? 0 }}</span>
-                  <span class="cc-stat-label">posts</span>
+                  <span class="cc-stat-label">{{ 'admin.community.posts' | translate }}</span>
                 </span>
               </div>
 
@@ -403,17 +403,17 @@
 
                 @if (community.is_private) {
                   <span class="cc-visibility-badge cc-visibility-badge--private">
-                    <i class="bi bi-lock-fill"></i> Private
+                    <i class="bi bi-lock-fill"></i> {{ 'admin.community.private' | translate }}
                   </span>
                 } @else if (community.is_global) {
                   <span class="cc-visibility-badge cc-visibility-badge--global">
-                    <i class="bi bi-globe2"></i> Global
+                    <i class="bi bi-globe2"></i> {{ 'admin.community.global' | translate }}
                   </span>
                 }
 
                 @if (community.is_default) {
                   <span class="cc-default-badge">
-                    <i class="bi bi-star-fill"></i> Default
+                    <i class="bi bi-star-fill"></i> {{ 'admin.community.default' | translate }}
                   </span>
                 }
 
@@ -428,13 +428,13 @@
 
               <!-- Actions -->
               <div class="cc-actions">
-                <a [routerLink]="['/admin/community', community.id]" class="cc-icon-action cc-icon-action--view" title="View community" (click)="$event.stopPropagation()">
-                  <i class="bi bi-eye-fill me-1"></i>View
+                <a [routerLink]="['/admin/community', community.id]" class="cc-icon-action cc-icon-action--view" [title]="'admin.community.viewCommunity' | translate" (click)="$event.stopPropagation()">
+                  <i class="bi bi-eye-fill me-1"></i>{{ 'admin.community.view' | translate }}
                 </a>
-                <button class="cc-icon-action cc-icon-action--edit" title="Edit community" (click)="$event.stopPropagation(); openEditModal(community)">
+                <button class="cc-icon-action cc-icon-action--edit" [title]="'admin.community.editCommunity' | translate" (click)="$event.stopPropagation(); openEditModal(community)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button class="cc-icon-action cc-icon-action--delete" title="Delete community" (click)="$event.stopPropagation(); confirmDelete(community)">
+                <button class="cc-icon-action cc-icon-action--delete" [title]="'admin.community.deleteCommunity' | translate" (click)="$event.stopPropagation(); confirmDelete(community)">
                   <i class="bi bi-trash-fill"></i>
                 </button>
               </div>
@@ -449,16 +449,16 @@
     <div class="um-pagination">
       <div class="um-pagination__left">
         <span class="um-pagination__info">
-          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-          of <strong>{{ totalItems() }}</strong> communities
+          {{ 'admin.community.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+          {{ 'admin.community.of' | translate }} <strong>{{ totalItems() }}</strong> {{ 'admin.community.communities' | translate }}
         </span>
         <div class="um-pg-divider"></div>
         <div class="um-pagination__size">
-          <span>Rows per page</span>
+          <span>{{ 'admin.community.rowsPerPage' | translate }}</span>
           <div class="jb-select-wrap jb-select-wrap--xs">
             <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
               (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-              aria-label="Rows per page">
+              [attr.aria-label]="'admin.community.rowsPerPage' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -467,11 +467,11 @@
       @if (totalPages() > 1) {
         <div class="um-pagination__pages">
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(1)" title="First page">
+            (click)="goToPage(1)" [title]="'admin.community.firstPage' | translate">
             <i class="bi bi-chevron-double-left"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            (click)="goToPage(currentPage() - 1)" [title]="'admin.community.previousPage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
           @for (page of getPages(); track page) {
@@ -479,11 +479,11 @@
               (click)="goToPage(page)">{{ page }}</button>
           }
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(currentPage() + 1)" title="Next page">
+            (click)="goToPage(currentPage() + 1)" [title]="'admin.community.nextPage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(totalPages())" title="Last page">
+            (click)="goToPage(totalPages())" [title]="'admin.community.lastPage' | translate">
             <i class="bi bi-chevron-double-right"></i>
           </button>
         </div>
@@ -498,7 +498,7 @@
             <tr>
               <th class="um-th" style="width:56px"></th>
               <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'name'" (click)="toggleSort('name')" role="button" tabindex="0" (keydown.enter)="toggleSort('name')">
-                Community
+                {{ 'admin.community.community' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
@@ -506,7 +506,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'category'" (click)="toggleSort('category')" role="button" tabindex="0" (keydown.enter)="toggleSort('category')">
-                Category
+                {{ 'admin.community.category' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'category' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'category' && sortDir() === 'desc'"
@@ -514,7 +514,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-lg-table-cell" [class.um-th--active]="sortBy() === 'country'" (click)="toggleSort('country')" role="button" tabindex="0" (keydown.enter)="toggleSort('country')">
-                Country
+                {{ 'admin.community.country' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'country' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'country' && sortDir() === 'desc'"
@@ -522,7 +522,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'visibility'" (click)="toggleSort('visibility')" role="button" tabindex="0" (keydown.enter)="toggleSort('visibility')">
-                Visibility
+                {{ 'admin.community.visibility' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'visibility' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'visibility' && sortDir() === 'desc'"
@@ -530,7 +530,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-xl-table-cell" [class.um-th--active]="sortBy() === 'members'" (click)="toggleSort('members')" role="button" tabindex="0" (keydown.enter)="toggleSort('members')">
-                Members
+                {{ 'admin.community.members2' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'members' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'members' && sortDir() === 'desc'"
@@ -538,7 +538,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-xl-table-cell" [class.um-th--active]="sortBy() === 'posts'" (click)="toggleSort('posts')" role="button" tabindex="0" (keydown.enter)="toggleSort('posts')">
-                Posts
+                {{ 'admin.community.posts2' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'posts' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'posts' && sortDir() === 'desc'"
@@ -546,7 +546,7 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'status'" (click)="toggleSort('status')" role="button" tabindex="0" (keydown.enter)="toggleSort('status')">
-                Status
+                {{ 'common.status' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'status' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'status' && sortDir() === 'desc'"
@@ -554,14 +554,14 @@
                 ></i>
               </th>
               <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
-                Created
+                {{ 'admin.community.created' | translate }}
                 <i class="bi um-th__sort-icon"
                   [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
                   [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
                   [class.bi-arrow-down-up]="sortBy() !== 'joined'"
                 ></i>
               </th>
-              <th class="um-th um-th--actions">Actions</th>
+              <th class="um-th um-th--actions">{{ 'common.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -579,16 +579,16 @@
                 <td class="um-td">
                   <span class="um-user-name">{{ community.name }}</span>
                   @if (community.is_default) {
-                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i> Default</span>
+                    <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i> {{ 'admin.community.default' | translate }}</span>
                   }
                 </td>
                 <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ community.category_name || 'Uncategorized' }}</span></td>
                 <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ community.country || 'Not Specified' }}</span></td>
                 <td class="um-td">
                   @if (community.is_private) {
-                    <span class="cc-visibility-badge cc-visibility-badge--private"><i class="bi bi-lock-fill"></i> Private</span>
+                    <span class="cc-visibility-badge cc-visibility-badge--private"><i class="bi bi-lock-fill"></i> {{ 'admin.community.private' | translate }}</span>
                   } @else if (community.is_global) {
-                    <span class="cc-visibility-badge cc-visibility-badge--global"><i class="bi bi-globe2"></i> Global</span>
+                    <span class="cc-visibility-badge cc-visibility-badge--global"><i class="bi bi-globe2"></i> {{ 'admin.community.global' | translate }}</span>
                   } @else {
                     <span class="um-td-text">—</span>
                   }
@@ -597,12 +597,12 @@
                 <td class="um-td d-none d-xl-table-cell"><span class="um-td-text">{{ community?._count?.posts ?? 0 }}</span></td>
                 <td class="um-td">
                   @if (community.status === 'PENDING') {
-                    <a class="cc-approval-chip cc-approval-chip--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
-                      <i class="bi bi-hourglass-split"></i> Pending Approval
+                    <a class="cc-approval-chip cc-approval-chip--pending" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
+                      <i class="bi bi-hourglass-split"></i> {{ 'admin.community.pendingApproval' | translate }}
                     </a>
                   } @else if (community.status === 'REJECTED') {
-                    <a class="cc-approval-chip cc-approval-chip--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" title="Go to Approval page">
-                      <i class="bi bi-x-circle-fill"></i> Rejected
+                    <a class="cc-approval-chip cc-approval-chip--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
+                      <i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}
                     </a>
                   } @else {
                     <span class="um-badge" [class.um-badge--trusted]="community.is_active" [class.um-badge--blocked]="!community.is_active">
@@ -628,16 +628,16 @@
       <div class="um-pagination um-pagination--nested">
         <div class="um-pagination__left">
           <span class="um-pagination__info">
-            Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-            of <strong>{{ totalItems() }}</strong> communities
+            {{ 'admin.community.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+            {{ 'admin.community.of' | translate }} <strong>{{ totalItems() }}</strong> {{ 'admin.community.communities' | translate }}
           </span>
           <div class="um-pg-divider"></div>
           <div class="um-pagination__size">
-            <span>Rows per page</span>
+            <span>{{ 'admin.community.rowsPerPage' | translate }}</span>
             <div class="jb-select-wrap jb-select-wrap--xs">
               <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
                 (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-                aria-label="Rows per page">
+                [attr.aria-label]="'admin.community.rowsPerPage' | translate">
               </app-searchable-select>
             </div>
           </div>
@@ -646,11 +646,11 @@
         @if (totalPages() > 1) {
           <div class="um-pagination__pages">
             <button class="um-pg-btn" [disabled]="currentPage() === 1"
-              (click)="goToPage(1)" title="First page">
+              (click)="goToPage(1)" [title]="'admin.community.firstPage' | translate">
               <i class="bi bi-chevron-double-left"></i>
             </button>
             <button class="um-pg-btn" [disabled]="currentPage() === 1"
-              (click)="goToPage(currentPage() - 1)" title="Previous page">
+              (click)="goToPage(currentPage() - 1)" [title]="'admin.community.previousPage' | translate">
               <i class="bi bi-chevron-left"></i>
             </button>
             @for (page of getPages(); track page) {
@@ -658,11 +658,11 @@
                 (click)="goToPage(page)">{{ page }}</button>
             }
             <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-              (click)="goToPage(currentPage() + 1)" title="Next page">
+              (click)="goToPage(currentPage() + 1)" [title]="'admin.community.nextPage' | translate">
               <i class="bi bi-chevron-right"></i>
             </button>
             <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-              (click)="goToPage(totalPages())" title="Last page">
+              (click)="goToPage(totalPages())" [title]="'admin.community.lastPage' | translate">
               <i class="bi bi-chevron-double-right"></i>
             </button>
           </div>
@@ -677,7 +677,7 @@
 
 <!-- ── Floating create button — shown while scrolling up ──────── -->
 <button class="community-fab" [class.community-fab--visible]="showCreateFab()"
-        (click)="openCreateModal()" aria-label="Create a new community" title="Create Community">
+        (click)="openCreateModal()" [attr.aria-label]="'admin.community.createNewCommunity' | translate" [title]="'admin.community.createCommunity' | translate">
   <i class="bi bi-plus-lg"></i>
 </button>
 
@@ -701,7 +701,7 @@
           {{ isEditing() ? 'Update the details of this community' : 'Fill in the details to launch a new community' }}
         </p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="closeModal()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="closeModal()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -716,20 +716,20 @@
                 <span class="cm-section-badge">
                   <i class="bi bi-info-circle-fill"></i>
                 </span>
-                <span class="cm-section-title">Basic Information</span>
+                <span class="cm-section-title">{{ 'admin.community.basicInformation' | translate }}</span>
               </div>
 
               <div class="cm-field-row">
                 <!-- Community Name -->
                 <div class="cm-field-group">
-                  <label class="cm-label">Community Name <span class="cm-required">*</span></label>
+                  <label class="cm-label">{{ 'admin.community.communityName' | translate }} <span class="cm-required">*</span></label>
                   <div class="cm-input-wrap">
                     <i class="bi bi-people cm-input-icon"></i>
                     <input
                       type="text"
                       formControlName="communityName"
                       maxlength="150"
-                      placeholder="e.g. Developers India"
+                      [placeholder]="'admin.community.eGDevelopersIndia' | translate"
                       class="cm-input"
                       [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
                     />
@@ -750,15 +750,15 @@
 
                 <!-- Category -->
                 <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
-                  <label class="cm-label">Category <span class="cm-required">*</span></label>
+                  <label class="cm-label">{{ 'admin.community.category' | translate }} <span class="cm-required">*</span></label>
                   <app-searchable-select
                     formControlName="interests"
                     [options]="interestOptions"
-                    placeholder="Select a category"
+                    [placeholder]="'admin.community.selectCategory' | translate"
                   ></app-searchable-select>
                   @if (f['interests'].touched && f['interests'].invalid) {
                     <div class="cm-error-msg">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.community.pleaseSelectCategory' | translate }}
                     </div>
                   }
                 </div>
@@ -767,7 +767,7 @@
               <!-- Description -->
               <div class="cm-field-group">
                 <div class="cm-label-row">
-                  <label class="cm-label">Description <span class="cm-required">*</span></label>
+                  <label class="cm-label">{{ 'admin.community.description' | translate }} <span class="cm-required">*</span></label>
                   <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/500</span>
                 </div>
                 <div class="cm-input-wrap cm-textarea-wrap">
@@ -776,7 +776,7 @@
                     formControlName="description"
                     rows="3"
                     maxlength="500"
-                    placeholder="Tell people what this community is about..."
+                    [placeholder]="'admin.community.tellPeopleWhatCommunityAbout' | translate"
                     class="cm-input cm-textarea"
                     [class.cm-input-error]="f['description'].touched && f['description'].invalid"
                   ></textarea>
@@ -800,37 +800,37 @@
                 <span class="cm-section-badge">
                   <i class="bi bi-gear-fill"></i>
                 </span>
-                <span class="cm-section-title">Settings</span>
+                <span class="cm-section-title">{{ 'admin.community.settings' | translate }}</span>
               </div>
 
               <div class="cm-field-row">
                 <!-- Country -->
                 <div class="cm-field-group" [class.cm-field-group--error]="f['countryId'].touched && f['countryId'].invalid">
-                  <label class="cm-label">Country <span class="cm-required">*</span></label>
+                  <label class="cm-label">{{ 'admin.community.country' | translate }} <span class="cm-required">*</span></label>
                   <app-searchable-select
                     formControlName="countryId"
                     [options]="countryOptions"
-                    placeholder="Select country"
+                    [placeholder]="'admin.community.selectCountry' | translate"
                   ></app-searchable-select>
                   @if (f['countryId'].touched && f['countryId'].invalid) {
                     <div class="cm-error-msg">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please select a country.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.community.pleaseSelectCountry' | translate }}
                     </div>
                   }
                 </div>
 
                 <!-- Visibility Toggles -->
                 <div class="cm-field-group">
-                  <label class="cm-label">Visibility <span class="cm-required">*</span></label>
+                  <label class="cm-label">{{ 'admin.community.visibility' | translate }} <span class="cm-required">*</span></label>
                   <app-radio-group
                     formControlName="visibility"
                     [options]="visibilityOptions"
                     [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
-                    ariaLabel="Visibility">
+                    [ariaLabel]="'admin.community.visibility' | translate">
                   </app-radio-group>
                   @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                     <div class="cm-error-msg">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.community.pleaseSelectVisibilityOption' | translate }}
                     </div>
                   }
                 </div>
@@ -838,11 +838,11 @@
 
               <!-- Community Mode -->
               <div class="cm-field-group">
-                <label class="cm-label">Community Mode <span class="cm-required">*</span></label>
+                <label class="cm-label">{{ 'admin.community.communityMode2' | translate }} <span class="cm-required">*</span></label>
                 <app-radio-group
                   formControlName="communityMode"
                   [options]="communityModeOptions"
-                  ariaLabel="Community mode">
+                  [ariaLabel]="'admin.community.communityMode' | translate">
                 </app-radio-group>
                 <div class="cm-default-hint">
                   @if (f['communityMode'].value === 'ENQUIRE') {
@@ -857,10 +857,10 @@
               <div class="cm-default-row">
                 <div class="cm-default-label">
                   <i class="bi bi-star-fill"></i>
-                  <span>Default Community</span>
-                  <span class="cm-default-hint">Mark this as the default community for new users</span>
+                  <span>{{ 'admin.community.defaultCommunity2' | translate }}</span>
+                  <span class="cm-default-hint">{{ 'admin.community.markAsDefaultCommunityNew' | translate }}</span>
                 </div>
-                <app-toggle formControlName="isDefault" ariaLabel="Default community"></app-toggle>
+                <app-toggle formControlName="isDefault" [ariaLabel]="'admin.community.defaultCommunity' | translate"></app-toggle>
               </div>
             </div>
 
@@ -870,7 +870,7 @@
                 <span class="cm-section-badge">
                   <i class="bi bi-shield-check"></i>
                 </span>
-                <span class="cm-section-title">Community Rules</span>
+                <span class="cm-section-title">{{ 'admin.community.communityRules' | translate }}</span>
               </div>
 
               <div class="cm-field-group">
@@ -884,17 +884,17 @@
                 <span class="cm-section-badge">
                   <i class="bi bi-image-fill"></i>
                 </span>
-                <span class="cm-section-title">Community Image</span>
+                <span class="cm-section-title">{{ 'admin.community.communityImage' | translate }}</span>
               </div>
 
               <app-file-upload
                 mode="single"
                 accept="image/*"
                 [maxSizeMb]="5"
-                label="Community Image"
+                [label]="'components.communityForm.imageLabel' | translate"
                 [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
                 [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
-                errorMessage="Community image is required."
+                [errorMessage]="'admin.community.communityImageRequired' | translate"
                 (filesChange)="onCommunityImageChange($event)"
               ></app-file-upload>
             </div>
@@ -904,7 +904,7 @@
     <!-- Modal Footer -->
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeModal()">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button
         type="button"
@@ -939,24 +939,24 @@
         <i class="bi bi-exclamation-triangle-fill"></i>
       </div>
       <div class="au-header__text cm-modal-header-inner">
-        <h5 class="au-header__title cm-modal-title" id="deleteModalTitle">Delete Community</h5>
-        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+        <h5 class="au-header__title cm-modal-title" id="deleteModalTitle">{{ 'admin.community.deleteCommunity2' | translate }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">{{ 'admin.community.actionCannotUndone' | translate }}</p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="cancelDelete()" [disabled]="deletingCommunity()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="cancelDelete()" [disabled]="deletingCommunity()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
     <div class="au-body cm-delete-modal-body">
       <p class="cm-delete-modal-text">
-        Are you sure you want to delete <strong>"{{ community.name }}"</strong>? This will permanently remove the community, its posts, and its members.
+        {{ 'admin.community.sureWantDelete' | translate }} <strong>"{{ community.name }}"</strong>? This will permanently remove the community, its posts, and its members.
       </p>
     </div>
 
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
         (click)="cancelDelete()" [disabled]="deletingCommunity()">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button type="button" class="au-btn cm-btn-submit au-btn--danger"
         (click)="deleteCommunity()" [disabled]="deletingCommunity()">

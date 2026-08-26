@@ -1,5 +1,6 @@
 import {
   Component,
+  inject,
   Input,
   Output,
   EventEmitter,
@@ -12,6 +13,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export type UploadMode = 'single' | 'multi';
 export type UploadVariant = 'default' | 'avatar';
@@ -19,17 +21,18 @@ export type UploadVariant = 'default' | 'avatar';
 @Component({
   selector: 'app-file-upload',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe],
+  imports: [CommonModule, ImageUrlPipe, TranslatePipe],
   templateUrl: './file-upload.component.html',
   styleUrls: ['./file-upload.component.scss'],
 })
 export class FileUploadComponent implements OnChanges {
+  private translate = inject(TranslateService);
   @Input() mode: UploadMode = 'single';
   @Input() variant: UploadVariant = 'default';
   @Input() accept = 'image/*';
   @Input() maxSizeMb = 5;
   @Input() maxFiles = 10;
-  @Input() label = 'Drag & drop or click to browse';
+  @Input() label = 'components.fileUpload.dragOrBrowse';
 
   // Plain @Input() fields aren't tracked by computed() — a parent that
   // populates these asynchronously (e.g. fetching the record being edited
@@ -141,11 +144,11 @@ export class FileUploadComponent implements OnChanges {
 
     for (const file of incoming) {
       if (!this.matchesAccept(file)) {
-        this.error.set(`File type not allowed: ${file.name}`);
+        this.error.set(this.translate.instant('components.fileUpload.typeNotAllowed', { name: file.name }));
         continue;
       }
       if (file.size > maxBytes) {
-        this.error.set(`"${file.name}" exceeds the ${this.maxSizeMb} MB limit.`);
+        this.error.set(this.translate.instant('components.fileUpload.tooLarge', { name: file.name, size: this.maxSizeMb }));
         continue;
       }
       valid.push(file);
@@ -160,7 +163,7 @@ export class FileUploadComponent implements OnChanges {
       const current = this.files();
       const available = Math.max(0, this.maxFiles - current.length);
       if (!available) {
-        this.error.set(`Maximum ${this.maxFiles} files already selected.`);
+        this.error.set(this.translate.instant('components.fileUpload.tooMany', { count: this.maxFiles }));
         return;
       }
       const toAdd = valid.slice(0, available);

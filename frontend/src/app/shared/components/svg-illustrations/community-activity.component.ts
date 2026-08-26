@@ -1,8 +1,10 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-community-activity',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <svg
       [attr.width]="width()"
@@ -12,7 +14,7 @@ import { Component, input } from '@angular/core';
       xmlns="http://www.w3.org/2000/svg"
       class="community-activity-svg"
       role="img"
-      aria-label="Community activity illustration"
+      [attr.aria-label]="'components.illustration.communityActivity' | translate"
     >
       <!-- Outer ring -->
       <circle cx="300" cy="150" r="120" stroke="#4f46e5" stroke-width="1" opacity="0.15" class="outer-ring"/>

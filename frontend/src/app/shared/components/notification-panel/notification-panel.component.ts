@@ -5,14 +5,19 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Notification } from '../../../core/models';
 import { notificationIcon, notificationColor, notificationBgColor, notificationRoute } from '../../utils/notification-display';
 import { timeAgo } from '../../utils/time-ago';
+import { TranslatePipe } from '@ngx-translate/core';
+import { NotificationTextPipe } from '../../../shared/pipes/notification-text.pipe';
+import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 @Component({
   selector: 'app-notification-panel',
   standalone: true,
+  imports: [TranslatePipe, NotificationTextPipe],
   templateUrl: './notification-panel.component.html',
   styleUrls: ['./notification-panel.component.scss'],
 })
 export class NotificationPanelComponent {
+  private relativeTimeService = inject(RelativeTimeService);
   /** Which layout this panel lives in — governs where notification clicks navigate (admin vs user routes). */
   readonly isAdmin = input(false);
 
@@ -47,7 +52,7 @@ export class NotificationPanelComponent {
   }
 
   relativeTime(n: Notification): string {
-    return timeAgo(n.createdAt);
+    return this.relativeTimeService.short(n.createdAt);
   }
 
   markAllRead(event: Event): void {

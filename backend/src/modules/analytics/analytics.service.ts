@@ -56,13 +56,13 @@ export async function getOverview(params: AnalyticsOverviewQueryDtoType) {
     : new Date(new Date().setDate(new Date().getDate() - 29));
 
   if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-    throw new AppError(400, 'Invalid date range');
+    throw new AppError(400, 'Invalid date range', 'INVALID_DATE_RANGE');
   }
-  if (fromDate > toDate) throw new AppError(400, '"from" date must be before "to" date');
+  if (fromDate > toDate) throw new AppError(400, '"from" date must be before "to" date', 'FROM_DATE_MUST_BEFORE');
 
   const rangeDays = Math.round((toDate.getTime() - fromDate.getTime()) / 86_400_000);
   if (rangeDays > MAX_RANGE_DAYS) {
-    throw new AppError(400, `Date range cannot exceed ${MAX_RANGE_DAYS} days`);
+    throw new AppError(400, `Date range cannot exceed ${MAX_RANGE_DAYS} days`, 'DATE_RANGE_TOO_LARGE');
   }
 
   const startDate = fromDate.toISOString();

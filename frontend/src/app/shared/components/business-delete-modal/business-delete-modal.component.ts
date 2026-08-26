@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BusinessService } from '../../../core/services/business.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business } from '../../../core/models';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * The single Delete-Business confirmation popup — a straight port of the
@@ -14,7 +15,7 @@ import { Business } from '../../../core/models';
 @Component({
   selector: 'app-business-delete-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './business-delete-modal.component.html',
   styleUrls: ['./business-delete-modal.component.scss'],
 })
@@ -42,13 +43,13 @@ export class BusinessDeleteModalComponent {
     this.deleting.set(true);
     this.svc.deleteBusiness(biz.id).subscribe({
       next: () => {
-        this.toast.success('Business deleted');
+        this.toast.success('components.businessDelete.toastDeleted');
         this.deleting.set(false);
         this.deleted.emit(biz.id);
         this.closed.emit();
       },
       error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Failed to delete business');
+        this.toast.error('components.businessDelete.toastFailed');
         this.deleting.set(false);
       },
     });

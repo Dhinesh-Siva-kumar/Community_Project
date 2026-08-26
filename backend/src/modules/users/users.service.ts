@@ -124,7 +124,7 @@ function calculateProfileCompletion(user: UserRow): number {
 // ---------------------------------------------------------------------------
 export async function getProfile(userId: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const memberships = await db('community_members as cm')
     .join('communities as c', 'cm.community_id', 'c.id')
@@ -164,9 +164,9 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   if (data.whatsappNo !== undefined) updateData['whatsapp_no'] = data.whatsappNo;
   if (data.email !== undefined) {
     const currentUser = await db('users').where({ id: userId }).first() as UserRow;
-    if (currentUser.email) throw new AppError(400, 'Email address cannot be changed once set');
+    if (currentUser.email) throw new AppError(400, 'Email address cannot be changed once set', 'EMAIL_ADDRESS_CHANGED_ONCE');
     const taken = await db('users').where({ email: data.email }).whereNot({ id: userId }).first();
-    if (taken) throw new AppError(409, 'Email address is already in use by another account');
+    if (taken) throw new AppError(409, 'Email address is already in use by another account', 'EMAIL_ADDRESS_ALREADY_USE');
     updateData['email'] = data.email;
   }
   if (data.bio !== undefined) updateData['bio'] = data.bio;
@@ -211,7 +211,7 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
     updateData['location'] = city?.name ?? (updateData['location'] as string | null | undefined) ?? null;
   }
 
-  if (Object.keys(updateData).length === 0) throw new AppError(400, 'No update fields provided');
+  if (Object.keys(updateData).length === 0) throw new AppError(400, 'No update fields provided', 'UPDATE_FIELDS_PROVIDED');
 
   await db('users').where({ id: userId }).update(updateData);
   const updatedUser = await db('users').where({ id: userId }).first() as UserRow;
@@ -316,7 +316,7 @@ export async function getUsers(options: GetUsersOptions) {
 // ---------------------------------------------------------------------------
 export async function getUserById(userId: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const [[{ posts }], [{ comments }], [{ communities }]] = await Promise.all([
     db('posts').count({ posts: '*' }).where({ user_id: userId }),
@@ -339,11 +339,11 @@ export async function getUserById(userId: string) {
 // ---------------------------------------------------------------------------
 export async function adminCreateUser(adminId: string, data: AdminCreateUserDtoType) {
   const existing = await db('users').where({ user_name: data.userName }).first();
-  if (existing) throw new AppError(409, 'Username is already taken');
+  if (existing) throw new AppError(409, 'Username is already taken', 'USERNAME_ALREADY_TAKEN_2');
 
   if (data.email) {
     const emailTaken = await db('users').where({ email: data.email }).first();
-    if (emailTaken) throw new AppError(409, 'Email is already in use');
+    if (emailTaken) throw new AppError(409, 'Email is already in use', 'EMAIL_ALREADY_USE');
   }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -377,12 +377,12 @@ export async function adminCreateUser(adminId: string, data: AdminCreateUserDtoT
 // ---------------------------------------------------------------------------
 export async function softDeleteUser(adminId: string, userId: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
-  if (user.role === 'ADMIN') throw new AppError(403, 'Cannot delete an admin account');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
+  if (user.role === 'ADMIN') throw new AppError(403, 'Cannot delete an admin account', 'DELETE_ADMIN_ACCOUNT');
 
   await db('users').where({ id: userId }).update({ is_active: false, is_blocked: true });
   await logAudit(adminId, 'USER_DELETED', { deletedUser: user.user_name }, 'users', userId);
-  await notificationsService.create(userId, 'ACCOUNT_DEACTIVATED', 'Your account has been deactivated by an administrator.');
+  await notificationsService.create(userId, 'ACCOUNT_DEACTIVATED', 'Your account has been deactivated by an administrator.', undefined, undefined, {});
 
   return { success: true, message: 'User deactivated' };
 }
@@ -392,7 +392,7 @@ export async function softDeleteUser(adminId: string, userId: string) {
 // ---------------------------------------------------------------------------
 export async function adminResetPassword(adminId: string, userId: string, data: AdminResetPasswordDtoType) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const hashed = await bcrypt.hash(data.newPassword, 10);
   await db('users').where({ id: userId }).update({ password: hashed });
@@ -428,7 +428,7 @@ export async function broadcastNotification(adminId: string, data: BroadcastNoti
     userIds = [data.userId];
   }
 
-  if (userIds.length === 0) throw new AppError(400, 'No recipients found');
+  if (userIds.length === 0) throw new AppError(400, 'No recipients found', 'RECIPIENTS_FOUND');
 
   // Routed through notificationsService.create() (not a raw bulk insert) so
   // each recipient also gets the real-time Socket.IO push, same as every
@@ -448,7 +448,7 @@ export async function broadcastNotification(adminId: string, data: BroadcastNoti
 // ---------------------------------------------------------------------------
 export async function blockUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_blocked: true })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_blocked']);
@@ -461,7 +461,7 @@ export async function blockUser(userId: string, adminId?: string) {
 
 export async function unblockUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first() as UserRow | undefined;
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_blocked: false })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_blocked']);
@@ -474,7 +474,7 @@ export async function unblockUser(userId: string, adminId?: string) {
 
 export async function trustUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first();
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_trusted: true })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
@@ -487,7 +487,7 @@ export async function trustUser(userId: string, adminId?: string) {
 
 export async function untrustUser(userId: string, adminId?: string) {
   const user = await db('users').where({ id: userId }).first();
-  if (!user) throw new AppError(404, 'User not found');
+  if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const [updated] = await db('users').where({ id: userId }).update({ is_trusted: false })
     .returning(['id', 'email', 'user_name', 'display_name', 'is_trusted']);
@@ -586,9 +586,9 @@ export async function getChartData(from?: string, to?: string) {
     : new Date(new Date().setDate(new Date().getDate() - 6));
 
   if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-    throw new AppError(400, 'Invalid date range');
+    throw new AppError(400, 'Invalid date range', 'INVALID_DATE_RANGE');
   }
-  if (fromDate > toDate) throw new AppError(400, '"from" date must be before "to" date');
+  if (fromDate > toDate) throw new AppError(400, '"from" date must be before "to" date', 'FROM_DATE_MUST_BEFORE');
 
   // Build the inclusive list of days between fromDate and toDate, each as YYYY-MM-DD
   const days: string[] = [];
@@ -596,7 +596,7 @@ export async function getChartData(from?: string, to?: string) {
     days.push(d.toISOString().slice(0, 10));
   }
   if (days.length > CHART_MAX_RANGE_DAYS) {
-    throw new AppError(400, `Date range cannot exceed ${CHART_MAX_RANGE_DAYS} days`);
+    throw new AppError(400, `Date range cannot exceed ${CHART_MAX_RANGE_DAYS} days`, 'DATE_RANGE_TOO_LARGE');
   }
 
   const startDate = days[0] + 'T00:00:00.000Z';

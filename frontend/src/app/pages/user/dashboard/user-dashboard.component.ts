@@ -26,6 +26,8 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 import { EventCalendarComponent } from '../../../shared/components/event-calendar/event-calendar.component';
 import { environment } from '../../../../environments/environment';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -77,11 +79,13 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent, EventCalendarComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
 export class UserDashboardComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
+  private relativeTime  = inject(RelativeTimeService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private communityService = inject(CommunityService);
@@ -145,9 +149,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   greeting = computed(() => {
     const hour = this.today().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return this.translate.instant('user.dashboard.greetingMorning');
+    if (hour < 17) return this.translate.instant('user.dashboard.greetingAfternoon');
+    return this.translate.instant('user.dashboard.greetingEvening');
   });
 
   // Time-of-day icon for the hero — deliberately not another copy of the
@@ -171,11 +175,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
   profileStrength = computed(() => {
     const pct = this.profileCompletion();
-    if (pct >= 100) return 'Complete';
-    if (pct >= 75) return 'Strong';
-    if (pct >= 50) return 'Intermediate';
-    if (pct >= 25) return 'Getting there';
-    return 'Just started';
+    if (pct >= 100) return this.translate.instant('user.dashboard.progressComplete');
+    if (pct >= 75) return this.translate.instant('user.dashboard.progressStrong');
+    if (pct >= 50) return this.translate.instant('user.dashboard.progressIntermediate');
+    if (pct >= 25) return this.translate.instant('user.dashboard.progressGettingThere');
+    return this.translate.instant('user.dashboard.progressJustStarted');
   });
 
   // allPosts() is loaded latest-first (see loadPostsFromCommunities), and a
@@ -214,11 +218,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Events all in the amber family, which made the icons hard to tell
   // apart at a glance in a short list.
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'Communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: '#16A34A', bgColor: '#DCFCE7', accentColor: '#16A34A', route: '/user/community' },
-    { label: 'Posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: '#F59E0B', bgColor: '#FEF3C7', accentColor: '#F59E0B', route: '/user/profile', queryParams: { tab: 'posts' } },
-    { label: 'Businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: '#2563EB', bgColor: '#DBEAFE', accentColor: '#2563EB', route: '/user/business' },
-    { label: 'Events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: '#7C3AED', bgColor: '#EDE9FE', accentColor: '#7C3AED', route: '/user/events' },
-    { label: 'Jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: '#0D9488', bgColor: '#CCFBF1', accentColor: '#0D9488', route: '/user/jobs' },
+    { label: 'user.dashboard.stat.communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: 'var(--stat-communities, #16A34A)', bgColor: 'var(--stat-communities-bg, #DCFCE7)', accentColor: 'var(--stat-communities, #16A34A)', route: '/user/community' },
+    { label: 'user.dashboard.stat.posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: 'var(--stat-posts, #F59E0B)', bgColor: 'var(--stat-posts-bg, #FEF3C7)', accentColor: 'var(--stat-posts, #F59E0B)', route: '/user/profile', queryParams: { tab: 'posts' } },
+    { label: 'user.dashboard.stat.businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: 'var(--stat-businesses, #2563EB)', bgColor: 'var(--stat-businesses-bg, #DBEAFE)', accentColor: 'var(--stat-businesses, #2563EB)', route: '/user/business' },
+    { label: 'user.dashboard.stat.events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: 'var(--stat-events, #7C3AED)', bgColor: 'var(--stat-events-bg, #EDE9FE)', accentColor: 'var(--stat-events, #7C3AED)', route: '/user/events' },
+    { label: 'user.dashboard.stat.jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: 'var(--stat-jobs, #0D9488)', bgColor: 'var(--stat-jobs-bg, #CCFBF1)', accentColor: 'var(--stat-jobs, #0D9488)', route: '/user/jobs' },
   ]);
 
   private animationFrameId: number | null = null;
@@ -229,24 +233,29 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     const u = this.user();
     if (!u) return [];
     return [
-      { label: 'Profile photo', completed: !!u.avatar, route: '/user/profile' },
-      { label: 'Country', completed: !!u.countryId, route: '/user/profile' },
-      { label: 'City', completed: !!u.cityId, route: '/user/profile' },
-      { label: 'Profession / Student status', completed: !!u.occupationType, route: '/user/profile' },
-      { label: 'Interests', completed: u.interests?.length > 0, route: '/user/profile' },
-      { label: 'Bio', completed: !!u.bio, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.profilePhoto', completed: !!u.avatar, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.country', completed: !!u.countryId, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.city', completed: !!u.cityId, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.occupation', completed: !!u.occupationType, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.interests', completed: u.interests?.length > 0, route: '/user/profile' },
+      { label: 'user.dashboard.checklist.bio', completed: !!u.bio, route: '/user/profile' },
     ];
   });
 
   completedItems = computed(() => this.profileItems().filter((item) => item.completed));
   incompleteItems = computed(() => this.profileItems().filter((item) => !item.completed));
 
+  // `color` is used both as text-on-tint (hover) AND as a solid icon-chip
+  // fill with a white icon on top (active) — kept as a fixed literal so
+  // that white-on-fill contrast can't degrade if it were ever swapped for
+  // a dark-mode-lightened variant. `bgColor` (the sliding active-tab
+  // indicator, a pure light tint) is reactive.
   tabs: ProfileTab[] = [
-    { id: 'ALL',       label: 'All Posts',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: '#E0F2FE' },
-    { id: 'POPULAR',   label: 'Popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: '#FFEDD5' },
-    { id: 'HELP',      label: 'Help Requests', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: '#FEF9C3' },
-    { id: 'EMERGENCY', label: 'Emergency Assistance', icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: '#FEE2E2' },
-    { id: 'ENQUIRY',   label: 'Enquire',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: '#EDE9FE' },
+    { id: 'ALL',       label: 'user.dashboard.tab.all',     icon: 'bi-grid-fill',                  color: '#0284C7', bgColor: 'var(--color-info-light, #E0F2FE)' },
+    { id: 'POPULAR',   label: 'user.dashboard.tab.popular',       icon: 'bi-fire',                       color: '#EA580C', bgColor: 'var(--color-badge-orange-bg, #FFEDD5)' },
+    { id: 'HELP',      label: 'user.dashboard.tab.help', icon: 'bi-question-circle-fill',       color: '#CA8A04', bgColor: 'var(--tab-help-bg, #FEF9C3)' },
+    { id: 'EMERGENCY', label: 'user.dashboard.tab.emergency', icon: 'bi-exclamation-triangle-fill',  color: '#DC2626', bgColor: 'var(--tab-emergency-bg, #FEE2E2)' },
+    { id: 'ENQUIRY',   label: 'user.dashboard.tab.enquiry',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: 'var(--color-badge-violet-bg, #EDE9FE)' },
   ];
 
   ngOnInit(): void {
@@ -483,7 +492,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         );
         this.likingPost.set(null);
       },
-      error: () => { this.toast.error('Failed to update like'); this.likingPost.set(null); },
+      error: () => { this.toast.error('user.dashboard.toast.failedUpdateLike'); this.likingPost.set(null); },
     });
   }
 
@@ -554,7 +563,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         form.reset();
         this.submittingComment.set(null);
       },
-      error: () => { this.toast.error('Failed to add comment'); this.submittingComment.set(null); },
+      error: () => { this.toast.error('user.dashboard.toast.failedAddComment'); this.submittingComment.set(null); },
     });
   }
 
@@ -686,8 +695,8 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
     const shareUrl = this.getShareUrl(post.id);
     navigator.clipboard.writeText(shareUrl)
-      .then(() => this.toast.success('Share link copied.'))
-      .catch(() => this.toast.error('Failed to copy share link.'));
+      .then(() => this.toast.success('user.dashboard.toast.shareLinkCopied'))
+      .catch(() => this.toast.error('user.dashboard.toast.failedCopyShareLink'));
   }
 
   private getShareUrl(postId: string): string {
@@ -898,13 +907,13 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   getPostTypeBadge(type: string): { label: string; class: string; icon: string } {
     switch (type) {
       case 'EMERGENCY':
-        return { label: 'Emergency Assistance', class: 'badge-emergency', icon: 'bi-exclamation-triangle-fill' };
+        return { label: 'user.dashboard.postType.emergency', class: 'badge-emergency', icon: 'bi-exclamation-triangle-fill' };
       case 'HELP':
-        return { label: 'Help', class: 'badge-help', icon: 'bi-question-circle-fill' };
+        return { label: 'user.dashboard.postType.help', class: 'badge-help', icon: 'bi-question-circle-fill' };
       case 'ENQUIRY':
-        return { label: 'Enquiry', class: 'badge-enquire', icon: 'bi-patch-question-fill' };
+        return { label: 'user.dashboard.postType.enquiry', class: 'badge-enquire', icon: 'bi-patch-question-fill' };
       default:
-        return { label: 'General', class: 'badge-general', icon: 'bi-chat-fill' };
+        return { label: 'user.dashboard.postType.general', class: 'badge-general', icon: 'bi-chat-fill' };
     }
   }
 
@@ -935,15 +944,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   }
 
   getTimeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return this.relativeTime.format(dateString);
   }
 
   getUserInitials(user?: User): string {

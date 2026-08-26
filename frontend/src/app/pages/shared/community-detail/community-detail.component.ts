@@ -15,6 +15,8 @@ import { DeletePostModalComponent } from '../../../shared/components/delete-post
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { environment } from '../../../../environments/environment';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
@@ -22,11 +24,13 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, TranslatePipe],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
 export class CommunityDetailComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
+  private relativeTime  = inject(RelativeTimeService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private communityService = inject(CommunityService);
@@ -320,7 +324,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.communityService.getCommunity(this.communityId()).subscribe({
       next: (community) => { this.community.set(community); this.loading.set(false); },
-      error: () => { this.toast.error('Failed to load community'); this.loading.set(false); },
+      error: () => { this.toast.error('shared.communityDetail.toast.failedLoadCommunity'); this.loading.set(false); },
     });
   }
 
@@ -345,7 +349,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         }
       },
       error: () => {
-        this.toast.error('Failed to load posts');
+        this.toast.error('shared.communityDetail.toast.failedLoadPosts');
         this.loadingPosts.set(false);
         this.loadingMore.set(false);
       },
@@ -370,7 +374,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.posts.update((list) => (list.some((p) => p.id === post.id) ? list : [post, ...list]));
         this.highlightSharedPost(postId);
       },
-      error: () => this.toast.error('This post is no longer available.'),
+      error: () => this.toast.error('shared.communityDetail.toast.postNoLongerAvailable'),
     });
   }
 
@@ -548,7 +552,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         }
         this.myPostsInCommunity.update((current) => [post, ...current]);
       },
-      error: () => { this.toast.error('Failed to create post'); this.submittingPost.set(false); },
+      error: () => { this.toast.error('shared.communityDetail.toast.failedCreatePost'); this.submittingPost.set(false); },
     });
   }
 
@@ -643,7 +647,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
               : p
           )
         );
-        this.toast.error('Failed to update like');
+        this.toast.error('shared.communityDetail.toast.failedUpdateLike');
         this.likingPost.set(null);
       },
     });
@@ -714,7 +718,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         }, 0);
         this.submittingComment.set(null);
       },
-      error: () => { this.toast.error('Failed to add comment'); this.submittingComment.set(null); },
+      error: () => { this.toast.error('shared.communityDetail.toast.failedAddComment'); this.submittingComment.set(null); },
     });
   }
 
@@ -844,8 +848,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
     const shareUrl = this.getShareUrl(post.id);
     navigator.clipboard.writeText(shareUrl)
-      .then(() => this.toast.success('Share link copied.'))
-      .catch(() => this.toast.error('Failed to copy share link.'));
+      .then(() => this.toast.success('shared.communityDetail.toast.shareLinkCopied'))
+      .catch(() => this.toast.error('shared.communityDetail.toast.failedCopyShareLink'));
   }
 
   private getShareUrl(postId: string): string {
@@ -985,8 +989,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   reportPost(post: Post): void {
     this.postMenuOpenId.set(null);
     this.postService.reportPost(post.id).subscribe({
-      next: () => this.toast.success('Post reported. Our team will review it.'),
-      error: () => this.toast.error('Failed to report post'),
+      next: () => this.toast.success('shared.communityDetail.toast.postReportedOurTeamWill'),
+      error: () => this.toast.error('shared.communityDetail.toast.failedReportPost'),
     });
   }
 
@@ -1038,7 +1042,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.savingEdit.set(false);
         this.closeEditModal();
       },
-      error: () => { this.toast.error('Failed to update post'); this.savingEdit.set(false); },
+      error: () => { this.toast.error('shared.communityDetail.toast.failedUpdatePost'); this.savingEdit.set(false); },
     });
   }
 
@@ -1080,12 +1084,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
             },
           };
         });
-        this.toast.success('Post deleted successfully.');
+        this.toast.success('shared.communityDetail.toast.postDeletedSuccessfully');
         this.deletingPost.set(false);
         this.closeDeletePostModal();
       },
       error: () => {
-        this.toast.error('Failed to delete post');
+        this.toast.error('shared.communityDetail.toast.failedDeletePost');
         this.deletingPost.set(false);
         this.updateDeletePostModalInputs();
       },
@@ -1113,7 +1117,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.joiningCommunity.set(true);
     this.communityService.joinCommunity(this.communityId()).subscribe({
       next: () => {
-        this.toast.success('You have joined the community!');
+        this.toast.success('shared.communityDetail.toast.haveJoinedCommunity');
         this.membersPage.set(1);
         this.loadMembers();
         this.community.update((c) =>
@@ -1132,7 +1136,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.leavingCommunity.set(true);
     this.communityService.leaveCommunity(this.communityId()).subscribe({
       next: () => {
-        this.toast.success('You have left the community');
+        this.toast.success('shared.communityDetail.toast.haveLeftCommunity');
         this.membersPage.set(1);
         this.loadMembers();
         this.community.update((c) =>
@@ -1204,18 +1208,18 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   getCommunityStatus(): { label: string; cls: string } {
     const c = this.community();
-    if (!c) return { label: 'Unknown', cls: '' };
+    if (!c) return { label: 'shared.communityDetail.status.unknown', cls: '' };
     const active = c.is_active ?? c.isActive;
     return active
-      ? { label: 'Active',   cls: 'cd-status-active'   }
-      : { label: 'Inactive', cls: 'cd-status-inactive' };
+      ? { label: 'shared.communityDetail.status.active',   cls: 'cd-status-active'   }
+      : { label: 'shared.communityDetail.status.inactive', cls: 'cd-status-inactive' };
   }
 
   getApprovalStatus(): { label: string; cls: string; icon: string } | null {
     const c = this.community();
     if (!c) return null;
-    if (c.status === 'PENDING')  return { label: 'Pending Approval', cls: 'cd-status-pending',  icon: 'bi-hourglass-split' };
-    if (c.status === 'REJECTED') return { label: 'Rejected',         cls: 'cd-status-rejected', icon: 'bi-x-circle-fill' };
+    if (c.status === 'PENDING')  return { label: 'shared.communityDetail.status.pending', cls: 'cd-status-pending',  icon: 'bi-hourglass-split' };
+    if (c.status === 'REJECTED') return { label: 'shared.communityDetail.status.rejected', cls: 'cd-status-rejected', icon: 'bi-x-circle-fill' };
     return null;
   }
 
@@ -1225,10 +1229,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   getVisibilityInfo(): { label: string; icon: string; cls: string } {
     const c = this.community();
-    if (!c) return { label: 'Default', icon: 'bi-eye',        cls: 'cd-vis--default' };
-    if (c.is_private) return { label: 'Private', icon: 'bi-lock-fill', cls: 'cd-vis--private' };
-    if (c.is_global)  return { label: 'Global',  icon: 'bi-globe2',    cls: 'cd-vis--global'  };
-    return { label: 'Default', icon: 'bi-eye', cls: 'cd-vis--default' };
+    if (!c) return { label: 'shared.communityDetail.visibilityLabel.default', icon: 'bi-eye',        cls: 'cd-vis--default' };
+    if (c.is_private) return { label: 'shared.communityDetail.visibilityLabel.private', icon: 'bi-lock-fill', cls: 'cd-vis--private' };
+    if (c.is_global)  return { label: 'shared.communityDetail.visibilityLabel.global',  icon: 'bi-globe2',    cls: 'cd-vis--global'  };
+    return { label: 'shared.communityDetail.visibilityLabel.default', icon: 'bi-eye', cls: 'cd-vis--default' };
   }
 
   // ── Utility ───────────────────────────────────────────────
@@ -1261,10 +1265,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   getPostTypeBadge(type: PostType): { label: string; class: string; icon: string } {
     switch (type) {
-      case 'EMERGENCY': return { label: 'Emergency Assistance', class: 'bg-danger',   icon: 'bi-exclamation-triangle-fill' };
-      case 'HELP':      return { label: 'Help',      class: 'bg-warning text-dark',   icon: 'bi-life-preserver'            };
-      case 'ENQUIRY':   return { label: 'Enquire',   class: 'bg-enquire',             icon: 'bi-question-circle-fill'      };
-      default:          return { label: 'General',   class: 'bg-primary',             icon: 'bi-chat-dots-fill'            };
+      case 'EMERGENCY': return { label: 'shared.communityDetail.postTypeBadge.emergency', class: 'bg-danger',   icon: 'bi-exclamation-triangle-fill' };
+      case 'HELP':      return { label: 'shared.communityDetail.postTypeBadge.help',      class: 'bg-warning text-dark',   icon: 'bi-life-preserver'            };
+      case 'ENQUIRY':   return { label: 'shared.communityDetail.postTypeBadge.enquiry',   class: 'bg-enquire',             icon: 'bi-question-circle-fill'      };
+      default:          return { label: 'shared.communityDetail.postTypeBadge.general',   class: 'bg-primary',             icon: 'bi-chat-dots-fill'            };
     }
   }
 
@@ -1272,12 +1276,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     // Reading this signal makes the calling template expression re-evaluate
     // as clockTick ticks, so "5m ago" keeps advancing under OnPush.
     this.clockTick();
-    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-    if (seconds < 60)     return 'Just now';
-    if (seconds < 3600)   return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400)  return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return this.relativeTime.format(dateStr);
   }
 
   formatDate(dateStr: string): string {
@@ -1290,7 +1289,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   getUserFullName(user?: { displayName?: string; userName?: string } | null): string {
-    if (!user) return 'Unknown User';
+    if (!user) return this.translate.instant('shared.communityDetail.unknownUser');
     return user.displayName || user.userName || 'Unknown User';
   }
 

@@ -13,6 +13,7 @@ import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { getPhoneRule } from '../../utils/phone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -43,7 +44,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-business-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe, TranslatePipe],
   templateUrl: './business-form-modal.component.html',
   styleUrls: ['./business-form-modal.component.scss'],
 })
@@ -51,6 +52,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
+  private translate         = inject(TranslateService);
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
@@ -135,7 +137,30 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   sameAsPhone = signal(false);
 
   // Opening days
+  // Stored values stay English (the API contract); the template translates
+  // each through DAY_LABELS for display.
   readonly DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  /** Short forms for the day toggles — slicing a Tamil word to 3 chars
+   * would cut it mid-grapheme, so each abbreviation is its own key. */
+  readonly DAY_SHORT: Record<string, string> = {
+    Monday:    'components.calendar.weekday.mon',
+    Tuesday:   'components.calendar.weekday.tue',
+    Wednesday: 'components.calendar.weekday.wed',
+    Thursday:  'components.calendar.weekday.thu',
+    Friday:    'components.calendar.weekday.fri',
+    Saturday:  'components.calendar.weekday.sat',
+    Sunday:    'components.calendar.weekday.sun',
+  };
+
+  readonly DAY_LABELS: Record<string, string> = {
+    Monday:    'components.businessForm.day.monday',
+    Tuesday:   'components.businessForm.day.tuesday',
+    Wednesday: 'components.businessForm.day.wednesday',
+    Thursday:  'components.businessForm.day.thursday',
+    Friday:    'components.businessForm.day.friday',
+    Saturday:  'components.businessForm.day.saturday',
+    Sunday:    'components.businessForm.day.sunday',
+  };
   selectedDays = signal<string[]>([]);
   toggleDay(day: string): void {
     this.selectedDays.update(d => d.includes(day) ? d.filter(x => x !== day) : [...d, day]);
@@ -157,9 +182,9 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   });
 
   displayTime(time24: string): string {
-    if (!time24) return 'Select';
+    if (!time24) return this.translate.instant('components.businessForm.selectTime');
     const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return 'Select';
+    if (isNaN(h) || isNaN(m)) return this.translate.instant('components.businessForm.selectTime');
     const period = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 || 12;
     return `${h12}:${String(m).padStart(2, '0')} ${period}`;
@@ -398,7 +423,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     this.categoriesLoaded = true;
     this.svc.getCategories().pipe(takeUntil(this.destroy$)).subscribe({
       next: data => this.categories.set(data),
-      error: () => this.toast.error('Failed to load categories'),
+      error: () => this.toast.error('components.businessForm.toast.categoriesFailed'),
     });
   }
 
@@ -406,7 +431,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     if (this.geoCountries().length) return;
     this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
       next: data => this.geoCountries.set(data),
-      error: () => this.toast.error('Failed to load countries'),
+      error: () => this.toast.error('components.businessForm.toast.countriesFailed'),
     });
   }
 
@@ -425,7 +450,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
 
   /** Defaults Phone/WhatsApp country to India (+91) when not already set — mirrors admin's loadPhoneCountries(). */
   private applyDefaultPhoneCountry(): void {
-    const india = this.phoneCountries().find((c) => c.name === 'India');
+    const india = this.phoneCountries().find((c) => c.iso2 === 'IN');
     if (!india) return;
     const patch: Record<string, unknown> = {};
     if (!this.businessForm.get('phoneCountryId')?.value) patch['phoneCountryId'] = india.id;
@@ -513,7 +538,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   private loadForEdit(id: string): void {
     this.svc.getBusiness(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (biz) => this.applyEditFormData(biz),
-      error: () => { this.toast.error('Failed to load business details'); this.closed.emit(); },
+      error: () => { this.toast.error('components.businessForm.toast.detailsFailed'); this.closed.emit(); },
     });
   }
 
@@ -712,7 +737,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
           });
         }
       },
-      error: () => this.toast.error('Failed to load country address details'),
+      error: () => this.toast.error('components.businessForm.toast.addressFailed'),
     });
   }
 
@@ -847,16 +872,16 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     req.subscribe({
       next: (biz) => {
         if (biz.status === 'PENDING') {
-          this.toast.success(editing ? 'Business resubmitted for admin approval' : 'Business submitted for admin approval');
+          this.toast.success(editing ? 'components.businessForm.toast.resubmitted' : 'components.businessForm.toast.submitted');
         } else {
-          this.toast.success(editing ? 'Business updated successfully' : 'Business created successfully');
+          this.toast.success(editing ? 'components.businessForm.toast.updated' : 'components.businessForm.toast.created');
         }
         this.submitting.set(false);
         this.saved.emit(biz);
         this.closed.emit();
       },
       error: (err) => {
-        this.toast.error(err?.error?.message ?? (editing ? 'Failed to update business' : 'Failed to create business'));
+        this.toast.error(editing ? 'components.businessForm.toast.updateFailed' : 'components.businessForm.toast.createFailed');
         this.submitting.set(false);
       },
     });

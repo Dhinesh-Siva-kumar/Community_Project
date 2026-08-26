@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { TagInputComponent } from '../tag-input/tag-input.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 // Single shared definition of the "Community Rules" field (label + tag-input
 // config) so every create/edit form for a community uses the exact same
@@ -9,7 +10,7 @@ import { TagInputComponent } from '../tag-input/tag-input.component';
 @Component({
   selector: 'app-community-rules-input',
   standalone: true,
-  imports: [ReactiveFormsModule, TagInputComponent],
+  imports: [ReactiveFormsModule, TagInputComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -20,10 +21,10 @@ import { TagInputComponent } from '../tag-input/tag-input.component';
   ],
   template: `
     <div class="cri-field">
-      <label class="cri-label">Community Rules</label>
+      <label class="cri-label">{{ 'components.rulesInput.label' | translate }}</label>
       <app-tag-input
         [formControl]="control"
-        placeholder="Type a rule and press Enter…"
+        [placeholder]="'components.rulesInput.placeholder' | translate"
         itemLabel="rule"
         [maxLength]="150"
         [commitOnComma]="false"

@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, OnChanges, SimpleChanges, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface ProfileTab {
   id: string;
@@ -16,7 +17,7 @@ export interface ProfileTab {
 @Component({
   selector: 'app-profile-tabs',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile-tabs.component.html',
   styleUrls: ['./profile-tabs.component.scss'],

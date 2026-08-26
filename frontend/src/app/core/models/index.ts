@@ -492,6 +492,12 @@ export interface Notification {
   isRead: boolean;
   /** Repeat-event aggregation count (likes/comments) — see notifications.service.ts create(). */
   count?: number;
+  /**
+   * Interpolation values for the `notification.<TYPE>` catalog entry, so the
+   * text renders in the reader's language. Absent on rows written before the
+   * params column existed — those fall back to the stored English `message`.
+   */
+  params?: Record<string, unknown>;
   relatedEntityId?: string;
   userId: string;
   createdAt: string;

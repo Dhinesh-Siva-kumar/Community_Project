@@ -1,13 +1,13 @@
 <!-- ── PREMIUM PAGE HEADER ─────────────────────────────────── -->
 <div class="jb-page-header">
   <div class="jb-page-header__left">
-    <h2 class="jb-page-header__title">Events</h2>
-    <p class="jb-page-header__sub">Review, moderate and manage all community events</p>
+    <h2 class="jb-page-header__title">{{ 'admin.events.events' | translate }}</h2>
+    <p class="jb-page-header__sub">{{ 'admin.events.reviewModerateManageAllCommunity' | translate }}</p>
   </div>
   <div class="jb-page-header__actions">
     <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i>
-      <span>New Event</span>
+      <span>{{ 'admin.events.newEvent' | translate }}</span>
     </button>
   </div>
 </div>
@@ -15,43 +15,43 @@
 <!-- ── STATISTICS BAR ─────────────────────────────────────── -->
 <div class="admin-stats-bar">
   <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'all'"
-    (click)="setEventStatFilter('all')" aria-label="Show all events">
+    (click)="setEventStatFilter('all')" [attr.aria-label]="'admin.events.showAllEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--jobs">
       <i class="bi bi-calendar-event"></i>
     </div>
     <div class="admin-stat-card__body">
       <div class="admin-stat-card__value">{{ totalEventsCount() }}</div>
-      <div class="admin-stat-card__label">Total Events</div>
+      <div class="admin-stat-card__label">{{ 'admin.events.totalEvents' | translate }}</div>
     </div>
   </button>
   <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'upcoming'"
-    (click)="setEventStatFilter('upcoming')" aria-label="Filter by upcoming events">
+    (click)="setEventStatFilter('upcoming')" [attr.aria-label]="'admin.events.filterByUpcomingEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--fulltime">
       <i class="bi bi-clock-history"></i>
     </div>
     <div class="admin-stat-card__body">
       <div class="admin-stat-card__value">{{ upcomingEventsCount() }}</div>
-      <div class="admin-stat-card__label">Upcoming</div>
+      <div class="admin-stat-card__label">{{ 'admin.events.upcoming' | translate }}</div>
     </div>
   </button>
   <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'hybrid'"
-    (click)="setEventStatFilter('hybrid')" aria-label="Filter by hybrid events">
+    (click)="setEventStatFilter('hybrid')" [attr.aria-label]="'admin.events.filterByHybridEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--parttime">
       <i class="bi bi-diagram-2"></i>
     </div>
     <div class="admin-stat-card__body">
       <div class="admin-stat-card__value">{{ hybridEventsCount() }}</div>
-      <div class="admin-stat-card__label">Hybrid</div>
+      <div class="admin-stat-card__label">{{ 'admin.events.hybrid' | translate }}</div>
     </div>
   </button>
   <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'offline'"
-    (click)="setEventStatFilter('offline')" aria-label="Filter by offline events">
+    (click)="setEventStatFilter('offline')" [attr.aria-label]="'admin.events.filterByOfflineEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--contract">
       <i class="bi bi-geo-alt"></i>
     </div>
     <div class="admin-stat-card__body">
       <div class="admin-stat-card__value">{{ offlineEventsCount() }}</div>
-      <div class="admin-stat-card__label">Offline</div>
+      <div class="admin-stat-card__label">{{ 'admin.events.offline' | translate }}</div>
     </div>
   </button>
 </div>
@@ -63,23 +63,23 @@
     <div class="jb-search-wrap">
       <i class="bi bi-search jb-search-wrap__icon"></i>
       <input type="search" class="jb-search-wrap__input"
-        placeholder="Search events by title, location..."
+        [placeholder]="'admin.events.searchEventsByTitleLocation' | translate"
         [value]="searchQuery()"
         (input)="onSearchInput($any($event.target).value)"
         autocomplete="off" />
       @if (searchQuery()) {
-        <button class="jb-search-wrap__clear" (click)="searchQuery.set(''); applyFilters()" aria-label="Clear search">
+        <button class="jb-search-wrap__clear" (click)="searchQuery.set(''); applyFilters()" [attr.aria-label]="'admin.events.clearSearch' | translate">
           <i class="bi bi-x"></i>
         </button>
       }
     </div>
 
     <!-- View toggle -->
-    <div class="um-view-toggle" role="group" aria-label="Switch view">
-      <button class="um-view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" aria-label="Grid view" title="Grid view">
+    <div class="um-view-toggle" role="group" [attr.aria-label]="'admin.events.switchView' | translate">
+      <button class="um-view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" [attr.aria-label]="'admin.events.gridView' | translate" [title]="'admin.events.gridView' | translate">
         <i class="bi bi-grid-3x3-gap-fill"></i>
       </button>
-      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" aria-label="Table view" title="Table view">
+      <button class="um-view-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" [attr.aria-label]="'admin.events.tableView' | translate" [title]="'admin.events.tableView' | translate">
         <i class="bi bi-table"></i>
       </button>
     </div>
@@ -88,13 +88,13 @@
       [class.jb-advanced-toggle--open]="showAdvancedFilters()"
       (click)="toggleAdvancedFilters()">
       <i class="bi bi-sliders2"></i>
-      <span>Advanced Filters</span>
+      <span>{{ 'admin.events.advancedFilters2' | translate }}</span>
       @if (activeFilterCount() > 0) {
         <span class="jb-advanced-count">{{ activeFilterCount() }}</span>
       }
     </button>
     @if (activeFilterCount() > 0) {
-      <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> Clear All</button>
+      <button class="jb-clear-all-btn" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> {{ 'admin.events.clearAll' | translate }}</button>
     }
   </div>
 
@@ -107,10 +107,10 @@
      LayoutService, to make room) — this is a docked panel, not a
      blocking modal. -->
 @if (showAdvancedFilters()) {
-  <aside class="jb-adv-drawer" role="complementary" aria-label="Advanced filters">
+  <aside class="jb-adv-drawer" role="complementary" [attr.aria-label]="'admin.events.advancedFilters' | translate">
     <div class="jb-adv-drawer__header">
-      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> Advanced Filters</h3>
-      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close">
+      <h3 class="jb-adv-drawer__title"><i class="bi bi-sliders2"></i> {{ 'admin.events.advancedFilters2' | translate }}</h3>
+      <button type="button" class="jb-adv-drawer__close" (click)="closeAdvancedFilters()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -119,18 +119,18 @@
 
       <!-- ── Location & Status ────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> Location &amp; Status</span>
+        <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> {{ 'admin.events.locationAmpStatus' | translate }}</span>
         <div class="jb-advanced-grid">
           <div class="jb-adv-field">
-            <label class="jb-adv-label"><i class="bi bi-globe"></i> Country</label>
+            <label class="jb-adv-label"><i class="bi bi-globe"></i> {{ 'admin.events.country' | translate }}</label>
             <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
-              (ngModelChange)="setCountryFilter($event)" placeholder="All Countries" searchPlaceholder="Search countries…">
+              (ngModelChange)="setCountryFilter($event)" [placeholder]="'admin.events.allCountries' | translate" [searchPlaceholder]="'components.search.countries' | translate">
             </app-searchable-select>
           </div>
           <div class="jb-adv-field">
-            <label class="jb-adv-label"><i class="bi bi-calendar-check"></i> Status</label>
+            <label class="jb-adv-label"><i class="bi bi-calendar-check"></i> {{ 'common.status' | translate }}</label>
             <app-searchable-select [options]="statusFilterOptions" [ngModel]="filterStatus()"
-              (ngModelChange)="setStatusFilter($event)" placeholder="All Status">
+              (ngModelChange)="setStatusFilter($event)" [placeholder]="'admin.events.allStatus' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -138,12 +138,12 @@
 
       <!-- ── Event Mode ───────────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> Event Mode</span>
-        <div class="jb-pill-row" role="group" aria-label="Filter by event mode">
+        <span class="jb-filter-section-label"><i class="bi bi-toggles"></i> {{ 'admin.events.eventMode2' | translate }}</span>
+        <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.events.filterByEventMode' | translate">
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterEventMode() === ''"
                   (click)="setEventModeFilter(null)">
-            All
+            {{ 'common.all' | translate }}
           </button>
           @for (mode of EVENT_MODES; track mode) {
             <button type="button" class="jb-pill-btn"
@@ -158,53 +158,53 @@
 
       <!-- ── Date Range ───────────────────────────────────────── -->
       <div class="jb-adv-section">
-        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> Date Range</span>
+        <span class="jb-filter-section-label"><i class="bi bi-calendar3"></i> {{ 'admin.events.dateRange' | translate }}</span>
         <div class="jb-advanced-grid jb-advanced-grid--dates">
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateFrom()">
             <div class="jb-adv-date-head">
-              <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> From Date</label>
-              <span class="jb-adv-date-help">Start date</span>
+              <label class="jb-adv-label" for="evFilterDateFrom"><i class="bi bi-calendar3"></i> {{ 'admin.events.fromDate2' | translate }}</label>
+              <span class="jb-adv-date-help">{{ 'admin.events.startDate' | translate }}</span>
             </div>
             <app-date-input
                   [ngModel]="filterDateFrom()"
                   (ngModelChange)="onFilterDateFromChange($event)"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="From date"
-                  ariaLabel="From date"
+                  [placeholder]="'admin.events.fromDate' | translate"
+                  [ariaLabel]="'admin.events.fromDate' | translate"
                 ></app-date-input>
           </div>
 
           <div class="jb-adv-date-card" [class.jb-adv-date-card--filled]="!!filterDateTo()">
             <div class="jb-adv-date-head">
-              <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> To Date</label>
-              <span class="jb-adv-date-help">End date</span>
+              <label class="jb-adv-label" for="evFilterDateTo"><i class="bi bi-calendar3"></i> {{ 'admin.events.date2' | translate }}</label>
+              <span class="jb-adv-date-help">{{ 'admin.events.endDate' | translate }}</span>
             </div>
             <app-date-input
                   [ngModel]="filterDateTo()"
                   (ngModelChange)="onFilterDateToChange($event)"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="To date"
-                  ariaLabel="To date"
+                  [placeholder]="'admin.events.date' | translate"
+                  [ariaLabel]="'admin.events.date' | translate"
                 ></app-date-input>
           </div>
         </div>
 
-        <div class="jb-quick-date-row" role="group" aria-label="Quick date presets">
-          <span class="jb-quick-date-row__label">Quick range:</span>
+        <div class="jb-quick-date-row" role="group" [attr.aria-label]="'admin.events.quickDatePresets' | translate">
+          <span class="jb-quick-date-row__label">{{ 'admin.events.quickRange' | translate }}</span>
           <button type="button" class="jb-quick-date-btn"
             [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
             (click)="applyQuickDatePreset('today')">
-            Today
+            {{ 'admin.events.today' | translate }}
           </button>
           <button type="button" class="jb-quick-date-btn"
             [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
             (click)="applyQuickDatePreset('7d')">
-            Last 7 Days
+            {{ 'admin.events.last7Days' | translate }}
           </button>
           <button type="button" class="jb-quick-date-btn"
             [class.jb-quick-date-btn--active]="activeQuickRange() === '30d'"
             (click)="applyQuickDatePreset('30d')">
-            Last 30 Days
+            {{ 'admin.events.last30Days' | translate }}
           </button>
         </div>
       </div>
@@ -213,10 +213,10 @@
 
     <div class="jb-adv-drawer__footer">
       <button type="button" class="jb-clear-all-btn" (click)="clearAllFilters()">
-        <i class="bi bi-x-circle"></i> Clear All
+        <i class="bi bi-x-circle"></i> {{ 'admin.events.clearAll' | translate }}
       </button>
       <button type="button" class="jb-btn jb-btn--neon jb-btn--sm" (click)="closeAdvancedFilters()">
-        Done
+        {{ 'admin.events.done' | translate }}
       </button>
     </div>
   </aside>
@@ -224,45 +224,45 @@
 
 <!-- ── ACTIVE FILTER CHIPS ──────────────────────────────────── -->
 @if (activeFilterCount() > 0) {
-  <div class="jb-active-chips" role="group" aria-label="Active filters">
-    <span class="jb-active-chips__label">Active:</span>
+  <div class="jb-active-chips" role="group" [attr.aria-label]="'admin.events.activeFilters' | translate">
+    <span class="jb-active-chips__label">{{ 'admin.events.active' | translate }}</span>
     @if (searchQuery()) {
       <span class="jb-active-chip">
         "{{ searchQuery() }}"
-        <button class="jb-active-chip__remove" (click)="removeFilter('search')" aria-label="Remove search"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('search')" [attr.aria-label]="'admin.events.removeSearch' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
     @if (filterCountry()) {
       <span class="jb-active-chip">
         Country: {{ filterCountry() }}
-        <button class="jb-active-chip__remove" (click)="removeFilter('country')" aria-label="Remove country filter"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('country')" [attr.aria-label]="'admin.events.removeCountryFilter' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
     @if (filterStatus()) {
       <span class="jb-active-chip">
         Status: {{ filterStatus() === 'upcoming' ? 'Upcoming' : 'Completed' }}
-        <button class="jb-active-chip__remove" (click)="removeFilter('status')" aria-label="Remove status filter"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('status')" [attr.aria-label]="'admin.events.removeStatusFilter' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
     @if (filterEventMode()) {
       <span class="jb-active-chip">
         Mode: {{ filterEventMode() }}
-        <button class="jb-active-chip__remove" (click)="removeFilter('eventMode')" aria-label="Remove event mode filter"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('eventMode')" [attr.aria-label]="'admin.events.removeEventModeFilter' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
     @if (filterDateFrom()) {
       <span class="jb-active-chip">
         From: {{ filterDateFrom() }}
-        <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" aria-label="Remove from-date filter"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('dateFrom')" [attr.aria-label]="'admin.events.removeFromDateFilter' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
     @if (filterDateTo()) {
       <span class="jb-active-chip">
         To: {{ filterDateTo() }}
-        <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" aria-label="Remove to-date filter"><i class="bi bi-x"></i></button>
+        <button class="jb-active-chip__remove" (click)="removeFilter('dateTo')" [attr.aria-label]="'admin.events.removeDateFilter' | translate"><i class="bi bi-x"></i></button>
       </span>
     }
-    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearAllFilters()">Clear All</button>
+    <button class="jb-clear-all-btn jb-clear-all-btn--inline" (click)="clearAllFilters()">{{ 'admin.events.clearAll' | translate }}</button>
   </div>
 }
 
@@ -306,7 +306,7 @@
     @if (activeFilterCount() === 0) {
       <button class="jb-btn jb-btn--neon jb-btn--sm" (click)="openAddModal()">
         <i class="bi bi-plus-lg"></i>
-        <span>New Event</span>
+        <span>{{ 'admin.events.newEvent' | translate }}</span>
       </button>
     }
   </div>
@@ -337,17 +337,17 @@
           @if (getEventStatus(evt); as status) {
             <span class="ev-badge ev-card__status" [class]="'ev-badge--' + status.type">
               <span class="ev-badge__dot"></span>
-              {{ status.label }}
+              {{ status.label | translate }}
             </span>
           }
 
           <!-- Edit / Delete overlay -->
           <div class="ev-card__actions">
-            <button class="ev-card__action ev-card__action--edit" (click)="openEditModal(evt, $event)" title="Edit event" aria-label="Edit event">
+            <button class="ev-card__action ev-card__action--edit" (click)="openEditModal(evt, $event)" [title]="'admin.events.editEvent' | translate" [attr.aria-label]="'admin.events.editEvent' | translate">
               <i class="bi bi-pencil-fill"></i>
             </button>
             <button class="ev-card__action ev-card__action--danger" [disabled]="deleting()"
-              (click)="openDeleteConfirm(evt, $event)" title="Delete event" aria-label="Delete event">
+              (click)="openDeleteConfirm(evt, $event)" [title]="'admin.events.deleteEvent' | translate" [attr.aria-label]="'admin.events.deleteEvent' | translate">
               <i class="bi bi-trash3-fill"></i>
             </button>
           </div>
@@ -360,7 +360,7 @@
             @if (evt.eventMode) {
               <span class="ev-badge" [class]="'ev-badge--' + evt.eventMode.toLowerCase()">
                 <i class="bi" [ngClass]="evt.eventMode === 'Offline' ? 'bi-geo-alt-fill' : evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
-                {{ evt.eventMode }}
+                {{ evt.eventMode | enumLabel:'eventMode' }}
               </span>
             }
             @if (evt.eventCategory) {
@@ -369,12 +369,12 @@
             @if (evt.status === 'PENDING') {
               <a class="ev-badge ev-badge--approval-pending ev-badge--link"
                  [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'events' }"
-                 (click)="$event.stopPropagation()" title="Go to Approval page">
-                <i class="bi bi-hourglass-split"></i> Pending Approval
+                 (click)="$event.stopPropagation()" [title]="'admin.events.goApprovalPage' | translate">
+                <i class="bi bi-hourglass-split"></i> {{ 'admin.events.pendingApproval' | translate }}
               </a>
             }
             @if (!evt.isActive) {
-              <span class="ev-badge ev-badge--inactive">Inactive</span>
+              <span class="ev-badge ev-badge--inactive">{{ 'common.inactive' | translate }}</span>
             }
           </div>
 
@@ -403,7 +403,7 @@
           @if (evt.status === 'REJECTED' && evt.rejectionReason) {
             <p class="ev-card__reject-note">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>Rejected:</strong> {{ evt.rejectionReason }}</span>
+              <span><strong>{{ 'admin.events.rejected' | translate }}</strong> {{ evt.rejectionReason }}</span>
             </p>
           }
 
@@ -418,7 +418,7 @@
               }
               @if ((evt.eventMode === 'Online' || evt.eventMode === 'Hybrid') && evt.locationLink) {
                 <a class="ev-card__join" [href]="evt.locationLink" target="_blank" rel="noopener">
-                  <i class="bi bi-camera-video-fill"></i> Join Meeting
+                  <i class="bi bi-camera-video-fill"></i> {{ 'admin.events.joinMeeting' | translate }}
                 </a>
               }
             </div>
@@ -432,16 +432,16 @@
   <div class="um-pagination">
     <div class="um-pagination__left">
       <span class="um-pagination__info">
-        Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-        of <strong>{{ totalItems() }}</strong> events
+        {{ 'admin.events.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+        {{ 'admin.events.of' | translate }} <strong>{{ totalItems() }}</strong> {{ 'admin.events.events2' | translate }}
       </span>
       <div class="um-pg-divider"></div>
       <div class="um-pagination__size">
-        <span>Rows per page</span>
+        <span>{{ 'admin.events.rowsPerPage' | translate }}</span>
         <div class="jb-select-wrap jb-select-wrap--xs">
           <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
             (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-            aria-label="Rows per page">
+            [attr.aria-label]="'admin.events.rowsPerPage' | translate">
           </app-searchable-select>
         </div>
       </div>
@@ -450,11 +450,11 @@
     @if (totalPages() > 1) {
       <div class="um-pagination__pages">
         <button class="um-pg-btn" [disabled]="currentPage() === 1"
-          (click)="goToPage(1)" title="First page">
+          (click)="goToPage(1)" [title]="'admin.events.firstPage' | translate">
           <i class="bi bi-chevron-double-left"></i>
         </button>
         <button class="um-pg-btn" [disabled]="currentPage() === 1"
-          (click)="goToPage(currentPage() - 1)" title="Previous page">
+          (click)="goToPage(currentPage() - 1)" [title]="'admin.events.previousPage' | translate">
           <i class="bi bi-chevron-left"></i>
         </button>
         @for (page of getPages(); track page) {
@@ -462,11 +462,11 @@
             (click)="goToPage(page)">{{ page }}</button>
         }
         <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(currentPage() + 1)" title="Next page">
+          (click)="goToPage(currentPage() + 1)" [title]="'admin.events.nextPage' | translate">
           <i class="bi bi-chevron-right"></i>
         </button>
         <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-          (click)="goToPage(totalPages())" title="Last page">
+          (click)="goToPage(totalPages())" [title]="'admin.events.lastPage' | translate">
           <i class="bi bi-chevron-double-right"></i>
         </button>
       </div>
@@ -483,7 +483,7 @@
           <tr>
             <th class="um-th" style="width:56px"></th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'name'" (click)="toggleSort('name')" role="button" tabindex="0" (keydown.enter)="toggleSort('name')">
-              Event
+              {{ 'admin.events.event' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'name' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'name' && sortDir() === 'desc'"
@@ -491,7 +491,7 @@
               ></i>
             </th>
             <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'category'" (click)="toggleSort('category')" role="button" tabindex="0" (keydown.enter)="toggleSort('category')">
-              Category
+              {{ 'admin.events.category' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'category' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'category' && sortDir() === 'desc'"
@@ -499,7 +499,7 @@
               ></i>
             </th>
             <th class="um-th um-th--sortable d-none d-lg-table-cell" [class.um-th--active]="sortBy() === 'mode'" (click)="toggleSort('mode')" role="button" tabindex="0" (keydown.enter)="toggleSort('mode')">
-              Mode
+              {{ 'admin.events.mode' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'mode' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'mode' && sortDir() === 'desc'"
@@ -507,41 +507,41 @@
               ></i>
             </th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'eventDate'" (click)="toggleSort('eventDate')" role="button" tabindex="0" (keydown.enter)="toggleSort('eventDate')">
-              Event Date
+              {{ 'admin.events.eventDate2' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'eventDate' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'eventDate' && sortDir() === 'desc'"
                 [class.bi-arrow-down-up]="sortBy() !== 'eventDate'"
               ></i>
             </th>
-            <th class="um-th d-none d-lg-table-cell">Time</th>
+            <th class="um-th d-none d-lg-table-cell">{{ 'admin.events.time' | translate }}</th>
             <th class="um-th um-th--sortable d-none d-lg-table-cell" [class.um-th--active]="sortBy() === 'location'" (click)="toggleSort('location')" role="button" tabindex="0" (keydown.enter)="toggleSort('location')">
-              Location
+              {{ 'admin.events.location' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'location' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'location' && sortDir() === 'desc'"
                 [class.bi-arrow-down-up]="sortBy() !== 'location'"
               ></i>
             </th>
-            <th class="um-th d-none d-lg-table-cell">Host</th>
+            <th class="um-th d-none d-lg-table-cell">{{ 'admin.events.host' | translate }}</th>
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'status'" (click)="toggleSort('status')" role="button" tabindex="0" (keydown.enter)="toggleSort('status')">
-              Status
+              {{ 'common.status' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'status' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'status' && sortDir() === 'desc'"
                 [class.bi-arrow-down-up]="sortBy() !== 'status'"
               ></i>
             </th>
-            <th class="um-th d-none d-md-table-cell">Approval</th>
+            <th class="um-th d-none d-md-table-cell">{{ 'admin.events.approval' | translate }}</th>
             <th class="um-th um-th--sortable d-none d-md-table-cell" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
-              Created
+              {{ 'admin.events.created' | translate }}
               <i class="bi um-th__sort-icon"
                 [class.bi-arrow-up]="sortBy() === 'joined' && sortDir() === 'asc'"
                 [class.bi-arrow-down]="sortBy() === 'joined' && sortDir() === 'desc'"
                 [class.bi-arrow-down-up]="sortBy() !== 'joined'"
               ></i>
             </th>
-            <th class="um-th um-th--actions">Actions</th>
+            <th class="um-th um-th--actions">{{ 'common.actions' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -558,7 +558,7 @@
               <td class="um-td d-none d-md-table-cell"><span class="um-td-text">{{ evt.eventCategory || '—' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
                 @if (evt.eventMode) {
-                  <span class="ev-badge" [class]="'ev-badge--' + evt.eventMode.toLowerCase()">{{ evt.eventMode }}</span>
+                  <span class="ev-badge" [class]="'ev-badge--' + evt.eventMode.toLowerCase()">{{ evt.eventMode | enumLabel:'eventMode' }}</span>
                 } @else { <span class="um-td-text">—</span> }
               </td>
               <td class="um-td"><span class="um-td-text">{{ evt.eventDate | date:'d MMM y' }}</span></td>
@@ -578,15 +578,15 @@
                 @if (getEventStatus(evt); as status) {
                   <span class="ev-badge" [class]="'ev-badge--' + status.type">
                     <span class="ev-badge__dot"></span>
-                    {{ status.label }}
+                    {{ status.label | translate }}
                   </span>
                 }
               </td>
               <td class="um-td d-none d-md-table-cell">
                 <div class="ev-td-stack">
-                  <span class="ev-badge" [class]="'ev-badge--approval-' + evt.status.toLowerCase()">{{ evt.status }}</span>
+                  <span class="ev-badge" [class]="'ev-badge--approval-' + evt.status.toLowerCase()">{{ evt.status | enumLabel:'approvalStatus' }}</span>
                   @if (!evt.isActive) {
-                    <span class="ev-badge ev-badge--inactive">Inactive</span>
+                    <span class="ev-badge ev-badge--inactive">{{ 'common.inactive' | translate }}</span>
                   }
                 </div>
               </td>
@@ -607,16 +607,16 @@
     <div class="um-pagination um-pagination--nested">
       <div class="um-pagination__left">
         <span class="um-pagination__info">
-          Showing <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
-          of <strong>{{ totalItems() }}</strong> events
+          {{ 'admin.events.showing' | translate }} <strong>{{ showingFrom() }}</strong>–<strong>{{ showingTo() }}</strong>
+          {{ 'admin.events.of' | translate }} <strong>{{ totalItems() }}</strong> {{ 'admin.events.events2' | translate }}
         </span>
         <div class="um-pg-divider"></div>
         <div class="um-pagination__size">
-          <span>Rows per page</span>
+          <span>{{ 'admin.events.rowsPerPage' | translate }}</span>
           <div class="jb-select-wrap jb-select-wrap--xs">
             <app-searchable-select [options]="pageSizeOptions" [ngModel]="pageSize()"
               (ngModelChange)="onPageSizeChange($event)" [placeholder]="pageSize() + ''"
-              aria-label="Rows per page">
+              [attr.aria-label]="'admin.events.rowsPerPage' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -625,11 +625,11 @@
       @if (totalPages() > 1) {
         <div class="um-pagination__pages">
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(1)" title="First page">
+            (click)="goToPage(1)" [title]="'admin.events.firstPage' | translate">
             <i class="bi bi-chevron-double-left"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)" title="Previous page">
+            (click)="goToPage(currentPage() - 1)" [title]="'admin.events.previousPage' | translate">
             <i class="bi bi-chevron-left"></i>
           </button>
           @for (page of getPages(); track page) {
@@ -637,11 +637,11 @@
               (click)="goToPage(page)">{{ page }}</button>
           }
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(currentPage() + 1)" title="Next page">
+            (click)="goToPage(currentPage() + 1)" [title]="'admin.events.nextPage' | translate">
             <i class="bi bi-chevron-right"></i>
           </button>
           <button class="um-pg-btn" [disabled]="currentPage() === totalPages()"
-            (click)="goToPage(totalPages())" title="Last page">
+            (click)="goToPage(totalPages())" [title]="'admin.events.lastPage' | translate">
             <i class="bi bi-chevron-double-right"></i>
           </button>
         </div>
@@ -653,7 +653,7 @@
 
 <!-- ── Floating create button — shown while scrolled past the header ── -->
 <button class="admin-page-fab" [class.admin-page-fab--visible]="showHeaderFab()"
-        (click)="openAddModal()" aria-label="Add a new event" title="New Event">
+        (click)="openAddModal()" [attr.aria-label]="'admin.events.addNewEvent' | translate" [title]="'admin.events.newEvent' | translate">
   <i class="bi bi-plus-lg"></i>
 </button>
 
@@ -677,7 +677,7 @@
           {{ editingEvent() ? 'Update the details of this event' : 'Fill in the details to create a new event' }}
         </p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="closeAddModal()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="closeAddModal()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -690,20 +690,20 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-calendar-event"></i></span>
-            <span class="cm-section-title">Event Details</span>
+            <span class="cm-section-title">{{ 'admin.events.eventDetails' | translate }}</span>
           </div>
 
           <div class="cm-field-row">
             <!-- Title -->
             <div class="cm-field-group">
-              <label class="cm-label">Title <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.title' | translate }} <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
                 <i class="bi bi-card-heading cm-input-icon"></i>
                 <input
                   type="text"
                   formControlName="title"
                   maxlength="100"
-                  placeholder="e.g. Community Tech Meetup"
+                  [placeholder]="'admin.events.eGCommunityTechMeetup' | translate"
                   class="cm-input"
                   [class.cm-input-error]="f['title'].touched && f['title'].invalid"
                 />
@@ -724,15 +724,15 @@
 
             <!-- Category -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['eventCategory'].touched && f['eventCategory'].invalid">
-              <label class="cm-label">Category <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.category' | translate }} <span class="cm-required">*</span></label>
               <app-searchable-select
                 formControlName="eventCategory"
                 [options]="categoryOptions"
-                placeholder="Select a category"
+                [placeholder]="'admin.events.selectCategory' | translate"
               ></app-searchable-select>
               @if (f['eventCategory'].touched && f['eventCategory'].invalid) {
                 <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.events.pleaseSelectCategory' | translate }}
                 </div>
               }
             </div>
@@ -741,7 +741,7 @@
           <!-- Description -->
           <div class="cm-field-group">
             <div class="cm-label-row">
-              <label class="cm-label">Description <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.description' | translate }} <span class="cm-required">*</span></label>
               <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/1000</span>
             </div>
             <div class="cm-input-wrap cm-textarea-wrap">
@@ -750,7 +750,7 @@
                 formControlName="description"
                 rows="3"
                 maxlength="1000"
-                placeholder="Describe your event — agenda, purpose, highlights…"
+                [placeholder]="'admin.events.describeEventAgendaPurposeHighlights' | translate"
                 class="cm-input cm-textarea"
                 [class.cm-input-error]="f['description'].touched && f['description'].invalid"
               ></textarea>
@@ -774,18 +774,18 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-clock"></i></span>
-            <span class="cm-section-title">Date &amp; Time</span>
+            <span class="cm-section-title">{{ 'admin.events.dateAmpTime' | translate }}</span>
           </div>
 
           <div class="cm-field-row">
             <!-- Event Date -->
             <div class="cm-field-group">
-              <label class="cm-label">Event Date <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.eventDate2' | translate }} <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
                 <app-date-input
                   formControlName="eventDate"
-                  ariaLabel="Event date"
-                  placeholder="Event date"
+                  [ariaLabel]="'admin.events.eventDate' | translate"
+                  [placeholder]="'admin.events.eventDate' | translate"
                   [invalid]="f['eventDate'].touched && f['eventDate'].invalid"
                 ></app-date-input>
               </div>
@@ -803,18 +803,18 @@
 
             <!-- Start Time -->
             <div class="cm-field-group">
-              <label class="cm-label">Start Time <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.startTime2' | translate }} <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
                 <app-time-input
                   formControlName="eventTime"
-                  ariaLabel="Start time"
-                  placeholder="Start time"
+                  [ariaLabel]="'admin.events.startTime' | translate"
+                  [placeholder]="'admin.events.startTime' | translate"
                   [invalid]="f['eventTime'].touched && f['eventTime'].invalid"
                 ></app-time-input>
               </div>
               @if (f['eventTime'].touched && f['eventTime'].invalid) {
                 <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>Start time is required.
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.events.startTimeRequired' | translate }}
                 </div>
               }
             </div>
@@ -823,29 +823,29 @@
           <div class="cm-field-row">
             <!-- End Time -->
             <div class="cm-field-group">
-              <label class="cm-label">End Time</label>
+              <label class="cm-label">{{ 'admin.events.endTime2' | translate }}</label>
               <div class="cm-input-wrap">
                 <app-time-input
                   formControlName="eventEndTime"
-                  ariaLabel="End time"
-                  placeholder="End time"
+                  [ariaLabel]="'admin.events.endTime' | translate"
+                  [placeholder]="'admin.events.endTime' | translate"
                   [invalid]="!!eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
                 ></app-time-input>
               </div>
               @if (eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched) {
                 <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>End time must be after start time.
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.events.endTimeMustAfterStart' | translate }}
                 </div>
               }
             </div>
 
             <!-- Timezone -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['timezone'].touched && f['timezone'].invalid">
-              <label class="cm-label">Time Zone <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.timeZone' | translate }} <span class="cm-required">*</span></label>
               <app-searchable-select
                 formControlName="timezone"
                 [options]="timezoneOptions"
-                placeholder="Select timezone"
+                [placeholder]="'admin.events.selectTimezone' | translate"
               ></app-searchable-select>
             </div>
           </div>
@@ -855,16 +855,16 @@
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-geo-alt"></i></span>
-            <span class="cm-section-title">Mode &amp; Location</span>
+            <span class="cm-section-title">{{ 'admin.events.modeAmpLocation' | translate }}</span>
           </div>
 
           <!-- Event Mode -->
           <div class="cm-field-group">
-            <label class="cm-label">Event Mode <span class="cm-required">*</span></label>
+            <label class="cm-label">{{ 'admin.events.eventMode2' | translate }} <span class="cm-required">*</span></label>
             <app-radio-group
               formControlName="eventMode"
               [options]="eventModeOptions"
-              ariaLabel="Event mode">
+              [ariaLabel]="'admin.events.eventMode' | translate">
             </app-radio-group>
           </div>
 
@@ -872,14 +872,14 @@
             <div class="cm-field-row">
               <!-- Address -->
               <div class="cm-field-group">
-                <label class="cm-label">Address <span class="cm-required">*</span></label>
+                <label class="cm-label">{{ 'admin.events.address' | translate }} <span class="cm-required">*</span></label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-signpost cm-input-icon"></i>
                   <input
                     type="text"
                     formControlName="address"
                     maxlength="200"
-                    placeholder="Street address, venue name"
+                    [placeholder]="'admin.events.streetAddressVenueName' | translate"
                     class="cm-input"
                     [class.cm-input-error]="f['address'].touched && f['address'].invalid"
                   />
@@ -900,21 +900,21 @@
 
               <!-- Pincode -->
               <div class="cm-field-group">
-                <label class="cm-label">Pincode</label>
+                <label class="cm-label">{{ 'admin.events.pincode' | translate }}</label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-mailbox cm-input-icon"></i>
                   <input
                     type="text"
                     formControlName="pincode"
                     maxlength="12"
-                    placeholder="Pincode"
+                    [placeholder]="'admin.events.pincode' | translate"
                     class="cm-input"
                     [class.cm-input-error]="f['pincode'].touched && f['pincode'].invalid"
                   />
                 </div>
                 @if (f['pincode'].touched && f['pincode'].invalid) {
                   <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>Maximum 12 characters allowed.
+                    <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.events.maximum12CharactersAllowed' | translate }}
                   </div>
                 }
               </div>
@@ -923,32 +923,32 @@
             <div class="cm-field-row">
               <!-- Venue / City -->
               <div class="cm-field-group">
-                <label class="cm-label">Venue / City</label>
+                <label class="cm-label">{{ 'admin.events.venueCity' | translate }}</label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-building cm-input-icon"></i>
                   <input
                     type="text"
                     formControlName="location"
                     maxlength="150"
-                    placeholder="e.g. City Hall, Chennai"
+                    [placeholder]="'admin.events.eGCityHallChennai' | translate"
                     class="cm-input"
                     [class.cm-input-error]="f['location'].touched && f['location'].invalid"
                   />
                 </div>
                 @if (f['location'].touched && f['location'].invalid) {
                   <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>Maximum 150 characters allowed.
+                    <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.events.maximum150CharactersAllowed' | translate }}
                   </div>
                 }
               </div>
 
               <!-- Country -->
               <div class="cm-field-group">
-                <label class="cm-label">Country</label>
+                <label class="cm-label">{{ 'admin.events.country' | translate }}</label>
                 <app-searchable-select
                   formControlName="country"
                   [options]="filterCountryOptions"
-                  placeholder="Select country"
+                  [placeholder]="'admin.events.selectCountry' | translate"
                 ></app-searchable-select>
               </div>
             </div>
@@ -956,14 +956,14 @@
 
           @if (showLocationLink) {
             <div class="cm-field-group">
-              <label class="cm-label">Meeting / Stream Link <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'admin.events.meetingStreamLink' | translate }} <span class="cm-required">*</span></label>
               <div class="cm-input-wrap">
                 <i class="bi bi-link-45deg cm-input-icon"></i>
                 <input
                   type="url"
                   formControlName="locationLink"
                   maxlength="300"
-                  placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+                  [placeholder]="'admin.events.httpsZoomUsJHttps' | translate"
                   class="cm-input"
                   [class.cm-input-error]="f['locationLink'].touched && f['locationLink'].invalid"
                 />
@@ -988,14 +988,14 @@
         <div class="cm-section cm-section-last">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
-            <span class="cm-section-title">Event Image</span>
+            <span class="cm-section-title">{{ 'admin.events.eventImage' | translate }}</span>
           </div>
 
           <app-file-upload
             mode="single"
             accept="image/*"
             [maxSizeMb]="5"
-            label="Upload event image (JPG, PNG, WEBP)"
+            [label]="'components.fileUpload.uploadEventImage' | translate"
             [existingPreview]="editingEvent()?.images?.[0] ?? null | imageUrl"
             (filesChange)="onImageChange($event)"
           ></app-file-upload>
@@ -1006,7 +1006,7 @@
     <!-- Modal Footer -->
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeAddModal()">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button
         type="button"
@@ -1041,24 +1041,24 @@
         <i class="bi bi-exclamation-triangle-fill"></i>
       </div>
       <div class="au-header__text cm-modal-header-inner">
-        <h5 class="au-header__title cm-modal-title" id="evDeleteModalTitle">Delete Event</h5>
-        <p class="au-header__sub cm-modal-subtitle">This action cannot be undone</p>
+        <h5 class="au-header__title cm-modal-title" id="evDeleteModalTitle">{{ 'admin.events.deleteEvent2' | translate }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">{{ 'admin.events.actionCannotUndone' | translate }}</p>
       </div>
-      <button type="button" class="au-close cm-close-btn" (click)="closeDeleteConfirm()" [disabled]="deleting()" aria-label="Close">
+      <button type="button" class="au-close cm-close-btn" (click)="closeDeleteConfirm()" [disabled]="deleting()" [attr.aria-label]="'common.close' | translate">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
     <div class="au-body cm-delete-modal-body">
       <p class="cm-delete-modal-text">
-        Are you sure you want to delete <strong>"{{ evt.title }}"</strong>? This will permanently remove the event.
+        {{ 'admin.events.sureWantDelete' | translate }} <strong>"{{ evt.title }}"</strong>? This will permanently remove the event.
       </p>
     </div>
 
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
         (click)="closeDeleteConfirm()" [disabled]="deleting()">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button type="button" class="au-btn cm-btn-submit au-btn--danger"
         (click)="confirmDelete()" [disabled]="deleting()">

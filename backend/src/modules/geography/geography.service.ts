@@ -88,7 +88,7 @@ export async function getCountries(): Promise<GeoCountry[]> {
  */
 export async function getCountryConfig(countryId: number): Promise<CountryAddressConfig> {
   const country = await db('master_countries').where({ id: countryId }).first();
-  if (!country) throw new AppError(404, 'Country not found');
+  if (!country) throw new AppError(404, 'Country not found', 'COUNTRY_FOUND');
 
   const rows: Array<{ level: number; type: string | null }> = await db('master_states')
     .where({ country_id: countryId })
@@ -137,7 +137,7 @@ export async function getCountryConfig(countryId: number): Promise<CountryAddres
  */
 export async function getDivisions(countryId: number, parentId?: number): Promise<Division[]> {
   const country = await db('master_countries').where({ id: countryId }).first('id');
-  if (!country) throw new AppError(404, 'Country not found');
+  if (!country) throw new AppError(404, 'Country not found', 'COUNTRY_FOUND');
 
   let query = db('master_states').where({ country_id: countryId });
   if (parentId) {
@@ -189,7 +189,7 @@ export async function getDivisionChain(divisionId: number): Promise<Division[]> 
 /** Searchable, paginated, always scoped by division or country — never the full worldwide list. */
 export async function searchCities(params: CitiesQueryDtoType): Promise<PaginatedResult<GeoCity>> {
   const { divisionId, countryId, search, page, limit } = params;
-  if (!divisionId && !countryId) throw new AppError(400, 'divisionId or countryId is required');
+  if (!divisionId && !countryId) throw new AppError(400, 'divisionId or countryId is required', 'DIVISIONID_COUNTRYID_REQUIRED');
 
   const offset = (page - 1) * limit;
   const baseQuery = () => {

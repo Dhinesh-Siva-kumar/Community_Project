@@ -30,6 +30,9 @@ export function errorHandler(
     res.status(400).json({
       statusCode: 400,
       error: 'Validation Error',
+      // `code` lets the client show a translated message; `fields` still
+      // carries the per-field English detail for forms that surface it.
+      code: 'VALIDATION_ERROR',
       fields: err.flatten().fieldErrors,
       requestId,
     });
@@ -51,6 +54,9 @@ export function errorHandler(
     res.status(400).json({
       statusCode: 400,
       error: 'File Upload Error',
+      // Multer's own messages are English-only, so hand the client a code it
+      // can translate; `message` remains for logs and non-UI consumers.
+      code: `UPLOAD_${err.code}`,
       message: err.message,
       requestId,
     });

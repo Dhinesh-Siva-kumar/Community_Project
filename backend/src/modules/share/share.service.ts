@@ -32,7 +32,7 @@ export async function getPostShareData(postId: string): Promise<{ id: string; co
     .first() as PostRow | undefined;
 
   if (!row) {
-    throw new AppError(404, 'Post not found');
+    throw new AppError(404, 'Post not found', 'POST_FOUND');
   }
 
   const firstImage = Array.isArray(row.images) && row.images.length > 0 ? row.images[0] ?? null : null;

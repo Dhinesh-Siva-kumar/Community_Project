@@ -7,6 +7,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { LanguageToggleComponent } from '../../shared/components/language-toggle/language-toggle.component';
 
 interface NavItem {
   label: string;
@@ -15,19 +18,21 @@ interface NavItem {
   sectionLabel?: string;
 }
 
+// Catalog keys, not display text — the template pipes them through
+// `| translate`, so the header title follows the language toggle.
 const ROUTE_TITLES: Record<string, string> = {
-  dashboard: 'Dashboard',
-  community: 'Community',
-  business:  'Business',
-  events:    'Events',
-  jobs:      'Jobs',
-  profile:   'Profile',
+  dashboard: 'nav.dashboard',
+  community: 'nav.community',
+  business:  'nav.business',
+  events:    'nav.events',
+  jobs:      'nav.jobs',
+  profile:   'nav.profile',
 };
 
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent, LanguageToggleComponent, TranslatePipe],
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
 })
@@ -43,15 +48,17 @@ export class UserLayoutComponent {
   mobileSidebarOpen = signal(false);
   userDropdownOpen  = signal(false);
   isMobile          = signal(false);
-  pageTitle         = signal('Dashboard');
+  pageTitle         = signal('nav.dashboard');
 
+  // `label`/`sectionLabel` hold catalog keys; the template translates them at
+  // render so they react to the language toggle.
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'bi-grid',           route: '/user/dashboard',  sectionLabel: 'MAIN'    },
-    { label: 'Community', icon: 'bi-people',         route: '/user/community',  sectionLabel: 'EXPLORE' },
-    { label: 'Business',  icon: 'bi-shop',           route: '/user/business'                            },
-    { label: 'Jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                },
-    { label: 'Events',    icon: 'bi-calendar-event', route: '/user/events'                              },
-    { label: 'Profile',   icon: 'bi-person-circle',  route: '/user/profile',    sectionLabel: 'ACCOUNT' },
+    { label: 'nav.dashboard', icon: 'bi-grid',           route: '/user/dashboard', sectionLabel: 'nav.section.main'    },
+    { label: 'nav.community', icon: 'bi-people',         route: '/user/community', sectionLabel: 'nav.section.explore' },
+    { label: 'nav.business',  icon: 'bi-shop',           route: '/user/business'                                       },
+    { label: 'nav.jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                           },
+    { label: 'nav.events',    icon: 'bi-calendar-event', route: '/user/events'                                         },
+    { label: 'nav.profile',   icon: 'bi-person-circle',  route: '/user/profile',   sectionLabel: 'nav.section.account'  },
   ];
 
   constructor() {
@@ -68,7 +75,7 @@ export class UserLayoutComponent {
   private updatePageTitle(url: string): void {
     const segments = url.split('/').filter((s) => s && !/^\d+$/.test(s));
     const segment = segments[segments.length - 1] ?? '';
-    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'Dashboard');
+    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'nav.dashboard');
   }
 
   @HostListener('window:resize')

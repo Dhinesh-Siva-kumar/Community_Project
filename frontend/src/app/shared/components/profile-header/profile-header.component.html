@@ -26,12 +26,12 @@
         <div class="name-row">
           <h4 class="user-name">{{ displayName }}</h4>
           @if (isAdmin) {
-            <span class="role-badge admin"><i class="bi bi-shield-fill-check"></i> Admin</span>
+            <span class="role-badge admin"><i class="bi bi-shield-fill-check"></i> {{ 'components.profileHeader.admin' | translate }}</span>
           } @else {
-            <span class="role-badge user"><i class="bi bi-person-fill"></i> Member</span>
+            <span class="role-badge user"><i class="bi bi-person-fill"></i> {{ 'components.profileHeader.member' | translate }}</span>
           }
           @if (u.isTrusted) {
-            <span class="role-badge trusted"><i class="bi bi-patch-check-fill"></i> Trusted</span>
+            <span class="role-badge trusted"><i class="bi bi-patch-check-fill"></i> {{ 'components.profileHeader.trusted' | translate }}</span>
           }
         </div>
 
@@ -44,7 +44,7 @@
             <span class="meta-item"><i class="bi bi-geo-alt"></i>{{ u.location || u.country }}</span>
           }
           @if (u.createdAt) {
-            <span class="meta-item"><i class="bi bi-calendar3"></i>Joined {{ u.createdAt | date:'mediumDate' }}</span>
+            <span class="meta-item"><i class="bi bi-calendar3"></i>{{ 'components.profileHeader.joined' | translate }} {{ u.createdAt | localizedDate:'mediumDate' }}</span>
           }
         </div>
 

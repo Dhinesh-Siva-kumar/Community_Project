@@ -5,7 +5,7 @@ import { CreateReportDtoType } from './reports.dto';
 export async function createReport(reporterId: string, dto: CreateReportDtoType) {
   if (dto.targetType === 'POST') {
     const post = await db('posts').where({ id: dto.targetId }).first();
-    if (!post) throw new AppError(404, 'Post not found');
+    if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
   }
 
   const [report] = await db('reports')

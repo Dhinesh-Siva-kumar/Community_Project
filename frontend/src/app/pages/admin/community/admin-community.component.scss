@@ -33,7 +33,7 @@
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   flex: 1;
@@ -70,9 +70,9 @@
     justify-content: center;
     font-size: 1.1rem;
     flex-shrink: 0;
-    &--jobs     { background: rgba(220, 38, 38, 0.10); color: #DC2626; }
-    &--fulltime { background: #E0F2FE; color: #0284C7; }
-    &--parttime { background: #DCFCE7; color: #15803D; }
+    &--jobs     { background: rgba(220, 38, 38, 0.10); color: $color-danger; }
+    &--fulltime { background: $color-info-light; color: $color-info-text; }
+    &--parttime { background: $color-success-light; color: $color-success-text; }
     &--contract { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
   }
 
@@ -133,7 +133,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffbeb;
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   box-shadow: 0 4px 14px rgba(28, 25, 23, 0.1);
   cursor: pointer;
@@ -145,9 +145,9 @@
   i { font-size: 1.2rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(217, 119, 6, 0.6);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 6px 18px rgba(28, 25, 23, 0.14);
   }
 
@@ -225,15 +225,15 @@
   }
 
   &.jb-btn--neon {
-    background: #fffbeb;
+    background: $color-primary-lighter;
     border: 1.5px solid rgba(245, 158, 11, 0.45);
     color: $color-primary-darker;
     box-shadow: 0 2px 8px rgba(28, 25, 23, 0.08);
 
     &:hover:not(:disabled) {
-      background: #fef3c7;
+      background: $color-warning-light;
       border-color: rgba(217, 119, 6, 0.6);
-      color: #78350f;
+      color: $color-warning-text;
       box-shadow: 0 4px 14px rgba(28, 25, 23, 0.12);
 
       i {
@@ -319,7 +319,7 @@
     transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
     &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: $color-bg-card; }
     &::-webkit-search-cancel-button { display: none; }
   }
 
@@ -358,7 +358,7 @@
   @include transition-short(all);
 
   &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
-  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-white; }
+  &--active { background: $color-dark; border-color: $color-dark; color: $color-white; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 
@@ -524,9 +524,9 @@
   .bi { font-size: 0.85rem; }
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(245, 158, 11, 0.55);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
   }
 
@@ -598,7 +598,7 @@
     height: 42px;
     padding: 0 36px 0 36px;
     font-weight: $font-weight-medium;
-    background: linear-gradient(180deg, #ffffff 0%, #fffdf7 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
 
     &::-webkit-calendar-picker-indicator {
       opacity: 0.72;
@@ -608,7 +608,7 @@
 
     &:hover {
       border-color: $color-amber-300;
-      background: #fffefb;
+      background: $color-bg-light;
 
       &::-webkit-calendar-picker-indicator {
         opacity: 1;
@@ -616,7 +616,7 @@
     }
 
     &:focus {
-      background: #ffffff;
+      background: $color-bg-card;
     }
   }
 }
@@ -628,7 +628,7 @@
   padding: 12px;
   border: 1px solid rgba(251, 191, 36, 0.16);
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 235, 0.45) 100%);
+  background: linear-gradient(180deg, $color-bg-card 0%, rgba(255, 251, 235, 0.45) 100%);
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
 
   &:hover {
@@ -646,7 +646,7 @@
   }
 
   &--filled {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.38) 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, rgba(254, 243, 199, 0.38) 100%);
     border-color: rgba(245, 158, 11, 0.32);
 
     .jb-adv-date-help {
@@ -702,9 +702,9 @@
   transition: background-color $duration-short $easing-standard, border-color $duration-short $easing-standard, color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
   &:hover {
-    background: #fef3c7;
+    background: $color-warning-light;
     border-color: rgba(245, 158, 11, 0.55);
-    color: #78350f;
+    color: $color-warning-text;
     box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
   }
 
@@ -782,7 +782,7 @@
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.15);
   border-radius: $radius-lg;
 
@@ -1093,7 +1093,7 @@
   }
 
   &--default {
-    background: $amber-50;
+    background: $color-primary-lighter;
     color: $color-primary-darker;
     border: 1px solid $color-amber-200;
   }
@@ -1121,8 +1121,8 @@
   }
 
   &--pending {
-    background: $amber-50;
-    color: #92400e;
+    background: $color-primary-lighter;
+    color: $color-warning-text;
     border: 1px solid $color-amber-200;
   }
 
@@ -1164,7 +1164,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.01em;
-  background: $amber-50;
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   border: 1px solid $color-amber-200;
 
@@ -1193,8 +1193,8 @@
   height: 34px;
   border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
+  background: $color-bg-page;
+  color: $color-text-muted;
   font-size: 13px;
   cursor: pointer;
   flex-shrink: 0;
@@ -1206,9 +1206,9 @@
   }
 
   &:hover {
-    background: #eef2f7;
+    background: $color-bg-hover;
     border-color: rgba(100, 116, 139, 0.42);
-    color: #1e293b;
+    color: $color-text-primary;
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.07);
   }
 
@@ -1216,39 +1216,39 @@
     flex: 1;
     width: auto;
     gap: 5px;
-    background: #fffbeb;
+    background: $color-primary-lighter;
     border-color: rgba(245, 158, 11, 0.35);
-    color: #92400e;
+    color: $color-warning-text;
     font-weight: 600;
 
     &:hover {
-      background: #fef3c7;
+      background: $color-warning-light;
       border-color: rgba(217, 119, 6, 0.5);
-      color: #78350f;
+      color: $color-warning-text;
       box-shadow: 0 4px 10px rgba(245, 158, 11, 0.16);
     }
   }
 
   &.cc-icon-action--edit {
-    background: #eff6ff;
+    background: $color-info-light;
     border-color: rgba(59, 130, 246, 0.35);
-    color: #2563eb;
+    color: $color-info-text;
 
     &:hover {
-      background: #dbeafe;
+      background: $color-badge-blue-bg;
       border-color: rgba(37, 99, 235, 0.55);
-      color: #1d4ed8;
+      color: $color-badge-blue-text;
       box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
     }
   }
 
   &.cc-icon-action--delete {
-    background: #fef2f2;
+    background: $color-error-bg;
     border-color: rgba(239, 68, 68, 0.35);
-    color: #dc2626;
+    color: $color-danger;
 
     &:hover {
-      background: #fee2e2;
+      background: $color-error-bg;
       border-color: rgba(220, 38, 38, 0.55);
       color: #b91c1c;
       box-shadow: 0 4px 10px rgba(220, 38, 38, 0.18);
@@ -1291,7 +1291,7 @@
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
   &.active {
-    background: $color-text-primary;
+    background: $color-dark;
     color: $color-white;
   }
 }
@@ -1320,7 +1320,7 @@
 
 // ── TABLE VIEW (mirrors .um-table* on the Post Approval / User Management pages) ──
 .um-table-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06);
@@ -1460,8 +1460,8 @@
   font-weight: $font-weight-semibold;
   white-space: nowrap;
 
-  &--trusted { background: #fffbeb; color: $color-warning; }
-  &--blocked { background: #fef2f2; color: $color-danger; }
+  &--trusted { background: $color-primary-lighter; color: $color-warning; }
+  &--blocked { background: $color-error-bg; color: $color-danger; }
 }
 
 .um-actions-row {
@@ -1502,7 +1502,7 @@
 
   &[data-tip]::before {
     content: attr(data-tip);
-    background: $color-text-primary;
+    background: $color-dark;
     color: #fff;
     font-size: 0.68rem;
     font-weight: $font-semibold;
@@ -1517,7 +1517,7 @@
     content: '';
     top: calc(100% + 2px);
     border: 4px solid transparent;
-    border-bottom-color: $color-text-primary;
+    border-bottom-color: $color-dark;
     border-top: none;
     width: 0;
     height: 0;
@@ -1544,8 +1544,8 @@
   &--edit {
     background: rgba(2,132,199,0.08);
     border-color: rgba(2,132,199,0.22);
-    color: #0284C7;
-    &:hover { background: #0284C7; border-color: #0284C7; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+    color: $color-info-text;
+    &:hover { background: $color-info-text; border-color: $color-info-text; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {
@@ -1829,7 +1829,7 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: $amber-50;
+  background: $color-primary-lighter;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2359,7 +2359,7 @@
       list-style: none;
 
       &:hover {
-        background: $amber-50;
+        background: $color-primary-lighter;
         color: $color-primary-darker;
       }
 

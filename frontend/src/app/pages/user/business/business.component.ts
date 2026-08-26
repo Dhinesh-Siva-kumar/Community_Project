@@ -13,6 +13,7 @@ import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scr
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -39,7 +40,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -127,8 +128,8 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   filterPincode       = signal('');
   filterOpeningHours  = signal<string | null>(null);
   filterOpeningHoursOptions: SelectOption[] = [
-    { value: '9-5',  label: '9 AM - 5 PM' },
-    { value: '24/7', label: '24/7' },
+    { value: '9-5',  label: 'user.business.hoursOption.nineToFive' },
+    { value: '24/7', label: 'user.business.hoursOption.allDay' },
   ];
   filterDateFrom      = signal('');
   filterDateTo        = signal('');
@@ -144,7 +145,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   /** Category options for filter dropdown (includes "All Categories") */
   categorySelectOptions = computed<SelectOption[]>(() => {
     const cats = this.categories().map(c => ({ value: c.id, label: c.name }));
-    return [{ value: '', label: 'All Categories' }, ...cats];
+    return [{ value: '', label: 'user.business.filter.allCategories' }, ...cats];
   });
 
   /** Label of the currently selected category filter, for the active-filter chip. */
@@ -186,9 +187,9 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
 
   /** Sort options for the Category view's sort dropdown — same app-searchable-select used everywhere else on this page. */
   readonly catSortOptions: SelectOption[] = [
-    { value: 'name',   label: 'Name A–Z' },
-    { value: 'count',  label: 'Most Businesses' },
-    { value: 'newest', label: 'Newest First' },
+    { value: 'name',   label: 'user.business.sortOption.name' },
+    { value: 'count',  label: 'user.business.sortOption.count' },
+    { value: 'newest', label: 'user.business.sortOption.newest' },
   ];
 
   filteredCategories = computed(() => {
@@ -332,7 +333,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   private openBusinessFromQueryParam(id: string): void {
     this.svc.getBusiness(id).subscribe({
       next: biz => this.loadBusinessDetail(biz),
-      error: () => this.toast.error('Business not found or no longer available'),
+      error: () => this.toast.error('user.business.toast.businessNotFoundNoLonger'),
     });
     this.router.navigate([], {
       relativeTo: this.route,
@@ -392,7 +393,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.svc.getCategories().subscribe({
       next: data => { this.categories.set(data); this.loading.set(false); },
-      error: () => { this.toast.error('Failed to load categories'); this.loading.set(false); },
+      error: () => { this.toast.error('user.business.toast.failedLoadCategories'); this.loading.set(false); },
     });
   }
 
@@ -478,7 +479,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load businesses');
+        this.toast.error('user.business.toast.failedLoadBusinesses');
         this.loading.set(false);
       },
     });
@@ -558,7 +559,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error('Failed to load your businesses');
+        this.toast.error('user.business.toast.failedLoadBusinesses2');
         this.loading.set(false);
       },
     });

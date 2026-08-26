@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface SortField {
   key: string;
@@ -19,11 +20,11 @@ export interface SortChange {
 @Component({
   selector: 'app-sort-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="sb-host">
-      <span class="sb-label">Sort by</span>
+      <span class="sb-label">{{ 'common.sortBy' | translate }}</span>
       @for (f of fields(); track f.key) {
         <button
           type="button"
@@ -31,7 +32,7 @@ export interface SortChange {
           [class.sb-field-active]="sortBy() === f.key"
           (click)="select(f.key)"
         >
-          {{ f.label }}
+          {{ f.label | translate }}
           <i class="bi sb-field-icon"
             [class.bi-arrow-up]="sortBy() === f.key && sortDir() === 'asc'"
             [class.bi-arrow-down]="sortBy() === f.key && sortDir() === 'desc'"

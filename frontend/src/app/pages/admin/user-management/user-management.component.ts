@@ -11,6 +11,9 @@ import { User, UserListResponse, Country } from '../../../core/models';
 import { AddUserDrawerComponent }      from './panels/add-user-drawer/add-user-drawer.component';
 import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-detail-drawer.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
+import { enumLabelKey } from '../../../shared/constants/enum-labels';
 
 type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
 
@@ -23,12 +26,12 @@ const VIEW_STORAGE_KEY = 'admin-user-management:viewMode';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, DatePipe, FormsModule,
-    AddUserDrawerComponent, UserDetailDrawerComponent, SearchableSelectComponent,
-  ],
+    AddUserDrawerComponent, UserDetailDrawerComponent, SearchableSelectComponent, TranslatePipe, EnumLabelPipe],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
 })
 export class UserManagementComponent implements OnInit {
+  private translate = inject(TranslateService);
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast       = inject(ToastService);
@@ -84,22 +87,22 @@ export class UserManagementComponent implements OnInit {
   // rest of the admin console uses, so filters don't fall back to a native
   // OS <select> list that looks out of place next to everything else.
   readonly roleFilterOptions: SelectOption[] = [
-    { value: '',      label: 'All Roles' },
-    { value: 'ADMIN', label: 'Admin' },
-    { value: 'USER',  label: 'User' },
+    { value: '',      label: 'admin.userManagement.label.allRoles' },
+    { value: 'ADMIN', label: 'admin.userManagement.label.admin' },
+    { value: 'USER',  label: 'admin.userManagement.label.user' },
   ];
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',        label: 'All Status' },
-    { value: 'active',  label: 'Active' },
-    { value: 'blocked', label: 'Blocked' },
-    { value: 'trusted', label: 'Trusted' },
+    { value: '',        label: 'admin.userManagement.label.allStatus' },
+    { value: 'active',  label: 'admin.userManagement.label.active' },
+    { value: 'blocked', label: 'admin.userManagement.label.blocked' },
+    { value: 'trusted', label: 'admin.userManagement.label.trusted' },
   ];
   readonly joinedFilterOptions: SelectOption[] = [
-    { value: '',     label: 'All Time' },
-    { value: 'today', label: 'Today' },
-    { value: '7d',    label: 'Last 7 Days' },
-    { value: '30d',   label: 'Last 30 Days' },
-    { value: '90d',   label: 'Last 3 Months' },
+    { value: '',     label: 'admin.userManagement.label.allTime' },
+    { value: 'today', label: 'admin.userManagement.label.today' },
+    { value: '7d',    label: 'admin.userManagement.label.last7Days' },
+    { value: '30d',   label: 'admin.userManagement.label.last30Days' },
+    { value: '90d',   label: 'admin.userManagement.label.last3Months' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -112,10 +115,10 @@ export class UserManagementComponent implements OnInit {
   // Active filter chips for display
   activeFilterChips = computed<{ key: string; label: string; value: any }[]>(() => {
     const chips: { key: string; label: string; value: any }[] = [];
-    if (this.appliedSearch()) chips.push({ key: 'search', label: `"${this.appliedSearch()}"`, value: this.appliedSearch() });
-    if (this.filterRole()) chips.push({ key: 'role', label: this.filterRole(), value: this.filterRole() });
-    if (this.filterStatus()) chips.push({ key: 'status', label: this.filterStatus()!, value: this.filterStatus() });
-    if (this.filterJoined()) chips.push({ key: 'joined', label: `Last ${this.filterJoined()}`, value: this.filterJoined() });
+    if (this.appliedSearch()) chips.push({ key: 'search', label: this.translate.instant('filters.search', { value: this.appliedSearch() }), value: this.appliedSearch() });
+    if (this.filterRole()) chips.push({ key: 'role', label: this.translate.instant(enumLabelKey('role', this.filterRole())), value: this.filterRole() });
+    if (this.filterStatus()) chips.push({ key: 'status', label: this.translate.instant(enumLabelKey('activeStatus', this.filterStatus())), value: this.filterStatus() });
+    if (this.filterJoined()) chips.push({ key: 'joined', label: this.translate.instant('filters.joinedLast', { period: this.filterJoined() }), value: this.filterJoined() });
     if (this.filterCountry()) chips.push({ key: 'country', label: this.filterCountry(), value: this.filterCountry() });
     return chips;
   });
@@ -194,7 +197,7 @@ export class UserManagementComponent implements OnInit {
         this.pageReady.set(true);
       },
       error: () => {
-        this.toast.error('Failed to load users');
+        this.toast.error('admin.userManagement.toast.failedLoadUsers');
         this.loading.set(false);
         this.pageReady.set(true);
       },
@@ -394,7 +397,7 @@ export class UserManagementComponent implements OnInit {
         this.actionWorkingId.set(null);
         this.closeDropdowns();
       },
-      error: () => { this.toast.error('Action failed'); this.actionWorkingId.set(null); },
+      error: () => { this.toast.error('admin.userManagement.toast.actionFailed'); this.actionWorkingId.set(null); },
     });
   }
 
@@ -412,7 +415,7 @@ export class UserManagementComponent implements OnInit {
         this.actionWorkingId.set(null);
         this.closeDropdowns();
       },
-      error: () => { this.toast.error('Action failed'); this.actionWorkingId.set(null); },
+      error: () => { this.toast.error('admin.userManagement.toast.actionFailed'); this.actionWorkingId.set(null); },
     });
   }
 
@@ -422,11 +425,11 @@ export class UserManagementComponent implements OnInit {
       next: () => {
         this.users.update((list) => list.filter((u) => u.id !== user.id));
         this.total.update((t) => t - 1);
-        this.toast.success('User deactivated');
+        this.toast.success('admin.userManagement.toast.userDeactivated');
         this.actionWorkingId.set(null);
         this.closeDropdowns();
       },
-      error: () => { this.toast.error('Failed to delete user'); this.actionWorkingId.set(null); },
+      error: () => { this.toast.error('admin.userManagement.toast.failedDeleteUser'); this.actionWorkingId.set(null); },
     });
   }
 
@@ -434,7 +437,7 @@ export class UserManagementComponent implements OnInit {
   onUserCreated(): void {
     this.showAddDrawer.set(false);
     this.loadUsers();
-    this.toast.success('User created successfully');
+    this.toast.success('admin.userManagement.toast.userCreatedSuccessfully');
   }
 
   onUserUpdated(updated: User): void {
@@ -478,7 +481,7 @@ export class UserManagementComponent implements OnInit {
         this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to CSV`);
         this.exporting.set(false);
       },
-      error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
+      error: () => { this.toast.error('admin.userManagement.toast.exportFailed'); this.exporting.set(false); },
     });
   }
 
@@ -501,7 +504,7 @@ export class UserManagementComponent implements OnInit {
         this.toast.success(`Exported ${users.length} user${users.length === 1 ? '' : 's'} to Excel`);
         this.exporting.set(false);
       },
-      error: () => { this.toast.error('Export failed'); this.exporting.set(false); },
+      error: () => { this.toast.error('admin.userManagement.toast.exportFailed'); this.exporting.set(false); },
     });
   }
 
@@ -549,9 +552,9 @@ export class UserManagementComponent implements OnInit {
   }
 
   getStatusLabel(user: User): string {
-    if (user.isBlocked) return 'Blocked';
-    if (!user.isActive) return 'Inactive';
-    return 'Active';
+    if (user.isBlocked) return this.translate.instant('admin.userStatus.blocked');
+    if (!user.isActive) return this.translate.instant('admin.userStatus.inactive');
+    return this.translate.instant('admin.userStatus.active');
   }
 
 }

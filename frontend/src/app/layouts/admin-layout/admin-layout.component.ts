@@ -13,6 +13,9 @@ import { JobService } from '../../core/services/job.service';
 import { EventService } from '../../core/services/event.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { LanguageToggleComponent } from '../../shared/components/language-toggle/language-toggle.component';
 
 interface NavItem {
   label: string;
@@ -21,23 +24,25 @@ interface NavItem {
   sectionLabel?: string;
 }
 
+// Catalog keys, not display text — the template pipes them through
+// `| translate`, so the header title follows the language toggle.
 const ROUTE_TITLES: Record<string, string> = {
-  dashboard:         'Dashboard',
-  community:         'Community',
-  business:          'Business',
-  jobs:              'Jobs',
-  events:            'Events',
-  'user-management': 'User Management',
-  approval:          'Approval',
-  analytics:         'Analytics',
-  'audit-log':       'Audit Log',
-  profile:           'Profile',
+  dashboard:         'nav.dashboard',
+  community:         'nav.community',
+  business:          'nav.business',
+  jobs:              'nav.jobs',
+  events:            'nav.events',
+  'user-management': 'nav.userManagement',
+  approval:          'nav.approval',
+  analytics:         'nav.analytics',
+  'audit-log':       'nav.auditLog',
+  profile:           'nav.profile',
 };
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent, LanguageToggleComponent, TranslatePipe],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
 })
@@ -58,7 +63,7 @@ export class AdminLayoutComponent {
   mobileSidebarOpen = signal(false);
   userDropdownOpen = signal(false);
   isMobile = signal(false);
-  pageTitle = signal('Dashboard');
+  pageTitle = signal('nav.dashboard');
 
   // Post Approval no longer has its own nav entry/page — it's a tab on the
   // unified Approval page now, so its pending count folds into this single
@@ -66,17 +71,19 @@ export class AdminLayoutComponent {
   pendingApprovalsCount = signal(0);
   hasPendingApprovals = computed(() => this.pendingApprovalsCount() > 0);
 
+  // `label`/`sectionLabel` hold catalog keys; the template translates them at
+  // render so they react to the language toggle.
   navItems: NavItem[] = [
-    { label: 'Dashboard',       icon: 'bi-grid',              route: '/admin/dashboard'                                     },
-    { label: 'Community',       icon: 'bi-people',            route: '/admin/community',     sectionLabel: 'MANAGE'        },
-    { label: 'Business',        icon: 'bi-shop',              route: '/admin/business'                                      },
-    { label: 'Jobs',            icon: 'bi-briefcase',         route: '/admin/jobs'                                          },
-    { label: 'Events',          icon: 'bi-calendar-event',    route: '/admin/events'                                        },
-    { label: 'User Management', icon: 'bi-person-gear',       route: '/admin/user-management', sectionLabel: 'ADMIN'       },
-    { label: 'Approval',        icon: 'bi-patch-check',       route: '/admin/approval'                                      },
-    { label: 'Analytics',       icon: 'bi-graph-up',          route: '/admin/analytics'                                     },
-    { label: 'Audit Log',       icon: 'bi-clock-history',     route: '/admin/audit-log'                                     },
-    { label: 'Profile',         icon: 'bi-person-circle',     route: '/admin/profile',         sectionLabel: 'ACCOUNT'    },
+    { label: 'nav.dashboard',      icon: 'bi-grid',           route: '/admin/dashboard'                                             },
+    { label: 'nav.community',      icon: 'bi-people',         route: '/admin/community',       sectionLabel: 'nav.section.manage'   },
+    { label: 'nav.business',       icon: 'bi-shop',           route: '/admin/business'                                              },
+    { label: 'nav.jobs',           icon: 'bi-briefcase',      route: '/admin/jobs'                                                  },
+    { label: 'nav.events',         icon: 'bi-calendar-event', route: '/admin/events'                                                },
+    { label: 'nav.userManagement', icon: 'bi-person-gear',    route: '/admin/user-management', sectionLabel: 'nav.section.admin'    },
+    { label: 'nav.approval',       icon: 'bi-patch-check',    route: '/admin/approval'                                              },
+    { label: 'nav.analytics',      icon: 'bi-graph-up',       route: '/admin/analytics'                                             },
+    { label: 'nav.auditLog',       icon: 'bi-clock-history',  route: '/admin/audit-log'                                             },
+    { label: 'nav.profile',        icon: 'bi-person-circle',  route: '/admin/profile',         sectionLabel: 'nav.section.account'  },
   ];
 
   constructor() {
@@ -167,7 +174,7 @@ export class AdminLayoutComponent {
   private updatePageTitle(url: string): void {
     const segments = url.split('/').filter((s) => s && !/^\d+$/.test(s));
     const segment = segments[segments.length - 1] ?? '';
-    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'Dashboard');
+    this.pageTitle.set(ROUTE_TITLES[segment] ?? 'nav.dashboard');
   }
 
   onNavClick(): void {

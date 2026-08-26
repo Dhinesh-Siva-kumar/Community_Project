@@ -8,11 +8,18 @@
 // FONT FAMILIES
 // ============================================================
 
+// Tamil font. Poppins and Inter carry no Tamil glyphs, so this sits directly
+// after them in every stack: the browser falls back per glyph, meaning Latin
+// text keeps its brand font while Tamil renders consistently across platforms.
+// Listing it in the base stacks (rather than under `html[lang="ta"]`) also
+// covers Tamil user-generated content shown while the UI is in English.
+$font-family-tamil:         'Noto Sans Tamil';
+
 // Header font (Poppins)
-$font-family-header:        'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-header:        'Poppins', $font-family-tamil, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
 // Body font (Inter)
-$font-family-body:          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-body:          'Inter', $font-family-tamil, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
 // Monospace font
 $font-family-mono:          'Courier New', Courier, monospace;
