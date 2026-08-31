@@ -41,6 +41,7 @@
     "pending": "நிலுவையில்",
     "approved": "அங்கீகரிக்கப்பட்டது",
     "rejected": "நிராகரிக்கப்பட்டது",
+    "needsMoreInfo": "மேலும் தகவல் தேவை",
     "language": "மொழி",
     "profile": "சுயவிவரம்",
     "logout": "வெளியேறு",
@@ -1642,6 +1643,7 @@
         "inactive": "செயலற்றது",
         "pending": "ஒப்புதலுக்கு நிலுவையில்",
         "rejected": "நிராகரிக்கப்பட்டது",
+        "needsInfo": "மேலும் தகவல் தேவை",
         "unknown": "தெரியவில்லை"
       },
       "visibilityLabel": {
@@ -2314,7 +2316,22 @@
       "date": "இறுதித் தேதி",
       "reasonOptionalShownSubmitter": "காரணம் (விருப்பத்தேர்வு) — சமர்ப்பித்தவருக்குக் காட்டப்படும்",
       "reasonOptionalShownEverySubmitter": "காரணம் (விருப்பத்தேர்வு) — ஒவ்வொரு சமர்ப்பித்தவருக்கும் காட்டப்படும்",
+      "reasonRequiredShownSubmitter": "காரணம் (அவசியம்) — சமர்ப்பித்தவருக்குக் காட்டப்படும்",
+      "reasonRequiredShownEverySubmitter": "காரணம் (அவசியம்) — ஒவ்வொரு சமர்ப்பித்தவருக்கும் காட்டப்படும்",
+      "requestMoreInfo": "மேலும் தகவல் கோரவும்",
+      "sureWantRequestMoreInfo": "மேலும் தகவல் கோர விரும்புகிறீர்களா என்று உறுதிசெய்யவும்",
+      "theseWillNeedMoreInfo": "சமர்ப்பித்தவருக்கு அறிவிக்கப்படும், தேவையானதைச் சரிசெய்த பிறகு மீண்டும் சமர்ப்பிக்கலாம்.",
+      "rejectPermanentWarning": "இது சமர்ப்பிப்பை நிரந்தரமாக நீக்கும் — இதை மீட்டெடுக்க முடியாது.",
+      "rejectCommunityWarning": "சமூகம் நிராகரிக்கப்பட்டதாகக் குறிக்கப்படும், இனி திருத்தவோ மீண்டும் சமர்ப்பிக்கவோ முடியாது.",
       "filterByCountry": "நாட்டின் அடிப்படையில் வடிகட்டு",
+      "allVisibility": "அனைத்துத் தெரிவுநிலைகளும்",
+      "global": "உலகளாவியது",
+      "private": "தனிப்பட்டது",
+      "filterByVisibility": "தெரிவுநிலையின் அடிப்படையில் வடிகட்டு",
+      "allDefault": "அனைத்துச் சமூகங்களும்",
+      "defaultOnly": "இயல்புநிலை மட்டும்",
+      "nonDefault": "இயல்புநிலை அல்லாதவை",
+      "filterByDefaultStatus": "இயல்புநிலையின் அடிப்படையில் வடிகட்டு",
       "selectAll": "அனைத்தையும் தேர்ந்தெடு",
       "rowsPerPage": "ஒரு பக்கத்திற்கான வரிசைகள்",
       "refreshPendingList": "நிலுவைப் பட்டியலைப் புதுப்பி",
@@ -2345,7 +2362,8 @@
       "description": "விளக்கம்",
       "toast": {
         "failedApprove": "அங்கீகரிக்க முடியவில்லை",
-        "failedReject": "நிராகரிக்க முடியவில்லை"
+        "failedReject": "நிராகரிக்க முடியவில்லை",
+        "failedRequestMoreInfo": "மேலும் தகவல் கோர முடியவில்லை"
       },
       "label": {
         "posts": "இடுகைகள்",
@@ -2792,6 +2810,7 @@
       "filterByGlobalCommunities": "உலகளாவிய சமூகங்களை வடிகட்டு",
       "filterByPrivateCommunities": "தனிப்பட்ட சமூகங்களை வடிகட்டு",
       "filterByDefaultCommunities": "இயல்புநிலைச் சமூகங்களை வடிகட்டு",
+      "filterByPendingApproval": "ஒப்புதலுக்கு நிலுவையில் உள்ளவற்றை வடிகட்டு",
       "searchCommunities": "சமூகங்களைத் தேடு",
       "clearSearch": "தேடலை அழி",
       "switchView": "காட்சியை மாற்று",
@@ -2886,6 +2905,7 @@
         "allStatus": "அனைத்து நிலைகளும்",
         "active": "செயலில்",
         "inactive": "செயலற்றது",
+        "pendingApproval": "ஒப்புதலுக்கு நிலுவையில்",
         "name": "பெயர்",
         "created": "உருவாக்கப்பட்டது"
       },

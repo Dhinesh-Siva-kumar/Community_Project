@@ -17,6 +17,7 @@ router.get('/', ctrl.findAll);
 router.get('/:id', ctrl.findOne);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);
 router.put('/:id/reject', authorize('ADMIN'), ctrl.reject);
+router.put('/:id/request-more-info', authorize('ADMIN'), ctrl.requestMoreInfo);
 router.put('/:id', ctrl.update);
 router.delete('/:id', ctrl.deleteCommunity);
 router.post('/:id/join', ctrl.join);

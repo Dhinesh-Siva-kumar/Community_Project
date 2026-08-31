@@ -36,7 +36,11 @@ export const ListEventsQueryDto = z.object({
   /** Filters by event date: 'upcoming' (today or later) vs 'completed' (before today). */
   status: z.enum(['upcoming', 'completed']).optional(),
   // Moderation status — distinct from `status` above (which means upcoming/completed).
-  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  // Accepts a single value or a comma-separated list (e.g. the user-side
+  // "Pending Approval" tab needs both PENDING and NEEDS_INFO submissions).
+  approvalStatus: z.string().optional()
+    .transform((v) => (v ? v.split(',').map((s) => s.trim()) : undefined))
+    .pipe(z.array(z.enum(['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_INFO'])).optional()),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
   dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
   /** Filters on event_date (when the event happens), unlike dateFrom/dateTo which filter created_at. */
@@ -61,8 +65,16 @@ export const RejectEventDto = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+export const RequestMoreInfoEventDto = z.object({
+  reason: z.string({ required_error: 'Please describe what information is needed' })
+    .trim()
+    .min(1, 'Please describe what information is needed')
+    .max(500),
+});
+
 export type CreateEventDtoType = z.infer<typeof CreateEventDto>;
 export type UpdateEventDtoType = z.infer<typeof UpdateEventDto>;
 export type ListEventsQueryDtoType = z.infer<typeof ListEventsQueryDto>;
 export type ListPendingEventsQueryDtoType = z.infer<typeof ListPendingEventsQueryDto>;
 export type RejectEventDtoType = z.infer<typeof RejectEventDto>;
+export type RequestMoreInfoEventDtoType = z.infer<typeof RequestMoreInfoEventDto>;

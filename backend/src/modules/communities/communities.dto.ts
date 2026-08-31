@@ -91,7 +91,11 @@ export const ListCommunitiesQueryDto = z.object({
   joined:     z.coerce.boolean().optional(),   // true = return only communities the caller has joined
   status:     z.enum(['active', 'inactive']).optional(),
   // Moderation status — distinct from `status` above (which means active/inactive).
-  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  // Accepts a single value or a comma-separated list (e.g. the user-side
+  // "Pending Approval" tab needs both PENDING and NEEDS_INFO submissions).
+  approvalStatus: z.string().optional()
+    .transform((v) => (v ? v.split(',').map((s) => s.trim()) : undefined))
+    .pipe(z.array(z.enum(['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_INFO'])).optional()),
   // Admin community-management list: rejected communities aren't relevant there
   // (they belong on the Approval page's Community tab) — hide them without
   // narrowing down to a single approvalStatus.
@@ -112,12 +116,21 @@ export const ListPendingCommunitiesQueryDto = z.object({
   country:  z.string().optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateFrom must be YYYY-MM-DD').optional(),
   dateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateTo must be YYYY-MM-DD').optional(),
+  visibility: z.enum(['global', 'private']).optional(),
+  is_default: z.enum(['true', 'false']).optional().transform((v) => (v === undefined ? undefined : v === 'true')),
   sortBy:   z.enum(['joined', 'name', 'submitter', 'country']).default('joined'),
   sortDir:  z.enum(['asc', 'desc']).default('desc'),
 });
 
 export const RejectCommunityDto = z.object({
   reason: z.string().trim().max(500).optional(),
+});
+
+export const RequestMoreInfoCommunityDto = z.object({
+  reason: z.string({ required_error: 'Please describe what information is needed' })
+    .trim()
+    .min(1, 'Please describe what information is needed')
+    .max(500),
 });
 
 export const SuggestedCommunitiesQueryDto = z.object({
@@ -129,4 +142,5 @@ export type UpdateCommunityDtoType = z.infer<typeof UpdateCommunityDto>;
 export type ListCommunitiesQueryDtoType = z.infer<typeof ListCommunitiesQueryDto>;
 export type ListPendingCommunitiesQueryDtoType = z.infer<typeof ListPendingCommunitiesQueryDto>;
 export type RejectCommunityDtoType = z.infer<typeof RejectCommunityDto>;
+export type RequestMoreInfoCommunityDtoType = z.infer<typeof RequestMoreInfoCommunityDto>;
 export type SuggestedCommunitiesQueryDtoType = z.infer<typeof SuggestedCommunitiesQueryDto>;

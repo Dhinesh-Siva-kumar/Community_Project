@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto, ListPendingCommunitiesQueryDto, RejectCommunityDto, SuggestedCommunitiesQueryDto } from './communities.dto';
+import { CreateCommunityDto, UpdateCommunityDto, ListCommunitiesQueryDto, PaginationQueryDto, ListPendingCommunitiesQueryDto, RejectCommunityDto, RequestMoreInfoCommunityDto, SuggestedCommunitiesQueryDto } from './communities.dto';
 import * as communitiesService from './communities.service';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -138,6 +138,14 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
   try {
     const { reason } = RejectCommunityDto.parse(req.body ?? {});
     const result = await communitiesService.reject(req.params['id'] as string, req.user!.sub, reason);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function requestMoreInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RequestMoreInfoCommunityDto.parse(req.body ?? {});
+    const result = await communitiesService.requestMoreInfo(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

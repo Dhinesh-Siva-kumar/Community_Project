@@ -323,6 +323,7 @@ $accents: (
 
     &--pending  { background: rgba(245, 158, 11, 0.94); color: #fff; }
     &--rejected { background: rgba(220, 38, 38, 0.94); color: #fff; }
+    &--needs-info { background: rgba(124, 58, 237, 0.94); color: #fff; }
   }
   &__rejection-reason {
     display: flex; align-items: flex-start; gap: 5px;
@@ -483,6 +484,7 @@ $accents: (
   &--owner    { background: rgba(251,191,36,0.20); border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker; .bi { font-size: 7px; } }
   &--pending  { background: $color-warning-light; border: 1.5px solid $color-amber-200; color: $color-warning-text; .bi { font-size: 7px; } }
   &--rejected { background: rgba($color-danger,0.10); border: 1.5px solid rgba($color-danger,0.25); color: $color-danger; .bi { font-size: 7px; } }
+  &--needs-info { background: rgba(124,58,237,0.10); border: 1.5px solid rgba(124,58,237,0.25); color: #7c3aed; .bi { font-size: 7px; } }
 }
 
 .bd-rejection-reason {

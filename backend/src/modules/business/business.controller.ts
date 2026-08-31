@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto, ListPendingBusinessQueryDto, RejectBusinessDto } from './business.dto';
+import { CreateBusinessDto, UpdateBusinessDto, CreateBusinessCategoryDto, UpdateBusinessCategoryDto, ListBusinessQueryDto, ListPendingBusinessQueryDto, RejectBusinessDto, RequestMoreInfoBusinessDto } from './business.dto';
 import * as businessService from './business.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -126,6 +126,14 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
   try {
     const { reason } = RejectBusinessDto.parse(req.body ?? {});
     const result = await businessService.reject(req.params['id'] as string, req.user!.sub, reason);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function requestMoreInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RequestMoreInfoBusinessDto.parse(req.body ?? {});
+    const result = await businessService.requestMoreInfo(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

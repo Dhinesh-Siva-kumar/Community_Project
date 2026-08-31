@@ -11,6 +11,8 @@ export interface PendingCommunitiesQueryParams {
   country?:  string;
   dateFrom?: string;
   dateTo?:   string;
+  visibility?: 'global' | 'private';
+  is_default?: boolean;
   sortBy?:   'joined' | 'name';
   sortDir?:  'asc' | 'desc';
 }
@@ -43,7 +45,7 @@ export class CommunityService {
     search?: string;
     sortBy?: string;
     sortDir?: string;
-    approvalStatus?: ApprovalStatus;
+    approvalStatus?: ApprovalStatus | ApprovalStatus[];
   } = {}): Observable<PaginatedResponse<Community>> {
     return this.api.get<PaginatedResponse<Community>>('/communities/created', params);
   }
@@ -54,6 +56,10 @@ export class CommunityService {
 
   rejectCommunity(id: string, reason?: string): Observable<Community> {
     return this.api.put<Community>(`/communities/${id}/reject`, reason ? { reason } : {});
+  }
+
+  requestMoreInfoCommunity(id: string, reason: string): Observable<Community> {
+    return this.api.put<Community>(`/communities/${id}/request-more-info`, { reason });
   }
 
   getPendingCommunities(params?: PendingCommunitiesQueryParams): Observable<PaginatedResponse<Community>> {

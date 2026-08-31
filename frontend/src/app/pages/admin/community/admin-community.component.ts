@@ -133,15 +133,18 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterIsDefault     = signal<boolean | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
-  filterStatus     = signal<'active' | 'inactive' | ''>('');
+  filterStatus     = signal<'active' | 'inactive' | 'PENDING' | 'NEEDS_INFO' | ''>('');
   activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
   showAdvancedFilters = signal(false);
   communityCounts = signal<CommunityAnalyticsCounts>({ total: 0, global: 0, private: 0, default: 0, totalMembers: 0 });
+  pendingApprovalCount = signal(0);
 
   readonly statusFilterOptions: SelectOption[] = [
-    { value: '',         label: 'admin.community.label.allStatus' },
-    { value: 'active',   label: 'admin.community.label.active' },
-    { value: 'inactive', label: 'admin.community.label.inactive' },
+    { value: '',            label: 'admin.community.label.allStatus' },
+    { value: 'active',      label: 'admin.community.label.active' },
+    { value: 'inactive',    label: 'admin.community.label.inactive' },
+    { value: 'PENDING',     label: 'admin.community.label.pendingApproval' },
+    { value: 'NEEDS_INFO',  label: 'common.needsMoreInfo' },
   ];
   readonly pageSizeOptions: SelectOption[] = [
     { value: 20,  label: '20' },
@@ -205,7 +208,13 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     }
     if (this.filterFromDate())   add('fromDate',  this.translate.instant('admin.community.chipFrom', { date: this.filterFromDate() }), this.filterFromDate());
     if (this.filterToDate())     add('toDate',    this.translate.instant('admin.community.chipTo', { date: this.filterToDate() }), this.filterToDate());
-    if (this.filterStatus())     add('status',    this.filterStatus() === 'active' ? 'Active' : 'Inactive', this.filterStatus());
+    if (this.filterStatus()) {
+      const statusLabel = this.filterStatus() === 'active' ? 'Active'
+        : this.filterStatus() === 'inactive' ? 'Inactive'
+        : this.filterStatus() === 'NEEDS_INFO' ? 'Needs More Info'
+        : 'Pending Approval';
+      add('status', statusLabel, this.filterStatus());
+    }
     return chips;
   });
 
@@ -354,7 +363,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterIsDefault() !== null) params['is_default'] = String(this.filterIsDefault());
     if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
     if (this.filterToDate())     params['to_date']    = this.filterToDate();
-    if (this.filterStatus())     params['status']     = this.filterStatus();
+    // "Pending Approval" / "Needs More Info" are moderation statuses, not
+    // active/inactive states — route them through approvalStatus instead of
+    // the is_active-backed status param. "Pending Approval" includes
+    // NEEDS_INFO alongside PENDING so it matches the stat card's count
+    // (see communities.service.ts countPending()); "Needs More Info" drills
+    // down to just that subset on its own.
+    if (this.filterStatus() === 'PENDING') {
+      params['approvalStatus'] = ['PENDING', 'NEEDS_INFO'];
+    } else if (this.filterStatus() === 'NEEDS_INFO') {
+      params['approvalStatus'] = 'NEEDS_INFO';
+    } else if (this.filterStatus()) {
+      params['status'] = this.filterStatus();
+    }
     params['sortBy']  = this.sortBy();
     params['sortDir'] = this.sortDir();
 
@@ -388,6 +409,10 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       error: () => {
         this.communityCounts.set({ total: 0, global: 0, private: 0, default: 0, totalMembers: 0 });
       },
+    });
+    this.communityService.getPendingCommunitiesCount().subscribe({
+      next: (res) => this.pendingApprovalCount.set(res.count),
+      error: () => this.pendingApprovalCount.set(0),
     });
   }
 
@@ -448,7 +473,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
    * derived value, so exactly one is ever selected at a time — each setter
    * clears the other axis (visibility vs. default) so they can't both be
    * active simultaneously. */
-  communityStatFilter = computed<'all' | 'global' | 'private' | 'default'>(() => {
+  communityStatFilter = computed<'all' | 'global' | 'private' | 'default' | 'pending'>(() => {
+    if (this.filterStatus() === 'PENDING') return 'pending';
     if (this.filterIsDefault() === true) return 'default';
     if (this.filterVisibility() === 'global') return 'global';
     if (this.filterVisibility() === 'private') return 'private';
@@ -456,10 +482,17 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   });
 
   /** Toggles off back to 'all' on a repeat click of the same card. */
-  setCommunityStatFilter(value: 'all' | 'global' | 'private' | 'default'): void {
+  setCommunityStatFilter(value: 'all' | 'global' | 'private' | 'default' | 'pending'): void {
     const next = this.communityStatFilter() === value ? 'all' : value;
     this.filterVisibility.set(next === 'global' ? 'global' : next === 'private' ? 'private' : null);
     this.filterIsDefault.set(next === 'default' ? true : null);
+    // Only touch filterStatus for the pending<->non-pending transition — leave
+    // an Active/Inactive choice made via the advanced filter dropdown alone.
+    if (next === 'pending') {
+      this.filterStatus.set('PENDING');
+    } else if (this.filterStatus() === 'PENDING') {
+      this.filterStatus.set('');
+    }
     this.applyFilters();
   }
 
@@ -496,7 +529,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   }
 
   setStatusFilter(value: string | number): void {
-    this.filterStatus.set(value as 'active' | 'inactive' | '');
+    this.filterStatus.set(value as 'active' | 'inactive' | 'PENDING' | 'NEEDS_INFO' | '');
     this.applyFilters();
   }
 

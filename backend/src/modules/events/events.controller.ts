@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateEventDto, UpdateEventDto, ListEventsQueryDto, ListPendingEventsQueryDto, RejectEventDto } from './events.dto';
+import { CreateEventDto, UpdateEventDto, ListEventsQueryDto, ListPendingEventsQueryDto, RejectEventDto, RequestMoreInfoEventDto } from './events.dto';
 import * as eventsService from './events.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -85,6 +85,14 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
   try {
     const { reason } = RejectEventDto.parse(req.body ?? {});
     const result = await eventsService.reject(req.params['id'] as string, req.user!.sub, reason);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function requestMoreInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RequestMoreInfoEventDto.parse(req.body ?? {});
+    const result = await eventsService.requestMoreInfo(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

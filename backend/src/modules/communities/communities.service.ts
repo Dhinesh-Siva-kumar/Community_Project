@@ -132,7 +132,7 @@ export async function findAll(params: {
   userId?: string;
   createdById?: string;
   status?: 'active' | 'inactive';
-  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approvalStatus?: ('PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO')[];
   excludeRejected?: boolean;
   sortBy?: 'name' | 'joined' | 'category' | 'country' | 'visibility' | 'members' | 'posts' | 'status';
   sortDir?: 'asc' | 'desc';
@@ -172,6 +172,12 @@ export async function findAll(params: {
     const isActive = status === 'active';
     query.where('c.is_active', isActive);
     countQuery.where('is_active', isActive);
+    // is_active defaults to true at creation, so a still-PENDING (or
+    // REJECTED) community would otherwise match the "active" filter before
+    // an admin ever approves it. Active/inactive is only meaningful for
+    // communities that have cleared moderation.
+    query.andWhere('c.status', 'APPROVED');
+    countQuery.andWhere('status', 'APPROVED');
   }
 
   // ── Moderation status — non-admin/non-owner callers only ever see
@@ -182,9 +188,9 @@ export async function findAll(params: {
     query.where('c.status', 'APPROVED');
     countQuery.where('status', 'APPROVED');
   }
-  if (approvalStatus) {
-    query.andWhere('c.status', approvalStatus);
-    countQuery.andWhere('status', approvalStatus);
+  if (approvalStatus?.length) {
+    query.whereIn('c.status', approvalStatus);
+    countQuery.whereIn('status', approvalStatus);
   } else if (excludeRejected) {
     query.andWhereNot('c.status', 'REJECTED');
     countQuery.andWhereNot('status', 'REJECTED');
@@ -526,8 +532,10 @@ export async function findOne(id: string) {
   };
 }
 
+// Drives the Approval page's "Community" tab badge — counts everything the
+// tab's list shows (PENDING + NEEDS_INFO), matching findPendingOnly() below.
 export async function countPending() {
-  const [{ count }] = await db('communities').where({ status: 'PENDING' }).count({ count: '*' });
+  const [{ count }] = await db('communities').whereIn('status', ['PENDING', 'NEEDS_INFO']).count({ count: '*' });
   return { count: Number(count) };
 }
 
@@ -538,21 +546,26 @@ export interface FindPendingCommunitiesOptions {
   country?: string;
   dateFrom?: string;
   dateTo?:   string;
+  visibility?: 'global' | 'private';
+  is_default?: boolean;
   sortBy?:  'joined' | 'name' | 'submitter' | 'country';
   sortDir?: 'asc' | 'desc';
 }
 
 export async function findPendingOnly(options: FindPendingCommunitiesOptions) {
-  const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
+  const { page, limit, search, country, dateFrom, dateTo, visibility, is_default, sortBy = 'joined', sortDir = 'desc' } = options;
   const offset = (page - 1) * limit;
 
+  // Also surfaces NEEDS_INFO communities here (read-only — see controller/frontend), so
+  // the admin can still see what they're waiting on the submitter for, alongside the
+  // actionable PENDING ones. countPending() below matches this same set for the tab badge.
   const query = db('communities as c')
     .leftJoin('users as u', 'c.created_by_id', 'u.id')
     .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
-    .where('c.status', 'PENDING')
+    .whereIn('c.status', ['PENDING', 'NEEDS_INFO'])
     .select('c.*', 'u.id as creator_id', 'u.user_name as creator_user_name', 'u.display_name as creator_display_name', 'im.interest_name as category_name');
 
-  const countQuery = db('communities').where({ status: 'PENDING' });
+  const countQuery = db('communities').whereIn('status', ['PENDING', 'NEEDS_INFO']);
 
   if (search) {
     query.andWhere(function () { this.whereILike('c.name', `%${search}%`).orWhereILike('c.description', `%${search}%`); });
@@ -570,6 +583,17 @@ export async function findPendingOnly(options: FindPendingCommunitiesOptions) {
     const toEnd = `${dateTo}T23:59:59.999Z`;
     query.andWhere('c.created_at', '<=', toEnd);
     countQuery.andWhere('created_at', '<=', toEnd);
+  }
+  if (visibility === 'global') {
+    query.andWhere('c.is_global', true);
+    countQuery.andWhere('is_global', true);
+  } else if (visibility === 'private') {
+    query.andWhere('c.is_private', true);
+    countQuery.andWhere('is_private', true);
+  }
+  if (is_default !== undefined) {
+    query.andWhere('c.is_default', is_default);
+    countQuery.andWhere('is_default', is_default);
   }
 
   const sortColumn = sortBy === 'name' ? 'c.name'
@@ -608,6 +632,11 @@ export async function approve(id: string, adminId: string) {
   return findOne(id);
 }
 
+// Rejecting is terminal but not destructive: the row (and its rejection
+// reason) stays around so the owner can still see it — e.g. tracked in the
+// "My Communities" tab on their profile — with a "Rejected" badge. Unlike
+// requestMoreInfo() below, a REJECTED community cannot be edited/resubmitted
+// (see update()'s guard) — the owner would need to submit a fresh community.
 export async function reject(id: string, adminId: string, reason?: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
@@ -618,6 +647,17 @@ export async function reject(id: string, adminId: string, reason?: string) {
   const message = `Your community "${community['name']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
   await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_REJECTED', message, id);
   await logAudit(adminId, 'COMMUNITY_REJECTED', { previousStatus: community['status'], reason: reason ?? null, name: community['name'] }, 'communities', id);
+  return findOne(id);
+}
+
+export async function requestMoreInfo(id: string, adminId: string, reason: string) {
+  const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
+
+  await db('communities').where({ id }).update({ status: 'NEEDS_INFO', rejection_reason: reason });
+  const message = `More information is needed for your community "${community['name']}": ${reason}`;
+  await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_NEEDS_INFO', message, id);
+  await logAudit(adminId, 'COMMUNITY_NEEDS_INFO', { previousStatus: community['status'], reason, name: community['name'] }, 'communities', id);
   return findOne(id);
 }
 
@@ -634,14 +674,20 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   if (!callerIsAdmin && (data.is_global || data.is_default)) {
     throw new AppError(403, 'Only admins can set a community to Global or Default', 'ONLY_ADMINS_SET_COMMUNITY');
   }
+  // A rejection is terminal for the owner — it stays visible (tracked in
+  // "My Communities") but can't be edited/resubmitted; only NEEDS_INFO
+  // supports that. An admin can still edit a rejected community directly.
+  if (!byAdmin && before['status'] === 'REJECTED') {
+    throw new AppError(403, 'This community was rejected and can no longer be edited', 'COMMUNITY_REJECTED_LOCKED');
+  }
 
   const updateData: Record<string, unknown> = { ...data };
 
-  // Resubmitting a rejected community: the owner editing their own rejected
+  // Resubmitting a needs-info community: the owner editing their own
   // community re-enters the approval gate exactly like a brand-new one,
-  // instead of silently staying REJECTED after the edit.
+  // instead of silently staying NEEDS_INFO after the edit.
   let reenteredPending = false;
-  if (!byAdmin && caller && before['status'] === 'REJECTED') {
+  if (!byAdmin && caller && before['status'] === 'NEEDS_INFO') {
     const isAutoApproved = caller['role'] === 'ADMIN';
     updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
     updateData['rejection_reason'] = null;

@@ -37,6 +37,19 @@
       </app-searchable-select>
     </div>
 
+    @if (activeEntity() === 'community') {
+      <div class="jb-select-wrap">
+        <app-searchable-select [options]="visibilityFilterOptions" [ngModel]="filterVisibility()"
+          (ngModelChange)="filterVisibility.set($event); applyFilters()" [placeholder]="'admin.approval.allVisibility' | translate" [attr.aria-label]="'admin.approval.filterByVisibility' | translate">
+        </app-searchable-select>
+      </div>
+      <div class="jb-select-wrap">
+        <app-searchable-select [options]="defaultFilterOptions" [ngModel]="filterIsDefault()"
+          (ngModelChange)="filterIsDefault.set($event); applyFilters()" [placeholder]="'admin.approval.allDefault' | translate" [attr.aria-label]="'admin.approval.filterByDefaultStatus' | translate">
+        </app-searchable-select>
+      </div>
+    }
+
     <div class="jb-filter-group">
       <app-date-input [ngModel]="filterDateFrom()" (ngModelChange)="filterDateFrom.set($event); applyFilters()" [ngModelOptions]="{ standalone: true }" [ariaLabel]="'admin.approval.fromDate' | translate" [placeholder]="'admin.approval.fromDate' | translate"></app-date-input>
     </div>
@@ -58,6 +71,9 @@
       <button class="ap-bulk-btn ap-bulk-btn--approve" [disabled]="bulkProcessing()" (click)="requestBulkApprove()">
         @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i> }
         Approve
+      </button>
+      <button class="ap-bulk-btn ap-bulk-btn--info" [disabled]="bulkProcessing()" (click)="requestBulkRequestInfo()">
+        <i class="bi bi-question-circle"></i> {{ 'admin.approval.requestMoreInfo' | translate }}
       </button>
       <button class="ap-bulk-btn ap-bulk-btn--reject" [disabled]="bulkProcessing()" (click)="requestBulkReject()">
         <i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}
@@ -121,6 +137,9 @@
                 [class.bi-arrow-down-up]="sortBy() !== 'meta'"
               ></i>
             </th>
+            @if (activeEntity() === 'community') {
+              <th class="um-th">{{ 'admin.approval.label.visibility' | translate }}</th>
+            }
             <th class="um-th um-th--sortable" [class.um-th--active]="sortBy() === 'joined'" (click)="toggleSort('joined')" role="button" tabindex="0" (keydown.enter)="toggleSort('joined')">
               {{ 'admin.approval.submitted' | translate }}
               <i class="bi um-th__sort-icon"
@@ -138,7 +157,9 @@
               (click)="viewItem(item)" (keydown.enter)="viewItem(item)"
               [attr.aria-label]="'View ' + itemName(item)">
               <td class="um-td" (click)="$event.stopPropagation()">
-                <input type="checkbox" class="form-check-input" [checked]="isSelected(item.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(item.id)" />
+                @if (!isNeedsInfo(item)) {
+                  <input type="checkbox" class="form-check-input" [checked]="isSelected(item.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(item.id)" />
+                }
               </td>
               <td class="um-td">
                 <div class="um-user-cell">
@@ -154,17 +175,36 @@
               </td>
               <td class="um-td"><span class="um-td-text">{{ itemSubmitter(item)?.displayName ?? itemSubmitter(item)?.userName ?? '—' }}</span></td>
               <td class="um-td"><span class="um-td-text">{{ itemMeta(item) }}</span></td>
+              @if (activeEntity() === 'community') {
+                <td class="um-td">
+                  @if (itemVisibility(item); as visibility) {
+                    <span class="pa-visibility-badge" [class.pa-visibility-badge--global]="visibility === 'Global'" [class.pa-visibility-badge--private]="visibility === 'Private'">
+                      <i class="bi" [class.bi-globe2]="visibility === 'Global'" [class.bi-lock-fill]="visibility === 'Private'"></i>
+                      {{ visibility === 'Global' ? ('admin.community.visibilityGlobal' | translate) : ('admin.community.visibilityPrivate' | translate) }}
+                    </span>
+                  } @else {
+                    <span class="um-td-text">—</span>
+                  }
+                </td>
+              }
               <td class="um-td"><span class="um-td-text">{{ item['createdAt'] | date:'d MMM, h:mm a' }}</span></td>
               <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
                 <div class="um-actions-row">
                   <button class="um-iab um-iab--view um-iab--tip-top" data-tip="View Details" (click)="viewItem(item)">
                     <i class="bi bi-eye-fill"></i>
                   </button>
-                  @if (approvingId() === item.id || rejectingId() === item.id) {
+                  @if (isNeedsInfo(item)) {
+                    <span class="pa-needs-info-chip" [title]="item['rejectionReason'] || ('common.needsMoreInfo' | translate)">
+                      <i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}
+                    </span>
+                  } @else if (approvingId() === item.id || rejectingId() === item.id || requestingInfoId() === item.id) {
                     <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
                   } @else {
                     <button class="um-iab um-iab--approve um-iab--tip-top" data-tip="Approve" [disabled]="bulkProcessing()" (click)="requestApprove(item)">
                       <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button class="um-iab um-iab--info um-iab--tip-top" data-tip="Request More Info" [disabled]="bulkProcessing()" (click)="requestRequestInfo(item)">
+                      <i class="bi bi-question-circle"></i>
                     </button>
                     <button class="um-iab um-iab--reject um-iab--tip-top" data-tip="Reject" [disabled]="bulkProcessing()" (click)="requestReject(item)">
                       <i class="bi bi-x-lg"></i>
@@ -258,7 +298,8 @@
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ itemName(item) }}</strong>? The submitter will be notified.
+          {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ itemName(item) }}</strong>?
+          {{ (activeEntity() === 'community' ? 'admin.approval.rejectCommunityWarning' : 'admin.approval.rejectPermanentWarning') | translate }}
         </p>
         <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownSubmitter' | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
@@ -266,6 +307,36 @@
       <div class="pa-confirm-footer">
         <button class="um-btn um-btn--ghost" (click)="cancelRejectConfirm()">{{ 'common.cancel' | translate }}</button>
         <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── REQUEST MORE INFO CONFIRM (single) — same chrome, recolored violet.
+     Reason is required — submit stays disabled until non-empty. ────────── -->
+@if (confirmMoreInfoTarget(); as item) {
+  <div class="pa-confirm-backdrop" (click)="cancelRequestInfoConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--info" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-question-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.requestMoreInfo' | translate }} — {{ currentTab().singular | translate }}</h5>
+        <button type="button" class="pa-confirm-close" (click)="cancelRequestInfoConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">
+          {{ 'admin.approval.sureWantRequestMoreInfo' | translate }} <strong>{{ itemName(item) }}</strong>?
+          {{ 'admin.approval.theseWillNeedMoreInfo' | translate }}
+        </p>
+        <textarea class="pa-reason-input" rows="3" maxlength="500" required [placeholder]="'admin.approval.reasonRequiredShownSubmitter' | translate"
+          [ngModel]="moreInfoReason()" (ngModelChange)="moreInfoReason.set($event)"></textarea>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" (click)="cancelRequestInfoConfirm()">{{ 'common.cancel' | translate }}</button>
+        <button class="um-btn um-btn--info" [disabled]="!moreInfoReason().trim()" (click)="confirmRequestInfoExecute()"><i class="bi bi-question-circle"></i> {{ 'admin.approval.requestMoreInfo' | translate }}</button>
       </div>
     </div>
   </div>
@@ -311,7 +382,10 @@
         <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
-        <p class="pa-confirm-desc">{{ 'admin.approval.submittersWillNotified' | translate }}</p>
+        <p class="pa-confirm-desc">
+          {{ 'admin.approval.submittersWillNotified' | translate }}
+          {{ (activeEntity() === 'community' ? 'admin.approval.rejectCommunityWarning' : 'admin.approval.rejectPermanentWarning') | translate }}
+        </p>
         <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownEverySubmitter' | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
       </div>
@@ -319,6 +393,34 @@
         <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">{{ 'common.cancel' | translate }}</button>
         <button class="um-btn um-btn--danger" [disabled]="bulkProcessing()" (click)="confirmBulkRejectExecute()">
           @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-x-lg"></i> Reject All }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── BULK REQUEST MORE INFO CONFIRM ──────────────────────────── -->
+@if (confirmBulkMoreInfo()) {
+  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+    <div class="pa-confirm-dialog pa-confirm-dialog--info" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pa-confirm-header">
+        <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
+          <span class="shape shape--1"></span>
+          <span class="shape shape--2"></span>
+        </div>
+        <div class="pa-confirm-header__icon"><i class="bi bi-question-circle-fill"></i></div>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.requestMoreInfo' | translate }} — {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="pa-confirm-body">
+        <p class="pa-confirm-desc">{{ 'admin.approval.theseWillNeedMoreInfo' | translate }}</p>
+        <textarea class="pa-reason-input" rows="3" maxlength="500" required [placeholder]="'admin.approval.reasonRequiredShownEverySubmitter' | translate"
+          [ngModel]="moreInfoReason()" (ngModelChange)="moreInfoReason.set($event)"></textarea>
+      </div>
+      <div class="pa-confirm-footer">
+        <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">{{ 'common.cancel' | translate }}</button>
+        <button class="um-btn um-btn--info" [disabled]="bulkProcessing() || !moreInfoReason().trim()" (click)="confirmBulkRequestInfoExecute()">
+          @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-question-circle"></i> Request Info for All }
         </button>
       </div>
     </div>
@@ -367,6 +469,11 @@
             <div class="pa-view-rejection">
               <i class="bi bi-exclamation-circle-fill"></i>
               <span><strong>{{ 'common.rejected' | translate }}</strong> — {{ vi['rejectionReason'] }}</span>
+            </div>
+          } @else if (vi['status'] === 'NEEDS_INFO' && vi['rejectionReason']) {
+            <div class="pa-view-rejection pa-view-rejection--needs-info">
+              <i class="bi bi-question-circle-fill"></i>
+              <span><strong>{{ 'common.needsMoreInfo' | translate }}</strong> — {{ vi['rejectionReason'] }}</span>
             </div>
           }
         </div>
@@ -430,10 +537,15 @@
       </div>
 
       <div class="pa-view-footer">
-        @if (approvingId() === vi.id || rejectingId() === vi.id) {
+        @if (isNeedsInfo(vi)) {
+          <span class="pa-needs-info-chip pa-needs-info-chip--lg">
+            <i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}
+          </span>
+        } @else if (approvingId() === vi.id || rejectingId() === vi.id || requestingInfoId() === vi.id) {
           <span class="spinner-border spinner-border-sm text-primary mx-2"></span>
         } @else {
           <button class="um-btn um-btn--success" (click)="closeViewItem(); requestApprove(vi)"><i class="bi bi-check-lg"></i> {{ 'admin.approval.approve' | translate }}</button>
+          <button class="um-btn um-btn--info" (click)="closeViewItem(); requestRequestInfo(vi)"><i class="bi bi-question-circle"></i> {{ 'admin.approval.requestMoreInfo' | translate }}</button>
           <button class="um-btn um-btn--danger" (click)="closeViewItem(); requestReject(vi)"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
         }
       </div>

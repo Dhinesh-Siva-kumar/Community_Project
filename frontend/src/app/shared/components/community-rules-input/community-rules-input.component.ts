@@ -3,10 +3,18 @@ import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModu
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { TranslatePipe } from '@ngx-translate/core';
 
-// Single shared definition of the "Community Rules" field (label + tag-input
-// config) so every create/edit form for a community uses the exact same
-// rules — max length, item label, no comma-splitting — instead of each page
-// repeating (and risking drifting) its own copy of these settings.
+// Single shared definition of the "Community Rules" field (tag-input config)
+// so every create/edit form for a community uses the exact same rules — max
+// length, item label, no comma-splitting — instead of each page repeating
+// (and risking drifting) its own copy of these settings.
+//
+// No label of its own — both call sites (admin-community.component.html,
+// community-form-modal.component.html) already have a "Community Rules"
+// section header right above this, so an internal label would be redundant.
+// The host element itself needs `display: block` from the consumer (both
+// call sites set it via `::ng-deep app-community-rules-input`), since
+// unknown custom elements default to `display: inline` and would otherwise
+// shrink-wrap instead of filling the input box.
 @Component({
   selector: 'app-community-rules-input',
   standalone: true,
@@ -20,26 +28,14 @@ import { TranslatePipe } from '@ngx-translate/core';
     },
   ],
   template: `
-    <div class="cri-field">
-      <label class="cri-label">{{ 'components.rulesInput.label' | translate }}</label>
-      <app-tag-input
-        [formControl]="control"
-        [placeholder]="'components.rulesInput.placeholder' | translate"
-        itemLabel="rule"
-        [maxLength]="150"
-        [commitOnComma]="false"
-      ></app-tag-input>
-    </div>
+    <app-tag-input
+      [formControl]="control"
+      [placeholder]="'components.rulesInput.placeholder' | translate"
+      itemLabel="rule"
+      [maxLength]="150"
+      [commitOnComma]="false"
+    ></app-tag-input>
   `,
-  styles: [`
-    .cri-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #44403c;
-      margin-bottom: 6px;
-    }
-  `],
 })
 export class CommunityRulesInputComponent implements ControlValueAccessor {
   protected control = new FormControl<string[]>([], { nonNullable: true });

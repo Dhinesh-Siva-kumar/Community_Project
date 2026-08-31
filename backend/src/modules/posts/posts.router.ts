@@ -15,6 +15,7 @@ router.get('/mine', ctrl.getMyPosts);
 router.get('/:id', ctrl.findOne);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);
 router.put('/:id/reject', authorize('ADMIN'), ctrl.reject);
+router.put('/:id/request-more-info', authorize('ADMIN'), ctrl.requestMoreInfo);
 router.put('/:id', uploadImages.array('images', 10), ctrl.updatePost);
 router.delete('/:id', ctrl.deletePost);
 router.post('/:id/like', ctrl.like);

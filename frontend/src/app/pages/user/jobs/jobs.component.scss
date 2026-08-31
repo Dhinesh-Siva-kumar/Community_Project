@@ -1195,6 +1195,7 @@ ms; }
   &--onsite     { background: $color-stone-100; color: $color-stone-700; }
   &--pending    { background: rgba(245, 158, 11, 0.94); color: #fff; }
   &--rejected   { background: rgba(220, 38, 38, 0.94); color: #fff; }
+  &--needs-info { background: rgba(124, 58, 237, 0.94); color: #fff; }
 }
 
 .jb-card__rejection-reason {
@@ -1307,6 +1308,7 @@ ms; }
 
   &--pending  { background: rgba(245, 158, 11, 0.94); color: #fff; }
   &--rejected { background: rgba(220, 38, 38, 0.94); color: #fff; }
+  &--needs-info { background: rgba(124, 58, 237, 0.94); color: #fff; }
 }
 
 .jbg-body {

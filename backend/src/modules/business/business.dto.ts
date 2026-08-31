@@ -82,7 +82,11 @@ export const ListBusinessQueryDto = z.object({
   dateTo: z.string().optional(),
   status: z.enum(['active', 'inactive']).optional(),
   // Moderation status — distinct from `status` above (which means active/inactive).
-  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  // Accepts a single value or a comma-separated list (e.g. the user-side
+  // "Pending Approval" tab needs both PENDING and NEEDS_INFO submissions).
+  approvalStatus: z.string().optional()
+    .transform((v) => (v ? v.split(',').map((s) => s.trim()) : undefined))
+    .pipe(z.array(z.enum(['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_INFO'])).optional()),
   sortBy: z.enum(['name', 'joined']).default('joined'),
   sortDir: z.enum(['asc', 'desc']).default('desc'),
 });
@@ -102,9 +106,17 @@ export const RejectBusinessDto = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+export const RequestMoreInfoBusinessDto = z.object({
+  reason: z.string({ required_error: 'Please describe what information is needed' })
+    .trim()
+    .min(1, 'Please describe what information is needed')
+    .max(500),
+});
+
 export type CreateBusinessDtoType = z.infer<typeof CreateBusinessDto>;
 export type UpdateBusinessDtoType = z.infer<typeof UpdateBusinessDto>;
 export type CreateBusinessCategoryDtoType = z.infer<typeof CreateBusinessCategoryDto>;
 export type ListBusinessQueryDtoType = z.infer<typeof ListBusinessQueryDto>;
 export type ListPendingBusinessQueryDtoType = z.infer<typeof ListPendingBusinessQueryDto>;
 export type RejectBusinessDtoType = z.infer<typeof RejectBusinessDto>;
+export type RequestMoreInfoBusinessDtoType = z.infer<typeof RequestMoreInfoBusinessDto>;

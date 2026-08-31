@@ -76,8 +76,25 @@ export class ApprovalComponent implements OnInit {
   filterCountryOptions: SelectOption[] = [];
   private searchDebounce: any = null;
 
+  // Community-only filters — Visibility and Default are meaningless for the
+  // other four entity tabs, so the controls only render (and only get sent
+  // to the API) while activeEntity() === 'community'.
+  filterVisibility = signal<'global' | 'private' | ''>('');
+  filterIsDefault  = signal<'true' | 'false' | ''>('');
+  readonly visibilityFilterOptions: SelectOption[] = [
+    { value: '',        label: 'admin.approval.allVisibility' },
+    { value: 'global',  label: 'admin.approval.global' },
+    { value: 'private', label: 'admin.approval.private' },
+  ];
+  readonly defaultFilterOptions: SelectOption[] = [
+    { value: '',      label: 'admin.approval.allDefault' },
+    { value: 'true',  label: 'admin.approval.defaultOnly' },
+    { value: 'false', label: 'admin.approval.nonDefault' },
+  ];
+
   hasActiveFilters = computed(() =>
-    !!(this.filterSearch() || this.filterCountry() || this.filterDateFrom() || this.filterDateTo())
+    !!(this.filterSearch() || this.filterCountry() || this.filterDateFrom() || this.filterDateTo()
+      || this.filterVisibility() || this.filterIsDefault())
   );
 
   // Pagination
@@ -108,13 +125,17 @@ export class ApprovalComponent implements OnInit {
   // Action state
   approvingId     = signal<string | null>(null);
   rejectingId     = signal<string | null>(null);
+  requestingInfoId = signal<string | null>(null);
   bulkProcessing  = signal(false);
 
   confirmApproveTarget = signal<PendingItem | null>(null);
   confirmRejectTarget  = signal<PendingItem | null>(null);
+  confirmMoreInfoTarget = signal<PendingItem | null>(null);
   confirmBulkApprove   = signal(false);
   confirmBulkReject    = signal(false);
+  confirmBulkMoreInfo   = signal(false);
   rejectReason          = signal('');
+  moreInfoReason         = signal('');
 
   viewingItem    = signal<PendingItem | null>(null);
   lightboxOpen   = signal(false);
@@ -161,6 +182,8 @@ export class ApprovalComponent implements OnInit {
     this.filterCountry.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.filterVisibility.set('');
+    this.filterIsDefault.set('');
     this.sortBy.set('joined');
     this.sortDir.set('desc');
     this.loadPending();
@@ -198,6 +221,16 @@ export class ApprovalComponent implements OnInit {
       case 'business':   return this.businessService.rejectBusiness(id, reason);
       case 'jobs':        return this.jobService.rejectJob(id, reason);
       case 'events':      return this.eventService.rejectEvent(id, reason);
+    }
+  }
+
+  private requestMoreInfoItem(id: string, reason: string): Observable<any> {
+    switch (this.activeEntity()) {
+      case 'posts':      return this.postService.requestMoreInfoPost(id, reason);
+      case 'community':  return this.communityService.requestMoreInfoCommunity(id, reason);
+      case 'business':   return this.businessService.requestMoreInfoBusiness(id, reason);
+      case 'jobs':        return this.jobService.requestMoreInfoJob(id, reason);
+      case 'events':      return this.eventService.requestMoreInfoEvent(id, reason);
     }
   }
 
@@ -250,6 +283,10 @@ export class ApprovalComponent implements OnInit {
       sortBy: this.backendSortBy(),
       sortDir: this.sortDir(),
     };
+    if (this.activeEntity() === 'community') {
+      if (this.filterVisibility()) params['visibility'] = this.filterVisibility();
+      if (this.filterIsDefault()) params['is_default'] = this.filterIsDefault() === 'true';
+    }
     this.fetchPending(params).subscribe({
       next: (res: PaginatedResponse<PendingItem>) => {
         this.items.set(res.data);
@@ -278,6 +315,8 @@ export class ApprovalComponent implements OnInit {
     this.filterCountry.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.filterVisibility.set('');
+    this.filterIsDefault.set('');
     this.applyFilters();
   }
 
@@ -324,14 +363,24 @@ export class ApprovalComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
+  /** A NEEDS_INFO item isn't actionable by the admin right now — it's waiting on the
+   * submitter to resubmit — so it's shown read-only (no checkbox, no approve/reject/
+   * request-info) with the reason surfaced instead. Currently only ever true for
+   * communities, since that's the only entity whose pending list includes NEEDS_INFO rows. */
+  isNeedsInfo(item: PendingItem): boolean { return item['status'] === 'NEEDS_INFO'; }
+
+  /** Items eligible for selection/bulk actions — excludes read-only NEEDS_INFO rows. */
+  selectableItems = computed(() => this.items().filter(i => !this.isNeedsInfo(i)));
+
   // ── Selection ────────────────────────────────────────────────
   toggleSelectAll(): void {
     if (this.selectAll()) {
       this.selectedIds.set(new Set());
       this.selectAll.set(false);
     } else {
-      this.selectedIds.set(new Set(this.items().map(i => i.id)));
-      this.selectAll.set(true);
+      const selectable = this.selectableItems();
+      this.selectedIds.set(new Set(selectable.map(i => i.id)));
+      this.selectAll.set(selectable.length > 0);
     }
   }
 
@@ -341,7 +390,8 @@ export class ApprovalComponent implements OnInit {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-    this.selectAll.set(this.selectedIds().size === this.items().length && this.items().length > 0);
+    const selectable = this.selectableItems();
+    this.selectAll.set(this.selectedIds().size === selectable.length && selectable.length > 0);
   }
 
   isSelected(id: string): boolean { return this.selectedIds().has(id); }
@@ -385,7 +435,7 @@ export class ApprovalComponent implements OnInit {
       next: () => {
         this.items.update(list => list.filter(i => i.id !== item.id));
         this.totalItems.update(v => Math.max(0, v - 1));
-        this.toast.success(`${this.currentTab().singular} rejected`);
+        this.toast.success(`${this.currentTab().singular} rejected and removed`);
         this.rejectingId.set(null);
         this.confirmRejectTarget.set(null);
         this.refreshCountForActiveEntity();
@@ -398,38 +448,85 @@ export class ApprovalComponent implements OnInit {
     });
   }
 
-  // ── Bulk approve / reject ───────────────────────────────────
+  // ── Single request-more-info ─────────────────────────────────
+  requestRequestInfo(item: PendingItem): void {
+    this.confirmMoreInfoTarget.set(item);
+    this.moreInfoReason.set('');
+  }
+  cancelRequestInfoConfirm(): void { this.confirmMoreInfoTarget.set(null); }
+
+  confirmRequestInfoExecute(): void {
+    const item = this.confirmMoreInfoTarget();
+    const reason = this.moreInfoReason().trim();
+    if (!item || !reason) return;
+    this.requestingInfoId.set(item.id);
+    this.requestMoreInfoItem(item.id, reason).subscribe({
+      next: () => {
+        this.items.update(list => list.filter(i => i.id !== item.id));
+        this.totalItems.update(v => Math.max(0, v - 1));
+        this.toast.success(`More information requested for ${this.currentTab().singular.toLowerCase()}`);
+        this.requestingInfoId.set(null);
+        this.confirmMoreInfoTarget.set(null);
+        this.refreshCountForActiveEntity();
+      },
+      error: () => {
+        this.toast.error('admin.approval.toast.failedRequestMoreInfo');
+        this.requestingInfoId.set(null);
+        this.confirmMoreInfoTarget.set(null);
+      },
+    });
+  }
+
+  // ── Bulk approve / reject / request-more-info ────────────────
   requestBulkApprove(): void { if (this.selectedCount() > 0) this.confirmBulkApprove.set(true); }
   requestBulkReject(): void {
     if (this.selectedCount() === 0) return;
     this.rejectReason.set('');
     this.confirmBulkReject.set(true);
   }
-  cancelBulkConfirm(): void { this.confirmBulkApprove.set(false); this.confirmBulkReject.set(false); }
+  requestBulkRequestInfo(): void {
+    if (this.selectedCount() === 0) return;
+    this.moreInfoReason.set('');
+    this.confirmBulkMoreInfo.set(true);
+  }
+  cancelBulkConfirm(): void {
+    this.confirmBulkApprove.set(false);
+    this.confirmBulkReject.set(false);
+    this.confirmBulkMoreInfo.set(false);
+  }
 
   confirmBulkApproveExecute(): void { this.runBulk('approve'); }
   confirmBulkRejectExecute(): void { this.runBulk('reject'); }
+  confirmBulkRequestInfoExecute(): void {
+    if (!this.moreInfoReason().trim()) return;
+    this.runBulk('requestMoreInfo');
+  }
 
-  private runBulk(action: 'approve' | 'reject'): void {
+  private runBulk(action: 'approve' | 'reject' | 'requestMoreInfo'): void {
     const ids = Array.from(this.selectedIds());
     if (!ids.length) return;
     this.bulkProcessing.set(true);
-    const reason = action === 'reject' ? (this.rejectReason().trim() || undefined) : undefined;
+    const reason = action === 'reject' ? (this.rejectReason().trim() || undefined)
+      : action === 'requestMoreInfo' ? this.moreInfoReason().trim()
+      : undefined;
     let succeeded = 0, failed = 0, completed = 0;
 
     const finish = () => {
       this.bulkProcessing.set(false);
       this.confirmBulkApprove.set(false);
       this.confirmBulkReject.set(false);
-      const verb = action === 'approve' ? 'approved' : 'rejected';
+      this.confirmBulkMoreInfo.set(false);
+      const verb = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected and removed' : 'sent a more-info request';
       if (succeeded) this.toast.success(`${succeeded} ${this.currentTab().label.toLowerCase()} item${succeeded === 1 ? '' : 's'} ${verb}`);
-      if (failed) this.toast.error(`${failed} item${failed === 1 ? '' : 's'} failed to ${action}`);
+      if (failed) this.toast.error(`${failed} item${failed === 1 ? '' : 's'} failed to process`);
       this.refreshCountForActiveEntity();
       this.loadPending();
     };
 
     ids.forEach((id) => {
-      const obs = action === 'approve' ? this.approveItem(id) : this.rejectItem(id, reason);
+      const obs = action === 'approve' ? this.approveItem(id)
+        : action === 'reject' ? this.rejectItem(id, reason)
+        : this.requestMoreInfoItem(id, reason as string);
       obs.subscribe({
         next: () => { succeeded++; completed++; if (completed === ids.length) finish(); },
         error: () => { failed++; completed++; if (completed === ids.length) finish(); },
@@ -559,6 +656,14 @@ export class ApprovalComponent implements OnInit {
     return item['country'] ?? '—';
   }
 
+  /** Visibility column — community-only, so the table only renders it while
+   * the Community tab is active (see approval.component.html). */
+  itemVisibility(item: PendingItem): 'Global' | 'Private' | null {
+    if (item['is_global']) return 'Global';
+    if (item['is_private']) return 'Private';
+    return null;
+  }
+
   // ── Rich detail-popup sections — a full field-by-field breakdown per
   // entity, since each carries very different data. ────────────────────
   private fmt(v: unknown): string {
@@ -584,8 +689,6 @@ export class ApprovalComponent implements OnInit {
           { title: 'Overview', icon: 'bi-info-circle', fields: [
             { label: 'admin.approval.label.category', value: this.fmt(item['category_name']) },
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
-            { label: 'admin.approval.label.location', value: this.fmt(item['location']) },
-            { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
           ]},
           { title: 'Visibility', icon: 'bi-eye', fields: [
             { label: 'admin.approval.label.visibility', value: item['is_global'] ? 'Global' : item['is_private'] ? 'Private' : 'Standard' },

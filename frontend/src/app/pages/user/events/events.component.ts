@@ -275,11 +275,12 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own events awaiting admin approval only. */
+  /** "Pending Approval" tab — the caller's own events still awaiting admin
+   * action: freshly submitted (PENDING) or kicked back for more info (NEEDS_INFO). */
   loadMyEvents(): void {
     this.loading.set(true);
     this.currentPage.set(1);
-    this.eventService.getMyEvents({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
+    this.eventService.getMyEvents({ page: 1, limit: 100, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => {
         this.events.set(res.data);
         this.totalItems.set(res.total);
@@ -294,7 +295,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   loadMyPendingEventsCount(): void {
-    this.eventService.getMyEvents({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+    this.eventService.getMyEvents({ page: 1, limit: 1, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<AppEvent>) => this.myPendingEventsCount.set(res.total),
       error: () => {},
     });
@@ -632,7 +633,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     const req$ = id ? this.eventService.updateEvent(id, data, images) : this.eventService.createEvent(data, images);
     req$.subscribe({
       next: (evt) => {
-        if (evt.status === 'PENDING' && (!id || editingBefore?.status === 'REJECTED')) {
+        if (evt.status === 'PENDING' && (!id || editingBefore?.status === 'REJECTED' || editingBefore?.status === 'NEEDS_INFO')) {
           this.loadMyPendingEventsCount();
           this.toast.success(id ? 'Event resubmitted for admin approval' : 'Event submitted for admin approval');
           if (id) {

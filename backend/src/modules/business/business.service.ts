@@ -177,9 +177,9 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     query.where('b.status', 'APPROVED');
     countQuery.where('status', 'APPROVED');
   }
-  if (approvalStatus) {
-    query.andWhere('b.status', approvalStatus);
-    countQuery.andWhere('status', approvalStatus);
+  if (approvalStatus?.length) {
+    query.whereIn('b.status', approvalStatus);
+    countQuery.whereIn('status', approvalStatus);
   }
 
   if (userId) { query.andWhere('b.user_id', userId); countQuery.andWhere('user_id', userId); }
@@ -395,16 +395,32 @@ export async function approve(id: string, adminId: string) {
   return findOne(id);
 }
 
+// Rejecting permanently deletes the submission — there is no lingering
+// REJECTED state to resubmit from. Use requestMoreInfo() below when the
+// owner should be able to fix and resubmit instead.
 export async function reject(id: string, adminId: string, reason?: string) {
   const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
   if (!business) throw new AppError(404, 'Business not found', 'BUSINESS_FOUND');
 
-  if (business['status'] === 'REJECTED') return findOne(id);
-
-  await db('businesses').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
   const message = `Your business "${business['name']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
-  await notificationsService.create(business['user_id'] as string, 'BUSINESS_REJECTED', message, id);
+  await notificationsService.create(business['user_id'] as string, 'BUSINESS_REJECTED', message);
   await logAudit(adminId, 'BUSINESS_REJECTED', { previousStatus: business['status'], reason: reason ?? null, name: business['name'] }, 'businesses', id);
+
+  await db('businesses').where({ id }).delete();
+  deleteUploadedFiles(business['images']);
+  deleteUploadedFile(business['logo']);
+
+  return { message: 'Business rejected and removed' };
+}
+
+export async function requestMoreInfo(id: string, adminId: string, reason: string) {
+  const business = await db('businesses').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!business) throw new AppError(404, 'Business not found', 'BUSINESS_FOUND');
+
+  await db('businesses').where({ id }).update({ status: 'NEEDS_INFO', rejection_reason: reason });
+  const message = `More information is needed for your business "${business['name']}": ${reason}`;
+  await notificationsService.create(business['user_id'] as string, 'BUSINESS_NEEDS_INFO', message, id);
+  await logAudit(adminId, 'BUSINESS_NEEDS_INFO', { previousStatus: business['status'], reason, name: business['name'] }, 'businesses', id);
   return findOne(id);
 }
 
@@ -444,11 +460,11 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.cityId !== undefined) updateData['city_id'] = data.cityId;
    if (data.isActive !== undefined) updateData['is_active'] = data.isActive;
 
-  // Resubmitting a rejected business: the owner editing their own rejected
-  // business re-enters the approval gate exactly like a brand-new one,
-  // instead of silently staying REJECTED after the edit.
+  // Resubmitting a rejected or needs-info business: the owner editing their
+  // own business re-enters the approval gate exactly like a brand-new one,
+  // instead of silently staying REJECTED/NEEDS_INFO after the edit.
   let reenteredPending = false;
-  if (!byAdmin && business['status'] === 'REJECTED') {
+  if (!byAdmin && (business['status'] === 'REJECTED' || business['status'] === 'NEEDS_INFO')) {
     const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
     const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
     updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';

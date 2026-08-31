@@ -312,27 +312,40 @@ export async function approve(postId: string, adminId: string) {
   return { ...updatedRow, user };
 }
 
+// Rejecting permanently deletes the submission — there is no lingering
+// REJECTED state to resubmit from. Use requestMoreInfo() below when the
+// author should be able to fix and resubmit instead.
 export async function reject(postId: string, adminId: string, reason?: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
+  const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
 
-  if (post['status'] === 'REJECTED') {
-    const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
-    return { ...post, user };
-  }
+  const message = `Your post has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+  await notificationsService.create(post['user_id'] as string, 'POST_REJECTED', message);
+  await logAudit(adminId, 'POST_REJECTED', { previousStatus: post['status'], reason: reason ?? null, author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
+
+  await db('posts').where({ id: postId }).delete();
+  deleteUploadedFiles(post['images']);
+
+  return { message: 'Post rejected and removed' };
+}
+
+export async function requestMoreInfo(postId: string, adminId: string, reason: string) {
+  const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
+  if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
   const [updated] = await db('posts').where({ id: postId })
-    .update({ status: 'REJECTED', rejection_reason: reason ?? null })
+    .update({ status: 'NEEDS_INFO', rejection_reason: reason })
     .returning('*');
   const updatedRow = updated as Record<string, unknown>;
   const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
-  const message = `Your post has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
-  await notificationsService.create(updatedRow['user_id'] as string, 'POST_REJECTED', message, postId);
-  await logAudit(adminId, 'POST_REJECTED', { previousStatus: post['status'], reason: reason ?? null, author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
+  const message = `More information is needed for your post: ${reason}`;
+  await notificationsService.create(updatedRow['user_id'] as string, 'POST_NEEDS_INFO', message, postId);
+  await logAudit(adminId, 'POST_NEEDS_INFO', { previousStatus: post['status'], reason, author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
   return { ...updatedRow, user };
 }
 
-export async function findMine(userId: string, options: { page: number; limit: number; status?: 'PENDING' | 'APPROVED' | 'REJECTED'; communityId?: string }) {
+export async function findMine(userId: string, options: { page: number; limit: number; status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO'; communityId?: string }) {
   const { page, limit, status, communityId } = options;
   const offset = (page - 1) * limit;
 
@@ -408,10 +421,10 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   if (data.type     !== undefined) updateFields['type']    = data.type;
   if (data.images   !== undefined) updateFields['images']  = data.images;
 
-  // Resubmitting a rejected post: the author editing their own rejected post
-  // re-enters the approval gate exactly like a brand-new post, instead of
-  // silently staying REJECTED after the edit.
-  if (isOwner && editor && post['status'] === 'REJECTED') {
+  // Resubmitting a rejected or needs-info post: the author editing their own
+  // post re-enters the approval gate exactly like a brand-new post, instead
+  // of silently staying REJECTED/NEEDS_INFO after the edit.
+  if (isOwner && editor && (post['status'] === 'REJECTED' || post['status'] === 'NEEDS_INFO')) {
     const isAutoApproved = editor['role'] === 'ADMIN';
     updateFields['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
     updateFields['rejection_reason'] = null;
