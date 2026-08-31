@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto, ListPendingPostsQueryDto, ListMyPostsQueryDto, RejectPostDto } from './posts.dto';
+import { CreatePostDto, UpdatePostBodyDto, ListPostsQueryDto, AddCommentDto, PaginationQueryDto, ListPendingPostsQueryDto, ListMyPostsQueryDto, RejectPostDto, RequestMoreInfoPostDto } from './posts.dto';
 import * as postsService from './posts.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -82,6 +82,14 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
   try {
     const { reason } = RejectPostDto.parse(req.body ?? {});
     const result = await postsService.reject(req.params['id'] as string, req.user!.sub, reason);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function requestMoreInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RequestMoreInfoPostDto.parse(req.body ?? {});
+    const result = await postsService.requestMoreInfo(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

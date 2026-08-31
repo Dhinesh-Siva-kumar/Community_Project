@@ -326,6 +326,12 @@
     border: 1px solid rgba($color-danger, 0.25);
   }
 
+  &.cd-status-needs-info {
+    background: rgba($color-violet, 0.1);
+    color: $color-violet;
+    border: 1px solid rgba($color-violet, 0.25);
+  }
+
   &--link {
     text-decoration: none;
     cursor: pointer;
@@ -372,6 +378,11 @@
   &.cd-status-rejected {
     background: rgba($color-danger, 0.1);
     color: $color-danger;
+  }
+
+  &.cd-status-needs-info {
+    background: rgba($color-violet, 0.1);
+    color: $color-violet;
   }
 
   &--link {
@@ -1318,6 +1329,11 @@
     background: linear-gradient(180deg, rgba(254, 242, 242, 0.92) 0%, $color-bg-card 100%);
     border-color: rgba(239, 68, 68, 0.35);
   }
+
+  &--needs-info {
+    background: linear-gradient(180deg, rgba(245, 243, 255, 0.92) 0%, $color-bg-card 100%);
+    border-color: rgba($color-violet, 0.35);
+  }
 }
 
 .cd-compose-locked__icon {
@@ -1332,6 +1348,11 @@
   .cd-compose-locked--rejected & {
     background: rgba($color-danger, 0.1);
     color: $color-danger;
+  }
+
+  .cd-compose-locked--needs-info & {
+    background: rgba($color-violet, 0.1);
+    color: $color-violet;
   }
 }
 
@@ -1969,6 +1990,12 @@
     border-color: rgba(239, 68, 68, 0.34);
   }
 
+  &.post-status-chip--needs-info {
+    background: rgba($color-violet, 0.1);
+    color: $color-violet;
+    border-color: rgba($color-violet, 0.34);
+  }
+
   &.post-status-chip--link {
     text-decoration: none;
     cursor: pointer;
@@ -1992,6 +2019,12 @@
   line-height: 1.5;
 
   i { font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+
+  &--needs-info {
+    background: rgba($color-violet, 0.08);
+    border-color: rgba($color-violet, 0.25);
+    color: $color-violet;
+  }
 }
 
 // Edit & Resubmit CTA — warm/primary gradient, mirrors .cd-btn-join's recipe

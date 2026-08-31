@@ -21,6 +21,7 @@ router.get('/pending-count', authorize('ADMIN'), ctrl.getPendingCount);
 router.get('/:id',   ctrl.findOne);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);
 router.put('/:id/reject', authorize('ADMIN'), ctrl.reject);
+router.put('/:id/request-more-info', authorize('ADMIN'), ctrl.requestMoreInfo);
 router.put('/:id',   jobUpload, ctrl.update);
 router.delete('/:id', ctrl.deleteJob);
 

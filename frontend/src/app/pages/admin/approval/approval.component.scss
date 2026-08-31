@@ -326,6 +326,13 @@
     color: $color-danger;
     &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
   }
+
+  &--info {
+    background: rgba($color-violet, 0.10);
+    border-color: rgba($color-violet, 0.35);
+    color: $color-violet;
+    &:not(:disabled):hover { background: $color-violet; border-color: $color-violet; color: #fff; }
+  }
 }
 
 // Checkbox
@@ -447,6 +454,13 @@
     border-color: rgba($color-info, 0.35);
     color: $color-info;
     &:hover { background: $color-info; border-color: $color-info; color: #fff; box-shadow: 0 4px 10px rgba($color-info, 0.35); }
+  }
+
+  &--info {
+    background: rgba($color-violet, 0.10);
+    border-color: rgba($color-violet, 0.35);
+    color: $color-violet;
+    &:hover { background: $color-violet; border-color: $color-violet; color: #fff; box-shadow: 0 4px 10px rgba($color-violet, 0.35); }
   }
 
   &--tip-top {
@@ -577,6 +591,19 @@
   }
 }
 
+// Request more info — dark stone header fading into violet.
+.pa-confirm-dialog--info {
+  .pa-confirm-header {
+    background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #4c1d95 80%, #7c3aed 160%);
+  }
+  .shape--1 { background: $color-violet; }
+  .pa-confirm-header__icon {
+    background: rgba($color-violet, 0.2);
+    border: 1.5px solid rgba($color-violet, 0.35);
+    color: #ddd6fe;
+  }
+}
+
 .pa-confirm-body {
   padding: 20px 24px 4px;
 }
@@ -615,6 +642,13 @@
     border-color: rgba($color-danger, 0.35);
     color: $color-danger;
     &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
+  }
+
+  .um-btn--info {
+    background: rgba($color-violet, 0.10);
+    border-color: rgba($color-violet, 0.35);
+    color: $color-violet;
+    &:not(:disabled):hover { background: $color-violet; border-color: $color-violet; color: #fff; }
   }
 }
 
@@ -781,6 +815,7 @@
   &.is-pending  { background: rgba(251, 191, 36, 0.22); color: #fde68a; }
   &.is-approved { background: rgba(22, 163, 74, 0.25); color: #86efac; }
   &.is-rejected { background: rgba(220, 38, 38, 0.28); color: #fca5a5; }
+  &.is-needs_info { background: rgba($color-violet, 0.25); color: #ddd6fe; }
 }
 
 .pa-view-body {
@@ -886,6 +921,13 @@
 
   .bi { flex-shrink: 0; margin-top: 2px; }
   strong { color: #b91c1c; }
+
+  &--needs-info {
+    background: rgba($color-violet, 0.08);
+    border-color: rgba($color-violet, 0.25);
+    color: $color-violet;
+    strong { color: $color-violet; }
+  }
 }
 
 // Key-value grid for a detail section's fields — two per row on wider
@@ -963,6 +1005,13 @@
     border-color: rgba($color-danger, 0.35);
     color: $color-danger;
     &:not(:disabled):hover { background: $color-danger; border-color: $color-danger; color: #fff; }
+  }
+
+  .um-btn--info {
+    background: rgba($color-violet, 0.10);
+    border-color: rgba($color-violet, 0.35);
+    color: $color-violet;
+    &:not(:disabled):hover { background: $color-violet; border-color: $color-violet; color: #fff; }
   }
 }
 
@@ -1239,6 +1288,57 @@
   color: #fff;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
+}
+
+// ── VISIBILITY COLUMN BADGE (Community tab only) ──────────────────
+.pa-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  i { font-size: 10px; }
+
+  &--private {
+    background: rgba(99, 102, 241, 0.1);
+    color: #3730a3;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+  }
+
+  &--global {
+    background: rgba(6, 182, 212, 0.1);
+    color: #0e7490;
+    border: 1px solid rgba(6, 182, 212, 0.25);
+  }
+}
+
+// Read-only replacement for the approve/reject/request-info buttons on a
+// NEEDS_INFO row — the reason shows as a tooltip (see [title] in the template).
+.pa-needs-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  background: rgba($color-violet, 0.1);
+  color: $color-violet;
+  border: 1px solid rgba($color-violet, 0.3);
+  white-space: nowrap;
+  cursor: help;
+
+  i { font-size: 11px; }
+
+  &--lg {
+    padding: 8px 16px;
+    font-size: $font-size-sm;
+    border-radius: $radius-md;
+  }
 }
 
 // ── RESPONSIVE ───────────────────────────────────────────────────

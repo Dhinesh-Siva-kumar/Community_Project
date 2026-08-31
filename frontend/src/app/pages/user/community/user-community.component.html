@@ -322,6 +322,8 @@
                     <span class="uc-g-badge uc-g-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ 'user.community.pendingApproval' | translate }}</span>
                   } @else if (community.status === 'REJECTED') {
                     <span class="uc-g-badge uc-g-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ 'common.rejected' | translate }}</span>
+                  } @else if (community.status === 'NEEDS_INFO') {
+                    <span class="uc-g-badge uc-g-badge--needs-info" [title]="community.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill" aria-hidden="true"></i>{{ 'common.needsMoreInfo' | translate }}</span>
                   }
                   @if ((community._count?.members ?? 0) > 50) {
                     <span class="uc-g-badge uc-g-badge--popular"><i class="bi bi-fire" aria-hidden="true"></i>{{ 'user.community.popular' | translate }}</span>
@@ -341,9 +343,11 @@
                 </button>
                 @if (openMenuId() === community.id) {
                   <div class="uc-card-menu-panel">
-                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
-                      <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
-                    </button>
+                    @if (community.status !== 'REJECTED') {
+                      <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                        <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
+                      </button>
+                    }
                     <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
                       <i class="bi bi-trash-fill"></i> {{ 'common.delete' | translate }}
                     </button>
@@ -369,10 +373,6 @@
               </div>
 
               <p class="uc-g-desc">{{ community.description }}</p>
-
-              @if (community.status === 'REJECTED' && community.rejectionReason) {
-                <p class="uc-g-rejection-reason"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> {{ community.rejectionReason }}</p>
-              }
 
               <div class="uc-g-foot">
                 <div class="uc-g-stats">
@@ -427,6 +427,13 @@
                   }
                 }
               </div>
+
+              @if ((community.status === 'REJECTED' || community.status === 'NEEDS_INFO') && community.rejectionReason) {
+                <p class="uc-g-rejection-reason" [class.uc-g-rejection-reason--needs-info]="community.status === 'NEEDS_INFO'">
+                  <i class="bi" [class.bi-exclamation-circle-fill]="community.status === 'REJECTED'" [class.bi-question-circle-fill]="community.status === 'NEEDS_INFO'" aria-hidden="true"></i>
+                  {{ community.rejectionReason }}
+                </p>
+              }
             </div>
           </article>
         }
@@ -461,12 +468,11 @@
                   <span class="uc-l-owner-badge uc-l-owner-badge--pending"><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ 'user.community.pendingApproval' | translate }}</span>
                 } @else if (community.status === 'REJECTED') {
                   <span class="uc-l-owner-badge uc-l-owner-badge--rejected" [title]="community.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill" aria-hidden="true"></i>{{ 'common.rejected' | translate }}</span>
+                } @else if (community.status === 'NEEDS_INFO') {
+                  <span class="uc-l-owner-badge uc-l-owner-badge--needs-info" [title]="community.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill" aria-hidden="true"></i>{{ 'common.needsMoreInfo' | translate }}</span>
                 }
               </div>
               <div class="uc-l-desc">{{ community.description }}</div>
-              @if (community.status === 'REJECTED' && community.rejectionReason) {
-                <p class="uc-g-rejection-reason">{{ community.rejectionReason }}</p>
-              }
               <div class="uc-l-chips">
                 <span class="uc-chip uc-chip--sm uc-chip--members">
                   <i class="bi bi-people-fill" aria-hidden="true"></i>{{ community._count?.members ?? 0 }}
@@ -481,6 +487,12 @@
                   </span>
                 }
               </div>
+              @if ((community.status === 'REJECTED' || community.status === 'NEEDS_INFO') && community.rejectionReason) {
+                <p class="uc-g-rejection-reason" [class.uc-g-rejection-reason--needs-info]="community.status === 'NEEDS_INFO'">
+                  <i class="bi" [class.bi-exclamation-circle-fill]="community.status === 'REJECTED'" [class.bi-question-circle-fill]="community.status === 'NEEDS_INFO'" aria-hidden="true"></i>
+                  {{ community.rejectionReason }}
+                </p>
+              }
             </div>
 
             @if (!isOwner(community)) {
@@ -525,9 +537,11 @@
                 </button>
                 @if (openMenuId() === community.id) {
                   <div class="uc-card-menu-panel">
-                    <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
-                      <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
-                    </button>
+                    @if (community.status !== 'REJECTED') {
+                      <button type="button" class="uc-card-menu-item" (click)="onEditFromMenu(community)">
+                        <i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}
+                      </button>
+                    }
                     <button type="button" class="uc-card-menu-item uc-card-menu-item--danger" (click)="onDeleteFromMenu(community)">
                       <i class="bi bi-trash-fill"></i> {{ 'common.delete' | translate }}
                     </button>

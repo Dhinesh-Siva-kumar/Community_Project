@@ -60,7 +60,7 @@ export class BusinessService {
     search?: string;
     sortBy?: string;
     sortDir?: string;
-    approvalStatus?: ApprovalStatus;
+    approvalStatus?: ApprovalStatus | ApprovalStatus[];
   } = {}): Observable<PaginatedResponse<Business>> {
     return this.api.get<PaginatedResponse<Business>>('/business/mine', params);
   }
@@ -71,6 +71,10 @@ export class BusinessService {
 
   rejectBusiness(id: string, reason?: string): Observable<Business> {
     return this.api.put<Business>(`/business/${id}/reject`, reason ? { reason } : {});
+  }
+
+  requestMoreInfoBusiness(id: string, reason: string): Observable<Business> {
+    return this.api.put<Business>(`/business/${id}/request-more-info`, { reason });
   }
 
   getPendingBusinesses(params?: PendingBusinessQueryParams): Observable<PaginatedResponse<Business>> {

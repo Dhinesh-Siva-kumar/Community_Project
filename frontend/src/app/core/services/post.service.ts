@@ -55,6 +55,10 @@ export class PostService {
     return this.api.put<Post>(`/posts/${id}/reject`, reason ? { reason } : {});
   }
 
+  requestMoreInfoPost(id: string, reason: string): Observable<Post> {
+    return this.api.put<Post>(`/posts/${id}/request-more-info`, { reason });
+  }
+
   getPendingPosts(params?: PendingPostsQueryParams): Observable<PaginatedResponse<Post>> {
     const clean: Record<string, any> = {};
     if (params) {

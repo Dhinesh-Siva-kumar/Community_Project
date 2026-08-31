@@ -1,6 +1,6 @@
 @if (open) {
   <div class="au-backdrop" (click)="requestClose()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle()" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle() | translate" (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -12,7 +12,7 @@
         <i class="bi" [class.bi-people-fill]="!isEditing()" [class.bi-pencil-square]="isEditing()"></i>
       </div>
       <div class="au-header__text cm-modal-header-inner">
-        <h5 class="au-header__title cm-modal-title">{{ modalTitle() }}</h5>
+        <h5 class="au-header__title cm-modal-title">{{ modalTitle() | translate }}</h5>
         <p class="au-header__sub cm-modal-subtitle">
           {{ (isEditing() ? 'components.communityForm.editSubtitle' : 'components.communityForm.createSubtitle') | translate }}
         </p>
@@ -65,11 +65,14 @@
             <!-- Category -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
               <label class="cm-label">{{ 'components.communityForm.categoryLabel' | translate }} <span class="cm-required">*</span></label>
-              <app-searchable-select
-                formControlName="interests"
-                [options]="interestOptions"
-                [placeholder]="'components.communityForm.categoryPlaceholder' | translate"
-              ></app-searchable-select>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-tag-fill cm-input-icon"></i>
+                <app-searchable-select
+                  formControlName="interests"
+                  [options]="interestOptions"
+                  [placeholder]="'components.communityForm.categoryPlaceholder' | translate"
+                ></app-searchable-select>
+              </div>
               @if (f['interests'].touched && f['interests'].invalid) {
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
@@ -119,11 +122,14 @@
             <!-- Country -->
             <div class="cm-field-group" [class.cm-field-group--error]="f['countryId'].touched && f['countryId'].invalid">
               <label class="cm-label">{{ 'components.communityForm.countryLabel' | translate }} <span class="cm-required">*</span></label>
-              <app-searchable-select
-                formControlName="countryId"
-                [options]="countryOptions"
-                [placeholder]="'components.communityForm.countryPlaceholder' | translate"
-              ></app-searchable-select>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-globe2 cm-input-icon"></i>
+                <app-searchable-select
+                  formControlName="countryId"
+                  [options]="countryOptions"
+                  [placeholder]="'components.communityForm.countryPlaceholder' | translate"
+                ></app-searchable-select>
+              </div>
               @if (f['countryId'].touched && f['countryId'].invalid) {
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>Please select a country.
@@ -189,7 +195,10 @@
           </div>
 
           <div class="cm-field-group">
-            <app-community-rules-input formControlName="rules"></app-community-rules-input>
+            <div class="cm-input-wrap cm-rules-wrap">
+              <i class="bi bi-shield-check cm-input-icon"></i>
+              <app-community-rules-input formControlName="rules"></app-community-rules-input>
+            </div>
           </div>
         </div>
 

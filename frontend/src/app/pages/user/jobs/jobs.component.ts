@@ -487,12 +487,13 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own jobs awaiting admin approval only. */
+  /** "Pending Approval" tab — the caller's own jobs still awaiting admin
+   * action: freshly submitted (PENDING) or kicked back for more info (NEEDS_INFO). */
   loadMyJobs(): void {
     this.loading.set(true);
     this.currentPage.set(1);
     this.activeJobId.set(null);
-    this.jobService.getMyJobs({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
+    this.jobService.getMyJobs({ page: 1, limit: 100, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<Job>) => {
         this.jobs.set(res.data);
         this.totalItems.set(res.total);
@@ -507,7 +508,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   }
 
   loadMyPendingJobsCount(): void {
-    this.jobService.getMyJobs({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+    this.jobService.getMyJobs({ page: 1, limit: 1, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<Job>) => this.myPendingJobsCount.set(res.total),
       error: () => {},
     });
@@ -1109,7 +1110,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (updated) => {
           this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
-          if (updated.status === 'PENDING' && job.status === 'REJECTED') {
+          if (updated.status === 'PENDING' && (job.status === 'REJECTED' || job.status === 'NEEDS_INFO')) {
             this.loadMyPendingJobsCount();
             this.toast.success('user.jobs.toast.jobResubmittedAdminApproval');
           } else {

@@ -310,6 +310,8 @@
             }
             @if (evt.status === 'PENDING') {
               <span class="ev-badge ev-badge--approval-pending"><i class="bi bi-hourglass-split"></i> {{ 'user.events.pendingApproval' | translate }}</span>
+            } @else if (evt.status === 'NEEDS_INFO') {
+              <span class="ev-badge ev-badge--needs-info" [title]="evt.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}</span>
             }
           </div>
 
@@ -348,6 +350,11 @@
             <p class="ev-card__reject-note">
               <i class="bi bi-exclamation-circle-fill"></i>
               <span><strong>{{ 'user.events.rejected' | translate }}</strong> {{ evt.rejectionReason }}</span>
+            </p>
+          } @else if (evt.status === 'NEEDS_INFO' && evt.rejectionReason) {
+            <p class="ev-card__reject-note">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span><strong>{{ 'common.needsMoreInfo' | translate }}:</strong> {{ evt.rejectionReason }}</span>
             </p>
           }
 

@@ -114,7 +114,11 @@ export const ListJobsQueryDto = z.object({
   // ── Status (admin only — public job listing always shows active) ──
   status: z.enum(['active', 'inactive']).optional(),
   // Moderation status — distinct from `status` above (which means active/inactive).
-  approvalStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  // Accepts a single value or a comma-separated list (e.g. the user-side
+  // "Pending Approval" tab needs both PENDING and NEEDS_INFO submissions).
+  approvalStatus: z.string().optional()
+    .transform((v) => (v ? v.split(',').map((s) => s.trim()) : undefined))
+    .pipe(z.array(z.enum(['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_INFO'])).optional()),
 
   // ── Sorting ──────────────────────────────────────────────────
   sortBy: z.enum([
@@ -144,8 +148,16 @@ export const RejectJobDto = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+export const RequestMoreInfoJobDto = z.object({
+  reason: z.string({ required_error: 'Please describe what information is needed' })
+    .trim()
+    .min(1, 'Please describe what information is needed')
+    .max(500),
+});
+
 export type CreateJobDtoType     = z.infer<typeof CreateJobDto>;
 export type UpdateJobDtoType     = z.infer<typeof UpdateJobDto>;
 export type ListJobsQueryDtoType = z.infer<typeof ListJobsQueryDto>;
 export type ListPendingJobsQueryDtoType = z.infer<typeof ListPendingJobsQueryDto>;
 export type RejectJobDtoType     = z.infer<typeof RejectJobDto>;
+export type RequestMoreInfoJobDtoType = z.infer<typeof RequestMoreInfoJobDto>;

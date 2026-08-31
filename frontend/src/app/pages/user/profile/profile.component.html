@@ -360,7 +360,13 @@
                   <div class="prf-item__body">
                     <div class="prf-item__title-row">
                       <h6 class="prf-item__name">{{ community.name }}</h6>
-                      @if (community.isActive ?? community.is_active) {
+                      @if (community.status === 'PENDING') {
+                        <span class="prf-badge prf-badge--pending">{{ 'user.profile.pendingApproval' | translate }}</span>
+                      } @else if (community.status === 'REJECTED') {
+                        <span class="prf-badge prf-badge--rejected">{{ 'common.rejected' | translate }}</span>
+                      } @else if (community.status === 'NEEDS_INFO') {
+                        <span class="prf-badge prf-badge--needs-info">{{ 'common.needsMoreInfo' | translate }}</span>
+                      } @else if (community.isActive ?? community.is_active) {
                         <span class="prf-badge prf-badge--active">{{ 'common.active' | translate }}</span>
                       } @else {
                         <span class="prf-badge prf-badge--inactive">{{ 'common.inactive' | translate }}</span>
@@ -370,9 +376,11 @@
                   </div>
                 </div>
                 <div class="prf-item__actions" (click)="$event.stopPropagation()">
-                  <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditCommunity(community.id)" [attr.aria-label]="'user.profile.editCommunity' | translate">
-                    <i class="bi bi-pencil"></i>
-                  </button>
+                  @if (community.status !== 'REJECTED') {
+                    <button class="prf-btn prf-btn--icon prf-btn--edit" (click)="openEditCommunity(community.id)" [attr.aria-label]="'user.profile.editCommunity' | translate">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  }
                   <button class="prf-btn prf-btn--icon prf-btn--danger" (click)="openDeleteCommunity(community)" [attr.aria-label]="'user.profile.deleteCommunity' | translate">
                     <i class="bi bi-trash"></i>
                   </button>

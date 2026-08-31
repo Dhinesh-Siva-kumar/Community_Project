@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateJobDto, UpdateJobDto, ListJobsQueryDto, ListPendingJobsQueryDto, RejectJobDto } from './jobs.dto';
+import { CreateJobDto, UpdateJobDto, ListJobsQueryDto, ListPendingJobsQueryDto, RejectJobDto, RequestMoreInfoJobDto } from './jobs.dto';
 import * as jobsService from './jobs.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
@@ -99,6 +99,14 @@ export async function reject(req: Request, res: Response, next: NextFunction): P
   try {
     const { reason } = RejectJobDto.parse(req.body ?? {});
     const result = await jobsService.reject(req.params['id'] as string, req.user!.sub, reason);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function requestMoreInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { reason } = RequestMoreInfoJobDto.parse(req.body ?? {});
+    const result = await jobsService.requestMoreInfo(req.params['id'] as string, req.user!.sub, reason);
     res.json(result);
   } catch (err) { next(err); }
 }

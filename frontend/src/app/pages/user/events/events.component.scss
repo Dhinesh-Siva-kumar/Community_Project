@@ -800,6 +800,7 @@
   &--online { background: $color-badge-blue-bg; color: $color-badge-blue-text; }
   &--hybrid { background: $color-badge-purple-bg; color: $color-badge-purple-text; }
   &--approval-pending { background: $color-warning-light; color: $color-warning-text; }
+  &--needs-info { background: $color-badge-purple-bg; color: $color-badge-purple-text; }
   &--near { background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; }
 }
 .ev-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

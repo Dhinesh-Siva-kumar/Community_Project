@@ -41,6 +41,7 @@
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
+    "needsMoreInfo": "Needs More Info",
     "language": "Language",
     "profile": "Profile",
     "logout": "Logout",
@@ -1642,6 +1643,7 @@
         "inactive": "Inactive",
         "pending": "Pending Approval",
         "rejected": "Rejected",
+        "needsInfo": "Needs More Info",
         "unknown": "Unknown"
       },
       "visibilityLabel": {
@@ -2388,6 +2390,7 @@
       "filterByGlobalCommunities": "Filter by global communities",
       "filterByPrivateCommunities": "Filter by private communities",
       "filterByDefaultCommunities": "Filter by default communities",
+      "filterByPendingApproval": "Filter by pending approval",
       "searchCommunities": "Search communities",
       "clearSearch": "Clear search",
       "switchView": "Switch view",
@@ -2482,6 +2485,7 @@
         "allStatus": "All Status",
         "active": "Active",
         "inactive": "Inactive",
+        "pendingApproval": "Pending Approval",
         "name": "Name",
         "created": "Created"
       },
@@ -3089,7 +3093,22 @@
       "date": "To date",
       "reasonOptionalShownSubmitter": "Reason (optional) — shown to the submitter",
       "reasonOptionalShownEverySubmitter": "Reason (optional) — shown to every submitter",
+      "reasonRequiredShownSubmitter": "Reason (required) — shown to the submitter",
+      "reasonRequiredShownEverySubmitter": "Reason (required) — shown to every submitter",
+      "requestMoreInfo": "Request More Info",
+      "sureWantRequestMoreInfo": "Are you sure you want to request more information for",
+      "theseWillNeedMoreInfo": "The submitter will be notified and can edit and resubmit once they've addressed it.",
+      "rejectPermanentWarning": "This will permanently delete the submission — this cannot be undone.",
+      "rejectCommunityWarning": "The community will be marked as rejected and can no longer be edited or resubmitted.",
       "filterByCountry": "Filter by country",
+      "allVisibility": "All Visibility",
+      "global": "Global",
+      "private": "Private",
+      "filterByVisibility": "Filter by visibility",
+      "allDefault": "All Communities",
+      "defaultOnly": "Default Only",
+      "nonDefault": "Non-Default",
+      "filterByDefaultStatus": "Filter by default status",
       "selectAll": "Select all",
       "rowsPerPage": "Rows per page",
       "refreshPendingList": "Refresh pending list",
@@ -3120,7 +3139,8 @@
       "description": "Description",
       "toast": {
         "failedApprove": "Failed to approve",
-        "failedReject": "Failed to reject"
+        "failedReject": "Failed to reject",
+        "failedRequestMoreInfo": "Failed to request more information"
       },
       "label": {
         "posts": "Posts",

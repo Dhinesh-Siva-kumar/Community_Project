@@ -183,6 +183,7 @@ export type NotificationType =
   | 'BUSINESS_PENDING' | 'BUSINESS_APPROVED' | 'BUSINESS_REJECTED'
   | 'JOB_PENDING' | 'JOB_APPROVED' | 'JOB_REJECTED'
   | 'EVENT_PENDING' | 'EVENT_APPROVED' | 'EVENT_REJECTED'
+  | 'POST_NEEDS_INFO' | 'COMMUNITY_NEEDS_INFO' | 'BUSINESS_NEEDS_INFO' | 'JOB_NEEDS_INFO' | 'EVENT_NEEDS_INFO'
   // Phase 2: account/moderation transparency
   | 'TRUST_REVOKED' | 'ACCOUNT_DEACTIVATED' | 'PASSWORD_RESET_BY_ADMIN'
   | 'POST_REMOVED' | 'COMMUNITY_REMOVED' | 'BUSINESS_REMOVED' | 'EVENT_REMOVED' | 'JOB_REMOVED'
@@ -200,6 +201,7 @@ export const ALL_NOTIFICATION_TYPES: NotificationType[] = [
   'BUSINESS_PENDING', 'BUSINESS_APPROVED', 'BUSINESS_REJECTED',
   'JOB_PENDING', 'JOB_APPROVED', 'JOB_REJECTED',
   'EVENT_PENDING', 'EVENT_APPROVED', 'EVENT_REJECTED',
+  'POST_NEEDS_INFO', 'COMMUNITY_NEEDS_INFO', 'BUSINESS_NEEDS_INFO', 'JOB_NEEDS_INFO', 'EVENT_NEEDS_INFO',
   'TRUST_REVOKED', 'ACCOUNT_DEACTIVATED', 'PASSWORD_RESET_BY_ADMIN',
   'POST_REMOVED', 'COMMUNITY_REMOVED', 'BUSINESS_REMOVED', 'EVENT_REMOVED', 'JOB_REMOVED',
   'COMMUNITY_MEMBER_JOINED', 'WELCOME',
@@ -228,8 +230,10 @@ export interface CommunityRequest {
 
 export type CommunityMode = 'HELP_EMERGENCY' | 'ENQUIRE';
 
-/** Admin moderation status — same shape as PostStatus, now shared by Community/Business/Job/Event. */
-export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+/** Admin moderation status — same shape as PostStatus, now shared by Community/Business/Job/Event.
+ * NEEDS_INFO is a non-terminal state: an admin asked for changes without rejecting outright —
+ * the submitter can edit and resubmit, which flips it back to PENDING. */
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO';
 
 export interface Community {
   id: string;
@@ -291,7 +295,7 @@ export interface CommunityAnalyticsCounts {
 }
 
 export type PostType = 'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
-export type PostStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type PostStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO';
 
 export interface Post {
   id: string;

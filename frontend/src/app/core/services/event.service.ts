@@ -8,7 +8,7 @@ export interface MyEventsQueryParams {
   page?:  number;
   limit?: number;
   search?: string;
-  approvalStatus?: ApprovalStatus;
+  approvalStatus?: ApprovalStatus | ApprovalStatus[];
 }
 
 export interface PendingEventsQueryParams {
@@ -91,6 +91,10 @@ export class EventService {
 
   rejectEvent(id: string, reason?: string): Observable<Event> {
     return this.api.put<Event>(`/events/${id}/reject`, reason ? { reason } : {});
+  }
+
+  requestMoreInfoEvent(id: string, reason: string): Observable<Event> {
+    return this.api.put<Event>(`/events/${id}/request-more-info`, { reason });
   }
 
   getPendingEvents(params?: PendingEventsQueryParams): Observable<PaginatedResponse<Event>> {

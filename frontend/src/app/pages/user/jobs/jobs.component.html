@@ -342,6 +342,8 @@
           <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> {{ 'user.jobs.pendingApproval' | translate }}</span>
         } @else if (job.status === 'REJECTED') {
           <span class="jb-badge jb-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}</span>
+        } @else if (job.status === 'NEEDS_INFO') {
+          <span class="jb-badge jb-badge--needs-info" [title]="job.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}</span>
         }
         @if (job.jobType) {
           <span class="{{ getJobTypeBadgeClass(job.jobType) }}">{{ job.jobType | enumLabel:'jobType' }}</span>
@@ -351,7 +353,7 @@
         }
       </div>
     </div>
-    @if (job.status === 'REJECTED' && job.rejectionReason) {
+    @if ((job.status === 'REJECTED' || job.status === 'NEEDS_INFO') && job.rejectionReason) {
       <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
     }
 
@@ -824,12 +826,14 @@
             }
             <div class="jbg-cover-sheen" aria-hidden="true"></div>
             <div class="jbg-cover-scrim" aria-hidden="true"></div>
-            @if (job.status === 'PENDING' || job.status === 'REJECTED') {
+            @if (job.status === 'PENDING' || job.status === 'REJECTED' || job.status === 'NEEDS_INFO') {
               <div class="jbg-cover-badges">
                 @if (job.status === 'PENDING') {
                   <span class="jbg-badge jbg-badge--pending"><i class="bi bi-hourglass-split"></i>{{ 'user.jobs.pendingApproval' | translate }}</span>
                 } @else if (job.status === 'REJECTED') {
                   <span class="jbg-badge jbg-badge--rejected" [title]="job.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i>{{ 'common.rejected' | translate }}</span>
+                } @else if (job.status === 'NEEDS_INFO') {
+                  <span class="jbg-badge jbg-badge--needs-info" [title]="job.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill"></i>{{ 'common.needsMoreInfo' | translate }}</span>
                 }
               </div>
             }
@@ -862,7 +866,7 @@
             @if (job.description) {
               <p class="jbg-desc">{{ job.description }}</p>
             }
-            @if (job.status === 'REJECTED' && job.rejectionReason) {
+            @if ((job.status === 'REJECTED' || job.status === 'NEEDS_INFO') && job.rejectionReason) {
               <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
             }
 

@@ -117,9 +117,9 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     query.where('e.status', 'APPROVED');
     countQuery.where('status', 'APPROVED');
   }
-  if (approvalStatus) {
-    query.andWhere('e.status', approvalStatus);
-    countQuery.andWhere('status', approvalStatus);
+  if (approvalStatus?.length) {
+    query.whereIn('e.status', approvalStatus);
+    countQuery.whereIn('status', approvalStatus);
   }
   if (userId) { query.andWhere('e.user_id', userId); countQuery.andWhere('user_id', userId); }
 
@@ -336,16 +336,31 @@ export async function approve(id: string, adminId: string) {
   return findOne(id);
 }
 
+// Rejecting permanently deletes the submission — there is no lingering
+// REJECTED state to resubmit from. Use requestMoreInfo() below when the
+// owner should be able to fix and resubmit instead.
 export async function reject(id: string, adminId: string, reason?: string) {
   const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
   if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
-  if (event['status'] === 'REJECTED') return findOne(id);
-
-  await db('events').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
   const message = `Your event "${event['title']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
-  await notificationsService.create(event['user_id'] as string, 'EVENT_REJECTED', message, id);
+  await notificationsService.create(event['user_id'] as string, 'EVENT_REJECTED', message);
   await logAudit(adminId, 'EVENT_REJECTED', { previousStatus: event['status'], reason: reason ?? null, title: event['title'] }, 'events', id);
+
+  await db('events').where({ id }).delete();
+  deleteUploadedFiles(event['images']);
+
+  return { message: 'Event rejected and removed' };
+}
+
+export async function requestMoreInfo(id: string, adminId: string, reason: string) {
+  const event = await db('events').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
+
+  await db('events').where({ id }).update({ status: 'NEEDS_INFO', rejection_reason: reason });
+  const message = `More information is needed for your event "${event['title']}": ${reason}`;
+  await notificationsService.create(event['user_id'] as string, 'EVENT_NEEDS_INFO', message, id);
+  await logAudit(adminId, 'EVENT_NEEDS_INFO', { previousStatus: event['status'], reason, title: event['title'] }, 'events', id);
   return findOne(id);
 }
 
@@ -375,11 +390,11 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   if (data.location !== undefined) updateData['location'] = data.location;
   if (data.country !== undefined) updateData['country'] = data.country;
 
-  // Resubmitting a rejected event: the owner editing their own rejected
+  // Resubmitting a rejected or needs-info event: the owner editing their own
   // event re-enters the approval gate exactly like a brand-new one, instead
-  // of silently staying REJECTED after the edit.
+  // of silently staying REJECTED/NEEDS_INFO after the edit.
   let reenteredPending = false;
-  if (!byAdmin && event['status'] === 'REJECTED') {
+  if (!byAdmin && (event['status'] === 'REJECTED' || event['status'] === 'NEEDS_INFO')) {
     const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
     const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
     updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';

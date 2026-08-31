@@ -544,12 +544,13 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "Pending Approval" tab — the caller's own businesses awaiting admin approval only. */
+  /** "Pending Approval" tab — the caller's own businesses still awaiting admin
+   * action: freshly submitted (PENDING) or kicked back for more info (NEEDS_INFO). */
   loadMyBusinesses(): void {
     this.currentView.set('list');
     this.businessView.set('list');
     this.loading.set(true);
-    this.svc.getMyBusinesses({ page: 1, limit: 100, approvalStatus: 'PENDING' }).subscribe({
+    this.svc.getMyBusinesses({ page: 1, limit: 100, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<Business>) => {
         this.businesses.set(res.data);
         this.allFilteredBusinesses.set(res.data);
@@ -566,7 +567,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   }
 
   loadMyPendingBusinessCount(): void {
-    this.svc.getMyBusinesses({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+    this.svc.getMyBusinesses({ page: 1, limit: 1, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (res: PaginatedResponse<Business>) => this.myPendingBusinessCount.set(res.total),
       error: () => {},
     });

@@ -45,6 +45,14 @@
         <span class="admin-stat-card__label">{{ 'admin.community.default' | translate }}</span>
       </div>
     </button>
+    <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="communityStatFilter() === 'pending'"
+      (click)="setCommunityStatFilter('pending')" [attr.aria-label]="'admin.community.filterByPendingApproval' | translate">
+      <div class="admin-stat-card__icon admin-stat-card__icon--pending"><i class="bi bi-hourglass-split"></i></div>
+      <div class="admin-stat-card__body">
+        <span class="admin-stat-card__value">{{ pendingApprovalCount() }}</span>
+        <span class="admin-stat-card__label">{{ 'admin.community.label.pendingApproval' | translate }}</span>
+      </div>
+    </button>
   </div>
 }
 
@@ -337,6 +345,10 @@
                 <a class="cc-status-tag cc-status-tag--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
                   <i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}
                 </a>
+              } @else if (community.status === 'NEEDS_INFO') {
+                <a class="cc-status-tag cc-status-tag--needs-info" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="community.rejectionReason || ('common.needsMoreInfo' | translate)">
+                  <i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}
+                </a>
               } @else {
                 <span class="cc-status-tag"
                       [class.cc-status-tag--active]="community.is_active"
@@ -603,6 +615,10 @@
                   } @else if (community.status === 'REJECTED') {
                     <a class="cc-approval-chip cc-approval-chip--rejected" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="'admin.community.goApprovalPage' | translate">
                       <i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}
+                    </a>
+                  } @else if (community.status === 'NEEDS_INFO') {
+                    <a class="cc-approval-chip cc-approval-chip--needs-info" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'community' }" (click)="$event.stopPropagation()" [title]="community.rejectionReason || ('common.needsMoreInfo' | translate)">
+                      <i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}
                     </a>
                   } @else {
                     <span class="um-badge" [class.um-badge--trusted]="community.is_active" [class.um-badge--blocked]="!community.is_active">
@@ -874,7 +890,10 @@
               </div>
 
               <div class="cm-field-group">
-                <app-community-rules-input formControlName="rules"></app-community-rules-input>
+                <div class="cm-input-wrap cm-rules-wrap">
+                  <i class="bi bi-shield-check cm-input-icon"></i>
+                  <app-community-rules-input formControlName="rules"></app-community-rules-input>
+                </div>
               </div>
             </div>
 

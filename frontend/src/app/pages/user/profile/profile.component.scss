@@ -604,6 +604,7 @@ textarea.form-control { border-radius: $radius-sm; }
   &--inactive { background: rgba(120, 113, 108, 0.12); border: 1.5px solid rgba(120, 113, 108, 0.28); color: $color-stone-500; }
   &--pending  { background: rgba(217, 119, 6, 0.12); border: 1.5px solid rgba(217, 119, 6, 0.28); color: #B45309; }
   &--rejected { background: rgba(220, 38, 38, 0.10); border: 1.5px solid rgba(220, 38, 38, 0.25); color: $color-danger; }
+  &--needs-info { background: rgba(124, 58, 237, 0.10); border: 1.5px solid rgba(124, 58, 237, 0.25); color: #7c3aed; }
   &--neutral  { background: rgba(14, 165, 233, 0.10); border: 1.5px solid rgba(14, 165, 233, 0.25); color: #0284C7; }
 }
 

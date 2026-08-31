@@ -74,6 +74,7 @@
     &--fulltime { background: $color-info-light; color: $color-info-text; }
     &--parttime { background: $color-success-light; color: $color-success-text; }
     &--contract { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
+    &--pending  { background: rgba(217, 119, 6, 0.12); color: #d97706; }
   }
 
   &__body { display: flex; flex-direction: column; min-width: 0; }
@@ -916,6 +917,17 @@
 
     &:hover { filter: brightness(0.95); text-decoration: none; }
   }
+
+  &.cc-status-tag--needs-info {
+    background: rgba($color-violet, 0.7);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { filter: brightness(0.95); text-decoration: none; }
+  }
 }
 
 // Avatar — overlaps head/body seam via negative top margin.
@@ -1130,6 +1142,12 @@
     background: rgba($color-danger, 0.1);
     color: $color-danger;
     border: 1px solid rgba($color-danger, 0.25);
+  }
+
+  &--needs-info {
+    background: rgba($color-violet, 0.1);
+    color: $color-violet;
+    border: 1px solid rgba($color-violet, 0.25);
   }
 }
 
@@ -1948,6 +1966,37 @@
 
     &:focus {
       box-shadow: 0 0 0 3px rgba($danger, 0.1);
+    }
+  }
+}
+
+// ── Community Rules tag input — same box treatment as Community Name.
+// app-community-rules-input/app-tag-input are unknown custom elements
+// (default display:inline, shrink-to-fit unless forced block here), and
+// TagInputComponent has its own encapsulated styles, so ::ng-deep is
+// needed to reach in; scoped to this component's own stylesheet, it only
+// ever applies within this modal.
+.cm-rules-wrap {
+  width: 100%;
+
+  ::ng-deep app-community-rules-input,
+  ::ng-deep app-tag-input {
+    display: block;
+    width: 100%;
+  }
+
+  ::ng-deep .tag-input-host {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px 0 40px;
+    border: 1.5px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg-page;
+
+    &--focus {
+      border-color: $color-primary;
+      background: $color-bg-card;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
     }
   }
 }

@@ -9,7 +9,7 @@ export interface MyJobsQueryParams {
   limit?: number;
   search?: string;
   sortBy?: string;
-  approvalStatus?: ApprovalStatus;
+  approvalStatus?: ApprovalStatus | ApprovalStatus[];
 }
 
 export interface PendingJobsQueryParams {
@@ -135,6 +135,10 @@ export class JobService {
 
   rejectJob(id: string, reason?: string): Observable<Job> {
     return this.api.put<Job>(`/jobs/${id}/reject`, reason ? { reason } : {});
+  }
+
+  requestMoreInfoJob(id: string, reason: string): Observable<Job> {
+    return this.api.put<Job>(`/jobs/${id}/request-more-info`, { reason });
   }
 
   getPendingJobs(params?: PendingJobsQueryParams): Observable<PaginatedResponse<Job>> {

@@ -38,12 +38,19 @@ export const ListPendingPostsQueryDto = z.object({
 export const ListMyPostsQueryDto = z.object({
   page:   z.coerce.number().int().min(1).default(1),
   limit:  z.coerce.number().int().min(1).max(100).default(20),
-  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_INFO']).optional(),
   communityId: z.string().uuid().optional(),
 });
 
 export const RejectPostDto = z.object({
   reason: z.string().trim().max(500).optional(),
+});
+
+export const RequestMoreInfoPostDto = z.object({
+  reason: z.string({ required_error: 'Please describe what information is needed' })
+    .trim()
+    .min(1, 'Please describe what information is needed')
+    .max(500),
 });
 
 export const AddCommentDto = z.object({
@@ -61,3 +68,4 @@ export type ListPostsQueryDtoType = z.infer<typeof ListPostsQueryDto>;
 export type ListPendingPostsQueryDtoType = z.infer<typeof ListPendingPostsQueryDto>;
 export type ListMyPostsQueryDtoType = z.infer<typeof ListMyPostsQueryDto>;
 export type RejectPostDtoType = z.infer<typeof RejectPostDto>;
+export type RequestMoreInfoPostDtoType = z.infer<typeof RequestMoreInfoPostDto>;

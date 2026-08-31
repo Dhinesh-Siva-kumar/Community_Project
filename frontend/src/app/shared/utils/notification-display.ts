@@ -31,6 +31,11 @@ const ICONS: Record<NotificationType, string> = {
   EVENT_PENDING: 'bi-hourglass-split',
   EVENT_APPROVED: 'bi-check-circle-fill',
   EVENT_REJECTED: 'bi-x-circle-fill',
+  POST_NEEDS_INFO: 'bi-question-circle-fill',
+  COMMUNITY_NEEDS_INFO: 'bi-question-circle-fill',
+  BUSINESS_NEEDS_INFO: 'bi-question-circle-fill',
+  JOB_NEEDS_INFO: 'bi-question-circle-fill',
+  EVENT_NEEDS_INFO: 'bi-question-circle-fill',
   TRUST_REVOKED: 'bi-patch-exclamation-fill',
   ACCOUNT_DEACTIVATED: 'bi-person-x-fill',
   PASSWORD_RESET_BY_ADMIN: 'bi-shield-lock-fill',
@@ -67,6 +72,11 @@ const COLORS: Record<NotificationType, string> = {
   EVENT_PENDING: '#D97706',
   EVENT_APPROVED: '#16A34A',
   EVENT_REJECTED: '#DC2626',
+  POST_NEEDS_INFO: '#7C3AED',
+  COMMUNITY_NEEDS_INFO: '#7C3AED',
+  BUSINESS_NEEDS_INFO: '#7C3AED',
+  JOB_NEEDS_INFO: '#7C3AED',
+  EVENT_NEEDS_INFO: '#7C3AED',
   TRUST_REVOKED: '#D97706',
   ACCOUNT_DEACTIVATED: '#DC2626',
   PASSWORD_RESET_BY_ADMIN: '#D97706',
@@ -103,6 +113,11 @@ const LABELS: Record<NotificationType, string> = {
   EVENT_PENDING: 'An event needs approval',
   EVENT_APPROVED: 'Your event is approved',
   EVENT_REJECTED: 'Your event is rejected',
+  POST_NEEDS_INFO: 'Your post needs more information',
+  COMMUNITY_NEEDS_INFO: 'Your community needs more information',
+  BUSINESS_NEEDS_INFO: 'Your business needs more information',
+  JOB_NEEDS_INFO: 'Your job needs more information',
+  EVENT_NEEDS_INFO: 'Your event needs more information',
   TRUST_REVOKED: 'Your trusted status is revoked',
   ACCOUNT_DEACTIVATED: 'Your account is deactivated',
   PASSWORD_RESET_BY_ADMIN: 'Your password is reset by an admin',
@@ -171,7 +186,7 @@ export function notificationRoute(
     return { path: ['/admin/approval'], queryParams: { tab } };
   }
 
-  if (type === 'POST_APPROVED' || type === 'POST_REJECTED' || type === 'POST_REMOVED' || type === 'NEW_LIKE' || type === 'NEW_COMMENT') {
+  if (type === 'POST_APPROVED' || type === 'POST_REJECTED' || type === 'POST_NEEDS_INFO' || type === 'POST_REMOVED' || type === 'NEW_LIKE' || type === 'NEW_COMMENT') {
     // Only ever sent to a non-admin submitter — admin-authored posts skip
     // the pending/approval gate entirely, so this path never fires for admins.
     return { path: ['/user/profile'], queryParams: { tab: 'posts' } };

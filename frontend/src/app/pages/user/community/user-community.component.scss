@@ -907,6 +907,7 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   &--popular  { background: rgba($color-primary, 0.94); color: $color-on-primary; }
   &--pending  { background: rgba(245, 158, 11, 0.94); color: #fff; }
   &--rejected { background: rgba(220, 38, 38, 0.94); color: #fff; }
+  &--needs-info { background: rgba(124, 58, 237, 0.94); color: #fff; }
 }
 
 .uc-g-body { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 12px 11px; }
@@ -955,10 +956,15 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   background: rgba(220, 38, 38, 0.08);
   border-radius: $radius-sm;
   padding: 6px 8px;
-  margin: 0 0 10px;
+  margin: 10px 0 0;
   line-height: 1.4;
 
   i { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+
+  &--needs-info {
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.08);
+  }
 }
 
 .uc-g-desc {
@@ -1528,6 +1534,7 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
 
   &--pending  { background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); color: #b45309; }
   &--rejected { background: rgba(220, 38, 38, 0.12);  border-color: rgba(220, 38, 38, 0.40);  color: #dc2626; }
+  &--needs-info { background: rgba(124, 58, 237, 0.12); border-color: rgba(124, 58, 237, 0.40); color: #7c3aed; }
 }
 
 // ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown ──

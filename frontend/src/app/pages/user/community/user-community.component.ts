@@ -280,10 +280,11 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     return params;
   }
 
-  /** "Pending Approval" tab — the caller's own communities awaiting admin approval only. */
+  /** "Pending Approval" tab — the caller's own communities still awaiting admin
+   * action: freshly submitted (PENDING) or kicked back for more info (NEEDS_INFO). */
   private fetchCommunitiesForCurrentTab(page: number) {
     if (this.activeTab() === 'pending') {
-      return this.communityService.getMyCreatedCommunities({ page, limit: this.pageSize(), approvalStatus: 'PENDING' });
+      return this.communityService.getMyCreatedCommunities({ page, limit: this.pageSize(), approvalStatus: ['PENDING', 'NEEDS_INFO'] });
     }
     return this.communityService.getCommunities(this.buildCommunitiesParams(page));
   }
@@ -349,7 +350,7 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   }
 
   loadMyPendingCount(): void {
-    this.communityService.getMyCreatedCommunities({ page: 1, limit: 1, approvalStatus: 'PENDING' }).subscribe({
+    this.communityService.getMyCreatedCommunities({ page: 1, limit: 1, approvalStatus: ['PENDING', 'NEEDS_INFO'] }).subscribe({
       next: (response: PaginatedResponse<Community>) => this.myPendingCount.set(response.total),
       error: () => {},
     });

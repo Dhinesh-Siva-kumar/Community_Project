@@ -225,9 +225,9 @@ export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?
     query.where('j.status', 'APPROVED');
     countQuery.where('status', 'APPROVED');
   }
-  if (approvalStatus) {
-    query.andWhere('j.status', approvalStatus);
-    countQuery.andWhere('status', approvalStatus);
+  if (approvalStatus?.length) {
+    query.whereIn('j.status', approvalStatus);
+    countQuery.whereIn('status', approvalStatus);
   }
   if (userId) { query.andWhere('j.user_id', userId); countQuery.andWhere('user_id', userId); }
 
@@ -513,16 +513,32 @@ export async function approve(id: string, adminId: string) {
   return findOne(id);
 }
 
+// Rejecting permanently deletes the submission — there is no lingering
+// REJECTED state to resubmit from. Use requestMoreInfo() below when the
+// owner should be able to fix and resubmit instead.
 export async function reject(id: string, adminId: string, reason?: string) {
   const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
   if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
-  if (job['status'] === 'REJECTED') return findOne(id);
-
-  await db('jobs').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
   const message = `Your job "${job['title']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
-  await notificationsService.create(job['user_id'] as string, 'JOB_REJECTED', message, id);
+  await notificationsService.create(job['user_id'] as string, 'JOB_REJECTED', message);
   await logAudit(adminId, 'JOB_REJECTED', { previousStatus: job['status'], reason: reason ?? null, title: job['title'] }, 'jobs', id);
+
+  await db('jobs').where({ id }).delete();
+  deleteUploadedFiles(job['images']);
+  deleteUploadedFile(job['company_logo']);
+
+  return { message: 'Job rejected and removed' };
+}
+
+export async function requestMoreInfo(id: string, adminId: string, reason: string) {
+  const job = await db('jobs').where({ id }).first() as Record<string, unknown> | undefined;
+  if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
+
+  await db('jobs').where({ id }).update({ status: 'NEEDS_INFO', rejection_reason: reason });
+  const message = `More information is needed for your job "${job['title']}": ${reason}`;
+  await notificationsService.create(job['user_id'] as string, 'JOB_NEEDS_INFO', message, id);
+  await logAudit(adminId, 'JOB_NEEDS_INFO', { previousStatus: job['status'], reason, title: job['title'] }, 'jobs', id);
   return findOne(id);
 }
 
@@ -557,11 +573,11 @@ export async function update(id: string, data: UpdateJobDtoType, userId: string)
   // New fields
   Object.assign(updateData, mapNewFields(data));
 
-  // Resubmitting a rejected job: the owner editing their own rejected job
-  // re-enters the approval gate exactly like a brand-new one, instead of
-  // silently staying REJECTED after the edit.
+  // Resubmitting a rejected or needs-info job: the owner editing their own
+  // job re-enters the approval gate exactly like a brand-new one, instead of
+  // silently staying REJECTED/NEEDS_INFO after the edit.
   let reenteredPending = false;
-  if (!byAdmin && job['status'] === 'REJECTED') {
+  if (!byAdmin && (job['status'] === 'REJECTED' || job['status'] === 'NEEDS_INFO')) {
     const caller = await db('users').where({ id: userId }).select('role', 'is_trusted', 'is_blocked').first() as Record<string, unknown> | undefined;
     const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
     updateData['status'] = isAutoApproved ? 'APPROVED' : 'PENDING';
