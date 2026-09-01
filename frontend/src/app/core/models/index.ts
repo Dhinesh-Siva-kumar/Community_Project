@@ -219,16 +219,23 @@ export interface CommunityRequest {
   location?: string;
   pincode?: string;
   interest_id?: number;
+  /** Up to 3 category ids — the multi-select source of truth for Individual communities; empty for Hub. */
+  interest_ids?: number[];
   country?: string;
   country_id?: number;
   is_private?: boolean;
   is_global?: boolean;
   is_default?: boolean;
   community_mode?: CommunityMode;
+  community_type?: CommunityType;
   rules?: string[];
 }
 
 export type CommunityMode = 'HELP_EMERGENCY' | 'ENQUIRE';
+// Hub = an official, admin-managed country community; Individual = a
+// regular user-interest group. Only admins can create/set Hub — non-admin
+// (user-side) communities are always Individual.
+export type CommunityType = 'HUB' | 'INDIVIDUAL';
 
 /** Admin moderation status — same shape as PostStatus, now shared by Community/Business/Job/Event.
  * NEEDS_INFO is a non-terminal state: an admin asked for changes without rejecting outright —
@@ -269,6 +276,12 @@ export interface Community {
   category_name?: string;
   // Added in migration 20240009 — gates which tabs community-detail shows.
   community_mode?: CommunityMode;
+  // Added in migration 20240033 — Hub (official country community, admin-only)
+  // vs Individual (user interest group).
+  community_type?: CommunityType;
+  // Added in migration 20240034 — up to 3 category ids for Individual
+  // communities (empty for Hub); interest_id above mirrors the first entry.
+  interest_ids?: number[];
   // Added in migration 20240011.
   rules?: string[];
   // Only populated by GET /communities/suggested — whether this suggestion

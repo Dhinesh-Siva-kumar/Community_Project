@@ -10,6 +10,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Community, CommunityAnalyticsCounts, CommunityRequest, Country, interests, PaginatedResponse } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
@@ -52,7 +53,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -89,9 +90,24 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   ];
 
   // ── Radio group options (app-radio-group, create/edit modal) ──
-  readonly visibilityOptions: RadioOption[] = [
+  private readonly visibilityOptionsAll: RadioOption[] = [
     { value: 'private', label: 'admin.community.label.private', icon: 'bi-lock-fill' },
     { value: 'global',  label: 'admin.community.label.global',  icon: 'bi-globe2' },
+  ];
+  private readonly visibilityOptionsPrivateOnly: RadioOption[] = [
+    { value: 'private', label: 'admin.community.label.private', icon: 'bi-lock-fill' },
+  ];
+
+  /** Hub communities are always Private, scoped to a single country — Global isn't offered for them. */
+  get visibilityOptions(): RadioOption[] {
+    return this.communityForm?.get('communityType')?.value === 'HUB'
+      ? this.visibilityOptionsPrivateOnly
+      : this.visibilityOptionsAll;
+  }
+
+  readonly communityTypeOptions: RadioOption[] = [
+    { value: 'INDIVIDUAL', label: 'admin.community.label.individualCommunity', icon: 'bi-people-fill' },
+    { value: 'HUB',        label: 'admin.community.label.hubCommunity',        icon: 'bi-globe-americas' },
   ];
 
   readonly communityModeOptions: RadioOption[] = [
@@ -122,14 +138,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   formSubmitAttempted = signal(false);
   showCreateFab      = signal(false);
   viewMode           = signal<'grid' | 'table'>('grid');
+  /** Set from the backend's HUB_COMMUNITY_ALREADY_EXISTS_FOR_COUNTRY error — shown inline in the create/edit modal. */
+  hubCountryConflict = signal<string | null>(null);
 
   private scrollTicking = false;
+  /** Suppresses the communityType side effects (see initForm) while programmatically loading form data (create reset / edit load). */
+  private suppressTypeSideEffects = false;
 
   // ── Filter signals ────────────────────────────────────────
   filterCountry       = signal<string | number | null>(null);
   filterCategory      = signal<string | number | null>(null);
   filterVisibility    = signal<string | number | null>(null);
   filterCommunityMode = signal<'HELP_EMERGENCY' | 'ENQUIRE' | null>(null);
+  filterCommunityType = signal<'HUB' | 'INDIVIDUAL' | null>(null);
   filterIsDefault     = signal<boolean | null>(null);
   filterFromDate   = signal('');
   filterToDate     = signal('');
@@ -203,6 +224,9 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCommunityMode()) {
       add('communityMode', this.filterCommunityMode() === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency Assistance', this.filterCommunityMode());
     }
+    if (this.filterCommunityType()) {
+      add('communityType', this.filterCommunityType() === 'HUB' ? 'Hub Community' : 'Individual Community', this.filterCommunityType());
+    }
     if (this.filterIsDefault() !== null) {
       add('isDefault', this.filterIsDefault() ? 'Default Only' : 'Non-Default', this.filterIsDefault());
     }
@@ -273,15 +297,47 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         '',
         [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(150)],
       ],
-      interests:   [null, Validators.required],
+      // Required only for Individual communities (1–3 categories) — Hub
+      // communities carry none; enforced manually in submitForm() since it
+      // depends on the communityType field.
+      interests:   [[] as number[]],
       description: ['', [Validators.required, noWhitespace, Validators.maxLength(500)]],
       image:       [null],
       visibility:  [''],
       isDefault:   [false],
       countryId:   [null, Validators.required],
       communityMode: ['HELP_EMERGENCY', Validators.required],
+      communityType: ['INDIVIDUAL', Validators.required],
       rules:       [[] as string[]],
     });
+
+    // Hub communities are always Private (country-scoped), always Default
+    // (still user-adjustable — not disabled), and never carry a category —
+    // the Category field itself is disabled (not just optional) while Hub
+    // is selected. Switching back to Individual restores Default to its
+    // normal false starting point and re-enables Category.
+    // `suppressTypeSideEffects` guards edit-load/reset patches (which also
+    // set communityType) from re-triggering these as if the admin had just
+    // switched types by hand — e.g. loading an existing Individual
+    // community with isDefault:true shouldn't get silently reset to false.
+    this.communityForm.get('communityType')?.valueChanges.subscribe((type) => {
+      const interestsControl = this.communityForm.get('interests');
+      if (type === 'HUB') {
+        interestsControl?.disable({ emitEvent: false });
+        if (!this.suppressTypeSideEffects) {
+          this.communityForm.patchValue({ visibility: 'private', isDefault: true, interests: [] });
+        }
+      } else {
+        interestsControl?.enable({ emitEvent: false });
+        if (!this.suppressTypeSideEffects) {
+          this.communityForm.patchValue({ isDefault: false });
+        }
+      }
+    });
+
+    // Clear a stale "Hub already exists for this country" error as soon as
+    // the admin changes anything — the previous check no longer applies.
+    this.communityForm.valueChanges.subscribe(() => this.hubCountryConflict.set(null));
   }
 
   get f() {
@@ -360,6 +416,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCategory())   params['category']   = String(this.filterCategory());
     if (this.filterVisibility()) params['visibility'] = String(this.filterVisibility());
     if (this.filterCommunityMode()) params['community_mode'] = this.filterCommunityMode();
+    if (this.filterCommunityType()) params['community_type'] = this.filterCommunityType();
     if (this.filterIsDefault() !== null) params['is_default'] = String(this.filterIsDefault());
     if (this.filterFromDate())   params['from_date']  = this.filterFromDate();
     if (this.filterToDate())     params['to_date']    = this.filterToDate();
@@ -501,6 +558,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onFilterCommunityTypeChange(type: 'HUB' | 'INDIVIDUAL' | null): void {
+    this.filterCommunityType.set(type);
+    this.applyFilters();
+  }
+
   onFilterIsDefaultChange(value: boolean | null): void {
     this.filterIsDefault.set(value);
     this.applyFilters();
@@ -519,6 +581,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.filterCategory.set(null);
     this.filterVisibility.set(null);
     this.filterCommunityMode.set(null);
+    this.filterCommunityType.set(null);
     this.filterIsDefault.set(null);
     this.filterFromDate.set('');
     this.filterToDate.set('');
@@ -559,6 +622,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       case 'category':   this.filterCategory.set(null);  break;
       case 'visibility': this.filterVisibility.set(null); break;
       case 'communityMode': this.filterCommunityMode.set(null); break;
+      case 'communityType': this.filterCommunityType.set(null); break;
       case 'isDefault':  this.filterIsDefault.set(null);  break;
       case 'fromDate':   this.filterFromDate.set('');    break;
       case 'toDate':     this.filterToDate.set('');      break;
@@ -598,12 +662,16 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     // Re-apply defaults that reset() clears.
     const patches: Record<string, unknown> = {};
     const defaultInterest = this.interests.find((i) => i.interest_name === 'Jobs');
-    if (defaultInterest) patches['interests'] = defaultInterest.interest_id;
+    if (defaultInterest) patches['interests'] = [defaultInterest.interest_id];
     const defaultCountry = this.countries.find((c) => c.name === 'India');
     if (defaultCountry) patches['countryId'] = defaultCountry.id;
+    patches['visibility'] = 'private';
     patches['communityMode'] = 'HELP_EMERGENCY';
+    patches['communityType'] = 'INDIVIDUAL';
     patches['rules'] = [];
+    this.suppressTypeSideEffects = true;
     if (Object.keys(patches).length) this.communityForm.patchValue(patches);
+    this.suppressTypeSideEffects = false;
 
     this.selectedImage.set(null);
     this.showModal.set(true);
@@ -612,17 +680,20 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   openEditModal(community: Community): void {
     this.editingCommunity.set(community);
     this.formSubmitAttempted.set(false);
+    this.suppressTypeSideEffects = true;
     const c = community as any;
     this.communityForm.patchValue({
       communityName: community.name,
       description:   community.description ?? '',
-      interests:     c['interest_id'] ?? null,
+      interests:     c['interest_ids'] ?? (c['interest_id'] ? [c['interest_id']] : []),
       countryId:     c['country_id'] ?? null,
       visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
       communityMode: c['community_mode'] ?? 'HELP_EMERGENCY',
+      communityType: c['community_type'] ?? 'INDIVIDUAL',
       rules:         c['rules'] ?? [],
     });
+    this.suppressTypeSideEffects = false;
     this.selectedImage.set(null);
     this.showModal.set(true);
   }
@@ -644,15 +715,19 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   submitForm(): void {
     this.formSubmitAttempted.set(true);
     this.communityForm.markAllAsTouched();
+    this.hubCountryConflict.set(null);
 
     const formData = this.communityForm.value;
 
-    // Image required on create.
-    const imageValid = this.isEditing() || !!this.selectedImage();
+    // Image required on create — except for Hub communities, where it's optional.
+    const imageValid = this.isEditing() || formData.communityType === 'HUB' || !!this.selectedImage();
     // At least one of Private / Global required on create.
     const visibilityValid = this.isEditing() || !!formData.visibility;
+    // Category required for Individual communities only — optional (and never
+    // stored) for Hub.
+    const categoriesValid = formData.communityType === 'HUB' || (Array.isArray(formData.interests) && formData.interests.length > 0);
 
-    if (this.communityForm.invalid || !imageValid || !visibilityValid) {
+    if (this.communityForm.invalid || !imageValid || !visibilityValid || !categoriesValid) {
       this.scrollToFirstError();
       return;
     }
@@ -683,10 +758,15 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
           this.loadCommunities(true);
           this.submitting.set(false);
         },
-        error: () => {
-          this.toast.error(
-            this.isEditing() ? 'Failed to update community' : 'Failed to create community',
-          );
+        error: (err: any) => {
+          if (err?.error?.code === 'HUB_COMMUNITY_ALREADY_EXISTS_FOR_COUNTRY') {
+            this.hubCountryConflict.set(err.error.message as string);
+            this.scrollToFirstError();
+          } else {
+            this.toast.error(
+              this.isEditing() ? 'Failed to update community' : 'Failed to create community',
+            );
+          }
           this.submitting.set(false);
         },
       });
@@ -776,17 +856,22 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       image = this.editingCommunity()?.image ?? undefined;
     }
 
+    // Hub communities carry no category at all, regardless of what's left
+    // in the (hidden) field from before the type was switched.
+    const interestIds: number[] = form.communityType === 'HUB' ? [] : (form.interests ?? []);
+
     return {
       name:        form.communityName,
       description: form.description || undefined,
       image,
-      interest_id: form.interests   || undefined,
+      interest_ids: interestIds,
       country:     selectedCountry?.name,
       country_id:  form.countryId   || undefined,
       is_private:  form.visibility === 'private',
       is_global:   form.visibility === 'global',
       is_default:  form.isDefault   ?? false,
       community_mode: form.communityMode ?? 'HELP_EMERGENCY',
+      community_type: form.communityType ?? 'INDIVIDUAL',
       rules:       form.rules ?? [],
     };
   }

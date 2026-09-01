@@ -22,7 +22,17 @@ export const UpdateUserDto = z.object({
   occupationType:       z.enum(['PROFESSIONAL', 'STUDENT']).optional(),
   institution:          z.string().max(150).optional(),
   course:               z.string().max(150).optional(),
-  graduationYear:       z.coerce.number().int().min(1950).max(2100).optional(),
+  // Optional — a blank field arrives as '' (the profile form always sends
+  // every key via getRawValue()), which z.coerce.number() would otherwise
+  // turn into 0 before .optional() ever gets a chance to skip it. Normalize
+  // '' to null first so it's treated as "clear this field" (saved as NULL)
+  // rather than failing the min/max range check; an absent key stays
+  // undefined and leaves the stored value untouched, same as every other
+  // optional field here.
+  graduationYear:       z.preprocess(
+    (val) => (val === '' ? null : val),
+    z.coerce.number().int().min(1950).max(2100).optional().nullable(),
+  ),
 });
 
 export const ListUsersQueryDto = z.object({

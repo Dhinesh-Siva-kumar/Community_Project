@@ -207,6 +207,12 @@
   margin-left: 2px;
 }
 
+.cm-optional {
+  color: $color-text-muted;
+  font-size: $font-xs;
+  margin-left: 4px;
+}
+
 .cm-char-count {
   font-size: $font-xs;
   color: $color-text-muted;
@@ -331,6 +337,47 @@
   }
 }
 
+// ── Category multi-select — same box treatment as Community Name / the
+// Category select above. app-multi-select has its own encapsulated styles
+// (like app-tag-input above), so ::ng-deep is needed to reach in.
+.cm-field-group {
+  ::ng-deep app-multi-select {
+    display: block;
+    width: 100%;
+
+    .ms-chips-row {
+      width: 100%;
+      min-height: 48px;
+      padding: 6px 14px;
+      border: 1.5px solid $color-border;
+      border-radius: 10px;
+      background: $color-bg-page;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+      &[aria-expanded="true"] {
+        border-color: $color-primary;
+        background: $color-bg-card;
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+      }
+    }
+
+    .ms-add-trigger {
+      border-color: $color-border;
+      color: $muted;
+    }
+  }
+}
+
+.cm-field-group--error {
+  ::ng-deep app-multi-select .ms-chips-row {
+    border-color: $danger;
+
+    &[aria-expanded="true"] {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1);
+    }
+  }
+}
+
 .cm-textarea {
   height: auto;
   padding-top: 12px;
@@ -346,7 +393,32 @@
   align-items: center;
 
   i { font-size: 12px; }
-}// ── Default community row ─────────────────────────────────────
+}
+
+// ── One Hub per country — inline conflict banner (see submitForm's 409 handler) ──
+.cm-hub-conflict-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba($color-danger, 0.08);
+  border: 1px solid rgba($color-danger, 0.25);
+  border-radius: 10px;
+
+  > i {
+    color: $color-danger;
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .cm-error-msg {
+    font-size: $font-sm;
+  }
+}
+
+// ── Default community row ─────────────────────────────────────
 .cm-default-row {
   display: flex;
   align-items: center;

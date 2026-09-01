@@ -1304,6 +1304,11 @@
       "label": "Community Rules",
       "placeholder": "Type a rule and press Enter…"
     },
+    "multiSelect": {
+      "remove": "Remove",
+      "addMore": "Add more",
+      "maxReached": "Maximum {{max}} selected"
+    },
     "toggle": {
       "default": "Toggle"
     },
@@ -1391,6 +1396,11 @@
       "defaultCommunity": "Default Community",
       "defaultHint": "Mark this as the default community for new users",
       "privateNote": "Your communities are always Private, scoped to your own country.",
+      "communityTypeLabel": "Community Type",
+      "communityTypeHubHint": "Official country community",
+      "communityTypeIndividualHint": "User interest group",
+      "pleaseSelectCommunityType": "Please select a community type.",
+      "optional": "(Optional)",
       "updating": "Updating...",
       "creating": "Creating...",
       "updateAction": "Update Community",
@@ -1398,6 +1408,10 @@
       "visibility": {
         "private": "Private",
         "global": "Global"
+      },
+      "communityType": {
+        "hub": "Hub Community",
+        "individual": "Individual Community"
       },
       "mode": {
         "helpEmergency": "Help & Emergency Assistance",
@@ -2398,6 +2412,7 @@
       "tableView": "Table view",
       "advancedFilters": "Advanced filters",
       "filterByCommunityMode": "Filter by community mode",
+      "filterByCommunityType": "Filter by community type",
       "filterByDefaultStatus": "Filter by default status",
       "quickDatePresets": "Quick date presets",
       "activeFilters": "Active filters",
@@ -2427,6 +2442,11 @@
       "helpAmpEmergencyAssistance": "Help &amp; Emergency Assistance",
       "enquire": "Enquire",
       "defaultCommunity2": "Default Community",
+      "communityType": "Community Type",
+      "hubCommunityHint": "Official country community",
+      "individualCommunityHint": "User interest group",
+      "pleaseSelectCommunityType": "Please select a community type.",
+      "optional": "(Optional)",
       "defaultOnly": "Default Only",
       "nonDefault": "Non-Default",
       "dateRange": "Date Range",
@@ -2487,7 +2507,9 @@
         "inactive": "Inactive",
         "pendingApproval": "Pending Approval",
         "name": "Name",
-        "created": "Created"
+        "created": "Created",
+        "hubCommunity": "Hub Community",
+        "individualCommunity": "Individual Community"
       },
       "chipFrom": "From {{date}}",
       "chipTo": "To {{date}}",

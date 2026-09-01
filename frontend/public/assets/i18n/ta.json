@@ -1304,6 +1304,11 @@
       "label": "சமூக விதிகள்",
       "placeholder": "ஒரு விதியைத் தட்டச்சு செய்து Enter அழுத்தவும்…"
     },
+    "multiSelect": {
+      "remove": "அகற்று",
+      "addMore": "மேலும் சேர்",
+      "maxReached": "அதிகபட்சம் {{max}} தேர்ந்தெடுக்கப்பட்டது"
+    },
     "toggle": {
       "default": "மாற்று"
     },
@@ -1391,6 +1396,11 @@
       "defaultCommunity": "இயல்புநிலைச் சமூகம்",
       "defaultHint": "புதிய பயனர்களுக்கான இயல்புநிலைச் சமூகமாக இதைக் குறிக்கவும்",
       "privateNote": "உங்கள் சமூகங்கள் எப்போதும் தனிப்பட்டவை, உங்கள் நாட்டிற்கு மட்டும் உரியவை.",
+      "communityTypeLabel": "சமூக வகை",
+      "communityTypeHubHint": "அதிகாரப்பூர்வ நாட்டுச் சமூகம்",
+      "communityTypeIndividualHint": "பயனர் ஆர்வக் குழு",
+      "pleaseSelectCommunityType": "சமூக வகையைத் தேர்ந்தெடுக்கவும்.",
+      "optional": "(விருப்பத்தேர்வு)",
       "updating": "புதுப்பிக்கிறது...",
       "creating": "உருவாக்குகிறது...",
       "updateAction": "சமூகத்தைப் புதுப்பி",
@@ -1398,6 +1408,10 @@
       "visibility": {
         "private": "தனிப்பட்டது",
         "global": "உலகளாவியது"
+      },
+      "communityType": {
+        "hub": "மைய சமூகம்",
+        "individual": "தனிப்பட்ட சமூகம்"
       },
       "mode": {
         "helpEmergency": "உதவி மற்றும் அவசர உதவி",
@@ -2818,6 +2832,7 @@
       "tableView": "அட்டவணைக் காட்சி",
       "advancedFilters": "மேம்பட்ட வடிப்பான்கள்",
       "filterByCommunityMode": "சமூக முறையின் அடிப்படையில் வடிகட்டு",
+      "filterByCommunityType": "சமூக வகையின் அடிப்படையில் வடிகட்டு",
       "filterByDefaultStatus": "இயல்புநிலையின் அடிப்படையில் வடிகட்டு",
       "quickDatePresets": "விரைவு தேதி விருப்பங்கள்",
       "activeFilters": "செயலில் உள்ள வடிப்பான்கள்",
@@ -2847,6 +2862,11 @@
       "helpAmpEmergencyAssistance": "உதவி &amp; அவசர உதவி",
       "enquire": "விசாரணை",
       "defaultCommunity2": "இயல்புநிலைச் சமூகம்",
+      "communityType": "சமூக வகை",
+      "hubCommunityHint": "அதிகாரப்பூர்வ நாட்டுச் சமூகம்",
+      "individualCommunityHint": "பயனர் ஆர்வக் குழு",
+      "pleaseSelectCommunityType": "சமூக வகையைத் தேர்ந்தெடுக்கவும்.",
+      "optional": "(விருப்பத்தேர்வு)",
       "defaultOnly": "இயல்புநிலை மட்டும்",
       "nonDefault": "இயல்புநிலை அல்லாதவை",
       "dateRange": "தேதி வரம்பு",
@@ -2907,7 +2927,9 @@
         "inactive": "செயலற்றது",
         "pendingApproval": "ஒப்புதலுக்கு நிலுவையில்",
         "name": "பெயர்",
-        "created": "உருவாக்கப்பட்டது"
+        "created": "உருவாக்கப்பட்டது",
+        "hubCommunity": "மைய சமூகம்",
+        "individualCommunity": "தனிப்பட்ட சமூகம்"
       },
       "chipFrom": "{{date}} முதல்",
       "chipTo": "{{date}} வரை",
