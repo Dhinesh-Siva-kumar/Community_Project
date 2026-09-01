@@ -271,6 +271,12 @@
                 </span>
               }
             }
+            @if (community()!.community_type === 'HUB') {
+              <span class="cd-hub-badge">
+                <i class="bi bi-globe-americas"></i>
+                {{ 'admin.community.label.hubCommunity' | translate }}
+              </span>
+            }
             <span class="cd-visibility-badge {{ getVisibilityInfo().cls }}">
               <i class="bi {{ getVisibilityInfo().icon }}"></i>
               {{ getVisibilityInfo().label | translate }}

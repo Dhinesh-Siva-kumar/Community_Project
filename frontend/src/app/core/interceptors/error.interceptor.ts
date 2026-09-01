@@ -23,6 +23,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      // Skip toast for the community "one Hub per country" conflict — the
+      // community create/edit modal shows this inline in the popup instead.
+      if (error.error?.code === 'HUB_COMMUNITY_ALREADY_EXISTS_FOR_COUNTRY') {
+        return throwError(() => error);
+      }
+
       toastService.error(resolveMessage(error, translate));
 
       return throwError(() => error);

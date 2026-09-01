@@ -521,6 +521,23 @@
   }
 }
 
+.cd-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+
+  i { font-size: 10px; }
+}
+
 // ── Admin Icon Buttons ────────────────────────────────────────
 
 .cd-admin-actions {

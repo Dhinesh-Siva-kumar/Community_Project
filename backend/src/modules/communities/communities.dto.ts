@@ -43,9 +43,10 @@ export const CreateCommunityDto = z
       .string({ required_error: 'Description is required' })
       .trim()
       .min(1, 'Description is required'),
-    image: z
-      .string({ required_error: 'Community image is required' })
-      .min(1, 'Community image is required'),
+    // Not required at the schema level — Hub communities don't require an
+    // image. Individual communities' requirement is enforced below via
+    // .refine, since it depends on community_type.
+    image: z.string().optional(),
     // Not required at the schema level — Hub communities carry no category
     // at all. Individual communities' requirement (1–3 categories) is
     // enforced below via .refine, since it depends on community_type.
@@ -81,6 +82,10 @@ export const CreateCommunityDto = z
   .refine((data) => data.community_type === 'HUB' || data.interest_ids.length > 0, {
     message: 'Please select at least one category',
     path: ['interest_ids'],
+  })
+  .refine((data) => data.community_type === 'HUB' || !!data.image, {
+    message: 'Community image is required',
+    path: ['image'],
   });
 
 export const UpdateCommunityDto = communityFields;
