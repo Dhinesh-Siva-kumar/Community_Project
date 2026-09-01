@@ -62,18 +62,23 @@
               }
             </div>
 
-            <!-- Category -->
-            <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
-              <label class="cm-label">{{ 'components.communityForm.categoryLabel' | translate }} <span class="cm-required">*</span></label>
-              <div class="cm-input-wrap cm-select-wrap">
-                <i class="bi bi-tag-fill cm-input-icon"></i>
-                <app-searchable-select
-                  formControlName="interests"
-                  [options]="interestOptions"
-                  [placeholder]="'components.communityForm.categoryPlaceholder' | translate"
-                ></app-searchable-select>
-              </div>
-              @if (f['interests'].touched && f['interests'].invalid) {
+            <!-- Category — required for Individual; optional (and never stored) for Hub -->
+            <div class="cm-field-group" [class.cm-field-group--error]="formSubmitAttempted() && f['communityType'].value !== 'HUB' && !f['interests'].value?.length">
+              <label class="cm-label">
+                {{ 'components.communityForm.categoryLabel' | translate }}
+                @if (f['communityType'].value === 'HUB') {
+                  <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
+                } @else {
+                  <span class="cm-required">*</span>
+                }
+              </label>
+              <app-multi-select
+                formControlName="interests"
+                [options]="interestOptions"
+                [max]="3"
+                [placeholder]="'components.communityForm.categoryPlaceholder' | translate"
+              ></app-multi-select>
+              @if (formSubmitAttempted() && f['communityType'].value !== 'HUB' && !f['interests'].value?.length) {
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>Please select a category.
                 </div>
@@ -157,21 +162,42 @@
             </div>
           </div>
 
-          <!-- Community Mode -->
-          <div class="cm-field-group">
-            <label class="cm-label">{{ 'components.communityForm.modeLabel' | translate }} <span class="cm-required">*</span></label>
-            <app-radio-group
-              formControlName="communityMode"
-              [options]="communityModeOptions"
-              [ariaLabel]="'components.communityForm.modeAria' | translate">
-            </app-radio-group>
-            <div class="cm-default-hint">
-              @if (f['communityMode'].value === 'ENQUIRE') {
-                Members can raise and track enquiries in a dedicated Enquire tab.
-              } @else {
-                Members can post Help and Emergency Assistance requests in dedicated tabs.
-              }
+          <div class="cm-field-row">
+            <!-- Community Mode -->
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'components.communityForm.modeLabel' | translate }} <span class="cm-required">*</span></label>
+              <app-radio-group
+                formControlName="communityMode"
+                [options]="communityModeOptions"
+                [ariaLabel]="'components.communityForm.modeAria' | translate">
+              </app-radio-group>
+              <div class="cm-default-hint">
+                @if (f['communityMode'].value === 'ENQUIRE') {
+                  Members can raise and track enquiries in a dedicated Enquire tab.
+                } @else {
+                  Members can post Help and Emergency Assistance requests in dedicated tabs.
+                }
+              </div>
             </div>
+
+            <!-- Community Type — admin-only; user-side communities are always Individual -->
+            @if (isAdminUser()) {
+              <div class="cm-field-group">
+                <label class="cm-label">{{ 'components.communityForm.communityTypeLabel' | translate }} <span class="cm-required">*</span></label>
+                <app-radio-group
+                  formControlName="communityType"
+                  [options]="communityTypeOptions"
+                  [ariaLabel]="'components.communityForm.communityTypeLabel' | translate">
+                </app-radio-group>
+                <div class="cm-default-hint">
+                  @if (f['communityType'].value === 'HUB') {
+                    {{ 'components.communityForm.communityTypeHubHint' | translate }}
+                  } @else {
+                    {{ 'components.communityForm.communityTypeIndividualHint' | translate }}
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Default Community toggle — admin only, force-enrolls every user -->
@@ -183,6 +209,14 @@
                 <span class="cm-default-hint">{{ 'components.communityForm.defaultHint' | translate }}</span>
               </div>
               <app-toggle formControlName="isDefault" [ariaLabel]="'components.communityForm.defaultAria' | translate"></app-toggle>
+            </div>
+          }
+
+          <!-- One Hub per country — surfaced from the backend's 409 on submit -->
+          @if (hubCountryConflict()) {
+            <div class="cm-hub-conflict-banner">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span class="cm-error-msg">{{ hubCountryConflict() }}</span>
             </div>
           }
         </div>
@@ -207,6 +241,9 @@
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
             <span class="cm-section-title">{{ 'components.communityForm.imageLabel' | translate }}</span>
+            @if (f['communityType'].value === 'HUB') {
+              <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
+            }
           </div>
 
           <app-file-upload
@@ -215,7 +252,7 @@
             [maxSizeMb]="5"
             [label]="'components.communityForm.imageLabel' | translate"
             [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
-            [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
+            [showError]="formSubmitAttempted() && !isEditing() && f['communityType'].value !== 'HUB' && !selectedImage()"
             [errorMessage]="'components.communityForm.imageRequired' | translate"
             (filesChange)="onCommunityImageChange($event)"
           ></app-file-upload>

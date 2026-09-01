@@ -1080,6 +1080,22 @@
   margin-bottom: 12px;
 }
 
+.cc-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+
+  i { font-size: 10px; }
+}
+
 .cc-visibility-badge {
   display: inline-flex;
   align-items: center;
@@ -1480,6 +1496,7 @@
 
   &--trusted { background: $color-primary-lighter; color: $color-warning; }
   &--blocked { background: $color-error-bg; color: $color-danger; }
+  &--hub { background: rgba(16, 185, 129, 0.1); color: #047857; }
 }
 
 .um-actions-row {
@@ -1907,6 +1924,13 @@
   margin-left: 2px;
 }
 
+.cm-optional {
+  color: $color-text-muted;
+  font-weight: $font-normal;
+  font-size: $font-xs;
+  margin-left: 4px;
+}
+
 .cm-char-count {
   font-size: $font-xs;
   color: $color-text-muted;
@@ -2018,7 +2042,32 @@
   i {
     font-size: 12px;
   }
-}// ── Default community row ─────────────────────────────────────
+}
+
+// ── One Hub per country — inline conflict banner (see submitForm's 409 handler) ──
+.cm-hub-conflict-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba($color-danger, 0.08);
+  border: 1px solid rgba($color-danger, 0.25);
+  border-radius: 10px;
+
+  > i {
+    color: $color-danger;
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .cm-error-msg {
+    font-size: $font-sm;
+  }
+}
+
+// ── Default community row ─────────────────────────────────────
 .cm-default-row {
   display: flex;
   align-items: center;
@@ -2439,6 +2488,71 @@
       font-size: 13px;
       color: $muted;
       list-style: none;
+    }
+  }
+}
+
+// ── Modal category multi-select — same box treatment as Community Name /
+// the searchable-selects above (48px, 1.5px border, 10px radius). Overrides
+// app-multi-select's own encapsulated styles the same way .cm-rules-wrap
+// reaches into app-tag-input elsewhere.
+.cm-field-group {
+  ::ng-deep app-multi-select {
+    display: block;
+
+    .ms-chips-row {
+      width: 100%;
+      min-height: 48px;
+      padding: 6px 14px;
+      border: 1.5px solid $color-border !important;
+      border-radius: 10px;
+      background: $color-bg-page;
+      box-shadow: none !important;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+      &[aria-expanded="true"] {
+        border-color: $color-primary !important;
+        background: $color-bg-card;
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.1) !important;
+      }
+    }
+
+    .ms-add-trigger {
+      border-color: $color-border;
+      color: $muted;
+      font-size: 13px;
+
+      &:hover {
+        border-color: $color-primary;
+        color: $color-primary;
+      }
+    }
+
+    .ms-panel {
+      border: 1.5px solid $color-stone-200;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .ms-search {
+      border: 1.5px solid $border;
+      background: $bg-neutral;
+      color: $dark;
+
+      &:focus {
+        border-color: $primary;
+        background: $white;
+      }
+    }
+  }
+}
+
+.cm-field-group--error {
+  ::ng-deep app-multi-select .ms-chips-row {
+    border-color: $danger !important;
+
+    &[aria-expanded="true"] {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1) !important;
     }
   }
 }

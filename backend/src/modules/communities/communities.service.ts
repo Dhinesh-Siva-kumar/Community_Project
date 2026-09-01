@@ -6,6 +6,21 @@ import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../servic
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
+// One Hub (official country community) per country — an admin creating or
+// editing a Hub whose country already has one gets a 409 naming that country.
+async function assertNoDuplicateHubForCountry(countryId: number, countryName: string | undefined, excludeId?: string): Promise<void> {
+  const query = db('communities').where({ community_type: 'HUB', country_id: countryId });
+  if (excludeId) query.andWhereNot('id', excludeId);
+  const existing = await query.first();
+  if (existing) {
+    throw new AppError(
+      409,
+      `A Hub Community already exists for this country.${countryName ? ` (${countryName})` : ''}`,
+      'HUB_COMMUNITY_ALREADY_EXISTS_FOR_COUNTRY',
+    );
+  }
+}
+
 async function notifyAdminsOfPendingCommunity(communityId: string, name: string): Promise<void> {
   const admins = await db('users').where({ role: 'ADMIN' }).select('id');
   if (!admins.length) return;
@@ -60,11 +75,31 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
     }
   }
 
+  // Hub communities (official country communities) are admin-only — a
+  // non-admin's submission is always forced to Individual, regardless of
+  // what the client sent.
+  if (data.community_type === 'HUB' && (!caller || caller['role'] !== 'ADMIN')) {
+    throw new AppError(403, 'Only admins can create Hub communities', 'ONLY_ADMINS_CREATE_HUB');
+  }
+
+  // One Hub per country.
+  if (data.community_type === 'HUB') {
+    await assertNoDuplicateHubForCountry(data.country_id, data.country);
+  }
+
   const isAutoApproved = !!caller && caller['role'] === 'ADMIN';
   const status = isAutoApproved ? 'APPROVED' : 'PENDING';
 
+  // Hub communities carry no category at all; Individual communities carry
+  // 1–3 (already validated by the DTO). interest_id mirrors the first
+  // selected category so existing single-category filtering/sorting/joins
+  // keep working off interest_ids as the source of truth.
+  const isHub = data.community_type === 'HUB';
+  const interestIds = isHub ? [] : data.interest_ids;
+  const primaryInterestId = interestIds[0] ?? null;
+
   const [community] = await db('communities')
-    .insert({ ...data, created_by_id: adminId, status })
+    .insert({ ...data, interest_id: primaryInterestId, interest_ids: interestIds, created_by_id: adminId, status })
     .returning('*');
 
   // The creator is always a member of their own community, so they show up
@@ -125,6 +160,7 @@ export async function findAll(params: {
   category?: string;
   visibility?: 'global' | 'private' | 'default';
   community_mode?: 'HELP_EMERGENCY' | 'ENQUIRE';
+  community_type?: 'HUB' | 'INDIVIDUAL';
   is_default?: boolean;
   from_date?: string;
   to_date?: string;
@@ -139,7 +175,7 @@ export async function findAll(params: {
 }) {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
-    community_mode, is_default, from_date, to_date, joined, userId, createdById,
+    community_mode, community_type, is_default, from_date, to_date, joined, userId, createdById,
     status, approvalStatus, excludeRejected, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
@@ -242,6 +278,12 @@ export async function findAll(params: {
   if (community_mode) {
     query.where('c.community_mode', community_mode);
     countQuery.where('community_mode', community_mode);
+  }
+
+  // ── Community type filter (Hub vs Individual) ───────────────
+  if (community_type) {
+    query.where('c.community_type', community_type);
+    countQuery.where('community_type', community_type);
   }
 
   // ── Default-community toggle filter (independent of visibility) ────
@@ -674,6 +716,9 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   if (!callerIsAdmin && (data.is_global || data.is_default)) {
     throw new AppError(403, 'Only admins can set a community to Global or Default', 'ONLY_ADMINS_SET_COMMUNITY');
   }
+  if (!callerIsAdmin && data.community_type === 'HUB') {
+    throw new AppError(403, 'Only admins can set a community to Hub', 'ONLY_ADMINS_SET_HUB');
+  }
   // A rejection is terminal for the owner — it stays visible (tracked in
   // "My Communities") but can't be edited/resubmitted; only NEEDS_INFO
   // supports that. An admin can still edit a rejected community directly.
@@ -682,6 +727,27 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   }
 
   const updateData: Record<string, unknown> = { ...data };
+
+  // Hub communities carry no category — clear it whenever the effective
+  // type (this update, or whatever it already was) is Hub, regardless of
+  // what interest_ids was sent. Otherwise, when a fresh interest_ids list is
+  // sent, keep interest_id (the legacy single-category column used by
+  // filtering/sorting/joins) mirroring its first entry.
+  const effectiveType = (data.community_type as string | undefined) ?? (before['community_type'] as string);
+  if (effectiveType === 'HUB') {
+    updateData['interest_ids'] = [];
+    updateData['interest_id'] = null;
+
+    // One Hub per country — check the effective country (this update's, or
+    // whatever it already was), excluding this community itself.
+    const effectiveCountryId = (data.country_id as number | undefined) ?? (before['country_id'] as number | undefined);
+    const effectiveCountryName = (data.country as string | undefined) ?? (before['country'] as string | undefined);
+    if (effectiveCountryId) {
+      await assertNoDuplicateHubForCountry(effectiveCountryId, effectiveCountryName, id);
+    }
+  } else if (data.interest_ids !== undefined) {
+    updateData['interest_id'] = (data.interest_ids as number[])[0] ?? null;
+  }
 
   // Resubmitting a needs-info community: the owner editing their own
   // community re-enters the approval gate exactly like a brand-new one,

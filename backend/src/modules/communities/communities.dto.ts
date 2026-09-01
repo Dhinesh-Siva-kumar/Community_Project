@@ -15,12 +15,19 @@ const communityFields = z.object({
   location: z.string().optional(),
   pincode: z.string().optional(),
   interest_id: z.number().int().positive().optional(),
+  // Individual communities can carry up to 3 categories; Hub communities
+  // carry none (cleared server-side regardless of what's sent — see service).
+  interest_ids: z.array(z.number().int().positive()).max(3, 'You can select up to 3 categories').optional(),
   country: z.string().optional(),
   country_id: z.number().int().positive().optional(),
   is_private: z.boolean().optional().default(false),
   is_global: z.boolean().optional().default(false),
   is_default: z.boolean().optional().default(false),
   community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+  // Hub = an official, admin-managed country community; Individual = a
+  // regular user-interest group. Only admins may set HUB (enforced in the
+  // service layer) — non-admin submissions always end up INDIVIDUAL.
+  community_type: z.enum(['HUB', 'INDIVIDUAL']).optional().default('INDIVIDUAL'),
   rules: rulesSchema,
 });
 
@@ -39,13 +46,11 @@ export const CreateCommunityDto = z
     image: z
       .string({ required_error: 'Community image is required' })
       .min(1, 'Community image is required'),
-    interest_id: z
-      .number({
-        required_error: 'Please select a category',
-        invalid_type_error: 'Please select a category',
-      })
-      .int()
-      .positive('Please select a valid category'),
+    // Not required at the schema level — Hub communities carry no category
+    // at all. Individual communities' requirement (1–3 categories) is
+    // enforced below via .refine, since it depends on community_type.
+    interest_id: z.number().int().positive().optional(),
+    interest_ids: z.array(z.number().int().positive()).max(3, 'You can select up to 3 categories').optional().default([]),
     country: z
       .string({ required_error: 'Please select a country' })
       .min(1, 'Please select a country'),
@@ -62,6 +67,7 @@ export const CreateCommunityDto = z
     is_global: z.boolean().optional().default(false),
     is_default: z.boolean().optional().default(false),
     community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+    community_type: z.enum(['HUB', 'INDIVIDUAL']).optional().default('INDIVIDUAL'),
     rules: rulesSchema,
   })
   .refine((data) => !(data.is_private && data.is_global), {
@@ -71,6 +77,10 @@ export const CreateCommunityDto = z
   .refine((data) => data.is_private || data.is_global, {
     message: 'Please select a visibility option (Private or Global)',
     path: ['visibility'],
+  })
+  .refine((data) => data.community_type === 'HUB' || data.interest_ids.length > 0, {
+    message: 'Please select at least one category',
+    path: ['interest_ids'],
   });
 
 export const UpdateCommunityDto = communityFields;
@@ -85,6 +95,7 @@ export const ListCommunitiesQueryDto = z.object({
   category:      z.string().optional(),
   visibility:    z.enum(['global', 'private', 'default']).optional(),
   community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional(),
+  community_type: z.enum(['HUB', 'INDIVIDUAL']).optional(),
   is_default:    z.enum(['true', 'false']).optional().transform((v) => (v === undefined ? undefined : v === 'true')),
   from_date:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'from_date must be YYYY-MM-DD').optional(),
   to_date:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'to_date must be YYYY-MM-DD').optional(),

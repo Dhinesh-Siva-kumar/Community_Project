@@ -150,6 +150,28 @@
         </div>
       </div>
 
+      <!-- ── Community Type ───────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-diagram-3"></i> {{ 'admin.community.communityType' | translate }}</span>
+        <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.community.filterByCommunityType' | translate">
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityType() === null"
+                  (click)="onFilterCommunityTypeChange(null)">
+            {{ 'common.all' | translate }}
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityType() === 'HUB'"
+                  (click)="onFilterCommunityTypeChange('HUB')">
+            <i class="bi bi-globe-americas"></i> {{ 'admin.community.label.hubCommunity' | translate }}
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityType() === 'INDIVIDUAL'"
+                  (click)="onFilterCommunityTypeChange('INDIVIDUAL')">
+            <i class="bi bi-people-fill"></i> {{ 'admin.community.label.individualCommunity' | translate }}
+          </button>
+        </div>
+      </div>
+
       <!-- ── Default Community ────────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-star"></i> {{ 'admin.community.defaultCommunity2' | translate }}</span>
@@ -410,8 +432,14 @@
                 </span>
               </div>
 
-              <!-- Badge row: Visibility, then Default, then Community Mode -->
+              <!-- Badge row: Hub, then Visibility, then Default, then Community Mode -->
               <div class="cc-badge-row">
+
+                @if (community.community_type === 'HUB') {
+                  <span class="cc-hub-badge">
+                    <i class="bi bi-globe-americas"></i> {{ 'admin.community.label.hubCommunity' | translate }}
+                  </span>
+                }
 
                 @if (community.is_private) {
                   <span class="cc-visibility-badge cc-visibility-badge--private">
@@ -590,6 +618,9 @@
                 </td>
                 <td class="um-td">
                   <span class="um-user-name">{{ community.name }}</span>
+                  @if (community.community_type === 'HUB') {
+                    <span class="um-badge um-badge--hub"><i class="bi bi-globe-americas"></i> {{ 'admin.community.label.hubCommunity' | translate }}</span>
+                  }
                   @if (community.is_default) {
                     <span class="um-badge um-badge--trusted"><i class="bi bi-star-fill"></i> {{ 'admin.community.default' | translate }}</span>
                   }
@@ -764,15 +795,23 @@
                   }
                 </div>
 
-                <!-- Category -->
-                <div class="cm-field-group" [class.cm-field-group--error]="f['interests'].touched && f['interests'].invalid">
-                  <label class="cm-label">{{ 'admin.community.category' | translate }} <span class="cm-required">*</span></label>
-                  <app-searchable-select
+                <!-- Category — required for Individual; optional (and never stored) for Hub -->
+                <div class="cm-field-group" [class.cm-field-group--error]="formSubmitAttempted() && f['communityType'].value !== 'HUB' && !f['interests'].value?.length">
+                  <label class="cm-label">
+                    {{ 'admin.community.category' | translate }}
+                    @if (f['communityType'].value === 'HUB') {
+                      <span class="cm-optional">{{ 'admin.community.optional' | translate }}</span>
+                    } @else {
+                      <span class="cm-required">*</span>
+                    }
+                  </label>
+                  <app-multi-select
                     formControlName="interests"
                     [options]="interestOptions"
+                    [max]="3"
                     [placeholder]="'admin.community.selectCategory' | translate"
-                  ></app-searchable-select>
-                  @if (f['interests'].touched && f['interests'].invalid) {
+                  ></app-multi-select>
+                  @if (formSubmitAttempted() && f['communityType'].value !== 'HUB' && !f['interests'].value?.length) {
                     <div class="cm-error-msg">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'admin.community.pleaseSelectCategory' | translate }}
                     </div>
@@ -852,20 +891,39 @@
                 </div>
               </div>
 
-              <!-- Community Mode -->
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'admin.community.communityMode2' | translate }} <span class="cm-required">*</span></label>
-                <app-radio-group
-                  formControlName="communityMode"
-                  [options]="communityModeOptions"
-                  [ariaLabel]="'admin.community.communityMode' | translate">
-                </app-radio-group>
-                <div class="cm-default-hint">
-                  @if (f['communityMode'].value === 'ENQUIRE') {
-                    Members can raise and track enquiries in a dedicated Enquire tab.
-                  } @else {
-                    Members can post Help and Emergency Assistance requests in dedicated tabs.
-                  }
+              <div class="cm-field-row">
+                <!-- Community Mode -->
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'admin.community.communityMode2' | translate }} <span class="cm-required">*</span></label>
+                  <app-radio-group
+                    formControlName="communityMode"
+                    [options]="communityModeOptions"
+                    [ariaLabel]="'admin.community.communityMode' | translate">
+                  </app-radio-group>
+                  <div class="cm-default-hint">
+                    @if (f['communityMode'].value === 'ENQUIRE') {
+                      Members can raise and track enquiries in a dedicated Enquire tab.
+                    } @else {
+                      Members can post Help and Emergency Assistance requests in dedicated tabs.
+                    }
+                  </div>
+                </div>
+
+                <!-- Community Type — admin-only; user-side communities are always Individual -->
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'admin.community.communityType' | translate }} <span class="cm-required">*</span></label>
+                  <app-radio-group
+                    formControlName="communityType"
+                    [options]="communityTypeOptions"
+                    [ariaLabel]="'admin.community.communityType' | translate">
+                  </app-radio-group>
+                  <div class="cm-default-hint">
+                    @if (f['communityType'].value === 'HUB') {
+                      {{ 'admin.community.hubCommunityHint' | translate }}
+                    } @else {
+                      {{ 'admin.community.individualCommunityHint' | translate }}
+                    }
+                  </div>
                 </div>
               </div>
 
@@ -878,6 +936,14 @@
                 </div>
                 <app-toggle formControlName="isDefault" [ariaLabel]="'admin.community.defaultCommunity' | translate"></app-toggle>
               </div>
+
+              <!-- One Hub per country — surfaced from the backend's 409 on submit -->
+              @if (hubCountryConflict()) {
+                <div class="cm-hub-conflict-banner">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span class="cm-error-msg">{{ hubCountryConflict() }}</span>
+                </div>
+              }
             </div>
 
             <!-- ── SECTION 3: Rules ── -->
@@ -904,6 +970,9 @@
                   <i class="bi bi-image-fill"></i>
                 </span>
                 <span class="cm-section-title">{{ 'admin.community.communityImage' | translate }}</span>
+                @if (f['communityType'].value === 'HUB') {
+                  <span class="cm-optional">{{ 'admin.community.optional' | translate }}</span>
+                }
               </div>
 
               <app-file-upload
@@ -912,7 +981,7 @@
                 [maxSizeMb]="5"
                 [label]="'components.communityForm.imageLabel' | translate"
                 [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
-                [showError]="formSubmitAttempted() && !isEditing() && !selectedImage()"
+                [showError]="formSubmitAttempted() && !isEditing() && f['communityType'].value !== 'HUB' && !selectedImage()"
                 [errorMessage]="'admin.community.communityImageRequired' | translate"
                 (filesChange)="onCommunityImageChange($event)"
               ></app-file-upload>
