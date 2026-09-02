@@ -554,7 +554,7 @@
 
 <!-- ── Confirm Dialog (block/unblock, trust/untrust, delete) ─────────── -->
 @if (confirmAction(); as ca) {
-  <div class="um-confirm-backdrop" (click)="cancelConfirm()">
+  <div class="um-confirm-backdrop" appScrollLock (click)="cancelConfirm()">
     <div class="um-confirm-dialog" (click)="$event.stopPropagation()">
       <div class="um-confirm-icon"
         [class.um-confirm-icon--danger]="ca.type === 'delete' || ca.type === 'block'"

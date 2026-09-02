@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
 import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
@@ -58,7 +59,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -73,15 +74,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
-  constructor() {
-    // Lock background scroll while the add/edit or delete-confirm modal is open.
-    effect(() => {
-      document.body.style.overflow = (this.showAddModal() || this.showDeleteConfirm()) ? 'hidden' : '';
-    });
-  }
-
   ngOnDestroy(): void {
-    document.body.style.overflow = '';
     this.layoutService.forceSidebarCollapsed.set(false);
   }
 

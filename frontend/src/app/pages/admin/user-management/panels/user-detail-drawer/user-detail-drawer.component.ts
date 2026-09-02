@@ -7,6 +7,7 @@ import { UserDetail, User, AuditLog, AuditLogResponse } from '../../../../../cor
 import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../../../shared/pipes/enum-label.pipe';
+import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
 
 type DrawerTab = 'overview' | 'activity' | 'actions';
 
@@ -28,7 +29,7 @@ const ACTION_ICONS: Record<string, string> = {
 @Component({
   selector: 'app-user-detail-drawer',
   standalone: true,
-  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe, TranslatePipe, EnumLabelPipe, ScrollLockDirective],
   templateUrl: './user-detail-drawer.component.html',
   styleUrls: ['./user-detail-drawer.component.scss'],
 })

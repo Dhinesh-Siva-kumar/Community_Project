@@ -4,6 +4,7 @@ import { BusinessService } from '../../../core/services/business.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Business } from '../../../core/models';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 /**
  * The single Delete-Business confirmation popup — a straight port of the
@@ -15,7 +16,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-business-delete-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ScrollLockDirective],
   templateUrl: './business-delete-modal.component.html',
   styleUrls: ['./business-delete-modal.component.scss'],
 })

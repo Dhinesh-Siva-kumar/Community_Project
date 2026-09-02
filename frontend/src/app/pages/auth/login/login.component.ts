@@ -18,7 +18,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -36,6 +36,7 @@ import {
   of,
   takeUntil,
 } from 'rxjs';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-login',
@@ -47,6 +48,7 @@ import {
     A11yModule,
     TranslatePipe,
     LanguageToggleComponent,
+    ScrollLockDirective,
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
@@ -58,8 +60,43 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   private themeService = inject(ThemeService);
   private languageService = inject(LanguageService);
   private router       = inject(Router);
+  private route        = inject(ActivatedRoute);
   private platformId   = inject(PLATFORM_ID) as object;
   private ngZone       = inject(NgZone);
+
+  /**
+   * Where to send the caller after a successful login/signup, when they got
+   * here via a guard redirect (e.g. opening a shared post link while logged
+   * out — see user.guard.ts/admin.guard.ts/auth.guard.ts, which all attach
+   * `returnUrl` before bouncing to /auth/login). Falls back to the normal
+   * role-based dashboard when there's no returnUrl, or when it isn't a safe
+   * same-app path (never honor an absolute/external URL here).
+   */
+  private getSafeReturnUrl(isAdmin: boolean): string | null {
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null;
+    if (raw.startsWith('/auth')) return null;
+    // A returnUrl meant for the other role's section would just get bounced
+    // straight back by admin.guard/user.guard — skip it and use the normal
+    // dashboard instead of round-tripping through a guard redirect.
+    if (isAdmin ? !raw.startsWith('/admin') : !raw.startsWith('/user')) return null;
+    return raw;
+  }
+
+  private navigateAfterAuth(isAdmin: boolean): void {
+    const returnUrl = this.getSafeReturnUrl(isAdmin);
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+      return;
+    }
+    this.router.navigate([isAdmin ? '/admin/dashboard' : '/user/dashboard']);
+  }
+
+  /** Forwarded onto the "create one" link so switching to Register doesn't drop a pending returnUrl (e.g. a shared post link opened while logged out). */
+  get registerLinkQueryParams(): Record<string, string> {
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+    return raw ? { returnUrl: raw } : {};
+  }
 
   loading      = signal(false);
   showPassword = signal(false);
@@ -165,13 +202,13 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     this.authService.login(identifier, password).subscribe({
       next: (resp: any) => {
         if (resp.user.roleLevel >= 50) {
-          this.router.navigate(['/admin/dashboard']);
+          this.navigateAfterAuth(true);
           this.toastService.success('auth.login.toastAdminLoginSuccess');
           return;
         }
         this.loading.set(false);
         this.toastService.success('auth.login.toastLoginSuccess');
-        this.router.navigate(['/user/dashboard']);
+        this.navigateAfterAuth(false);
       },
       error: (err) => {
         this.loading.set(false);
@@ -279,11 +316,11 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           this.googleNeedsUsername.set(true);
         } else {
           if (res.user?.roleLevel >= 50) {
-            this.router.navigate(['/admin/dashboard']);
+            this.navigateAfterAuth(true);
             this.toastService.success('auth.login.toastGoogleAdminSuccess');
           } else {
             this.toastService.success('auth.login.toastGoogleSuccess');
-            this.router.navigate(['/user/dashboard']);
+            this.navigateAfterAuth(false);
           }
         }
       },
@@ -321,11 +358,11 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           this.googleLoading.set(false);
           this.googleNeedsUsername.set(false);
           if (res.user?.roleLevel >= 50) {
-            this.router.navigate(['/admin/dashboard']);
+            this.navigateAfterAuth(true);
             this.toastService.success('auth.login.toastGoogleAdminSuccess');
           } else {
             this.toastService.success('auth.login.toastGoogleAccountCreated');
-            this.router.navigate(['/user/dashboard']);
+            this.navigateAfterAuth(false);
           }
         },
         error: (err: any) => {

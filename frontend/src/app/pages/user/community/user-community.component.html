@@ -188,30 +188,20 @@
                     <button
                       class="uc-spot-leave-btn"
                       type="button"
-                      (click)="leaveCommunity($event, community.id)"
-                      [disabled]="leavingId() === community.id"
+                      (click)="openLeaveModal($event, community)"
                       [attr.aria-label]="'Leave ' + community.name"
                     >
-                      @if (leavingId() === community.id) {
-                        <span class="uc-btn-spinner" aria-hidden="true"></span> Leaving…
-                      } @else {
-                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Leave
-                      }
+                      <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Leave
                     </button>
                   </div>
                 } @else {
                   <button
                     class="uc-spot-cta"
                     type="button"
-                    (click)="joinCommunity($event, community.id)"
-                    [disabled]="joiningId() === community.id"
+                    (click)="openJoinModal($event, community)"
                     [attr.aria-label]="'Join ' + community.name"
                   >
-                    @if (joiningId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span> Joining…
-                    } @else {
-                      <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
-                    }
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Join community
                   </button>
                 }
               }
@@ -399,30 +389,20 @@
                       <button
                         class="uc-g-cta uc-g-cta--leave"
                         type="button"
-                        (click)="leaveCommunity($event, community.id)"
-                        [disabled]="leavingId() === community.id"
+                        (click)="openLeaveModal($event, community)"
                         [attr.aria-label]="'Leave ' + community.name"
                       >
-                        @if (leavingId() === community.id) {
-                          <span class="uc-btn-spinner" aria-hidden="true"></span>
-                        } @else {
-                          Leave
-                        }
+                        Leave
                       </button>
                     </div>
                   } @else {
                     <button
                       class="uc-g-cta"
                       type="button"
-                      (click)="joinCommunity($event, community.id)"
-                      [disabled]="joiningId() === community.id"
+                      (click)="openJoinModal($event, community)"
                       [attr.aria-label]="'Join ' + community.name"
                     >
-                      @if (joiningId() === community.id) {
-                        <span class="uc-btn-spinner" aria-hidden="true"></span>
-                      } @else {
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
-                      }
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i>Join
                     </button>
                   }
                 }
@@ -502,30 +482,20 @@
                   <button
                     class="uc-l-btn uc-l-btn--leave"
                     type="button"
-                    (click)="leaveCommunity($event, community.id)"
-                    [disabled]="leavingId() === community.id"
+                    (click)="openLeaveModal($event, community)"
                     [attr.aria-label]="'Leave ' + community.name"
                   >
-                    @if (leavingId() === community.id) {
-                      <span class="uc-btn-spinner" aria-hidden="true"></span>
-                    } @else {
-                      Leave
-                    }
+                    Leave
                   </button>
                 </div>
               } @else {
                 <button
                   class="uc-l-btn uc-l-btn--join"
                   type="button"
-                  (click)="joinCommunity($event, community.id)"
-                  [disabled]="joiningId() === community.id"
+                  (click)="openJoinModal($event, community)"
                   [attr.aria-label]="'Join ' + community.name"
                 >
-                  @if (joiningId() === community.id) {
-                    <span class="uc-btn-spinner" aria-hidden="true"></span>
-                  } @else {
-                    Join
-                  }
+                  Join
                 </button>
               }
             }
@@ -655,7 +625,7 @@
 </button>
 
 @if (lightboxOpen()) {
-  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'user.community.imagePreview' | translate">
+  <div class="cd-lightbox" appScrollLock (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'user.community.imagePreview' | translate">
     <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
       <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'user.community.closeImagePreview' | translate">
         <i class="bi bi-x-lg"></i>
@@ -696,5 +666,20 @@
   (closed)="closeDeleteModal()"
   (deleted)="onCommunityDeleted($event)">
 </app-community-delete-modal>
+
+<!-- ==================== JOIN / LEAVE COMMUNITY ==================== -->
+<app-community-join-modal
+  [open]="showJoinModal()"
+  [community]="communityToJoin()"
+  (closed)="closeJoinModal()"
+  (joined)="onCommunityJoined($event)">
+</app-community-join-modal>
+
+<app-community-leave-modal
+  [open]="showLeaveModal()"
+  [community]="communityToLeave()"
+  (closed)="closeLeaveModal()"
+  (left)="onCommunityLeft($event)">
+</app-community-leave-modal>
 
 } <!-- /loading -->

@@ -1,5 +1,5 @@
 @if (!embedded) {
-  <div class="drawer-backdrop" (click)="close.emit()"></div>
+  <div class="drawer-backdrop" appScrollLock (click)="close.emit()"></div>
 }
 
 <div [class]="embedded ? 'al-embedded' : 'drawer'" role="dialog">

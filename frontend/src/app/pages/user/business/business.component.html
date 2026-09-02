@@ -690,7 +690,7 @@
 }
 
 @if (lightboxOpen()) {
-  <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'user.business.imagePreview' | translate">
+  <div class="cd-lightbox" appScrollLock (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'user.business.imagePreview' | translate">
     <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
       <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'user.business.closeImagePreview' | translate">
         <i class="bi bi-x-lg"></i>

@@ -10,6 +10,9 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
+import { CommunityJoinModalComponent } from '../../../shared/components/community-join-modal/community-join-modal.component';
+import { CommunityLeaveModalComponent } from '../../../shared/components/community-leave-modal/community-leave-modal.component';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe } from '@ngx-translate/core';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
@@ -25,7 +28,7 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, TranslatePipe],
+  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
@@ -81,9 +84,12 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   showScrollTop = signal(false);
   private scrollTicking = false;
 
-  // ── Action states ──────────────────────────────────────────
-  joiningId  = signal<string | null>(null);
-  leavingId  = signal<string | null>(null);
+  // ── Join / Leave — the confirmation popups live in
+  // app-community-join-modal / app-community-leave-modal. ──
+  showJoinModal   = signal(false);
+  communityToJoin = signal<Community | null>(null);
+  showLeaveModal   = signal(false);
+  communityToLeave = signal<Community | null>(null);
 
   // ── Create/Edit/Delete — own communities only; the form lives in
   // app-community-form-modal, the confirm popup in app-community-delete-modal. ──
@@ -435,56 +441,52 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   }
 
   // ── Community actions ──────────────────────────────────────
-  joinCommunity(event: Event, communityId: string): void {
+  openJoinModal(event: Event, community: Community): void {
     event.stopPropagation();
-    this.joiningId.set(communityId);
-
-    this.communityService.joinCommunity(communityId).subscribe({
-      next: () => {
-        this.toast.success('user.community.toast.joinedCommunity');
-        // Optimistically patch is_joined on the local object
-        this.communities.update(list =>
-          list.map(c => c.id === communityId ? { ...c, is_joined: true } : c)
-        );
-        this.joinedCommunityIds.update((ids) => {
-          const n = new Set(ids);
-          n.add(communityId);
-          return n;
-        });
-        this.joinedTotalCount.update(n => n + 1);
-        this.joiningId.set(null);
-      },
-      error: () => {
-        this.toast.error('user.community.toast.failedJoinCommunity');
-        this.joiningId.set(null);
-      },
-    });
+    this.communityToJoin.set(community);
+    this.showJoinModal.set(true);
   }
 
-  leaveCommunity(event: Event, communityId: string): void {
-    event.stopPropagation();
-    this.leavingId.set(communityId);
+  closeJoinModal(): void {
+    this.showJoinModal.set(false);
+    this.communityToJoin.set(null);
+  }
 
-    this.communityService.leaveCommunity(communityId).subscribe({
-      next: () => {
-        this.toast.success('user.community.toast.leftCommunity');
-        // Optimistically patch is_joined on the local object so UI updates instantly
-        this.communities.update(list =>
-          list.map(c => c.id === communityId ? { ...c, is_joined: false } : c)
-        );
-        this.joinedCommunityIds.update((ids) => {
-          const n = new Set(ids);
-          n.delete(communityId);
-          return n;
-        });
-        this.joinedTotalCount.update(n => Math.max(0, n - 1));
-        this.leavingId.set(null);
-      },
-      error: () => {
-        this.toast.error('user.community.toast.failedLeaveCommunity');
-        this.leavingId.set(null);
-      },
+  onCommunityJoined(communityId: string): void {
+    // Optimistically patch is_joined on the local object
+    this.communities.update(list =>
+      list.map(c => c.id === communityId ? { ...c, is_joined: true } : c)
+    );
+    this.joinedCommunityIds.update((ids) => {
+      const n = new Set(ids);
+      n.add(communityId);
+      return n;
     });
+    this.joinedTotalCount.update(n => n + 1);
+  }
+
+  openLeaveModal(event: Event, community: Community): void {
+    event.stopPropagation();
+    this.communityToLeave.set(community);
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+    this.communityToLeave.set(null);
+  }
+
+  onCommunityLeft(communityId: string): void {
+    // Optimistically patch is_joined on the local object so UI updates instantly
+    this.communities.update(list =>
+      list.map(c => c.id === communityId ? { ...c, is_joined: false } : c)
+    );
+    this.joinedCommunityIds.update((ids) => {
+      const n = new Set(ids);
+      n.delete(communityId);
+      return n;
+    });
+    this.joinedTotalCount.update(n => Math.max(0, n - 1));
   }
 
   // ── Navigation ─────────────────────────────────────────────

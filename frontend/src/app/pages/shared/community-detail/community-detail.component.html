@@ -57,7 +57,7 @@
   ══════════════════════════════════════════════════════════════ -->
   @if (editModalOpen()) {
     <div class="au-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1040;" (click)="closeEditModal()"></div>
-    <div class="au-modal cm-modal ep-modal" role="dialog" aria-modal="true" aria-labelledby="cdEditPostModalTitle">
+    <div class="au-modal cm-modal ep-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="cdEditPostModalTitle">
 
         <!-- Modal Header -->
         <div class="au-header cm-modal-header ep-modal-header">
@@ -106,32 +106,29 @@
             <div class="mb-3">
               <label class="cm-label">{{ 'shared.communityDetail.postType' | translate }}</label>
               <div class="cd-type-selector">
-                @if (!isEnquireMode()) {
-                  <button type="button" class="cd-type-btn"
-                    [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
-                    (click)="setEditPostType('GENERAL')">
-                    <i class="bi bi-chat-dots-fill"></i>
-                    <span>{{ 'shared.communityDetail.general' | translate }}</span>
-                  </button>
+                <button type="button" class="cd-type-btn"
+                  [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
+                  (click)="setEditPostType('GENERAL')">
+                  <i class="bi bi-chat-dots-fill"></i>
+                  <span>{{ 'shared.communityDetail.general' | translate }}</span>
+                </button>
+                @if (showHelpTab()) {
                   <button type="button" class="cd-type-btn cd-type-btn--help"
                     [class.cd-type-btn--active]="selectedEditType() === 'HELP'"
                     (click)="setEditPostType('HELP')">
                     <i class="bi bi-life-preserver"></i>
                     <span>{{ 'shared.communityDetail.help' | translate }}</span>
                   </button>
+                }
+                @if (showEmergencyTab()) {
                   <button type="button" class="cd-type-btn cd-type-btn--emergency"
                     [class.cd-type-btn--active]="selectedEditType() === 'EMERGENCY'"
                     (click)="setEditPostType('EMERGENCY')">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
                   </button>
-                } @else {
-                  <button type="button" class="cd-type-btn"
-                    [class.cd-type-btn--active]="selectedEditType() === 'GENERAL'"
-                    (click)="setEditPostType('GENERAL')">
-                    <i class="bi bi-chat-dots-fill"></i>
-                    <span>{{ 'shared.communityDetail.general' | translate }}</span>
-                  </button>
+                }
+                @if (showEnquireTab()) {
                   <button type="button" class="cd-type-btn cd-type-btn--enquire"
                     [class.cd-type-btn--active]="selectedEditType() === 'ENQUIRY'"
                     (click)="setEditPostType('ENQUIRY')">
@@ -209,6 +206,23 @@
     (closed)="closeEditCommunityModal()"
     (saved)="onCommunitySaved($event)">
   </app-community-form-modal>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       JOIN / LEAVE COMMUNITY MODALS
+  ══════════════════════════════════════════════════════════════ -->
+  <app-community-join-modal
+    [open]="joinModalOpen()"
+    [community]="community()"
+    (closed)="closeJoinModal()"
+    (joined)="onCommunityJoined()">
+  </app-community-join-modal>
+
+  <app-community-leave-modal
+    [open]="leaveModalOpen()"
+    [community]="community()"
+    (closed)="closeLeaveModal()"
+    (left)="onCommunityLeft()">
+  </app-community-leave-modal>
 
   <!-- ═══════════════════════════════════════════════════════════
        COMMUNITY HERO CARD
@@ -328,20 +342,12 @@
             <!-- Join / Leave button — user view only, and never for the community's own owner -->
             @if (!isAdmin() && !isOwnerOfCommunity()) {
               @if (isMember()) {
-                <button type="button" class="cd-btn-leave" (click)="onLeaveCommunity()" [disabled]="leavingCommunity()">
-                  @if (leavingCommunity()) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>Leaving...
-                  } @else {
-                    <i class="bi bi-box-arrow-right me-1"></i>Leave
-                  }
+                <button type="button" class="cd-btn-leave" (click)="openLeaveModal()">
+                  <i class="bi bi-box-arrow-right me-1"></i>Leave
                 </button>
               } @else {
-                <button type="button" class="cd-btn-join" (click)="onJoinCommunity()" [disabled]="joiningCommunity()">
-                  @if (joiningCommunity()) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>Joining...
-                  } @else {
-                    <i class="bi bi-plus-circle-fill me-1"></i>Join Community
-                  }
+                <button type="button" class="cd-btn-join" (click)="openJoinModal()">
+                  <i class="bi bi-plus-circle-fill me-1"></i>Join Community
                 </button>
               }
             }
@@ -367,7 +373,7 @@
           }
         </button>
 
-        @if (!isEnquireMode()) {
+        @if (showHelpTab()) {
           <button class="cd-tab-btn cd-tab-btn--help" role="tab" [class.cd-tab-btn--active]="displayTab() === 'help'"
             (click)="setTab('help')" [attr.aria-selected]="displayTab() === 'help'">
             <i class="bi bi-life-preserver"></i>
@@ -376,7 +382,9 @@
               <span class="cd-tab-badge cd-tab-badge--help">{{ helpCount() }}</span>
             }
           </button>
+        }
 
+        @if (showEmergencyTab()) {
           <button class="cd-tab-btn cd-tab-btn--emergency" role="tab" [class.cd-tab-btn--active]="displayTab() === 'emergency'"
             (click)="setTab('emergency')" [attr.aria-selected]="displayTab() === 'emergency'">
             <i class="bi bi-exclamation-triangle-fill"></i>
@@ -385,7 +393,9 @@
               <span class="cd-tab-badge cd-tab-badge--emergency">{{ emergencyCount() }}</span>
             }
           </button>
-        } @else {
+        }
+
+        @if (showEnquireTab()) {
           <button class="cd-tab-btn cd-tab-btn--enquire" role="tab" [class.cd-tab-btn--active]="displayTab() === 'enquire'"
             (click)="setTab('enquire')" [attr.aria-selected]="displayTab() === 'enquire'">
             <i class="bi bi-question-circle-fill"></i>
@@ -742,32 +752,29 @@
 
                       <!-- Type selector -->
                       <div class="cd-type-selector">
-                        @if (!isEnquireMode()) {
-                          <button type="button" class="cd-type-btn cd-type-btn--general"
-                            [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
-                            (click)="setPostType('GENERAL')">
-                            <i class="bi bi-chat-dots-fill"></i>
-                            <span>{{ 'shared.communityDetail.general' | translate }}</span>
-                          </button>
+                        <button type="button" class="cd-type-btn cd-type-btn--general"
+                          [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
+                          (click)="setPostType('GENERAL')">
+                          <i class="bi bi-chat-dots-fill"></i>
+                          <span>{{ 'shared.communityDetail.general' | translate }}</span>
+                        </button>
+                        @if (showHelpTab()) {
                           <button type="button" class="cd-type-btn cd-type-btn--help"
                             [class.cd-type-btn--active]="selectedPostType() === 'HELP'"
                             (click)="setPostType('HELP')">
                             <i class="bi bi-life-preserver"></i>
                             <span>{{ 'shared.communityDetail.help' | translate }}</span>
                           </button>
+                        }
+                        @if (showEmergencyTab()) {
                           <button type="button" class="cd-type-btn cd-type-btn--emergency"
                             [class.cd-type-btn--active]="selectedPostType() === 'EMERGENCY'"
                             (click)="setPostType('EMERGENCY')">
                             <i class="bi bi-exclamation-triangle-fill"></i>
                             <span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
                           </button>
-                        } @else {
-                          <button type="button" class="cd-type-btn cd-type-btn--general"
-                            [class.cd-type-btn--active]="selectedPostType() === 'GENERAL'"
-                            (click)="setPostType('GENERAL')">
-                            <i class="bi bi-chat-dots-fill"></i>
-                            <span>{{ 'shared.communityDetail.general' | translate }}</span>
-                          </button>
+                        }
+                        @if (showEnquireTab()) {
                           <button type="button" class="cd-type-btn cd-type-btn--enquire"
                             [class.cd-type-btn--active]="selectedPostType() === 'ENQUIRY'"
                             (click)="setPostType('ENQUIRY')">
@@ -1795,7 +1802,7 @@
                 </div>
               </div>
             </div>
-            @if (!isEnquireMode()) {
+            @if (showHelpTab()) {
               <div class="col-6 col-md-4 col-xl">
                 <div class="cd-stat-card cd-surface-card cd-stat-card--help">
                   <div class="cd-stat-icon-box">
@@ -1807,6 +1814,8 @@
                   </div>
                 </div>
               </div>
+            }
+            @if (showEmergencyTab()) {
               <div class="col-6 col-md-4 col-xl">
                 <div class="cd-stat-card cd-surface-card cd-stat-card--emergency">
                   <div class="cd-stat-icon-box">
@@ -1818,7 +1827,8 @@
                   </div>
                 </div>
               </div>
-            } @else {
+            }
+            @if (showEnquireTab()) {
               <div class="col-6 col-md-4 col-xl">
                 <div class="cd-stat-card cd-surface-card cd-stat-card--help">
                   <div class="cd-stat-icon-box">
@@ -2061,16 +2071,19 @@
               (click)="setMyPostsFilterType('GENERAL')">
               <i class="bi bi-chat-dots-fill"></i><span>{{ 'shared.communityDetail.general' | translate }}</span>
             </button>
-            @if (!isEnquireMode()) {
+            @if (showHelpTab()) {
               <button type="button" class="cd-type-btn cd-type-btn--help" [class.cd-type-btn--active]="myPostsFilterType() === 'HELP'"
                 (click)="setMyPostsFilterType('HELP')">
                 <i class="bi bi-life-preserver"></i><span>{{ 'shared.communityDetail.help' | translate }}</span>
               </button>
+            }
+            @if (showEmergencyTab()) {
               <button type="button" class="cd-type-btn cd-type-btn--emergency" [class.cd-type-btn--active]="myPostsFilterType() === 'EMERGENCY'"
                 (click)="setMyPostsFilterType('EMERGENCY')">
                 <i class="bi bi-exclamation-triangle-fill"></i><span>{{ 'shared.communityDetail.emergencyAssistance' | translate }}</span>
               </button>
-            } @else {
+            }
+            @if (showEnquireTab()) {
               <button type="button" class="cd-type-btn cd-type-btn--enquire" [class.cd-type-btn--active]="myPostsFilterType() === 'ENQUIRY'"
                 (click)="setMyPostsFilterType('ENQUIRY')">
                 <i class="bi bi-question-circle-fill"></i><span>{{ 'shared.communityDetail.enquire' | translate }}</span>
@@ -2159,7 +2172,7 @@
   </div>
 
   @if (lightboxOpen()) {
-    <div class="cd-lightbox" (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'shared.communityDetail.imagePreview' | translate">
+    <div class="cd-lightbox" appScrollLock (click)="closeImagePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'shared.communityDetail.imagePreview' | translate">
       <div class="cd-lightbox-content" (click)="$event.stopPropagation()">
         <button type="button" class="cd-lightbox-close" (click)="closeImagePreview()" [attr.aria-label]="'shared.communityDetail.closeImagePreview' | translate">
           <i class="bi bi-x-lg"></i>
@@ -2187,7 +2200,7 @@
 
   @if (shareModalOpen()) {
     @if (shareTargetPost(); as sharePostData) {
-      <div class="cd-modal-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1050;" (click)="closeShareModal()" role="dialog" aria-modal="true" aria-labelledby="cdShareModalTitle">
+      <div class="cd-modal-backdrop" style="position:fixed;inset:0;background:transparent;z-index:1050;" appScrollLock (click)="closeShareModal()" role="dialog" aria-modal="true" aria-labelledby="cdShareModalTitle">
         <div class="cd-modal cd-modal--share" (click)="$event.stopPropagation()">
           <div class="cd-modal-header">
             <div class="cd-modal-icon-wrap cd-modal-icon-wrap--share">

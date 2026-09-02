@@ -20,7 +20,7 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -48,6 +48,7 @@ import {
   SelectOption,
 } from '../../../shared/components/searchable-select/searchable-select.component';
 import { computePasswordStrength } from '../../../shared/utils/password-strength';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-register',
@@ -60,6 +61,7 @@ import { computePasswordStrength } from '../../../shared/utils/password-strength
     A11yModule,
     TranslatePipe,
     LanguageToggleComponent,
+    ScrollLockDirective,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -159,7 +161,32 @@ export class RegisterComponent {
     private themeService:     ThemeService,
     private languageService:  LanguageService,
     private router:           Router,
+    private route:            ActivatedRoute,
   ) {}
+
+  /**
+   * Where to send a newly-registered user, when they got here via a guard
+   * redirect (e.g. opening a shared post link while logged out — see
+   * user.guard.ts/auth.guard.ts, which attach `returnUrl` before bouncing to
+   * /auth/login, and the login page forwards it here on "create one"). New
+   * accounts are never admin, so only a /user/* returnUrl is honored.
+   */
+  private getSafeReturnUrl(): string | null {
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (!raw || !raw.startsWith('/user')) return null;
+    return raw;
+  }
+
+  private navigateAfterAuth(): void {
+    const returnUrl = this.getSafeReturnUrl();
+    this.router.navigateByUrl(returnUrl ?? '/user/dashboard');
+  }
+
+  /** Forwarded onto the "sign in" link so switching to Login doesn't drop a pending returnUrl (e.g. a shared post link opened while logged out). */
+  get loginLinkQueryParams(): Record<string, string> {
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+    return raw ? { returnUrl: raw } : {};
+  }
 
   ngOnInit() {
     this.themeService.applyDefaultIfUnset('dark');
@@ -475,7 +502,7 @@ export class RegisterComponent {
         this.registeringStage.set('');
         this.showSuccessModal.set(true);
         this.markWelcomeBannerPending();
-        setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
+        setTimeout(() => this.navigateAfterAuth(), 3000);
       },
       error: (err) => {
         this.loading.set(false);
@@ -737,7 +764,7 @@ export class RegisterComponent {
           // Tokens already stored by authService tap — go to dashboard
           this.showSuccessModal.set(true);
           this.markWelcomeBannerPending();
-          setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
+          setTimeout(() => this.navigateAfterAuth(), 3000);
         }
       },
       error: (err: any) => {
@@ -779,7 +806,7 @@ export class RegisterComponent {
           } else {
             this.showSuccessModal.set(true);
             this.markWelcomeBannerPending();
-            setTimeout(() => this.router.navigate(['/user/dashboard']), 3000);
+            setTimeout(() => this.navigateAfterAuth(), 3000);
           }
         },
         error: (err: any) => {

@@ -10,6 +10,7 @@ import { Business, BusinessCategory, PaginatedResponse, Country } from '../../..
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
@@ -40,7 +41,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, BusinessFormModalComponent, BusinessDeleteModalComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessDeleteModalComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the

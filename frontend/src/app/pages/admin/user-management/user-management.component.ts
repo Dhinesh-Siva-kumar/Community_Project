@@ -14,6 +14,7 @@ import { SelectOption, SearchableSelectComponent } from '../../../shared/compone
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { enumLabelKey } from '../../../shared/constants/enum-labels';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
 type ConfirmActionType = 'block' | 'unblock' | 'trust' | 'untrust' | 'delete';
 
@@ -26,7 +27,7 @@ const VIEW_STORAGE_KEY = 'admin-user-management:viewMode';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, DatePipe, FormsModule,
-    AddUserDrawerComponent, UserDetailDrawerComponent, SearchableSelectComponent, TranslatePipe, EnumLabelPipe],
+    AddUserDrawerComponent, UserDetailDrawerComponent, SearchableSelectComponent, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
 })

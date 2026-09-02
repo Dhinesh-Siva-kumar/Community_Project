@@ -7,11 +7,12 @@ import { AuthService } from '../../../../../core/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { SearchableSelectComponent, SelectOption } from '../../../../../shared/components/searchable-select/searchable-select.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-add-user-drawer',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent, TranslatePipe, ScrollLockDirective],
   templateUrl: './add-user-drawer.component.html',
   styleUrls: ['./add-user-drawer.component.scss'],
 })

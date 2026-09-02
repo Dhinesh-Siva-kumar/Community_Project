@@ -6,13 +6,14 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { NotificationType } from '../../../../../core/models';
 import { RadioGroupComponent, RadioOption } from '../../../../../shared/components/radio-group/radio-group.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
 
 type RecipientType = 'all' | 'role' | 'user';
 
 @Component({
   selector: 'app-notification-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, RadioGroupComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, RadioGroupComponent, TranslatePipe, ScrollLockDirective],
   templateUrl: './notification-modal.component.html',
   styleUrls: ['./notification-modal.component.scss'],
 })

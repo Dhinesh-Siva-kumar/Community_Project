@@ -1,0 +1,83 @@
+@if (open && community) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-join-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="joinCommunityModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-join-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-join-modal-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="joinCommunityModalTitle">{{ 'components.communityJoin.title' | translate }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">{{ community.name }}</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [disabled]="joining()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-join-modal-body">
+
+      <!-- General community guidelines — always shown -->
+      <div class="cm-join-section">
+        <div class="cm-join-section-title">
+          <i class="bi bi-file-earmark-check-fill"></i>
+          {{ 'components.communityJoin.termsTitle' | translate }}
+        </div>
+        <ul class="cm-join-list">
+          <li>{{ 'components.communityJoin.term1' | translate }}</li>
+          <li>{{ 'components.communityJoin.term2' | translate }}</li>
+          <li>{{ 'components.communityJoin.term3' | translate }}</li>
+          <li>{{ 'components.communityJoin.term4' | translate }}</li>
+          <li>{{ 'components.communityJoin.term5' | translate }}</li>
+        </ul>
+      </div>
+
+      <!-- This community's own rules — only when it has any -->
+      @if (hasRules()) {
+        <div class="cm-join-section">
+          <div class="cm-join-section-title">
+            <i class="bi bi-shield-check"></i>
+            {{ 'components.communityJoin.rulesTitle' | translate }}
+          </div>
+          <ol class="cm-join-list cm-join-list--rules">
+            @for (rule of community.rules; track $index) {
+              <li>{{ rule }}</li>
+            }
+          </ol>
+        </div>
+      }
+
+      <label class="cm-join-agree form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          [checked]="agreed()"
+          (change)="toggleAgreed()"
+        />
+        <span class="form-check-label">{{ 'components.communityJoin.agreeLabel' | translate }}</span>
+      </label>
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="requestClose()" [disabled]="joining()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--success"
+        (click)="confirmJoin()" [disabled]="joining() || !agreed()">
+        @if (joining()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'components.communityJoin.joining' | translate }}
+        } @else {
+          <i class="bi bi-check-lg"></i>
+          {{ 'components.communityJoin.confirmAction' | translate }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

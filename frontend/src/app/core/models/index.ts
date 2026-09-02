@@ -226,12 +226,13 @@ export interface CommunityRequest {
   is_private?: boolean;
   is_global?: boolean;
   is_default?: boolean;
-  community_mode?: CommunityMode;
+  /** Any combination of Help/Emergency/Enquire — which tabs the community offers. */
+  community_modes?: CommunityMode[];
   community_type?: CommunityType;
   rules?: string[];
 }
 
-export type CommunityMode = 'HELP_EMERGENCY' | 'ENQUIRE';
+export type CommunityMode = 'HELP' | 'EMERGENCY' | 'ENQUIRE';
 // Hub = an official, admin-managed country community; Individual = a
 // regular user-interest group. Only admins can create/set Hub — non-admin
 // (user-side) communities are always Individual.
@@ -274,8 +275,9 @@ export interface Community {
   is_default?: boolean;
   // Joined field from interest_master (resolved via category JOIN in service)
   category_name?: string;
-  // Added in migration 20240009 — gates which tabs community-detail shows.
-  community_mode?: CommunityMode;
+  // Added in migration 20240009, split into a multi-value array in
+  // migration 20240035 — gates which tabs community-detail shows.
+  community_modes?: CommunityMode[];
   // Added in migration 20240033 — Hub (official country community, admin-only)
   // vs Individual (user interest group).
   community_type?: CommunityType;

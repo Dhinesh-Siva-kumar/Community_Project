@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Observable, of } from 'rxjs';
@@ -15,6 +15,7 @@ import { ProfileInfoCardComponent } from '../../../shared/components/profile-inf
 import { ProfileProgressComponent } from '../../../shared/components/profile-progress/profile-progress.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -32,11 +33,11 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   imports: [
     CommonModule, ReactiveFormsModule, DatePipe,
     SearchableSelectComponent,
-    ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent, TranslatePipe, EnumLabelPipe],
+    ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent, TranslatePipe, EnumLabelPipe, ScrollLockDirective],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
-export class AdminProfileComponent implements OnInit, OnDestroy {
+export class AdminProfileComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast = inject(ToastService);
@@ -150,17 +151,6 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     'Marketing', 'Design', 'Engineering', 'Sales', 'Construction',
     'Hospitality', 'Retail', 'Real Estate', 'Other',
   ].map(c => ({ value: c, label: c }));
-
-  constructor() {
-    // Lock background scroll while the Change Password popup is open.
-    effect(() => {
-      document.body.style.overflow = this.showPasswordSection() ? 'hidden' : '';
-    });
-  }
-
-  ngOnDestroy(): void {
-    document.body.style.overflow = '';
-  }
 
   ngOnInit(): void {
     this.profileForm = this.fb.group({

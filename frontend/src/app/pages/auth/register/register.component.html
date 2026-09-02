@@ -452,7 +452,7 @@
          @if (step() === 'form') {
         <p class="switch-auth">
           {{ 'auth.register.alreadyHaveAccount' | translate }}
-          <a routerLink="/auth/login" class="switch-link">{{ 'auth.register.signIn' | translate }} &rarr;</a>
+          <a routerLink="/auth/login" [queryParams]="loginLinkQueryParams" class="switch-link">{{ 'auth.register.signIn' | translate }} &rarr;</a>
         </p>
         }
       </div>
@@ -461,7 +461,7 @@
 
   <!-- ── Loading overlay (verifying OTP → creating account; Google sign-in) ── -->
   @if (loading() || googleLoading()) {
-    <div class="reg-loading-overlay">
+    <div class="reg-loading-overlay" appScrollLock>
       <div class="reg-loading-card">
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
         <p class="reg-loading-text">
@@ -479,7 +479,7 @@
 
   <!-- ── Success modal ── -->
   @if (showSuccessModal()) {
-    <div class="reg-success-overlay">
+    <div class="reg-success-overlay" appScrollLock>
       <div class="reg-success-card">
         <div class="reg-success-icon">
           <i class="bi bi-check-circle-fill"></i>
@@ -495,7 +495,7 @@
 
   <!-- ── Google username selection modal ── -->
   @if (googleNeedsUsername()) {
-    <div class="google-username-overlay">
+    <div class="google-username-overlay" appScrollLock>
       <div class="google-username-card">
         <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="('auth.register.modalClose' | translate)">
           <i class="bi bi-x-lg"></i>

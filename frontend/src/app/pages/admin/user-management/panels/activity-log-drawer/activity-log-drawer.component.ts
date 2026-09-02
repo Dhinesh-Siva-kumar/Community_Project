@@ -6,11 +6,12 @@ import { AuditLog, AuditLogResponse } from '../../../../../core/models';
 import { getAuditActionColor, getAuditActionIcon, auditActionKey, titleCaseCode } from '../../../../../core/constants/audit-actions';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TranslateService } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-activity-log-drawer',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, TranslatePipe],
+  imports: [CommonModule, DatePipe, FormsModule, TranslatePipe, ScrollLockDirective],
   templateUrl: './activity-log-drawer.component.html',
   styleUrls: ['./activity-log-drawer.component.scss'],
 })

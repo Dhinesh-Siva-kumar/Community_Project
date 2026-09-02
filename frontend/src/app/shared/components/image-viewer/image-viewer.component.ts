@@ -13,11 +13,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 @Component({
   selector: 'app-image-viewer',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe, TranslatePipe],
+  imports: [CommonModule, ImageUrlPipe, TranslatePipe, ScrollLockDirective],
   templateUrl: './image-viewer.component.html',
   styleUrls: ['./image-viewer.component.scss'],
 })

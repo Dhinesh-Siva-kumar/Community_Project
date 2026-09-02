@@ -1,0 +1,46 @@
+@if (open && community) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-leave-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="leaveCommunityModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cm-leave-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-leave-modal-icon">
+        <i class="bi bi-box-arrow-right"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="leaveCommunityModalTitle">{{ 'components.communityLeave.title' | translate }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">{{ 'components.communityLeave.subtitle' | translate }}</p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [disabled]="leaving()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cm-leave-modal-body">
+      <p class="cm-leave-modal-text">
+        {{ 'components.communityLeave.confirmPre' | translate }} <strong>"{{ community.name }}"</strong>{{ 'components.communityLeave.confirmPost' | translate }}
+      </p>
+    </div>
+
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn cm-btn-cancel au-btn--ghost"
+        (click)="requestClose()" [disabled]="leaving()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="button" class="au-btn cm-btn-submit au-btn--warning"
+        (click)="confirmLeave()" [disabled]="leaving()">
+        @if (leaving()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'components.communityLeave.leaving' | translate }}
+        } @else {
+          <i class="bi bi-box-arrow-right"></i>
+          {{ 'components.communityLeave.confirmAction' | translate }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

@@ -10,12 +10,14 @@ import { Community, CommunityRequest, Country, interests } from '../../../core/m
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { MultiSelectComponent } from '../multi-select/multi-select.component';
 import { RadioGroupComponent, RadioOption } from '../radio-group/radio-group.component';
+import { CheckboxGroupComponent, CheckboxOption } from '../checkbox-group/checkbox-group.component';
 import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { CommunityRulesInputComponent } from '../community-rules-input/community-rules-input.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 /** Fails when the trimmed value is empty (catches whitespace-only strings). */
 function noWhitespace(control: AbstractControl): ValidationErrors | null {
@@ -49,7 +51,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-community-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, ToggleComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe, TranslatePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, CheckboxGroupComponent, ToggleComponent, FileUploadComponent, CommunityRulesInputComponent, ImageUrlPipe, TranslatePipe, ScrollLockDirective],
   templateUrl: './community-form-modal.component.html',
   styleUrls: ['./community-form-modal.component.scss'],
 })
@@ -96,9 +98,16 @@ export class CommunityFormModalComponent implements OnChanges {
     return opts;
   }
 
-  readonly communityModeOptions: RadioOption[] = [
-    { value: 'HELP_EMERGENCY', label: 'components.communityForm.mode.helpEmergency', icon: 'bi-life-preserver' },
-    { value: 'ENQUIRE',        label: 'components.communityForm.mode.enquire',             icon: 'bi-question-circle-fill' },
+  /**
+   * Admin-only multi-select — any combination of Help, Emergency and
+   * Enquire may be active on a community at once. Non-admins never see
+   * this field; their communities are always Enquire-only (enforced both
+   * here and server-side).
+   */
+  readonly communityModeOptions: CheckboxOption[] = [
+    { value: 'HELP',      label: 'components.communityForm.mode.help',      icon: 'bi-life-preserver' },
+    { value: 'EMERGENCY', label: 'components.communityForm.mode.emergency', icon: 'bi-exclamation-triangle-fill' },
+    { value: 'ENQUIRE',   label: 'components.communityForm.mode.enquire',   icon: 'bi-question-circle-fill' },
   ];
 
   /** Admin-only — non-admins never see this field, their communities are always Individual. */
@@ -147,7 +156,11 @@ export class CommunityFormModalComponent implements OnChanges {
       visibility:    [''],
       isDefault:     [false],
       countryId:     [null, Validators.required],
-      communityMode: ['HELP_EMERGENCY', Validators.required],
+      // Admin-only field — non-admins never see it, and their submissions
+      // are always forced to ['ENQUIRE'] regardless of this value (see
+      // mapToPayload). Validated manually in submitForm() since admin
+      // requires at least one mode but non-admins don't show the control.
+      communityModes: [['ENQUIRE'] as string[]],
       communityType: ['INDIVIDUAL', Validators.required],
       rules:         [[] as string[]],
     });
@@ -166,12 +179,15 @@ export class CommunityFormModalComponent implements OnChanges {
       if (type === 'HUB') {
         interestsControl?.disable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
-          this.communityForm.patchValue({ visibility: 'private', isDefault: true, interests: [] });
+          // A Hub is meant to cover every kind of post, so switching to it
+          // auto-selects all three modes rather than leaving the admin's
+          // prior (narrower) Individual-community pick in place.
+          this.communityForm.patchValue({ visibility: 'private', isDefault: true, interests: [], communityModes: ['HELP', 'EMERGENCY', 'ENQUIRE'] });
         }
       } else {
         interestsControl?.enable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
-          this.communityForm.patchValue({ isDefault: false });
+          this.communityForm.patchValue({ isDefault: false, communityModes: ['HELP'] });
         }
       }
     });
@@ -216,7 +232,7 @@ export class CommunityFormModalComponent implements OnChanges {
     const patches: Record<string, unknown> = {};
     const defaultCountry = this.countries.find((c) => c.iso2 === 'IN');
     if (defaultCountry) patches['countryId'] = defaultCountry.id;
-    patches['communityMode'] = 'HELP_EMERGENCY';
+    patches['communityModes'] = this.isAdminUser() ? ['HELP'] : ['ENQUIRE'];
     patches['communityType'] = 'INDIVIDUAL';
     patches['rules'] = [];
     // Private is the default visibility for every new community — non-admins
@@ -248,7 +264,7 @@ export class CommunityFormModalComponent implements OnChanges {
       countryId:     c['country_id'] ?? null,
       visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
-      communityMode: c['community_mode'] ?? 'HELP_EMERGENCY',
+      communityModes: c['community_modes'] ?? ['ENQUIRE'],
       communityType: c['community_type'] ?? 'INDIVIDUAL',
       rules:         c['rules'] ?? [],
     });
@@ -277,8 +293,11 @@ export class CommunityFormModalComponent implements OnChanges {
     // Category required for Individual communities only — optional (and
     // never stored) for Hub.
     const categoriesValid = formData.communityType === 'HUB' || (Array.isArray(formData.interests) && formData.interests.length > 0);
+    // Community Mode is only shown to admins (non-admins are always
+    // forced to Enquire-only in mapToPayload) — require at least one pick.
+    const communityModesValid = !this.isAdminUser() || (Array.isArray(formData.communityModes) && formData.communityModes.length > 0);
 
-    if (this.communityForm.invalid || !imageValid || !visibilityValid || !categoriesValid) {
+    if (this.communityForm.invalid || !imageValid || !visibilityValid || !categoriesValid || !communityModesValid) {
       return;
     }
 
@@ -354,7 +373,8 @@ export class CommunityFormModalComponent implements OnChanges {
       is_private:  admin ? form.visibility === 'private' : true,
       is_global:   admin ? form.visibility === 'global' : false,
       is_default:  admin ? (form.isDefault ?? false) : false,
-      community_mode: form.communityMode ?? 'HELP_EMERGENCY',
+      // Non-admins never choose their community's modes — always Enquire-only.
+      community_modes: admin ? (form.communityModes?.length ? form.communityModes : ['ENQUIRE']) : ['ENQUIRE'],
       community_type: communityType,
       rules:       form.rules ?? [],
     };

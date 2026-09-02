@@ -1,5 +1,5 @@
 @if (!embedded) {
-  <div class="modal-backdrop" (click)="close.emit()"></div>
+  <div class="modal-backdrop" appScrollLock (click)="close.emit()"></div>
 }
 
 <div [class]="embedded ? 'pm-embedded' : 'pm-modal'" role="dialog" [attr.aria-label]="'admin.permissions.rolePermissions' | translate">

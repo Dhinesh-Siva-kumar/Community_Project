@@ -20,6 +20,7 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
@@ -90,7 +91,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   imports: [DateInputComponent, 
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink,
     SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
-    SortBarComponent, TranslatePipe, EnumLabelPipe],
+    SortBarComponent, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the

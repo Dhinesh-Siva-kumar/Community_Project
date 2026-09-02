@@ -138,9 +138,14 @@
             {{ 'common.all' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
-                  [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP_EMERGENCY'"
-                  (click)="onFilterCommunityModeChange('HELP_EMERGENCY')">
-            <i class="bi bi-life-preserver"></i> {{ 'admin.community.helpAmpEmergencyAssistance' | translate }}
+                  [class.jb-pill-btn--active]="filterCommunityMode() === 'HELP'"
+                  (click)="onFilterCommunityModeChange('HELP')">
+            <i class="bi bi-life-preserver"></i> {{ 'admin.community.label.help' | translate }}
+          </button>
+          <button type="button" class="jb-pill-btn"
+                  [class.jb-pill-btn--active]="filterCommunityMode() === 'EMERGENCY'"
+                  (click)="onFilterCommunityModeChange('EMERGENCY')">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ 'admin.community.label.emergency' | translate }}
           </button>
           <button type="button" class="jb-pill-btn"
                   [class.jb-pill-btn--active]="filterCommunityMode() === 'ENQUIRE'"
@@ -457,12 +462,21 @@
                   </span>
                 }
 
-                <span class="cc-mode-badge"
-                      [class.cc-mode-badge--enquire]="community.community_mode === 'ENQUIRE'">
-                  <i class="bi" [class.bi-life-preserver]="community.community_mode !== 'ENQUIRE'"
-                     [class.bi-question-circle-fill]="community.community_mode === 'ENQUIRE'"></i>
-                  {{ community.community_mode === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency Assistance' }}
-                </span>
+                @if (community.community_modes?.includes('HELP')) {
+                  <span class="cc-mode-badge cc-mode-badge--help">
+                    <i class="bi bi-life-preserver"></i> {{ 'admin.community.label.help' | translate }}
+                  </span>
+                }
+                @if (community.community_modes?.includes('EMERGENCY')) {
+                  <span class="cc-mode-badge">
+                    <i class="bi bi-exclamation-triangle-fill"></i> {{ 'admin.community.label.emergency' | translate }}
+                  </span>
+                }
+                @if (community.community_modes?.includes('ENQUIRE')) {
+                  <span class="cc-mode-badge cc-mode-badge--enquire">
+                    <i class="bi bi-question-circle-fill"></i> {{ 'admin.community.enquire' | translate }}
+                  </span>
+                }
 
               </div>
 
@@ -731,7 +745,7 @@
 <!-- Create / Edit Modal Backdrop -->
 @if (showModal()) {
   <div class="au-backdrop" (click)="closeModal()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle()">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="modalTitle()">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -892,21 +906,21 @@
               </div>
 
               <div class="cm-field-row">
-                <!-- Community Mode -->
-                <div class="cm-field-group">
+                <!-- Community Mode — multi-select: any combination of Help/Emergency/Enquire -->
+                <div class="cm-field-group" [class.cm-field-group--error]="formSubmitAttempted() && !f['communityModes'].value?.length">
                   <label class="cm-label">{{ 'admin.community.communityMode2' | translate }} <span class="cm-required">*</span></label>
-                  <app-radio-group
-                    formControlName="communityMode"
+                  <app-checkbox-group
+                    formControlName="communityModes"
                     [options]="communityModeOptions"
+                    [invalid]="formSubmitAttempted() && !f['communityModes'].value?.length"
                     [ariaLabel]="'admin.community.communityMode' | translate">
-                  </app-radio-group>
-                  <div class="cm-default-hint">
-                    @if (f['communityMode'].value === 'ENQUIRE') {
-                      Members can raise and track enquiries in a dedicated Enquire tab.
-                    } @else {
-                      Members can post Help and Emergency Assistance requests in dedicated tabs.
-                    }
-                  </div>
+                  </app-checkbox-group>
+                  <div class="cm-default-hint">{{ 'components.communityForm.modeMultiHint' | translate }}</div>
+                  @if (formSubmitAttempted() && !f['communityModes'].value?.length) {
+                    <div class="cm-error-msg">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please select at least one community mode.
+                    </div>
+                  }
                 </div>
 
                 <!-- Community Type — admin-only; user-side communities are always Individual -->
@@ -1016,7 +1030,7 @@
 <!-- ── DELETE CONFIRM ─────────────────────────────────────── -->
 @if (communityToDelete(); as community) {
   <div class="au-backdrop" (click)="cancelDelete()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
       <div class="au-header__cover-shapes" aria-hidden="true">

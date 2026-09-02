@@ -1157,7 +1157,7 @@
 <!-- ==================== ADD / EDIT CATEGORY MODAL ==================== -->
 @if (showAddCategoryModal()) {
   <div class="au-backdrop" (click)="closeAddCategory()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="catModalTitle" (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -1303,7 +1303,7 @@
 <!-- ==================== DELETE CATEGORY CONFIRM ==================== -->
 @if (showDeleteCategoryConfirm() && categoryToDelete()) {
   <div class="au-backdrop" (click)="closeDeleteCategory()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteCatModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="deleteCatModalTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
       <div class="au-header__cover-shapes" aria-hidden="true">
@@ -1356,7 +1356,7 @@
 <!-- ==================== ADD BUSINESS MODAL ==================== -->
 @if (showAddBusinessModal()) {
   <div class="au-backdrop" (click)="closeAddBusiness()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="bizModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="bizModalTitle" (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -1825,7 +1825,7 @@
 <!-- ==================== DELETE BUSINESS CONFIRM ==================== -->
 @if (showDeleteBusinessConfirm() && businessToDelete()) {
   <div class="au-backdrop" (click)="closeDeleteBusiness()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteBizModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="deleteBizModalTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
       <div class="au-header__cover-shapes" aria-hidden="true">

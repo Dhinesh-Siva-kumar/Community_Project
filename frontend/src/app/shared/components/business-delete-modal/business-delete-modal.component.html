@@ -1,6 +1,6 @@
 @if (open && business) {
   <div class="au-backdrop" (click)="requestClose()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteBizModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="deleteBizModalTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
       <div class="au-header__cover-shapes" aria-hidden="true">

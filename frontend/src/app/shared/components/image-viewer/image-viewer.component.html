@@ -1,6 +1,7 @@
 <!-- Image Viewer Modal Overlay -->
-<div class="iv-overlay" 
-  [class.iv-overlay--open]="isOpen()" 
+<div class="iv-overlay"
+  [class.iv-overlay--open]="isOpen()"
+  [appScrollLock]="isOpen()"
   (click)="onBackdropClick($event)"
   role="presentation">
   

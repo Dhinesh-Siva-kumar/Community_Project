@@ -98,8 +98,12 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
   const interestIds = isHub ? [] : data.interest_ids;
   const primaryInterestId = interestIds[0] ?? null;
 
+  // Non-admins never choose which tabs their community offers — every
+  // user-created community is Enquire-only, regardless of what's sent.
+  const communityModes = isAutoApproved ? data.community_modes : ['ENQUIRE' as const];
+
   const [community] = await db('communities')
-    .insert({ ...data, interest_id: primaryInterestId, interest_ids: interestIds, created_by_id: adminId, status })
+    .insert({ ...data, community_modes: communityModes, interest_id: primaryInterestId, interest_ids: interestIds, created_by_id: adminId, status })
     .returning('*');
 
   // The creator is always a member of their own community, so they show up
@@ -159,7 +163,7 @@ export async function findAll(params: {
   country?: string;
   category?: string;
   visibility?: 'global' | 'private' | 'default';
-  community_mode?: 'HELP_EMERGENCY' | 'ENQUIRE';
+  community_mode?: 'HELP' | 'EMERGENCY' | 'ENQUIRE';
   community_type?: 'HUB' | 'INDIVIDUAL';
   is_default?: boolean;
   from_date?: string;
@@ -274,10 +278,11 @@ export async function findAll(params: {
     countQuery.where('is_default', true);
   }
 
-  // ── Community mode filter ──────────────────────────────────
+  // ── Community mode filter — community_modes is an array column, so
+  // "filter by mode X" means X is one of (possibly several) modes set. ──
   if (community_mode) {
-    query.where('c.community_mode', community_mode);
-    countQuery.where('community_mode', community_mode);
+    query.whereRaw('? = ANY(c.community_modes)', [community_mode]);
+    countQuery.whereRaw('? = ANY(community_modes)', [community_mode]);
   }
 
   // ── Community type filter (Hub vs Individual) ───────────────
@@ -718,6 +723,11 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   }
   if (!callerIsAdmin && data.community_type === 'HUB') {
     throw new AppError(403, 'Only admins can set a community to Hub', 'ONLY_ADMINS_SET_HUB');
+  }
+  // Non-admins never choose which tabs their community offers — every
+  // user-created community stays Enquire-only, regardless of what's sent.
+  if (!callerIsAdmin && data.community_modes !== undefined) {
+    data.community_modes = ['ENQUIRE'];
   }
   // A rejection is terminal for the owner — it stays visible (tracked in
   // "My Communities") but can't be edited/resubmitted; only NEEDS_INFO

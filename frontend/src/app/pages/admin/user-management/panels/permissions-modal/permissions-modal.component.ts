@@ -1,13 +1,14 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
 
 interface Permission { label: string; desc: string; admin: boolean; user: boolean; }
 
 @Component({
   selector: 'app-permissions-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ScrollLockDirective],
   templateUrl: './permissions-modal.component.html',
   styleUrls: ['./permissions-modal.component.scss'],
 })
