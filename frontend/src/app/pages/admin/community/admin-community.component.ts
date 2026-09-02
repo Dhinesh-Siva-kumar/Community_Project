@@ -12,6 +12,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { MultiSelectComponent } from '../../../shared/components/multi-select/multi-select.component';
 import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { CheckboxGroupComponent, CheckboxOption } from '../../../shared/components/checkbox-group/checkbox-group.component';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
@@ -53,7 +55,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, CheckboxGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe, ScrollLockDirective],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -110,9 +112,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     { value: 'HUB',        label: 'admin.community.label.hubCommunity',        icon: 'bi-globe-americas' },
   ];
 
-  readonly communityModeOptions: RadioOption[] = [
-    { value: 'HELP_EMERGENCY', label: 'admin.community.label.helpEmergencyAssistance', icon: 'bi-life-preserver' },
-    { value: 'ENQUIRE',        label: 'admin.community.label.enquire',                     icon: 'bi-question-circle-fill' },
+  /** Any combination of Help, Emergency and Enquire may be active on a community at once. */
+  readonly communityModeOptions: CheckboxOption[] = [
+    { value: 'HELP',      label: 'admin.community.label.help',      icon: 'bi-life-preserver' },
+    { value: 'EMERGENCY', label: 'admin.community.label.emergency', icon: 'bi-exclamation-triangle-fill' },
+    { value: 'ENQUIRE',   label: 'admin.community.label.enquire',   icon: 'bi-question-circle-fill' },
   ];
 
   // ── Signals ──────────────────────────────────────────────────
@@ -149,7 +153,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   filterCountry       = signal<string | number | null>(null);
   filterCategory      = signal<string | number | null>(null);
   filterVisibility    = signal<string | number | null>(null);
-  filterCommunityMode = signal<'HELP_EMERGENCY' | 'ENQUIRE' | null>(null);
+  filterCommunityMode = signal<'HELP' | 'EMERGENCY' | 'ENQUIRE' | null>(null);
   filterCommunityType = signal<'HUB' | 'INDIVIDUAL' | null>(null);
   filterIsDefault     = signal<boolean | null>(null);
   filterFromDate   = signal('');
@@ -222,7 +226,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     if (this.filterCategory())   add('category',  String(this.filterCategory()), this.filterCategory());
     if (this.filterVisibility()) add('visibility', String(this.filterVisibility()), this.filterVisibility());
     if (this.filterCommunityMode()) {
-      add('communityMode', this.filterCommunityMode() === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency Assistance', this.filterCommunityMode());
+      const modeLabels: Record<string, string> = { HELP: 'Help', EMERGENCY: 'Emergency', ENQUIRE: 'Enquire' };
+      add('communityMode', modeLabels[this.filterCommunityMode()!], this.filterCommunityMode());
     }
     if (this.filterCommunityType()) {
       add('communityType', this.filterCommunityType() === 'HUB' ? 'Hub Community' : 'Individual Community', this.filterCommunityType());
@@ -306,7 +311,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       visibility:  [''],
       isDefault:   [false],
       countryId:   [null, Validators.required],
-      communityMode: ['HELP_EMERGENCY', Validators.required],
+      communityModes: [['HELP'] as string[]],
       communityType: ['INDIVIDUAL', Validators.required],
       rules:       [[] as string[]],
     });
@@ -325,12 +330,15 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       if (type === 'HUB') {
         interestsControl?.disable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
-          this.communityForm.patchValue({ visibility: 'private', isDefault: true, interests: [] });
+          // A Hub is meant to cover every kind of post, so switching to it
+          // auto-selects all three modes rather than leaving the admin's
+          // prior (narrower) Individual-community pick in place.
+          this.communityForm.patchValue({ visibility: 'private', isDefault: true, interests: [], communityModes: ['HELP', 'EMERGENCY', 'ENQUIRE'] });
         }
       } else {
         interestsControl?.enable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
-          this.communityForm.patchValue({ isDefault: false });
+          this.communityForm.patchValue({ isDefault: false, communityModes: ['HELP'] });
         }
       }
     });
@@ -553,7 +561,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onFilterCommunityModeChange(mode: 'HELP_EMERGENCY' | 'ENQUIRE' | null): void {
+  onFilterCommunityModeChange(mode: 'HELP' | 'EMERGENCY' | 'ENQUIRE' | null): void {
     this.filterCommunityMode.set(mode);
     this.applyFilters();
   }
@@ -666,7 +674,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     const defaultCountry = this.countries.find((c) => c.name === 'India');
     if (defaultCountry) patches['countryId'] = defaultCountry.id;
     patches['visibility'] = 'private';
-    patches['communityMode'] = 'HELP_EMERGENCY';
+    patches['communityModes'] = ['HELP'];
     patches['communityType'] = 'INDIVIDUAL';
     patches['rules'] = [];
     this.suppressTypeSideEffects = true;
@@ -689,7 +697,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       countryId:     c['country_id'] ?? null,
       visibility:    c['is_private'] ? 'private' : c['is_global'] ? 'global' : '',
       isDefault:     c['is_default'] ?? false,
-      communityMode: c['community_mode'] ?? 'HELP_EMERGENCY',
+      communityModes: c['community_modes'] ?? ['ENQUIRE'],
       communityType: c['community_type'] ?? 'INDIVIDUAL',
       rules:         c['rules'] ?? [],
     });
@@ -726,8 +734,10 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     // Category required for Individual communities only — optional (and never
     // stored) for Hub.
     const categoriesValid = formData.communityType === 'HUB' || (Array.isArray(formData.interests) && formData.interests.length > 0);
+    // At least one of Help/Emergency/Enquire required.
+    const communityModesValid = Array.isArray(formData.communityModes) && formData.communityModes.length > 0;
 
-    if (this.communityForm.invalid || !imageValid || !visibilityValid || !categoriesValid) {
+    if (this.communityForm.invalid || !imageValid || !visibilityValid || !categoriesValid || !communityModesValid) {
       this.scrollToFirstError();
       return;
     }
@@ -870,7 +880,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       is_private:  form.visibility === 'private',
       is_global:   form.visibility === 'global',
       is_default:  form.isDefault   ?? false,
-      community_mode: form.communityMode ?? 'HELP_EMERGENCY',
+      community_modes: form.communityModes?.length ? form.communityModes : ['ENQUIRE'],
       community_type: form.communityType ?? 'INDIVIDUAL',
       rules:       form.rules ?? [],
     };

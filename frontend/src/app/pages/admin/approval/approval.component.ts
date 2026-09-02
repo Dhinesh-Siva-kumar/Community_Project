@@ -14,6 +14,7 @@ import { Country, PaginatedResponse } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -45,7 +46,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -693,7 +694,7 @@ export class ApprovalComponent implements OnInit {
           { title: 'Visibility', icon: 'bi-eye', fields: [
             { label: 'admin.approval.label.visibility', value: item['is_global'] ? 'Global' : item['is_private'] ? 'Private' : 'Standard' },
             { label: 'admin.approval.label.defaultCommunity', value: this.fmtBool(item['is_default']) },
-            { label: 'admin.approval.label.mode', value: item['community_mode'] === 'ENQUIRE' ? 'Enquire' : 'Help & Emergency' },
+            { label: 'admin.approval.label.mode', value: this.fmtList((item['community_modes'] as string[] | undefined)?.map((m) => m === 'HELP' ? 'Help' : m === 'EMERGENCY' ? 'Emergency' : 'Enquire')) },
           ]},
           { title: 'Rules', icon: 'bi-list-check', fields: [
             { label: 'admin.approval.label.communityRules', value: this.fmtList(item['rules']) },

@@ -4,6 +4,7 @@ import { CommunityService } from '../../../core/services/community.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Community } from '../../../core/models';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 /**
  * The single Delete-Community confirmation popup — a straight port of the
@@ -15,7 +16,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-community-delete-modal',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ScrollLockDirective],
   templateUrl: './community-delete-modal.component.html',
   styleUrls: ['./community-delete-modal.component.scss'],
 })

@@ -259,7 +259,7 @@
 <!-- ── APPROVE CONFIRM (single) — same chrome as the View Detail popup,
      recolored green for the approve action. ───────────────────────── -->
 @if (confirmApproveTarget(); as item) {
-  <div class="pa-confirm-backdrop" (click)="cancelApproveConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelApproveConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--approve" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -285,7 +285,7 @@
 
 <!-- ── REJECT CONFIRM (single) — same chrome, recolored red. ────────── -->
 @if (confirmRejectTarget(); as item) {
-  <div class="pa-confirm-backdrop" (click)="cancelRejectConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelRejectConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--reject" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -315,7 +315,7 @@
 <!-- ── REQUEST MORE INFO CONFIRM (single) — same chrome, recolored violet.
      Reason is required — submit stays disabled until non-empty. ────────── -->
 @if (confirmMoreInfoTarget(); as item) {
-  <div class="pa-confirm-backdrop" (click)="cancelRequestInfoConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelRequestInfoConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--info" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -344,7 +344,7 @@
 
 <!-- ── BULK APPROVE CONFIRM ──────────────────────────────────── -->
 @if (confirmBulkApprove()) {
-  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelBulkConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--approve" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -370,7 +370,7 @@
 
 <!-- ── BULK REJECT CONFIRM ───────────────────────────────────── -->
 @if (confirmBulkReject()) {
-  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelBulkConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--reject" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -401,7 +401,7 @@
 
 <!-- ── BULK REQUEST MORE INFO CONFIRM ──────────────────────────── -->
 @if (confirmBulkMoreInfo()) {
-  <div class="pa-confirm-backdrop" (click)="cancelBulkConfirm()">
+  <div class="pa-confirm-backdrop" appScrollLock (click)="cancelBulkConfirm()">
     <div class="pa-confirm-dialog pa-confirm-dialog--info" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <div class="pa-confirm-header">
         <div class="pa-confirm-header__cover-shapes" aria-hidden="true">
@@ -431,7 +431,7 @@
      (dark gradient header w/ decorative shapes, sectioned body with badge
      icons, light footer bar). ──────────────────────────────────────── -->
 @if (viewingItem(); as vi) {
-  <div class="pa-view-backdrop" (click)="closeViewItem()">
+  <div class="pa-view-backdrop" appScrollLock (click)="closeViewItem()">
     <div class="pa-view-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
 
       <div class="pa-view-header">

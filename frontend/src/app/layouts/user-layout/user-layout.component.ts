@@ -10,6 +10,7 @@ import { NotificationPanelComponent } from '../../shared/components/notification
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageToggleComponent } from '../../shared/components/language-toggle/language-toggle.component';
+import { ScrollLockDirective } from '../../shared/directives/scroll-lock.directive';
 
 interface NavItem {
   label: string;
@@ -32,7 +33,7 @@ const ROUTE_TITLES: Record<string, string> = {
 @Component({
   selector: 'app-user-layout',
   standalone: true,
-  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent, LanguageToggleComponent, TranslatePipe],
+  imports: [NgClass, RouterOutlet, RouterLink, RouterLinkActive, ImageUrlPipe, NotificationPanelComponent, ThemeToggleComponent, LanguageToggleComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './user-layout.component.html',
   styleUrls: ['./user-layout.component.scss'],
 })

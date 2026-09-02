@@ -165,7 +165,7 @@
 
         <p class="switch-auth">
           {{ 'auth.login.noAccount' | translate }}
-          <a routerLink="/auth/register" class="switch-link">{{ 'auth.login.createOne' | translate }} &rarr;</a>
+          <a routerLink="/auth/register" [queryParams]="registerLinkQueryParams" class="switch-link">{{ 'auth.login.createOne' | translate }} &rarr;</a>
         </p>
 
         <!-- <p class="admin-link">
@@ -178,7 +178,7 @@
 
   <!-- ── Google sign-in loading overlay ── -->
   @if (googleLoading()) {
-    <div class="reg-loading-overlay">
+    <div class="reg-loading-overlay" appScrollLock>
       <div class="reg-loading-card">
         <span class="spinner-border reg-loading-spinner" role="status" aria-hidden="true"></span>
         <p class="reg-loading-text">{{ 'auth.login.googleSigningIn' | translate }}</p>
@@ -188,7 +188,7 @@
 
   <!-- ── Google username selection modal ── -->
   @if (googleNeedsUsername()) {
-    <div class="google-username-overlay" (keydown.escape)="closeGoogleModal()">
+    <div class="google-username-overlay" appScrollLock (keydown.escape)="closeGoogleModal()">
       <div class="google-username-card" role="dialog" aria-modal="true" aria-labelledby="google-username-title" cdkTrapFocus cdkTrapFocusAutoCapture>
         <button type="button" class="google-username-close" (click)="closeGoogleModal()" [attr.aria-label]="('auth.login.modalClose' | translate)">
           <i class="bi bi-x-lg"></i>

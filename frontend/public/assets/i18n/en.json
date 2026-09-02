@@ -1265,6 +1265,31 @@
       "toastDeleted": "Community deleted successfully",
       "toastFailed": "Failed to delete community"
     },
+    "communityJoin": {
+      "title": "Join Community",
+      "termsTitle": "Terms & Conditions",
+      "term1": "Be respectful and courteous to all community members.",
+      "term2": "Do not post spam, promotional content, or misleading information.",
+      "term3": "All posts and content are subject to admin review and moderation.",
+      "term4": "Do not share other members' personal information without their consent.",
+      "term5": "Violating these terms may result in your removal from the community.",
+      "rulesTitle": "Community Rules",
+      "agreeLabel": "I have read and agree to the Terms & Conditions and this community's rules.",
+      "confirmAction": "Join Community",
+      "joining": "Joining...",
+      "toastJoined": "You have joined the community",
+      "toastFailed": "Failed to join community"
+    },
+    "communityLeave": {
+      "title": "Leave Community",
+      "subtitle": "This action can be undone by rejoining later",
+      "confirmPre": "Are you sure you want to leave",
+      "confirmPost": "? You'll stop seeing its posts and updates until you rejoin.",
+      "confirmAction": "Leave Community",
+      "leaving": "Leaving...",
+      "toastLeft": "You have left the community",
+      "toastFailed": "Failed to leave community"
+    },
     "postDelete": {
       "title": "Delete Post",
       "confirm": "Are you sure you want to permanently delete this post?",
@@ -1414,9 +1439,11 @@
         "individual": "Individual Community"
       },
       "mode": {
-        "helpEmergency": "Help & Emergency Assistance",
+        "help": "Help",
+        "emergency": "Emergency",
         "enquire": "Enquire"
       },
+      "modeMultiHint": "Members can post to whichever tabs are selected here — Help, Emergency and Enquire can be combined.",
       "toast": {
         "countriesFailed": "Failed to load countries",
         "categoriesFailed": "Failed to load categories",
@@ -2501,6 +2528,8 @@
         "global": "Global",
         "private": "Private",
         "helpEmergencyAssistance": "Help & Emergency Assistance",
+        "help": "Help",
+        "emergency": "Emergency",
         "enquire": "Enquire",
         "allStatus": "All Status",
         "active": "Active",

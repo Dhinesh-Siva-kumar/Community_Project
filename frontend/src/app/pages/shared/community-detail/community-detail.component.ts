@@ -14,6 +14,9 @@ import { FileUploadComponent } from '../../../shared/components/file-upload/file
 import { DeletePostModalComponent } from '../../../shared/components/delete-post-modal/delete-post-modal.component';
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
+import { CommunityJoinModalComponent } from '../../../shared/components/community-join-modal/community-join-modal.component';
+import { CommunityLeaveModalComponent } from '../../../shared/components/community-leave-modal/community-leave-modal.component';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
@@ -24,7 +27,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -78,9 +81,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   submittingComment = signal<string | null>(null);
   likingPost = signal<string | null>(null);
 
-  // Join / Leave
-  joiningCommunity = signal(false);
-  leavingCommunity = signal(false);
+  // Join / Leave — the confirmation popups live in app-community-join-modal
+  // / app-community-leave-modal; this component only opens/closes them and
+  // applies the result.
+  joinModalOpen  = signal(false);
+  leaveModalOpen = signal(false);
 
   // Add/Edit/Delete — the form lives in app-community-form-modal, the
   // confirm popup in app-community-delete-modal; this component only opens/
@@ -156,8 +161,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
 
   isAdmin = computed(() => this.router.url.startsWith('/admin'));
 
-  communityMode = computed(() => this.community()?.community_mode ?? 'HELP_EMERGENCY');
-  isEnquireMode = computed(() => this.communityMode() === 'ENQUIRE');
+  communityModes = computed(() => this.community()?.community_modes ?? ['ENQUIRE']);
+  showHelpTab = computed(() => this.communityModes().includes('HELP'));
+  showEmergencyTab = computed(() => this.communityModes().includes('EMERGENCY'));
+  showEnquireTab = computed(() => this.communityModes().includes('ENQUIRE'));
 
   isMember = computed(() => {
     const uid = this.currentUserId();
@@ -1114,42 +1121,36 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.community.set(updated);
   }
 
-  onJoinCommunity(): void {
-    this.joiningCommunity.set(true);
-    this.communityService.joinCommunity(this.communityId()).subscribe({
-      next: () => {
-        this.toast.success('shared.communityDetail.toast.haveJoinedCommunity');
-        this.membersPage.set(1);
-        this.loadMembers();
-        this.community.update((c) =>
-          c ? { ...c, _count: { ...c._count!, members: (c._count?.members ?? 0) + 1 } } : c
-        );
-        this.joiningCommunity.set(false);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message || 'Failed to join community');
-        this.joiningCommunity.set(false);
-      },
-    });
+  openJoinModal(): void {
+    this.joinModalOpen.set(true);
   }
 
-  onLeaveCommunity(): void {
-    this.leavingCommunity.set(true);
-    this.communityService.leaveCommunity(this.communityId()).subscribe({
-      next: () => {
-        this.toast.success('shared.communityDetail.toast.haveLeftCommunity');
-        this.membersPage.set(1);
-        this.loadMembers();
-        this.community.update((c) =>
-          c ? { ...c, _count: { ...c._count!, members: Math.max(0, (c._count?.members ?? 0) - 1) } } : c
-        );
-        this.leavingCommunity.set(false);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message || 'Failed to leave community');
-        this.leavingCommunity.set(false);
-      },
-    });
+  closeJoinModal(): void {
+    this.joinModalOpen.set(false);
+  }
+
+  onCommunityJoined(): void {
+    this.membersPage.set(1);
+    this.loadMembers();
+    this.community.update((c) =>
+      c ? { ...c, _count: { ...c._count!, members: (c._count?.members ?? 0) + 1 } } : c
+    );
+  }
+
+  openLeaveModal(): void {
+    this.leaveModalOpen.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.leaveModalOpen.set(false);
+  }
+
+  onCommunityLeft(): void {
+    this.membersPage.set(1);
+    this.loadMembers();
+    this.community.update((c) =>
+      c ? { ...c, _count: { ...c._count!, members: Math.max(0, (c._count?.members ?? 0) - 1) } } : c
+    );
   }
 
   onCommunityDeleted(): void {

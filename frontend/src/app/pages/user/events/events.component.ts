@@ -15,6 +15,7 @@ import { RadioGroupComponent, RadioOption } from '../../../shared/components/rad
 import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
@@ -71,7 +72,7 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, InfiniteScrollDirective, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, FileUploadComponent, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -118,12 +119,6 @@ export class UserEventsComponent implements OnInit, OnDestroy {
       this.updateTabIndicator();
     });
 
-    // Lock background scroll while the add/edit modal, delete-confirm
-    // popup, or image viewer is open.
-    effect(() => {
-      const open = this.showAddModal() || !!this.eventToDelete() || this.imageViewerOpen();
-      document.body.style.overflow = open ? 'hidden' : '';
-    });
   }
 
   @HostListener('window:resize')
@@ -251,7 +246,6 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    document.body.style.overflow = '';
     this.layoutService.forceSidebarCollapsed.set(false);
   }
 

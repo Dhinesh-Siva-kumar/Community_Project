@@ -905,7 +905,7 @@
      ═══════════════════════════════════════════════════════════ -->
 @if (showAddModal()) {
   <div class="au-backdrop" (click)="closeAddModal()"></div>
-  <div class="au-modal jb-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="adminJbModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal jb-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="adminJbModalTitle" (click)="$event.stopPropagation()">
 
         <div class="au-header cm-modal-header">
           <div class="au-header__cover-shapes"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
@@ -1347,7 +1347,7 @@
      ═══════════════════════════════════════════════════════════ -->
 @if (showDeleteConfirm() && jobToDelete()) {
   <div class="au-backdrop jb-delete-modal-backdrop" (click)="closeDeleteConfirm()"></div>
-  <div class="au-modal jb-delete-modal cm-delete-modal" role="alertdialog" aria-modal="true"
+  <div class="au-modal jb-delete-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true"
     aria-labelledby="adminJbDeleteTitle" (click)="$event.stopPropagation()">
 
         <div class="au-header cm-delete-modal-header">
@@ -1391,7 +1391,7 @@
      ═══════════════════════════════════════════════════════════ -->
 @if (detailJob(); as job) {
   <div class="au-backdrop" (click)="closeDetail()"></div>
-  <div class="au-modal jb-detail-modal cm-modal" role="dialog" aria-modal="true" aria-labelledby="adminJbDetailTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal jb-detail-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="adminJbDetailTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-modal-header">
       <div class="au-header__cover-shapes"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>

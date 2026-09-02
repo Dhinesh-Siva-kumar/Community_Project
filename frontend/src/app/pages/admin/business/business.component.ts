@@ -15,6 +15,7 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { TruncatedDirective } from '../../../shared/directives/truncated.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
@@ -69,7 +70,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ImageUrlPipe, SortBarComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageErrorHandlerDirective, TruncatedDirective, ScrollLockDirective, ImageUrlPipe, SortBarComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the

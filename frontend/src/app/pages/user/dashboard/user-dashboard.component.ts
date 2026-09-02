@@ -23,6 +23,7 @@ import {
 } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
 import { EventCalendarComponent } from '../../../shared/components/event-calendar/event-calendar.component';
 import { environment } from '../../../../environments/environment';
@@ -79,7 +80,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -271,7 +272,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (this.animationFrameId !== null && isPlatformBrowser(this.platformId)) {
       cancelAnimationFrame(this.animationFrameId);
     }
-    if (isPlatformBrowser(this.platformId)) document.body.style.overflow = '';
   }
 
   // ── Welcome banner ────────────────────────────────────────
@@ -608,7 +608,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     this.sharePopupBlocked.set(false);
     this.blockedShareUrl.set(null);
     this.shareModalOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeShareModal(): void {
@@ -616,7 +615,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     this.shareTargetPost.set(null);
     this.sharePopupBlocked.set(false);
     this.blockedShareUrl.set(null);
-    this.syncPageScrollLock();
   }
 
   shareVia(platform: SharePlatform): void {
@@ -843,14 +841,12 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     this.lightboxImages.set(images);
     this.activeImageIndex.set(Math.max(0, Math.min(startIndex, images.length - 1)));
     this.lightboxOpen.set(true);
-    this.syncPageScrollLock();
   }
 
   closeImagePreview(): void {
     this.lightboxOpen.set(false);
     this.lightboxImages.set([]);
     this.activeImageIndex.set(0);
-    this.syncPageScrollLock();
   }
 
   nextPreviewImage(): void {
@@ -870,11 +866,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     const index = this.activeImageIndex();
     if (!images.length || index < 0 || index >= images.length) return null;
     return images[index] ?? null;
-  }
-
-  private syncPageScrollLock(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    document.body.style.overflow = (this.lightboxOpen() || this.shareModalOpen()) ? 'hidden' : '';
   }
 
   @HostListener('document:keydown.escape', ['$event'])

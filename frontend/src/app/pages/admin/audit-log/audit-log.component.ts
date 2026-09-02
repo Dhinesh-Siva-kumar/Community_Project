@@ -6,6 +6,7 @@ import { AuditService, AuditLogFilterParams, AuditLogActor } from '../../../core
 import { ToastService } from '../../../core/services/toast.service';
 import { AuditLog, AuditLogResponse } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import {
   AUDIT_ACTION_OPTIONS, AUDIT_RESOURCE_OPTIONS,
   auditActionKey, auditResourceKey, titleCaseCode, getAuditActionColor, getAuditActionIcon,
@@ -17,7 +18,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
   selector: 'app-audit-log',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './audit-log.component.html',
   styleUrls: ['./audit-log.component.scss'],
 })

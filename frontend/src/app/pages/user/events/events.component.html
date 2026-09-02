@@ -392,7 +392,7 @@
 <!-- ── DELETE CONFIRM — same design language as the Admin Events delete popup ── -->
 @if (eventToDelete(); as evt) {
   <div class="au-backdrop" (click)="cancelDeleteConfirm()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true"
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true"
     aria-labelledby="evDeleteTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
@@ -441,7 +441,7 @@
      Event popup (.au-*/.cm-* shell, sections, inputs, pills, validation). ── -->
 @if (showAddModal()) {
   <div class="au-backdrop" (click)="closeAddModal()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="editingId() ? 'Edit Event' : 'Add Event'">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="editingId() ? 'Edit Event' : 'Add Event'">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">

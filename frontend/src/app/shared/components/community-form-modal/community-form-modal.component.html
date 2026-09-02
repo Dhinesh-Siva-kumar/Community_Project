@@ -1,6 +1,6 @@
 @if (open) {
   <div class="au-backdrop" (click)="requestClose()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="modalTitle() | translate" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="modalTitle() | translate" (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -163,25 +163,25 @@
           </div>
 
           <div class="cm-field-row">
-            <!-- Community Mode -->
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'components.communityForm.modeLabel' | translate }} <span class="cm-required">*</span></label>
-              <app-radio-group
-                formControlName="communityMode"
-                [options]="communityModeOptions"
-                [ariaLabel]="'components.communityForm.modeAria' | translate">
-              </app-radio-group>
-              <div class="cm-default-hint">
-                @if (f['communityMode'].value === 'ENQUIRE') {
-                  Members can raise and track enquiries in a dedicated Enquire tab.
-                } @else {
-                  Members can post Help and Emergency Assistance requests in dedicated tabs.
+            <!-- Community Mode — admin-only multi-select; non-admin communities are always Enquire-only -->
+            @if (isAdminUser()) {
+              <div class="cm-field-group" [class.cm-field-group--error]="formSubmitAttempted() && !f['communityModes'].value?.length">
+                <label class="cm-label">{{ 'components.communityForm.modeLabel' | translate }} <span class="cm-required">*</span></label>
+                <app-checkbox-group
+                  formControlName="communityModes"
+                  [options]="communityModeOptions"
+                  [invalid]="formSubmitAttempted() && !f['communityModes'].value?.length"
+                  [ariaLabel]="'components.communityForm.modeAria' | translate">
+                </app-checkbox-group>
+                <div class="cm-default-hint">{{ 'components.communityForm.modeMultiHint' | translate }}</div>
+                @if (formSubmitAttempted() && !f['communityModes'].value?.length) {
+                  <div class="cm-error-msg">
+                    <i class="bi bi-exclamation-circle me-1"></i>Please select at least one community mode.
+                  </div>
                 }
               </div>
-            </div>
 
-            <!-- Community Type — admin-only; user-side communities are always Individual -->
-            @if (isAdminUser()) {
+              <!-- Community Type — admin-only; user-side communities are always Individual -->
               <div class="cm-field-group">
                 <label class="cm-label">{{ 'components.communityForm.communityTypeLabel' | translate }} <span class="cm-required">*</span></label>
                 <app-radio-group

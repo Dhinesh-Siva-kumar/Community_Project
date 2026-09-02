@@ -23,7 +23,10 @@ const communityFields = z.object({
   is_private: z.boolean().optional().default(false),
   is_global: z.boolean().optional().default(false),
   is_default: z.boolean().optional().default(false),
-  community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+  // Which post tabs the community offers — any combination of Help,
+  // Emergency and Enquire (admin-only choice; non-admin submissions always
+  // end up ['ENQUIRE'] regardless of what's sent — enforced in the service).
+  community_modes: z.array(z.enum(['HELP', 'EMERGENCY', 'ENQUIRE'])).min(1, 'Select at least one community mode').optional().default(['ENQUIRE']),
   // Hub = an official, admin-managed country community; Individual = a
   // regular user-interest group. Only admins may set HUB (enforced in the
   // service layer) — non-admin submissions always end up INDIVIDUAL.
@@ -67,7 +70,7 @@ export const CreateCommunityDto = z
     is_private: z.boolean().optional().default(false),
     is_global: z.boolean().optional().default(false),
     is_default: z.boolean().optional().default(false),
-    community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional().default('HELP_EMERGENCY'),
+    community_modes: z.array(z.enum(['HELP', 'EMERGENCY', 'ENQUIRE'])).min(1, 'Select at least one community mode').optional().default(['ENQUIRE']),
     community_type: z.enum(['HUB', 'INDIVIDUAL']).optional().default('INDIVIDUAL'),
     rules: rulesSchema,
   })
@@ -99,7 +102,7 @@ export const ListCommunitiesQueryDto = z.object({
   country:       z.string().optional(),
   category:      z.string().optional(),
   visibility:    z.enum(['global', 'private', 'default']).optional(),
-  community_mode: z.enum(['HELP_EMERGENCY', 'ENQUIRE']).optional(),
+  community_mode: z.enum(['HELP', 'EMERGENCY', 'ENQUIRE']).optional(),
   community_type: z.enum(['HUB', 'INDIVIDUAL']).optional(),
   is_default:    z.enum(['true', 'false']).optional().transform((v) => (v === undefined ? undefined : v === 'true')),
   from_date:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'from_date must be YYYY-MM-DD').optional(),

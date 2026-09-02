@@ -24,6 +24,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -94,7 +95,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, DatePipe,
     SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe, ImageViewerComponent,
-    ImageErrorHandlerDirective, InfiniteScrollDirective, TranslatePipe, EnumLabelPipe],
+    ImageErrorHandlerDirective, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -26,6 +26,7 @@ import { CommunityDeleteModalComponent } from '../../../shared/components/commun
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { TranslatePipe } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
+import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -46,11 +47,11 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
     ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent,
     BusinessFormModalComponent, BusinessDeleteModalComponent,
     CommunityFormModalComponent, CommunityDeleteModalComponent,
-    ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+    ImageUrlPipe, TranslatePipe, EnumLabelPipe, ScrollLockDirective],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
-export class UserProfileComponent implements OnInit, OnDestroy {
+export class UserProfileComponent implements OnInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private businessService = inject(BusinessService);
@@ -221,22 +222,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     { value: 'PROFESSIONAL', label: 'user.profile.occupationOption.professional' },
     { value: 'STUDENT',      label: 'user.profile.occupationOption.student' },
   ];
-
-  constructor() {
-    // Lock background scroll while any popup on this page is open — the
-    // Business/Community add & delete modals, and the Change Password
-    // popup.
-    effect(() => {
-      const open = this.showBusinessModal() || this.showDeleteBusinessModal()
-        || this.showCommunityModal() || this.showDeleteCommunityModal()
-        || this.showPasswordSection();
-      document.body.style.overflow = open ? 'hidden' : '';
-    });
-  }
-
-  ngOnDestroy(): void {
-    document.body.style.overflow = '';
-  }
 
   ngOnInit(): void {
     this.profileForm = this.fb.group({

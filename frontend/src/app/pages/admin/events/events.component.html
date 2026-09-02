@@ -660,7 +660,7 @@
 <!-- ── ADD / EDIT MODAL — same design language as the Community Creation popup ── -->
 @if (showAddModal()) {
   <div class="au-backdrop" (click)="closeAddModal()"></div>
-  <div class="au-modal cm-modal" role="dialog" aria-modal="true" [attr.aria-label]="editingEvent() ? 'Edit Event' : 'Add Event'">
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="editingEvent() ? 'Edit Event' : 'Add Event'">
 
     <!-- Modal Header -->
     <div class="au-header cm-modal-header">
@@ -1030,7 +1030,7 @@
 <!-- ── DELETE CONFIRM — same design language as the Community delete popup ── -->
 @if (showDeleteConfirm() && eventToDelete(); as evt) {
   <div class="au-backdrop" (click)="closeDeleteConfirm()"></div>
-  <div class="au-modal cm-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="evDeleteModalTitle" (click)="$event.stopPropagation()">
+  <div class="au-modal cm-delete-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="evDeleteModalTitle" (click)="$event.stopPropagation()">
 
     <div class="au-header cm-delete-modal-header">
       <div class="au-header__cover-shapes" aria-hidden="true">

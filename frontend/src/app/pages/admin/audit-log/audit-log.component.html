@@ -233,7 +233,7 @@
 ══════════════════════════════════════════════════════════════ -->
 @if (selectedLog(); as log) {
   <div class="al-drawer-backdrop" (click)="closeDetail()"></div>
-  <div class="al-drawer" role="dialog" [attr.aria-label]="'admin.auditLog.auditLogDetails' | translate">
+  <div class="al-drawer" appScrollLock role="dialog" [attr.aria-label]="'admin.auditLog.auditLogDetails' | translate">
     <div class="al-drawer__header">
       <div class="al-action-icon al-action-icon--lg" [style.background]="getColor(log.action) + '18'">
         <i class="bi {{ getIcon(log.action) }}" [style.color]="getColor(log.action)"></i>

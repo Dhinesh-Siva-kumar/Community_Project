@@ -14,6 +14,7 @@ import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { getPhoneRule } from '../../utils/phone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
 
 function urlValidator(c: AbstractControl): ValidationErrors | null {
   const v = c.value;
@@ -44,7 +45,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-business-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe, TranslatePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe, TranslatePipe, ScrollLockDirective],
   templateUrl: './business-form-modal.component.html',
   styleUrls: ['./business-form-modal.component.scss'],
 })
