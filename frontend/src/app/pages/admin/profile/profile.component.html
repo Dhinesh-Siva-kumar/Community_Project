@@ -193,7 +193,7 @@
                 <label class="prf-label" for="adminPincode">{{ 'admin.profile.pincode' | translate }}</label>
                 <input id="adminPincode" type="text" class="form-control" formControlName="pincode" maxlength="12" [readonly]="!editMode()" [placeholder]="countryConfig()?.postalCode?.format || ''" />
                 @if (profileForm.get('pincode')?.hasError('postalFormat') && profileForm.get('pincode')?.dirty) {
-                  <div class="invalid-feedback d-block">Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}.</div>
+                  <div class="invalid-feedback d-block">{{ 'common.postalFormatMismatch' | translate: { suffix: (countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '') } }}</div>
                 }
               </div>
             </div>

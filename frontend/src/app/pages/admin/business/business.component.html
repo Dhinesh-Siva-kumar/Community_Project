@@ -406,7 +406,7 @@
             </div>
             <div>
               <h2 class="jb-page-header__title">{{ 'admin.business.allBusinesses' | translate }}</h2>
-              <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'business' : 'businesses' }} across every category</p>
+              <p class="jb-page-header__sub"><strong>{{ totalItems() }}</strong> {{ 'admin.business.businessesAcrossEveryCategory' | translate }}</p>
             </div>
           }
         </div>
@@ -755,7 +755,7 @@
                     <span class="bl-card__submeta-item"><i class="bi bi-person-circle"></i>{{ $any(biz).user.displayName }}</span>
                   }
                   @if (getCreatedAt(biz)) {
-                    <span class="bl-card__submeta-item"><i class="bi bi-calendar3"></i>Added {{ formatDate(getCreatedAt(biz)) }}</span>
+                    <span class="bl-card__submeta-item"><i class="bi bi-calendar3"></i>{{ 'common.addedDate' | translate: { date: formatDate(getCreatedAt(biz)) } }}</span>
                   }
                 </div>
               }
@@ -1210,7 +1210,7 @@
                   }
                 </div>
                 <div class="col-12">
-                  <label class="jb-label" for="catDesc">{{ 'admin.business.description' | translate }} <span class="jb-optional">(optional)</span></label>
+                  <label class="jb-label" for="catDesc">{{ 'admin.business.description' | translate }} <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <div class="jb-textarea-wrap">
                     <textarea id="catDesc" class="jb-input jb-input--textarea" formControlName="description" rows="2"
                       [placeholder]="'admin.business.briefDescription' | translate" maxlength="300"
@@ -1520,7 +1520,7 @@
                   </div>
                 } @else {
                   <div class="col-12">
-                    <label class="jb-label" for="bizWa">{{ 'admin.business.whatsapp' | translate }} <span class="jb-optional">(same as phone)</span></label>
+                    <label class="jb-label" for="bizWa">{{ 'admin.business.whatsapp' | translate }} <span class="jb-optional">{{ 'common.sameAsPhone' | translate }}</span></label>
                     <div class="jb-input-group">
                       <i class="bi bi-whatsapp jb-input-group__icon"></i>
                       <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="7700 900000" maxlength="15" />
@@ -1604,7 +1604,7 @@
                         : ('admin.geo.selectCountryFirst' | translate)"
                       (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
                     @if (businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched) {
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[0].label | translate }} is required</span>
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[0].label | translate) } }}</span>
                     }
                   </div>
                 }
@@ -1623,7 +1623,7 @@
                         : ('admin.geo.selectLevelFirst' | translate:{ level: adminLevels()[0].label })"
                       (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
                     @if (businessForm.get('division2Id')?.invalid && businessForm.get('division2Id')?.touched) {
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[1].label | translate }} is required</span>
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[1].label | translate) } }}</span>
                     }
                   </div>
                 }
@@ -1670,7 +1670,7 @@
                   <label class="jb-label" for="bizPin">
                     Postal Code
                     @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
-                    @else { <span class="jb-optional">(optional)</span> }
+                    @else { <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span> }
                   </label>
                   <input id="bizPin" type="text" class="jb-input" formControlName="pincode"
                     [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'" maxlength="12"
@@ -1772,7 +1772,7 @@
             <div class="jb-form-section">
               <div class="jb-form-section__header">
                 <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-                <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'admin.business.galleryPhotos' | translate }} <span class="jb-form-section__optional">(optional)</span></span></div>
+                <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'admin.business.galleryPhotos' | translate }} <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
               </div>
               <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
                 [label]="'components.fileUpload.dragGalleryImages' | translate"

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { Event as AppEvent } from '../../../core/models';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface EventStatus {
   label: string;
@@ -60,6 +61,7 @@ function startOfDay(d: Date): Date {
 })
 export class EventCalendarComponent implements OnInit {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
 
   private eventService = inject(EventService);
   private hostRef = inject(ElementRef<HTMLElement>);
@@ -88,6 +90,8 @@ export class EventCalendarComponent implements OnInit {
   });
 
   calendarCells = computed<CalendarCell[]>(() => {
+    // Cells bake in translated event status + aria labels, so recompute on switch.
+    this.language.currentLang();
     const anchor = this.viewMonth();
     const year = anchor.getFullYear();
     const month = anchor.getMonth();
@@ -118,7 +122,7 @@ export class EventCalendarComponent implements OnInit {
         hasEvents: eventCount > 0,
         allPast,
         ariaLabel: `${date.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}` +
-          (eventCount ? ` — ${eventCount} event${eventCount > 1 ? 's' : ''}` : ''),
+          (eventCount ? ` — ${this.translate.instant('components.calendar.eventCount', { count: eventCount })}` : ''),
       });
     }
     return cells;
@@ -228,7 +232,10 @@ export class EventCalendarComponent implements OnInit {
       });
   }
 
+  /** Reading the language signal keeps `calendarCells` — which bakes these
+   * labels in — recomputing when the reader switches language. */
   private relTime(dateStr: string): EventStatus {
+    this.language.currentLang();
     const eventDay = startOfDay(new Date(dateStr));
     const days = Math.round((eventDay.getTime() - this.today.getTime()) / 86400000);
     if (days < 0) return { label: this.translate.instant('components.calendar.status.completed'), cls: 'is-past', isPast: true };

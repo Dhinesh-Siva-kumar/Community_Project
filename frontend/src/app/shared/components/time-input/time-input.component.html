@@ -25,13 +25,13 @@
 
   <!-- ── Time popup ───────────────────────────────────────── -->
   @if (isOpen()) {
-    <div class="ti-panel" [class.fc-panel--up]="dropUp()" role="dialog" [attr.aria-label]="ariaLabel() || 'Choose time'">
+    <div class="ti-panel" [class.fc-panel--up]="dropUp()" role="dialog" [attr.aria-label]="ariaLabel() || ('components.timeInput.chooseTime' | translate)">
 
       <div class="ti-cols">
 
         <!-- Hours -->
         <div class="ti-col" role="listbox" [attr.aria-label]="'components.timeInput.hour' | translate">
-          <span class="ti-col__label">Hr</span>
+          <span class="ti-col__label">{{ 'components.timeInput.hrShort' | translate }}</span>
           <div class="ti-col__scroll">
             @for (h of hours12; track h) {
               <button type="button" class="ti-opt"
@@ -44,7 +44,7 @@
 
         <!-- Minutes -->
         <div class="ti-col" role="listbox" [attr.aria-label]="'components.timeInput.minute' | translate">
-          <span class="ti-col__label">Min</span>
+          <span class="ti-col__label">{{ 'components.timeInput.minShort' | translate }}</span>
           <div class="ti-col__scroll">
             @for (m of minutes(); track m) {
               <button type="button" class="ti-opt"
@@ -62,11 +62,11 @@
             <button type="button" class="ti-opt"
               [class.ti-opt--active]="selectedMeridiem() === 'AM'"
               [attr.aria-selected]="selectedMeridiem() === 'AM'"
-              (click)="pickMeridiem('AM')">AM</button>
+              (click)="pickMeridiem('AM')">{{ 'components.timeInput.am' | translate }}</button>
             <button type="button" class="ti-opt"
               [class.ti-opt--active]="selectedMeridiem() === 'PM'"
               [attr.aria-selected]="selectedMeridiem() === 'PM'"
-              (click)="pickMeridiem('PM')">PM</button>
+              (click)="pickMeridiem('PM')">{{ 'components.timeInput.pm' | translate }}</button>
           </div>
         </div>
 
@@ -74,7 +74,7 @@
 
       <!-- Actions -->
       <div class="ti-foot">
-        <button type="button" class="ti-text-btn" (click)="selectNow()">Now</button>
+        <button type="button" class="ti-text-btn" (click)="selectNow()">{{ 'components.timeInput.now' | translate }}</button>
         <div class="ti-foot__right">
           @if (clearable() && displayText()) {
             <button type="button" class="ti-text-btn ti-text-btn--muted" (click)="clear($event)">{{ 'common.clear' | translate }}</button>

@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 
 export interface SelectOption {
@@ -116,9 +117,18 @@ export interface SelectOption {
 })
 export class SearchableSelectComponent implements ControlValueAccessor {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
 
-  /** Option labels are catalog keys; unknown keys pass through unchanged. */
+  /**
+   * Option labels are catalog keys; unknown keys pass through unchanged.
+   *
+   * Reading the language signal is what keeps this OnPush component in sync:
+   * `instant()` is a plain call, so without a tracked dependency nothing marks
+   * the component dirty on a language switch and the options stay in the old
+   * language.
+   */
   protected tr(label: string): string {
+    this.language.currentLang();
     return this.translate.instant(label) as string;
   }
 

@@ -17,7 +17,7 @@
   <div class="jb-page-header">
     <div class="jb-page-header__left">
       <h2 class="jb-page-header__title">{{ 'admin.analytics.advancedAnalytics' | translate }}</h2>
-      <p class="jb-page-header__sub">Platform-wide growth, engagement and retention insights · {{ rangeLabel() }}</p>
+      <p class="jb-page-header__sub">{{ 'admin.analytics.subtitle' | translate: { range: rangeLabel() } }}</p>
     </div>
     <div class="jb-page-header__actions">
       <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="exportExcel()" [disabled]="exporting() !== null" [attr.aria-label]="'admin.analytics.exportAsExcel' | translate">

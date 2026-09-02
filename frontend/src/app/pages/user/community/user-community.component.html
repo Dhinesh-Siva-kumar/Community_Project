@@ -28,7 +28,7 @@
 <div class="uc-head">
   <div>
     <h1 class="uc-title">{{ 'user.community.communities' | translate }}</h1>
-    <p class="uc-subtitle">{{ overallStats()?.total ?? 0 }} {{ overallStats()?.total === 1 ? 'community' : 'communities' }} · {{ (overallStats()?.totalMembers ?? 0) | number }} members</p>
+    <p class="uc-subtitle">{{ 'user.community.summary' | translate: { count: (overallStats()?.total ?? 0), members: ((overallStats()?.totalMembers ?? 0) | number) } }}</p>
   </div>
 
   <div class="uc-head-controls">
@@ -531,7 +531,7 @@
           {{ 'user.community.loadingMoreCommunities' | translate }}
         </div>
       } @else if (!hasMore() && totalItems() > pageSize()) {
-        <p class="uc-load-more-end">You&rsquo;ve reached the end — {{ totalItems() }} communities total.</p>
+        <p class="uc-load-more-end">{{ 'user.community.endOfList' | translate: { count: totalItems() } }}</p>
       }
 
     } <!-- / filteredCommunities -->

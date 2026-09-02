@@ -164,7 +164,7 @@
 
             <!-- Add images (optional) -->
             <div class="mb-1">
-              <label class="cm-label">{{ 'shared.communityDetail.addImages' | translate }} <span class="text-muted fw-normal">(optional)</span></label>
+              <label class="cm-label">{{ 'shared.communityDetail.addImages' | translate }} <span class="text-muted fw-normal">{{ 'common.optionalParen' | translate }}</span></label>
               <app-file-upload
                 mode="multi"
                 accept="image/*"
@@ -722,7 +722,7 @@
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
                       </div>
                       @if ((postForm.get('content')?.value?.length ?? 0) >= postContentMaxLength) {
-                        <div class="text-danger small mt-1">Maximum {{ postContentMaxLength }} characters reached.</div>
+                        <div class="text-danger small mt-1">{{ 'shared.communityDetail.maxCharactersReached' | translate: { max: postContentMaxLength } }}</div>
                       }
                       @if (postForm.get('content')?.touched && postForm.get('content')?.invalid) {
                         <div class="text-danger small mt-1">
@@ -1039,7 +1039,7 @@
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
                       </div>
                       @if ((postForm.get('content')?.value?.length ?? 0) >= postContentMaxLength) {
-                        <div class="text-danger small mt-1">Maximum {{ postContentMaxLength }} characters reached.</div>
+                        <div class="text-danger small mt-1">{{ 'shared.communityDetail.maxCharactersReached' | translate: { max: postContentMaxLength } }}</div>
                       }
                       @if (postForm.get('content')?.touched && postForm.get('content')?.invalid) {
                         <div class="text-danger small mt-1">
@@ -1309,7 +1309,7 @@
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
                       </div>
                       @if ((postForm.get('content')?.value?.length ?? 0) >= postContentMaxLength) {
-                        <div class="text-danger small mt-1">Maximum {{ postContentMaxLength }} characters reached.</div>
+                        <div class="text-danger small mt-1">{{ 'shared.communityDetail.maxCharactersReached' | translate: { max: postContentMaxLength } }}</div>
                       }
                       @if (postForm.get('content')?.touched && postForm.get('content')?.invalid) {
                         <div class="text-danger small mt-1">
@@ -1591,7 +1591,7 @@
                         <span class="cd-input-counter">{{ postForm.get('content')?.value?.length ?? 0 }}/{{ postContentMaxLength }}</span>
                       </div>
                       @if ((postForm.get('content')?.value?.length ?? 0) >= postContentMaxLength) {
-                        <div class="text-danger small mt-1">Maximum {{ postContentMaxLength }} characters reached.</div>
+                        <div class="text-danger small mt-1">{{ 'shared.communityDetail.maxCharactersReached' | translate: { max: postContentMaxLength } }}</div>
                       }
                       @if (postForm.get('content')?.touched && postForm.get('content')?.invalid) {
                         <div class="text-danger small mt-1">
@@ -1739,7 +1739,7 @@
                             <span class="cd-member-author-chip">{{ 'shared.communityDetail.author' | translate }}</span>
                           }
                         </div>
-                        <span class="cd-member-joined-pill">Joined {{ getTimeAgo(member.joinedAt) }}</span>
+                        <span class="cd-member-joined-pill">{{ 'common.joinedDate' | translate: { date: getTimeAgo(member.joinedAt) } }}</span>
                       </div>
                       @if (member.user?.userName) {
                         <span class="cd-member-username text-truncate">{{ '@' + member.user!.userName }}</span>

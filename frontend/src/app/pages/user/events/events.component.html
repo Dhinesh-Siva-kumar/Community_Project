@@ -3,7 +3,7 @@
 <div class="biz-head">
   <div>
     <h1 class="biz-title">{{ 'user.events.events' | translate }}</h1>
-    <p class="biz-subtitle">{{ totalItems() }} {{ totalItems() === 1 ? 'event' : 'events' }} · Discover what's happening in your community.</p>
+    <p class="biz-subtitle">{{ 'user.events.subtitle' | translate: { count: totalItems() } }}</p>
   </div>
 
   <div class="biz-head-controls">

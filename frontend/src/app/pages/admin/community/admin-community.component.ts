@@ -23,6 +23,7 @@ import { SortBarComponent, SortField, SortChange, SortDir } from '../../../share
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
+import { LanguageService } from '../../../core/services/language.service';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -66,6 +67,7 @@ function minLengthTrimmed(min: number) {
 })
 export class AdminCommunityComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
@@ -224,6 +226,8 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
 
   /** Active filter chips for display. */
   activeFilterChips = computed<any[]>(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const chips: any[] = [];
     const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
     if (this.searchTerm())       add('search',    `"${this.searchTerm()}"`, this.searchTerm());

@@ -17,7 +17,7 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -58,6 +58,7 @@ export class ApprovalComponent implements OnInit {
   private postService       = inject(PostService);
   private authService       = inject(AuthService);
   private toast             = inject(ToastService);
+  private translate         = inject(TranslateService);
   private route              = inject(ActivatedRoute);
 
   readonly entityTabs = ENTITY_TABS;
@@ -194,6 +195,12 @@ export class ApprovalComponent implements OnInit {
     return this.entityTabs.find(t => t.id === this.activeEntity())!;
   }
 
+  /** Translated entity nouns for toast interpolation. The tab's `label`/`singular`
+   * are catalog keys, so they must be resolved before being placed inside a
+   * sentence — otherwise the raw key leaks into the toast. */
+  private tabLabel(): string { return (this.translate.instant(this.currentTab().label) as string).toLowerCase(); }
+  private tabSingular(): string { return this.translate.instant(this.currentTab().singular) as string; }
+
   // ── Per-entity service dispatch ─────────────────────────────
   private fetchPending(params: Record<string, any>): Observable<PaginatedResponse<PendingItem>> {
     switch (this.activeEntity()) {
@@ -296,7 +303,7 @@ export class ApprovalComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.toast.error(`Failed to load pending ${this.currentTab().label.toLowerCase()} submissions`);
+        this.toast.error('admin.approval.toast.failedLoadPending', { entity: this.tabLabel() });
         this.loading.set(false);
       },
     });
@@ -409,7 +416,7 @@ export class ApprovalComponent implements OnInit {
       next: () => {
         this.items.update(list => list.filter(i => i.id !== item.id));
         this.totalItems.update(v => Math.max(0, v - 1));
-        this.toast.success(`${this.currentTab().singular} approved`);
+        this.toast.success('admin.approval.toast.itemApproved', { entity: this.tabSingular() });
         this.approvingId.set(null);
         this.confirmApproveTarget.set(null);
         this.refreshCountForActiveEntity();
@@ -436,7 +443,7 @@ export class ApprovalComponent implements OnInit {
       next: () => {
         this.items.update(list => list.filter(i => i.id !== item.id));
         this.totalItems.update(v => Math.max(0, v - 1));
-        this.toast.success(`${this.currentTab().singular} rejected and removed`);
+        this.toast.success('admin.approval.toast.itemRejected', { entity: this.tabSingular() });
         this.rejectingId.set(null);
         this.confirmRejectTarget.set(null);
         this.refreshCountForActiveEntity();
@@ -465,7 +472,7 @@ export class ApprovalComponent implements OnInit {
       next: () => {
         this.items.update(list => list.filter(i => i.id !== item.id));
         this.totalItems.update(v => Math.max(0, v - 1));
-        this.toast.success(`More information requested for ${this.currentTab().singular.toLowerCase()}`);
+        this.toast.success('admin.approval.toast.itemMoreInfoRequested', { entity: this.tabLabel() });
         this.requestingInfoId.set(null);
         this.confirmMoreInfoTarget.set(null);
         this.refreshCountForActiveEntity();
@@ -517,9 +524,11 @@ export class ApprovalComponent implements OnInit {
       this.confirmBulkApprove.set(false);
       this.confirmBulkReject.set(false);
       this.confirmBulkMoreInfo.set(false);
-      const verb = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected and removed' : 'sent a more-info request';
-      if (succeeded) this.toast.success(`${succeeded} ${this.currentTab().label.toLowerCase()} item${succeeded === 1 ? '' : 's'} ${verb}`);
-      if (failed) this.toast.error(`${failed} item${failed === 1 ? '' : 's'} failed to process`);
+      const successKey = action === 'approve' ? 'admin.approval.toast.bulkApproved'
+        : action === 'reject' ? 'admin.approval.toast.bulkRejected'
+        : 'admin.approval.toast.bulkMoreInfoRequested';
+      if (succeeded) this.toast.success(successKey, { count: succeeded, entity: this.tabLabel() });
+      if (failed) this.toast.error('admin.approval.toast.bulkFailed', { count: failed });
       this.refreshCountForActiveEntity();
       this.loadPending();
     };
@@ -643,7 +652,9 @@ export class ApprovalComponent implements OnInit {
     }
   }
 
-  itemLogoLabel(): string { return this.activeEntity() === 'jobs' ? 'Company Icon' : 'Business Icon'; }
+  itemLogoLabel(): string {
+    return this.activeEntity() === 'jobs' ? 'admin.approval.section.companyIcon' : 'admin.approval.section.businessIcon';
+  }
   itemDescription(item: PendingItem): string {
     if (this.activeEntity() === 'posts') return item['content'] ?? '';
     return item['description'] ?? '';
@@ -670,16 +681,19 @@ export class ApprovalComponent implements OnInit {
   private fmt(v: unknown): string {
     return (v === null || v === undefined || v === '') ? '—' : String(v);
   }
-  private fmtBool(v: unknown): string { return v ? 'Yes' : 'No'; }
+  private fmtBool(v: unknown): string { return this.t(v ? 'common.yes' : 'common.no'); }
   private fmtList(v: unknown): string {
     return Array.isArray(v) && v.length ? v.join(', ') : '—';
   }
+  /** Section field *values* are rendered raw (only the labels go through the
+   * translate pipe), so any literal built here has to be resolved up front. */
+  private t(key: string): string { return this.translate.instant(key) as string; }
 
   itemDetailSections(item: PendingItem): { title: string; icon: string; fields: { label: string; value: string }[] }[] {
     switch (this.activeEntity()) {
       case 'posts':
         return [
-          { title: 'Post', icon: 'bi-file-earmark-text', fields: [
+          { title: 'admin.approval.section.post', icon: 'bi-file-earmark-text', fields: [
             { label: 'admin.approval.label.type', value: this.fmt(item['type']) },
             { label: 'admin.approval.label.community', value: this.fmt(item['community']?.name) },
           ]},
@@ -687,23 +701,23 @@ export class ApprovalComponent implements OnInit {
 
       case 'community':
         return [
-          { title: 'Overview', icon: 'bi-info-circle', fields: [
+          { title: 'admin.approval.section.overview', icon: 'bi-info-circle', fields: [
             { label: 'admin.approval.label.category', value: this.fmt(item['category_name']) },
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
           ]},
-          { title: 'Visibility', icon: 'bi-eye', fields: [
-            { label: 'admin.approval.label.visibility', value: item['is_global'] ? 'Global' : item['is_private'] ? 'Private' : 'Standard' },
+          { title: 'admin.approval.section.visibility', icon: 'bi-eye', fields: [
+            { label: 'admin.approval.label.visibility', value: this.t(item['is_global'] ? 'admin.community.visibilityGlobal' : item['is_private'] ? 'admin.community.visibilityPrivate' : 'admin.approval.value.standard') },
             { label: 'admin.approval.label.defaultCommunity', value: this.fmtBool(item['is_default']) },
-            { label: 'admin.approval.label.mode', value: this.fmtList((item['community_modes'] as string[] | undefined)?.map((m) => m === 'HELP' ? 'Help' : m === 'EMERGENCY' ? 'Emergency' : 'Enquire')) },
+            { label: 'admin.approval.label.mode', value: this.fmtList((item['community_modes'] as string[] | undefined)?.map((m) => this.t(m === 'HELP' ? 'components.communityForm.mode.help' : m === 'EMERGENCY' ? 'components.communityForm.mode.emergency' : 'components.communityForm.mode.enquire'))) },
           ]},
-          { title: 'Rules', icon: 'bi-list-check', fields: [
+          { title: 'admin.approval.section.rules', icon: 'bi-list-check', fields: [
             { label: 'admin.approval.label.communityRules', value: this.fmtList(item['rules']) },
           ]},
         ];
 
       case 'business':
         return [
-          { title: 'Overview', icon: 'bi-info-circle', fields: [
+          { title: 'admin.approval.section.overview', icon: 'bi-info-circle', fields: [
             { label: 'admin.approval.label.category', value: this.fmt(item['category']?.name) },
             { label: 'admin.approval.label.address', value: this.fmt(item['address']) },
             { label: 'admin.approval.label.city', value: this.fmt(item['city']) },
@@ -711,13 +725,13 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
             { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
           ]},
-          { title: 'Contact', icon: 'bi-telephone', fields: [
+          { title: 'admin.approval.section.contact', icon: 'bi-telephone', fields: [
             { label: 'admin.approval.label.phone', value: this.fmt(item['phone']) },
             { label: 'admin.approval.label.email', value: this.fmt(item['email']) },
             { label: 'admin.approval.label.website', value: this.fmt(item['website']) },
             { label: 'admin.approval.label.whatsapp', value: this.fmt(item['whatsapp']) },
           ]},
-          { title: 'Hours', icon: 'bi-clock', fields: [
+          { title: 'admin.approval.section.hours', icon: 'bi-clock', fields: [
             { label: 'admin.approval.label.openingHours', value: this.fmt(item['opening_hours']) },
             { label: 'admin.approval.label.openingDays', value: this.fmt(item['opening_days']) },
           ]},
@@ -725,52 +739,52 @@ export class ApprovalComponent implements OnInit {
 
       case 'jobs':
         return [
-          { title: 'Company', icon: 'bi-building', fields: [
+          { title: 'admin.approval.section.company', icon: 'bi-building', fields: [
             { label: 'admin.approval.label.companyName', value: this.fmt(item['companyName']) },
             { label: 'admin.approval.label.website', value: this.fmt(item['companyWebsite']) },
           ]},
-          { title: 'Role', icon: 'bi-briefcase', fields: [
+          { title: 'admin.approval.section.role', icon: 'bi-briefcase', fields: [
             { label: 'admin.approval.label.jobType', value: this.fmt(item['jobType']) },
             { label: 'admin.approval.label.workMode', value: this.fmt(item['workMode']) },
-            { label: 'admin.approval.label.experience', value: (item['expMin'] != null || item['expMax'] != null) ? `${item['expMin'] ?? 0}–${item['expMax'] ?? '∞'} yrs` : '—' },
+            { label: 'admin.approval.label.experience', value: (item['expMin'] != null || item['expMax'] != null) ? `${item['expMin'] ?? 0}–${item['expMax'] ?? '∞'} ${this.t('admin.approval.value.yrs')}` : '—' },
             { label: 'admin.approval.label.education', value: this.fmt(item['education']) },
             { label: 'admin.approval.label.openings', value: this.fmt(item['openings']) },
             { label: 'admin.approval.label.shift', value: this.fmt(item['shiftType']) },
           ]},
-          { title: 'Salary', icon: 'bi-cash-stack', fields: [
+          { title: 'admin.approval.section.salary', icon: 'bi-cash-stack', fields: [
             { label: 'admin.approval.label.salary', value: item['salaryHidden']
-              ? 'Hidden'
+              ? this.t('admin.approval.value.hidden')
               : (item['salaryMin'] || item['salaryMax'])
                 ? `${item['salaryCurrency'] ?? ''} ${item['salaryMin'] ?? '?'} – ${item['salaryMax'] ?? '?'} (${item['salaryType'] ?? ''})`
                 : this.fmt(item['salary']) },
           ]},
-          { title: 'Location', icon: 'bi-geo-alt', fields: [
+          { title: 'admin.approval.section.location', icon: 'bi-geo-alt', fields: [
             { label: 'admin.approval.label.city', value: this.fmt(item['city']) },
             { label: 'admin.approval.label.state', value: this.fmt(item['state']) },
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
             { label: 'admin.approval.label.address', value: this.fmt(item['fullAddress'] ?? item['location']) },
           ]},
-          { title: 'Contact', icon: 'bi-telephone', fields: [
+          { title: 'admin.approval.section.contact', icon: 'bi-telephone', fields: [
             { label: 'admin.approval.label.contactPerson', value: this.fmt(item['contactPerson']) },
             { label: 'admin.approval.label.email', value: this.fmt(item['contactEmail']) },
             { label: 'admin.approval.label.phone', value: this.fmt(item['contactPhone']) },
             { label: 'admin.approval.label.applicationUrl', value: this.fmt(item['applicationUrl']) },
           ]},
-          { title: 'Skills', icon: 'bi-stars', fields: [
+          { title: 'admin.approval.section.skills', icon: 'bi-stars', fields: [
             { label: 'admin.approval.label.skills', value: this.fmtList(item['skills']) },
           ]},
         ];
 
       case 'events':
         return [
-          { title: 'Overview', icon: 'bi-info-circle', fields: [
+          { title: 'admin.approval.section.overview', icon: 'bi-info-circle', fields: [
             { label: 'admin.approval.label.category', value: this.fmt(item['eventCategory']) },
             { label: 'admin.approval.label.mode', value: this.fmt(item['eventMode']) },
             { label: 'admin.approval.label.date', value: this.fmt(item['eventDate']) },
             { label: 'admin.approval.label.time', value: item['eventTime'] ? `${item['eventTime']}${item['eventEndTime'] ? ' – ' + item['eventEndTime'] : ''}` : '—' },
             { label: 'admin.approval.label.timezone', value: this.fmt(item['timezone']) },
           ]},
-          { title: 'Location', icon: 'bi-geo-alt', fields: [
+          { title: 'admin.approval.section.location', icon: 'bi-geo-alt', fields: [
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
             { label: 'admin.approval.label.location', value: this.fmt(item['location']) },
             { label: 'admin.approval.label.address', value: this.fmt(item['address']) },

@@ -24,7 +24,7 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
@@ -60,6 +60,7 @@ export class UserProfileComponent implements OnInit {
   private postService = inject(PostService);
   private eventService = inject(EventService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -663,7 +664,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deleteJob(id: string): void {
-    if (!confirm('Delete this job?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeleteJob'))) return;
     this.deletingJobId.set(id);
     this.jobService.deleteJob(id).subscribe({
       next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('user.profile.toast.jobDeleted'); this.deletingJobId.set(null); },
@@ -696,7 +697,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deletePost(id: string): void {
-    if (!confirm('Delete this post?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeletePost'))) return;
     this.deletingPostId.set(id);
     this.postService.deletePost(id).subscribe({
       next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('user.profile.toast.postDeleted'); this.deletingPostId.set(null); },
@@ -713,7 +714,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deleteEvent(id: string): void {
-    if (!confirm('Delete this event?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeleteEvent'))) return;
     this.deletingEventId.set(id);
     this.eventService.deleteEvent(id).subscribe({
       next: () => { this.myEvents.update(l => l.filter(e => e.id !== id)); this.toast.success('user.profile.toast.eventDeleted'); this.deletingEventId.set(null); },

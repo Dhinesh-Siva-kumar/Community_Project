@@ -7,7 +7,7 @@
 <div class="jb-head">
   <div>
     <h1 class="jb-title">{{ 'user.jobs.jobBoard' | translate }}</h1>
-    <p class="jb-subtitle">{{ totalItems() }} {{ totalItems() === 1 ? 'job' : 'jobs' }} · Discover opportunities and connect with employers in your community.</p>
+    <p class="jb-subtitle">{{ 'user.jobs.subtitle' | translate: { count: totalItems() } }}</p>
   </div>
 
   <div class="jb-head-controls">
@@ -478,7 +478,7 @@
                         </div>
                         <div class="jbd-info-card__body">
                           <span class="jbd-info-card__label">{{ 'user.jobs.shift' | translate }}</span>
-                          <span class="jbd-info-card__value">{{ job.shiftType | enumLabel:'shiftType' }} Shift</span>
+                          <span class="jbd-info-card__value">{{ 'jobs.value.shiftSuffix' | translate: { shift: (job.shiftType | enumLabel:'shiftType') } }}</span>
                         </div>
                       </div>
                     }
@@ -502,7 +502,7 @@
                         } @else {
                           <p class="jbd-salary-card__amount">{{ getSalaryDisplay(job) }}</p>
                           @if (job.salaryType) {
-                            <p class="jbd-salary-card__sub">Paid {{ job.salaryType | lowercase }}.</p>
+                            <p class="jbd-salary-card__sub">{{ 'jobs.value.paidType' | translate: { type: (job.salaryType | lowercase) } }}</p>
                           }
                         }
                       </div>
@@ -722,7 +722,7 @@
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'job' : 'jobs' }} found
       @if (activeFilterCount() > 0) {
-        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
+        <span class="jb-meta__filter-note">{{ 'filters.appliedCount' | translate: { count: activeFilterCount() } }}</span>
       }
     </span>
   </div>
@@ -975,7 +975,7 @@
                   }
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="companyWebsite">{{ 'user.jobs.website' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="companyWebsite">{{ 'user.jobs.website' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <div class="jb-input-group">
                     <i class="bi bi-globe2 jb-input-group__icon"></i>
                     <input id="companyWebsite" type="url" class="jb-input jb-input--icon-left" formControlName="companyWebsite" [placeholder]="'user.jobs.httpsCompanyCom' | translate"
@@ -986,7 +986,7 @@
                   }
                 </div>
                 <div class="col-12">
-                  <label class="jb-label">{{ 'user.jobs.logo' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label">{{ 'user.jobs.logo' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   @if (logoPreview()) {
                     <div class="jb-logo-preview">
                       <img [src]="logoPreview()! | imageUrl" [alt]="'user.jobs.logoPreview' | translate" class="jb-logo-preview__img" appImageError />
@@ -1058,7 +1058,7 @@
                   <app-searchable-select formControlName="expMax" [options]="expOptions" [placeholder]="'user.jobs.maxYearsOptional' | translate"></app-searchable-select>
                 </div>
                 @if (jobForm.errors?.['expRange']) {
-                  <div class="col-12"><span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum must be ≥ minimum</span></div>
+                  <div class="col-12"><span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.maxMustBeGteMin' | translate }}</span></div>
                 }
               </div>
             </div>
@@ -1110,7 +1110,7 @@
                     }
                   </div>
                   @if (jobForm.errors?.['salaryRange']) {
-                    <div class="col-12"><span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum salary must be ≥ minimum</span></div>
+                    <div class="col-12"><span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.maxSalaryMustBeGteMin' | translate }}</span></div>
                   }
                 }
               </div>
@@ -1180,7 +1180,7 @@
                     }
                   </div>
                   <div class="col-md-8">
-                    <label class="jb-label" for="fullAddress">{{ 'user.jobs.fullAddress' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                    <label class="jb-label" for="fullAddress">{{ 'user.jobs.fullAddress' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                     <input id="fullAddress" type="text" class="jb-input" formControlName="fullAddress" [placeholder]="'user.jobs.streetBuilding' | translate" />
                   </div>
                 }
@@ -1262,7 +1262,7 @@
                   }
                 </div>
                 <div class="col-12">
-                  <label class="jb-label" for="applicationUrl">{{ 'user.jobs.applicationUrl' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="applicationUrl">{{ 'user.jobs.applicationUrl' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <div class="jb-input-group"><i class="bi bi-link-45deg jb-input-group__icon"></i>
                     <input id="applicationUrl" type="url" class="jb-input jb-input--icon-left" formControlName="applicationUrl" [placeholder]="'user.jobs.httpsApplyCompanyComJob' | translate"
                       [class.jb-input--error]="jobForm.get('applicationUrl')?.invalid && jobForm.get('applicationUrl')?.touched" /></div>
@@ -1279,7 +1279,7 @@
                 <div class="jb-form-section__badge"><i class="bi bi-tags"></i></div>
                 <div><span class="jb-form-section__num">08</span><span class="jb-form-section__name">{{ 'user.jobs.skillsRequired' | translate }}</span></div>
               </div>
-              <label class="jb-label">{{ 'user.jobs.skills' | translate }} <span class="jb-label__optional">(type and press Enter)</span></label>
+              <label class="jb-label">{{ 'user.jobs.skills' | translate }} <span class="jb-label__optional">{{ 'common.typeAndPressEnter' | translate }}</span></label>
               <app-tag-input formControlName="skills" [placeholder]="'user.jobs.eGReactNodeJs' | translate"></app-tag-input>
             </div>
 
@@ -1291,28 +1291,28 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-label" for="description">{{ 'user.jobs.description' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="description">{{ 'user.jobs.description' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <p class="jb-helper-text">{{ 'user.jobs.generalSummaryRole' | translate }}</p>
                   <textarea id="description" class="jb-input jb-input--textarea" formControlName="description" rows="5"
                     [placeholder]="'user.jobs.describeRole' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="responsibilities">{{ 'user.jobs.responsibilities' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="responsibilities">{{ 'user.jobs.responsibilities' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="responsibilities" class="jb-input jb-input--textarea" formControlName="responsibilities" rows="4"
                     [placeholder]="'user.jobs.keyDayDayResponsibilities' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="qualifications">{{ 'user.jobs.qualifications' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="qualifications">{{ 'user.jobs.qualifications' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="qualifications" class="jb-input jb-input--textarea" formControlName="qualifications" rows="4"
                     [placeholder]="'user.jobs.degreesCertifications' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="requirements">{{ 'user.jobs.requirements' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="requirements">{{ 'user.jobs.requirements' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="requirements" class="jb-input jb-input--textarea" formControlName="requirements" rows="4"
                     [placeholder]="'user.jobs.mustHaveSkillsExperience' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="benefits">{{ 'user.jobs.benefits' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="benefits">{{ 'user.jobs.benefits' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="benefits" class="jb-input jb-input--textarea" formControlName="benefits" rows="4"
                     [placeholder]="'user.jobs.perksInsuranceBonuses' | translate"></textarea>
                 </div>
@@ -1323,7 +1323,7 @@
             <div class="jb-form-section">
               <div class="jb-form-section__header">
                 <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-                <div><span class="jb-form-section__num">10</span><span class="jb-form-section__name">{{ 'user.jobs.jobImages' | translate }} <span class="jb-label__optional">(optional)</span></span></div>
+                <div><span class="jb-form-section__num">10</span><span class="jb-form-section__name">{{ 'user.jobs.jobImages' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
               </div>
               <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
                 [resetCounter]="fileUploadReset()" [existingPreviews]="editingJob()?.images ?? []"

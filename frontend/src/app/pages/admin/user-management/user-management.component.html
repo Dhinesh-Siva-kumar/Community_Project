@@ -432,7 +432,7 @@
                     </div>
                   }
                   <div class="um-g-meta-row">
-                    <i class="bi bi-calendar-check-fill"></i><span>Joined {{ user.createdAt | date:'d MMM yyyy' }}</span>
+                    <i class="bi bi-calendar-check-fill"></i><span>{{ 'common.joinedDate' | translate: { date: (user.createdAt | date:'d MMM yyyy') } }}</span>
                   </div>
                 </div>
 

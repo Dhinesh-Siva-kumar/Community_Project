@@ -279,7 +279,7 @@
               <button class="ud-pg-btn" [disabled]="auditPage() === 1" (click)="goToAuditPage(auditPage() - 1)">
                 <i class="bi bi-chevron-left"></i>
               </button>
-              <span class="ud-log-pagination__label">Page {{ auditPage() }} of {{ auditTotalPages() }}</span>
+              <span class="ud-log-pagination__label">{{ 'common.pageOf' | translate: { page: auditPage(), total: auditTotalPages() } }}</span>
               <button class="ud-pg-btn" [disabled]="auditPage() === auditTotalPages()" (click)="goToAuditPage(auditPage() + 1)">
                 <i class="bi bi-chevron-right"></i>
               </button>

@@ -8,6 +8,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { ToastService } from '../../core/services/toast.service';
 
 /**
@@ -27,6 +28,7 @@ import { ToastService } from '../../core/services/toast.service';
 export class ImageErrorHandlerDirective implements OnInit {
   private el = inject(ElementRef);
   private toastService = inject(ToastService);
+  private translate = inject(TranslateService);
   private platformId = inject(PLATFORM_ID);
 
   /** Array of fallback image URLs to try before using placeholder */
@@ -93,7 +95,7 @@ export class ImageErrorHandlerDirective implements OnInit {
   private useImageError(img: HTMLImageElement): void {
     img.src = this.PLACEHOLDER_URL;
     img.classList.add('image-error');
-    img.title = 'Image not available';
+    img.title = this.translate.instant('common.imageNotAvailable');
 
     if (this.debug()) {
       console.warn(
@@ -103,7 +105,7 @@ export class ImageErrorHandlerDirective implements OnInit {
 
     // Show toast notification if enabled
     if (this.showToast()) {
-      this.toastService.warning('Image not available');
+      this.toastService.warning('common.imageNotAvailable');
     }
   }
 }

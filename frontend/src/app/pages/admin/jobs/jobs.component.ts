@@ -28,6 +28,7 @@ import { getPhoneRule } from '../../../shared/utils/phone';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
@@ -101,6 +102,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 })
 export class AdminJobsComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private jobService        = inject(JobService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
@@ -232,6 +234,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   // Active filter chips
   activeFilterChips = computed<FilterChip[]>(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const chips: FilterChip[] = [];
     const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
     if (this.searchQuery())           add('search',       this.translate.instant('filters.search', { value: this.searchQuery() }), this.searchQuery());

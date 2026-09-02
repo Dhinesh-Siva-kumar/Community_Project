@@ -12,6 +12,7 @@ import { AddUserDrawerComponent }      from './panels/add-user-drawer/add-user-d
 import { UserDetailDrawerComponent }   from './panels/user-detail-drawer/user-detail-drawer.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { enumLabelKey } from '../../../shared/constants/enum-labels';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
@@ -33,6 +34,7 @@ const VIEW_STORAGE_KEY = 'admin-user-management:viewMode';
 })
 export class UserManagementComponent implements OnInit {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private toast       = inject(ToastService);
@@ -115,6 +117,8 @@ export class UserManagementComponent implements OnInit {
 
   // Active filter chips for display
   activeFilterChips = computed<{ key: string; label: string; value: any }[]>(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const chips: { key: string; label: string; value: any }[] = [];
     if (this.appliedSearch()) chips.push({ key: 'search', label: this.translate.instant('filters.search', { value: this.appliedSearch() }), value: this.appliedSearch() });
     if (this.filterRole()) chips.push({ key: 'role', label: this.translate.instant(enumLabelKey('role', this.filterRole())), value: this.filterRole() });

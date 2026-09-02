@@ -12,6 +12,7 @@ import {
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 
 export interface SelectOption {
   value: string | number;
@@ -112,9 +113,13 @@ export interface SelectOption {
 })
 export class ChipMultiSelectComponent implements ControlValueAccessor {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
 
-  /** Option labels are catalog keys; unknown keys pass through unchanged. */
+  /** Option labels are catalog keys; unknown keys pass through unchanged.
+   * Reads the language signal so this OnPush component re-renders its labels
+   * on a language switch — see SearchableSelectComponent.tr(). */
   protected tr(label: string): string {
+    this.language.currentLang();
     return this.translate.instant(label) as string;
   }
 

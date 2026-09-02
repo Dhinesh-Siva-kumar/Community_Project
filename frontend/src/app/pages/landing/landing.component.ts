@@ -225,8 +225,10 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     const stats = this.translate.instant('landing.aboutStats') as AboutStat[];
     stats.forEach((stat) => {
       if (stat.value === 'growing') {
-        // Non-numeric stat — just set it immediately
-        this.counterValues[stat.value] = stat.displayValue;
+        // Non-numeric stat — nothing to animate. Deliberately not cached:
+        // getCounterValue() then falls back to the stat's own displayValue,
+        // which the template re-reads from the translated catalog, so the
+        // label follows a language switch instead of freezing.
         return;
       }
       const numericTarget = stat.value === '100free' || stat.value === '100safe' ? 100 : parseInt(stat.value, 10);

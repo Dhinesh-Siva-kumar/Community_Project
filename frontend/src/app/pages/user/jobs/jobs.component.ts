@@ -28,6 +28,7 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 
@@ -105,6 +106,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
 })
 export class UserJobsComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private jobService        = inject(JobService);
   private authService       = inject(AuthService);
   private layoutService     = inject(LayoutService);
@@ -338,6 +340,8 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   // ─── Active filter chips ─────────────────────────────────────
   activeFilterChips = computed<FilterChip[]>(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const chips: FilterChip[] = [];
     const add = (key: string, label: string, value: any) => chips.push({ key, label, value });
 

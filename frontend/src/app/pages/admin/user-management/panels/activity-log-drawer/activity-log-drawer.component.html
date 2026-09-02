@@ -9,7 +9,7 @@
       <div class="drawer-header__icon"><i class="bi bi-clock-history"></i></div>
       <div>
         <h5 class="drawer-header__title">{{ 'admin.activityLog.activityLog' | translate }}</h5>
-        <p class="drawer-header__sub">{{ total() }} admin action{{ total() === 1 ? '' : 's' }} recorded</p>
+        <p class="drawer-header__sub">{{ 'admin.activityLog.actionsRecorded' | translate: { count: total() } }}</p>
       </div>
       <button class="drawer-close" (click)="close.emit()"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -24,7 +24,7 @@
         <option [value]="a">{{ formatAction(a) }}</option>
       }
     </select>
-    <span class="al-count">{{ total() }} entries</span>
+    <span class="al-count">{{ 'admin.activityLog.entriesCount' | translate: { count: total() } }}</span>
   </div>
 
   <div class="drawer-body">

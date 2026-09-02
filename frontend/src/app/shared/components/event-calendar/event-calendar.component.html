@@ -83,7 +83,7 @@
                     </a>
                   }
                   @if (cell.events.length > 4) {
-                    <div class="cal-popover__more">+{{ cell.events.length - 4 }} more</div>
+                    <div class="cal-popover__more">{{ 'components.calendar.moreCount' | translate: { count: cell.events.length - 4 } }}</div>
                   }
                 </div>
               }

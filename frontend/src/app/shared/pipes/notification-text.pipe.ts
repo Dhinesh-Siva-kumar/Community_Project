@@ -1,5 +1,6 @@
-import { Pipe, PipeTransform, inject } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
 import { Notification } from '../../core/models';
 
@@ -12,10 +13,18 @@ import { Notification } from '../../core/models';
  * older rows have no params, so their stored `message` is shown as-is.
  *
  * Impure because the language can change without the notification changing.
+ * Impure alone is not enough inside an OnPush component — see EnumLabelPipe for
+ * why the `onLangChange` + `markForCheck()` pairing is also needed.
  */
 @Pipe({ name: 'notificationText', standalone: true, pure: false })
-export class NotificationTextPipe implements PipeTransform {
+export class NotificationTextPipe implements PipeTransform, OnDestroy {
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
+  private sub: Subscription = this.translate.onLangChange.subscribe(() => this.cdr.markForCheck());
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
 
   transform(notification: Notification | null | undefined): string {
     if (!notification) return '';

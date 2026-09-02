@@ -61,7 +61,7 @@
           <div class="welcome-banner__header">
             <span class="welcome-banner__icon"><i class="bi bi-stars"></i></span>
             <div class="welcome-banner__heading">
-              <h2 class="welcome-banner__title">Welcome to TamilConnect, {{ firstName() }}!</h2>
+              <h2 class="welcome-banner__title">{{ 'user.dashboard.welcomeBanner' | translate: { name: firstName() } }}</h2>
               <p class="welcome-banner__subtitle">{{ welcomeBannerText().subtitle }}</p>
             </div>
           </div>
@@ -312,7 +312,7 @@
             <span class="rail-card__pct">{{ profileCompletion() }}%</span>
           </div>
           <div class="rail-progress"><div class="rail-progress__bar" [style.width.%]="profileCompletion()"></div></div>
-          <p class="rail-card__hint">{{ profileStrength() }} — finish these to stand out:</p>
+          <p class="rail-card__hint">{{ 'user.dashboard.finishToStandOut' | translate: { strength: profileStrength() } }}</p>
           <ul class="rail-checklist">
             @for (item of incompleteItems().slice(0,3); track item.label) {
               <li><a [routerLink]="item.route"><i class="bi bi-circle"></i> {{ item.label | translate }}</a></li>
@@ -325,7 +325,7 @@
       <div class="rail-card">
         <div class="rail-card__head">
           <h3 class="rail-card__title">{{ 'user.dashboard.events' | translate }}</h3>
-          <a routerLink="/user/events" class="rail-card__link">View all →</a>
+          <a routerLink="/user/events" class="rail-card__link">{{ 'common.viewAll' | translate }} →</a>
         </div>
         @if (!loadingUpcomingEvents() && hasUpcomingEvents() === false) {
           <div class="rail-empty">

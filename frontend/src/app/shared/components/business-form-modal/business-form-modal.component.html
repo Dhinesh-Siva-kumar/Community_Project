@@ -164,7 +164,7 @@
               </div>
             } @else {
               <div class="col-12">
-                <label class="jb-label" for="bizFormWa">{{ 'components.businessForm.whatsappLabel' | translate }} <span class="jb-optional">(same as phone)</span></label>
+                <label class="jb-label" for="bizFormWa">{{ 'components.businessForm.whatsappLabel' | translate }} <span class="jb-optional">{{ 'common.sameAsPhone' | translate }}</span></label>
                 <div class="jb-input-group">
                   <i class="bi bi-whatsapp jb-input-group__icon"></i>
                   <input id="bizFormWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" [placeholder]="'components.businessForm.phonePlaceholder' | translate" maxlength="15" />
@@ -246,7 +246,7 @@
                   [placeholder]="division1Options().length ? ('Select ' + adminLevels()[0].label.toLowerCase()) : 'Select country first'"
                   (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
                 @if (businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched) {
-                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[0].label }} is required</span>
+                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[0].label) } }}</span>
                 }
               </div>
             }
@@ -263,7 +263,7 @@
                   [placeholder]="division2Options().length ? ('Select ' + adminLevels()[1].label.toLowerCase()) : ('Select ' + adminLevels()[0].label.toLowerCase() + ' first')"
                   (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
                 @if (businessForm.get('division2Id')?.invalid && businessForm.get('division2Id')?.touched) {
-                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ adminLevels()[1].label }} is required</span>
+                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[1].label) } }}</span>
                 }
               </div>
             }
@@ -309,7 +309,7 @@
               <label class="jb-label" for="bizFormPin">
                 Postal Code
                 @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
-                @else { <span class="jb-optional">(optional)</span> }
+                @else { <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span> }
               </label>
               <input id="bizFormPin" type="text" class="jb-input" formControlName="pincode"
                 [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'" maxlength="12"
@@ -332,7 +332,7 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-clock"></i></div>
-            <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">Opening Days &amp; Hours</span></div>
+            <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">{{ 'components.businessForm.openingDaysAndHours' | translate }}</span></div>
           </div>
           <div class="row g-3">
             <div class="col-12">
@@ -375,7 +375,7 @@
                     }
                   </div>
                 </div>
-                <div class="col-auto" style="padding-top: 6px;"><span class="biz-hours-sep">to</span></div>
+                <div class="col-auto" style="padding-top: 6px;"><span class="biz-hours-sep">{{ 'components.businessForm.timeRangeSeparator' | translate }}</span></div>
                 <div class="col-5">
                   <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'to'"
                     [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursTo')?.value">
@@ -411,7 +411,7 @@
         <div class="jb-form-section">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-            <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'components.businessForm.galleryLabel' | translate }} <span class="jb-form-section__optional">(optional)</span></span></div>
+            <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'components.businessForm.galleryLabel' | translate }} <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
           </div>
           <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
             [label]="'components.fileUpload.dragGalleryImages' | translate"

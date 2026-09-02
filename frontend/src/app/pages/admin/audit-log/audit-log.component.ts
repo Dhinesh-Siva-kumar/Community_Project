@@ -13,6 +13,7 @@ import {
 } from '../../../core/constants/audit-actions';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 
 @Component({
   selector: 'app-audit-log',
@@ -24,6 +25,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 })
 export class AuditLogComponent implements OnInit {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private auditService = inject(AuditService);
   private toast        = inject(ToastService);
   private router        = inject(Router);
@@ -71,6 +73,8 @@ export class AuditLogComponent implements OnInit {
   ]);
 
   activeFilterChips = computed<{ key: string; label: string }[]>(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const chips: { key: string; label: string }[] = [];
     if (this.filterAction())   chips.push({ key: 'action',   label: this.formatAction(this.filterAction()) });
     if (this.filterResource()) chips.push({ key: 'resource', label: this.formatResource(this.filterResource()) });

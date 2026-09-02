@@ -1,11 +1,16 @@
-<nav class="profile-tabs" [class.profile-tabs--full]="fullWidth" role="tablist" [attr.aria-label]="'components.profileTabs.sections' | translate">
+<nav
+  class="profile-tabs"
+  [class.profile-tabs--full]="fullWidth"
+  [style.--tab-count]="tabCountVar"
+  [style.--active-index]="activeIndexVar"
+  role="tablist"
+  [attr.aria-label]="'components.profileTabs.sections' | translate"
+>
   @if (fullWidth && tabs.length > 0) {
-    <span
-      class="tab-indicator"
-      [style.transform]="'translateX(calc(' + activeIndex + ' * 100%))'"
-      [style.background]="activeTabBg"
-      aria-hidden="true"
-    ></span>
+    <!-- Width and slide distance are derived from --tab-count / --active-index
+         in the stylesheet, so they stay correct for any tab count and any
+         label length. -->
+    <span class="tab-indicator" [style.background]="activeTabBg" aria-hidden="true"></span>
   }
   @for (tab of tabs; track tab.id) {
     <button
@@ -22,7 +27,10 @@
       @if (tab.icon) {
         <span class="tab-icon-chip"><i [class]="'bi ' + tab.icon"></i></span>
       }
-      <span class="tab-label">{{ tab.label | translate }}</span>
+      <!-- title carries the full text for the equal-width variant, where a
+           long label (Tamil runs noticeably longer than English) is ellipsised
+           rather than allowed to widen the row. -->
+      <span class="tab-label" [title]="tab.label | translate">{{ tab.label | translate }}</span>
       @if (tab.badge) {
         <span class="tab-badge">{{ tab.badge }}</span>
       }
