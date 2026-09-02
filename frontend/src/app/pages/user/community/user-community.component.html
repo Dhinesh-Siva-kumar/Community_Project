@@ -147,6 +147,7 @@
                 <div class="uc-spot-name-group">
                   <h3 class="uc-spot-name">{{ community.name }}</h3>
                   <span class="uc-spot-category">
+                    <i class="bi {{ categoryIcon(community.category_name) }}"></i>
                     {{ community.category_name || 'Community' }}
                     @if (community.location) { · {{ community.location }} }
                   </span>
@@ -358,7 +359,7 @@
               <div class="uc-g-top-row">
                 <div class="uc-g-title-group">
                   <h3 class="uc-g-name">{{ community.name }}</h3>
-                  <span class="uc-g-category">{{ community.category_name || 'Community' }}</span>
+                  <span class="uc-g-category"><i class="bi {{ categoryIcon(community.category_name) }}"></i> {{ community.category_name || 'Community' }}</span>
                 </div>
               </div>
 

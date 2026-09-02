@@ -34,6 +34,9 @@ import { SelectOption } from '../searchable-select/searchable-select.component';
       <div class="ms-chips-row" [attr.aria-expanded]="isOpen()">
         @for (chip of selectedChips(); track chip.value) {
           <span class="ms-chip">
+            @if (chip.icon) {
+              <i class="bi {{ chip.icon }} ms-chip__icon"></i>
+            }
             <span class="ms-chip__label">{{ tr(chip.label) }}</span>
             @if (!isDisabled()) {
               <button
@@ -75,7 +78,12 @@ import { SelectOption } from '../searchable-select/searchable-select.component';
           <ul class="ms-list" role="listbox">
             @for (opt of availableOptions(); track opt.value) {
               <li class="ms-option" role="option" (click)="addOption(opt)">
-                <span class="ms-option-label">{{ tr(opt.label) }}</span>
+                <span class="ms-option-label">
+                  @if (opt.icon) {
+                    <i class="bi {{ opt.icon }} ms-option-icon"></i>
+                  }
+                  {{ tr(opt.label) }}
+                </span>
                 <i class="bi bi-plus ms-add-icon"></i>
               </li>
             } @empty {
@@ -131,6 +139,7 @@ import { SelectOption } from '../searchable-select/searchable-select.component';
       transition: background 100ms ease;
     }
     .ms-chip__remove:hover { background: rgba(146, 64, 14, 0.3); }
+    .ms-chip__icon { font-size: 0.75rem; color: #92400E; }
 
     .ms-add-trigger {
       display: inline-flex;
@@ -208,6 +217,7 @@ import { SelectOption } from '../searchable-select/searchable-select.component';
       cursor: pointer;
     }
     .ms-option:hover { background: #FFFBEB; }
+    .ms-option-icon { color: #A8A29E; font-size: 0.8rem; margin-right: 6px; }
     .ms-add-icon { color: #A8A29E; font-size: 0.8rem; }
     .ms-no-results {
       padding: 10px;

@@ -20,6 +20,7 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
+import { getCategoryIcon } from '../../../shared/utils/category-icons';
 
 type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
@@ -43,6 +44,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
   private environmentInjector = inject(EnvironmentInjector);
+
+  protected categoryIcon(name?: string | null): string {
+    return getCategoryIcon(name);
+  }
 
   // Signals
   community = signal<Community | null>(null);

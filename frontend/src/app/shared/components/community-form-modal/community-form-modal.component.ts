@@ -18,6 +18,7 @@ import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
+import { getCategoryIcon } from '../../utils/category-icons';
 
 /** Fails when the trimmed value is empty (catches whitespace-only strings). */
 function noWhitespace(control: AbstractControl): ValidationErrors | null {
@@ -42,10 +43,12 @@ function minLengthTrimmed(min: number) {
  * The single Add/Edit Community form modal — a straight port of the admin
  * Community page's create/edit modal (same fields, same chrome), so the
  * user side gets identical design and functionality — except non-admin
- * callers are restricted to Private visibility and can't set a community as
- * Default, since both Global and Default force-enroll every active user on
- * the platform as a member the instant the community is saved (an
- * admin-only bulk action; the backend rejects it too, this is UI-level).
+ * callers still can't set a community as Default, since that force-enrolls
+ * every active user on the platform as a member the instant the community
+ * is saved (an admin-only bulk action; the backend rejects it too, this is
+ * UI-level). Private vs. Global visibility is choosable by everyone: Global
+ * just widens who can see/join the community (anyone, not just users in its
+ * country) — it does not by itself enroll anyone.
  * Shared by the user Community list page and the community detail page.
  */
 @Component({
@@ -85,16 +88,15 @@ export class CommunityFormModalComponent implements OnChanges {
 
   // ── Radio group options (app-radio-group) ────────────────────
   /**
-   * Non-admins only ever get Private — Global is admin-only. Hub communities
-   * are always Private (country-scoped) too, so Global drops out once an
-   * admin picks Hub. Reads the live form value (not a signal), so this is a
-   * plain method re-evaluated each change-detection pass rather than a
-   * `computed()`.
+   * Everyone can choose Private or Global. Hub communities are always
+   * Private (country-scoped), so Global drops out once (an admin-only) Hub
+   * is picked. Reads the live form value (not a signal), so this is a plain
+   * method re-evaluated each change-detection pass rather than a `computed()`.
    */
   visibilityOptions(): RadioOption[] {
     const opts: RadioOption[] = [{ value: 'private', label: 'components.communityForm.visibility.private', icon: 'bi-lock-fill' }];
     const isHub = this.communityForm?.get('communityType')?.value === 'HUB';
-    if (this.isAdminUser() && !isHub) opts.push({ value: 'global', label: 'components.communityForm.visibility.global', icon: 'bi-globe2' });
+    if (!isHub) opts.push({ value: 'global', label: 'components.communityForm.visibility.global', icon: 'bi-globe2' });
     return opts;
   }
 
@@ -218,7 +220,7 @@ export class CommunityFormModalComponent implements OnChanges {
     this.authService.getInterests().subscribe({
       next: (res: any) => {
         this.interests = res.data ?? res ?? [];
-        this.interestOptions = this.interests.map((i) => ({ value: i.interest_id, label: i.interest_name }));
+        this.interestOptions = this.interests.map((i) => ({ value: i.interest_id, label: i.interest_name, icon: getCategoryIcon(i.interest_name) }));
       },
       error: () => this.toast.error('components.communityForm.toast.categoriesFailed'),
     });
@@ -352,9 +354,10 @@ export class CommunityFormModalComponent implements OnChanges {
       image = this.editingCommunity()?.image ?? undefined;
     }
 
-    // Non-admins can never submit Global/Default regardless of what the form
-    // holds — the backend rejects it too, but keeping the client payload
-    // honest avoids a round-trip 403 for the normal case.
+    // Non-admins can never submit Default regardless of what the form holds
+    // — the backend rejects it too, but keeping the client payload honest
+    // avoids a round-trip 403 for the normal case. Visibility (Private/Global)
+    // is chosen by everyone, admin or not.
     const admin = this.isAdminUser();
     // Community Type isn't shown to non-admins — their communities are
     // always Individual regardless of what the form control holds.
@@ -370,8 +373,8 @@ export class CommunityFormModalComponent implements OnChanges {
       interest_ids: interestIds,
       country:     selectedCountry?.name,
       country_id:  form.countryId || undefined,
-      is_private:  admin ? form.visibility === 'private' : true,
-      is_global:   admin ? form.visibility === 'global' : false,
+      is_private:  form.visibility === 'private',
+      is_global:   form.visibility === 'global',
       is_default:  admin ? (form.isDefault ?? false) : false,
       // Non-admins never choose their community's modes — always Enquire-only.
       community_modes: admin ? (form.communityModes?.length ? form.communityModes : ['ENQUIRE']) : ['ENQUIRE'],

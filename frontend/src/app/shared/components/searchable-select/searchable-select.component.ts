@@ -18,6 +18,8 @@ import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, of
 export interface SelectOption {
   value: string | number;
   label: string;
+  /** Optional Bootstrap Icons class (e.g. 'bi-tag-fill') shown before the label. */
+  icon?: string;
 }
 
 @Component({
@@ -45,7 +47,12 @@ export interface SelectOption {
         [attr.aria-expanded]="isOpen()"
         aria-haspopup="listbox"
       >
-        <span class="ss-trigger-text">{{ selectedLabel() || placeholder() }}</span>
+        <span class="ss-trigger-text">
+          @if (selectedIcon()) {
+            <i class="bi {{ selectedIcon() }} ss-trigger-icon"></i>
+          }
+          {{ selectedLabel() || placeholder() }}
+        </span>
         <i class="bi bi-chevron-down ss-caret" [class.ss-caret-open]="isOpen()"></i>
       </button>
 
@@ -85,7 +92,12 @@ export interface SelectOption {
                   [attr.aria-selected]="opt.value === value()"
                   (click)="selectOption(opt)"
                 >
-                  <span class="ss-option-label">{{ tr(opt.label) }}</span>
+                  <span class="ss-option-label">
+                    @if (opt.icon) {
+                      <i class="bi {{ opt.icon }} ss-option-icon"></i>
+                    }
+                    {{ tr(opt.label) }}
+                  </span>
                   @if (opt.value === value()) {
                     <i class="bi bi-check2 ss-check"></i>
                   }
@@ -200,6 +212,15 @@ export class SearchableSelectComponent implements ControlValueAccessor {
     const seeded = this.selectedOption();
     if (seeded && seeded.value === v) return this.tr(seeded.label);
     return '';
+  });
+
+  protected selectedIcon = computed(() => {
+    const v = this.value();
+    if (v == null) return '';
+    const opt = this.options().find(o => o.value === v)
+      ?? this.remoteOptions().find(o => o.value === v)
+      ?? (this.selectedOption()?.value === v ? this.selectedOption() : null);
+    return opt?.icon ?? '';
   });
 
   // ── ControlValueAccessor ──────────────────────────────────────

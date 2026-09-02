@@ -69,9 +69,9 @@ export async function create(data: CreateCommunityDtoType, adminId: string) {
 
   const caller = await db('users').where({ id: adminId }).first() as Record<string, unknown> | undefined;
 
-  if (data.is_global || data.is_default) {
+  if (data.is_default) {
     if (!caller || caller['role'] !== 'ADMIN') {
-      throw new AppError(403, 'Only admins can create Global or Default communities', 'ONLY_ADMINS_CREATE_GLOBAL');
+      throw new AppError(403, 'Only admins can create Default communities', 'ONLY_ADMINS_CREATE_GLOBAL');
     }
   }
 
@@ -718,8 +718,8 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
   if (byAdmin && !callerIsAdmin) {
     throw new AppError(403, 'You can only update your own community', 'ONLY_UPDATE_OWN_COMMUNITY');
   }
-  if (!callerIsAdmin && (data.is_global || data.is_default)) {
-    throw new AppError(403, 'Only admins can set a community to Global or Default', 'ONLY_ADMINS_SET_COMMUNITY');
+  if (!callerIsAdmin && data.is_default) {
+    throw new AppError(403, 'Only admins can set a community to Default', 'ONLY_ADMINS_SET_COMMUNITY');
   }
   if (!callerIsAdmin && data.community_type === 'HUB') {
     throw new AppError(403, 'Only admins can set a community to Hub', 'ONLY_ADMINS_SET_HUB');
