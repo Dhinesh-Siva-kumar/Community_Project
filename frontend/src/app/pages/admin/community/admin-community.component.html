@@ -790,6 +790,7 @@
                       type="text"
                       formControlName="communityName"
                       maxlength="150"
+                      spellcheck="true"
                       [placeholder]="'admin.community.eGDevelopersIndia' | translate"
                       class="cm-input"
                       [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
@@ -845,6 +846,7 @@
                     formControlName="description"
                     rows="3"
                     maxlength="500"
+                    spellcheck="true"
                     [placeholder]="'admin.community.tellPeopleWhatCommunityAbout' | translate"
                     class="cm-input cm-textarea"
                     [class.cm-input-error]="f['description'].touched && f['description'].invalid"
@@ -941,12 +943,18 @@
                 </div>
               </div>
 
-              <!-- Default Community toggle — independent of visibility -->
+              <!-- Default Community toggle — independent of visibility; locked ON for Hub -->
               <div class="cm-default-row">
                 <div class="cm-default-label">
                   <i class="bi bi-star-fill"></i>
                   <span>{{ 'admin.community.defaultCommunity2' | translate }}</span>
-                  <span class="cm-default-hint">{{ 'admin.community.markAsDefaultCommunityNew' | translate }}</span>
+                  <span class="cm-default-hint">
+                    @if (f['communityType'].value === 'HUB') {
+                      {{ 'admin.community.defaultHubLockedHint' | translate }}
+                    } @else {
+                      {{ 'admin.community.markAsDefaultCommunityNew' | translate }}
+                    }
+                  </span>
                 </div>
                 <app-toggle formControlName="isDefault" [ariaLabel]="'admin.community.defaultCommunity' | translate"></app-toggle>
               </div>

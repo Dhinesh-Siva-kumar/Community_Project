@@ -322,18 +322,20 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     });
 
     // Hub communities are always Private (country-scoped), always Default
-    // (still user-adjustable — not disabled), and never carry a category —
-    // the Category field itself is disabled (not just optional) while Hub
-    // is selected. Switching back to Individual restores Default to its
-    // normal false starting point and re-enables Category.
+    // (locked — the toggle is disabled, not just pre-checked), and never
+    // carry a category — the Category field itself is disabled (not just
+    // optional) while Hub is selected. Switching back to Individual restores
+    // Default to its normal false starting point and re-enables both fields.
     // `suppressTypeSideEffects` guards edit-load/reset patches (which also
     // set communityType) from re-triggering these as if the admin had just
     // switched types by hand — e.g. loading an existing Individual
     // community with isDefault:true shouldn't get silently reset to false.
     this.communityForm.get('communityType')?.valueChanges.subscribe((type) => {
       const interestsControl = this.communityForm.get('interests');
+      const isDefaultControl = this.communityForm.get('isDefault');
       if (type === 'HUB') {
         interestsControl?.disable({ emitEvent: false });
+        isDefaultControl?.disable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
           // A Hub is meant to cover every kind of post, so switching to it
           // auto-selects all three modes rather than leaving the admin's
@@ -342,6 +344,7 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         }
       } else {
         interestsControl?.enable({ emitEvent: false });
+        isDefaultControl?.enable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
           this.communityForm.patchValue({ isDefault: false, communityModes: ['HELP'] });
         }
@@ -886,7 +889,11 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
       country_id:  form.countryId   || undefined,
       is_private:  form.visibility === 'private',
       is_global:   form.visibility === 'global',
-      is_default:  form.isDefault   ?? false,
+      // Hub is always Default — the toggle is disabled while Hub is
+      // selected, so `form.isDefault` (a disabled control) is dropped from
+      // `communityForm.value` entirely; force it explicitly instead of
+      // trusting the (absent) form value.
+      is_default:  form.communityType === 'HUB' ? true : (form.isDefault ?? false),
       community_modes: form.communityModes?.length ? form.communityModes : ['ENQUIRE'],
       community_type: form.communityType ?? 'INDIVIDUAL',
       rules:       form.rules ?? [],

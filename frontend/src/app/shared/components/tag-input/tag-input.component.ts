@@ -56,7 +56,7 @@ import { TranslatePipe } from '@ngx-translate/core';
         [placeholder]="tags().length === 0 ? placeholder() : ''"
         autocomplete="off"
         autocorrect="off"
-        spellcheck="false"
+        [attr.spellcheck]="spellcheck()"
         (keydown)="onKeydown($event)"
         (focus)="focused = true"
         (blur)="onBlur()"
@@ -178,6 +178,8 @@ export class TagInputComponent implements ControlValueAccessor {
   readonly maxLength = input<number | null>(null);
   readonly itemLabel = input<string>('skill');
   readonly commitOnComma = input<boolean>(true);
+  /** Off by default — short keyword-style tags (e.g. job skills) don't benefit from it. Free-text tag fields (e.g. community rules) opt in. */
+  readonly spellcheck = input<boolean>(false);
 
   @ViewChild('inputEl') inputElRef!: ElementRef<HTMLInputElement>;
 

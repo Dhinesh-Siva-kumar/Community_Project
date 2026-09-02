@@ -34,6 +34,7 @@ import { TranslatePipe } from '@ngx-translate/core';
       itemLabel="rule"
       [maxLength]="150"
       [commitOnComma]="false"
+      [spellcheck]="true"
     ></app-tag-input>
   `,
 })
