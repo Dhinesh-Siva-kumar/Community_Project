@@ -43,6 +43,7 @@
                   type="text"
                   formControlName="communityName"
                   maxlength="150"
+                  spellcheck="true"
                   [placeholder]="'components.communityForm.namePlaceholder' | translate"
                   class="cm-input"
                   [class.cm-input-error]="f['communityName'].touched && f['communityName'].invalid"
@@ -98,6 +99,7 @@
                 formControlName="description"
                 rows="3"
                 maxlength="500"
+                spellcheck="true"
                 [placeholder]="'components.communityForm.descriptionPlaceholder' | translate"
                 class="cm-input cm-textarea"
                 [class.cm-input-error]="f['description'].touched && f['description'].invalid"
@@ -197,13 +199,19 @@
             }
           </div>
 
-          <!-- Default Community toggle — admin only, force-enrolls every user -->
+          <!-- Default Community toggle — admin only, force-enrolls every user; locked ON for Hub -->
           @if (isAdminUser()) {
             <div class="cm-default-row">
               <div class="cm-default-label">
                 <i class="bi bi-star-fill"></i>
                 <span>{{ 'components.communityForm.defaultCommunity' | translate }}</span>
-                <span class="cm-default-hint">{{ 'components.communityForm.defaultHint' | translate }}</span>
+                <span class="cm-default-hint">
+                  @if (f['communityType'].value === 'HUB') {
+                    {{ 'components.communityForm.defaultHubLockedHint' | translate }}
+                  } @else {
+                    {{ 'components.communityForm.defaultHint' | translate }}
+                  }
+                </span>
               </div>
               <app-toggle formControlName="isDefault" [ariaLabel]="'components.communityForm.defaultAria' | translate"></app-toggle>
             </div>

@@ -168,18 +168,21 @@ export class CommunityFormModalComponent implements OnChanges {
     });
 
     // Hub communities are always Private (country-scoped), always Default
-    // (still user-adjustable — not disabled), and never carry a category —
-    // the Category field itself is disabled (not just optional) while Hub
-    // is selected. Switching back to Individual restores Default to its
-    // normal false starting point and re-enables Category. Only reachable
-    // by admins — communityType never leaves INDIVIDUAL for anyone else.
+    // (locked — the toggle is disabled, not just pre-checked), and never
+    // carry a category — the Category field itself is disabled (not just
+    // optional) while Hub is selected. Switching back to Individual restores
+    // Default to its normal false starting point and re-enables both
+    // fields. Only reachable by admins — communityType never leaves
+    // INDIVIDUAL for anyone else.
     // `suppressTypeSideEffects` guards edit-load/reset patches (which also
     // set communityType) from re-triggering these as if the admin had just
     // switched types by hand.
     this.communityForm.get('communityType')?.valueChanges.subscribe((type) => {
       const interestsControl = this.communityForm.get('interests');
+      const isDefaultControl = this.communityForm.get('isDefault');
       if (type === 'HUB') {
         interestsControl?.disable({ emitEvent: false });
+        isDefaultControl?.disable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
           // A Hub is meant to cover every kind of post, so switching to it
           // auto-selects all three modes rather than leaving the admin's
@@ -188,6 +191,7 @@ export class CommunityFormModalComponent implements OnChanges {
         }
       } else {
         interestsControl?.enable({ emitEvent: false });
+        isDefaultControl?.enable({ emitEvent: false });
         if (!this.suppressTypeSideEffects) {
           this.communityForm.patchValue({ isDefault: false, communityModes: ['HELP'] });
         }
@@ -375,7 +379,11 @@ export class CommunityFormModalComponent implements OnChanges {
       country_id:  form.countryId || undefined,
       is_private:  form.visibility === 'private',
       is_global:   form.visibility === 'global',
-      is_default:  admin ? (form.isDefault ?? false) : false,
+      // Hub is always Default — the toggle is disabled while Hub is
+      // selected, so `form.isDefault` (a disabled control) is dropped from
+      // `communityForm.value` entirely; force it explicitly instead of
+      // trusting the (absent) form value.
+      is_default:  !admin ? false : communityType === 'HUB' ? true : (form.isDefault ?? false),
       // Non-admins never choose their community's modes — always Enquire-only.
       community_modes: admin ? (form.communityModes?.length ? form.communityModes : ['ENQUIRE']) : ['ENQUIRE'],
       community_type: communityType,
