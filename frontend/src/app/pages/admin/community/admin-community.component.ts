@@ -22,6 +22,7 @@ import { FORM_DATA_FIELD_NAMES } from '../../../core/constants/upload.constants'
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { getCategoryIcon } from '../../../shared/utils/category-icons';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -76,6 +77,10 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);
+  }
+
+  protected categoryIcon(name?: string | null): string {
+    return getCategoryIcon(name);
   }
 
   countries: Country[] = [];
@@ -390,10 +395,12 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
         this.interestOptions = this.interests.map((i) => ({
           value: i.interest_id,
           label: i.interest_name,
+          icon: getCategoryIcon(i.interest_name),
         }));
         this.filterCategoryOptions = this.interests.map((i) => ({
           value: i.interest_name,
           label: i.interest_name,
+          icon: getCategoryIcon(i.interest_name),
         }));
       },
       error: () => this.toastService.error('admin.community.toast.failedLoadInterests'),

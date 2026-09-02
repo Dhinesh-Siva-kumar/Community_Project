@@ -14,6 +14,7 @@ import { CommunityJoinModalComponent } from '../../../shared/components/communit
 import { CommunityLeaveModalComponent } from '../../../shared/components/community-leave-modal/community-leave-modal.component';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe } from '@ngx-translate/core';
+import { getCategoryIcon } from '../../../shared/utils/category-icons';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -47,6 +48,10 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // element not existing yet and leave the arrows stuck hidden.
   private spotlightRailEl = viewChild<ElementRef<HTMLElement>>('spotlightRail');
   canScrollSpotlightLeft  = signal(false);
+
+  protected categoryIcon(name?: string | null): string {
+    return getCategoryIcon(name);
+  }
   canScrollSpotlightRight = signal(false);
   private spotlightResizeObserver?: ResizeObserver;
 

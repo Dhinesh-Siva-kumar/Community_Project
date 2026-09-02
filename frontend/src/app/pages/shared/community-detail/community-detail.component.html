@@ -324,7 +324,7 @@
                 <i class="bi bi-file-earmark-text-fill"></i>{{ postCount() }} posts
               </span>
               <span class="cd-chip cd-chip-category">
-                <i class="bi bi-tag-fill"></i>{{ community()!.category_name || 'Uncategorized' }}
+                <i class="bi {{ categoryIcon(community()!.category_name) }}"></i>{{ community()!.category_name || 'Uncategorized' }}
               </span>
               <span class="cd-chip cd-chip-country">
                 <i class="bi bi-globe2"></i>{{ community()!.country || 'Not Specified' }}
@@ -1893,7 +1893,7 @@
 
                 <!-- Category -->
                 <div class="cd-info-row cd-info-row--category info-item-animate" style="animation-delay:40ms">
-                  <div class="cd-info-icon"><i class="bi bi-tag-fill"></i></div>
+                  <div class="cd-info-icon"><i class="bi {{ categoryIcon(community()!.category_name) }}"></i></div>
                   <div class="cd-info-content">
                     <span class="cd-info-label">{{ 'shared.communityDetail.category' | translate }}</span>
                     <p class="cd-info-value">{{ community()!.category_name || 'Uncategorized' }}</p>

@@ -142,7 +142,7 @@
               }
             </div>
 
-            <!-- Visibility Toggles — non-admins only ever get Private -->
+            <!-- Visibility Toggles — Private or Global, choosable by everyone -->
             <div class="cm-field-group">
               <label class="cm-label">{{ 'components.communityForm.visibilityLabel' | translate }} <span class="cm-required">*</span></label>
               <app-radio-group
@@ -151,9 +151,6 @@
                 [invalid]="formSubmitAttempted() && !isEditing() && !f['visibility'].value"
                 [ariaLabel]="'components.communityForm.visibilityAria' | translate">
               </app-radio-group>
-              @if (!isAdminUser()) {
-                <div class="cm-default-hint">{{ 'components.communityForm.privateNote' | translate }}</div>
-              }
               @if (formSubmitAttempted() && !isEditing() && !f['visibility'].value) {
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>Please select a visibility option.
