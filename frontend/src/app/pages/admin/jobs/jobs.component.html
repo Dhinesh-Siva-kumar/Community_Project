@@ -1424,3 +1424,85 @@
 
   </div>
 }
+
+<!-- ═══════════════════════════════════════════════════════════
+     SHARE MODAL — Native Web Share API is tried first (see
+     shareJob()); this popup is the fallback for browsers/desktops
+     without it, matching the post-share popup used elsewhere. ═══
+     ═══════════════════════════════════════════════════════════ -->
+@if (shareModalOpen()) {
+  @if (shareTargetJob(); as shareJobData) {
+    <div class="au-backdrop" (click)="closeShareModal()"></div>
+    <div class="au-modal jb-modal jb-share-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="jbShareModalTitle" (click)="$event.stopPropagation()">
+      <div class="au-header cm-modal-header">
+        <div class="au-header__cover-shapes" aria-hidden="true"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
+        <div class="au-header__icon cm-modal-icon"><i class="bi bi-share-fill"></i></div>
+        <div class="au-header__text cm-modal-header-inner">
+          <h5 class="au-header__title cm-modal-title" id="jbShareModalTitle">{{ 'admin.jobs.shareJob' | translate }}</h5>
+          <p class="au-header__sub cm-modal-subtitle">{{ 'admin.jobs.chooseWhereShareJob' | translate }}</p>
+        </div>
+        <button type="button" class="au-close cm-close-btn" (click)="closeShareModal()" [attr.aria-label]="'admin.jobs.closeDialog' | translate">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="au-body cm-modal-body">
+        @if (getCompanyLogoSrc(shareJobData)) {
+          <div class="jb-share-preview-image-wrap">
+            <img [src]="getCompanyLogoSrc(shareJobData) | imageUrl" [alt]="'admin.jobs.postSharePreview' | translate" class="jb-share-preview-image" appImageError />
+          </div>
+        }
+        <p class="jb-share-preview-text">{{ getShareText(shareJobData) }}</p>
+
+        @if (sharePopupBlocked()) {
+          <div class="jb-share-popup-warning" role="alert">
+            <div class="jb-share-popup-warning__icon">
+              <i class="bi bi-window"></i>
+            </div>
+            <div class="jb-share-popup-warning__content">
+              <p class="jb-share-popup-warning__title">{{ 'admin.jobs.popupBlockedByBrowser' | translate }}</p>
+              <p class="jb-share-popup-warning__text">{{ 'admin.jobs.allowPopupsSiteTryAgain' | translate }}</p>
+              <p class="jb-share-popup-warning__steps">{{ 'admin.jobs.clickBlockedPopupIconNear' | translate }} <strong>{{ 'admin.jobs.alwaysAllowPopUpsFrom' | translate }}</strong>.</p>
+            </div>
+            <button type="button" class="jb-share-popup-warning__action" (click)="openShareInSameTab()">
+              {{ 'admin.jobs.openHere' | translate }}
+            </button>
+          </div>
+        }
+
+        <div class="jb-share-grid">
+          <button type="button" class="jb-share-btn jb-share-btn--whatsapp" (click)="shareVia('whatsapp')">
+            <i class="bi bi-whatsapp"></i><span>{{ 'admin.jobs.whatsapp' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--facebook" (click)="shareVia('facebook')">
+            <i class="bi bi-facebook"></i><span>{{ 'admin.jobs.facebook' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--x" (click)="shareVia('x')">
+            <i class="bi bi-twitter-x"></i><span>X</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--telegram" (click)="shareVia('telegram')">
+            <i class="bi bi-telegram"></i><span>{{ 'admin.jobs.telegram' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--linkedin" (click)="shareVia('linkedin')">
+            <i class="bi bi-linkedin"></i><span>{{ 'admin.jobs.linkedin' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--pinterest" (click)="shareVia('pinterest')">
+            <i class="bi bi-pinterest"></i><span>{{ 'admin.jobs.pinterest' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--email" (click)="shareVia('email')">
+            <i class="bi bi-envelope-fill"></i><span>{{ 'admin.jobs.email' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--copy" (click)="copyShareLink()">
+            <i class="bi bi-link-45deg"></i><span>{{ 'admin.jobs.copyLink' | translate }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="au-footer cm-modal-footer">
+        <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="closeShareModal()">
+          {{ 'common.close' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+}

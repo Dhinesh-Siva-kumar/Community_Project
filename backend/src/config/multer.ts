@@ -34,8 +34,11 @@ function mimeFilter(allowed: string[]) {
 
 const MB = 1024 * 1024;
 
+// Memory storage — the controller validates the buffer with Sharp (via
+// FileValidationService) before writing it to disk itself with
+// saveBufferToFile(), same as the business/events/jobs/upload endpoints.
 export const uploadProfile = multer({
-  storage: makeStorage('profiles'),
+  storage: multer.memoryStorage(),
   fileFilter: mimeFilter(['image/jpeg', 'image/png', 'image/webp']),
   limits: { fileSize: 5 * MB },
 });

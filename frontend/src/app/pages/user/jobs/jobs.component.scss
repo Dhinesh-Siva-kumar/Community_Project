@@ -896,9 +896,9 @@
     &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
 
     &--active {
-      background: $color-dark;
-      color: #fff;
-      &:hover { background: $color-dark; color: #fff; }
+      background: $color-text-primary;
+      color: $color-bg-page;
+      &:hover { background: $color-text-primary; color: $color-bg-page; }
     }
 
     &[data-tooltip] { @include jb-tooltip; }
@@ -2452,7 +2452,7 @@ ms; }
   user-select: none;
   @include transition-short(all);
   .bi { font-size: 0.85em; color: $color-text-muted; }
-  &:not(.jb-mode-chip--active):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-amber-50; }
+  &:not(.jb-mode-chip--active):hover { border-color: $color-primary; color: $color-primary-dark; background: $color-primary-lighter; }
   &--active {
     border-color: $color-primary-dark;
     background: $color-primary;
@@ -2551,6 +2551,184 @@ ms; }
   .jb-phone-field   { flex-direction: column; &__dial { flex: none; } }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SHARE MODAL — same chrome as the other Jobs popups (.au-*/.jb-modal),
+// with a platform grid styled after the Community/Dashboard post-share
+// popup (`.cd-share-*`) so every "Share" action in the app looks the same.
+// ═══════════════════════════════════════════════════════════════
+.jb-share-modal {
+  max-width: 560px;
+}
+
+.jb-share-preview-image-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: $color-bg-page;
+}
+
+.jb-share-preview-image {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
+}
+
+.jb-share-preview-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: $color-stone-700;
+  margin: 0;
+}
+
+.jb-share-popup-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  background: var(--cd-fffbeb, #fffbeb);
+  color: var(--cd-92400e, #92400e);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.jb-share-popup-warning__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(217, 119, 6, 0.14);
+  flex-shrink: 0;
+}
+
+.jb-share-popup-warning__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.jb-share-popup-warning__title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cd-78350f, #78350f);
+}
+
+.jb-share-popup-warning__text {
+  margin: 1px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--cd-92400e, #92400e);
+}
+
+.jb-share-popup-warning__steps {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--cd-7c2d12, #7c2d12);
+}
+
+.jb-share-popup-warning__action {
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  background: var(--cd-fff7ed, #fff7ed);
+  color: var(--cd-7c2d12, #7c2d12);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
+  height: 31px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.jb-share-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.jb-share-btn {
+  height: 42px;
+  border-radius: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.33);
+  background: $color-bg-card;
+  color: $color-text-body;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  i {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  &.jb-share-btn--whatsapp {
+    color: var(--cd-0f9f5e, #0f9f5e);
+    border-color: rgba(16, 185, 129, 0.35);
+    background: var(--cd-f0fdf4, #f0fdf4);
+  }
+
+  &.jb-share-btn--facebook {
+    color: var(--cd-1d4ed8, #1d4ed8);
+    border-color: rgba(59, 130, 246, 0.35);
+    background: var(--cd-eff6ff, #eff6ff);
+  }
+
+  &.jb-share-btn--x {
+    color: var(--cd-111827, #111827);
+    border-color: rgba(17, 24, 39, 0.3);
+    background: var(--cd-f8fafc, #f8fafc);
+  }
+
+  &.jb-share-btn--telegram {
+    color: var(--cd-0284c7, #0284c7);
+    border-color: rgba(14, 165, 233, 0.34);
+    background: var(--cd-f0f9ff, #f0f9ff);
+  }
+
+  &.jb-share-btn--linkedin {
+    color: var(--cd-0a66c2, #0a66c2);
+    border-color: rgba(10, 102, 194, 0.36);
+    background: var(--cd-eff6ff, #eff6ff);
+  }
+
+  &.jb-share-btn--pinterest {
+    color: var(--cd-b91c1c, #b91c1c);
+    border-color: rgba(239, 68, 68, 0.34);
+    background: var(--cd-fef2f2, #fef2f2);
+  }
+
+  &.jb-share-btn--email {
+    color: var(--cd-854d0e, #854d0e);
+    border-color: rgba(217, 119, 6, 0.32);
+    background: var(--cd-fffbeb, #fffbeb);
+  }
+
+  &.jb-share-btn--copy {
+    color: var(--cd-334155, #334155);
+    border-color: rgba(100, 116, 139, 0.32);
+    background: var(--cd-f8fafc, #f8fafc);
+  }
+}
+
+@include media-md-max {
+  .jb-share-modal { max-width: 100%; }
+  .jb-share-grid { grid-template-columns: 1fr; }
+  .jb-share-preview-image { height: 148px; }
+  .jb-share-popup-warning { align-items: flex-start; flex-wrap: wrap; }
+  .jb-share-popup-warning__action { width: 100%; }
+}
+
 // ── CARD QUICK-ACTIONS (Edit / Delete icon buttons on card header) ─
 // Same .um-iab icon-button style as the Community/Business admin pages,
 // including its CSS-only tooltip (via the `data-tip` attribute).
@@ -2631,7 +2809,10 @@ ms; }
     background: rgba(2,132,199,0.08);
     border-color: rgba(2,132,199,0.22);
     color: $color-info-text;
-    &:hover { background: $color-info-text; border-color: $color-info-text; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+    // Fixed (not reactive) fill — $color-info-text lightens in dark mode
+    // for body-text contrast, which would wash out the fixed white label
+    // if used as this hover state's solid background instead.
+    &:hover { background: $color-info; border-color: $color-info; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {

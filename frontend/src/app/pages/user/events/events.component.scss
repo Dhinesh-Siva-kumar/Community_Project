@@ -95,7 +95,7 @@
   font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
   @include transition-quick(all);
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--active { background: $color-dark; color: #fff; }
+  &--active { background: $color-text-primary; color: $color-bg-page; }
 }
 
 .biz-add-btn {
@@ -336,7 +336,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid rgba(251, 191, 36, 0.35);
-  background: rgba(255, 251, 235, 0.9);
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   border-radius: 999px;
   padding: 7px 14px;
@@ -449,7 +449,7 @@
   padding: 12px;
   border: 1px solid rgba(251, 191, 36, 0.16);
   border-radius: 12px;
-  background: linear-gradient(180deg, $color-bg-card 0%, rgba(255, 251, 235, 0.45) 100%);
+  background: $color-bg-card;
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
 
   &:hover {
@@ -467,7 +467,7 @@
   }
 
   &--filled {
-    background: linear-gradient(180deg, $color-bg-card 0%, rgba(254, 243, 199, 0.38) 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-warning-light 100%);
     border-color: rgba(245, 158, 11, 0.32);
 
     .jb-adv-date-help {
@@ -512,7 +512,7 @@
 
 .jb-quick-date-btn {
   border: 1px solid rgba(251, 191, 36, 0.35);
-  background: rgba(255, 251, 235, 0.9);
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   border-radius: 999px;
   padding: 6px 12px;

@@ -79,7 +79,10 @@
               </div>
               <div class="col-md-6">
                 <label class="prf-label" for="phoneNo">{{ 'user.profile.phone' | translate }}</label>
-                <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" [readonly]="!editMode()" [placeholder]="'user.profile.phoneNumber' | translate" />
+                <input id="phoneNo" type="text" class="form-control" formControlName="phoneNo" maxlength="20" readonly [placeholder]="'user.profile.phoneNumber' | translate" />
+                @if (editMode()) {
+                  <small class="form-text text-muted">{{ 'user.profile.phoneCannotChange' | translate }}</small>
+                }
               </div>
               <div class="col-md-6">
                 <label class="prf-label" for="whatsappNo">{{ 'user.profile.whatsapp' | translate }}</label>
@@ -149,12 +152,9 @@
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="prf-label">{{ 'user.profile.country' | translate }}</label>
+                <input type="text" class="form-control" [value]="u.country || 'Not set'" readonly />
                 @if (editMode()) {
-                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                    [placeholder]="'user.profile.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
-                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
-                } @else {
-                  <input type="text" class="form-control" [value]="u.country || 'Not set'" readonly />
+                  <small class="form-text text-muted">{{ 'user.profile.countryCannotChange' | translate }}</small>
                 }
               </div>
               @if (adminLevels().length >= 1) {

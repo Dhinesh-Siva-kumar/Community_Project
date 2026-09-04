@@ -31,6 +31,9 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
+import { environment } from '../../../../environments/environment';
+
+type JobSharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
 // ─── Validators ──────────────────────────────────────────────
 function urlValidator(control: AbstractControl): ValidationErrors | null {
@@ -232,6 +235,15 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   showDeleteConfirm  = signal(false);
   jobToDelete        = signal<Job | null>(null);
   deleting           = signal(false);
+
+  // ─── Share modal — native Web Share API is tried first (see
+  // shareJob()); this popup is the fallback for browsers/desktops
+  // without it, offering the same social platforms as the post-share
+  // popup on the dashboard/community feeds. ────────────────────
+  shareModalOpen     = signal(false);
+  shareTargetJob     = signal<Job | null>(null);
+  sharePopupBlocked  = signal(false);
+  blockedShareUrl    = signal<string | null>(null);
 
   // ─── Computed: current user helpers ─────────────────────────
   currentUserId  = computed(() => this.authService.currentUser()?.id ?? '');
@@ -1253,12 +1265,146 @@ export class UserJobsComponent implements OnInit, OnDestroy {
 
   shareJob(job: Job, event: Event): void {
     event.stopPropagation();
-    const text = `${job.title}${job.companyName ? ' at ' + job.companyName : ''}`;
-    if (navigator.share) {
-      navigator.share({ title: job.title, text }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text).then(() => this.toast.success('user.jobs.toast.copiedClipboard')).catch(() => {});
+    // Always shows the WhatsApp/Facebook/etc. popup instead of falling back
+    // to navigator.share() — Chrome supports the native Web Share API (and
+    // would otherwise hand off to the OS share sheet), but this popup should
+    // be consistent across every browser.
+    this.openShareModal(job);
+  }
+
+  openShareModal(job: Job): void {
+    this.shareTargetJob.set(job);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    this.shareModalOpen.set(true);
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen.set(false);
+    this.shareTargetJob.set(null);
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+  }
+
+  shareVia(platform: JobSharePlatform): void {
+    const job = this.shareTargetJob();
+    if (!job) return;
+
+    const shareUrl = this.getJobShareUrl(job.id);
+    const text = this.getJobShareText(job);
+    const imageUrl = this.getJobShareImage(job);
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(text);
+    const encodedTextWithUrl = encodeURIComponent(`${shareUrl}\n\n${text}`);
+    const encodedImage = imageUrl ? encodeURIComponent(imageUrl) : '';
+
+    let target = '';
+    switch (platform) {
+      case 'whatsapp':
+        target = `https://wa.me/?text=${encodedTextWithUrl}`;
+        break;
+      case 'facebook':
+        target = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'x':
+        target = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'telegram':
+        target = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        break;
+      case 'linkedin':
+        target = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'email':
+        target = `mailto:?subject=${encodeURIComponent(job.title)}&body=${encodedTextWithUrl}`;
+        break;
+      case 'pinterest':
+        target = imageUrl
+          ? `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImage}&description=${encodedText}`
+          : `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedText}`;
+        break;
     }
+
+    if (platform === 'email') {
+      window.location.href = target;
+      return;
+    }
+
+    this.openShareTarget(target, platform);
+  }
+
+  private openShareTarget(target: string, platform: JobSharePlatform): void {
+    const popupFeatures = platform === 'whatsapp' ? 'width=980,height=760' : 'width=680,height=720';
+
+    const popup = window.open(target, '_blank', popupFeatures);
+    if (!popup) {
+      this.sharePopupBlocked.set(true);
+      this.blockedShareUrl.set(target);
+      return;
+    }
+
+    this.sharePopupBlocked.set(false);
+    this.blockedShareUrl.set(null);
+    popup.opener = null;
+  }
+
+  openShareInSameTab(): void {
+    const target = this.blockedShareUrl();
+    if (!target) return;
+    window.location.href = target;
+  }
+
+  copyShareLink(): void {
+    const job = this.shareTargetJob();
+    if (!job) return;
+
+    const shareUrl = this.getJobShareUrl(job.id);
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => this.toast.success('user.jobs.toast.shareLinkCopied'))
+      .catch(() => this.toast.error('user.jobs.toast.failedCopyShareLink'));
+  }
+
+  getShareText(job: Job): string {
+    return this.getJobShareText(job);
+  }
+
+  private getJobShareText(job: Job): string {
+    return job.companyName ? `${job.title} at ${job.companyName}` : job.title;
+  }
+
+  private getJobShareUrl(jobId: string): string {
+    const base = this.getShareBaseOrigin();
+    return `${base}/user/jobs?jobId=${jobId}`;
+  }
+
+  private getJobShareImage(job: Job): string | null {
+    const path = job.companyLogo || job.images?.[0];
+    return path ? this.resolveShareImageUrl(path) : null;
+  }
+
+  private resolveShareImageUrl(pathOrUrl: string): string {
+    if (/^(https?:)?\/\//i.test(pathOrUrl) || pathOrUrl.startsWith('data:')) {
+      return pathOrUrl;
+    }
+    const base = environment.wsUrl || window.location.origin;
+    const normalized = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    return `${base.replace(/\/$/, '')}${normalized}`;
+  }
+
+  private getShareBaseOrigin(): string {
+    const wsOrigin = (environment.wsUrl || '').trim();
+    if (wsOrigin) return wsOrigin.replace(/\/$/, '');
+
+    const apiUrl = (environment.apiUrl || '').trim();
+    if (apiUrl) {
+      try {
+        return new URL(apiUrl, window.location.origin).origin;
+      } catch {
+        // ignore and fall back to current origin
+      }
+    }
+
+    return window.location.origin.replace(/\/$/, '');
   }
 
   // ─── Card Helpers ────────────────────────────────────────────
