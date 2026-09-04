@@ -760,6 +760,64 @@ html[lang='ta'] {
   --cd-0369a1: #0369a1; // sky-700 icon (created)
   --cd-0e7490: #0e7490; // cyan-700 icon (updated)
   --cd-9333ea: #9333ea; // purple-600 icon (owner username)
+
+  // ── Business pages' filter surfaces — the shared `jb-*` family used by the
+  // Admin and User Business pages: the clickable count/stat cards, the
+  // List/Category + All/Pending tab switch, the filter card and the Advanced
+  // Filters drawer (pills, date cards, active chips). These were hardcoded
+  // white / amber-50 literals that stayed light-mode-only, so the dark theme
+  // showed white cards and unreadable amber-600 text; tokenised here so both
+  // themes get a real surface and readable accent text.
+  --jbf-stat-bg:              rgba(255, 255, 255, 0.92);
+  --jbf-stat-border:          rgba(251, 191, 36, 0.18);
+  --jbf-stat-hover-border:    rgba(251, 191, 36, 0.55);
+  --jbf-stat-hover-shadow:    0 6px 20px rgba(251, 191, 36, 0.18);
+  --jbf-stat-active-bg:       rgba(251, 191, 36, 0.08);
+
+  --jbf-soft-bg:              rgba(255, 251, 235, 0.90);
+  --jbf-soft-border:          rgba(251, 191, 36, 0.35);
+  --jbf-soft-text:            #B45309;
+  --jbf-hover-border:         rgba(245, 158, 11, 0.55);
+  --jbf-hover-shadow:         0 3px 10px rgba(245, 158, 11, 0.14);
+  --jbf-focus-ring:           rgba(245, 158, 11, 0.40);
+
+  --jbf-active-bg:            linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  --jbf-active-border:        #D97706;
+  --jbf-active-text:          #FFFFFF;
+  --jbf-active-shadow:        0 4px 12px rgba(245, 158, 11, 0.24);
+
+  --jbf-date-card-bg:         linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 235, 0.45) 100%);
+  --jbf-date-card-filled-bg:  linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.38) 100%);
+  --jbf-date-card-border:     rgba(251, 191, 36, 0.16);
+  --jbf-dashed-border:        rgba(148, 163, 184, 0.35);
+
+  --jbf-tabs-border:          rgba(148, 163, 184, 0.20);
+  --jbf-tabs-shadow:          0 6px 18px rgba(15, 23, 42, 0.06);
+  --jbf-tabs-inset:           rgba(255, 255, 255, 0.96);
+
+  --jbf-chip-remove-bg:       rgba(180, 83, 9, 0.15);
+  --jbf-chip-remove-bg-hover: rgba(180, 83, 9, 0.30);
+
+  // Table/grid row hover wash — same amber-50 tint used by every admin
+  // list page's `.xx-row:hover` (Business, Jobs, Approval, Community,
+  // User Management). Tokenised here (User Management is the first to
+  // consume it) so the pale-yellow wash doesn't stay stuck at its light
+  // value once a dark card sits behind it.
+  --jbf-row-hover-bg:         rgba(254, 243, 199, 0.35);
+
+  // ── User Management stat-card icons — one hue per stat (total/active/
+  // blocked/trusted), previously hardcoded inline on each button in the
+  // template via `--ic`/`--bg`, so dark mode never reached them. Consumed
+  // the same way (inline `style="--ic:var(--um-stat-total)..."`), just
+  // pointed at a theme-reactive var instead of a literal hex. ──────────
+  --um-stat-total:     #4F46E5;
+  --um-stat-total-bg:  #EEF2FF;
+  --um-stat-active:    #059669;
+  --um-stat-active-bg: #ECFDF5;
+  --um-stat-blocked:      #DC2626;
+  --um-stat-blocked-bg:   #FEF2F2;
+  --um-stat-trusted:      #D97706;
+  --um-stat-trusted-bg:   #FFFBEB;
 }
 
 // ── Dark-mode tokens — Amber brand palette ────────────────────
@@ -959,6 +1017,57 @@ html[lang='ta'] {
   --cd-0369a1: #7dd3fc; // sky-300 (was sky-700 icon)
   --cd-0e7490: #67e8f9; // cyan-300 (was cyan-700 icon)
   --cd-9333ea: #d8b4fe; // purple-300 (was purple-600 icon)
+
+  // ── Business pages' filter surfaces — dark equivalents (see the light
+  // block for what each one drives). White/near-white surfaces become the
+  // card/elevated stone tones, and the amber-600 accent text lifts to
+  // amber-300 so it stays legible on a dark tint. ───────────────────────
+  --jbf-stat-bg:              #1C1917;
+  --jbf-stat-border:          rgba(251, 191, 36, 0.20);
+  --jbf-stat-hover-border:    rgba(251, 191, 36, 0.50);
+  --jbf-stat-hover-shadow:    0 6px 20px rgba(251, 191, 36, 0.28), 0 6px 20px rgba(0, 0, 0, 0.35);
+  --jbf-stat-active-bg:       rgba(251, 191, 36, 0.14);
+
+  --jbf-soft-bg:              rgba(251, 191, 36, 0.10);
+  --jbf-soft-border:          rgba(251, 191, 36, 0.30);
+  --jbf-soft-text:            #FCD34D;
+  --jbf-hover-border:         rgba(252, 211, 77, 0.55);
+  --jbf-hover-shadow:         0 3px 10px rgba(252, 211, 77, 0.22), 0 3px 10px rgba(0, 0, 0, 0.30);
+  --jbf-focus-ring:           rgba(252, 211, 77, 0.50);
+
+  --jbf-active-bg:            linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+  --jbf-active-border:        #FCD34D;
+  --jbf-active-text:          #1C1917;
+  --jbf-active-shadow:        0 4px 12px rgba(0, 0, 0, 0.45);
+
+  --jbf-date-card-bg:         linear-gradient(180deg, #201C16 0%, #2A2113 100%);
+  --jbf-date-card-filled-bg:  linear-gradient(180deg, #241F17 0%, #34290F 100%);
+  --jbf-date-card-border:     rgba(251, 191, 36, 0.22);
+  --jbf-dashed-border:        rgba(168, 162, 158, 0.35);
+
+  --jbf-tabs-border:          rgba(120, 113, 108, 0.35);
+  --jbf-tabs-shadow:          0 6px 18px rgba(0, 0, 0, 0.40);
+  --jbf-tabs-inset:           rgba(255, 255, 255, 0.04);
+
+  --jbf-chip-remove-bg:       rgba(252, 211, 77, 0.18);
+  --jbf-chip-remove-bg-hover: rgba(252, 211, 77, 0.34);
+
+  // Row hover wash — dark equivalent. The light-mode pale-yellow tint would
+  // read as an odd bright smear over a dark row, so this becomes a soft
+  // warm-amber-on-dark wash instead of a lightened version of the same hue.
+  --jbf-row-hover-bg:         rgba(251, 191, 36, 0.10);
+
+  // ── User Management stat-card icons — dark equivalents. Icon hue
+  // lightens (readable on a dark chip), its pastel bg becomes a dark,
+  // desaturated tint of the same hue instead of staying paper-white. ──
+  --um-stat-total:     #A5B4FC;
+  --um-stat-total-bg:  #211D45;
+  --um-stat-active:    #6EE7B7;
+  --um-stat-active-bg: #123A29;
+  --um-stat-blocked:      #FCA5A5;
+  --um-stat-blocked-bg:   #3A1B15;
+  --um-stat-trusted:      #FCD34D;
+  --um-stat-trusted-bg:   #33260F;
 }
 
 // ══════════════════════════════════════════════════════════════

@@ -204,6 +204,45 @@ $color-border:              var(--color-border, #E7E5E4);
 $color-border-strong:       var(--color-border-strong, #D6D3D1);
 
 // ============================================================
+// BUSINESS FILTER SURFACES (`jb-*` family)
+// ============================================================
+// Theme-reactive — var(--x, <light-fallback>) driven by the global
+// :root / [data-theme='dark'] block in styles.scss (see ThemeService).
+// Drives the Business pages' clickable count/stat cards, tab switch,
+// filter card and Advanced Filters drawer (pills, date cards, chips).
+
+$jbf-stat-bg:              var(--jbf-stat-bg, rgba(255, 255, 255, 0.92));
+$jbf-stat-border:          var(--jbf-stat-border, rgba(251, 191, 36, 0.18));
+$jbf-stat-hover-border:    var(--jbf-stat-hover-border, rgba(251, 191, 36, 0.55));
+$jbf-stat-hover-shadow:    var(--jbf-stat-hover-shadow, 0 6px 20px rgba(251, 191, 36, 0.18));
+$jbf-stat-active-bg:       var(--jbf-stat-active-bg, rgba(251, 191, 36, 0.08));
+
+$jbf-soft-bg:              var(--jbf-soft-bg, rgba(255, 251, 235, 0.90));
+$jbf-soft-border:          var(--jbf-soft-border, rgba(251, 191, 36, 0.35));
+$jbf-soft-text:            var(--jbf-soft-text, #B45309);
+$jbf-hover-border:         var(--jbf-hover-border, rgba(245, 158, 11, 0.55));
+$jbf-hover-shadow:         var(--jbf-hover-shadow, 0 3px 10px rgba(245, 158, 11, 0.14));
+$jbf-focus-ring:           var(--jbf-focus-ring, rgba(245, 158, 11, 0.40));
+
+$jbf-active-bg:            var(--jbf-active-bg, linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%));
+$jbf-active-border:        var(--jbf-active-border, #D97706);
+$jbf-active-text:          var(--jbf-active-text, #FFFFFF);
+$jbf-active-shadow:        var(--jbf-active-shadow, 0 4px 12px rgba(245, 158, 11, 0.24));
+
+$jbf-date-card-bg:         var(--jbf-date-card-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 235, 0.45) 100%));
+$jbf-date-card-filled-bg:  var(--jbf-date-card-filled-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.38) 100%));
+$jbf-date-card-border:     var(--jbf-date-card-border, rgba(251, 191, 36, 0.16));
+$jbf-dashed-border:        var(--jbf-dashed-border, rgba(148, 163, 184, 0.35));
+
+$jbf-tabs-border:          var(--jbf-tabs-border, rgba(148, 163, 184, 0.20));
+$jbf-tabs-shadow:          var(--jbf-tabs-shadow, 0 6px 18px rgba(15, 23, 42, 0.06));
+$jbf-tabs-inset:           var(--jbf-tabs-inset, rgba(255, 255, 255, 0.96));
+
+$jbf-chip-remove-bg:       var(--jbf-chip-remove-bg, rgba(180, 83, 9, 0.15));
+$jbf-chip-remove-bg-hover: var(--jbf-chip-remove-bg-hover, rgba(180, 83, 9, 0.30));
+$jbf-row-hover-bg:         var(--jbf-row-hover-bg, rgba(254, 243, 199, 0.35));
+
+// ============================================================
 // GRADIENT DEFINITIONS
 // ============================================================
 
