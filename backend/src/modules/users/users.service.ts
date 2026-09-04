@@ -148,8 +148,9 @@ export async function getProfile(userId: string) {
 }
 
 export async function updateProfile(userId: string, data: UpdateUserDtoType) {
+  const currentUser = await db('users').where({ id: userId }).first() as UserRow | undefined;
+
   if (data.avatar) {
-    const currentUser = await db('users').where({ id: userId }).first() as UserRow | undefined;
     const oldAvatar = currentUser?.avatar;
     if (oldAvatar && oldAvatar.startsWith('/uploads/profiles/')) {
       const filePath = path.join(path.resolve(env.UPLOADS_PATH), 'profiles', path.basename(oldAvatar));
@@ -160,11 +161,16 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   const updateData: Record<string, unknown> = {};
   if (data.userName !== undefined) updateData['user_name'] = data.userName;
   if (data.displayName !== undefined) updateData['display_name'] = data.displayName;
-  if (data.phoneNo !== undefined) updateData['phone_no'] = data.phoneNo;
   if (data.whatsappNo !== undefined) updateData['whatsapp_no'] = data.whatsappNo;
+  if (data.phoneNo !== undefined) {
+    // Phone number is verified via OTP at registration and shown read-only
+    // in the profile UI — this mirrors that lock server-side so it can't be
+    // changed by calling the API directly either.
+    if (currentUser?.phone_no) throw new AppError(400, 'Registered phone number cannot be changed', 'PHONE_NUMBER_CHANGED_ONCE');
+    updateData['phone_no'] = data.phoneNo;
+  }
   if (data.email !== undefined) {
-    const currentUser = await db('users').where({ id: userId }).first() as UserRow;
-    if (currentUser.email) throw new AppError(400, 'Email address cannot be changed once set', 'EMAIL_ADDRESS_CHANGED_ONCE');
+    if (currentUser?.email) throw new AppError(400, 'Email address cannot be changed once set', 'EMAIL_ADDRESS_CHANGED_ONCE');
     const taken = await db('users').where({ email: data.email }).whereNot({ id: userId }).first();
     if (taken) throw new AppError(409, 'Email address is already in use by another account', 'EMAIL_ADDRESS_ALREADY_USE');
     updateData['email'] = data.email;
@@ -184,12 +190,19 @@ export async function updateProfile(userId: string, data: UpdateUserDtoType) {
   if (data.course !== undefined) updateData['course'] = data.course;
   if (data.graduationYear !== undefined) updateData['graduation_year'] = data.graduationYear;
 
-  // Location — country/state/city are stored as both a real FK (validated
-  // against each other and against the postal-code format below) and a
-  // denormalized text mirror resolved server-side, exactly like Business.
+  // Location — country is fixed once registered (mirrors email/phone above)
+  // and shown read-only in the profile UI; only state/city beneath it stay
+  // editable. State/city are stored as both a real FK (validated against
+  // each other and against the postal-code format below) and a denormalized
+  // text mirror resolved server-side, exactly like Business. The hierarchy
+  // check still validates against the account's real country even though
+  // countryId itself is no longer part of the request.
+  if (data.countryId !== undefined && currentUser?.country_id) {
+    throw new AppError(400, 'Registered country cannot be changed', 'COUNTRY_CHANGED_ONCE');
+  }
   if (data.countryId !== undefined || data.stateId !== undefined || data.cityId !== undefined) {
     await validateAddressHierarchy({
-      countryId: data.countryId,
+      countryId: data.countryId ?? currentUser?.country_id ?? undefined,
       stateId: data.stateId,
       cityId: data.cityId,
       pincode: data.pincode,

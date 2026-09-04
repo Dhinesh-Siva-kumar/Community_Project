@@ -221,7 +221,7 @@
   bottom: 8px;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.85);
+  background: $color-bg-card;
   pointer-events: none;
 }
 
@@ -259,7 +259,7 @@
 
 .jb-day-toggle {
   padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: rgba(255,255,255,0.7);
+  border: 1.5px solid $color-border; background: $color-bg-page;
   color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
   display: inline-flex; align-items: center; gap: 4px;
   @include transition-short(all);
@@ -437,8 +437,8 @@
     outline: none;
     transition: background 0.15s, color 0.15s;
 
-    &:hover { background: $amber-50; }
-    &:focus-visible { background: $amber-50; }
+    &:hover { background: $color-primary-light; }
+    &:focus-visible { background: $color-primary-light; }
 
     &--selected {
       background: rgba($color-primary, 0.1);
@@ -496,7 +496,7 @@
         outline: none;
       }
 
-      &.ss-placeholder .ss-trigger-text { color: $gray-400; }
+      &.ss-placeholder .ss-trigger-text { color: $color-text-muted; }
 
       &:disabled { opacity: 0.55; cursor: not-allowed; }
     }
@@ -507,7 +507,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 14px;
-      color: $dark;
+      color: $color-text-body;
     }
 
     .ss-caret {
@@ -562,17 +562,17 @@
       border: 1.5px solid $border;
       border-radius: 8px;
       font-size: 13px;
-      color: $dark;
+      color: $color-text-body;
       background: $bg-neutral;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
 
-      &::placeholder { color: $gray-400; }
+      &::placeholder { color: $color-text-muted; }
 
       &:focus {
         border-color: $primary;
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
-        background: $white;
+        background: $color-bg-card;
       }
     }
 
@@ -592,7 +592,7 @@
       align-items: center;
       transition: color 0.15s;
 
-      &:hover { color: $dark; }
+      &:hover { color: $color-text-primary; }
     }
 
     .ss-list {
@@ -614,12 +614,12 @@
       padding: 8px 10px;
       border-radius: 8px;
       font-size: 14px;
-      color: $dark;
+      color: $color-text-body;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
       list-style: none;
 
-      &:hover { background: $amber-50; color: $color-primary-darker; }
+      &:hover { background: $color-primary-light; color: $color-primary-darker; }
 
       &.ss-option-selected {
         background: rgba($primary, 0.1);

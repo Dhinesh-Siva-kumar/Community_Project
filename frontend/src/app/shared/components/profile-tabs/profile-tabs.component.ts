@@ -42,6 +42,18 @@ export class ProfileTabsComponent implements OnChanges {
     return this.tabs[this.activeIndex]?.bgColor ?? null;
   }
 
+  // The stylesheet derives the sliding indicator's width and slide distance
+  // from these, so the equal-width variant stays correct for any tab count and
+  // any label length. Written as strings because they are CSS custom property
+  // values, not lengths — Angular passes them straight to setProperty().
+  get tabCountVar(): string {
+    return String(this.tabs.length);
+  }
+
+  get activeIndexVar(): string {
+    return String(this.activeIndex);
+  }
+
   select(tab: ProfileTab): void {
     if (!tab.disabled) this.tabChange.emit(tab.id);
   }

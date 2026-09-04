@@ -31,7 +31,7 @@ $_tab-all-shadow:    rgba(37, 99, 235, .16);
 $_tab-joined-text:   var(--cd-0f766e, #0f766e);
 $_tab-joined-badge:  rgba(15, 118, 110, .14);
 $_tab-joined-shadow: rgba(15, 118, 110, .14);
-$_tab-trend-text:    #c2410c;
+$_tab-trend-text:    var(--cd-c2410c, #c2410c);
 $_tab-trend-badge:   rgba(194, 65, 12, .13);
 $_tab-trend-shadow:  rgba(194, 65, 12, .16);
 
@@ -145,8 +145,14 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   &:hover { background: rgba($color-stone-900, 0.04); }
 
   &.active {
-    background: $color-dark;
-    color: $color-white;
+    // Was a fixed $color-dark/$color-white pair — near-invisible in dark
+    // mode since $color-dark (#1C1917) is essentially the same shade as
+    // the dark-mode card/page background. These two tokens are exact
+    // inverse-polarity pairs (see _colors.scss), so swapping to them keeps
+    // an unchanged look in light mode while staying a real high-contrast
+    // "pressed" pill once the page itself goes dark.
+    background: $color-text-primary;
+    color: $color-bg-page;
   }
 }
 
@@ -392,7 +398,7 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   height: 40px;
   border-radius: $radius-full;
   border: 1.5px solid $color-border;
-  background: $color-white;
+  background: $color-bg-card;
   color: $color-stone-700;
   display: flex;
   align-items: center;
@@ -571,7 +577,11 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   border-radius: $radius-full;
   border: 1.5px solid rgba($color-primary, 0.85);
   background: rgba($color-primary-dark, 0.92);
-  color: $color-stone-900;
+  // Was the reactive $color-stone-900 — correct in light mode (dark text)
+  // but flips to near-white in dark mode, going illegible against this
+  // button's own fixed-amber fill. $color-on-primary is the fixed
+  // dark-on-amber pairing used by every other primary CTA on this page.
+  color: $color-on-primary;
   font-weight: $font-weight-extrabold;
   font-size: 12.5px;
   letter-spacing: 0.01em;
@@ -962,7 +972,7 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   i { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
 
   &--needs-info {
-    color: #7c3aed;
+    color: var(--cd-7c3aed, #7c3aed);
     background: rgba(124, 58, 237, 0.08);
   }
 }
@@ -1532,9 +1542,9 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
   color: $color-primary-darker; font-size: 10px; font-weight: $font-weight-bold;
   i { font-size: 9px; }
 
-  &--pending  { background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); color: #b45309; }
-  &--rejected { background: rgba(220, 38, 38, 0.12);  border-color: rgba(220, 38, 38, 0.40);  color: #dc2626; }
-  &--needs-info { background: rgba(124, 58, 237, 0.12); border-color: rgba(124, 58, 237, 0.40); color: #7c3aed; }
+  &--pending  { background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.45); color: var(--cd-b45309, #b45309); }
+  &--rejected { background: rgba(220, 38, 38, 0.12);  border-color: rgba(220, 38, 38, 0.40);  color: var(--cd-dc2626, #dc2626); }
+  &--needs-info { background: rgba(124, 58, 237, 0.12); border-color: rgba(124, 58, 237, 0.40); color: var(--cd-7c3aed, #7c3aed); }
 }
 
 // ── Owner action menu (Edit/Delete) — a three-dot trigger + dropdown ──
@@ -1569,7 +1579,9 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
     &:hover, &:focus-visible { background: rgba(28, 25, 23, 0.75); border-color: #fff; color: #fff; }
   }
 }
-.uc-card-menu--open .uc-card-menu-trigger { background: $color-dark; border-color: $color-dark; color: #fff; }
+// Same inverse-polarity fix as .uc-view-btn.active above — a fixed
+// $color-dark fill would be nearly invisible against the dark-mode card bg.
+.uc-card-menu--open .uc-card-menu-trigger { background: $color-text-primary; border-color: $color-text-primary; color: $color-bg-page; }
 
 .uc-card-menu-panel {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;

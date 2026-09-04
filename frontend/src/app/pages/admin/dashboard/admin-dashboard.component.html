@@ -24,7 +24,7 @@
       </span>
       <div class="db-welcome__text">
         <h1 class="db-welcome__title">{{ getGreetingText() }}</h1>
-        <p class="db-welcome__sub">{{ getAdminRole() }} · Here's today's community summary.</p>
+        <p class="db-welcome__sub">{{ getAdminRole() }} · {{ 'admin.dashboard.todaysSummary' | translate }}</p>
       </div>
     </div>
     <span class="db-welcome__status">
@@ -439,7 +439,7 @@
                   class="pagination-dot" 
                   [class.active]="pageNum === activityCurrentPage()"
                   (click)="goToActivityPage(pageNum)"
-                  [attr.aria-label]="'Go to page ' + pageNum"
+                  [attr.aria-label]="'admin.dashboard.goToPage' | translate: { page: pageNum }"
                   type="button">
                 </button>
               }

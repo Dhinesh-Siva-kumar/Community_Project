@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ApexChartComponent } from '../../../shared/components/apex-chart/apex-chart.component';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslateLoader, TranslatePipe, TranslateService, TranslationObject } from '@ngx-translate/core';
 
 type ApexOptions = ApexCharts.ApexOptions;
 type DatePreset = '7d' | '30d' | '90d' | '365d' | 'custom';
@@ -35,6 +35,21 @@ const RED     = '#DC2626';
 export class AdminAnalyticsComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
+  private translateLoader = inject(TranslateLoader);
+
+  /** ApexCharts options are plain objects, so series names/labels can't use the
+   * translate pipe. They are resolved with `instant()` inside computed(), which
+   * is not reactive on its own — this signal re-runs those computeds when the
+   * user switches language. */
+  private lang = signal(this.translate.currentLang);
+
+  /** Resolve a catalog key in the active language, tracking `lang` so callers
+   * inside computed() re-evaluate on switch. */
+  private t(key: string): string {
+    this.lang();
+    return this.translate.instant(key) as string;
+  }
 
   loading  = signal(true);
   exporting = signal<'pdf' | 'excel' | null>(null);
@@ -55,6 +70,12 @@ export class AdminAnalyticsComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.translate.onLangChange.subscribe((e) => this.lang.set(e.lang));
+    // Pre-load the English catalog so the PDF export (which cannot render
+    // Tamil) has English strings available synchronously — see englishResolver().
+    this.translateLoader.getTranslation('en').subscribe((c: TranslationObject) => {
+      this.enCatalog = c as Record<string, unknown>;
+    });
     this.load();
   }
 
@@ -129,7 +150,7 @@ export class AdminAnalyticsComponent implements OnInit {
       { icon: 'bi-arrow-repeat',        label: 'admin.analytics.label.retentionRate',      value: `${ov.retentionRate.rate}%`,     accent: 'green'  },
       { icon: 'bi-briefcase-fill',      label: 'admin.analytics.label.activeJobs',         value: fmt(ov.jobActivity.active),      accent: 'cyan'   },
       { icon: 'bi-patch-check-fill',    label: 'admin.analytics.label.verifiedBusinesses', value: fmt(ov.businessGrowth.verified), accent: 'rose'   },
-      { icon: 'bi-globe-americas',      label: 'admin.analytics.label.topCountry',         value: topCountry?.country ?? '—',      accent: 'purple', sub: topCountry ? `${fmt(topCountry.count)} users` : '' },
+      { icon: 'bi-globe-americas',      label: 'admin.analytics.label.topCountry',         value: topCountry?.country ?? '—',      accent: 'purple', sub: topCountry ? `${fmt(topCountry.count)} ${this.t('admin.analytics.series.users').toLowerCase()}` : '' },
     ];
   });
 
@@ -153,7 +174,7 @@ export class AdminAnalyticsComponent implements OnInit {
     if (!s) return undefined;
     return {
       chart: this.baseChart('line', 280),
-      series: [{ name: 'New Users', data: s.data }],
+      series: [{ name: this.t('admin.analytics.series.newUsers'), data: s.data }],
       xaxis: { categories: s.labels.map((l) => this.formatLabel(l)) },
       colors: [AMBER],
       stroke: { curve: 'smooth', width: 3 },
@@ -169,7 +190,7 @@ export class AdminAnalyticsComponent implements OnInit {
     const top = rows.slice(0, 10);
     return {
       chart: this.baseChart('bar', 280),
-      series: [{ name: 'Users', data: top.map((r) => r.count) }],
+      series: [{ name: this.t('admin.analytics.series.users'), data: top.map((r) => r.count) }],
       xaxis: { categories: top.map((r) => r.country) },
       plotOptions: { bar: { horizontal: true, borderRadius: 4, distributed: true } },
       colors: [INDIGO, AMBER, GREEN, ROSE, PURPLE, CYAN, SLATE, RED, '#0D9488', '#C026D3'],
@@ -184,7 +205,7 @@ export class AdminAnalyticsComponent implements OnInit {
     if (!s) return undefined;
     return {
       chart: this.baseChart('bar', 220),
-      series: [{ name: 'Jobs Posted', data: s.data }],
+      series: [{ name: this.t('admin.analytics.series.jobsPosted'), data: s.data }],
       xaxis: { categories: s.labels.map((l) => this.formatLabel(l)) },
       colors: [CYAN],
       plotOptions: { bar: { borderRadius: 4, columnWidth: '55%' } },
@@ -198,7 +219,7 @@ export class AdminAnalyticsComponent implements OnInit {
     if (!s) return undefined;
     return {
       chart: this.baseChart('line', 220),
-      series: [{ name: 'Businesses Registered', data: s.data }],
+      series: [{ name: this.t('admin.analytics.series.businessesRegistered'), data: s.data }],
       xaxis: { categories: s.labels.map((l) => this.formatLabel(l)) },
       colors: [ROSE],
       stroke: { curve: 'smooth', width: 3 },
@@ -214,9 +235,9 @@ export class AdminAnalyticsComponent implements OnInit {
     return {
       chart: this.baseChart('line', 280),
       series: [
-        { name: 'Posts',     data: e.posts.data },
-        { name: 'Comments',  data: e.comments.data },
-        { name: 'Reactions', data: e.reactions.data },
+        { name: this.t('admin.analytics.series.posts'), data: e.posts.data },
+        { name: this.t('admin.analytics.series.comments'), data: e.comments.data },
+        { name: this.t('admin.analytics.series.reactions'), data: e.reactions.data },
       ],
       xaxis: { categories: e.posts.labels.map((l) => this.formatLabel(l)) },
       colors: [AMBER, INDIGO, GREEN],
@@ -235,7 +256,7 @@ export class AdminAnalyticsComponent implements OnInit {
     return {
       chart: this.baseChart('donut', 220),
       series: [r.returned, notReturned],
-      labels: ['Returned', 'Did not return'],
+      labels: [this.t('admin.analytics.series.returned'), this.t('admin.analytics.series.didNotReturn')],
       colors: [GREEN, SLATE],
       dataLabels: { enabled: true },
       legend: { position: 'bottom' },
@@ -248,60 +269,64 @@ export class AdminAnalyticsComponent implements OnInit {
   // ── Export ───────────────────────────────────────────────────
   // Shared data shaping for both PDF and Excel exports — one source of
   // truth for what "a report" contains, formatted for each target's needs.
-  private buildReportSections(ov: AnalyticsOverview): { title: string; headers: string[]; rows: (string | number)[][] }[] {
+  private buildReportSections(
+    ov: AnalyticsOverview,
+    tr: (key: string) => string,
+  ): { title: string; headers: string[]; rows: (string | number)[][] }[] {
     const seriesRows = (s: { labels: string[]; data: number[] }) =>
       s.labels.map((l, i) => [this.formatLabel(l), s.data[i] ?? 0]);
+    const k = (suffix: string) => tr(`admin.analytics.report.${suffix}`);
 
     return [
       {
-        title: 'User Growth',
-        headers: ['Period', 'New Users'],
+        title: k('userGrowth'),
+        headers: [k('period'), k('newUsers')],
         rows: seriesRows(ov.userGrowth),
       },
       {
-        title: 'Active Users',
-        headers: ['Window', 'Users'],
+        title: k('activeUsers'),
+        headers: [k('window'), k('users')],
         rows: [
-          ['Today', ov.activeUsers.today],
-          ['This Week', ov.activeUsers.thisWeek],
-          ['This Month', ov.activeUsers.thisMonth],
+          [k('today'), ov.activeUsers.today],
+          [k('thisWeek'), ov.activeUsers.thisWeek],
+          [k('thisMonth'), ov.activeUsers.thisMonth],
         ],
       },
       {
-        title: 'Country Distribution',
-        headers: ['Country', 'Users'],
+        title: k('countryDistribution'),
+        headers: [k('country'), k('users')],
         rows: ov.countryDistribution.map((r) => [r.country, r.count]),
       },
       {
-        title: 'Job Activity — Posted Over Time',
-        headers: ['Period', 'Jobs Posted'],
+        title: k('jobActivityPosted'),
+        headers: [k('period'), k('jobsPosted')],
         rows: seriesRows(ov.jobActivity.posted),
       },
       {
-        title: 'Job Activity — Status',
-        headers: ['Status', 'Count'],
+        title: k('jobActivityStatus'),
+        headers: [k('status'), k('count')],
         rows: [
-          ['Active', ov.jobActivity.active],
-          ['Inactive', ov.jobActivity.inactive],
+          [k('active'), ov.jobActivity.active],
+          [k('inactive'), ov.jobActivity.inactive],
         ],
       },
       {
-        title: 'Business Growth — Registered Over Time',
-        headers: ['Period', 'Businesses Registered'],
+        title: k('businessGrowthRegistered'),
+        headers: [k('period'), k('businessesRegistered')],
         rows: seriesRows(ov.businessGrowth.registered),
       },
       {
-        title: 'Business Growth — Summary',
-        headers: ['Metric', 'Count'],
+        title: k('businessGrowthSummary'),
+        headers: [k('metric'), k('count')],
         rows: [
-          ['Total Registered', ov.businessGrowth.total],
-          ['Verified', ov.businessGrowth.verified],
-          ['Active', ov.businessGrowth.active],
+          [k('totalRegistered'), ov.businessGrowth.total],
+          [k('verified'), ov.businessGrowth.verified],
+          [k('active'), ov.businessGrowth.active],
         ],
       },
       {
-        title: 'Community Engagement',
-        headers: ['Period', 'Posts', 'Comments', 'Reactions'],
+        title: k('communityEngagement'),
+        headers: [k('period'), k('posts'), k('comments'), k('reactions')],
         rows: ov.communityEngagement.posts.labels.map((l, i) => [
           this.formatLabel(l),
           ov.communityEngagement.posts.data[i] ?? 0,
@@ -310,31 +335,49 @@ export class AdminAnalyticsComponent implements OnInit {
         ]),
       },
       {
-        title: 'Retention Rate',
-        headers: ['Metric', 'Value'],
+        title: k('retentionRate'),
+        headers: [k('metric'), k('value')],
         rows: [
-          ['Retention Rate', `${ov.retentionRate.rate}%`],
-          ['Eligible Users (30+ days old)', ov.retentionRate.eligible],
-          ['Returned in Last 30 Days', ov.retentionRate.returned],
+          [k('retentionRate'), `${ov.retentionRate.rate}%`],
+          [k('eligibleUsers'), ov.retentionRate.eligible],
+          [k('returnedLast30Days'), ov.retentionRate.returned],
         ],
       },
     ];
   }
+
+  /**
+   * jsPDF's built-in fonts carry no Tamil glyphs, so a Tamil PDF would render
+   * as blank boxes. The PDF export therefore always resolves against the
+   * English catalog; the Excel export (UTF-8 HTML) follows the active language.
+   */
+  private englishResolver(): (key: string) => string {
+    const en = this.enCatalog;
+    return (key: string) => {
+      const value = key.split('.').reduce<unknown>(
+        (acc, part) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined),
+        en,
+      );
+      return typeof value === 'string' ? value : (this.translate.instant(key) as string);
+    };
+  }
+  private enCatalog: Record<string, unknown> = {};
 
   exportPdf(): void {
     const ov = this.overview();
     if (!ov) return;
     this.exporting.set('pdf');
     try {
+      const tr = this.englishResolver();
       const doc = new jsPDF();
       doc.setFontSize(16);
-      doc.text('Advanced Analytics Report', 14, 18);
+      doc.text(tr('admin.analytics.report.title'), 14, 18);
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Range: ${ov.range.from} to ${ov.range.to}  ·  Granularity: ${ov.granularity}`, 14, 25);
+      doc.text(`${tr('admin.analytics.report.range')}: ${ov.range.from} ${tr('admin.analytics.report.to')} ${ov.range.to}  ·  ${tr('admin.analytics.report.granularity')}: ${ov.granularity}`, 14, 25);
 
       let y = 32;
-      for (const section of this.buildReportSections(ov)) {
+      for (const section of this.buildReportSections(ov, tr)) {
         if (y > 260) { doc.addPage(); y = 20; }
         doc.setFontSize(12);
         doc.setTextColor(20);
@@ -367,14 +410,15 @@ export class AdminAnalyticsComponent implements OnInit {
       const escapeHtml = (v: string | number) =>
         String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      const sectionsHtml = this.buildReportSections(ov).map((section) => {
+      const tr = (key: string) => this.translate.instant(key) as string;
+      const sectionsHtml = this.buildReportSections(ov, tr).map((section) => {
         const headerRow = `<tr>${section.headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`;
         const bodyRows = section.rows.map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
         return `<h3>${escapeHtml(section.title)}</h3><table border="1">${headerRow}${bodyRows}</table><br/>`;
       }).join('');
 
       const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head>
-        <body><h2>Advanced Analytics Report (${ov.range.from} to ${ov.range.to})</h2>${sectionsHtml}</body></html>`;
+        <body><h2>${tr('admin.analytics.report.title')} (${ov.range.from} ${tr('admin.analytics.report.to')} ${ov.range.to})</h2>${sectionsHtml}</body></html>`;
 
       const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);

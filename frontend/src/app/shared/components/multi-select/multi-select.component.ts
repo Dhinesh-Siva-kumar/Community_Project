@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { SelectOption } from '../searchable-select/searchable-select.component';
 
 /**
@@ -229,10 +230,14 @@ import { SelectOption } from '../searchable-select/searchable-select.component';
 })
 export class MultiSelectComponent implements ControlValueAccessor {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** Reads the language signal so this OnPush component re-renders its option
+   * labels on a language switch — see SearchableSelectComponent.tr(). */
   protected tr(label: string): string {
+    this.language.currentLang();
     return this.translate.instant(label) as string;
   }
 

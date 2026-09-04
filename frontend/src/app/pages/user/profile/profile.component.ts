@@ -13,7 +13,7 @@ import { PostService } from '../../../core/services/post.service';
 import { EventService } from '../../../core/services/event.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
-import { User, Business, Community, Job, Post, Event as CommunityEvent, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
+import { User, Business, Community, Job, Post, Event as CommunityEvent, CountryAddressConfig, Division } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ProfileHeaderComponent } from '../../../shared/components/profile-header/profile-header.component';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
@@ -24,7 +24,7 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 
@@ -60,6 +60,7 @@ export class UserProfileComponent implements OnInit {
   private postService = inject(PostService);
   private eventService = inject(EventService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -97,15 +98,10 @@ export class UserProfileComponent implements OnInit {
   newInterest = signal('');
 
   // ── Country-aware address hierarchy (Country → State/District → City) ──
-  // Mirrors business-form-modal.component.ts's implementation — same
-  // GeographyService, same signals/handler names.
-  geoCountries  = signal<GeoCountry[]>([]);
+  // Country itself is fixed at registration and shown read-only; only the
+  // State/District → City levels beneath it are editable here.
   countryConfig = signal<CountryAddressConfig | null>(null);
   adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
-
-  geoCountryOptions = computed<SelectOption[]>(() =>
-    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
-  );
 
   division1Options = signal<Division[]>([]);
   division2Options = signal<Division[]>([]);
@@ -256,7 +252,6 @@ export class UserProfileComponent implements OnInit {
       confirmPassword: ['', Validators.required],
     });
 
-    this.loadGeoCountriesIfNeeded();
     this.loadProfile();
 
     // Deep-link support — e.g. the dashboard's "Posts" activity stat links
@@ -298,14 +293,6 @@ export class UserProfileComponent implements OnInit {
       graduationYear: u.graduationYear ?? '',
     });
     this.patchLocation(u);
-  }
-
-  private loadGeoCountriesIfNeeded(): void {
-    if (this.geoCountries().length) return;
-    this.geographyService.getCountries().subscribe({
-      next: data => this.geoCountries.set(data),
-      error: () => {},
-    });
   }
 
   /**
@@ -399,27 +386,6 @@ export class UserProfileComponent implements OnInit {
     this.profileForm.get('division1Id')?.setValue(null, silent);
     this.profileForm.get('division2Id')?.setValue(null, silent);
     this.profileForm.get('cityId')?.setValue(null, silent);
-  }
-
-  onCountryChange(countryId: any): void {
-    this.resetDivisionState();
-    const id = countryId ? Number(countryId) : null;
-    if (!id) { this.applyPincodeValidators(); return; }
-
-    this.geographyService.getCountryConfig(id).subscribe({
-      next: (config) => {
-        this.countryConfig.set(config);
-        this.applyPincodeValidators();
-        if (config.divisionLevels.length > 0) {
-          this.division1Loading.set(true);
-          this.geographyService.getDivisions(id).subscribe({
-            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
-            error: () => this.division1Loading.set(false),
-          });
-        }
-      },
-      error: () => this.toast.error('user.profile.toast.failedLoadCountryAddressDetails'),
-    });
   }
 
   onDivision1Change(divisionId: any): void {
@@ -535,15 +501,20 @@ export class UserProfileComponent implements OnInit {
     this.saving.set(true);
     const data: Record<string, any> = { ...this.profileForm.getRawValue(), interests: this.user()?.interests ?? [] };
     if (this.user()?.email || !data['email']) delete data['email'];
+    // Phone and country are fixed at registration and shown read-only in
+    // the edit form — never resend them (the backend also rejects any
+    // attempt to change either once set).
+    delete data['phoneNo'];
+    delete data['countryId'];
 
     // division1Id/division2Id are UI-only — the backend only wants the
     // resolved leaf division as stateId (mirrors business-form-modal's
-    // submitBusiness()). Country/state/city are optional here, so omit
-    // rather than send null (the DTO's fields are optional, not nullable).
+    // submitBusiness()). State/city are optional here, so omit rather than
+    // send null (the DTO's fields are optional, not nullable).
     data['stateId'] = this.getLeafDivisionId() ?? undefined;
     delete data['division1Id'];
     delete data['division2Id'];
-    (['countryId', 'stateId', 'cityId'] as const).forEach((k) => {
+    (['stateId', 'cityId'] as const).forEach((k) => {
       if (data[k] === null || data[k] === undefined) delete data[k];
     });
 
@@ -663,7 +634,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deleteJob(id: string): void {
-    if (!confirm('Delete this job?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeleteJob'))) return;
     this.deletingJobId.set(id);
     this.jobService.deleteJob(id).subscribe({
       next: () => { this.myJobs.update(l => l.filter(j => j.id !== id)); this.toast.success('user.profile.toast.jobDeleted'); this.deletingJobId.set(null); },
@@ -696,7 +667,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deletePost(id: string): void {
-    if (!confirm('Delete this post?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeletePost'))) return;
     this.deletingPostId.set(id);
     this.postService.deletePost(id).subscribe({
       next: () => { this.myPosts.update(l => l.filter(p => p.id !== id)); this.toast.success('user.profile.toast.postDeleted'); this.deletingPostId.set(null); },
@@ -713,7 +684,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   deleteEvent(id: string): void {
-    if (!confirm('Delete this event?')) return;
+    if (!confirm(this.translate.instant('user.profile.confirmDeleteEvent'))) return;
     this.deletingEventId.set(id);
     this.eventService.deleteEvent(id).subscribe({
       next: () => { this.myEvents.update(l => l.filter(e => e.id !== id)); this.toast.success('user.profile.toast.eventDeleted'); this.deletingEventId.set(null); },

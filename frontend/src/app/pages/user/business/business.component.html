@@ -393,7 +393,7 @@
                   <span class="bl-card__submeta-item"><i class="bi bi-person-circle"></i>{{ $any(biz).user.displayName }}</span>
                 }
                 @if (getCreatedAt(biz)) {
-                  <span class="bl-card__submeta-item"><i class="bi bi-calendar3"></i>Added {{ formatDate(getCreatedAt(biz)) }}</span>
+                  <span class="bl-card__submeta-item"><i class="bi bi-calendar3"></i>{{ 'common.addedDate' | translate: { date: formatDate(getCreatedAt(biz)) } }}</span>
                 }
               </div>
             }

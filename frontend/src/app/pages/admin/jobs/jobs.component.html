@@ -276,7 +276,7 @@
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'job' : 'jobs' }}
       @if (activeFilterCount() > 0) {
-        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
+        <span class="jb-meta__filter-note">{{ 'filters.appliedCount' | translate: { count: activeFilterCount() } }}</span>
       }
     </span>
   </div>
@@ -369,7 +369,7 @@
               <p class="jbd-salary-card__sub">{{ 'admin.jobs.salaryNotSharedRole' | translate }}</p>
             } @else {
               <p class="jbd-salary-card__amount">{{ getSalaryDisplay(job) }}</p>
-              @if (job.salaryType) { <p class="jbd-salary-card__sub">Paid {{ job.salaryType | lowercase }}.</p> }
+              @if (job.salaryType) { <p class="jbd-salary-card__sub">{{ 'jobs.value.paidType' | translate: { type: (job.salaryType | lowercase) } }}</p> }
             }
           </div>
         </div>
@@ -1035,7 +1035,7 @@
                 </div>
                 @if (jobForm.errors?.['expRange']) {
                   <div class="col-12">
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum must be ≥ minimum</span>
+                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.maxMustBeGteMin' | translate }}</span>
                   </div>
                 }
               </div>
@@ -1089,7 +1089,7 @@
                   </div>
                   @if (jobForm.errors?.['salaryRange']) {
                     <div class="col-12">
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> Maximum salary must be ≥ minimum</span>
+                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.maxSalaryMustBeGteMin' | translate }}</span>
                     </div>
                   }
                 }
@@ -1269,7 +1269,7 @@
                 <div class="jb-form-section__badge"><i class="bi bi-tags"></i></div>
                 <div><span class="jb-form-section__num">08</span><span class="jb-form-section__name">{{ 'admin.jobs.skillsRequired' | translate }}</span></div>
               </div>
-              <label class="jb-label">{{ 'admin.jobs.skills' | translate }} <span class="jb-label__optional">(type and press Enter)</span></label>
+              <label class="jb-label">{{ 'admin.jobs.skills' | translate }} <span class="jb-label__optional">{{ 'common.typeAndPressEnter' | translate }}</span></label>
               <app-tag-input formControlName="skills" [placeholder]="'admin.jobs.eGReactNodeJs' | translate"></app-tag-input>
             </div>
 
@@ -1281,28 +1281,28 @@
               </div>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="jb-label" for="aDescription">{{ 'admin.jobs.description' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="aDescription">{{ 'admin.jobs.description' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <p class="jb-helper-text">{{ 'admin.jobs.generalSummaryRole' | translate }}</p>
                   <textarea id="aDescription" class="jb-input jb-input--textarea" formControlName="description" rows="5"
                     [placeholder]="'admin.jobs.describeRole' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="aResponsibilities">{{ 'admin.jobs.responsibilities' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="aResponsibilities">{{ 'admin.jobs.responsibilities' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="aResponsibilities" class="jb-input jb-input--textarea" formControlName="responsibilities" rows="4"
                     [placeholder]="'admin.jobs.keyDayDayResponsibilities' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="aQualifications">{{ 'admin.jobs.qualifications' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="aQualifications">{{ 'admin.jobs.qualifications' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="aQualifications" class="jb-input jb-input--textarea" formControlName="qualifications" rows="4"
                     [placeholder]="'admin.jobs.degreesCertifications' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="aRequirements">{{ 'admin.jobs.requirements' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="aRequirements">{{ 'admin.jobs.requirements' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="aRequirements" class="jb-input jb-input--textarea" formControlName="requirements" rows="4"
                     [placeholder]="'admin.jobs.mustHaveSkillsExperience' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="jb-label" for="aBenefits">{{ 'admin.jobs.benefits' | translate }} <span class="jb-label__optional">(optional)</span></label>
+                  <label class="jb-label" for="aBenefits">{{ 'admin.jobs.benefits' | translate }} <span class="jb-label__optional">{{ 'common.optionalParen' | translate }}</span></label>
                   <textarea id="aBenefits" class="jb-input jb-input--textarea" formControlName="benefits" rows="4"
                     [placeholder]="'admin.jobs.perksInsuranceBonuses' | translate"></textarea>
                 </div>
@@ -1423,4 +1423,86 @@
     </div>
 
   </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════
+     SHARE MODAL — Native Web Share API is tried first (see
+     shareJob()); this popup is the fallback for browsers/desktops
+     without it, matching the post-share popup used elsewhere. ═══
+     ═══════════════════════════════════════════════════════════ -->
+@if (shareModalOpen()) {
+  @if (shareTargetJob(); as shareJobData) {
+    <div class="au-backdrop" (click)="closeShareModal()"></div>
+    <div class="au-modal jb-modal jb-share-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="jbShareModalTitle" (click)="$event.stopPropagation()">
+      <div class="au-header cm-modal-header">
+        <div class="au-header__cover-shapes" aria-hidden="true"><span class="shape shape--1"></span><span class="shape shape--2"></span></div>
+        <div class="au-header__icon cm-modal-icon"><i class="bi bi-share-fill"></i></div>
+        <div class="au-header__text cm-modal-header-inner">
+          <h5 class="au-header__title cm-modal-title" id="jbShareModalTitle">{{ 'admin.jobs.shareJob' | translate }}</h5>
+          <p class="au-header__sub cm-modal-subtitle">{{ 'admin.jobs.chooseWhereShareJob' | translate }}</p>
+        </div>
+        <button type="button" class="au-close cm-close-btn" (click)="closeShareModal()" [attr.aria-label]="'admin.jobs.closeDialog' | translate">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="au-body cm-modal-body">
+        @if (getCompanyLogoSrc(shareJobData)) {
+          <div class="jb-share-preview-image-wrap">
+            <img [src]="getCompanyLogoSrc(shareJobData) | imageUrl" [alt]="'admin.jobs.postSharePreview' | translate" class="jb-share-preview-image" appImageError />
+          </div>
+        }
+        <p class="jb-share-preview-text">{{ getShareText(shareJobData) }}</p>
+
+        @if (sharePopupBlocked()) {
+          <div class="jb-share-popup-warning" role="alert">
+            <div class="jb-share-popup-warning__icon">
+              <i class="bi bi-window"></i>
+            </div>
+            <div class="jb-share-popup-warning__content">
+              <p class="jb-share-popup-warning__title">{{ 'admin.jobs.popupBlockedByBrowser' | translate }}</p>
+              <p class="jb-share-popup-warning__text">{{ 'admin.jobs.allowPopupsSiteTryAgain' | translate }}</p>
+              <p class="jb-share-popup-warning__steps">{{ 'admin.jobs.clickBlockedPopupIconNear' | translate }} <strong>{{ 'admin.jobs.alwaysAllowPopUpsFrom' | translate }}</strong>.</p>
+            </div>
+            <button type="button" class="jb-share-popup-warning__action" (click)="openShareInSameTab()">
+              {{ 'admin.jobs.openHere' | translate }}
+            </button>
+          </div>
+        }
+
+        <div class="jb-share-grid">
+          <button type="button" class="jb-share-btn jb-share-btn--whatsapp" (click)="shareVia('whatsapp')">
+            <i class="bi bi-whatsapp"></i><span>{{ 'admin.jobs.whatsapp' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--facebook" (click)="shareVia('facebook')">
+            <i class="bi bi-facebook"></i><span>{{ 'admin.jobs.facebook' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--x" (click)="shareVia('x')">
+            <i class="bi bi-twitter-x"></i><span>X</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--telegram" (click)="shareVia('telegram')">
+            <i class="bi bi-telegram"></i><span>{{ 'admin.jobs.telegram' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--linkedin" (click)="shareVia('linkedin')">
+            <i class="bi bi-linkedin"></i><span>{{ 'admin.jobs.linkedin' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--pinterest" (click)="shareVia('pinterest')">
+            <i class="bi bi-pinterest"></i><span>{{ 'admin.jobs.pinterest' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--email" (click)="shareVia('email')">
+            <i class="bi bi-envelope-fill"></i><span>{{ 'admin.jobs.email' | translate }}</span>
+          </button>
+          <button type="button" class="jb-share-btn jb-share-btn--copy" (click)="copyShareLink()">
+            <i class="bi bi-link-45deg"></i><span>{{ 'admin.jobs.copyLink' | translate }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="au-footer cm-modal-footer">
+        <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="closeShareModal()">
+          {{ 'common.close' | translate }}
+        </button>
+      </div>
+    </div>
+  }
 }

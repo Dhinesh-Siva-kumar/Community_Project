@@ -699,6 +699,11 @@ html[lang='ta'] {
   // token block. ─────────────────────────────────────────────────────
   --cd-6d28d9: #6d28d9; // violet-700 text
   --cd-1d4ed8: #1d4ed8; // blue-700 text
+  --cd-0a66c2: #0a66c2; // linkedin-blue text (share button)
+  --cd-compose-general:   rgba(239, 246, 255, 0.88); // general compose card top tint
+  --cd-compose-help:      rgba(255, 251, 235, 0.92); // help compose card top tint
+  --cd-compose-emergency: rgba(254, 242, 242, 0.92); // emergency compose card top tint
+  --cd-compose-enquire:   rgba(245, 243, 255, 0.92); // enquire compose card top tint
   --cd-2563eb: #2563eb; // blue-600 accent
   --cd-eff6ff: #eff6ff; // blue-50 bg
   --cd-dbeafe: #dbeafe; // blue-100 bg
@@ -740,6 +745,7 @@ html[lang='ta'] {
 
   // ── Community Detail — third batch (remaining chip family + email share) ──
   --cd-9a3412: #9a3412; // orange-800 text
+  --cd-c2410c: #c2410c; // orange-700 text (user-community "Trending" tab)
   --cd-ecfdf3: #ecfdf3; // green-50 bg (alt)
   --cd-166534: #166534; // green-800 text
   --cd-f0fdfa: #f0fdfa; // teal-50 bg
@@ -894,6 +900,11 @@ html[lang='ta'] {
   // saturated dark-mode text colors lighten enough to read on them. ───
   --cd-6d28d9: #c4b5fd; // violet-300 (was violet-700 text)
   --cd-1d4ed8: #93c5fd; // blue-300 (was blue-700 text)
+  --cd-0a66c2: #93c5fd; // blue-300 (was linkedin-blue text) — same family/bg as --cd-1d4ed8
+  --cd-compose-general:   rgba(37, 65, 102, 0.35);  // dark blue-tinted (was light blue-tinted)
+  --cd-compose-help:      rgba(87, 66, 12, 0.35);   // dark amber-tinted (was light amber-tinted)
+  --cd-compose-emergency: rgba(90, 34, 34, 0.35);   // dark red-tinted (was light red-tinted)
+  --cd-compose-enquire:   rgba(60, 41, 92, 0.35);   // dark violet-tinted (was light violet-tinted)
   --cd-2563eb: #60a5fa; // blue-400 (was blue-600 accent)
   --cd-eff6ff: #1e293b; // dark blue-tinted bg (was blue-50)
   --cd-dbeafe: #1e3a5f; // dark blue-tinted bg, stronger (was blue-100)
@@ -934,6 +945,7 @@ html[lang='ta'] {
 
   // ── Community Detail — third batch dark equivalents ────────────────
   --cd-9a3412: #fdba74; // orange-300 (was orange-800 text)
+  --cd-c2410c: #fdba74; // orange-300 (was orange-700 text)
   --cd-ecfdf3: #12291d; // dark green-tinted bg (was green-50 alt)
   --cd-166534: #4ade80; // green-400 (was green-800 text)
   --cd-f0fdfa: #12302c; // dark teal-tinted bg (was teal-50)

@@ -69,7 +69,7 @@
     justify-content: center;
     font-size: 1.1rem;
     flex-shrink: 0;
-    &--jobs     { background: rgba(220, 38, 38, 0.10); color: #DC2626; }
+    &--jobs     { background: $color-error-bg; color: $color-danger-text; }
     &--fulltime { background: $color-success-light; color: $color-success-text; }
     &--parttime { background: $color-info-light; color: $color-info-text; }
     &--contract { background: rgba(251,191,36,0.15); color: $color-primary-darker; }
@@ -353,7 +353,7 @@
   @include transition-short(all);
 
   &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
-  &--active { background: $color-dark; border-color: $color-dark; color: $color-white; }
+  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-bg-page; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 
@@ -846,7 +846,7 @@
 .ev-card__reject-note {
   display: flex; align-items: flex-start; gap: 6px;
   margin: 2px 0 0; padding: 8px 10px;
-  background: $color-error-bg; border: 1px solid #FECACA; border-radius: $radius-sm;
+  background: $color-error-bg; border: 1px solid rgba($color-danger, 0.3); border-radius: $radius-sm;
   font-size: 12px; line-height: 1.4; color: $color-danger-text;
   i { flex-shrink: 0; margin-top: 1px; font-size: 12px; }
 }
@@ -1261,8 +1261,8 @@
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
   &.active {
-    background: $color-dark;
-    color: $color-white;
+    background: $color-text-primary;
+    color: $color-bg-page;
   }
 }
 
@@ -1313,7 +1313,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid rgba(251, 191, 36, 0.35);
-  background: rgba(255, 251, 235, 0.9);
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   border-radius: 999px;
   padding: 7px 14px;
@@ -1389,7 +1389,7 @@
   padding: 12px;
   border: 1px solid rgba(251, 191, 36, 0.16);
   border-radius: 12px;
-  background: linear-gradient(180deg, $color-bg-card 0%, rgba(255, 251, 235, 0.45) 100%);
+  background: linear-gradient(180deg, $color-bg-card 0%, $color-primary-lighter 100%);
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
 
   &:hover {
@@ -1404,7 +1404,7 @@
   }
 
   &--filled {
-    background: linear-gradient(180deg, $color-bg-card 0%, rgba(254, 243, 199, 0.38) 100%);
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-warning-light 100%);
     border-color: rgba(245, 158, 11, 0.32);
     .jb-adv-date-help { color: $color-primary-darker; }
   }
@@ -1446,7 +1446,7 @@
 
 .jb-quick-date-btn {
   border: 1px solid rgba(251, 191, 36, 0.35);
-  background: rgba(255, 251, 235, 0.9);
+  background: $color-primary-lighter;
   color: $color-primary-darker;
   border-radius: 999px;
   padding: 6px 12px;
@@ -1567,7 +1567,7 @@
 .um-row {
   transition: background 0.2s ease;
   &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
-  &:hover { background: rgba(254, 243, 199, 0.35); }
+  &:hover { background: $color-primary-lighter; }
 
   // No admin detail page for a single event — the row itself isn't clickable,
   // only the Edit/Delete action buttons in the last column are.

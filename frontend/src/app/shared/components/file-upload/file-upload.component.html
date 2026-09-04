@@ -21,7 +21,7 @@
     </div>
 
     @if (error()) {
-      <p class="fu-error text-danger small mt-1 mb-0">{{ error() }}</p>
+      <p class="fu-error text-danger small mt-1 mb-0">{{ error()!.key | translate: error()!.params }}</p>
     }
   </div>
 }
@@ -100,7 +100,7 @@
         <div class="fu-empty">
           <i class="bi bi-images fu-empty-icon"></i>
           <span class="fu-empty-label">{{ label | translate }}</span>
-          <span class="fu-empty-hint">Up to {{ maxFiles }} images · Max {{ maxSizeMb }} MB each</span>
+          <span class="fu-empty-hint">{{ 'components.fileUpload.upToImagesMaxSize' | translate: { count: maxFiles, size: maxSizeMb } }}</span>
         </div>
       }
     }
@@ -108,7 +108,7 @@
   </div>
 
   @if (error()) {
-    <p class="fu-error text-danger small mt-1 mb-0">{{ error() }}</p>
+    <p class="fu-error text-danger small mt-1 mb-0">{{ error()!.key | translate: error()!.params }}</p>
   }
   @if (showError && !error()) {
     <p class="fu-error text-danger small mt-1 mb-0">

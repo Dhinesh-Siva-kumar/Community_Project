@@ -53,7 +53,24 @@
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "toggleMenu": "Toggle menu",
-    "ukFlag": "UK flag"
+    "ukFlag": "UK flag",
+    "optionalParen": "(optional)",
+    "sameAsPhone": "(same as phone)",
+    "typeAndPressEnter": "(type and press Enter)",
+    "maxMustBeGteMin": "Maximum must be ≥ minimum",
+    "maxSalaryMustBeGteMin": "Maximum salary must be ≥ minimum",
+    "imageNotAvailable": "Image not available",
+    "fieldIsRequired": "{{field}} is required",
+    "addedDate": "Added {{date}}",
+    "joinedDate": "Joined {{date}}",
+    "postedDate": "Posted {{date}}",
+    "pageOf": "Page {{page}} of {{total}}",
+    "membersCount": "{{count}} members",
+    "reasonLabel": "Reason: {{reason}}",
+    "countPending": "{{count}} Pending",
+    "countApproved": "{{count}} Approved",
+    "countRejected": "{{count}} Rejected",
+    "postalFormatMismatch": "Doesn't match the expected format{{suffix}}."
   },
   "auth": {
     "adminLogin": {
@@ -1360,7 +1377,9 @@
         "tomorrow": "Tomorrow",
         "inDays": "In {{days}} days",
         "upcoming": "Upcoming"
-      }
+      },
+      "eventCount": "{{count}} event(s)",
+      "moreCount": "+{{count}} more"
     },
     "fileUpload": {
       "avatarAlt": "Avatar",
@@ -1380,7 +1399,9 @@
       "uploadEventImage": "Upload event image (JPG, PNG, WEBP)",
       "uploadCompanyLogo": "Upload company logo",
       "dragOrClick": "Drag & drop or click to upload",
-      "dragOrBrowse": "Drag & drop or click to browse"
+      "dragOrBrowse": "Drag & drop or click to browse",
+      "slotsRemaining": "Only {{available}} slot(s) remaining (max {{max}}).",
+      "upToImagesMaxSize": "Up to {{count}} images · Max {{size}} MB each"
     },
     "dateInput": {
       "clear": "Clear date",
@@ -1392,7 +1413,13 @@
       "hour": "Hour",
       "minute": "Minute",
       "amPm": "AM or PM",
-      "done": "Done"
+      "done": "Done",
+      "chooseTime": "Choose time",
+      "hrShort": "Hr",
+      "minShort": "Min",
+      "am": "AM",
+      "pm": "PM",
+      "now": "Now"
     },
     "searchableSelect": {
       "searchOptions": "Search options"
@@ -1532,7 +1559,9 @@
       },
       "sameAsPhoneAria": "WhatsApp number is same as phone",
       "statusAria": "Active",
-      "selectTime2": "Select"
+      "selectTime2": "Select",
+      "openingDaysAndHours": "Opening Days & Hours",
+      "timeRangeSeparator": "to"
     },
     "illustration": {
       "communityActivity": "Community activity illustration",
@@ -1698,7 +1727,8 @@
         "help": "Help",
         "general": "General"
       },
-      "unknownUser": "Unknown User"
+      "unknownUser": "Unknown User",
+      "maxCharactersReached": "Maximum {{max}} characters reached."
     }
   },
   "user": {
@@ -1787,7 +1817,9 @@
       "progressStrong": "Strong",
       "progressIntermediate": "Intermediate",
       "progressGettingThere": "Getting there",
-      "progressJustStarted": "Just started"
+      "progressJustStarted": "Just started",
+      "welcomeBanner": "Welcome to TamilConnect, {{name}}!",
+      "finishToStandOut": "{{strength}} — finish these to stand out:"
     },
     "community": {
       "loadingCommunities": "Loading communities…",
@@ -1836,7 +1868,9 @@
         "pending": "Pending Approval",
         "trending": "Trending"
       },
-      "loadingMoreCommunities": "Loading more communities…"
+      "loadingMoreCommunities": "Loading more communities…",
+      "summary": "{{count}} communities · {{members}} members",
+      "endOfList": "You’ve reached the end — {{count}} communities total."
     },
     "business": {
       "allCountries": "All Countries",
@@ -2042,7 +2076,8 @@
       },
       "searchEventsByTitleDescription": "Search events by title or description…",
       "describeEventAgendaPurposeHighlights": "Describe your event — agenda, purpose, highlights…",
-      "loadingMoreEvents": "Loading more events…"
+      "loadingMoreEvents": "Loading more events…",
+      "subtitle": "{{count}} events · Discover what's happening in your community."
     },
     "jobs": {
       "sortNewest": "Sort: Newest",
@@ -2108,6 +2143,22 @@
       "applyNow": "Apply Now",
       "contact": "Contact",
       "share": "Share",
+      "shareJob": "Share Job",
+      "chooseWhereShareJob": "Choose where to share this job",
+      "postSharePreview": "Job share preview",
+      "popupBlockedByBrowser": "Popup blocked by browser",
+      "allowPopupsSiteTryAgain": "Allow popups for this site and try again, or continue in the same tab.",
+      "clickBlockedPopupIconNear": "Click the blocked popup icon near the address bar and choose",
+      "alwaysAllowPopUpsFrom": "Always allow pop-ups from this site",
+      "openHere": "Open Here",
+      "whatsapp": "WhatsApp",
+      "facebook": "Facebook",
+      "telegram": "Telegram",
+      "linkedin": "LinkedIn",
+      "pinterest": "Pinterest",
+      "email": "Email",
+      "copyLink": "Copy Link",
+      "closeDialog": "Close dialog",
       "noSubmissionsYet": "No submissions yet",
       "jobsPostWillShowUp": "Jobs you post will show up here with their approval status.",
       "noJobsMatchFilters": "No jobs match your filters",
@@ -2167,7 +2218,9 @@
         "failedUpdateJobPleaseTry": "Failed to update job. Please try again.",
         "jobDeletedSuccessfully": "Job deleted successfully",
         "failedDeleteJob": "Failed to delete job",
-        "copiedClipboard": "Copied to clipboard"
+        "copiedClipboard": "Copied to clipboard",
+        "shareLinkCopied": "Share link copied.",
+        "failedCopyShareLink": "Failed to copy share link."
       },
       "educationOption": {
         "none": "No education needed",
@@ -2224,10 +2277,13 @@
       "keyDayDayResponsibilities": "Key day-to-day responsibilities…",
       "degreesCertifications": "Degrees, certifications…",
       "mustHaveSkillsExperience": "Must-have skills, experience…",
-      "perksInsuranceBonuses": "Perks, insurance, bonuses…"
+      "perksInsuranceBonuses": "Perks, insurance, bonuses…",
+      "subtitle": "{{count}} jobs · Discover opportunities and connect with employers in your community."
     },
     "profile": {
       "phoneNumber": "Phone number",
+      "phoneCannotChange": "Your registered phone number can't be changed.",
+      "countryCannotChange": "Your registered country can't be changed.",
       "whatsappNumber": "WhatsApp number",
       "tellUsAboutYourself": "Tell us about yourself",
       "selectCategory": "Select category",
@@ -2345,7 +2401,10 @@
       },
       "selectLevel": "Select {{level}}",
       "loadingEllipsis": "Loading…",
-      "graduationYearPlaceholder": "e.g. 2027"
+      "graduationYearPlaceholder": "e.g. 2027",
+      "confirmDeleteJob": "Delete this job?",
+      "confirmDeletePost": "Delete this post?",
+      "confirmDeleteEvent": "Delete this event?"
     }
   },
   "admin": {
@@ -2412,7 +2471,9 @@
       "greetingEvening": "Good Evening, {{name}}!",
       "range7": "Last 7 days",
       "range30": "Last 30 days",
-      "range90": "Last 90 days"
+      "range90": "Last 90 days",
+      "todaysSummary": "Here's today's community summary.",
+      "goToPage": "Go to page {{page}}"
     },
     "community": {
       "searchByNameDescription": "Search by name, description…",
@@ -2737,7 +2798,8 @@
         "name": "Name",
         "created": "Created",
         "businesses": "Businesses"
-      }
+      },
+      "businessesAcrossEveryCategory": "businesses across every category"
     },
     "jobs": {
       "searchByTitleCompanyLocation": "Search by title, company, location…",
@@ -2838,6 +2900,22 @@
       "applyNow": "Apply Now",
       "contact": "Contact",
       "share": "Share",
+      "shareJob": "Share Job",
+      "chooseWhereShareJob": "Choose where to share this job",
+      "postSharePreview": "Job share preview",
+      "popupBlockedByBrowser": "Popup blocked by browser",
+      "allowPopupsSiteTryAgain": "Allow popups for this site and try again, or continue in the same tab.",
+      "clickBlockedPopupIconNear": "Click the blocked popup icon near the address bar and choose",
+      "alwaysAllowPopUpsFrom": "Always allow pop-ups from this site",
+      "openHere": "Open Here",
+      "whatsapp": "WhatsApp",
+      "facebook": "Facebook",
+      "telegram": "Telegram",
+      "linkedin": "LinkedIn",
+      "pinterest": "Pinterest",
+      "email": "Email",
+      "copyLink": "Copy Link",
+      "closeDialog": "Close dialog",
       "noMatchingJobs": "No matching jobs",
       "noJobsMatchCurrentSearch": "No jobs match your current search or filters.",
       "clearAllFilters": "Clear All Filters",
@@ -2900,7 +2978,9 @@
         "failedUpdateJob": "Failed to update job.",
         "jobDeletedSuccessfully": "Job deleted successfully",
         "failedDeleteJob": "Failed to delete job",
-        "copiedClipboard": "Copied to clipboard"
+        "copiedClipboard": "Copied to clipboard",
+        "shareLinkCopied": "Share link copied.",
+        "failedCopyShareLink": "Failed to copy share link."
       },
       "label": {
         "allStatus": "All Status",
@@ -3192,7 +3272,15 @@
       "toast": {
         "failedApprove": "Failed to approve",
         "failedReject": "Failed to reject",
-        "failedRequestMoreInfo": "Failed to request more information"
+        "failedRequestMoreInfo": "Failed to request more information",
+        "failedLoadPending": "Failed to load pending {{entity}} submissions",
+        "itemApproved": "{{entity}} approved",
+        "itemRejected": "{{entity}} rejected and removed",
+        "itemMoreInfoRequested": "More information requested for {{entity}}",
+        "bulkApproved": "{{count}} {{entity}} items approved",
+        "bulkRejected": "{{count}} {{entity}} items rejected and removed",
+        "bulkMoreInfoRequested": "{{count}} {{entity}} items sent a more-info request",
+        "bulkFailed": "{{count}} items failed to process"
       },
       "label": {
         "posts": "Posts",
@@ -3238,7 +3326,37 @@
         "link": "Link"
       },
       "searchSubmissions": "Search {{tab}} submissions…",
-      "allReviewed": "All {{tab}} submissions have been reviewed."
+      "allReviewed": "All {{tab}} submissions have been reviewed.",
+      "viewDetails": "View Details",
+      "section": {
+        "post": "Post",
+        "overview": "Overview",
+        "visibility": "Visibility",
+        "rules": "Rules",
+        "contact": "Contact",
+        "hours": "Hours",
+        "company": "Company",
+        "role": "Role",
+        "salary": "Salary",
+        "location": "Location",
+        "skills": "Skills",
+        "companyIcon": "Company Icon",
+        "businessIcon": "Business Icon",
+        "communityIcon": "Community Icon",
+        "imagesCount": "Images ({{count}})"
+      },
+      "value": {
+        "standard": "Standard",
+        "hidden": "Hidden",
+        "yrs": "yrs"
+      },
+      "selectedCount": "{{count}} selected",
+      "approveEntity": "Approve {{entity}}",
+      "rejectEntity": "Reject {{entity}}",
+      "approveItems": "Approve {{count}} item(s)",
+      "rejectItems": "Reject {{count}} item(s)",
+      "itemsCount": "{{count}} item(s)",
+      "entityApproval": "{{entity}} Approval"
     },
     "analytics": {
       "fromDate": "From date",
@@ -3289,7 +3407,57 @@
         "activeJobs": "Active Jobs",
         "verifiedBusinesses": "Verified Businesses",
         "topCountry": "Top Country"
-      }
+      },
+      "series": {
+        "newUsers": "New Users",
+        "users": "Users",
+        "jobsPosted": "Jobs Posted",
+        "businessesRegistered": "Businesses Registered",
+        "posts": "Posts",
+        "comments": "Comments",
+        "reactions": "Reactions",
+        "returned": "Returned",
+        "didNotReturn": "Did not return"
+      },
+      "report": {
+        "title": "Advanced Analytics Report",
+        "range": "Range",
+        "to": "to",
+        "granularity": "Granularity",
+        "period": "Period",
+        "window": "Window",
+        "metric": "Metric",
+        "value": "Value",
+        "status": "Status",
+        "count": "Count",
+        "country": "Country",
+        "users": "Users",
+        "newUsers": "New Users",
+        "jobsPosted": "Jobs Posted",
+        "businessesRegistered": "Businesses Registered",
+        "posts": "Posts",
+        "comments": "Comments",
+        "reactions": "Reactions",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "active": "Active",
+        "inactive": "Inactive",
+        "verified": "Verified",
+        "totalRegistered": "Total Registered",
+        "userGrowth": "User Growth",
+        "activeUsers": "Active Users",
+        "countryDistribution": "Country Distribution",
+        "jobActivityPosted": "Job Activity — Posted Over Time",
+        "jobActivityStatus": "Job Activity — Status",
+        "businessGrowthRegistered": "Business Growth — Registered Over Time",
+        "businessGrowthSummary": "Business Growth — Summary",
+        "communityEngagement": "Community Engagement",
+        "retentionRate": "Retention Rate",
+        "eligibleUsers": "Eligible Users (30+ days old)",
+        "returnedLast30Days": "Returned in Last 30 Days"
+      },
+      "subtitle": "Platform-wide growth, engagement and retention insights · {{range}}"
     },
     "auditLog": {
       "allActions": "All Actions",
@@ -3522,7 +3690,9 @@
     "activityLog": {
       "activityLog": "Activity Log",
       "allActions": "All Actions",
-      "noActivityLogsFound": "No activity logs found"
+      "noActivityLogsFound": "No activity logs found",
+      "actionsRecorded": "{{count}} admin action(s) recorded",
+      "entriesCount": "{{count}} entries"
     },
     "permissions": {
       "rolePermissions": "Role Permissions",
@@ -3671,7 +3841,8 @@
     "dateFrom": "From {{date}}",
     "dateTo": "To {{date}}",
     "actor": "Actor: {{name}}",
-    "joinedLast": "Last {{period}}"
+    "joinedLast": "Last {{period}}",
+    "appliedCount": "with {{count}} filter(s) applied"
   },
   "audit": {
     "action": {
@@ -3751,7 +3922,9 @@
       "applicantsOnly": "{{country}} applicants only",
       "postcode": "Postcode {{code}}",
       "selectDialCodeFirst": "Please select a dial code first",
-      "notDisclosed": "Not Disclosed"
+      "notDisclosed": "Not Disclosed",
+      "paidType": "Paid {{type}}.",
+      "shiftSuffix": "{{shift}} Shift"
     }
   },
   "time": {

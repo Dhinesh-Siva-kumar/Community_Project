@@ -53,7 +53,24 @@
     "scrollLeft": "இடதுபுறம் நகர்த்து",
     "scrollRight": "வலதுபுறம் நகர்த்து",
     "toggleMenu": "மெனுவை மாற்று",
-    "ukFlag": "UK கொடி"
+    "ukFlag": "UK கொடி",
+    "optionalParen": "(விருப்பத்தேர்வு)",
+    "sameAsPhone": "(தொலைபேசி எண்ணைப் போலவே)",
+    "typeAndPressEnter": "(தட்டச்சு செய்து Enter அழுத்தவும்)",
+    "maxMustBeGteMin": "அதிகபட்சம் குறைந்தபட்சத்திற்குச் சமமாகவோ அதிகமாகவோ இருக்க வேண்டும்",
+    "maxSalaryMustBeGteMin": "அதிகபட்ச ஊதியம் குறைந்தபட்சத்திற்குச் சமமாகவோ அதிகமாகவோ இருக்க வேண்டும்",
+    "imageNotAvailable": "படம் கிடைக்கவில்லை",
+    "fieldIsRequired": "{{field}} தேவை",
+    "addedDate": "{{date}} அன்று சேர்க்கப்பட்டது",
+    "joinedDate": "{{date}} அன்று இணைந்தார்",
+    "postedDate": "{{date}} அன்று இடப்பட்டது",
+    "pageOf": "பக்கம் {{page}} / {{total}}",
+    "membersCount": "{{count}} உறுப்பினர்கள்",
+    "reasonLabel": "காரணம்: {{reason}}",
+    "countPending": "{{count}} நிலுவையில்",
+    "countApproved": "{{count}} அங்கீகரிக்கப்பட்டது",
+    "countRejected": "{{count}} நிராகரிக்கப்பட்டது",
+    "postalFormatMismatch": "எதிர்பார்க்கப்பட்ட வடிவத்துடன் பொருந்தவில்லை{{suffix}}."
   },
   "auth": {
     "adminLogin": {
@@ -1360,7 +1377,9 @@
         "tomorrow": "நாளை",
         "inDays": "{{days}} நாட்களில்",
         "upcoming": "வரவிருக்கிறது"
-      }
+      },
+      "eventCount": "{{count}} நிகழ்வு(கள்)",
+      "moreCount": "+{{count}} மேலும்"
     },
     "fileUpload": {
       "avatarAlt": "சுயவிவரப் படம்",
@@ -1380,7 +1399,9 @@
       "uploadEventImage": "நிகழ்வுப் படத்தைப் பதிவேற்றவும் (JPG, PNG, WEBP)",
       "uploadCompanyLogo": "நிறுவனச் சின்னத்தைப் பதிவேற்றவும்",
       "dragOrClick": "பதிவேற்ற இழுத்துவிடவும் அல்லது கிளிக் செய்யவும்",
-      "dragOrBrowse": "உலாவ இழுத்துவிடவும் அல்லது கிளிக் செய்யவும்"
+      "dragOrBrowse": "உலாவ இழுத்துவிடவும் அல்லது கிளிக் செய்யவும்",
+      "slotsRemaining": "{{available}} இடம்(கள்) மட்டுமே மீதம் உள்ளது (அதிகபட்சம் {{max}}).",
+      "upToImagesMaxSize": "அதிகபட்சம் {{count}} படங்கள் · ஒவ்வொன்றும் அதிகபட்சம் {{size}} MB"
     },
     "dateInput": {
       "clear": "தேதியை அழி",
@@ -1392,7 +1413,13 @@
       "hour": "மணி",
       "minute": "நிமிடம்",
       "amPm": "முற்பகல் அல்லது பிற்பகல்",
-      "done": "முடிந்தது"
+      "done": "முடிந்தது",
+      "chooseTime": "நேரத்தைத் தேர்வுசெய்க",
+      "hrShort": "மணி",
+      "minShort": "நிமி",
+      "am": "முற்பகல்",
+      "pm": "பிற்பகல்",
+      "now": "இப்போது"
     },
     "searchableSelect": {
       "searchOptions": "விருப்பங்களைத் தேடு"
@@ -1532,7 +1559,9 @@
       },
       "sameAsPhoneAria": "WhatsApp எண் தொலைபேசி எண்ணைப் போலவே",
       "statusAria": "செயலில்",
-      "selectTime2": "தேர்ந்தெடு"
+      "selectTime2": "தேர்ந்தெடு",
+      "openingDaysAndHours": "திறந்திருக்கும் நாட்கள் மற்றும் நேரம்",
+      "timeRangeSeparator": "முதல்"
     },
     "illustration": {
       "communityActivity": "சமூக செயல்பாட்டு விளக்கப்படம்",
@@ -1698,7 +1727,8 @@
         "help": "உதவி",
         "general": "பொது"
       },
-      "unknownUser": "தெரியாத பயனர்"
+      "unknownUser": "தெரியாத பயனர்",
+      "maxCharactersReached": "அதிகபட்சம் {{max}} எழுத்துகள் எட்டப்பட்டன."
     }
   },
   "user": {
@@ -1787,7 +1817,9 @@
       "progressStrong": "வலுவானது",
       "progressIntermediate": "இடைநிலை",
       "progressGettingThere": "முன்னேறுகிறது",
-      "progressJustStarted": "இப்போதுதான் தொடங்கியது"
+      "progressJustStarted": "இப்போதுதான் தொடங்கியது",
+      "welcomeBanner": "TamilConnect-க்கு வரவேற்கிறோம், {{name}}!",
+      "finishToStandOut": "{{strength}} — தனித்து நிற்க இவற்றை நிறைவு செய்யுங்கள்:"
     },
     "community": {
       "loadingCommunities": "சமூகங்களை ஏற்றுகிறது",
@@ -1836,10 +1868,14 @@
         "pending": "ஒப்புதலுக்கு நிலுவையில்",
         "trending": "பிரபலமாகி வருபவை"
       },
-      "loadingMoreCommunities": "மேலும் சமூகங்களை ஏற்றுகிறது…"
+      "loadingMoreCommunities": "மேலும் சமூகங்களை ஏற்றுகிறது…",
+      "summary": "{{count}} சமூகங்கள் · {{members}} உறுப்பினர்கள்",
+      "endOfList": "நீங்கள் இறுதியை அடைந்துவிட்டீர்கள் — மொத்தம் {{count}} சமூகங்கள்."
     },
     "profile": {
       "phoneNumber": "தொலைபேசி எண்",
+      "phoneCannotChange": "உங்கள் பதிவு செய்யப்பட்ட தொலைபேசி எண்ணை மாற்ற முடியாது.",
+      "countryCannotChange": "உங்கள் பதிவு செய்யப்பட்ட நாட்டை மாற்ற முடியாது.",
       "whatsappNumber": "WhatsApp எண்",
       "tellUsAboutYourself": "உங்களைப் பற்றிச் சொல்லுங்கள்",
       "selectCategory": "வகையைத் தேர்ந்தெடுக்கவும்",
@@ -1957,7 +1993,10 @@
       },
       "selectLevel": "{{level}} தேர்ந்தெடுக்கவும்",
       "loadingEllipsis": "ஏற்றுகிறது…",
-      "graduationYearPlaceholder": "எ.கா. 2027"
+      "graduationYearPlaceholder": "எ.கா. 2027",
+      "confirmDeleteJob": "இந்த வேலையை நீக்கவா?",
+      "confirmDeletePost": "இந்த இடுகையை நீக்கவா?",
+      "confirmDeleteEvent": "இந்த நிகழ்வை நீக்கவா?"
     },
     "business": {
       "allCountries": "அனைத்து நாடுகளும்",
@@ -2163,7 +2202,8 @@
       },
       "searchEventsByTitleDescription": "தலைப்பு அல்லது விளக்கத்தால் நிகழ்வுகளைத் தேடு…",
       "describeEventAgendaPurposeHighlights": "உங்கள் நிகழ்வை விவரிக்கவும் — நிகழ்ச்சி நிரல், நோக்கம், சிறப்பம்சங்கள்…",
-      "loadingMoreEvents": "மேலும் நிகழ்வுகளை ஏற்றுகிறது…"
+      "loadingMoreEvents": "மேலும் நிகழ்வுகளை ஏற்றுகிறது…",
+      "subtitle": "{{count}} நிகழ்வுகள் · உங்கள் சமூகத்தில் நடப்பதைக் கண்டறியுங்கள்."
     },
     "jobs": {
       "sortNewest": "வரிசை: புதியவை",
@@ -2229,6 +2269,22 @@
       "applyNow": "இப்போது விண்ணப்பிக்கவும்",
       "contact": "தொடர்பு",
       "share": "பகிர்",
+      "shareJob": "வேலையைப் பகிர்",
+      "chooseWhereShareJob": "இந்த வேலையை எங்கே பகிர்வது என்பதைத் தேர்ந்தெடுக்கவும்",
+      "postSharePreview": "வேலை பகிர்வு முன்னோட்டம்",
+      "popupBlockedByBrowser": "உலாவி பாப்-அப்பைத் தடுத்தது",
+      "allowPopupsSiteTryAgain": "இந்தத் தளத்திற்கு பாப்-அப்களை அனுமதித்து மீண்டும் முயற்சிக்கவும், அல்லது இதே தாவலில் தொடரவும்.",
+      "clickBlockedPopupIconNear": "முகவரிப் பட்டைக்கு அருகில் உள்ள தடுக்கப்பட்ட பாப்-அப் ஐகானைக் கிளிக் செய்து தேர்ந்தெடுக்கவும்",
+      "alwaysAllowPopUpsFrom": "இந்தத் தளத்திலிருந்து பாப்-அப்களை எப்போதும் அனுமதி",
+      "openHere": "இங்கே திற",
+      "whatsapp": "வாட்ஸ்அப்",
+      "facebook": "பேஸ்புக்",
+      "telegram": "டெலிகிராம்",
+      "linkedin": "லிங்க்டு இன்",
+      "pinterest": "பின்டரெஸ்ட்",
+      "email": "மின்னஞ்சல்",
+      "copyLink": "இணைப்பை நகலெடு",
+      "closeDialog": "உரையாடலை மூடு",
       "noSubmissionsYet": "இதுவரை சமர்ப்பிப்புகள் இல்லை",
       "jobsPostWillShowUp": "நீங்கள் பதிவிடும் வேலைகள் அவற்றின் ஒப்புதல் நிலையுடன் இங்கே காட்டப்படும்.",
       "noJobsMatchFilters": "உங்கள் வடிப்பான்களுக்குப் பொருந்தும் வேலைகள் இல்லை",
@@ -2288,7 +2344,9 @@
         "failedUpdateJobPleaseTry": "வேலையைப் புதுப்பிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
         "jobDeletedSuccessfully": "வேலை வெற்றிகரமாக நீக்கப்பட்டது",
         "failedDeleteJob": "வேலையை நீக்க முடியவில்லை",
-        "copiedClipboard": "நகலெடுக்கப்பட்டது"
+        "copiedClipboard": "நகலெடுக்கப்பட்டது",
+        "shareLinkCopied": "பகிர்வு இணைப்பு நகலெடுக்கப்பட்டது.",
+        "failedCopyShareLink": "பகிர்வு இணைப்பை நகலெடுக்க முடியவில்லை."
       },
       "educationOption": {
         "none": "கல்வித் தகுதி தேவையில்லை",
@@ -2345,7 +2403,8 @@
       "keyDayDayResponsibilities": "அன்றாட முக்கியப் பொறுப்புகள்…",
       "degreesCertifications": "பட்டங்கள், சான்றிதழ்கள்…",
       "mustHaveSkillsExperience": "கட்டாயத் திறன்கள், அனுபவம்…",
-      "perksInsuranceBonuses": "சலுகைகள், காப்பீடு, ஊக்கத்தொகை…"
+      "perksInsuranceBonuses": "சலுகைகள், காப்பீடு, ஊக்கத்தொகை…",
+      "subtitle": "{{count}} வேலைகள் · வாய்ப்புகளைக் கண்டறிந்து உங்கள் சமூகத்தின் முதலாளிகளுடன் இணையுங்கள்."
     }
   },
   "admin": {
@@ -2404,7 +2463,15 @@
       "toast": {
         "failedApprove": "அங்கீகரிக்க முடியவில்லை",
         "failedReject": "நிராகரிக்க முடியவில்லை",
-        "failedRequestMoreInfo": "மேலும் தகவல் கோர முடியவில்லை"
+        "failedRequestMoreInfo": "மேலும் தகவல் கோர முடியவில்லை",
+        "failedLoadPending": "நிலுவையிலுள்ள {{entity}} சமர்ப்பிப்புகளை ஏற்ற முடியவில்லை",
+        "itemApproved": "{{entity}} அங்கீகரிக்கப்பட்டது",
+        "itemRejected": "{{entity}} நிராகரிக்கப்பட்டு நீக்கப்பட்டது",
+        "itemMoreInfoRequested": "{{entity}} குறித்து கூடுதல் தகவல் கோரப்பட்டது",
+        "bulkApproved": "{{count}} {{entity}} உருப்படிகள் அங்கீகரிக்கப்பட்டன",
+        "bulkRejected": "{{count}} {{entity}} உருப்படிகள் நிராகரிக்கப்பட்டு நீக்கப்பட்டன",
+        "bulkMoreInfoRequested": "{{count}} {{entity}} உருப்படிகளுக்கு கூடுதல் தகவல் கோரிக்கை அனுப்பப்பட்டது",
+        "bulkFailed": "{{count}} உருப்படிகளைச் செயலாக்க முடியவில்லை"
       },
       "label": {
         "posts": "இடுகைகள்",
@@ -2448,7 +2515,37 @@
         "time": "நேரம்",
         "timezone": "நேர மண்டலம்",
         "link": "இணைப்பு"
-      }
+      },
+      "viewDetails": "விவரங்களைக் காண்க",
+      "section": {
+        "post": "இடுகை",
+        "overview": "மேலோட்டம்",
+        "visibility": "தெரிவுநிலை",
+        "rules": "விதிகள்",
+        "contact": "தொடர்பு",
+        "hours": "நேரம்",
+        "company": "நிறுவனம்",
+        "role": "பணி",
+        "salary": "ஊதியம்",
+        "location": "இடம்",
+        "skills": "திறன்கள்",
+        "companyIcon": "நிறுவன சின்னம்",
+        "businessIcon": "வணிக சின்னம்",
+        "communityIcon": "சமூக சின்னம்",
+        "imagesCount": "படங்கள் ({{count}})"
+      },
+      "value": {
+        "standard": "நிலையானது",
+        "hidden": "மறைக்கப்பட்டது",
+        "yrs": "ஆண்டுகள்"
+      },
+      "selectedCount": "{{count}} தேர்ந்தெடுக்கப்பட்டது",
+      "approveEntity": "{{entity}} அங்கீகரி",
+      "rejectEntity": "{{entity}} நிராகரி",
+      "approveItems": "{{count}} உருப்படி(கள்) அங்கீகரி",
+      "rejectItems": "{{count}} உருப்படி(கள்) நிராகரி",
+      "itemsCount": "{{count}} உருப்படி(கள்)",
+      "entityApproval": "{{entity}} அங்கீகாரம்"
     },
     "auditLog": {
       "removeFilter": "{{name}} வடிப்பானை நீக்கு",
@@ -2684,7 +2781,9 @@
     "activityLog": {
       "activityLog": "செயல்பாட்டுப் பதிவு",
       "allActions": "அனைத்துச் செயல்களும்",
-      "noActivityLogsFound": "செயல்பாட்டுப் பதிவுகள் எதுவும் இல்லை"
+      "noActivityLogsFound": "செயல்பாட்டுப் பதிவுகள் எதுவும் இல்லை",
+      "actionsRecorded": "{{count}} நிர்வாகச் செயல்(கள்) பதிவு செய்யப்பட்டுள்ளது",
+      "entriesCount": "{{count}} பதிவுகள்"
     },
     "permissions": {
       "rolePermissions": "பங்கு அனுமதிகள்",
@@ -2781,7 +2880,9 @@
       "greetingEvening": "மாலை வணக்கம், {{name}}!",
       "range7": "கடந்த 7 நாட்கள்",
       "range30": "கடந்த 30 நாட்கள்",
-      "range90": "கடந்த 90 நாட்கள்"
+      "range90": "கடந்த 90 நாட்கள்",
+      "todaysSummary": "இன்றைய சமூகச் சுருக்கம் இதோ.",
+      "goToPage": "பக்கம் {{page}}க்குச் செல்"
     },
     "analytics": {
       "fromDate": "தொடக்கத் தேதி",
@@ -2832,7 +2933,57 @@
         "activeJobs": "செயலில் உள்ள வேலைகள்",
         "verifiedBusinesses": "சரிபார்க்கப்பட்ட வணிகங்கள்",
         "topCountry": "முன்னணி நாடு"
-      }
+      },
+      "series": {
+        "newUsers": "புதிய பயனர்கள்",
+        "users": "பயனர்கள்",
+        "jobsPosted": "இடப்பட்ட வேலைகள்",
+        "businessesRegistered": "பதிவுசெய்யப்பட்ட வணிகங்கள்",
+        "posts": "இடுகைகள்",
+        "comments": "கருத்துகள்",
+        "reactions": "எதிர்வினைகள்",
+        "returned": "திரும்பியவர்கள்",
+        "didNotReturn": "திரும்பவில்லை"
+      },
+      "report": {
+        "title": "மேம்பட்ட பகுப்பாய்வு அறிக்கை",
+        "range": "வரம்பு",
+        "to": "முதல்",
+        "granularity": "நுண்மை",
+        "period": "காலம்",
+        "window": "கால அளவு",
+        "metric": "அளவீடு",
+        "value": "மதிப்பு",
+        "status": "நிலை",
+        "count": "எண்ணிக்கை",
+        "country": "நாடு",
+        "users": "பயனர்கள்",
+        "newUsers": "புதிய பயனர்கள்",
+        "jobsPosted": "இடப்பட்ட வேலைகள்",
+        "businessesRegistered": "பதிவுசெய்யப்பட்ட வணிகங்கள்",
+        "posts": "இடுகைகள்",
+        "comments": "கருத்துகள்",
+        "reactions": "எதிர்வினைகள்",
+        "today": "இன்று",
+        "thisWeek": "இந்த வாரம்",
+        "thisMonth": "இந்த மாதம்",
+        "active": "செயலில்",
+        "inactive": "செயலற்ற",
+        "verified": "சரிபார்க்கப்பட்டது",
+        "totalRegistered": "மொத்தம் பதிவுசெய்யப்பட்டவை",
+        "userGrowth": "பயனர் வளர்ச்சி",
+        "activeUsers": "செயலில் உள்ள பயனர்கள்",
+        "countryDistribution": "நாடு வாரியான பரவல்",
+        "jobActivityPosted": "வேலை செயல்பாடு — காலப்போக்கில் இடப்பட்டவை",
+        "jobActivityStatus": "வேலை செயல்பாடு — நிலை",
+        "businessGrowthRegistered": "வணிக வளர்ச்சி — காலப்போக்கில் பதிவுசெய்யப்பட்டவை",
+        "businessGrowthSummary": "வணிக வளர்ச்சி — சுருக்கம்",
+        "communityEngagement": "சமூக ஈடுபாடு",
+        "retentionRate": "தக்கவைப்பு விகிதம்",
+        "eligibleUsers": "தகுதியான பயனர்கள் (30+ நாட்கள் பழையவை)",
+        "returnedLast30Days": "கடந்த 30 நாட்களில் திரும்பியவர்கள்"
+      },
+      "subtitle": "தளம் முழுவதும் வளர்ச்சி, ஈடுபாடு மற்றும் தக்கவைப்பு நுண்ணறிவுகள் · {{range}}"
     },
     "community": {
       "searchByNameDescription": "பெயர், விளக்கத்தால் தேடு…",
@@ -3356,7 +3507,8 @@
         "name": "பெயர்",
         "created": "உருவாக்கப்பட்டது",
         "businesses": "வணிகங்கள்"
-      }
+      },
+      "businessesAcrossEveryCategory": "ஒவ்வொரு வகையிலும் உள்ள வணிகங்கள்"
     },
     "jobs": {
       "searchByTitleCompanyLocation": "தலைப்பு, நிறுவனம், இருப்பிடத்தால் தேடு…",
@@ -3457,6 +3609,22 @@
       "applyNow": "இப்போது விண்ணப்பிக்கவும்",
       "contact": "தொடர்பு",
       "share": "பகிர்",
+      "shareJob": "வேலையைப் பகிர்",
+      "chooseWhereShareJob": "இந்த வேலையை எங்கே பகிர்வது என்பதைத் தேர்ந்தெடுக்கவும்",
+      "postSharePreview": "வேலை பகிர்வு முன்னோட்டம்",
+      "popupBlockedByBrowser": "உலாவி பாப்-அப்பைத் தடுத்தது",
+      "allowPopupsSiteTryAgain": "இந்தத் தளத்திற்கு பாப்-அப்களை அனுமதித்து மீண்டும் முயற்சிக்கவும், அல்லது இதே தாவலில் தொடரவும்.",
+      "clickBlockedPopupIconNear": "முகவரிப் பட்டைக்கு அருகில் உள்ள தடுக்கப்பட்ட பாப்-அப் ஐகானைக் கிளிக் செய்து தேர்ந்தெடுக்கவும்",
+      "alwaysAllowPopUpsFrom": "இந்தத் தளத்திலிருந்து பாப்-அப்களை எப்போதும் அனுமதி",
+      "openHere": "இங்கே திற",
+      "whatsapp": "வாட்ஸ்அப்",
+      "facebook": "பேஸ்புக்",
+      "telegram": "டெலிகிராம்",
+      "linkedin": "லிங்க்டு இன்",
+      "pinterest": "பின்டரெஸ்ட்",
+      "email": "மின்னஞ்சல்",
+      "copyLink": "இணைப்பை நகலெடு",
+      "closeDialog": "உரையாடலை மூடு",
       "noMatchingJobs": "பொருந்தும் வேலைகள் இல்லை",
       "noJobsMatchCurrentSearch": "உங்கள் தற்போதைய தேடல் அல்லது வடிப்பான்களுக்குப் பொருந்தும் வேலைகள் இல்லை.",
       "clearAllFilters": "அனைத்து வடிப்பான்களையும் அழி",
@@ -3519,7 +3687,9 @@
         "failedUpdateJob": "வேலையைப் புதுப்பிக்க முடியவில்லை.",
         "jobDeletedSuccessfully": "வேலை வெற்றிகரமாக நீக்கப்பட்டது",
         "failedDeleteJob": "வேலையை நீக்க முடியவில்லை",
-        "copiedClipboard": "நகலெடுக்கப்பட்டது"
+        "copiedClipboard": "நகலெடுக்கப்பட்டது",
+        "shareLinkCopied": "பகிர்வு இணைப்பு நகலெடுக்கப்பட்டது.",
+        "failedCopyShareLink": "பகிர்வு இணைப்பை நகலெடுக்க முடியவில்லை."
       },
       "label": {
         "allStatus": "அனைத்து நிலைகளும்",
@@ -3671,7 +3841,8 @@
     "dateFrom": "{{date}} முதல்",
     "dateTo": "{{date}} வரை",
     "actor": "செய்தவர்: {{name}}",
-    "joinedLast": "கடந்த {{period}}"
+    "joinedLast": "கடந்த {{period}}",
+    "appliedCount": "{{count}} வடிப்பான்(கள்) பயன்படுத்தப்பட்டுள்ளது"
   },
   "audit": {
     "action": {
@@ -3751,7 +3922,9 @@
       "applicantsOnly": "{{country}} விண்ணப்பதாரர்கள் மட்டும்",
       "postcode": "அஞ்சல் குறியீடு {{code}}",
       "selectDialCodeFirst": "முதலில் நாட்டுக் குறியீட்டைத் தேர்ந்தெடுக்கவும்",
-      "notDisclosed": "வெளியிடப்படவில்லை"
+      "notDisclosed": "வெளியிடப்படவில்லை",
+      "paidType": "{{type}} அடிப்படையில் வழங்கப்படும்.",
+      "shiftSuffix": "{{shift}} பணிமுறை"
     }
   },
   "time": {

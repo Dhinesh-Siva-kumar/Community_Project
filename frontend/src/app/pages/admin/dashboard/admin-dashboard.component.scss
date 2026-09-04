@@ -199,6 +199,9 @@ $_muted:   $color-text-muted;       // was #534434
   gap: 12px;
   min-width: 0;
 }
+// Without this the greeting block keeps its full content width and stops the
+// header from shrinking, which the longer translated strings then overflow.
+.db-welcome__text { min-width: 0; }
 
 .db-welcome__icon {
   width: 40px;
@@ -399,9 +402,16 @@ $_muted:   $color-text-muted;       // was #534434
   font-weight: 600;
   color: $_muted;
   line-height: 1.25;
-  white-space: nowrap;
+  // Translated labels run far longer than the English originals
+  // ("Users Pending" is 13 characters, "நிலுவையில் உள்ள பயனர்கள்" is 24), so a
+  // single nowrap line cut most of them off mid-word. Two clamped lines keep
+  // the label readable while still giving every card the same height.
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .ov-card__value {
@@ -464,6 +474,10 @@ $_muted:   $color-text-muted;       // was #534434
   display: flex;
   align-items: center;
   justify-content: space-between;
+  // A long translated panel title sitting next to its filter control had
+  // nowhere to go and pushed out of the panel; allow the pair to stack.
+  flex-wrap: wrap;
+  gap: 10px;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid $_border;
 }
@@ -474,6 +488,9 @@ $_muted:   $color-text-muted;       // was #534434
   font-weight: 600;
   color: $_text;
   margin: 0;
+  // Lets the title shrink and wrap instead of holding the head at its
+  // content width — see .panel__head.
+  min-width: 0;
 }
 
 // Chart panel header: title/legend row + a filter row underneath
@@ -1240,8 +1257,12 @@ $_comp-border: var(--color-comp-border, #DCE1F5);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  width: 118px;
-  flex-shrink: 0;
+  // Was a hard `width: 118px` measured off the English labels, which forced
+  // the longer translated ones to wrap inside a box that could not grow.
+  // A floor plus content sizing keeps the English layout identical and lets
+  // the column widen only when the text actually needs it.
+  min-width: 118px;
+  flex: 0 1 auto;
 }
 
 .comp-row__label {

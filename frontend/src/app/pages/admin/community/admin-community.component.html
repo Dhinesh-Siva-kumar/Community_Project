@@ -294,7 +294,7 @@
     <span class="jb-meta__count">
       <strong>{{ totalItems() }}</strong> total {{ totalItems() === 1 ? 'community' : 'communities' }}
       @if (activeFilterCount() > 0) {
-        <span class="jb-meta__filter-note">with {{ activeFilterCount() }} filter{{ activeFilterCount() !== 1 ? 's' : '' }} applied</span>
+        <span class="jb-meta__filter-note">{{ 'filters.appliedCount' | translate: { count: activeFilterCount() } }}</span>
       }
     </span>
   </div>

@@ -64,7 +64,13 @@ export class FileUploadComponent implements OnChanges {
   readonly files      = signal<File[]>([]);
   readonly previews   = signal<string[]>([]);
   readonly isDragging = signal(false);
-  readonly error      = signal<string | null>(null);
+  /**
+   * Holds the *key* plus its interpolation params rather than resolved text.
+   * A resolved string would freeze in whichever language was active when the
+   * validation failed; letting the template's `| translate` do the work means
+   * a visible error follows a language switch.
+   */
+  readonly error = signal<{ key: string; params?: Record<string, unknown> } | null>(null);
 
   /** New data-URL preview takes priority; falls back to existingPreview from parent. */
   readonly displayPreview = computed<string | null>(() =>
@@ -144,11 +150,11 @@ export class FileUploadComponent implements OnChanges {
 
     for (const file of incoming) {
       if (!this.matchesAccept(file)) {
-        this.error.set(this.translate.instant('components.fileUpload.typeNotAllowed', { name: file.name }));
+        this.error.set({ key: 'components.fileUpload.typeNotAllowed', params: { name: file.name } });
         continue;
       }
       if (file.size > maxBytes) {
-        this.error.set(this.translate.instant('components.fileUpload.tooLarge', { name: file.name, size: this.maxSizeMb }));
+        this.error.set({ key: 'components.fileUpload.tooLarge', params: { name: file.name, size: this.maxSizeMb } });
         continue;
       }
       valid.push(file);
@@ -163,12 +169,12 @@ export class FileUploadComponent implements OnChanges {
       const current = this.files();
       const available = Math.max(0, this.maxFiles - current.length);
       if (!available) {
-        this.error.set(this.translate.instant('components.fileUpload.tooMany', { count: this.maxFiles }));
+        this.error.set({ key: 'components.fileUpload.tooMany', params: { count: this.maxFiles } });
         return;
       }
       const toAdd = valid.slice(0, available);
       if (toAdd.length < valid.length) {
-        this.error.set(`Only ${available} slot(s) remaining (max ${this.maxFiles}).`);
+        this.error.set({ key: 'components.fileUpload.slotsRemaining', params: { available, max: this.maxFiles } });
       }
       this.files.update(arr => [...arr, ...toAdd]);
       this.readAndSet(toAdd, current.length);

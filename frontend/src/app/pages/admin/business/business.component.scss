@@ -325,7 +325,7 @@
     transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard;
 
     &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: #fff; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18); background: $color-bg-card; }
     &::-webkit-search-cancel-button { display: none; }
   }
 
@@ -366,7 +366,7 @@
   @include transition-short(all);
 
   &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
-  &--active { background: $color-dark; border-color: $color-dark; color: $color-white; }
+  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-bg-page; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
 
@@ -913,11 +913,11 @@
     transition: background 0.15s, color 0.15s;
 
     &:hover {
-      background: $amber-50;
+      background: $color-primary-lighter;
     }
 
     &:focus-visible {
-      background: $amber-50;
+      background: $color-primary-lighter;
     }
 
     &--selected {
@@ -1194,7 +1194,7 @@
       list-style: none;
 
       &:hover {
-        background: $amber-50;
+        background: $color-primary-lighter;
         color: $color-primary-darker;
       }
 
@@ -1614,8 +1614,8 @@
   &--delete {
     background: rgba(220,38,38,0.07);
     border-color: rgba(220,38,38,0.22);
-    color: #dc2626;
-    &:hover { background: rgba(220,38,38,0.15); border-color: #dc2626; transform: translateY(-1px); }
+    color: $color-danger-text;
+    &:hover { background: rgba(220,38,38,0.15); border-color: $color-danger-text; transform: translateY(-1px); }
     &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   }
 }
@@ -1699,7 +1699,7 @@
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
     &::placeholder { color: $color-stone-400; }
-    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba($color-primary, 0.1); background: $color-white; }
+    &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba($color-primary, 0.1); background: $color-bg-card; }
     &::-webkit-search-cancel-button { display: none; }
   }
 
@@ -1733,8 +1733,8 @@
   cursor: pointer;
   transition: all 160ms ease;
 
-  .bi { font-size: 1.2rem; color: #57534e; transition: color 160ms ease; }
-  &__name { font-size: 9px; color: #a8a29e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58px; }
+  .bi { font-size: 1.2rem; color: $color-stone-600; transition: color 160ms ease; }
+  &__name { font-size: 9px; color: $color-stone-400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58px; }
 
   &:hover { background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.30); .bi { color: #92400e; } }
   &:focus-visible { outline: 2px solid #fbbf24; outline-offset: 1px; }
@@ -1778,7 +1778,7 @@
   &__name {
     font-weight: 700;
     font-size: 0.85rem;
-    color: #1c1917;
+    color: $color-text-primary;
     text-align: center;
     // Long category names wrap and break inside the card instead of
     // overflowing past its edges (e.g. a single unbroken long word).
@@ -1821,7 +1821,7 @@
   & + & { border-left: 1.5px solid $color-border; }
   .bi { font-size: 0.85rem; }
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--active { background: $color-dark; color: #fff; }
+  &--active { background: $color-text-primary; color: $color-bg-page; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
 }
 
@@ -1831,7 +1831,7 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   @include transition-quick(all);
   &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
-  &--active { background: $color-dark; color: #fff; }
+  &--active { background: $color-text-primary; color: $color-bg-page; }
    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
 }
 
@@ -2103,7 +2103,10 @@
     background: rgba(2,132,199,0.08);
     border-color: rgba(2,132,199,0.22);
     color: $color-info-text;
-    &:hover { background: $color-info-text; border-color: $color-info-text; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
+    // Fixed (non-reactive) fill on hover — $color-info-text lightens in
+    // dark mode for use as text-on-tint, which would leave the white
+    // label illegible if it filled solid on hover instead.
+    &:hover { background: $color-info; border-color: $color-info; color: #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3); }
   }
 
   &--delete {
@@ -2724,7 +2727,7 @@ $accents: (
   font-size: $font-size-xs; font-weight: $font-weight-medium; cursor: pointer;
   display: flex; align-items: center; justify-content: center; @include transition-short(all);
   &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.08); color: $color-primary-darker; }
-  &--active { background: $color-dark; border-color: $color-dark; color: #fff; }
+  &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-bg-page; }
   &:disabled { opacity: 0.38; cursor: not-allowed; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
@@ -3288,7 +3291,7 @@ $accents: (
       }
 
       &.ss-placeholder .ss-trigger-text {
-        color: $gray-400;
+        color: $color-text-secondary;
       }
 
       &:disabled {
@@ -3366,7 +3369,7 @@ $accents: (
       transition: border-color 0.2s, box-shadow 0.2s;
 
       &::placeholder {
-        color: $gray-400;
+        color: $color-text-secondary;
       }
 
       &:focus {
@@ -3431,7 +3434,7 @@ $accents: (
       list-style: none;
 
       &:hover {
-        background: $amber-50;
+        background: $color-primary-lighter;
         color: $color-primary-darker;
       }
 

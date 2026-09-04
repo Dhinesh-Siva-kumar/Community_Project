@@ -6,6 +6,7 @@ import {
 } from './users.dto';
 import * as usersService from './users.service';
 import { FileValidationService } from '../../services/file-validation.service';
+import { saveBufferToFile } from '../../services/upload-storage.service';
 
 export async function getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try { res.json(await usersService.getProfile(req.user!.sub)); } catch (e) { next(e); }
@@ -15,7 +16,9 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
   try {
     const rawBody = { ...req.body };
 
-    // Validate avatar file if present
+    // Validate avatar file if present, then write the validated buffer to
+    // disk ourselves — uploadProfile uses memory storage, so nothing is
+    // saved until validation passes (same pattern as business/events/jobs).
     if (req.file) {
       const validation = await FileValidationService.validateMulterFile(req.file);
       if (!validation.valid) {
@@ -25,7 +28,8 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
         });
         return;
       }
-      rawBody['avatar'] = `/uploads/profiles/${req.file.filename}`;
+      const filename = await saveBufferToFile(req.file.buffer, req.file.originalname, 'profiles');
+      rawBody['avatar'] = `/uploads/${filename}`;
     }
 
     res.json(await usersService.updateProfile(req.user!.sub, UpdateUserDto.parse(rawBody)));

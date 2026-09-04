@@ -66,7 +66,7 @@
 <!-- ── BULK ACTIONS ─────────────────────────────────────────── -->
 @if (selectedCount() > 0) {
   <div class="ap-bulk-bar">
-    <span class="ap-bulk-bar__count">{{ selectedCount() }} selected</span>
+    <span class="ap-bulk-bar__count">{{ 'admin.approval.selectedCount' | translate: { count: selectedCount() } }}</span>
     <div class="ap-bulk-bar__actions">
       <button class="ap-bulk-btn ap-bulk-btn--approve" [disabled]="bulkProcessing()" (click)="requestBulkApprove()">
         @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i> }
@@ -190,7 +190,7 @@
               <td class="um-td"><span class="um-td-text">{{ item['createdAt'] | date:'d MMM, h:mm a' }}</span></td>
               <td class="um-td um-td--actions" (click)="$event.stopPropagation()">
                 <div class="um-actions-row">
-                  <button class="um-iab um-iab--view um-iab--tip-top" data-tip="View Details" (click)="viewItem(item)">
+                  <button class="um-iab um-iab--view um-iab--tip-top" [attr.data-tip]="'admin.approval.viewDetails' | translate" (click)="viewItem(item)">
                     <i class="bi bi-eye-fill"></i>
                   </button>
                   @if (isNeedsInfo(item)) {
@@ -267,7 +267,7 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Approve {{ currentTab().singular | translate }}</h5>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.approveEntity' | translate: { entity: (currentTab().singular | translate) } }}</h5>
         <button type="button" class="pa-confirm-close" (click)="cancelApproveConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
@@ -293,7 +293,7 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Reject {{ currentTab().singular | translate }}</h5>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.rejectEntity' | translate: { entity: (currentTab().singular | translate) } }}</h5>
         <button type="button" class="pa-confirm-close" (click)="cancelRejectConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
@@ -352,7 +352,7 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Approve {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.approveItems' | translate: { count: selectedCount() } }}</h5>
         <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
@@ -378,7 +378,7 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-x-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">Reject {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.rejectItems' | translate: { count: selectedCount() } }}</h5>
         <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
@@ -409,7 +409,7 @@
           <span class="shape shape--2"></span>
         </div>
         <div class="pa-confirm-header__icon"><i class="bi bi-question-circle-fill"></i></div>
-        <h5 class="pa-confirm-header__title">{{ 'admin.approval.requestMoreInfo' | translate }} — {{ selectedCount() }} item{{ selectedCount() === 1 ? '' : 's' }}</h5>
+        <h5 class="pa-confirm-header__title">{{ 'admin.approval.requestMoreInfo' | translate }} — {{ 'admin.approval.itemsCount' | translate: { count: selectedCount() } }}</h5>
         <button type="button" class="pa-confirm-close" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="pa-confirm-body">
@@ -441,7 +441,7 @@
         </div>
         <div class="pa-view-header__icon"><i class="bi {{ currentTab().icon }}"></i></div>
         <div class="pa-view-header__text">
-          <h5 class="pa-view-header__title">{{ currentTab().singular | translate }} Approval</h5>
+          <h5 class="pa-view-header__title">{{ 'admin.approval.entityApproval' | translate: { entity: (currentTab().singular | translate) } }}</h5>
           <span class="pa-view-status-badge" [class]="'is-' + (vi['status'] ?? 'pending').toLowerCase()">{{ vi['status'] ?? 'PENDING' }}</span>
         </div>
         <button type="button" class="pa-view-close" (click)="closeViewItem()" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x-lg"></i></button>
@@ -492,7 +492,7 @@
           <div class="pa-view-section">
             <div class="pa-view-section-header">
               <span class="pa-view-section-badge"><i class="bi {{ section.icon }}"></i></span>
-              <span class="pa-view-section-title">{{ section.title }}</span>
+              <span class="pa-view-section-title">{{ section.title | translate }}</span>
             </div>
             <div class="pa-view-grid">
               @for (f of section.fields; track f.label) {
@@ -509,7 +509,7 @@
           <div class="pa-view-section" [class.pa-view-section--last]="itemImages(vi).length === 0">
             <div class="pa-view-section-header">
               <span class="pa-view-section-badge"><i class="bi {{ activeEntity() === 'jobs' ? 'bi-building' : 'bi-shop' }}"></i></span>
-              <span class="pa-view-section-title">{{ itemLogoLabel() }}</span>
+              <span class="pa-view-section-title">{{ itemLogoLabel() | translate }}</span>
             </div>
             <div class="pa-view-images">
               <button class="pa-view-image-btn" (click)="openImagePreview([logo], 0)">
@@ -523,7 +523,7 @@
           <div class="pa-view-section pa-view-section--last">
             <div class="pa-view-section-header">
               <span class="pa-view-section-badge"><i class="bi {{ activeEntity() === 'community' ? 'bi-image' : 'bi-paperclip' }}"></i></span>
-              <span class="pa-view-section-title">{{ activeEntity() === 'community' ? 'Community Icon' : 'Images (' + itemImages(vi).length + ')' }}</span>
+              <span class="pa-view-section-title">{{ activeEntity() === 'community' ? ('admin.approval.section.communityIcon' | translate) : ('admin.approval.section.imagesCount' | translate: { count: itemImages(vi).length }) }}</span>
             </div>
             <div class="pa-view-images">
               @for (img of itemImages(vi); track img; let i = $index) {

@@ -18,53 +18,6 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 
-  // ── Equal-width row variant ────────────────────────────────
-  // Rounded-rect card treatment matching community-detail's tab wrapper
-  // (.cd-tabs-wrap) — soft gradient + blur + shadow, rounded-rect buttons
-  // instead of pills, so the whole thing reads as a card of its own.
-  &--full {
-    // Concentric corners: the inner (active-tab) radius is the outer card
-    // radius minus the container's own padding, so the active tab's curve
-    // traces the same corner as the card around it instead of a mismatched
-    // tighter radius.
-    $full-tab-radius: $radius-lg - 8px;
-    $full-tab-padding: 8px;
-
-    display: flex;
-    width: 100%;
-    gap: 6px;
-    overflow: visible;
-    padding: $full-tab-padding;
-    border-radius: $radius-lg;
-    background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
-    border-color: rgba(148, 163, 184, 0.2);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    .tab-indicator { border-radius: $full-tab-radius; }
-
-    .profile-tab {
-      position: relative;
-      z-index: 1;
-      flex: 1 1 0;
-      justify-content: center;
-      height: 39px;
-      border-radius: $full-tab-radius;
-
-      &.active {
-        background: transparent;
-        box-shadow: none;
-
-        // The sliding indicator behind this tab already supplies its own
-        // shadow — keep that suppression on focus too, showing only the
-        // ring instead of stacking the (here, unwanted) card shadow under it.
-        &:focus-visible {
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-color, #{$color-primary}) 35%, transparent);
-        }
-      }
-    }
-  }
 
   // Gentle overshoot ("spring") easing on the slide itself — the standard
   // material ease used elsewhere in the app reads a little flat for a
@@ -186,6 +139,84 @@
     &.active .tab-badge {
       background: var(--tab-color, #{$color-primary});
       transform: scale(1.05);
+    }
+  }
+
+  // ── Equal-width row variant ────────────────────────────────
+  // Rounded-rect card treatment matching community-detail's tab wrapper
+  // (.cd-tabs-wrap) — soft gradient + blur + shadow, rounded-rect buttons
+  // instead of pills, so the whole thing reads as a card of its own.
+  &--full {
+    // Concentric corners: the inner (active-tab) radius is the outer card
+    // radius minus the container's own padding, so the active tab's curve
+    // traces the same corner as the card around it instead of a mismatched
+    // tighter radius.
+    $full-tab-radius: $radius-lg - 8px;
+    $full-tab-padding: 8px;
+    $full-tab-gap: 6px;
+
+    display: flex;
+    width: 100%;
+    gap: $full-tab-gap;
+    overflow: visible;
+    padding: $full-tab-padding;
+    border-radius: $radius-lg;
+    background: linear-gradient(180deg, $color-bg-card 0%, $color-bg-light 100%);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    // The indicator is only rendered in this variant, so its geometry lives
+    // here. Tabs are `flex: 1 1 0`, so each takes an equal share of the track
+    // left over after the container padding and the inter-tab gaps; the slide
+    // therefore moves one tab width *plus one gap* per step.
+    .tab-indicator {
+      top: $full-tab-padding;
+      bottom: $full-tab-padding;
+      left: $full-tab-padding;
+      width: calc(
+        (100% - #{$full-tab-padding * 2} - (var(--tab-count, 1) - 1) * #{$full-tab-gap})
+        / var(--tab-count, 1)
+      );
+      transform: translateX(calc(var(--active-index, 0) * (100% + #{$full-tab-gap})));
+      border-radius: $full-tab-radius;
+    }
+
+    .profile-tab {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 0;
+      // Without this a flex item refuses to shrink below its own content
+      // width, so the longer labels of a non-English catalog push the row
+      // wider than the card and spill outside it. Matches .cd-tab-btn.
+      min-width: 0;
+      overflow: hidden;
+      justify-content: center;
+      height: 39px;
+      border-radius: $full-tab-radius;
+
+      // The label is itself a flex item of the button, so it needs its own
+      // `min-width: 0` — without it the default `min-width: auto` keeps it at
+      // full content width and the ellipsis never engages.
+      .tab-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      &.active {
+        background: transparent;
+        box-shadow: none;
+
+        // The sliding indicator behind this tab already supplies its own
+        // shadow — keep that suppression on focus too, showing only the
+        // ring instead of stacking the (here, unwanted) card shadow under it.
+        &:focus-visible {
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--tab-color, #{$color-primary}) 35%, transparent);
+        }
+      }
     }
   }
 }

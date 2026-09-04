@@ -10,6 +10,7 @@ import { CommunityService } from '../../../core/services/community.service';
 import { DashboardStats, Post, AuditLog, ChartData, CommunityAnalyticsCounts } from '../../../core/models';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 @Component({
@@ -22,6 +23,7 @@ import { RelativeTimeService } from '../../../core/services/relative-time.servic
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   private relativeTime  = inject(RelativeTimeService);
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private userService = inject(UserService);
   private postService = inject(PostService);
   private authService = inject(AuthService);
@@ -167,6 +169,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   chartLabelStride = computed(() => Math.max(1, Math.ceil(this.chartPointCount() / 8)));
 
   chartRangeLabel = computed(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     switch (this.chartPreset()) {
       case '7d':  return this.translate.instant('admin.dashboard.range7');
       case '30d': return this.translate.instant('admin.dashboard.range30');

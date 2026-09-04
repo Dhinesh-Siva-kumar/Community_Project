@@ -28,6 +28,7 @@ import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/pro
 import { EventCalendarComponent } from '../../../shared/components/event-calendar/event-calendar.component';
 import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
 
 type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
@@ -86,6 +87,7 @@ interface AnimatedStat {
 })
 export class UserDashboardComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   private relativeTime  = inject(RelativeTimeService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
@@ -149,6 +151,8 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   currentUser = computed(() => this.user());
 
   greeting = computed(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const hour = this.today().getHours();
     if (hour < 12) return this.translate.instant('user.dashboard.greetingMorning');
     if (hour < 17) return this.translate.instant('user.dashboard.greetingAfternoon');
@@ -175,6 +179,8 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   welcomeBannerText = computed(() => WELCOME_BANNER_TEXT[this.welcomeLang]);
 
   profileStrength = computed(() => {
+    // Recompute these labels when the reader switches language.
+    this.language.currentLang();
     const pct = this.profileCompletion();
     if (pct >= 100) return this.translate.instant('user.dashboard.progressComplete');
     if (pct >= 75) return this.translate.instant('user.dashboard.progressStrong');
