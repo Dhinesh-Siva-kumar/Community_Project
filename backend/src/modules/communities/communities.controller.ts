@@ -23,10 +23,11 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListCommunitiesQueryDto.parse(req.query);
-    const skipActiveFilter = req.user!.role === 'ADMIN';
+    const isAdmin = req.user!.role === 'ADMIN';
     const result = await communitiesService.findAll({
       ...query,
-      skipActiveFilter,
+      skipActiveFilter: isAdmin,
+      isAdmin,
       userId: req.user!.sub,
     });
     res.json(result);
@@ -51,7 +52,7 @@ export async function getSuggested(req: Request, res: Response, next: NextFuncti
 
 export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await communitiesService.findOne(req.params['id'] as string);
+    const result = await communitiesService.findOne(req.params['id'] as string, req.user?.role === 'ADMIN', req.user?.sub);
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -59,7 +60,7 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = UpdateCommunityDto.parse(req.body);
-    const result = await communitiesService.update(req.params['id'] as string, body, req.user!.sub);
+    const result = await communitiesService.update(req.params['id'] as string, body, req.user!.sub, req.user!.role === 'ADMIN');
     res.json(result);
   } catch (err) { next(err); }
 }

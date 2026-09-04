@@ -80,12 +80,34 @@ export async function countPending() {
   return { count: Number(count) };
 }
 
+// ---------------------------------------------------------------------------
+// Taking part in a community is members-only. A non-member can still read
+// everything the community exposes (posts, comments, members), but posting,
+// liking and commenting all require having joined first — otherwise the Join
+// button is decorative and anyone can write into any community they can see.
+// Admins are exempt so the console can still moderate/participate anywhere.
+// Undo actions (unlike, unsave, deleting your own content) are deliberately
+// NOT gated: someone who left a community must still be able to take back
+// what they left behind.
+// ---------------------------------------------------------------------------
+async function assertCommunityMember(communityId: string, userId: string, action: string): Promise<void> {
+  const user = await db('users').where({ id: userId }).select('role').first() as { role?: string } | undefined;
+  if (user?.['role'] === 'ADMIN') return;
+
+  const membership = await db('community_members').where({ community_id: communityId, user_id: userId }).first();
+  if (!membership) {
+    throw new AppError(403, `Join this community to ${action}`, 'NOT_COMMUNITY_MEMBER');
+  }
+}
+
 export async function create(data: CreatePostDtoType, userId: string) {
   const user = await db('users').where({ id: userId }).first() as Record<string, unknown> | undefined;
   if (!user) throw new AppError(404, 'User not found', 'USER_FOUND');
 
   const community = await db('communities').where({ id: data.communityId }).first();
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
+
+  await assertCommunityMember(data.communityId, userId, 'post in it');
 
   const isAutoApproved = user['role'] === 'ADMIN';
   const status = isAutoApproved ? 'APPROVED' : 'PENDING';
@@ -315,19 +337,34 @@ export async function approve(postId: string, adminId: string) {
 // Rejecting permanently deletes the submission — there is no lingering
 // REJECTED state to resubmit from. Use requestMoreInfo() below when the
 // author should be able to fix and resubmit instead.
+// Rejecting is terminal but not destructive — the same rule communities
+// already follow (see communities.service.reject). The row and its rejection
+// reason stay around so the author can still see the post under "My Posts"
+// with a Rejected badge and the reason, and edit-and-resubmit it (updatePost
+// flips a REJECTED/NEEDS_INFO post back to PENDING). Deleting the row instead
+// meant a rejected post — and its images — vanished with nothing but a
+// notification, which is why the profile's rejected count was always 0.
+// Nothing leaks publicly: every non-admin read path filters to APPROVED.
 export async function reject(postId: string, adminId: string, reason?: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
-  const user = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
+
+  if (post['status'] === 'REJECTED') {
+    const existingUser = await db('users').where({ id: post['user_id'] }).select('id', 'user_name', 'display_name').first();
+    return { ...post, user: existingUser };
+  }
+
+  const [updated] = await db('posts').where({ id: postId })
+    .update({ status: 'REJECTED', rejection_reason: reason ?? null })
+    .returning('*');
+  const updatedRow = updated as Record<string, unknown>;
+  const user = await db('users').where({ id: updatedRow['user_id'] }).select('id', 'user_name', 'display_name').first();
 
   const message = `Your post has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
-  await notificationsService.create(post['user_id'] as string, 'POST_REJECTED', message);
+  await notificationsService.create(updatedRow['user_id'] as string, 'POST_REJECTED', message, postId);
   await logAudit(adminId, 'POST_REJECTED', { previousStatus: post['status'], reason: reason ?? null, author: (user as Record<string, unknown> | undefined)?.['user_name'] }, 'posts', postId);
 
-  await db('posts').where({ id: postId }).delete();
-  deleteUploadedFiles(post['images']);
-
-  return { message: 'Post rejected and removed' };
+  return { ...updatedRow, user };
 }
 
 export async function requestMoreInfo(postId: string, adminId: string, reason: string) {
@@ -463,6 +500,8 @@ export async function like(postId: string, userId: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
 
+  await assertCommunityMember(post['community_id'] as string, userId, 'like posts in it');
+
   const existing = await db('likes').where({ post_id: postId, user_id: userId }).first();
   if (existing) throw new AppError(409, 'You have already liked this post', 'HAVE_ALREADY_LIKED_POST');
 
@@ -541,6 +580,8 @@ export async function getComments(postId: string, page: number, limit: number) {
 export async function addComment(postId: string, userId: string, content: string) {
   const post = await db('posts').where({ id: postId }).first() as Record<string, unknown> | undefined;
   if (!post) throw new AppError(404, 'Post not found', 'POST_FOUND');
+
+  await assertCommunityMember(post['community_id'] as string, userId, 'comment in it');
 
   const [comment] = await db('comments')
     .insert({ content, post_id: postId, user_id: userId })

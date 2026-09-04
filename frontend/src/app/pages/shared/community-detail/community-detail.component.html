@@ -484,7 +484,7 @@
                    <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                      <div class="post-avatar flex-shrink-0">
                        @if (post.user?.avatar) {
-                         <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                         <img [src]="post.user?.avatar | imageUrl" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                        } @else {
                          <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                            {{ getUserInitials(post.user) }}
@@ -571,6 +571,7 @@
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like"
                       [class.text-primary]="post.isLiked" [class.fw-semibold]="post.isLiked"
                       [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked"
+                      [disabled]="!canInteract()" [attr.title]="canInteract() ? null : ('shared.communityDetail.joinToParticipate' | translate)"
                       (click)="toggleLike(post)">
                       <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>
                       {{ post._count?.likes ?? 0 }}
@@ -597,7 +598,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                                  <img [src]="comment.user?.avatar | imageUrl" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
                                     {{ getUserInitials(comment.user) }}
@@ -612,6 +613,28 @@
                                       <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
+                                    @if (canDeleteComment(comment)) {
+                                      @if (pendingDeleteCommentId() === comment.id) {
+                                        <button type="button" class="comment-delete-btn comment-delete-btn--danger"
+                                          (click)="confirmDeleteComment(post.id, comment)" [disabled]="deletingCommentId() === comment.id"
+                                          [title]="'common.confirm' | translate" [attr.aria-label]="'common.confirm' | translate">
+                                          @if (deletingCommentId() === comment.id) {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                          } @else {
+                                            <i class="bi bi-check-lg"></i>
+                                          }
+                                        </button>
+                                        <button type="button" class="comment-delete-btn" (click)="cancelDeleteComment()"
+                                          [title]="'common.cancel' | translate" [attr.aria-label]="'common.cancel' | translate">
+                                          <i class="bi bi-x-lg"></i>
+                                        </button>
+                                      } @else {
+                                        <button type="button" class="comment-delete-btn" (click)="requestDeleteComment(comment.id)"
+                                          [title]="'common.delete' | translate" [attr.aria-label]="'common.delete' | translate">
+                                          <i class="bi bi-trash3"></i>
+                                        </button>
+                                      }
+                                    }
                                   </div>
                                   <p class="mb-0 small">{{ comment.content }}</p>
                                 </div>
@@ -622,39 +645,46 @@
                             <p class="text-muted small text-center mb-0">{{ 'shared.communityDetail.noCommentsYetFirst' | translate }}</p>
                           }
                         </div>
-                        <div class="d-flex gap-2 comment-compose-row">
-                          <div class="comment-avatar flex-shrink-0">
-                            @if (currentUser()?.avatar) {
-                              <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
-                            } @else {
-                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
-                                {{ getUserInitials(currentUser()) }}
-                              </div>
-                            }
-                          </div>
-                          <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
-                            <div class="row g-2 w-100 align-items-start comment-compose-grid">
-                              <div class="col-8 comment-input-col">
-                                <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
-                                  @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
-                                  }
+                        @if (canInteract()) {
+                          <div class="d-flex gap-2 comment-compose-row">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (currentUser()?.avatar) {
+                                <img [src]="currentUser()!.avatar | imageUrl" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">
+                                  {{ getUserInitials(currentUser()) }}
+                                </div>
+                              }
+                            </div>
+                            <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                              <div class="row g-2 w-100 align-items-start comment-compose-grid">
+                                <div class="col-8 comment-input-col">
+                                  <div class="comment-input-wrap">
+                                    <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
+                                    @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
+                                      <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
+                                    }
+                                  </div>
+                                </div>
+                                <div class="col-4 comment-submit-col">
+                                  <button type="submit" class="btn btn-sm btn-primary comment-submit-btn"
+                                    [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                                    @if (submittingComment() === post.id) {
+                                      <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
+                                      <i class="bi bi-send"></i>
+                                    }
+                                  </button>
                                 </div>
                               </div>
-                              <div class="col-4 comment-submit-col">
-                                <button type="submit" class="btn btn-sm btn-primary comment-submit-btn"
-                                  [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
-                                  @if (submittingComment() === post.id) {
-                                    <span class="spinner-border spinner-border-sm"></span>
-                                  } @else {
-                                    <i class="bi bi-send"></i>
-                                  }
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
+                            </form>
+                          </div>
+                        } @else {
+                          <div class="comment-locked-hint">
+                            <i class="bi bi-lock-fill"></i>
+                            <span>{{ 'shared.communityDetail.joinToComment' | translate }}</span>
+                          </div>
+                        }
                       }
                     </div>
                   }
@@ -687,13 +717,14 @@
                 <div class="cd-compose-card"
                   [class.cd-compose-card--general]="selectedPostType() === 'GENERAL'"
                   [class.cd-compose-card--help]="selectedPostType() === 'HELP'"
-                  [class.cd-compose-card--emergency]="selectedPostType() === 'EMERGENCY'">
+                  [class.cd-compose-card--emergency]="selectedPostType() === 'EMERGENCY'"
+                  [class.cd-compose-card--enquire]="selectedPostType() === 'ENQUIRY'">
 
                   <!-- Composer header: user identity -->
                   <div class="cd-compose-header">
                     <div class="post-avatar flex-shrink-0">
                       @if (currentUser()?.avatar) {
-                        <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                        <img [src]="currentUser()!.avatar | imageUrl" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                           {{ getUserInitials(currentUser()) }}
@@ -792,6 +823,7 @@
                           [class.cd-post-submit-btn--general]="selectedPostType() === 'GENERAL'"
                           [class.cd-post-submit-btn--help]="selectedPostType() === 'HELP'"
                           [class.cd-post-submit-btn--emergency]="selectedPostType() === 'EMERGENCY'"
+                          [class.cd-post-submit-btn--enquire]="selectedPostType() === 'ENQUIRY'"
                           [disabled]="submittingPost() || postForm.invalid">
                           @if (submittingPost()) {
                             <span class="spinner-border spinner-border-sm me-1"></span>Posting...
@@ -803,6 +835,17 @@
 
                     </div>
                   </form>
+                </div>
+                } @else if (community()?.status === 'APPROVED') {
+                <div class="cd-compose-locked cd-compose-locked--members">
+                  <div class="cd-compose-locked__icon"><i class="bi bi-lock-fill"></i></div>
+                  <p class="cd-compose-locked__title">{{ 'shared.communityDetail.membersOnly' | translate }}</p>
+                  <p class="cd-compose-locked__text">{{ 'shared.communityDetail.joinToParticipate' | translate }}</p>
+                  @if (!isOwnerOfCommunity()) {
+                    <button type="button" class="cd-btn-join mt-2" (click)="openJoinModal()">
+                      <i class="bi bi-plus-circle-fill me-1"></i>{{ 'shared.communityDetail.joinCommunity' | translate }}
+                    </button>
+                  }
                 </div>
                 } @else {
                 <div class="cd-compose-locked"
@@ -862,7 +905,7 @@
                   <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                        <img [src]="post.user?.avatar | imageUrl" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
                       }
@@ -936,7 +979,7 @@
                   }
                   <hr class="post-divider" />
                   <div class="d-flex gap-1 post-actions-row">
-                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)" [disabled]="!canInteract()" [attr.title]="canInteract() ? null : ('shared.communityDetail.joinToParticipate' | translate)">
                       <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--comment" (click)="toggleComments(post.id)">
@@ -956,7 +999,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                                  <img [src]="comment.user?.avatar | imageUrl" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
                                 }
@@ -969,6 +1012,28 @@
                                       <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
+                                    @if (canDeleteComment(comment)) {
+                                      @if (pendingDeleteCommentId() === comment.id) {
+                                        <button type="button" class="comment-delete-btn comment-delete-btn--danger"
+                                          (click)="confirmDeleteComment(post.id, comment)" [disabled]="deletingCommentId() === comment.id"
+                                          [title]="'common.confirm' | translate" [attr.aria-label]="'common.confirm' | translate">
+                                          @if (deletingCommentId() === comment.id) {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                          } @else {
+                                            <i class="bi bi-check-lg"></i>
+                                          }
+                                        </button>
+                                        <button type="button" class="comment-delete-btn" (click)="cancelDeleteComment()"
+                                          [title]="'common.cancel' | translate" [attr.aria-label]="'common.cancel' | translate">
+                                          <i class="bi bi-x-lg"></i>
+                                        </button>
+                                      } @else {
+                                        <button type="button" class="comment-delete-btn" (click)="requestDeleteComment(comment.id)"
+                                          [title]="'common.delete' | translate" [attr.aria-label]="'common.delete' | translate">
+                                          <i class="bi bi-trash3"></i>
+                                        </button>
+                                      }
+                                    }
                                   </div>
                                   <p class="mb-0 small">{{ comment.content }}</p>
                                 </div>
@@ -976,36 +1041,43 @@
                             </div>
                           }
                         </div>
-                        <div class="d-flex gap-2 comment-compose-row">
-                          <div class="comment-avatar flex-shrink-0">
-                            @if (currentUser()?.avatar) {
-                              <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
-                            } @else {
-                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
-                            }
-                          </div>
-                          <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
-                            <div class="row g-2 w-100 align-items-start comment-compose-grid">
-                              <div class="col-8 comment-input-col">
-                                <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
-                                  @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
-                                  }
+                        @if (canInteract()) {
+                          <div class="d-flex gap-2 comment-compose-row">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (currentUser()?.avatar) {
+                                <img [src]="currentUser()!.avatar | imageUrl" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
+                              }
+                            </div>
+                            <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                              <div class="row g-2 w-100 align-items-start comment-compose-grid">
+                                <div class="col-8 comment-input-col">
+                                  <div class="comment-input-wrap">
+                                    <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
+                                    @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
+                                      <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
+                                    }
+                                  </div>
+                                </div>
+                                <div class="col-4 comment-submit-col">
+                                  <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                                    @if (submittingComment() === post.id) {
+                                      <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
+                                      <i class="bi bi-send"></i>
+                                    }
+                                  </button>
                                 </div>
                               </div>
-                              <div class="col-4 comment-submit-col">
-                                <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
-                                  @if (submittingComment() === post.id) {
-                                    <span class="spinner-border spinner-border-sm"></span>
-                                  } @else {
-                                    <i class="bi bi-send"></i>
-                                  }
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
+                            </form>
+                          </div>
+                        } @else {
+                          <div class="comment-locked-hint">
+                            <i class="bi bi-lock-fill"></i>
+                            <span>{{ 'shared.communityDetail.joinToComment' | translate }}</span>
+                          </div>
+                        }
                       }
                     </div>
                   }
@@ -1075,6 +1147,17 @@
                     </div>
                   </form>
                 </div>
+                } @else if (community()?.status === 'APPROVED') {
+                <div class="cd-compose-locked cd-compose-locked--members">
+                  <div class="cd-compose-locked__icon"><i class="bi bi-lock-fill"></i></div>
+                  <p class="cd-compose-locked__title">{{ 'shared.communityDetail.membersOnly' | translate }}</p>
+                  <p class="cd-compose-locked__text">{{ 'shared.communityDetail.joinToParticipate' | translate }}</p>
+                  @if (!isOwnerOfCommunity()) {
+                    <button type="button" class="cd-btn-join mt-2" (click)="openJoinModal()">
+                      <i class="bi bi-plus-circle-fill me-1"></i>{{ 'shared.communityDetail.joinCommunity' | translate }}
+                    </button>
+                  }
+                </div>
                 } @else {
                 <div class="cd-compose-locked"
                   [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'"
@@ -1132,7 +1215,7 @@
                   <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                        <img [src]="post.user?.avatar | imageUrl" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
                       }
@@ -1206,7 +1289,7 @@
                   }
                   <hr class="post-divider" />
                   <div class="d-flex gap-1 post-actions-row">
-                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)" [disabled]="!canInteract()" [attr.title]="canInteract() ? null : ('shared.communityDetail.joinToParticipate' | translate)">
                       <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--comment" (click)="toggleComments(post.id)">
@@ -1226,7 +1309,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                                  <img [src]="comment.user?.avatar | imageUrl" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
                                 }
@@ -1239,6 +1322,28 @@
                                       <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
+                                    @if (canDeleteComment(comment)) {
+                                      @if (pendingDeleteCommentId() === comment.id) {
+                                        <button type="button" class="comment-delete-btn comment-delete-btn--danger"
+                                          (click)="confirmDeleteComment(post.id, comment)" [disabled]="deletingCommentId() === comment.id"
+                                          [title]="'common.confirm' | translate" [attr.aria-label]="'common.confirm' | translate">
+                                          @if (deletingCommentId() === comment.id) {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                          } @else {
+                                            <i class="bi bi-check-lg"></i>
+                                          }
+                                        </button>
+                                        <button type="button" class="comment-delete-btn" (click)="cancelDeleteComment()"
+                                          [title]="'common.cancel' | translate" [attr.aria-label]="'common.cancel' | translate">
+                                          <i class="bi bi-x-lg"></i>
+                                        </button>
+                                      } @else {
+                                        <button type="button" class="comment-delete-btn" (click)="requestDeleteComment(comment.id)"
+                                          [title]="'common.delete' | translate" [attr.aria-label]="'common.delete' | translate">
+                                          <i class="bi bi-trash3"></i>
+                                        </button>
+                                      }
+                                    }
                                   </div>
                                   <p class="mb-0 small">{{ comment.content }}</p>
                                 </div>
@@ -1246,36 +1351,43 @@
                             </div>
                           }
                         </div>
-                        <div class="d-flex gap-2 comment-compose-row">
-                          <div class="comment-avatar flex-shrink-0">
-                            @if (currentUser()?.avatar) {
-                              <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
-                            } @else {
-                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
-                            }
-                          </div>
-                          <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
-                            <div class="row g-2 w-100 align-items-start comment-compose-grid">
-                              <div class="col-8 comment-input-col">
-                                <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
-                                  @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
-                                  }
+                        @if (canInteract()) {
+                          <div class="d-flex gap-2 comment-compose-row">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (currentUser()?.avatar) {
+                                <img [src]="currentUser()!.avatar | imageUrl" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
+                              }
+                            </div>
+                            <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                              <div class="row g-2 w-100 align-items-start comment-compose-grid">
+                                <div class="col-8 comment-input-col">
+                                  <div class="comment-input-wrap">
+                                    <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
+                                    @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
+                                      <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
+                                    }
+                                  </div>
+                                </div>
+                                <div class="col-4 comment-submit-col">
+                                  <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                                    @if (submittingComment() === post.id) {
+                                      <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
+                                      <i class="bi bi-send"></i>
+                                    }
+                                  </button>
                                 </div>
                               </div>
-                              <div class="col-4 comment-submit-col">
-                                <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
-                                  @if (submittingComment() === post.id) {
-                                    <span class="spinner-border spinner-border-sm"></span>
-                                  } @else {
-                                    <i class="bi bi-send"></i>
-                                  }
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
+                            </form>
+                          </div>
+                        } @else {
+                          <div class="comment-locked-hint">
+                            <i class="bi bi-lock-fill"></i>
+                            <span>{{ 'shared.communityDetail.joinToComment' | translate }}</span>
+                          </div>
+                        }
                       }
                     </div>
                   }
@@ -1345,6 +1457,17 @@
                     </div>
                   </form>
                 </div>
+                } @else if (community()?.status === 'APPROVED') {
+                <div class="cd-compose-locked cd-compose-locked--members">
+                  <div class="cd-compose-locked__icon"><i class="bi bi-lock-fill"></i></div>
+                  <p class="cd-compose-locked__title">{{ 'shared.communityDetail.membersOnly' | translate }}</p>
+                  <p class="cd-compose-locked__text">{{ 'shared.communityDetail.joinToParticipate' | translate }}</p>
+                  @if (!isOwnerOfCommunity()) {
+                    <button type="button" class="cd-btn-join mt-2" (click)="openJoinModal()">
+                      <i class="bi bi-plus-circle-fill me-1"></i>{{ 'shared.communityDetail.joinCommunity' | translate }}
+                    </button>
+                  }
+                </div>
                 } @else {
                 <div class="cd-compose-locked"
                   [class.cd-compose-locked--rejected]="getApprovalStatus()?.cls === 'cd-status-rejected'"
@@ -1402,7 +1525,7 @@
                   <div class="d-flex align-items-center gap-3 mb-3 post-head-row">
                     <div class="post-avatar flex-shrink-0">
                       @if (post.user?.avatar) {
-                        <img [src]="post.user?.avatar" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                        <img [src]="post.user?.avatar | imageUrl" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(post.user) }}</div>
                       }
@@ -1476,7 +1599,7 @@
                   }
                   <hr class="post-divider" />
                   <div class="d-flex gap-1 post-actions-row">
-                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)">
+                    <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--like" [class.text-primary]="post.isLiked" [class.heartbeat-active]="post.isLiked" [class.action-btn--liked]="post.isLiked" (click)="toggleLike(post)" [disabled]="!canInteract()" [attr.title]="canInteract() ? null : ('shared.communityDetail.joinToParticipate' | translate)">
                       <i class="bi me-1" [class.bi-heart-fill]="post.isLiked" [class.bi-heart]="!post.isLiked"></i>{{ post._count?.likes ?? 0 }}
                     </button>
                     <button class="btn btn-sm btn-light flex-grow-1 action-btn action-btn--comment" (click)="toggleComments(post.id)">
@@ -1496,7 +1619,7 @@
                             <div class="comment-item d-flex gap-2 mb-3 comment-fade-in" [style.animation-delay]="(ci * 50) + 'ms'">
                               <div class="comment-avatar flex-shrink-0">
                                 @if (comment.user?.avatar) {
-                                  <img [src]="comment.user?.avatar" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                                  <img [src]="comment.user?.avatar | imageUrl" [alt]="comment.user?.displayName ?? comment.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                                 } @else {
                                   <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(comment.user) }}</div>
                                 }
@@ -1509,6 +1632,28 @@
                                       <span class="comment-author-tag">{{ 'shared.communityDetail.author' | translate }}</span>
                                     }
                                     <span class="comment-time">{{ getTimeAgo(comment.createdAt) }}</span>
+                                    @if (canDeleteComment(comment)) {
+                                      @if (pendingDeleteCommentId() === comment.id) {
+                                        <button type="button" class="comment-delete-btn comment-delete-btn--danger"
+                                          (click)="confirmDeleteComment(post.id, comment)" [disabled]="deletingCommentId() === comment.id"
+                                          [title]="'common.confirm' | translate" [attr.aria-label]="'common.confirm' | translate">
+                                          @if (deletingCommentId() === comment.id) {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                          } @else {
+                                            <i class="bi bi-check-lg"></i>
+                                          }
+                                        </button>
+                                        <button type="button" class="comment-delete-btn" (click)="cancelDeleteComment()"
+                                          [title]="'common.cancel' | translate" [attr.aria-label]="'common.cancel' | translate">
+                                          <i class="bi bi-x-lg"></i>
+                                        </button>
+                                      } @else {
+                                        <button type="button" class="comment-delete-btn" (click)="requestDeleteComment(comment.id)"
+                                          [title]="'common.delete' | translate" [attr.aria-label]="'common.delete' | translate">
+                                          <i class="bi bi-trash3"></i>
+                                        </button>
+                                      }
+                                    }
                                   </div>
                                   <p class="mb-0 small">{{ comment.content }}</p>
                                 </div>
@@ -1516,36 +1661,43 @@
                             </div>
                           }
                         </div>
-                        <div class="d-flex gap-2 comment-compose-row">
-                          <div class="comment-avatar flex-shrink-0">
-                            @if (currentUser()?.avatar) {
-                              <img [src]="currentUser()!.avatar" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
-                            } @else {
-                              <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
-                            }
-                          </div>
-                          <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
-                            <div class="row g-2 w-100 align-items-start comment-compose-grid">
-                              <div class="col-8 comment-input-col">
-                                <div class="comment-input-wrap">
-                                  <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
-                                  @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
-                                    <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
-                                  }
+                        @if (canInteract()) {
+                          <div class="d-flex gap-2 comment-compose-row">
+                            <div class="comment-avatar flex-shrink-0">
+                              @if (currentUser()?.avatar) {
+                                <img [src]="currentUser()!.avatar | imageUrl" [alt]="getUserFullName(currentUser())" class="rounded-circle" appImageError />
+                              } @else {
+                                <div class="avatar-initials-sm rounded-circle d-flex align-items-center justify-content-center">{{ getUserInitials(currentUser()) }}</div>
+                              }
+                            </div>
+                            <form class="flex-grow-1" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
+                              <div class="row g-2 w-100 align-items-start comment-compose-grid">
+                                <div class="col-8 comment-input-col">
+                                  <div class="comment-input-wrap">
+                                    <input type="text" class="form-control form-control-sm" formControlName="content" maxlength="300" [placeholder]="'shared.communityDetail.writeComment' | translate" />
+                                    @if ((getCommentForm(post.id).get('content')?.value?.length ?? 0) >= 300) {
+                                      <small class="comment-limit-msg">{{ 'shared.communityDetail.maximum300CharactersReached' | translate }}</small>
+                                    }
+                                  </div>
+                                </div>
+                                <div class="col-4 comment-submit-col">
+                                  <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
+                                    @if (submittingComment() === post.id) {
+                                      <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
+                                      <i class="bi bi-send"></i>
+                                    }
+                                  </button>
                                 </div>
                               </div>
-                              <div class="col-4 comment-submit-col">
-                                <button type="submit" class="btn btn-sm btn-primary comment-submit-btn" [disabled]="submittingComment() === post.id || getCommentForm(post.id).invalid">
-                                  @if (submittingComment() === post.id) {
-                                    <span class="spinner-border spinner-border-sm"></span>
-                                  } @else {
-                                    <i class="bi bi-send"></i>
-                                  }
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
+                            </form>
+                          </div>
+                        } @else {
+                          <div class="comment-locked-hint">
+                            <i class="bi bi-lock-fill"></i>
+                            <span>{{ 'shared.communityDetail.joinToComment' | translate }}</span>
+                          </div>
+                        }
                       }
                     </div>
                   }
@@ -1626,6 +1778,17 @@
                       </button>
                     </div>
                   </form>
+                </div>
+                } @else if (community()?.status === 'APPROVED') {
+                <div class="cd-compose-locked cd-compose-locked--members">
+                  <div class="cd-compose-locked__icon"><i class="bi bi-lock-fill"></i></div>
+                  <p class="cd-compose-locked__title">{{ 'shared.communityDetail.membersOnly' | translate }}</p>
+                  <p class="cd-compose-locked__text">{{ 'shared.communityDetail.joinToParticipate' | translate }}</p>
+                  @if (!isOwnerOfCommunity()) {
+                    <button type="button" class="cd-btn-join mt-2" (click)="openJoinModal()">
+                      <i class="bi bi-plus-circle-fill me-1"></i>{{ 'shared.communityDetail.joinCommunity' | translate }}
+                    </button>
+                  }
                 </div>
                 } @else {
                 <div class="cd-compose-locked"
@@ -1723,7 +1886,7 @@
                     <!-- Avatar -->
                     <div class="member-avatar flex-shrink-0">
                       @if (member.user?.avatar) {
-                        <img [src]="member.user?.avatar" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                        <img [src]="member.user?.avatar | imageUrl" [alt]="member.user?.displayName ?? member.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
                       } @else {
                         <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
                           {{ getUserInitials(member.user) }}
@@ -2109,6 +2272,20 @@
               <div class="card border-0 shadow-sm mb-3 post-card post-stagger-in" [style.animation-delay]="(i * 60) + 'ms'">
                 <div class="card-body">
                   <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <!-- Author identity, same shape as the feed's post header -->
+                    <div class="post-avatar flex-shrink-0">
+                      @if (post.user?.avatar) {
+                        <img [src]="post.user?.avatar | imageUrl" [alt]="post.user?.displayName ?? post.user?.userName" class="rounded-circle" loading="lazy" decoding="async" appImageError />
+                      } @else {
+                        <div class="avatar-initials rounded-circle d-flex align-items-center justify-content-center">
+                          {{ getUserInitials(post.user) }}
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0 fw-semibold small">{{ getUserFullName(post.user) }}</h6>
+                      <small class="text-muted">{{ getTimeAgo(post.createdAt) }}</small>
+                    </div>
                     <span class="post-type-chip"
                       [class.post-type-chip--general]="post.type === 'GENERAL'"
                       [class.post-type-chip--help]="post.type === 'HELP'"
@@ -2142,11 +2319,25 @@
                         @if (post.status === 'PENDING') { Pending Approval } @else if (post.status === 'APPROVED') { Approved } @else if (post.status === 'NEEDS_INFO') { Needs More Info } @else { Rejected }
                       </span>
                     }
-                    <small class="text-muted ms-auto">{{ getTimeAgo(post.createdAt) }}</small>
                   </div>
 
                   <hr class="post-divider" />
                   <p class="post-content mb-0">{{ post.content }}</p>
+
+                  <!-- Same grid + lightbox the community feed uses, so an author
+                       reviewing their own post sees exactly what they submitted. -->
+                  @if (post.images && post.images.length > 0) {
+                    <div class="post-images mt-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
+                      @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
+                        <button type="button" class="post-image-tile" (click)="openImagePreview(post.images, imgIndex)" [attr.aria-label]="'Open image ' + (imgIndex + 1)">
+                          <img [src]="img | imageUrl" [alt]="'shared.communityDetail.postImage' | translate" loading="lazy" decoding="async" appImageError />
+                          @if (post.images.length > 4 && imgIndex === 3) {
+                            <span class="post-image-more-overlay">+{{ post.images.length - 4 }}</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
 
                   @if ((post.status === 'REJECTED' || post.status === 'NEEDS_INFO') && post.rejectionReason) {
                     <div class="mp-reason mt-2" [class.mp-reason--needs-info]="post.status === 'NEEDS_INFO'">

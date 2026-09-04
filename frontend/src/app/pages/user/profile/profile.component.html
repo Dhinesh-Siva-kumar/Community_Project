@@ -479,11 +479,13 @@
                         <span class="prf-badge prf-badge--active">{{ 'common.approved' | translate }}</span>
                       } @else if (post.status === 'REJECTED') {
                         <span class="prf-badge prf-badge--rejected">{{ 'common.rejected' | translate }}</span>
+                      } @else if (post.status === 'NEEDS_INFO') {
+                        <span class="prf-badge prf-badge--needs-info">{{ 'common.needsMoreInfo' | translate }}</span>
                       }
                     </div>
                     <p class="prf-item__desc">{{ post.content }}</p>
                     <small class="prf-item__meta">{{ 'common.postedDate' | translate: { date: (post.createdAt | date:'mediumDate') } }}</small>
-                    @if (post.status === 'REJECTED' && post.rejectionReason) {
+                    @if ((post.status === 'REJECTED' || post.status === 'NEEDS_INFO') && post.rejectionReason) {
                       <div class="small text-danger mt-1"><i class="bi bi-info-circle me-1"></i>{{ 'common.reasonLabel' | translate: { reason: post.rejectionReason } }}</div>
                     }
                   </div>
