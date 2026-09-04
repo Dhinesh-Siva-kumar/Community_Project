@@ -637,7 +637,7 @@
 
   &--past {
     .ev-card__media img { filter: grayscale(0.35) brightness(0.92); }
-    .ev-card__date { background: rgba(255, 255, 255, 0.85); }
+    .ev-card__date { background: color-mix(in srgb, $color-bg-card 85%, transparent); }
   }
 
   // Deep-link scroll target (dashboard calendar → jump to this event).
@@ -679,7 +679,7 @@
   position: absolute; top: 12px; left: 12px;
   display: flex; flex-direction: column; align-items: center; line-height: 1;
   min-width: 46px; padding: 6px 8px 7px; border-radius: $radius-md;
-  background: rgba(255, 255, 255, 0.96); box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
+  background: color-mix(in srgb, $color-bg-card 96%, transparent); box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
   transition: background-color 220ms ease;
 }
 .ev-card__date-day { font-family: $font-family-header; font-size: 1.25rem; font-weight: 800; color: $color-stone-900; }

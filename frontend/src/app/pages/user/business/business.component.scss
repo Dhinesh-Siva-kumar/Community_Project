@@ -49,8 +49,8 @@
 .biz-tabs-wrap {
   position: relative; flex-shrink: 0;
   background: $color-bg-card;
-  border: 1px solid rgba(148, 163, 184, 0.2); border-radius: $radius-md;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  border: 1px solid $jbf-tabs-border; border-radius: $radius-md;
+  box-shadow: $jbf-tabs-shadow, inset 0 1px 0 $jbf-tabs-inset;
   padding: 4px; backdrop-filter: blur(10px); display: inline-block;
 }
 
@@ -64,8 +64,8 @@
 .biz-tab-indicator {
   position: absolute; top: 0; left: 0; height: 32px;
   border-radius: $radius-sm; background: $color-bg-card;
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 rgba(255, 255, 255, 0.95) inset;
+  border: 1px solid $jbf-soft-border;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18), 0 1px 0 $jbf-tabs-inset inset;
   opacity: 0;
   z-index: 0;
   pointer-events: none;
@@ -84,7 +84,7 @@
   i { font-size: 12px; }
 
   &:hover:not(.active) { color: $color-stone-800; }
-  &.active { color: $color-primary-darker; font-weight: $font-weight-bold; }
+  &.active { color: $jbf-soft-text; font-weight: $font-weight-bold; }
 }
 
 .biz-tab-count {
@@ -123,7 +123,7 @@
   width: 36px; height: 36px; border: none; background: $color-bg-light; color: $color-stone-500;
   font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
   @include transition-quick(all);
-  &:hover { background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &:hover { background: rgba(251,191,36,0.10); color: $jbf-soft-text; }
   // Reactive pair (not $color-dark/#fff): $color-dark is a fixed hex that's
   // nearly identical to $color-bg-card's dark-mode value, so a fixed-dark
   // "active" fill would all but disappear against a dark-mode card. Using
@@ -645,7 +645,7 @@ $accents: (
   border-radius: $radius-lg;
   padding: $spacing-md $spacing-lg;
   margin-bottom: $spacing-md;
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05);
+  box-shadow: $shadow-2;
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
@@ -739,7 +739,7 @@ $accents: (
   white-space: nowrap;
   @include transition-short(all);
 
-  &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $color-primary-darker; }
+  &:hover { background: $color-primary-light; border-color: $color-amber-200; color: $jbf-soft-text; }
   &--active { background: $color-text-primary; border-color: $color-text-primary; color: $color-bg-page; }
   &--sm { height: 28px; padding: 4px 10px; font-size: 11px; }
 }
@@ -790,7 +790,7 @@ $accents: (
   border: 1.5px solid $color-border; border-radius: 50%;
   background: $color-bg-card; color: $color-stone-600; font-size: 0.7rem; cursor: pointer;
   @include transition-quick(all);
-  &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.10); color: $color-primary-darker; }
+  &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.10); color: $jbf-soft-text; }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
@@ -810,8 +810,8 @@ $accents: (
   height: 28px; padding: 0 12px; border: 1.5px solid $color-border; border-radius: $radius-full;
   background: $color-bg-card; color: $color-stone-600; font-size: 11px; font-weight: $font-weight-semibold; cursor: pointer;
   @include transition-quick(all);
-  &:hover { border-color: $color-primary; color: $color-primary-darker; }
-  &--active { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-color: #d97706; color: #fff; }
+  &:hover { border-color: $color-primary; color: $jbf-soft-text; }
+  &--active { background: $jbf-active-bg; border-color: $jbf-active-border; color: $jbf-active-text; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
 
@@ -828,7 +828,7 @@ $accents: (
   font-weight: $font-weight-semibold;
   cursor: pointer;
   @include transition-short(all);
-  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $color-primary-darker; }
+  &:hover, &--open { border-color: $color-primary; background: $color-primary-light; color: $jbf-soft-text; }
 }
 
 .jb-advanced-count {
@@ -956,9 +956,9 @@ $accents: (
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  background: $color-primary-lighter;
-  color: $color-primary-darker;
+  border: 1px solid $jbf-soft-border;
+  background: $jbf-soft-bg;
+  color: $jbf-soft-text;
   border-radius: 999px;
   padding: 7px 14px;
   font-size: 12px;
@@ -971,21 +971,21 @@ $accents: (
 
   &:hover {
     background: $color-warning-light;
-    border-color: rgba(245, 158, 11, 0.55);
+    border-color: $jbf-hover-border;
     color: $color-warning-text;
-    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+    box-shadow: $jbf-hover-shadow;
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline: 2px solid $jbf-focus-ring;
     outline-offset: 2px;
   }
 
   &--active {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    border-color: #d97706;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+    background: $jbf-active-bg;
+    border-color: $jbf-active-border;
+    color: $jbf-active-text;
+    box-shadow: $jbf-active-shadow;
   }
 }
 
@@ -1073,18 +1073,18 @@ $accents: (
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px solid rgba(251, 191, 36, 0.16);
+  border: 1px solid $jbf-date-card-border;
   border-radius: 12px;
   background: $color-bg-card;
   transition: border-color $duration-short $easing-standard, box-shadow $duration-short $easing-standard, background $duration-short $easing-standard;
 
   &:hover {
-    border-color: rgba(251, 191, 36, 0.36);
+    border-color: $jbf-stat-hover-border;
     box-shadow: 0 4px 14px rgba(251, 191, 36, 0.1);
   }
 
   &:focus-within {
-    border-color: rgba(245, 158, 11, 0.48);
+    border-color: $jbf-hover-border;
     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.14);
 
     .jb-adv-input-icon {
@@ -1094,10 +1094,10 @@ $accents: (
 
   &--filled {
     background: $color-warning-light;
-    border-color: rgba(245, 158, 11, 0.32);
+    border-color: $jbf-hover-border;
 
     .jb-adv-date-help {
-      color: $color-primary-darker;
+      color: $jbf-soft-text;
     }
   }
 }
@@ -1124,7 +1124,7 @@ $accents: (
   gap: 8px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+  border-top: 1px dashed $jbf-dashed-border;
 
   &__label {
     font-size: 11px;
@@ -1137,9 +1137,9 @@ $accents: (
 }
 
 .jb-quick-date-btn {
-  border: 1px solid rgba(251, 191, 36, 0.35);
-  background: $color-primary-lighter;
-  color: $color-primary-darker;
+  border: 1px solid $jbf-soft-border;
+  background: $jbf-soft-bg;
+  color: $jbf-soft-text;
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12px;
@@ -1150,21 +1150,21 @@ $accents: (
 
   &:hover {
     background: $color-warning-light;
-    border-color: rgba(245, 158, 11, 0.55);
+    border-color: $jbf-hover-border;
     color: $color-warning-text;
-    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.14);
+    box-shadow: $jbf-hover-shadow;
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline: 2px solid $jbf-focus-ring;
     outline-offset: 2px;
   }
 
   &--active {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    border-color: #d97706;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.24);
+    background: $jbf-active-bg;
+    border-color: $jbf-active-border;
+    color: $jbf-active-text;
+    box-shadow: $jbf-active-shadow;
   }
 }
 
@@ -1187,19 +1187,19 @@ $accents: (
 .jb-active-chip {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: $radius-full;
-  border: 1px solid rgba(251, 191, 36, 0.40);
-  background: rgba(251, 191, 36, 0.10);
-  color: $color-primary-darker;
+  border: 1px solid $jbf-soft-border;
+  background: $jbf-soft-bg;
+  color: $jbf-soft-text;
   font-size: $font-size-xs; font-weight: $font-weight-semibold;
   white-space: nowrap;
 
   &__remove {
     display: flex; align-items: center; justify-content: center;
     width: 15px; height: 15px;
-    border: none; background: rgba(180, 83, 9, 0.15); border-radius: 50%;
-    color: $color-primary-darker; font-size: 0.6rem; cursor: pointer; padding: 0;
+    border: none; background: $jbf-chip-remove-bg; border-radius: 50%;
+    color: $jbf-soft-text; font-size: 0.6rem; cursor: pointer; padding: 0;
     @include transition-quick(background-color);
-    &:hover { background: rgba(180, 83, 9, 0.30); }
+    &:hover { background: $jbf-chip-remove-bg-hover; }
   }
 }
 
@@ -1211,10 +1211,10 @@ $accents: (
   padding: $spacing-sm $spacing-md;
   margin-bottom: $spacing-lg;
   border-radius: $radius-md;
-  background: rgba(251,191,36,0.08);
+  background: $jbf-stat-active-bg;
   border: 1px solid rgba(251,191,36,0.22);
   font-size: $font-size-xs;
-  color: $color-primary-darker;
+  color: $jbf-soft-text;
   font-weight: $font-weight-medium;
 
   .bi { font-size: 0.9rem; animation: bizSpin 1.2s linear infinite; }

@@ -30,7 +30,6 @@
      LIVE PAGE
 ══════════════════════════════════════════════════════════════ -->
 <div class="um-layout"
-  [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'"
   (click)="closeDropdowns()">
 
   <!-- ── Page Header ──────────────────────────────────────── -->
@@ -74,7 +73,7 @@
   <div class="admin-stats-bar">
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === ''"
       (click)="setStatFilter('')" [attr.aria-label]="'admin.userManagement.filterByAllUsers' | translate">
-      <div class="admin-stat-card__icon" style="--ic:#4f46e5;--bg:#eef2ff">
+      <div class="admin-stat-card__icon" style="--ic:var(--um-stat-total);--bg:var(--um-stat-total-bg)">
         <i class="bi bi-people-fill"></i>
       </div>
       <div class="admin-stat-card__content">
@@ -85,7 +84,7 @@
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'active'"
       (click)="setStatFilter('active')" [attr.aria-label]="'admin.userManagement.filterByActiveUsers' | translate">
-      <div class="admin-stat-card__icon" style="--ic:#059669;--bg:#ecfdf5">
+      <div class="admin-stat-card__icon" style="--ic:var(--um-stat-active);--bg:var(--um-stat-active-bg)">
         <i class="bi bi-check-circle-fill"></i>
       </div>
       <div class="admin-stat-card__content">
@@ -96,7 +95,7 @@
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'blocked'"
       (click)="setStatFilter('blocked')" [attr.aria-label]="'admin.userManagement.filterByBlockedUsers' | translate">
-      <div class="admin-stat-card__icon" style="--ic:#dc2626;--bg:#fef2f2">
+      <div class="admin-stat-card__icon" style="--ic:var(--um-stat-blocked);--bg:var(--um-stat-blocked-bg)">
         <i class="bi bi-slash-circle-fill"></i>
       </div>
       <div class="admin-stat-card__content">
@@ -107,7 +106,7 @@
 
     <button class="admin-stat-card" [class.admin-stat-card--active]="filterStatus() === 'trusted'"
       (click)="setStatFilter('trusted')" [attr.aria-label]="'admin.userManagement.filterByTrustedUsers' | translate">
-      <div class="admin-stat-card__icon" style="--ic:#d97706;--bg:#fffbeb">
+      <div class="admin-stat-card__icon" style="--ic:var(--um-stat-trusted);--bg:var(--um-stat-trusted-bg)">
         <i class="bi bi-shield-fill-check"></i>
       </div>
       <div class="admin-stat-card__content">
@@ -201,8 +200,13 @@
     </div>
   }
 
-  <!-- Scrollable User Table Section -->
-  <div class="um-users-section">
+  <!-- Scrollable User Table Section — only this section (table/grid +
+       toolbar + pagination) dims during a refetch (stat-card quick filter,
+       search, sort, pagination); the header, stat cards and filter panel
+       above stay fully visible/interactive so the whole page doesn't
+       flicker on every filter click. -->
+  <div class="um-users-section"
+    [style.opacity]="loading() ? 0.5 : 1" [style.pointer-events]="loading() ? 'none' : 'auto'" [style.transition]="'opacity 150ms ease'">
 
   <!-- ── Table Toolbar (Export) ─────────────────────── -->
   <div class="um-table-toolbar pb-2">

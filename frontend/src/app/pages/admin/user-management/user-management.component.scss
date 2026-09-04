@@ -26,20 +26,20 @@ $_t:  0.2s ease;
   gap: $spacing-md;
   padding: $spacing-md $spacing-lg;
   background: $color-bg-card;
-  border: 1px solid rgba(251, 191, 36, 0.18);
+  border: 1px solid $jbf-stat-border;
   border-radius: $radius-lg;
   flex: 1;
   min-width: 140px;
   min-height: 88px;
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: $shadow-2, inset 0 1px 0 $jbf-tabs-inset;
   @include transition-short(all);
   transition-property: transform, box-shadow, border-color;
   transition-duration: 250ms;
   transition-timing-function: cubic-bezier(.2, .8, .2, 1);
 
   &:hover {
-    border-color: rgba(251, 191, 36, 0.55);
-    box-shadow: 0 16px 26px rgba(28, 25, 23, 0.10), 0 6px 16px rgba(251, 191, 36, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-color: $jbf-stat-hover-border;
+    box-shadow: 0 16px 26px rgba(28, 25, 23, 0.10), 0 6px 16px rgba(251, 191, 36, 0.22), inset 0 1px 0 $jbf-tabs-inset;
     transform: translateY(-3px);
 
     .admin-stat-card__icon { transform: scale(1.08); }
@@ -77,7 +77,7 @@ $_t:  0.2s ease;
   @include media-sm-max { &__value { font-size: $font-size-xl; } }
   
   &--active {
-    background: rgba(251, 191, 36, 0.08);
+    background: $jbf-stat-active-bg;
     border-color: $color-primary;
   }
 }
@@ -339,8 +339,8 @@ $_t:  0.2s ease;
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
   &.active {
-    background: $color-dark;
-    color: $color-white;
+    background: $color-text-primary;
+    color: $color-bg-page;
   }
 }
 
@@ -675,10 +675,10 @@ $_t:  0.2s ease;
 // ─────────────────────────────────────────────────────────────
 // Table card — grows to fill remaining space
 .um-table-card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(251, 191, 36, 0.18);
+  background: $jbf-stat-bg;
+  border: 1px solid $jbf-stat-border;
   border-radius: $_r;
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06), 0 4px 16px rgba(28, 25, 23, 0.03);
+  box-shadow: $shadow-2;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -752,7 +752,7 @@ $_t:  0.2s ease;
 .um-row {
   transition: background $_t;
   &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
-  &:hover { background: rgba(254, 243, 199, 0.35); }
+  &:hover { background: $jbf-row-hover-bg; }
 }
 
 .um-td {
@@ -1018,9 +1018,9 @@ $_t:  0.2s ease;
   display: flex;
   flex-direction: column;
   border-radius: $radius-lg;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(251, 191, 36, 0.18);
-  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06), 0 4px 16px rgba(28, 25, 23, 0.03);
+  background: $jbf-stat-bg;
+  border: 1px solid $jbf-stat-border;
+  box-shadow: $shadow-2;
   cursor: pointer;
   transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
 

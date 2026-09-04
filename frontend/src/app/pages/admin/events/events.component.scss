@@ -586,7 +586,7 @@
   // hiding any of the information itself.
   &--past {
     .ev-card__media img { filter: grayscale(0.35) brightness(0.92); }
-    .ev-card__date { background: rgba(255, 255, 255, 0.85); }
+    .ev-card__date { background: color-mix(in srgb, $color-bg-card 85%, transparent); }
   }
 }
 
@@ -633,7 +633,7 @@
   min-width: 46px;
   padding: 6px 8px 7px;
   border-radius: $radius-md;
-  background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, $color-bg-card 96%, transparent);
   box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
   transition: background-color 220ms ease;
 }
@@ -1257,7 +1257,7 @@
 
   i { font-size: 0.9rem; }
 
-  &:hover { background: rgba(28, 25, 23, 0.05); }
+  &:hover { background: rgba(251, 191, 36, 0.10); color: $color-primary-darker; }
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 
   &.active {
