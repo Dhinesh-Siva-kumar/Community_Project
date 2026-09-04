@@ -6,6 +6,20 @@ import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../servic
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreateCommunityDtoType, UpdateCommunityDtoType } from './communities.dto';
 
+// ---------------------------------------------------------------------------
+// Post counts are role-scoped. A non-admin only ever sees APPROVED posts in a
+// community feed, so counting posts still awaiting approval made a community
+// look busier than it reads (e.g. "4 posts" above a list of 3). Admin surfaces
+// keep counting every post, since the admin post tab lists them all.
+// Correlated subquery (not a JOIN) so it composes with any other aggregate in
+// the same SELECT; expects the communities table aliased as `c`.
+// ---------------------------------------------------------------------------
+function postCountSelect(isAdmin: boolean) {
+  return isAdmin
+    ? db.raw('(SELECT COUNT(*) FROM posts WHERE community_id = c.id) AS post_count')
+    : db.raw("(SELECT COUNT(*) FROM posts WHERE community_id = c.id AND status = 'APPROVED') AS post_count");
+}
+
 // One Hub (official country community) per country — an admin creating or
 // editing a Hub whose country already has one gets a 409 naming that country.
 async function assertNoDuplicateHubForCountry(countryId: number, countryName: string | undefined, excludeId?: string): Promise<void> {
@@ -171,6 +185,7 @@ export async function findAll(params: {
   joined?: boolean;
   userId?: string;
   createdById?: string;
+  isAdmin?: boolean;
   status?: 'active' | 'inactive';
   approvalStatus?: ('PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_INFO')[];
   excludeRejected?: boolean;
@@ -180,7 +195,7 @@ export async function findAll(params: {
   const {
     page, limit, search, pincode, skipActiveFilter, country, category, visibility,
     community_mode, community_type, is_default, from_date, to_date, joined, userId, createdById,
-    status, approvalStatus, excludeRejected, sortBy = 'joined', sortDir = 'desc',
+    isAdmin = false, status, approvalStatus, excludeRejected, sortBy = 'joined', sortDir = 'desc',
   } = params;
   const offset = (page - 1) * limit;
 
@@ -354,7 +369,11 @@ export async function findAll(params: {
       query.orderByRaw(`(SELECT COUNT(*) FROM community_members cm WHERE cm.community_id = c.id) ${sortDir}`);
       break;
     case 'posts':
-      query.orderByRaw(`(SELECT COUNT(*) FROM posts p WHERE p.community_id = c.id) ${sortDir}`);
+      query.orderByRaw(
+        isAdmin
+          ? `(SELECT COUNT(*) FROM posts p WHERE p.community_id = c.id) ${sortDir}`
+          : `(SELECT COUNT(*) FROM posts p WHERE p.community_id = c.id AND p.status = 'APPROVED') ${sortDir}`,
+      );
       break;
     default:           query.orderBy('c.created_at', sortDir);
   }
@@ -368,11 +387,12 @@ export async function findAll(params: {
   const ids = (communities as Array<Record<string, unknown>>).map((c) => c['id']);
   const counts = ids.length
     ? await db('communities as c')
-        .leftJoin('community_members as cm', 'c.id', 'cm.community_id')
-        .leftJoin('posts as p', 'c.id', 'p.community_id')
         .whereIn('c.id', ids as string[])
-        .groupBy('c.id')
-        .select('c.id', db.raw('COUNT(DISTINCT cm.id) as member_count'), db.raw('COUNT(DISTINCT p.id) as post_count'))
+        .select(
+          'c.id',
+          db.raw('(SELECT COUNT(*) FROM community_members WHERE community_id = c.id) AS member_count'),
+          postCountSelect(isAdmin),
+        )
     : [];
 
   const countMap = new Map(
@@ -451,11 +471,12 @@ export async function getSuggested(userId: string, limit: number) {
 
   const counts = ids.length
     ? await db('communities as c')
-        .leftJoin('community_members as cm', 'c.id', 'cm.community_id')
-        .leftJoin('posts as p', 'c.id', 'p.community_id')
         .whereIn('c.id', ids)
-        .groupBy('c.id')
-        .select('c.id', db.raw('COUNT(DISTINCT cm.id) as member_count'), db.raw('COUNT(DISTINCT p.id) as post_count'))
+        .select(
+          'c.id',
+          db.raw('(SELECT COUNT(*) FROM community_members WHERE community_id = c.id) AS member_count'),
+          postCountSelect(false),
+        )
     : [];
   const countMap = new Map(
     (counts as Array<Record<string, unknown>>).map((r) => [
@@ -541,7 +562,7 @@ export async function getAnalytics(params: {
   };
 }
 
-export async function findOne(id: string) {
+export async function findOne(id: string, isAdmin = false, currentUserId?: string) {
   const community = await db('communities as c')
     .leftJoin('users as u', 'c.created_by_id', 'u.id')
     .leftJoin('interest_master as im', 'c.interest_id', 'im.interest_id')
@@ -559,7 +580,17 @@ export async function findOne(id: string) {
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
   const counts = await db('community_members').where({ community_id: id }).count({ total: '*' }).first();
-  const postCounts = await db('posts').where({ community_id: id }).count({ total: '*' }).first();
+  const postCountQuery = db('posts').where({ community_id: id });
+  if (!isAdmin) postCountQuery.where({ status: 'APPROVED' });
+  const postCounts = await postCountQuery.count({ total: '*' }).first();
+
+  // Membership drives the user-side read-only mode (non-members can browse a
+  // community but not post/like/comment), so the detail endpoint has to report
+  // it the way the list endpoints already do — the Members tab alone can't
+  // answer it, since it's paginated and the caller may sit on a later page.
+  const membership = currentUserId
+    ? await db('community_members').where({ community_id: id, user_id: currentUserId }).first()
+    : undefined;
 
   return {
     ...(community as Record<string, unknown>),
@@ -572,6 +603,7 @@ export async function findOne(id: string) {
       displayName: (community as Record<string, unknown>)['creator_display_name'],
       email: (community as Record<string, unknown>)['creator_email'],
     },
+    is_joined: !!membership,
     _count: {
       members: Number((counts as Record<string, unknown>)?.['total'] ?? 0),
       posts: Number((postCounts as Record<string, unknown>)?.['total'] ?? 0),
@@ -671,12 +703,12 @@ export async function approve(id: string, adminId: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
-  if (community['status'] === 'APPROVED') return findOne(id);
+  if (community['status'] === 'APPROVED') return findOne(id, true, adminId);
 
   await db('communities').where({ id }).update({ status: 'APPROVED' });
   await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_APPROVED', `Your community "${community['name']}" has been approved.`, id, undefined, { name: community['name'] });
   await logAudit(adminId, 'COMMUNITY_APPROVED', { previousStatus: community['status'], name: community['name'] }, 'communities', id);
-  return findOne(id);
+  return findOne(id, true, adminId);
 }
 
 // Rejecting is terminal but not destructive: the row (and its rejection
@@ -688,13 +720,13 @@ export async function reject(id: string, adminId: string, reason?: string) {
   const community = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
-  if (community['status'] === 'REJECTED') return findOne(id);
+  if (community['status'] === 'REJECTED') return findOne(id, true, adminId);
 
   await db('communities').where({ id }).update({ status: 'REJECTED', rejection_reason: reason ?? null });
   const message = `Your community "${community['name']}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
   await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_REJECTED', message, id);
   await logAudit(adminId, 'COMMUNITY_REJECTED', { previousStatus: community['status'], reason: reason ?? null, name: community['name'] }, 'communities', id);
-  return findOne(id);
+  return findOne(id, true, adminId);
 }
 
 export async function requestMoreInfo(id: string, adminId: string, reason: string) {
@@ -705,10 +737,10 @@ export async function requestMoreInfo(id: string, adminId: string, reason: strin
   const message = `More information is needed for your community "${community['name']}": ${reason}`;
   await notificationsService.create(community['created_by_id'] as string, 'COMMUNITY_NEEDS_INFO', message, id);
   await logAudit(adminId, 'COMMUNITY_NEEDS_INFO', { previousStatus: community['status'], reason, name: community['name'] }, 'communities', id);
-  return findOne(id);
+  return findOne(id, true, adminId);
 }
 
-export async function update(id: string, data: UpdateCommunityDtoType, adminId: string) {
+export async function update(id: string, data: UpdateCommunityDtoType, adminId: string, isAdmin = false) {
   const before = await db('communities').where({ id }).first() as Record<string, unknown> | undefined;
   if (!before) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
@@ -807,7 +839,7 @@ export async function update(id: string, data: UpdateCommunityDtoType, adminId: 
 
   await logAudit(adminId, 'COMMUNITY_UPDATED', { fields: Object.keys(data) }, 'communities', id);
 
-  return findOne(id);
+  return findOne(id, isAdmin, adminId);
 }
 
 export async function deleteCommunity(id: string, adminId: string) {

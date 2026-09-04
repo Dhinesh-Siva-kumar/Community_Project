@@ -1706,7 +1706,10 @@
         "postDeletedSuccessfully": "Post deleted successfully.",
         "failedDeletePost": "Failed to delete post",
         "haveJoinedCommunity": "You have joined the community!",
-        "haveLeftCommunity": "You have left the community"
+        "haveLeftCommunity": "You have left the community",
+        "joinToInteract": "Join this community to take part in it",
+        "commentDeleted": "Comment deleted",
+        "failedDeleteComment": "Failed to delete comment"
       },
       "status": {
         "active": "Active",
@@ -1728,7 +1731,11 @@
         "general": "General"
       },
       "unknownUser": "Unknown User",
-      "maxCharactersReached": "Maximum {{max}} characters reached."
+      "maxCharactersReached": "Maximum {{max}} characters reached.",
+      "membersOnly": "Members only",
+      "joinToParticipate": "Join this community to post, like and comment. You can keep browsing everything here.",
+      "joinToComment": "Join this community to comment",
+      "joinCommunity": "Join Community"
     }
   },
   "user": {

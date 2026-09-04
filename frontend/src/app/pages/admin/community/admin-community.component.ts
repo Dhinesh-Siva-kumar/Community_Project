@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Observable, of, switchMap } from 'rxjs';
+import { Observable, of, switchMap, distinctUntilChanged } from 'rxjs';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { LayoutService } from '../../../core/services/layout.service';
@@ -334,7 +334,14 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
     // set communityType) from re-triggering these as if the admin had just
     // switched types by hand — e.g. loading an existing Individual
     // community with isDefault:true shouldn't get silently reset to false.
-    this.communityForm.get('communityType')?.valueChanges.subscribe((type) => {
+    // distinctUntilChanged: app-radio-group's select() re-fires _onChange
+    // even when the clicked option is already the active one (it doesn't
+    // compare against the current value), so without this guard, simply
+    // re-clicking "Individual" while it's already selected would re-run
+    // the `else` branch below and silently wipe out any Emergency/Enquire
+    // modes the admin had just checked, resetting communityModes to
+    // ['HELP'] alone.
+    this.communityForm.get('communityType')?.valueChanges.pipe(distinctUntilChanged()).subscribe((type) => {
       const interestsControl = this.communityForm.get('interests');
       const isDefaultControl = this.communityForm.get('isDefault');
       if (type === 'HUB') {

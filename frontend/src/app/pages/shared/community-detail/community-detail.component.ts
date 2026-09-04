@@ -76,6 +76,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   // approved posts, since the main feed below only ever shows APPROVED ones.
   myPostsInCommunity = signal<Post[]>([]);
   loadingMyPosts = signal(false);
+  // Tracks whether the list has been fetched for the current community, so an
+  // author with genuinely zero posts isn't re-fetched every time they open the
+  // tab (an empty list is a real answer, not a "not loaded yet").
+  myPostsLoaded = signal(false);
   myPostsFilterType = signal<'ALL' | PostType>('ALL');
 
   // Post interactions
@@ -84,6 +88,11 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   postComments = signal<Map<string, Comment[]>>(new Map());
   expandedPostContent = signal<Set<string>>(new Set());
   submittingComment = signal<string | null>(null);
+  // Two-step delete: the first click arms the comment (swapping the trash icon
+  // for confirm/cancel), the second one actually deletes it — a stray tap on a
+  // 20px icon shouldn't destroy someone's comment.
+  pendingDeleteCommentId = signal<string | null>(null);
+  deletingCommentId = signal<string | null>(null);
   likingPost = signal<string | null>(null);
 
   // Join / Leave — the confirmation popups live in app-community-join-modal
@@ -171,9 +180,15 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   showEmergencyTab = computed(() => this.communityModes().includes('EMERGENCY'));
   showEnquireTab = computed(() => this.communityModes().includes('ENQUIRE'));
 
+  // `is_joined` comes from the API and is the authoritative answer; the
+  // members list is only a fallback, since it's paginated (20 at a time) and
+  // the caller can easily sit on a page that hasn't been fetched. The creator
+  // is enrolled as a member when the community is created, so they need no
+  // special case here.
   isMember = computed(() => {
     const uid = this.currentUserId();
     if (!uid) return false;
+    if (this.community()?.is_joined) return true;
     return this.members().some((m) => m.user?.id === uid);
   });
 
@@ -288,6 +303,14 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.pendingSharedPostId = this.parseSharedPostId(this.route.snapshot.fragment);
         this.loadCommunity();
         this.loadPosts();
+        // The "My Posts" tab badge reads this list, so it has to be fetched
+        // with the page instead of lazily on first tab click — otherwise the
+        // count only appears once the user has already opened the tab. Reset
+        // first so navigating to another community can't show the previous
+        // one's posts. Admins don't get the tab, so they don't get the call.
+        this.myPostsInCommunity.set([]);
+        this.myPostsLoaded.set(false);
+        if (!this.isAdmin()) this.loadMyPostsInCommunity();
         this.membersPage.set(1);
         this.loadMembers();
       }
@@ -483,7 +506,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
       if (token !== this.tabSwitchToken) return;
 
       this.activeTab.set(tab);
-      if (tab === 'myposts' && this.myPostsInCommunity().length === 0) {
+      if (tab === 'myposts' && !this.myPostsLoaded() && !this.loadingMyPosts()) {
         this.loadMyPostsInCommunity();
       }
       switch (tab) {
@@ -577,7 +600,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   loadMyPostsInCommunity(): void {
     this.loadingMyPosts.set(true);
     this.postService.getMyPosts({ communityId: this.communityId(), page: 1, limit: 50 }).subscribe({
-      next: (r) => { this.myPostsInCommunity.set(r.data); this.loadingMyPosts.set(false); },
+      next: (r) => { this.myPostsInCommunity.set(r.data); this.myPostsLoaded.set(true); this.loadingMyPosts.set(false); },
       error: () => this.loadingMyPosts.set(false),
     });
   }
@@ -617,6 +640,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   toggleLike(post: Post): void {
+    if (!this.requireMembership()) return;
     if (this.likingPost() === post.id) return;
 
     this.likingPost.set(post.id);
@@ -702,6 +726,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   isLoadingComments(postId: string): boolean { return this.loadingComments().has(postId); }
 
   submitComment(postId: string): void {
+    if (!this.requireMembership()) return;
     const form = this.getCommentForm(postId);
     if (form.invalid) return;
 
@@ -732,6 +757,44 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.submittingComment.set(null);
       },
       error: () => { this.toast.error('shared.communityDetail.toast.failedAddComment'); this.submittingComment.set(null); },
+    });
+  }
+
+  requestDeleteComment(commentId: string): void {
+    this.pendingDeleteCommentId.set(commentId);
+  }
+
+  cancelDeleteComment(): void {
+    this.pendingDeleteCommentId.set(null);
+  }
+
+  confirmDeleteComment(postId: string, comment: Comment): void {
+    if (!this.canDeleteComment(comment)) return;
+
+    this.deletingCommentId.set(comment.id);
+    this.postService.deleteComment(comment.id).subscribe({
+      next: () => {
+        this.postComments.update((map) => {
+          const m = new Map(map);
+          m.set(postId, (m.get(postId) ?? []).filter((c) => c.id !== comment.id));
+          return m;
+        });
+        this.posts.update((posts) =>
+          posts.map((p) =>
+            p.id === postId
+              ? { ...p, _count: { comments: Math.max(0, (p._count?.comments ?? 1) - 1), likes: p._count?.likes ?? 0 } }
+              : p
+          )
+        );
+        this.deletingCommentId.set(null);
+        this.pendingDeleteCommentId.set(null);
+        this.toast.success('shared.communityDetail.toast.commentDeleted');
+      },
+      error: () => {
+        this.deletingCommentId.set(null);
+        this.pendingDeleteCommentId.set(null);
+        this.toast.error('shared.communityDetail.toast.failedDeleteComment');
+      },
     });
   }
 
@@ -999,6 +1062,16 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     return this.isAdmin() || post.userId === this.currentUserId();
   }
 
+  // Mirrors the backend rule in posts.service.deleteComment(): an admin can
+  // remove any comment, everyone else only their own. The two id sources are
+  // both needed — the comments list returns the author under `user`, while a
+  // freshly posted comment comes back with a flat `userId`.
+  canDeleteComment(comment: Comment): boolean {
+    if (this.isAdmin()) return true;
+    const uid = this.currentUserId();
+    return !!uid && (comment.user?.id === uid || comment.userId === uid);
+  }
+
   reportPost(post: Post): void {
     this.postMenuOpenId.set(null);
     this.postService.reportPost(post.id).subscribe({
@@ -1138,7 +1211,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.membersPage.set(1);
     this.loadMembers();
     this.community.update((c) =>
-      c ? { ...c, _count: { ...c._count!, members: (c._count?.members ?? 0) + 1 } } : c
+      c ? { ...c, is_joined: true, _count: { ...c._count!, members: (c._count?.members ?? 0) + 1 } } : c
     );
   }
 
@@ -1154,7 +1227,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.membersPage.set(1);
     this.loadMembers();
     this.community.update((c) =>
-      c ? { ...c, _count: { ...c._count!, members: Math.max(0, (c._count?.members ?? 0) - 1) } } : c
+      c ? { ...c, is_joined: false, _count: { ...c._count!, members: Math.max(0, (c._count?.members ?? 0) - 1) } } : c
     );
   }
 
@@ -1232,7 +1305,23 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   canPostInCommunity(): boolean {
-    return this.community()?.status === 'APPROVED';
+    return this.community()?.status === 'APPROVED' && this.canInteract();
+  }
+
+  // Read-only mode for non-members: browsing a community is open, but posting,
+  // liking and commenting all require joining first (the backend enforces the
+  // same rule — see assertCommunityMember in posts.service.ts). The admin view
+  // is exempt so the console can still moderate any community.
+  canInteract(): boolean {
+    return this.isAdmin() || this.isMember();
+  }
+
+  // Guard shared by the interaction handlers, so a stale view (or a fiddled
+  // DOM) can't fire a request the server will only reject.
+  private requireMembership(): boolean {
+    if (this.canInteract()) return true;
+    this.toast.info('shared.communityDetail.toast.joinToInteract');
+    return false;
   }
 
   getVisibilityInfo(): { label: string; icon: string; cls: string } {

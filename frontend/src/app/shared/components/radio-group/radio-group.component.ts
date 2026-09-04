@@ -92,7 +92,7 @@ export class RadioGroupComponent implements ControlValueAccessor {
 
   // ── Interaction ───────────────────────────────────────────────
   protected select(opt: RadioOption): void {
-    if (this.isDisabled() || opt.disabled) return;
+    if (this.isDisabled() || opt.disabled || opt.value === this.value()) return;
     this.value.set(opt.value);
     this._onChange(opt.value);
     this._onTouched();
