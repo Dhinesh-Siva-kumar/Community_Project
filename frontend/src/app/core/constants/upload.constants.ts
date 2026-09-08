@@ -50,7 +50,12 @@ export const VIDEO_CONFIG = {
 } as const;
 
 export const FORM_DATA_FIELD_NAMES = {
+  /** Business "Gallery Photos", and the generic image field elsewhere. */
   IMAGES: 'images',
+  /** Business "Menu Card Images". */
+  MENU_IMAGES: 'menuImages',
+  /** Business "Business Card Images". */
+  CARD_IMAGES: 'cardImages',
   IMAGE: 'image',
   LOGO: 'logo',
   AVATAR: 'avatar',

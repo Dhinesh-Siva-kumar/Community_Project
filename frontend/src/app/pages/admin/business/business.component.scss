@@ -529,6 +529,20 @@
     display: flex;
     margin-bottom: 10px;
   }
+
+  // A sub-label that follows another control inside the same section needs
+  // its own top gap — .jb-adv-label only carries a bottom margin, so
+  // "Open on day" and "Features" otherwise sat flush against the control
+  // above them.
+  .jb-pill-row + .jb-adv-label,
+  app-chip-multi-select + .jb-adv-label,
+  app-searchable-select + .jb-adv-label,
+  .jb-adv-subfield + .jb-adv-label {
+    margin-top: $spacing-md;
+  }
+
+  // ...and the control that follows a sub-label sits directly under it.
+  .jb-adv-label + .jb-pill-row { margin-top: 2px; }
 }
 
 .jb-pill-row {
@@ -599,6 +613,22 @@
   text-transform: uppercase; letter-spacing: 0.07em;
   color: $color-stone-500; margin-bottom: 2px;
   .bi { color: $color-primary-dark; font-size: 0.8rem; }
+}
+
+// Stacked sub-fields inside an Advanced Filters section (the cascading
+// Country → State → City location filter, and the category multi-select).
+.jb-adv-subfield {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: $spacing-sm;
+}
+
+.jb-adv-hint {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: $spacing-sm 0 0;
+  font-size: $font-size-xs;
+  color: $color-stone-500;
+  line-height: 1.5;
+  .bi { flex-shrink: 0; margin-top: 2px; color: $color-primary-dark; }
 }
 
 .jb-adv-input-wrap { position: relative; }
@@ -790,162 +820,6 @@
   }
 }
 
-// ── Opening hours time picker separator ──────────────────────────
-.biz-hours-sep {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: $text-muted;
-}
-
-// ── Custom time dropdown ────────────────────────────────────────
-// Opening-hours time picker — mirrors .ss-trigger / .ss-panel / .ss-option
-// on the Community popup's dropdowns, so it reads as just another dropdown
-// field even though it opens a custom time-slot list instead of the shared
-// searchable-select panel.
-.time-dropdown {
-  position: relative;
-  width: 100%;
-
-  &__trigger {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    height: 48px;
-    padding: 0 14px;
-    border: 1.5px solid $color-border;
-    border-radius: 10px;
-    background: $color-bg-page;
-    cursor: pointer;
-    text-align: left;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-
-    &:hover {
-      border-color: $color-primary;
-    }
-
-    &:focus-visible {
-      border-color: $color-primary;
-      background: $color-bg-card;
-      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-    }
-  }
-
-  &__icon {
-    font-size: 0.85rem;
-    color: $color-stone-400;
-    flex-shrink: 0;
-  }
-
-  &__value {
-    flex: 1;
-    font-size: $font-size-sm;
-    color: $color-text-body;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__chevron {
-    font-size: 0.65rem;
-    color: $color-stone-400;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-  }
-
-  &--open &__chevron {
-    transform: rotate(180deg);
-  }
-
-  &--open &__trigger {
-    border-color: $color-primary;
-    background: $color-bg-card;
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-  }
-
-  &--error &__trigger {
-    border-color: $color-danger;
-    &:focus-visible { box-shadow: 0 0 0 3px rgba($color-danger, 0.1); }
-  }
-
-  &--error.time-dropdown--open &__trigger {
-    box-shadow: 0 0 0 3px rgba($color-danger, 0.1);
-  }
-
-  &__panel {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 0;
-    right: 0;
-    z-index: 1060;
-    background: $color-bg-card;
-    border: 1.5px solid $color-stone-200;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-    animation: timeDropdownIn 180ms ease;
-  }
-
-  &__list {
-    max-height: 220px;
-    overflow-y: auto;
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-
-    &::-webkit-scrollbar { width: 4px; }
-    &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: $color-stone-300; border-radius: 4px; }
-  }
-
-  &__option {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 8px 10px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    cursor: pointer;
-    text-align: left;
-    outline: none;
-    transition: background 0.15s, color 0.15s;
-
-    &:hover {
-      background: $color-primary-lighter;
-    }
-
-    &:focus-visible {
-      background: $color-primary-lighter;
-    }
-
-    &--selected {
-      background: rgba($color-primary, 0.1);
-      font-weight: 600;
-    }
-  }
-
-  &__option-time {
-    font-size: $font-size-sm;
-    color: $color-text-body;
-  }
-
-  &__option--selected &__option-time {
-    color: $color-primary-darker;
-  }
-}
-
-@keyframes timeDropdownIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 // ── Filter Bar (cf-bar) ────────────────────────────────────────────
 .cf-bar {
@@ -2506,70 +2380,8 @@ $accents: (
   &--icon-left { padding-left: 40px; }
 }
 
-.jb-input-group {
-  position: relative;
-  &__icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: $color-stone-400; font-size: 0.9rem; pointer-events: none; z-index: 1; }
-}
-
-.jb-field-error {
-  display: flex; align-items: center; gap: 4px; margin-top: 4px;
-  font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-danger;
-  .bi { font-size: 12px; flex-shrink: 0; }
-}
-
 .jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
 
-.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.jb-day-toggle {
-  padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: $color-bg-card;
-  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 4px;
-  @include transition-short(all);
-
-  // Hover on an UNselected day — neutral gray, deliberately a different hue
-  // family from --on's amber below, so hovering can never read as "selected".
-  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-
-  // Selected — the only state that uses amber, and stays amber regardless
-  // of hover, so it reads as "on" independent of mouse position.
-  &--on {
-    background: rgba(251,191,36,0.28);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    font-weight: $font-weight-bold;
-    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
-  }
-}
-
-.jb-logo-preview {
-  position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;
-  &__img    { width: 90px; height: 90px; border-radius: $radius-md; object-fit: contain; border: 1.5px solid rgba(251,191,36,0.30); background: $color-bg-page; }
-  &__remove { position: absolute; top: -7px; right: -7px; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid $color-border; background: $color-bg-card; color: $color-danger; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all); &:hover { background: $color-error-bg; } }
-}
-
-// ── Business Status toggle — mirrors .cm-default-row/.cm-switch on the
-// Community Create/Edit popup's "Default Community" toggle. ──
-.cm-default-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 16px; border-radius: 12px;
-  border: 1.5px solid $color-border; background: $color-bg-page;
-  transition: border-color 0.2s ease;
-  &:hover { border-color: $color-primary; }
-}
-
-.cm-default-label {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  i { font-size: 13px; color: $color-primary; flex-shrink: 0; }
-  span { font-size: 13px; font-weight: 600; color: $color-stone-700; line-height: 1.3; }
-}
-
-.cm-default-hint {
-  font-size: 11px !important; font-weight: 400 !important; color: $color-text-muted !important;
-  width: 100%; margin-top: 1px;
-}
 
 @include media-md-max {
   .jb-form-section { padding: $spacing-md; }
@@ -2739,189 +2551,6 @@ $accents: (
   .bl-grid { grid-template-columns: 1fr; }
 }
 
-.biz-gallery-existing {
-  margin-top: $spacing-md;
-  &__label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: $spacing-sm; }
-  &__grid { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-  // Same remove-badge treatment as .jb-logo-preview__remove, just per-thumbnail.
-  &__item { position: relative; display: inline-flex; }
-  &__img { width: 80px; height: 60px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; }
-  &__remove {
-    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
-    border: 1.5px solid $color-border; background: $color-bg-card; color: $color-danger; font-size: 0.6rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; @include transition-quick(all);
-    &:hover { background: $color-error-bg; border-color: $color-danger; }
-    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  }
-  &__hint { font-size: $font-size-xs; color: $color-stone-400; margin-top: $spacing-sm; margin-bottom: 0; .bi { font-size: 0.75em; } }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// BUSINESS DETAIL VIEW
-// ═══════════════════════════════════════════════════════════════
-
-.bd-hero {
-  border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
-  background: $color-bg-card; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
-
-  // No cover banner — just the logo + business details, so the profile row
-  // sits flush at the top of the card.
-  &__profile { display: flex; align-items: center; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
-
-  &__avatar {
-    width: 72px; height: 72px; border-radius: $radius-full; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
-    color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12));
-    border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
-    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
-    padding: 0; cursor: default; overflow: hidden; @include transition-short(all);
-
-    // Same zoom-in affordance as the gallery thumbnails below, since both
-    // open the same lightbox.
-    &--clickable {
-      cursor: zoom-in;
-      &:hover { transform: scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.16); }
-      &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-    }
-    &:disabled { cursor: default; }
-  }
-
-  &__info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
-  &__name-row { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
-  &__name { font-family: $font-family-header; font-size: clamp(1.15rem,3vw,1.6rem); font-weight: 800; color: $color-stone-900; margin: 0; letter-spacing: -0.02em; }
-  &__category { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-primary-darker; font-weight: $font-weight-semibold; .bi { font-size: 0.8em; } }
-  &__location { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-stone-500; .bi { color: #DC2626; font-size: 0.8em; } }
-
-  &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
-  &__admin { display: flex; align-items: center; gap: 6px; }
-
-  // Edit / Delete — matched to the height of the Call/WhatsApp/Website/
-  // Directions pills (.bd-action-btn) they sit alongside in this row.
-  &__admin-btn {
-    width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
-    border-radius: $radius-md; font-size: 0.85rem; cursor: pointer;
-    border: 1.5px solid transparent; @include transition-short(all);
-    &--edit   { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: $color-info-text; &:hover:not(:disabled) { background: rgba(14,165,233,0.18); border-color: $color-info-text; } }
-    &--delete { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.22); color: $color-danger; &:hover:not(:disabled) { background: rgba(220,38,38,0.15); border-color: $color-danger; } }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  }
-}
-
-.bd-badge {
-  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
-  border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
-  text-transform: uppercase; letter-spacing: 0.04em;
-  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: $color-success-text; .bi { font-size: 7px; } }
-  &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
-  &--pending  { background: $color-primary-lighter; border: 1.5px solid $color-amber-200; color: $color-warning-text; .bi { font-size: 7px; } }
-  &--rejected { background: rgba($color-danger,0.10); border: 1.5px solid rgba($color-danger,0.25); color: $color-danger; .bi { font-size: 7px; } }
-
-  // Pending badge doubles as a link to the Approval page.
-  &--link {
-    text-decoration: none;
-    cursor: pointer;
-    @include transition-quick(all);
-    &:hover { background: rgba($amber-500, 0.22); color: $color-warning-text; }
-    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  }
-}
-
-.bd-rejection-reason {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin: 4px 0 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: $color-error-bg;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: $color-danger-text;
-  font-size: 12.5px;
-  line-height: 1.5;
-  max-width: fit-content;
-
-  .bi { font-size: 12px; margin-top: 2px; flex-shrink: 0; }
-}
-
-.bd-action-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
-  border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  text-decoration: none; white-space: nowrap; @include transition-short(all);
-  &:hover { transform: translateY(-1px); }
-  &--green    { background: rgba(22,163,74,0.10);   color: $color-success-text; border: 1.5px solid rgba(22,163,74,0.28);   &:hover { background: rgba(22,163,74,0.18); } }
-  &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; border: 1.5px solid rgba(37,211,102,0.28);  &:hover { background: rgba(37,211,102,0.18); } }
-  &--blue     { background: rgba(14,165,233,0.10);  color: $color-info-text; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
-  &--orange   { background: rgba(249,115,22,0.10);  color: #C2410C; border: 1.5px solid rgba(249,115,22,0.28);  &:hover { background: rgba(249,115,22,0.18); } }
-}
-
-.bd-grid { display: grid; grid-template-columns: 1fr 300px; gap: $spacing-lg; align-items: start; @include media-md-max { grid-template-columns: 1fr; } }
-.bd-main { display: flex; flex-direction: column; gap: $spacing-md; }
-.bd-sidebar { display: flex; flex-direction: column; gap: $spacing-md; }
-
-.bd-section {
-  background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg;
-  padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
-  &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; padding-bottom: $spacing-sm; border-bottom: 1.5px solid rgba(251,191,36,0.18); .bi { color: $color-primary-dark; } }
-  &__body  { font-size: $font-size-sm; color: $color-text-body; line-height: 1.75; margin: 0; }
-}
-
-.bd-card {
-  background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg;
-  padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04);
-  &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; .bi { color: $color-primary-dark; } }
-}
-
-.bd-info-list { display: flex; flex-direction: column; gap: 12px; &--compact { gap: 8px; } }
-
-.bd-info-row {
-  display: flex; align-items: flex-start; gap: 10px;
-  &__icon { width: 32px; height: 32px; border-radius: $radius-sm; background: rgba(251,191,36,0.10); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem; color: $color-primary-darker;
-    &--green    { background: rgba(22,163,74,0.10);   color: $color-success-text; }
-    &--blue     { background: rgba(14,165,233,0.10);  color: $color-info-text; }
-    &--teal     { background: rgba(13,148,136,0.10);  color: #0D9488; }
-    &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; }
-  }
-  &__label { display: block; font-size: 10px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-stone-400; margin-bottom: 1px; }
-  &__value { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; word-break: break-word; &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
-}
-
-// Soft tinted pill — same visual language as .bd-action-btn / .jb-pill-btn
-// used everywhere else on this tab, instead of a one-off solid gradient CTA.
-// Both variants share the same shape/padding/font so the pair (primary
-// "View on Maps" vs. secondary "Get Directions" fallback) reads as one
-// consistent button style, just at two tint strengths.
-.bd-maps-btn {
-  display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md;
-  padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  text-decoration: none; @include transition-short(all);
-  background: rgba(251,191,36,0.14); color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.35);
-  &:hover { background: rgba(251,191,36,0.22); border-color: $color-primary; transform: translateY(-1px); color: $color-primary-darker; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  &--secondary { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.24); &:hover { background: rgba(251,191,36,0.14); } }
-}
-
-.bd-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: $spacing-sm; }
-// Light amber tint on the selected days — matches .jb-day-toggle--on from
-// the Business creation form's Opening Days picker, instead of a heavier
-// gradient fill.
-.bd-day  {
-  display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
-  border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  background: $color-bg-card; color: $color-stone-500; border: 1.5px solid $color-border;
-  &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
-}
-.bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
-
-.bd-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-.bd-gallery__btn { padding: 0; border: none; background: none; cursor: zoom-in; border-radius: $radius-sm; line-height: 0; &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; } }
-.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; @include transition-short(all); .bd-gallery__btn:hover & { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
-
-@include media-sm-max {
-  .bd-hero__profile { flex-direction: column; align-items: center; text-align: center; }
-  .bd-hero__info { align-items: center; }
-  .bd-hero__actions { margin-left: 0; justify-content: center; }
-}
 
 // ── Image lightbox — copied 1:1 from community-detail.component's
 // .cd-lightbox so the logo/gallery preview here looks and behaves exactly

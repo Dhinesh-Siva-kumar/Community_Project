@@ -91,28 +91,6 @@
         }
       </div>
 
-      <!-- ── Distance — a "normal" filter alongside search (not tucked
-           behind Advanced Filters), with a user-adjustable radius in km. ── -->
-      <div class="jb-distance-control" role="group" [attr.aria-label]="'user.business.filterByDistance' | translate">
-        <i class="bi bi-geo-alt jb-distance-control__icon"></i>
-        <button type="button" class="jb-distance-step" (click)="adjustDistanceKm(-1)"
-          [disabled]="filterDistance() === null || filterDistanceKm()! <= DISTANCE_MIN_KM" [attr.aria-label]="'user.business.decreaseDistance' | translate">
-          <i class="bi bi-dash"></i>
-        </button>
-        <input type="number" class="jb-distance-input" [min]="DISTANCE_MIN_KM" [max]="DISTANCE_MAX_KM" step="1"
-          [value]="filterDistanceKm()" (change)="onDistanceKmChange($event)"
-          [disabled]="filterDistance() === null" [attr.aria-label]="'user.business.distanceKilometers' | translate" />
-        <span class="jb-distance-unit">{{ 'user.business.km' | translate }}</span>
-        <button type="button" class="jb-distance-step" (click)="adjustDistanceKm(1)"
-          [disabled]="filterDistance() === null || filterDistanceKm()! >= DISTANCE_MAX_KM" [attr.aria-label]="'user.business.increaseDistance' | translate">
-          <i class="bi bi-plus"></i>
-        </button>
-        <button type="button" class="jb-distance-all" [class.jb-distance-all--active]="filterDistance() === null"
-          (click)="toggleDistanceAll()">
-          {{ 'common.all' | translate }}
-        </button>
-      </div>
-
       <div class="jb-filter-row">
         <button class="jb-advanced-toggle" [class.jb-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
           <i class="bi bi-sliders2"></i>
@@ -154,16 +132,70 @@
           <button class="jb-active-chip__remove" (click)="removeFilter('category')" [attr.aria-label]="'user.business.removeCategoryFilter' | translate"><i class="bi bi-x"></i></button>
         </span>
       }
-      @if (filterDistance() !== DISTANCE_DEFAULT_M) {
+      @if (filterCountryIds().length) {
         <span class="jb-active-chip">
-          Distance: {{ filterDistance() === null ? 'All' : filterDistanceKm() + ' km' }}
-          <button class="jb-active-chip__remove" (click)="setDistance(DISTANCE_DEFAULT_M)" [attr.aria-label]="'user.business.resetDistanceFilter' | translate"><i class="bi bi-x"></i></button>
+          {{ 'user.business.filter.countries' | translate }}: {{ filterCountryIds().length }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('countries')" [attr.aria-label]="'user.business.filter.countries' | translate"><i class="bi bi-x"></i></button>
         </span>
       }
-      @if (filterOpeningHours()) {
+      @if (filterStateId()) {
         <span class="jb-active-chip">
-          Hours: {{ filterOpeningHours() }}
-          <button class="jb-active-chip__remove" (click)="removeFilter('hours')" [attr.aria-label]="'user.business.removeHoursFilter' | translate"><i class="bi bi-x"></i></button>
+          {{ 'user.business.filter.state' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('state')" [attr.aria-label]="'user.business.filter.state' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCityId()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.city' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('city')" [attr.aria-label]="'user.business.filter.city' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterVisibility()) {
+        <span class="jb-active-chip">
+          {{ (filterVisibility() === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry') | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('visibility')" [attr.aria-label]="'user.business.filter.visibility' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterOpenNow()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.openNow' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('openNow')" [attr.aria-label]="'user.business.filter.openNow' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterOpenOnDay()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.openOnDay' | translate }}: {{ DAY_SHORT_KEYS[filterOpenOnDay()!] | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('openOnDay')" [attr.aria-label]="'user.business.filter.openOnDay' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCategoryIds().length) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.categories' | translate }}: {{ filterCategoryIds().length }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('categories')" [attr.aria-label]="'user.business.filter.categories' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterHasMenu()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.hasMenuCard' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hasMenu')" [attr.aria-label]="'user.business.filter.hasMenuCard' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterHasGallery()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.hasGalleryPhotos' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hasGallery')" [attr.aria-label]="'user.business.filter.hasGalleryPhotos' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterHasWhatsapp()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.hasWhatsapp' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hasWhatsapp')" [attr.aria-label]="'user.business.filter.hasWhatsapp' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterHasWebsite()) {
+        <span class="jb-active-chip">
+          {{ 'user.business.filter.hasWebsite' | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('hasWebsite')" [attr.aria-label]="'user.business.filter.hasWebsite' | translate"><i class="bi bi-x"></i></button>
         </span>
       }
       @if (filterDateFrom()) {
@@ -181,17 +213,6 @@
     </div>
   }
 
-  <!-- Geolocation status -->
-  @if (geoLoading()) {
-    <div class="biz-geo-status">
-      <i class="bi bi-crosshair"></i> {{ 'user.business.gettingLocation' | translate }}
-    </div>
-  }
-  @if (geoDenied() && !geoLoading()) {
-    <div class="biz-geo-status biz-geo-status--muted">
-      <i class="bi bi-info-circle"></i> {{ 'user.business.locationAccessDeniedShowingAll' | translate }}
-    </div>
-  }
   }
 
   <!-- Advanced Filters — right-side drawer, matches the User Jobs page's
@@ -228,35 +249,114 @@
               </div>
             </div>
           </div>
+
+          <!-- Id-based location, from the geography master data. Country is
+               multi-select; State and City only appear once it's narrowed to
+               a single country, since they belong to one. -->
+          <div class="jb-adv-subfield">
+            <label class="jb-adv-label">{{ 'user.business.filter.countries' | translate }}</label>
+            <app-chip-multi-select
+              [options]="geoCountryOptions()"
+              [ngModel]="filterCountryIds()"
+              (ngModelChange)="onFilterCountryIdsChange($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'user.business.filter.allCountries' | translate"></app-chip-multi-select>
+          </div>
+
+          @if (singleSelectedCountryId()) {
+            <div class="jb-adv-subfield">
+              <label class="jb-adv-label">{{ 'user.business.filter.state' | translate }}</label>
+              <app-searchable-select
+                [options]="divisionSelectOptions()"
+                [ngModel]="filterStateId()"
+                (ngModelChange)="onFilterStateChange($event)"
+                [ngModelOptions]="{ standalone: true }"
+                [placeholder]="'common.all' | translate"></app-searchable-select>
+            </div>
+
+            <div class="jb-adv-subfield">
+              <label class="jb-adv-label">{{ 'user.business.filter.city' | translate }}</label>
+              <app-searchable-select
+                [options]="[]"
+                [remoteSearchFn]="citySearchFn"
+                [ngModel]="filterCityId()"
+                (ngModelChange)="onFilterCityChange($event)"
+                [ngModelOptions]="{ standalone: true }"
+                [placeholder]="'common.all' | translate"></app-searchable-select>
+            </div>
+          } @else if (filterCountryIds().length > 1) {
+            <p class="jb-adv-hint"><i class="bi bi-info-circle"></i> {{ 'user.business.filter.selectCountryFirst' | translate }}</p>
+          }
+
+          <p class="jb-adv-hint">
+            <i class="bi bi-shield-check"></i> {{ 'user.business.filter.visibilityScopeHint' | translate }}
+          </p>
         </div>
 
-        <!-- ── Category ─────────────────────────────────────── -->
+        <!-- ── Visibility ───────────────────────────────────── -->
         <div class="jb-adv-section">
-          <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'user.business.category' | translate }}</span>
-          <app-searchable-select
-            [options]="categorySelectOptions()"
-            [ngModel]="filterCategoryId()"
-            (ngModelChange)="onCategoryFilterChange($event)"
-            [placeholder]="'user.business.allCategories' | translate">
-          </app-searchable-select>
+          <span class="jb-filter-section-label"><i class="bi bi-globe2"></i> {{ 'user.business.filter.visibility' | translate }}</span>
+          <app-radio-group variant="pill"
+            [options]="visibilityFilterOptions"
+            [ngModel]="filterVisibility()"
+            (ngModelChange)="onFilterVisibilityChange($event)"
+            [ngModelOptions]="{ standalone: true }"
+            [ariaLabel]="'user.business.filter.visibility' | translate"></app-radio-group>
         </div>
 
         <!-- ── Opening Hours ─────────────────────────────────── -->
         <div class="jb-adv-section">
           <span class="jb-filter-section-label"><i class="bi bi-clock"></i> {{ 'user.business.openingHours' | translate }}</span>
-          <div class="jb-pill-row" role="group" [attr.aria-label]="'user.business.filterByOpeningHours' | translate">
-            <button type="button" class="jb-pill-btn"
-                    [class.jb-pill-btn--active]="filterOpeningHours() === null"
-                    (click)="onFilterOpeningHoursChange(null)">
-              {{ 'common.all' | translate }}
+          <div class="jb-pill-row" role="group" [attr.aria-label]="'user.business.openingHours' | translate">
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterOpenNow()"
+              [attr.aria-pressed]="filterOpenNow()" (click)="toggleOpenNow()">
+              <i class="bi bi-door-open"></i> {{ 'user.business.filter.openNow' | translate }}
             </button>
-            @for (opt of filterOpeningHoursOptions; track opt.value) {
+          </div>
+
+          <label class="jb-adv-label">{{ 'user.business.filter.openOnDay' | translate }}</label>
+          <div class="jb-pill-row" role="group" [attr.aria-label]="'user.business.filter.openOnDay' | translate">
+            @for (day of DAY_KEYS; track day) {
               <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
-                      (click)="onFilterOpeningHoursChange(opt.value + '')">
-                <i class="bi bi-clock-history"></i> {{ opt.label | translate }}
-              </button>
+                [class.jb-pill-btn--active]="filterOpenOnDay() === day"
+                [attr.aria-pressed]="filterOpenOnDay() === day"
+                (click)="toggleOpenOnDay(day)">{{ DAY_SHORT_KEYS[day] | translate }}</button>
             }
+          </div>
+
+          <p class="jb-adv-hint">
+            <i class="bi bi-info-circle"></i> {{ 'components.openingHours.deviceTimeHint' | translate }}
+          </p>
+        </div>
+
+        <!-- ── Category & Features ──────────────────────────── -->
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'user.business.category' | translate }}</span>
+          <app-chip-multi-select
+            [options]="categoryChipOptions()"
+            [ngModel]="filterCategoryIds()"
+            (ngModelChange)="onFilterCategoryIdsChange($event)"
+            [ngModelOptions]="{ standalone: true }"
+            [placeholder]="'user.business.allCategories' | translate"></app-chip-multi-select>
+
+          <label class="jb-adv-label">{{ 'user.business.filter.features' | translate }}</label>
+          <div class="jb-pill-row" role="group" [attr.aria-label]="'user.business.filter.features' | translate">
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasMenu()"
+              [attr.aria-pressed]="filterHasMenu()" (click)="toggleFeatureFilter('menu')">
+              <i class="bi bi-card-list"></i> {{ 'user.business.filter.hasMenuCard' | translate }}
+            </button>
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasGallery()"
+              [attr.aria-pressed]="filterHasGallery()" (click)="toggleFeatureFilter('gallery')">
+              <i class="bi bi-images"></i> {{ 'user.business.filter.hasGalleryPhotos' | translate }}
+            </button>
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasWhatsapp()"
+              [attr.aria-pressed]="filterHasWhatsapp()" (click)="toggleFeatureFilter('whatsapp')">
+              <i class="bi bi-whatsapp"></i> {{ 'user.business.filter.hasWhatsapp' | translate }}
+            </button>
+            <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasWebsite()"
+              [attr.aria-pressed]="filterHasWebsite()" (click)="toggleFeatureFilter('website')">
+              <i class="bi bi-globe"></i> {{ 'user.business.filter.hasWebsite' | translate }}
+            </button>
           </div>
         </div>
 
@@ -378,11 +478,6 @@
             } @else if (biz.status === 'NEEDS_INFO') {
               <span class="bl-card__owner-badge bl-card__owner-badge--needs-info" [title]="biz.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}</span>
             }
-            @if ($any(biz)._distanceKm != null) {
-              <span class="bl-card__dist-badge">
-                <i class="bi bi-geo-alt-fill"></i> {{ $any(biz)._distanceKm.toFixed(2) }} km
-              </span>
-            }
           </div>
 
           <div class="bl-card__body">
@@ -407,7 +502,11 @@
               }
               @if (biz.phone) { <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span> }
               @if ($any(biz).whatsapp) { <span class="bl-card__meta-item"><i class="bi bi-whatsapp"></i>{{ $any(biz).whatsapp }}</span> }
-              @if (biz.openingHours) { <span class="bl-card__meta-item"><i class="bi bi-clock-fill"></i>{{ biz.openingHours }}</span> }
+              @if (biz.openingHours || biz.openingHoursJson) {
+                <span class="bl-card__meta-item">
+                  <app-opening-hours-summary [business]="biz"></app-opening-hours-summary>
+                </span>
+              }
               @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bl-card__meta-item bl-card__meta-item--link" (click)="$event.stopPropagation()"><i class="bi bi-globe2"></i>{{ 'user.business.website' | translate }}</a> }
             </div>
           </div>
@@ -464,8 +563,8 @@
         </nav>
       }
     } @else {
-      <!-- Lazily reveals the next batch of 10 businesses as this scrolls into view. -->
-      @if (visibleBusinessCount() < allFilteredBusinesses().length) {
+      <!-- Fetches and appends the next server page as this scrolls into view. -->
+      @if (currentPage() < totalPages()) {
         <div class="biz-load-more-sentinel" appInfiniteScroll (nearEnd)="loadMoreBusinesses()">
           <span class="spinner-border spinner-border-sm"></span> {{ 'user.business.loadingMoreBusinesses' | translate }}
         </div>
@@ -566,126 +665,18 @@
       </ol>
     </nav>
 
-    <div class="bd-hero">
-       <div class="bd-hero__profile">
-         <button type="button" class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}"
-           [class.bd-hero__avatar--clickable]="!!$any(biz).logo"
-           [disabled]="!$any(biz).logo"
-           (click)="$any(biz).logo && openImagePreview([$any(biz).logo], 0)"
-           [attr.aria-label]="$any(biz).logo ? 'View ' + biz.name + ' logo' : biz.name + ' logo placeholder'">
-           @if ($any(biz).logo) {
-             <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="w-100 h-100 object-fit-cover rounded-circle" loading="eager" />
-           } @else {
-             <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
-           }
-         </button>
-         <div class="bd-hero__info">
-          <div class="bd-hero__name-row">
-            <h1 class="bd-hero__name">{{ biz.name }}</h1>
-            @if (biz.status === 'PENDING') {
-              <span class="bd-badge bd-badge--pending"><i class="bi bi-hourglass-split"></i> {{ 'user.business.pendingApproval' | translate }}</span>
-            } @else if (biz.status === 'REJECTED') {
-              <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}</span>
-            } @else if (biz.status === 'NEEDS_INFO') {
-              <span class="bd-badge bd-badge--needs-info" [title]="biz.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill"></i> {{ 'common.needsMoreInfo' | translate }}</span>
-            } @else if (biz.isActive) {
-              <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> {{ 'common.active' | translate }}</span>
-            } @else {
-              <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> {{ 'common.inactive' | translate }}</span>
-            }
-            @if (isOwner(biz)) {
-              <span class="bd-badge bd-badge--owner"><i class="bi bi-person-check-fill"></i> {{ 'user.business.business' | translate }}</span>
-            }
-          </div>
-          <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
-          @if ($any(biz).city || $any(biz).state || biz.country) {
-            <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getFullLocation(biz) }}</span>
-          }
-          @if ((biz.status === 'REJECTED' || biz.status === 'NEEDS_INFO') && biz.rejectionReason) {
-            <p class="bd-rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
-          }
-        </div>
-        <div class="bd-hero__actions">
-          @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bd-action-btn bd-action-btn--green"><i class="bi bi-telephone-fill"></i> {{ 'user.business.call' | translate }}</a> }
-          @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--whatsapp"><i class="bi bi-whatsapp"></i> {{ 'user.business.whatsapp' | translate }}</a> }
-          @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--blue"><i class="bi bi-globe2"></i> {{ 'user.business.website' | translate }}</a> }
-          @if ($any(biz).mapsLink) { <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--orange"><i class="bi bi-pin-map-fill"></i> {{ 'user.business.directions' | translate }}</a> }
-          @if (isOwner(biz)) {
-            <button type="button" class="bd-action-btn bd-action-btn--amber" (click)="openEditBusiness(biz)"><i class="bi bi-pencil-fill"></i> {{ 'common.edit' | translate }}</button>
-            <button type="button" class="bd-action-btn bd-action-btn--red" (click)="openDeleteBusiness(biz)">
-              <i class="bi bi-trash-fill"></i> {{ 'common.delete' | translate }}
-            </button>
-          }
-        </div>
-      </div>
-    </div>
+    <app-business-hero [business]="biz"
+      [canManage]="isOwner(biz)"
+      [showOwnerBadge]="isOwner(biz)"
+      (logoClick)="openImagePreview([$any(biz).logo], 0)"
+      (edit)="openEditBusiness(biz)"
+      (delete)="openDeleteBusiness(biz)"></app-business-hero>
 
-    <div class="bd-grid">
-      <div class="bd-main">
-        @if (biz.description) {
-          <div class="bd-section">
-            <h3 class="bd-section__title"><i class="bi bi-file-text"></i> {{ 'user.business.about' | translate }}</h3>
-            <p class="bd-section__body">{{ biz.description }}</p>
-          </div>
-        }
-        @if (biz.phone || biz.email || biz.website || $any(biz).whatsapp) {
-          <div class="bd-section">
-            <h3 class="bd-section__title"><i class="bi bi-telephone"></i> {{ 'user.business.contact' | translate }}</h3>
-            <div class="bd-info-list">
-              @if (biz.phone) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--green"><i class="bi bi-telephone-fill"></i></div><div><span class="bd-info-row__label">{{ 'user.business.phone' | translate }}</span><a [href]="'tel:' + biz.phone" class="bd-info-row__value bd-info-row__value--link">{{ biz.phone }}</a></div></div> }
-              @if ($any(biz).whatsapp) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--whatsapp"><i class="bi bi-whatsapp"></i></div><div><span class="bd-info-row__label">{{ 'user.business.whatsapp' | translate }}</span><a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ $any(biz).whatsapp }}</a></div></div> }
-              @if (biz.email) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--blue"><i class="bi bi-envelope-fill"></i></div><div><span class="bd-info-row__label">{{ 'user.business.email' | translate }}</span><a [href]="'mailto:' + biz.email" (click)="openMailto(biz.email, $event)" class="bd-info-row__value bd-info-row__value--link">{{ biz.email }}</a></div></div> }
-              @if (biz.website) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--teal"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">{{ 'user.business.website' | translate }}</span><a [href]="biz.website" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ biz.website }}</a></div></div> }
-            </div>
-          </div>
-        }
-        @if (biz.images && biz.images.length > 1) {
-          <div class="bd-section">
-            <h3 class="bd-section__title"><i class="bi bi-images"></i> {{ 'user.business.gallery' | translate }}</h3>
-            <div class="bd-gallery">
-              @for (img of biz.images; track $index) {
-                <button type="button" class="bd-gallery__btn" (click)="openImagePreview(biz.images, $index)" [attr.aria-label]="'View ' + biz.name + ' image ' + ($index+1)">
-                  <img [src]="img | imageUrl" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" />
-                </button>
-              }
-            </div>
-          </div>
-        }
-      </div>
-
-      <aside class="bd-sidebar">
-        @if (biz.address || $any(biz).city || biz.country) {
-          <div class="bd-card">
-            <h4 class="bd-card__title"><i class="bi bi-geo-alt-fill"></i> {{ 'user.business.location' | translate }}</h4>
-            <div class="bd-info-list bd-info-list--compact">
-              @if (biz.address) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-house"></i></div><div><span class="bd-info-row__label">{{ 'user.business.address' | translate }}</span><span class="bd-info-row__value">{{ biz.address }}</span></div></div> }
-              @if ($any(biz).city) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-buildings"></i></div><div><span class="bd-info-row__label">{{ 'user.business.city' | translate }}</span><span class="bd-info-row__value">{{ $any(biz).city }}</span></div></div> }
-              @if ($any(biz).state) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-map"></i></div><div><span class="bd-info-row__label">{{ 'user.business.state' | translate }}</span><span class="bd-info-row__value">{{ $any(biz).state }}</span></div></div> }
-              @if (biz.country) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">{{ 'user.business.country' | translate }}</span><span class="bd-info-row__value">{{ biz.country }}</span></div></div> }
-              @if (biz.pincode) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-mailbox2"></i></div><div><span class="bd-info-row__label">{{ 'user.business.pinCode' | translate }}</span><span class="bd-info-row__value">{{ biz.pincode }}</span></div></div> }
-            </div>
-            @if ($any(biz).mapsLink) {
-              <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-maps-btn"><i class="bi bi-pin-map-fill"></i> {{ 'user.business.viewGoogleMaps' | translate }}</a>
-            } @else {
-              <a [href]="getDirectionsUrl()" target="_blank" rel="noopener" class="bd-maps-btn bd-maps-btn--secondary"><i class="bi bi-sign-turn-right"></i> {{ 'user.business.getDirections' | translate }}</a>
-            }
-          </div>
-        }
-        @if ($any(biz).openingDays || biz.openingHours) {
-          <div class="bd-card">
-            <h4 class="bd-card__title"><i class="bi bi-clock-fill"></i> {{ 'user.business.businessDaysAmpHours' | translate }}</h4>
-            @if ($any(biz).openingDays) {
-              <div class="bd-days">
-                @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
-                  <span class="bd-day" [class.bd-day--active]="$any(biz).openingDays && isDayActive($any(biz).openingDays, d)">{{ d }}</span>
-                }
-              </div>
-            }
-            @if (biz.openingHours) { <p class="bd-hours"><i class="bi bi-clock"></i> {{ biz.openingHours }}</p> }
-          </div>
-        }
-      </aside>
-    </div>
+    <!-- Business Information / Opening Days & Hours / Menu Card Images /
+         Business Card Images / Gallery Photos — one shared component, also
+         used by the admin console. -->
+    <app-business-detail-view [business]="biz"
+      (imagePreview)="openImagePreview($event.images, $event.index)"></app-business-detail-view>
   }
 }
 

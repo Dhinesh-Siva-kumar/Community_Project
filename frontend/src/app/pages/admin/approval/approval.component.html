@@ -528,6 +528,24 @@
             <app-post-video [src]="itemVideo(vi)"></app-post-video>
           </div>
         }
+        <!-- Business menu card / business card galleries — their own labelled
+             sections so a reviewer can tell them apart from gallery photos. -->
+        @for (group of itemImageGroups(vi); track group.labelKey) {
+          <div class="pa-view-section">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi bi-images"></i></span>
+              <span class="pa-view-section-title">{{ group.labelKey | translate }} ({{ group.images.length }})</span>
+            </div>
+            <div class="pa-view-images">
+              @for (img of group.images; track img; let i = $index) {
+                <button class="pa-view-image-btn" (click)="openImagePreview(group.images, i)">
+                  <img [src]="img | imageUrl" alt="" />
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         @if (itemImages(vi).length > 0) {
           <div class="pa-view-section pa-view-section--last">
             <div class="pa-view-section-header">

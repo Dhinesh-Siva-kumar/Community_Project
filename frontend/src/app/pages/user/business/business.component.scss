@@ -443,130 +443,6 @@ $accents: (
   &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
 }
 
-// ─── Business Detail View — replicated verbatim from the Admin
-// Business page's .bd-hero / .bd-badge / .bd-action-btn design system. ──
-.bd-hero {
-  border: 1.5px solid $color-border; border-radius: $radius-lg; overflow: hidden;
-  background: $color-bg-card; box-shadow: 0 1px 4px rgba(28,25,23,0.06); margin-bottom: $spacing-lg; margin-top: $spacing-sm;
-
-  // No cover banner — just the logo + business details, so the profile row
-  // sits flush at the top of the card.
-  &__profile { display: flex; align-items: center; gap: $spacing-md; padding: $spacing-lg; flex-wrap: wrap; }
-
-  &__avatar {
-    width: 72px; height: 72px; border-radius: $radius-full; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
-    color: var(--cat-accent, #F97316); background: var(--cat-accent-bg, rgba(251,191,36,0.12));
-    border: 2px solid var(--cat-accent-border, rgba(251,191,36,0.25));
-    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
-    padding: 0; cursor: default; overflow: hidden; @include transition-short(all);
-
-    // Same zoom-in affordance as the gallery thumbnails below, since both
-    // open the same lightbox.
-    &--clickable {
-      cursor: zoom-in;
-      &:hover { transform: scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.16); }
-      &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-    }
-    &:disabled { cursor: default; }
-  }
-
-  &__info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
-  &__name-row { display: flex; align-items: center; gap: $spacing-sm; flex-wrap: wrap; }
-  &__name { font-family: $font-family-header; font-size: clamp(1.15rem,3vw,1.6rem); font-weight: 800; color: $color-stone-900; margin: 0; letter-spacing: -0.02em; }
-  &__category { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-primary-darker; font-weight: $font-weight-semibold; .bi { font-size: 0.8em; } }
-  &__location { display: inline-flex; align-items: center; gap: 5px; font-size: $font-size-xs; color: $color-stone-500; .bi { color: #DC2626; font-size: 0.8em; } }
-
-  &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; margin-left: auto; }
-}
-
-.bd-badge {
-  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
-  border-radius: $radius-full; font-size: 10px; font-weight: $font-weight-bold;
-  text-transform: uppercase; letter-spacing: 0.04em;
-  &--active   { background: rgba(22,163,74,0.12); border: 1.5px solid rgba(22,163,74,0.28); color: $color-success-text; .bi { font-size: 7px; } }
-  &--inactive { background: rgba(220,38,38,0.10); border: 1.5px solid rgba(220,38,38,0.25); color: $color-danger; .bi { font-size: 7px; } }
-  &--owner    { background: rgba(251,191,36,0.20); border: 1.5px solid rgba(251,191,36,0.40); color: $color-primary-darker; .bi { font-size: 7px; } }
-  &--pending  { background: $color-warning-light; border: 1.5px solid $color-amber-200; color: $color-warning-text; .bi { font-size: 7px; } }
-  &--rejected { background: rgba($color-danger,0.10); border: 1.5px solid rgba($color-danger,0.25); color: $color-danger; .bi { font-size: 7px; } }
-  &--needs-info { background: rgba(124,58,237,0.10); border: 1.5px solid rgba(124,58,237,0.25); color: #7c3aed; .bi { font-size: 7px; } }
-}
-
-.bd-rejection-reason {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin: 4px 0 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: $color-error-bg;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: $color-danger-text;
-  font-size: 12.5px;
-  line-height: 1.5;
-  max-width: fit-content;
-
-  .bi { font-size: 12px; margin-top: 2px; flex-shrink: 0; }
-}
-
-.bd-action-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: $radius-md;
-  font-size: $font-size-xs; font-weight: $font-weight-semibold; text-decoration: none; white-space: nowrap;
-  @include transition-short(all); &:hover { transform: translateY(-1px); }
-  &--green    { background: rgba(22,163,74,0.10);   color: $color-success-text; border: 1.5px solid rgba(22,163,74,0.28);   &:hover { background: rgba(22,163,74,0.18); } }
-  &--whatsapp { background: rgba(37,211,102,0.10);  color: #128C7E; border: 1.5px solid rgba(37,211,102,0.28);  &:hover { background: rgba(37,211,102,0.18); } }
-  &--blue     { background: rgba(14,165,233,0.10);  color: #0284C7; border: 1.5px solid rgba(14,165,233,0.28);  &:hover { background: rgba(14,165,233,0.18); } }
-  &--orange   { background: rgba(249,115,22,0.10);  color: #C2410C; border: 1.5px solid rgba(249,115,22,0.28);  &:hover { background: rgba(249,115,22,0.18); } }
-  &--amber    { background: rgba(251,191,36,0.14);  color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.32); cursor: pointer; &:hover { background: rgba(251,191,36,0.22); } }
-  &--red      { background: rgba(220,38,38,0.10);   color: $color-danger;  border: 1.5px solid rgba(220,38,38,0.28); cursor: pointer; &:hover { background: rgba(220,38,38,0.18); } }
-}
-
-.bd-grid { display: grid; grid-template-columns: 1fr 300px; gap: $spacing-lg; align-items: start; }
-.bd-main { display: flex; flex-direction: column; gap: $spacing-md; }
-.bd-sidebar { display: flex; flex-direction: column; gap: $spacing-md; }
-
-.bd-section { background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg; padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04); &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; padding-bottom: $spacing-sm; border-bottom: 1.5px solid rgba(251,191,36,0.18); .bi { color: $color-primary-dark; } } &__body { font-size: $font-size-sm; color: $color-text-body; line-height: 1.75; margin: 0; } }
-
-.bd-card { background: $color-bg-card; border: 1.5px solid $color-border; border-radius: $radius-lg; padding: $spacing-lg; box-shadow: 0 1px 3px rgba(28,25,23,0.04); &__title { display: flex; align-items: center; gap: 8px; font-family: $font-family-header; font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-800; margin: 0 0 $spacing-md; .bi { color: $color-primary-dark; } } }
-
-.bd-info-list { display: flex; flex-direction: column; gap: 12px; &--compact { gap: 8px; } }
-.bd-info-row {
-  display: flex; align-items: flex-start; gap: 10px;
-  &__icon { width: 32px; height: 32px; border-radius: $radius-sm; background: rgba(251,191,36,0.10); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem; color: $color-primary-darker; &--green { background: rgba(22,163,74,0.10); color: $color-success-text; } &--blue { background: rgba(14,165,233,0.10); color: #0284C7; } &--teal { background: rgba(13,148,136,0.10); color: #0D9488; } &--whatsapp { background: rgba(37,211,102,0.10); color: #128C7E; } }
-  &__label { display: block; font-size: 10px; font-weight: $font-weight-semibold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-stone-400; margin-bottom: 1px; }
-  &__value { font-size: $font-size-sm; font-weight: $font-weight-medium; color: $color-stone-800; word-break: break-word; &--link { color: $color-info; text-decoration: none; &:hover { text-decoration: underline; } } }
-}
-
-// Soft tinted pill — same visual language as .bd-action-btn / .jb-pill-btn
-// used everywhere else, instead of a one-off solid gradient CTA.
-.bd-maps-btn {
-  display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: $spacing-md;
-  padding: 9px 16px; border-radius: $radius-md; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  text-decoration: none; @include transition-short(all);
-  background: rgba(251,191,36,0.14); color: $color-primary-darker; border: 1.5px solid rgba(251,191,36,0.35);
-  &:hover { background: rgba(251,191,36,0.22); border-color: $color-primary; transform: translateY(-1px); color: $color-primary-darker; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-  &--secondary { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.24); &:hover { background: rgba(251,191,36,0.14); } }
-}
-
-.bd-days { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: $spacing-sm; }
-.bd-day  {
-  display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 34px;
-  border-radius: $radius-full; font-size: $font-size-xs; font-weight: $font-weight-semibold;
-  background: $color-bg-page; color: $color-stone-500; border: 1.5px solid $color-border;
-  &--active { background: rgba(251,191,36,0.28); color: $color-primary-darker; border-color: $color-primary; font-weight: $font-weight-bold; }
-}
-.bd-hours { display: flex; align-items: center; gap: 6px; font-size: $font-size-sm; color: $color-stone-700; margin: 0; .bi { color: $color-primary-dark; } }
-
-.bd-gallery { display: flex; flex-wrap: wrap; gap: $spacing-sm; }
-.bd-gallery__btn { padding: 0; border: none; background: none; cursor: zoom-in; border-radius: $radius-sm; line-height: 0; &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; } }
-.bd-gallery__img { width: 100px; height: 75px; object-fit: cover; border-radius: $radius-sm; border: 1px solid $color-border; @include transition-short(all); .bd-gallery__btn:hover & { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.14); } }
-
-@include media-sm-max {
-  .bd-hero__profile { flex-direction: column; align-items: center; text-align: center; }
-  .bd-hero__info { align-items: center; }
-  .bd-hero__actions { margin-left: 0; justify-content: center; }
-}
 
 // ── Image lightbox — copied 1:1 from the Admin Business page's
 // .cd-lightbox, itself copied 1:1 from community-detail.component's, so
@@ -768,52 +644,6 @@ $accents: (
 
 .jb-adv-input--icon-left { padding-left: 32px; }
 
-// ── Distance — an adjustable-radius control that sits in the "normal"
-// filter row alongside search, rather than tucked behind Advanced Filters. ──
-.jb-distance-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 6px 0 12px;
-  border: 1.5px solid $color-border;
-  border-radius: $radius-full;
-  background: $color-bg-light;
-  flex-shrink: 0;
-
-  &__icon { color: $color-primary-dark; font-size: 0.85rem; }
-}
-
-.jb-distance-step {
-  width: 24px; height: 24px; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 1.5px solid $color-border; border-radius: 50%;
-  background: $color-bg-card; color: $color-stone-600; font-size: 0.7rem; cursor: pointer;
-  @include transition-quick(all);
-  &:hover:not(:disabled) { border-color: $color-primary; background: rgba(251,191,36,0.10); color: $jbf-soft-text; }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-}
-
-.jb-distance-input {
-  width: 42px; height: 28px; padding: 0 2px; border: none; background: none;
-  font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-stone-800;
-  text-align: center; outline: none;
-  &::-webkit-inner-spin-button, &::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  -moz-appearance: textfield;
-  &:disabled { color: $color-stone-400; }
-}
-
-.jb-distance-unit { font-size: $font-size-xs; font-weight: $font-weight-medium; color: $color-stone-500; margin-right: 2px; }
-
-.jb-distance-all {
-  height: 28px; padding: 0 12px; border: 1.5px solid $color-border; border-radius: $radius-full;
-  background: $color-bg-card; color: $color-stone-600; font-size: 11px; font-weight: $font-weight-semibold; cursor: pointer;
-  @include transition-quick(all);
-  &:hover { border-color: $color-primary; color: $jbf-soft-text; }
-  &--active { background: $jbf-active-bg; border-color: $jbf-active-border; color: $jbf-active-text; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-}
 
 .jb-advanced-toggle {
   display: inline-flex;
@@ -943,6 +773,20 @@ $accents: (
     display: flex;
     margin-bottom: 10px;
   }
+
+  // A sub-label that follows another control inside the same section needs
+  // its own top gap — .jb-adv-label only carries a bottom margin, so
+  // "Open on day" and "Features" otherwise sat flush against the control
+  // above them.
+  .jb-pill-row + .jb-adv-label,
+  app-chip-multi-select + .jb-adv-label,
+  app-searchable-select + .jb-adv-label,
+  .jb-adv-subfield + .jb-adv-label {
+    margin-top: $spacing-md;
+  }
+
+  // ...and the control that follows a sub-label sits directly under it.
+  .jb-adv-label + .jb-pill-row { margin-top: 2px; }
 }
 
 .jb-pill-row {
@@ -1014,6 +858,22 @@ $accents: (
   text-transform: uppercase; letter-spacing: 0.07em;
   color: $color-stone-500; margin-bottom: 2px;
   .bi { color: $color-primary-dark; font-size: 0.8rem; }
+}
+
+// Stacked sub-fields inside an Advanced Filters section (the cascading
+// Country → State → City location filter, and the category multi-select).
+.jb-adv-subfield {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: $spacing-sm;
+}
+
+.jb-adv-hint {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: $spacing-sm 0 0;
+  font-size: $font-size-xs;
+  color: $color-stone-500;
+  line-height: 1.5;
+  .bi { flex-shrink: 0; margin-top: 2px; color: $color-primary-dark; }
 }
 
 .jb-adv-input-wrap { position: relative; }
@@ -1203,50 +1063,7 @@ $accents: (
   }
 }
 
-// ─── Geolocation Status ────────────────────────────────────────────────
-.biz-geo-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: $spacing-sm $spacing-md;
-  margin-bottom: $spacing-lg;
-  border-radius: $radius-md;
-  background: $jbf-stat-active-bg;
-  border: 1px solid rgba(251,191,36,0.22);
-  font-size: $font-size-xs;
-  color: $jbf-soft-text;
-  font-weight: $font-weight-medium;
 
-  .bi { font-size: 0.9rem; animation: bizSpin 1.2s linear infinite; }
-
-  &--muted {
-    background: $color-bg-light;
-    border-color: $color-border;
-    color: $color-stone-500;
-    .bi { animation: none; }
-  }
-}
-
-// ─── Distance Badge on Card ────────────────────────────────────────────
-.bl-card__dist-badge {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 1;
-  padding: 3px 9px;
-  border-radius: $radius-full;
-  background: rgba(28,25,23,0.70);
-  backdrop-filter: blur(6px);
-  color: #fff;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-
-  .bi { font-size: 0.7rem; color: $color-primary; }
-}
 
 // ─── Responsive ───────────────────────────────────────────────
 @include media-md-max {

@@ -524,24 +524,110 @@
                   [attr.aria-label]="'admin.business.filterByPincode' | translate" />
               </div>
             </div>
+
+            <!-- Id-based location, from the geography master data. Country is
+                 multi-select; State and City only appear once it's narrowed to
+                 a single country, since they belong to one. -->
+            <div class="jb-adv-subfield">
+              <label class="jb-adv-label">{{ 'admin.business.filter.countries' | translate }}</label>
+              <app-chip-multi-select
+                [options]="geoCountryOptions()"
+                [ngModel]="filterCountryIds()"
+                (ngModelChange)="onFilterCountryIdsChange($event)"
+                [ngModelOptions]="{ standalone: true }"
+                [placeholder]="'admin.business.filter.allCountries' | translate"></app-chip-multi-select>
+            </div>
+
+            @if (singleSelectedCountryId()) {
+              <div class="jb-adv-subfield">
+                <label class="jb-adv-label">{{ 'admin.business.filter.state' | translate }}</label>
+                <app-searchable-select
+                  [options]="divisionSelectOptions()"
+                  [ngModel]="filterStateId()"
+                  (ngModelChange)="onFilterStateChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  [placeholder]="'common.all' | translate"></app-searchable-select>
+              </div>
+
+              <div class="jb-adv-subfield">
+                <label class="jb-adv-label">{{ 'admin.business.filter.city' | translate }}</label>
+                <app-searchable-select
+                  [options]="[]"
+                  [remoteSearchFn]="citySearchFn"
+                  [ngModel]="filterCityId()"
+                  (ngModelChange)="onFilterCityChange($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  [placeholder]="'common.all' | translate"></app-searchable-select>
+              </div>
+            } @else if (filterCountryIds().length > 1) {
+              <p class="jb-adv-hint"><i class="bi bi-info-circle"></i> {{ 'admin.business.filter.selectCountryFirst' | translate }}</p>
+            }
+          </div>
+
+          <!-- ── Visibility ───────────────────────────────────── -->
+          <div class="jb-adv-section">
+            <span class="jb-filter-section-label"><i class="bi bi-globe2"></i> {{ 'admin.business.filter.visibility' | translate }}</span>
+            <app-radio-group variant="pill"
+              [options]="visibilityFilterOptions"
+              [ngModel]="filterVisibility()"
+              (ngModelChange)="onFilterVisibilityChange($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [ariaLabel]="'admin.business.filter.visibility' | translate"></app-radio-group>
           </div>
 
           <!-- ── Opening Hours ─────────────────────────────────── -->
           <div class="jb-adv-section">
             <span class="jb-filter-section-label"><i class="bi bi-clock"></i> {{ 'admin.business.openingHours' | translate }}</span>
-            <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.business.filterByOpeningHours' | translate">
-              <button type="button" class="jb-pill-btn"
-                      [class.jb-pill-btn--active]="filterOpeningHours() === null"
-                      (click)="onFilterOpeningHoursChange(null)">
-                {{ 'common.all' | translate }}
+            <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.business.openingHours' | translate">
+              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterOpenNow()"
+                [attr.aria-pressed]="filterOpenNow()" (click)="toggleOpenNow()">
+                <i class="bi bi-door-open"></i> {{ 'admin.business.filter.openNow' | translate }}
               </button>
-              @for (opt of filterOpeningHoursOptions; track opt.value) {
+            </div>
+
+            <label class="jb-adv-label">{{ 'admin.business.filter.openOnDay' | translate }}</label>
+            <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.business.filter.openOnDay' | translate">
+              @for (day of DAY_KEYS; track day) {
                 <button type="button" class="jb-pill-btn"
-                        [class.jb-pill-btn--active]="filterOpeningHours() === opt.value"
-                        (click)="onFilterOpeningHoursChange(opt.value + '')">
-                  <i class="bi bi-clock-history"></i> {{ opt.label | translate }}
-                </button>
+                  [class.jb-pill-btn--active]="filterOpenOnDay() === day"
+                  [attr.aria-pressed]="filterOpenOnDay() === day"
+                  (click)="toggleOpenOnDay(day)">{{ DAY_SHORT_KEYS[day] | translate }}</button>
               }
+            </div>
+
+            <p class="jb-adv-hint">
+              <i class="bi bi-info-circle"></i> {{ 'components.openingHours.deviceTimeHint' | translate }}
+            </p>
+          </div>
+
+          <!-- ── Category & Features ──────────────────────────── -->
+          <div class="jb-adv-section">
+            <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'admin.business.filter.categories' | translate }}</span>
+            <app-chip-multi-select
+              [options]="categoryChipOptions()"
+              [ngModel]="filterCategoryIds()"
+              (ngModelChange)="onFilterCategoryIdsChange($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'common.all' | translate"></app-chip-multi-select>
+
+            <label class="jb-adv-label">{{ 'admin.business.filter.features' | translate }}</label>
+            <div class="jb-pill-row" role="group" [attr.aria-label]="'admin.business.filter.features' | translate">
+              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasMenu()"
+                [attr.aria-pressed]="filterHasMenu()" (click)="toggleFeatureFilter('menu')">
+                <i class="bi bi-card-list"></i> {{ 'admin.business.filter.hasMenuCard' | translate }}
+              </button>
+              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasGallery()"
+                [attr.aria-pressed]="filterHasGallery()" (click)="toggleFeatureFilter('gallery')">
+                <i class="bi bi-images"></i> {{ 'admin.business.filter.hasGalleryPhotos' | translate }}
+              </button>
+              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasWhatsapp()"
+                [attr.aria-pressed]="filterHasWhatsapp()" (click)="toggleFeatureFilter('whatsapp')">
+                <i class="bi bi-whatsapp"></i> {{ 'admin.business.filter.hasWhatsapp' | translate }}
+              </button>
+              <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterHasWebsite()"
+                [attr.aria-pressed]="filterHasWebsite()" (click)="toggleFeatureFilter('website')">
+                <i class="bi bi-globe"></i> {{ 'admin.business.filter.hasWebsite' | translate }}
+              </button>
             </div>
           </div>
 
@@ -655,10 +741,70 @@
             <button class="jb-active-chip__remove" (click)="filterPincode.set(''); applyFilters()" [attr.aria-label]="'admin.business.removePincodeFilter' | translate"><i class="bi bi-x"></i></button>
           </span>
         }
-        @if (filterOpeningHours()) {
+        @if (filterCountryIds().length) {
           <span class="jb-active-chip">
-            Hours: {{ filterOpeningHours() }}
-            <button class="jb-active-chip__remove" (click)="removeFilter('hours')" [attr.aria-label]="'admin.business.removeHoursFilter' | translate"><i class="bi bi-x"></i></button>
+            {{ 'admin.business.filter.countries' | translate }}: {{ filterCountryIds().length }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('countries')" [attr.aria-label]="'admin.business.filter.countries' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterStateId()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.state' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('state')" [attr.aria-label]="'admin.business.filter.state' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterCityId()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.city' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('city')" [attr.aria-label]="'admin.business.filter.city' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterVisibility()) {
+          <span class="jb-active-chip">
+            {{ (filterVisibility() === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry') | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('visibility')" [attr.aria-label]="'admin.business.filter.visibility' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterOpenNow()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.openNow' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('openNow')" [attr.aria-label]="'admin.business.filter.openNow' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterOpenOnDay()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.openOnDay' | translate }}: {{ DAY_SHORT_KEYS[filterOpenOnDay()!] | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('openOnDay')" [attr.aria-label]="'admin.business.filter.openOnDay' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterCategoryIds().length) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.categories' | translate }}: {{ filterCategoryIds().length }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('categories')" [attr.aria-label]="'admin.business.filter.categories' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterHasMenu()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.hasMenuCard' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('hasMenu')" [attr.aria-label]="'admin.business.filter.hasMenuCard' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterHasGallery()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.hasGalleryPhotos' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('hasGallery')" [attr.aria-label]="'admin.business.filter.hasGalleryPhotos' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterHasWhatsapp()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.hasWhatsapp' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('hasWhatsapp')" [attr.aria-label]="'admin.business.filter.hasWhatsapp' | translate"><i class="bi bi-x"></i></button>
+          </span>
+        }
+        @if (filterHasWebsite()) {
+          <span class="jb-active-chip">
+            {{ 'admin.business.filter.hasWebsite' | translate }}
+            <button class="jb-active-chip__remove" (click)="removeFilter('hasWebsite')" [attr.aria-label]="'admin.business.filter.hasWebsite' | translate"><i class="bi bi-x"></i></button>
           </span>
         }
         @if (filterStatus()) {
@@ -773,8 +919,10 @@
                 @if (biz.phone) {
                   <span class="bl-card__meta-item"><i class="bi bi-telephone-fill"></i>{{ biz.phone }}</span>
                 }
-                @if (biz.openingHours) {
-                  <span class="bl-card__meta-item"><i class="bi bi-clock-fill"></i>{{ biz.openingHours }}</span>
+                @if (biz.openingHours || biz.openingHoursJson) {
+                  <span class="bl-card__meta-item">
+                    <app-opening-hours-summary [business]="biz"></app-opening-hours-summary>
+                  </span>
                 }
                 @if (biz.website) {
                   <a [href]="biz.website" target="_blank" rel="noopener"
@@ -1000,120 +1148,20 @@
         </ol>
       </nav>
 
-      <div class="bd-hero">
-         <div class="bd-hero__profile">
-           <button type="button" class="bd-hero__avatar biz-cat-card--{{ getCategoryAccent(biz.category?.icon) }}"
-             [class.bd-hero__avatar--clickable]="!!$any(biz).logo"
-             [disabled]="!$any(biz).logo"
-             (click)="$any(biz).logo && openImagePreview([$any(biz).logo], 0)"
-             [attr.aria-label]="$any(biz).logo ? 'View ' + biz.name + ' logo' : biz.name + ' logo placeholder'">
-             @if ($any(biz).logo) {
-               <img [src]="$any(biz).logo | imageUrl" [alt]="biz.name + ' logo'" class="w-100 h-100 object-fit-cover rounded-circle" loading="eager" />
-             } @else {
-               <i class="bi {{ getCategoryIcon(biz.category?.icon) }}"></i>
-             }
-           </button>
-           <div class="bd-hero__info">
-            <div class="bd-hero__name-row">
-              <h1 class="bd-hero__name">{{ biz.name }}</h1>
-              @if (biz.status === 'PENDING') {
-                <a class="bd-badge bd-badge--pending bd-badge--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'business' }" [title]="'admin.business.goBusinessApproval' | translate"><i class="bi bi-hourglass-split"></i> {{ 'admin.business.pendingApproval' | translate }}</a>
-              } @else if (biz.status === 'REJECTED') {
-                <span class="bd-badge bd-badge--rejected" [title]="biz.rejectionReason || 'Rejected'"><i class="bi bi-x-circle-fill"></i> {{ 'common.rejected' | translate }}</span>
-              } @else if (biz.isActive) {
-                <span class="bd-badge bd-badge--active"><i class="bi bi-circle-fill"></i> {{ 'common.active' | translate }}</span>
-              } @else {
-                <span class="bd-badge bd-badge--inactive"><i class="bi bi-dash-circle-fill"></i> {{ 'common.inactive' | translate }}</span>
-              }
-            </div>
-            <span class="bd-hero__category"><i class="bi bi-tags"></i> {{ biz.category?.name }}</span>
-            @if ($any(biz).city || $any(biz).state || biz.country) {
-              <span class="bd-hero__location"><i class="bi bi-geo-alt-fill"></i> {{ getLocation(biz) }}</span>
-            }
-            @if (biz.status === 'REJECTED' && biz.rejectionReason) {
-              <p class="bd-rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
-            }
-          </div>
-          <div class="bd-hero__actions">
-            @if (biz.phone) { <a [href]="'tel:' + biz.phone" class="bd-action-btn bd-action-btn--green"><i class="bi bi-telephone-fill"></i> {{ 'admin.business.call' | translate }}</a> }
-            @if ($any(biz).whatsapp) { <a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--whatsapp"><i class="bi bi-whatsapp"></i> {{ 'admin.business.whatsapp' | translate }}</a> }
-            @if (biz.website) { <a [href]="biz.website" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--blue"><i class="bi bi-globe2"></i> {{ 'admin.business.website' | translate }}</a> }
-            @if ($any(biz).mapsLink) { <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-action-btn bd-action-btn--orange"><i class="bi bi-pin-map-fill"></i> {{ 'admin.business.directions' | translate }}</a> }
-            <div class="bd-hero__admin" (click)="$event.stopPropagation()">
-              <button class="bd-hero__admin-btn bd-hero__admin-btn--edit" (click)="openEditBusiness($event, biz)" [disabled]="deletingId() === biz.id" [attr.aria-label]="'common.edit' | translate" [title]="'common.edit' | translate"><i class="bi bi-pencil"></i></button>
-              <button class="bd-hero__admin-btn bd-hero__admin-btn--delete" (click)="openDeleteBusiness($event, biz)" [disabled]="deletingId() === biz.id" [attr.aria-label]="'common.delete' | translate" [title]="'common.delete' | translate">
-                @if (deletingId() === biz.id) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash3"></i> }
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <app-business-hero [business]="biz"
+        [canManage]="true"
+        [pendingApprovalRoute]="['/admin/approval']"
+        [pendingApprovalQueryParams]="{ tab: 'business' }"
+        [deleting]="deletingId() === biz.id"
+        (logoClick)="openImagePreview([$any(biz).logo], 0)"
+        (edit)="openEditBusiness($event, biz)"
+        (delete)="openDeleteBusiness($event, biz)"></app-business-hero>
 
-      <div class="bd-grid">
-        <div class="bd-main">
-          @if (biz.description) {
-            <div class="bd-section">
-              <h3 class="bd-section__title"><i class="bi bi-file-text"></i> {{ 'admin.business.about' | translate }}</h3>
-              <p class="bd-section__body">{{ biz.description }}</p>
-            </div>
-          }
-          @if (biz.phone || biz.email || biz.website || $any(biz).whatsapp) {
-            <div class="bd-section">
-              <h3 class="bd-section__title"><i class="bi bi-telephone"></i> {{ 'admin.business.contact' | translate }}</h3>
-              <div class="bd-info-list">
-                @if (biz.phone) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--green"><i class="bi bi-telephone-fill"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.phone' | translate }}</span><a [href]="'tel:' + biz.phone" class="bd-info-row__value bd-info-row__value--link">{{ biz.phone }}</a></div></div> }
-                @if ($any(biz).whatsapp) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--whatsapp"><i class="bi bi-whatsapp"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.whatsapp' | translate }}</span><a [href]="getWhatsappUrl($any(biz).whatsapp)" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ $any(biz).whatsapp }}</a></div></div> }
-                @if (biz.email) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--blue"><i class="bi bi-envelope-fill"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.email' | translate }}</span><a [href]="'mailto:' + biz.email" (click)="openMailto(biz.email, $event)" class="bd-info-row__value bd-info-row__value--link">{{ biz.email }}</a></div></div> }
-                @if (biz.website) { <div class="bd-info-row"><div class="bd-info-row__icon bd-info-row__icon--teal"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.website' | translate }}</span><a [href]="biz.website" target="_blank" rel="noopener" class="bd-info-row__value bd-info-row__value--link">{{ biz.website }}</a></div></div> }
-              </div>
-            </div>
-          }
-          @if (biz.images && biz.images.length > 1) {
-            <div class="bd-section">
-              <h3 class="bd-section__title"><i class="bi bi-images"></i> {{ 'admin.business.gallery' | translate }}</h3>
-              <div class="bd-gallery">
-                @for (img of biz.images; track $index) {
-                  <button type="button" class="bd-gallery__btn" (click)="openImagePreview(biz.images, $index)" [attr.aria-label]="'View ' + biz.name + ' image ' + ($index+1)">
-                    <img [src]="img | imageUrl" [alt]="biz.name + ' ' + ($index+1)" class="bd-gallery__img" loading="lazy" />
-                  </button>
-                }
-              </div>
-            </div>
-          }
-        </div>
-        <aside class="bd-sidebar">
-          @if (biz.address || $any(biz).city || biz.country) {
-            <div class="bd-card">
-              <h4 class="bd-card__title"><i class="bi bi-geo-alt-fill"></i> {{ 'admin.business.location' | translate }}</h4>
-              <div class="bd-info-list bd-info-list--compact">
-                @if (biz.address) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-house"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.address' | translate }}</span><span class="bd-info-row__value">{{ biz.address }}</span></div></div> }
-                @if ($any(biz).city) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-buildings"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.city' | translate }}</span><span class="bd-info-row__value">{{ $any(biz).city }}</span></div></div> }
-                @if ($any(biz).state) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-map"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.state' | translate }}</span><span class="bd-info-row__value">{{ $any(biz).state }}</span></div></div> }
-                @if (biz.country) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-globe2"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.country' | translate }}</span><span class="bd-info-row__value">{{ biz.country }}</span></div></div> }
-                @if (biz.pincode) { <div class="bd-info-row"><div class="bd-info-row__icon"><i class="bi bi-mailbox2"></i></div><div><span class="bd-info-row__label">{{ 'admin.business.pinCode' | translate }}</span><span class="bd-info-row__value">{{ biz.pincode }}</span></div></div> }
-              </div>
-              @if ($any(biz).mapsLink) {
-                <a [href]="$any(biz).mapsLink" target="_blank" rel="noopener" class="bd-maps-btn"><i class="bi bi-pin-map-fill"></i> {{ 'admin.business.viewGoogleMaps' | translate }}</a>
-              } @else {
-                <a [href]="getDirectionsUrl()" target="_blank" rel="noopener" class="bd-maps-btn bd-maps-btn--secondary"><i class="bi bi-sign-turn-right"></i> {{ 'admin.business.getDirections' | translate }}</a>
-              }
-            </div>
-          }
-          @if ($any(biz).openingDays || biz.openingHours) {
-            <div class="bd-card">
-              <h4 class="bd-card__title"><i class="bi bi-clock-fill"></i> {{ 'admin.business.businessDaysAmpHours' | translate }}</h4>
-              @if ($any(biz).openingDays) {
-                <div class="bd-days">
-                  @for (d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; track d) {
-                    <span class="bd-day" [class.bd-day--active]="isOpeningDay($any(biz).openingDays, d)">{{ d }}</span>
-                  }
-                </div>
-              }
-              @if (biz.openingHours) { <p class="bd-hours"><i class="bi bi-clock"></i> {{ biz.openingHours }}</p> }
-            </div>
-          }
-        </aside>
-      </div>
+      <!-- Business Information / Opening Days & Hours / Menu Card Images /
+           Business Card Images / Gallery Photos — one shared component, also
+           used by the user Business page. -->
+      <app-business-detail-view [business]="biz"
+        (imagePreview)="openImagePreview($event.images, $event.index)"></app-business-detail-view>
     }
   }
 
@@ -1353,474 +1401,19 @@
   </div>
 }
 
-<!-- ==================== ADD BUSINESS MODAL ==================== -->
-@if (showAddBusinessModal()) {
-  <div class="au-backdrop" (click)="closeAddBusiness()"></div>
-  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="bizModalTitle" (click)="$event.stopPropagation()">
-
-    <!-- Modal Header -->
-    <div class="au-header cm-modal-header">
-      <div class="au-header__cover-shapes" aria-hidden="true">
-        <span class="shape shape--1"></span>
-        <span class="shape shape--2"></span>
-      </div>
-      <div class="au-header__icon cm-modal-icon">
-        <i class="bi" [ngClass]="editingBusiness() ? 'bi-pencil-fill' : 'bi-shop-window'"></i>
-      </div>
-      <div class="au-header__text cm-modal-header-inner">
-        <h5 class="au-header__title cm-modal-title" id="bizModalTitle">{{ editingBusiness() ? 'Edit Business' : 'Add Business' }}</h5>
-        <p class="au-header__sub cm-modal-subtitle">{{ 'admin.business.fieldsMarked' | translate }} <span class="text-danger">*</span> {{ 'admin.business.required' | translate }}</p>
-      </div>
-      <button type="button" class="au-close cm-close-btn" (click)="closeAddBusiness()" [attr.aria-label]="'common.close' | translate">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-
-    <!-- Modal Body -->
-    <div class="au-body cm-modal-body">
-      <form [formGroup]="businessForm" novalidate>
-
-            <!-- S1: Business Info -->
-            <div class="jb-form-section">
-              <div class="jb-form-section__header">
-                <div class="jb-form-section__badge"><i class="bi bi-shop"></i></div>
-                <div><span class="jb-form-section__num">01</span><span class="jb-form-section__name">{{ 'admin.business.businessInformation' | translate }}</span></div>
-              </div>
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="jb-label" for="bizName">{{ 'admin.business.businessName' | translate }} <span class="text-danger">*</span></label>
-                  <input id="bizName" type="text" class="jb-input" formControlName="name" [placeholder]="'admin.business.eGSunriseCoffee' | translate" maxlength="100"
-                    [class.jb-input--error]="businessForm.get('name')?.invalid && businessForm.get('name')?.touched" />
-                  @if (businessForm.get('name')?.invalid && businessForm.get('name')?.touched) {
-                    <span class="jb-field-error">
-                      <i class="bi bi-exclamation-circle"></i>
-                      @if (businessForm.get('name')?.errors?.['required']) {
-                        Business name is required
-                      } @else if (businessForm.get('name')?.errors?.['minlength']) {
-                        Minimum 2 characters required
-                      } @else if (businessForm.get('name')?.errors?.['maxlength']) {
-                        Maximum 100 characters allowed
-                      }
-                    </span>
-                  }
-                </div>
-                <div class="col-md-6" [class.cm-field-group--error]="businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched">
-                  <label class="jb-label">{{ 'admin.business.category' | translate }} <span class="text-danger">*</span></label>
-                  <app-searchable-select formControlName="categoryId" [options]="categoryOptions()" [placeholder]="'admin.business.selectCategory' | translate"></app-searchable-select>
-                  @if (businessForm.get('categoryId')?.invalid && businessForm.get('categoryId')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.categoryRequired' | translate }}</span>
-                  }
-                </div>
-                <div class="col-12">
-                  <label class="jb-label" for="bizDesc">{{ 'admin.business.description' | translate }} <span class="text-danger">*</span></label>
-                  <div class="jb-textarea-wrap">
-                    <textarea id="bizDesc" class="jb-input jb-input--textarea" formControlName="description" rows="3"
-                      [placeholder]="'admin.business.describeBusinessMin10Characters' | translate" maxlength="1000"
-                      [class.jb-input--error]="businessForm.get('description')?.invalid && businessForm.get('description')?.touched"></textarea>
-                    <span class="jb-char-count jb-char-count--overlay">{{ businessForm.get('description')?.value?.length ?? 0 }}/1000</span>
-                  </div>
-                  @if (businessForm.get('description')?.invalid && businessForm.get('description')?.touched) {
-                    <span class="jb-field-error">
-                      <i class="bi bi-exclamation-circle"></i>
-                      @if (businessForm.get('description')?.errors?.['required']) {
-                        Description is required
-                      } @else if (businessForm.get('description')?.errors?.['minlength']) {
-                        Minimum 10 characters required
-                      } @else if (businessForm.get('description')?.errors?.['maxlength']) {
-                        Maximum 1000 characters allowed
-                      }
-                    </span>
-                  }
-                </div>
-                <!-- Business Logo -->
-                <div class="col-12">
-                  <label class="jb-label">{{ 'admin.business.businessLogo' | translate }} <span class="text-danger">*</span></label>
-                  @if (logoPreview()) {
-                    <div class="jb-logo-preview">
-                      <img [src]="logoPreview() | imageUrl" [alt]="'admin.business.logoPreview' | translate" class="jb-logo-preview__img" />
-                      <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  } @else {
-                    <app-file-upload mode="single" accept="image/*"
-                      [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadBusinessLogo' | translate"
-                      [showError]="businessSubmitAttempted() && !logoPreview()"
-                      [errorMessage]="'admin.business.businessLogoRequired' | translate"
-                      (filesChange)="onLogoChange($event)"></app-file-upload>
-                  }
-                </div>
-
-                <!-- Business Status — owner or admin can toggle it -->
-                <div class="col-12">
-                  <div class="cm-default-row">
-                    <div class="cm-default-label">
-                      <i class="bi" [ngClass]="businessForm.get('isActive')?.value ? 'bi-check-circle-fill' : 'bi-dash-circle-fill'"></i>
-                      <span>{{ 'admin.business.businessStatus' | translate }}</span>
-                      <span class="cm-default-hint">
-                        {{ businessForm.get('isActive')?.value ? 'Active — visible in listings' : 'Inactive — hidden from listings' }}
-                      </span>
-                    </div>
-                    <app-toggle formControlName="isActive" [ariaLabel]="'common.active' | translate"></app-toggle>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- S2: Contact -->
-            <div class="jb-form-section">
-              <div class="jb-form-section__header">
-                <div class="jb-form-section__badge"><i class="bi bi-telephone"></i></div>
-                <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">{{ 'admin.business.contactDetails' | translate }}</span></div>
-              </div>
-              <div class="row g-3">
-                <!-- Row 1: Phone Country + Phone -->
-                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched">
-                  <label class="jb-label">{{ 'admin.business.phoneCountry' | translate }} <span class="text-danger">*</span></label>
-                  <app-searchable-select formControlName="phoneCountryId" [options]="phoneCountryOptions()"
-                    [placeholder]="'admin.business.selectCountryCode' | translate"></app-searchable-select>
-                  @if (businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.countryCodeRequired' | translate }}</span>
-                  }
-                </div>
-                <div class="col-md-8">
-                  <label class="jb-label" for="bizPhone">{{ 'admin.business.phone' | translate }} <span class="text-danger">*</span></label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-telephone jb-input-group__icon"></i>
-                    <input id="bizPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" placeholder="7700 900000" maxlength="15"
-                      [class.jb-input--error]="businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched" />
-                  </div>
-                  @if (businessForm.get('phone')?.invalid && businessForm.get('phone')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('phone')?.errors?.['phoneInvalid'] || 'Valid phone required' }}</span>
-                  }
-                </div>
-
-                <!-- Row 2: Same-as-phone toggle -->
-                <div class="col-12">
-                  <app-toggle formControlName="sameAsPhone" [label]="'components.businessForm.sameAsPhoneAria' | translate" [ariaLabel]="'admin.business.whatsappNumberSameAsPhone' | translate"></app-toggle>
-                </div>
-
-                <!-- Row 3: WhatsApp — its own Country dropdown only when NOT
-                     synced with phone; the field itself always holds just the
-                     local digits, never a country code. -->
-                @if (!businessForm.get('sameAsPhone')?.value) {
-                  <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('whatsappCountryId')?.invalid && businessForm.get('whatsappCountryId')?.touched">
-                    <label class="jb-label">{{ 'admin.business.whatsappCountry' | translate }}</label>
-                    <app-searchable-select formControlName="whatsappCountryId" [options]="phoneCountryOptions()"
-                      [placeholder]="'admin.business.selectCountryCode' | translate"></app-searchable-select>
-                  </div>
-                  <div class="col-md-8">
-                    <label class="jb-label" for="bizWa">{{ 'admin.business.whatsapp' | translate }}</label>
-                    <div class="jb-input-group">
-                      <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                      <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="7700 900000" maxlength="15"
-                        [class.jb-input--error]="businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched" />
-                    </div>
-                    @if (businessForm.get('whatsapp')?.invalid && businessForm.get('whatsapp')?.touched) {
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ businessForm.get('whatsapp')?.errors?.['phoneInvalid'] || 'Valid WhatsApp number required' }}</span>
-                    }
-                  </div>
-                } @else {
-                  <div class="col-12">
-                    <label class="jb-label" for="bizWa">{{ 'admin.business.whatsapp' | translate }} <span class="jb-optional">{{ 'common.sameAsPhone' | translate }}</span></label>
-                    <div class="jb-input-group">
-                      <i class="bi bi-whatsapp jb-input-group__icon"></i>
-                      <input id="bizWa" type="tel" class="jb-input jb-input--icon-left" formControlName="whatsapp" placeholder="7700 900000" maxlength="15" />
-                    </div>
-                  </div>
-                }
-
-                <!-- Row 4: Email + Website (6+6 = 12) -->
-                <div class="col-md-6">
-                  <label class="jb-label" for="bizEmail">{{ 'admin.business.email' | translate }}</label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-envelope jb-input-group__icon"></i>
-                    <input id="bizEmail" type="email" class="jb-input jb-input--icon-left" formControlName="email" [placeholder]="'admin.business.infoBusinessCom' | translate" maxlength="255"
-                      [class.jb-input--error]="businessForm.get('email')?.invalid && businessForm.get('email')?.touched" />
-                  </div>
-                  @if (businessForm.get('email')?.invalid && businessForm.get('email')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.validEmailRequired' | translate }}</span>
-                  }
-                </div>
-                <div class="col-md-6">
-                  <label class="jb-label" for="bizWeb">{{ 'admin.business.website' | translate }}</label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-globe2 jb-input-group__icon"></i>
-                    <input id="bizWeb" type="url" class="jb-input jb-input--icon-left" formControlName="website" [placeholder]="'admin.business.httpsBusinessCom' | translate" maxlength="500"
-                      [class.jb-input--error]="businessForm.get('website')?.invalid && businessForm.get('website')?.touched" />
-                  </div>
-                  @if (businessForm.get('website')?.errors?.['invalidUrl'] && businessForm.get('website')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.enterValidUrl' | translate }}</span>
-                  }
-                </div>
-
-                <!-- Row 3: Maps link gets the full width — it's usually a long URL -->
-                <div class="col-12">
-                  <label class="jb-label" for="bizMaps">{{ 'admin.business.googleMapsLink' | translate }}</label>
-                  <div class="jb-input-group">
-                    <i class="bi bi-pin-map jb-input-group__icon"></i>
-                    <input id="bizMaps" type="url" class="jb-input jb-input--icon-left" formControlName="mapsLink" [placeholder]="'admin.business.autoGeneratedFromAddress' | translate" maxlength="2000"
-                      [class.jb-input--error]="businessForm.get('mapsLink')?.invalid && businessForm.get('mapsLink')?.touched" />
-                  </div>
-                  @if (mapsLinkAutoGenerated() && businessForm.get('mapsLink')?.value) {
-                    <span class="jb-field-hint"><i class="bi bi-robot"></i> {{ 'admin.business.autoGeneratedFromLocationFields' | translate }}</span>
-                  }
-                  @if (businessForm.get('mapsLink')?.errors?.['invalidUrl'] && businessForm.get('mapsLink')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.enterValidUrl' | translate }}</span>
-                  }
-                </div>
-              </div>
-            </div>
-
-            <!-- S3: Location -->
-            <div class="jb-form-section">
-              <div class="jb-form-section__header">
-                <div class="jb-form-section__badge"><i class="bi bi-geo-alt"></i></div>
-                <div><span class="jb-form-section__num">03</span><span class="jb-form-section__name">{{ 'admin.business.location' | translate }}</span></div>
-              </div>
-              <div class="row g-3">
-                <!-- Country — selecting it loads that country's own address
-                     hierarchy (division levels, labels, postal rules) below. -->
-                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched">
-                  <label class="jb-label">{{ 'admin.business.country' | translate }} <span class="text-danger">*</span></label>
-                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                    [placeholder]="'admin.business.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
-                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
-                  @if (businessForm.get('countryId')?.invalid && businessForm.get('countryId')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.countryRequired' | translate }}</span>
-                  }
-                </div>
-
-                <!-- Division level 1 (state/province/region/emirate/etc. — label
-                     and presence are entirely data-driven per country; some
-                     countries have none at all). -->
-                @if (adminLevels().length >= 1) {
-                  <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched">
-                    <label class="jb-label">
-                      {{ adminLevels()[0].label | translate }} <span class="text-danger">*</span>
-                      @if (division1Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
-                    </label>
-                    <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
-                      [placeholder]="division1Options().length
-                        ? ('admin.geo.selectLevel' | translate:{ level: adminLevels()[0].label })
-                        : ('admin.geo.selectCountryFirst' | translate)"
-                      (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
-                    @if (businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched) {
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[0].label | translate) } }}</span>
-                    }
-                  </div>
-                }
-
-                <!-- Division level 2 (district/county-equivalent) — only for
-                     the countries whose imported data actually nests this deep. -->
-                @if (adminLevels().length >= 2) {
-                  <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('division2Id')?.invalid && businessForm.get('division2Id')?.touched">
-                    <label class="jb-label">
-                      {{ adminLevels()[1].label | translate }} <span class="text-danger">*</span>
-                      @if (division2Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
-                    </label>
-                    <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
-                      [placeholder]="division2Options().length
-                        ? ('admin.geo.selectLevel' | translate:{ level: adminLevels()[1].label })
-                        : ('admin.geo.selectLevelFirst' | translate:{ level: adminLevels()[0].label })"
-                      (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
-                    @if (businessForm.get('division2Id')?.invalid && businessForm.get('division2Id')?.touched) {
-                      <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[1].label | translate) } }}</span>
-                    }
-                  </div>
-                }
-
-                <!-- City — server-searched and scoped to the leaf division (or
-                     the country itself, for the handful of countries with no
-                     division level at all) instead of loading a whole
-                     worldwide list into the browser. -->
-                <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('cityId')?.invalid && businessForm.get('cityId')?.touched">
-                  <label class="jb-label">{{ 'admin.business.city' | translate }} <span class="text-danger">*</span></label>
-                  <app-searchable-select formControlName="cityId"
-                    [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
-                    [placeholder]="businessForm.get('countryId')?.value ? 'Search for a city…' : 'Select country first'"
-                    [searchPlaceholder]="'components.search.cities' | translate"
-                    (ngModelChange)="onCityChange($event)"></app-searchable-select>
-                  @if (businessForm.get('cityId')?.invalid && businessForm.get('cityId')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.cityRequired' | translate }}</span>
-                  }
-                </div>
-
-                <div class="col-md-8">
-                  <label class="jb-label" for="bizAddr">{{ 'admin.business.address' | translate }} <span class="text-danger">*</span></label>
-                  <input id="bizAddr" type="text" class="jb-input" formControlName="address" [placeholder]="'admin.business.streetBuildingNo' | translate" maxlength="500"
-                    [class.jb-input--error]="businessForm.get('address')?.invalid && businessForm.get('address')?.touched" />
-                  @if (businessForm.get('address')?.invalid && businessForm.get('address')?.touched) {
-                    <span class="jb-field-error">
-                      <i class="bi bi-exclamation-circle"></i>
-                      @if (businessForm.get('address')?.errors?.['required']) {
-                        Address is required
-                      } @else if (businessForm.get('address')?.errors?.['minlength']) {
-                        Minimum 5 characters required
-                      } @else if (businessForm.get('address')?.errors?.['maxlength']) {
-                        Maximum 500 characters allowed
-                      }
-                    </span>
-                  }
-                </div>
-
-                <!-- Postal code — required-ness, format hint and validation
-                     all come from the selected country's own postal_code_regex
-                     (189/250 countries have one; the rest genuinely don't use
-                     postal codes, so the field is simply optional for them). -->
-                <div class="col-md-4">
-                  <label class="jb-label" for="bizPin">
-                    Postal Code
-                    @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
-                    @else { <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span> }
-                  </label>
-                  <input id="bizPin" type="text" class="jb-input" formControlName="pincode"
-                    [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'" maxlength="12"
-                    [class.jb-input--error]="businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched" />
-                  @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
-                    <span class="jb-field-error">
-                      <i class="bi bi-exclamation-circle"></i>
-                      @if (businessForm.get('pincode')?.errors?.['required']) {
-                        Postal code is required
-                      } @else {
-                        Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}
-                      }
-                    </span>
-                  }
-                </div>
-              </div>
-            </div>
-
-            <!-- S4: Opening Hours -->
-            <div class="jb-form-section">
-              <div class="jb-form-section__header">
-                <div class="jb-form-section__badge"><i class="bi bi-clock"></i></div>
-                <div><span class="jb-form-section__num">04</span><span class="jb-form-section__name">{{ 'admin.business.openingDaysAmpHours' | translate }}</span></div>
-              </div>
-              <div class="row g-3">
-                <div class="col-12">
-                  <label class="jb-label">{{ 'admin.business.openingDays' | translate }} <span class="text-danger">*</span></label>
-                  <div class="jb-day-toggles">
-                    @for (day of DAYS; track day) {
-                      <button type="button" class="jb-day-toggle"
-                        [class.jb-day-toggle--on]="selectedDays().includes(day)"
-                        [attr.aria-pressed]="selectedDays().includes(day)"
-                        (click)="toggleDay(day)">{{ day.slice(0,3) }}</button>
-                    }
-                  </div>
-                  @if (businessForm.get('openingDays')?.invalid && businessForm.get('openingDays')?.touched) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.selectLeastOneDay' | translate }}</span>
-                  }
-                </div>
-<div class="col-12">
-                  <label class="jb-label">{{ 'admin.business.openingHours' | translate }} <span class="text-danger">*</span></label>
-                  <div class="row g-2 align-items-center">
-                    <div class="col-5">
-                      <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'from'"
-                        [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursFrom')?.value">
-                        <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('from')" (blur)="closeTimeDropdown()">
-                          <i class="bi bi-clock time-dropdown__icon"></i>
-                          <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursFrom')?.value ?? '') }}</span>
-                          <i class="bi bi-chevron-down time-dropdown__chevron"></i>
-                        </button>
-                        @if (timeDropdownOpen() === 'from') {
-                          <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
-                            <div class="time-dropdown__list">
-                              @for (t of TIME_OPTIONS; track t) {
-                                <button type="button" class="time-dropdown__option"
-                                  [class.time-dropdown__option--selected]="businessForm.get('openingHoursFrom')?.value === t"
-                                  (click)="selectTime('from', t)">
-                                  <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
-                                </button>
-                              }
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                    <div class="col-auto" style="padding-top: 6px;"><span class="biz-hours-sep">{{ 'admin.business.to' | translate }}</span></div>
-                    <div class="col-5">
-                      <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'to'"
-                        [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursTo')?.value">
-                        <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('to')" (blur)="closeTimeDropdown()">
-                          <i class="bi bi-clock time-dropdown__icon"></i>
-                          <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursTo')?.value ?? '') }}</span>
-                          <i class="bi bi-chevron-down time-dropdown__chevron"></i>
-                        </button>
-                        @if (timeDropdownOpen() === 'to') {
-                          <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
-                            <div class="time-dropdown__list">
-                              @for (t of TIME_OPTIONS; track t) {
-                                <button type="button" class="time-dropdown__option"
-                                  [class.time-dropdown__option--selected]="businessForm.get('openingHoursTo')?.value === t"
-                                  (click)="selectTime('to', t)">
-                                  <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
-                                </button>
-                              }
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                  @if (openingHoursTouched() && (!businessForm.get('openingHoursFrom')?.value || !businessForm.get('openingHoursTo')?.value)) {
-                    <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.openingHoursRequired' | translate }}</span>
-                  }
-                </div>
-              </div>
-            </div>
-
-            <!-- S5: Gallery -->
-            <div class="jb-form-section">
-              <div class="jb-form-section__header">
-                <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-                <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'admin.business.galleryPhotos' | translate }} <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
-              </div>
-              <app-file-upload mode="multi" accept="image/*" [maxFiles]="10"
-                [label]="'components.fileUpload.dragGalleryImages' | translate"
-                [resetCounter]="fileUploadReset()"
-                (filesChange)="onBusinessImagesChange($event)"></app-file-upload>
-              @if (editingBusiness() && editingBusiness()!.images && editingBusiness()!.images.length) {
-                <div class="biz-gallery-existing">
-                  <p class="biz-gallery-existing__label">{{ 'admin.business.existingPhotos' | translate }}</p>
-                  @if (existingGalleryImages().length) {
-                    <div class="biz-gallery-existing__grid">
-                      @for (img of existingGalleryImages(); track img) {
-                        <div class="biz-gallery-existing__item">
-                          <img [src]="img | imageUrl" [alt]="'admin.business.galleryImage' | translate" class="biz-gallery-existing__img" loading="lazy" />
-                          <button type="button" class="biz-gallery-existing__remove" (click)="removeExistingImage(img)" [attr.aria-label]="'admin.business.removePhoto' | translate">
-                            <i class="bi bi-x-lg"></i>
-                          </button>
-                        </div>
-                      }
-                    </div>
-                    <p class="biz-gallery-existing__hint">{{ 'admin.business.click' | translate }} <i class="bi bi-x-lg"></i> {{ 'admin.business.removePhotoUploadNewImages' | translate }}</p>
-                  } @else {
-                    <p class="biz-gallery-existing__hint">{{ 'admin.business.allExistingPhotosRemovedUpload' | translate }}</p>
-                  }
-                </div>
-              }
-            </div>
-
-      </form>
-    </div>
-
-    <!-- Modal Footer -->
-    <div class="au-footer cm-modal-footer">
-      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeAddBusiness()">{{ 'common.cancel' | translate }}</button>
-      <button type="button" class="au-btn au-btn--primary cm-btn-submit"
-        [disabled]="businessForm.invalid || !logoPreview() || submitting()"
-        (click)="submitBusiness()">
-        @if (submitting()) {
-          <span class="spinner-border spinner-border-sm me-1"></span>
-          {{ editingBusiness() ? 'Saving...' : 'Creating...' }}
-        } @else {
-          <i class="bi me-1" [ngClass]="editingBusiness() ? 'bi-check-lg' : 'bi-shop-window'"></i>
-          {{ editingBusiness() ? 'Save Changes' : 'Add Business' }}
-        }
-      </button>
-    </div>
-
-  </div>
-}
+<!-- ==================== ADD / EDIT BUSINESS MODAL ====================
+     The admin console used to carry its own full copy of this form. It now
+     reuses the shared app-business-form-modal — the same component the user
+     Business page and the profile "My Businesses" tab use — so visibility,
+     the three image categories and the opening-hours editor only exist once.
+     [isAdmin] only affects copy; authorization stays server-side. -->
+<app-business-form-modal
+  [open]="showAddBusinessModal()"
+  [editBusinessId]="editBusinessId()"
+  [defaultCategoryId]="selectedCategory()?.id ?? null"
+  [isAdmin]="true"
+  (closed)="closeAddBusiness()"
+  (saved)="onBusinessSaved($event)"></app-business-form-modal>
 
 <!-- ==================== DELETE BUSINESS CONFIRM ==================== -->
 @if (showDeleteBusinessConfirm() && businessToDelete()) {

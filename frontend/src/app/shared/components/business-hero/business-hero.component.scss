@@ -1,0 +1,215 @@
+@use '../../../../assets/styles/index' as *;
+
+:host { display: block; }
+
+.bh {
+  background: $color-bg-card;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  box-shadow: $shadow-2;
+  margin: $spacing-sm 0 $spacing-lg;
+
+  @include media-md-max { padding: $spacing-md; }
+}
+
+.bh__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+}
+
+.bh__identity {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.bh__logo {
+  flex-shrink: 0;
+  width: 64px; height: 64px;
+  padding: 0;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-lg;
+  background: $color-bg-page;
+  cursor: zoom-in;
+  overflow: hidden;
+  @include transition-short(all);
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  &:hover { transform: scale(1.03); box-shadow: $shadow-md; border-color: $color-primary; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  @include media-sm-max { width: 52px; height: 52px; }
+}
+
+.bh__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bh__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bh__name {
+  font-family: $font-family-header;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  font-weight: $font-weight-extrabold;
+  color: $color-stone-900;
+  letter-spacing: -0.01em;
+  margin: 2px 0 0;
+  line-height: 1.2;
+}
+
+.bh__location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-stone-600;
+  .bi { color: $color-primary-darker; font-size: 0.95em; }
+}
+
+.bh__reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 7px 11px;
+  border-radius: $radius-md;
+  background: rgba($color-danger, 0.06);
+  border: 1px solid rgba($color-danger, 0.20);
+  color: $color-danger-text;
+  font-size: $font-size-xs;
+  line-height: 1.5;
+  max-width: fit-content;
+  .bi { margin-top: 1px; flex-shrink: 0; }
+}
+
+// ── Badges ─────────────────────────────────────────────
+.bh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+  @include transition-short(all);
+
+  .bi { font-size: 0.85em; }
+
+  &--active     { background: rgba($color-success, 0.10); border: 1.5px solid rgba($color-success, 0.28); color: $color-success-text; }
+  &--inactive   { background: rgba($color-danger, 0.08);  border: 1.5px solid rgba($color-danger, 0.22);  color: $color-danger-text; }
+  &--pending    { background: $color-primary-lighter; border: 1.5px solid $color-primary-medium; color: $color-primary-darker; cursor: pointer; &:hover { background: $color-primary-light; } }
+  &--rejected   { background: rgba($color-danger, 0.08);  border: 1.5px solid rgba($color-danger, 0.22);  color: $color-danger-text; }
+  &--needs-info { background: rgba(124, 58, 237, 0.08); border: 1.5px solid rgba(124, 58, 237, 0.24); color: #6D28D9; cursor: pointer; &:hover { background: rgba(124, 58, 237, 0.14); } }
+  &--owner      { background: $color-primary-light; border: 1.5px solid $color-primary-medium; color: $color-primary-darker; }
+
+  &--neutral {
+    background: $color-stone-100;
+    border: 1.5px solid $color-stone-200;
+    color: $color-stone-600;
+    font-weight: $font-weight-semibold;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  &__dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: $color-success;
+    animation: bhPulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes bhPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// ── Action buttons ───────────────────────────────────────
+.bh__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.bh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  @include transition-short(all);
+
+  .bi { font-size: 1em; }
+
+  &:hover:not(:disabled) { transform: translateY(-1px); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &--solid-primary {
+    background: $color-primary-darker;
+    color: #fff;
+    box-shadow: $shadow-button-hover;
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+  }
+
+  &--solid-whatsapp {
+    background: #128C7E;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(18, 140, 126, 0.28);
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+  }
+
+  &--outline {
+    background: $color-bg-card;
+    color: $color-stone-700;
+    border-color: $color-stone-300;
+    &:hover:not(:disabled) { background: $color-stone-50; border-color: $color-stone-400; }
+    .bi { color: $color-stone-500; }
+  }
+
+  &--icon {
+    padding: 10px;
+    background: $color-bg-card;
+    color: $color-stone-600;
+    border-color: $color-stone-300;
+    &:hover:not(:disabled) { background: $color-stone-50; color: $color-stone-900; }
+
+    &.bh-btn--icon-danger {
+      color: $color-danger;
+      border-color: rgba($color-danger, 0.30);
+      &:hover:not(:disabled) { background: rgba($color-danger, 0.06); }
+    }
+  }
+}
+
+@include media-sm-max {
+  .bh__top { flex-direction: column; align-items: stretch; }
+  .bh__actions { width: 100%; }
+  .bh-btn { flex: 1 1 auto; justify-content: center; }
+  .bh-btn--icon { flex: 0 0 auto; }
+}

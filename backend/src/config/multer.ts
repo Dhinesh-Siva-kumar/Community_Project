@@ -136,6 +136,21 @@ export const uploadVideo = multer({
   limits: { fileSize: 200 * MB },
 });
 
+// Businesses carry three separate galleries (gallery photos, menu cards,
+// business cards) of up to ten images each, plus a logo — 31 parts, well
+// past the `files: 11` ceiling on the shared uploadImages below. Kept as its
+// own instance so events/jobs/upload keep their tighter bound.
+//
+// PDF is deliberately absent from the allowlist even though uploadImages
+// permits it: the controller validates every part with Sharp, so a PDF would
+// be accepted here only to fail later with a confusing "image validation
+// failed". Supporting PDF menu cards needs a non-Sharp validation path.
+export const uploadBusinessMedia = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: mimeFilter(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+  limits: { fileSize: env.IMAGE_MAX_UPLOAD_BYTES, files: 31 },
+});
+
 // Generic image + PDF uploader used by business/events/jobs/upload endpoints
 // Uses memory storage so buffer is available for validation with Sharp.
 // `files` caps the whole request: the widest route (business/jobs) sends one

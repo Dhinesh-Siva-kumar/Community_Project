@@ -1,17 +1,27 @@
 import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
+import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, of, map, debounceTime, distinctUntilChanged } from 'rxjs';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Business, BusinessCategory, PaginatedResponse, Country } from '../../../core/models';
+import { Business, BusinessCategory, PaginatedResponse, Country, GeoCountry, Division, OpeningDayKey } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { BusinessFormModalComponent } from '../../../shared/components/business-form-modal/business-form-modal.component';
+import { BusinessHeroComponent } from '../../../shared/components/business-hero/business-hero.component';
+import { BusinessDetailViewComponent } from '../../../shared/components/business-detail-view/business-detail-view.component';
+import { OpeningHoursSummaryComponent } from '../../../shared/components/opening-hours-summary/opening-hours-summary.component';
+import { ChipMultiSelectComponent } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
+import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { GeographyService } from '../../../core/services/geography.service';
+import { BusinessQueryParams } from '../../../core/services/business.service';
+import { DAY_KEYS, DAY_SHORT_KEYS, currentDayKey, currentHHmm } from '../../../shared/utils/opening-hours';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -28,20 +38,13 @@ interface BusinessNavState {
   business: Business;
 }
 
-/** Haversine distance in km between two lat/lng points */
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2
-          + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+/** Server page size for the business list (both grid pages and list-view scroll batches). */
+const BUSINESS_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessDeleteModalComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -56,6 +59,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   private toast             = inject(ToastService);
   private route             = inject(ActivatedRoute);
   private router            = inject(Router);
+  private geographyService  = inject(GeographyService);
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -85,13 +89,13 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   categories       = signal<BusinessCategory[]>([]);
   /** Grid view — numbered-page slice of the current filtered/sorted results. */
   businesses       = signal<Business[]>([]);
-  // List view — the full filtered/sorted results, lazily revealed 10 at a
-  // time as the user scrolls (see visibleBusinesses / loadMoreBusinesses),
-  // instead of Grid view's numbered pagination.
+  // List view — every server page fetched so far, accumulated as the user
+  // scrolls (see loadMoreBusinesses), instead of Grid view's numbered
+  // pagination which shows one page at a time.
   allFilteredBusinesses = signal<Business[]>([]);
-  readonly BUSINESS_BATCH_SIZE = 10;
-  visibleBusinessCount  = signal(this.BUSINESS_BATCH_SIZE);
-  visibleBusinesses     = computed(() => this.allFilteredBusinesses().slice(0, this.visibleBusinessCount()));
+  visibleBusinesses     = computed(() => this.allFilteredBusinesses());
+  /** Set by loadMoreBusinesses so the next fetch appends instead of replacing. */
+  private appendNextLoad = false;
   selectedCategory = signal<BusinessCategory | null>(null);
   selectedBusiness = signal<Business | null>(null);
   showDeleteModal = signal(false);
@@ -99,6 +103,10 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   /** id of the card whose owner action menu (Edit/Delete) is currently open — only one at a time. */
   openMenuId = signal<string | null>(null);
   loading          = signal(true);
+  /** Appending the next page in list view — keeps the current results visible. */
+  loadingMore      = signal(false);
+  /** Debounced mirror of filterSearch — what actually reaches the server. */
+  private debouncedSearch = signal('');
   currentPage      = signal(1);
   totalPages       = signal(1);
   totalItems       = signal(0);
@@ -107,43 +115,66 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   lightboxOpen   = signal(false);
   lightboxImages = signal<string[]>([]);
 
-  // ── Geolocation ─────────────────────────────────────────────
-  userLatitude     = signal<number | null>(null);
-  userLongitude    = signal<number | null>(null);
-  geoDenied        = signal(false);
-  geoLoading       = signal(true);
-
-  // ── Distance filter bounds — user-adjustable radius (km), shown as a
-  // "normal" filter alongside search rather than tucked in Advanced Filters. ──
-  readonly DISTANCE_MIN_KM  = 1;
-  readonly DISTANCE_MAX_KM  = 500;
-  readonly DISTANCE_DEFAULT_M = 5000;
-
   // ── Filters — panel replicated from the Admin Business list page's
   // .jb-filter-panel (search + collapsible Advanced Filters), with Status
-  // dropped (public users only ever see active businesses) and Distance +
-  // Category added since those are specific to this consumer-facing page. ──
+  // dropped (public users only ever see active businesses). ──
   filterSearch        = signal('');
   filterCountry       = signal<string | null>(null);
   filterCountryOptions: SelectOption[] = [];
   filterPincode       = signal('');
-  filterOpeningHours  = signal<string | null>(null);
-  filterOpeningHoursOptions: SelectOption[] = [
-    { value: '9-5',  label: 'user.business.hoursOption.nineToFive' },
-    { value: '24/7', label: 'user.business.hoursOption.allDay' },
-  ];
   filterDateFrom      = signal('');
   filterDateTo        = signal('');
   activeQuickRange    = signal<'today' | '7d' | '30d' | null>(null);
   showAdvancedFilters = signal(false);
-  /** Distance in meters: null = no filter (All), otherwise a user-adjustable radius (default 5km). */
-  filterDistance      = signal<number | null>(this.DISTANCE_DEFAULT_M);
-  /** Distance in whole kilometers, for the adjustable distance input — derived from filterDistance. */
-  filterDistanceKm    = computed(() => this.filterDistance() === null ? null : Math.round(this.filterDistance()! / 1000));
   /** Selected category ID for filter dropdown (null/empty = all) */
   filterCategoryId    = signal<string | null>(null);
 
-  /** Category options for filter dropdown (includes "All Categories") */
+  // ── Location (id-based, from the geography master data) ──
+  /** master_countries ids. Multi-select, independent of the free-text country above. */
+  filterCountryIds = signal<number[]>([]);
+  filterStateId    = signal<number | null>(null);
+  filterCityId     = signal<number | null>(null);
+  geoCountries     = signal<GeoCountry[]>([]);
+  divisionOptions  = signal<Division[]>([]);
+
+  geoCountryOptions = computed<SelectOption[]>(() =>
+    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() })),
+  );
+  divisionSelectOptions = computed<SelectOption[]>(() =>
+    this.divisionOptions().map(d => ({ value: d.id, label: d.name })),
+  );
+  /** State/City only make sense once the location is narrowed to a single country. */
+  singleSelectedCountryId = computed<number | null>(() =>
+    this.filterCountryIds().length === 1 ? this.filterCountryIds()[0] : null,
+  );
+
+  // ── Visibility ──
+  filterVisibility = signal<'' | 'COUNTRY' | 'WORLDWIDE'>('');
+  readonly visibilityFilterOptions: RadioOption[] = [
+    { value: '',          label: 'user.business.filter.visibilityAll' },
+    { value: 'COUNTRY',   label: 'components.businessForm.visibilityCountry' },
+    { value: 'WORLDWIDE', label: 'components.businessForm.visibilityWorldwide' },
+  ];
+
+  // ── Opening hours (structured) ──
+  /** Evaluated against the viewer's own device clock — businesses carry no timezone. */
+  filterOpenNow   = signal(false);
+  filterOpenOnDay = signal<OpeningDayKey | null>(null);
+  readonly DAY_KEYS = DAY_KEYS;
+  readonly DAY_SHORT_KEYS = DAY_SHORT_KEYS;
+
+  // ── Category (multi-select) + feature toggles ──
+  filterCategoryIds = signal<string[]>([]);
+  filterHasMenu     = signal(false);
+  filterHasGallery  = signal(false);
+  filterHasWhatsapp = signal(false);
+  filterHasWebsite  = signal(false);
+
+  categoryChipOptions = computed<SelectOption[]>(() =>
+    this.categories().map(c => ({ value: c.id, label: c.name })),
+  );
+
+  /** Category options for the drill-down dropdown (includes "All Categories") */
   categorySelectOptions = computed<SelectOption[]>(() => {
     const cats = this.categories().map(c => ({ value: c.id, label: c.name }));
     return [{ value: '', label: 'user.business.filter.allCategories' }, ...cats];
@@ -157,23 +188,30 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   });
 
   hasActiveFilters = computed(() =>
-    !!(this.filterSearch() || (this.filterCountry() !== this.getDefaultCountry()) || this.filterPincode() || this.filterOpeningHours()
+    !!(this.filterSearch() || (this.filterCountry() !== this.getDefaultCountry()) || this.filterPincode()
       || this.filterDateFrom() || this.filterDateTo() || this.filterCategoryId()
-      || this.filterDistance() !== this.DISTANCE_DEFAULT_M)
+      || this.activeFilterCount())
   );
 
-  // Distance now lives in the "normal" filter row (next to search), not
-  // Advanced Filters, so it's excluded from this badge count.
   activeFilterCount = computed(() => {
     let count = 0;
     // The country filter defaults to the signed-in user's own country, so
     // only count/chip it when it differs from that default.
     if (this.filterCountry() !== this.getDefaultCountry()) count++;
+    if (this.filterCountryIds().length) count++;
+    if (this.filterStateId()) count++;
+    if (this.filterCityId()) count++;
     if (this.filterPincode()) count++;
-    if (this.filterOpeningHours()) count++;
+    if (this.filterVisibility()) count++;
+    if (this.filterOpenNow()) count++;
+    if (this.filterOpenOnDay()) count++;
+    if (this.filterCategoryIds().length) count++;
+    if (this.filterHasMenu()) count++;
+    if (this.filterHasGallery()) count++;
+    if (this.filterHasWhatsapp()) count++;
+    if (this.filterHasWebsite()) count++;
     if (this.filterDateFrom()) count++;
     if (this.filterDateTo()) count++;
-    if (this.filterCategoryId()) count++;
     return count;
   });
 
@@ -241,22 +279,42 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   getCategoryIcon(icon?: string): string   { return icon || 'bi-shop'; }
 
   constructor() {
+    // Search hits the server on every change now (results are paged
+    // server-side), so it's debounced rather than firing per keystroke.
+    // Everything downstream still reads `debouncedSearch`, so the effect
+    // below sees one settled value.
+    toObservable(this.filterSearch)
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(v => {
+        if (v !== this.debouncedSearch()) this.currentPage.set(1);
+        this.debouncedSearch.set(v);
+      });
+
     // Auto-refresh whenever any filter changes
     effect(() => {
-      const _search = this.filterSearch();
-      const _country = this.filterCountry();
-      const _pincode = this.filterPincode();
-      const _hours = this.filterOpeningHours();
-      const _dateFrom = this.filterDateFrom();
-      const _dateTo = this.filterDateTo();
-      const _dist = this.filterDistance();
-      const _catId = this.filterCategoryId();
-      const _page = this.currentPage();
+      this.debouncedSearch();
+      this.filterCountry();
+      this.filterCountryIds();
+      this.filterStateId();
+      this.filterCityId();
+      this.filterPincode();
+      this.filterVisibility();
+      this.filterOpenNow();
+      this.filterOpenOnDay();
+      this.filterCategoryIds();
+      this.filterHasMenu();
+      this.filterHasGallery();
+      this.filterHasWhatsapp();
+      this.filterHasWebsite();
+      this.filterDateFrom();
+      this.filterDateTo();
+      this.filterCategoryId();
+      this.currentPage();
       // Guard on pageTab() too — otherwise returning from a business's detail
       // view (which flips currentView back to 'list' via popstate) silently
       // overwrote the "Pending Approval" tab's list with the full "All"
       // businesses fetch, since this effect fires on any currentView change.
-      if (this.currentView() === 'list' && this.pageTab() === 'all' && !this.geoLoading()) {
+      if (this.currentView() === 'list' && this.pageTab() === 'all') {
         this.loadNearbyBusinesses();
       }
     });
@@ -314,10 +372,13 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     // picks one in the filter. Set before the first fetch so it's already
     // applied (the constructor's effect() won't actually fetch until
     // geoLoading resolves, so there's no extra/duplicate request).
+    // The constructor's effect() is the single trigger for the first fetch —
+    // nothing else here calls loadNearbyBusinesses(), so exactly one request
+    // goes out on load.
     this.filterCountry.set(this.getDefaultCountry());
     this.loadCategories();
     this.loadCountries();
-    this.requestGeolocation();
+    this.loadGeoCountries();
     this.loadMyPendingBusinessCount();
 
     // Deep-link support — e.g. the Profile page's "My Businesses" tab
@@ -353,29 +414,12 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     return this.authService.currentUser()?.country || null;
   }
 
-  private requestGeolocation(): void {
-    this.geoLoading.set(true);
-    if (!navigator.geolocation) {
-      this.geoDenied.set(true);
-      this.geoLoading.set(false);
-      this.loadNearbyBusinesses();
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.userLatitude.set(pos.coords.latitude);
-        this.userLongitude.set(pos.coords.longitude);
-        this.geoDenied.set(false);
-        this.geoLoading.set(false);
-        this.loadNearbyBusinesses();
-      },
-      () => {
-        this.geoDenied.set(true);
-        this.geoLoading.set(false);
-        this.loadNearbyBusinesses();
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    );
+  /** Countries for the id-based Location filter's cascading dropdowns. */
+  loadGeoCountries(): void {
+    this.geographyService.getCountries().subscribe({
+      next: (list) => this.geoCountries.set(list),
+      error: () => {},
+    });
   }
 
   loadCountries(): void {
@@ -398,90 +442,79 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Main method to load businesses with filters applied (client-side distance) */
+  /** Every active filter, as the query params the list endpoint expects. */
+  private buildQueryParams(): BusinessQueryParams {
+    const params: BusinessQueryParams = { page: this.currentPage(), limit: BUSINESS_PAGE_SIZE };
+
+    if (this.filterCategoryId()) params.categoryId = this.filterCategoryId()!;
+    if (this.filterCategoryIds().length) params.categoryIds = this.filterCategoryIds().join(',');
+    if (this.debouncedSearch()) params.search = this.debouncedSearch();
+    if (this.filterCountry()) params.country = this.filterCountry()!;
+    if (this.filterCountryIds().length) params.countryIds = this.filterCountryIds().join(',');
+    if (this.filterStateId()) params.stateId = this.filterStateId()!;
+    if (this.filterCityId()) params.cityId = this.filterCityId()!;
+    if (this.filterPincode()) params.pincode = this.filterPincode();
+    if (this.filterVisibility()) params.visibilityType = this.filterVisibility() as 'COUNTRY' | 'WORLDWIDE';
+    if (this.filterOpenOnDay()) params.openOnDay = this.filterOpenOnDay()!;
+
+    // "Open now" is resolved against the viewer's device clock and sent as an
+    // explicit day + HH:mm — businesses carry no timezone, so there is no
+    // meaningful server-side "now".
+    if (this.filterOpenNow()) {
+      params.openNowDay = currentDayKey();
+      params.openNowTime = currentHHmm();
+    }
+
+    // Only sent when true: api.get() strips ''/null/undefined, but a literal
+    // `false` would survive and be parsed as an active filter.
+    if (this.filterHasMenu()) params.hasMenu = true;
+    if (this.filterHasGallery()) params.hasGallery = true;
+    if (this.filterHasWhatsapp()) params.hasWhatsapp = true;
+    if (this.filterHasWebsite()) params.hasWebsite = true;
+
+    if (this.filterDateFrom()) params.dateFrom = this.filterDateFrom();
+    if (this.filterDateTo()) params.dateTo = this.filterDateTo();
+
+    return params;
+  }
+
+  /**
+   * Loads one server page of businesses.
+   *
+   * Paging is server-side: filters like "Open now" are evaluated in SQL
+   * across the whole table, so slicing a fixed prefix client-side (as this
+   * page used to) would silently under-report matches beyond it.
+   *
+   * `append` is the list view's infinite scroll adding the next page;
+   * the grid view replaces the page instead.
+   */
   loadNearbyBusinesses(): void {
+    // Read-and-clear: only the infinite-scroll path sets this, so every other
+    // trigger (a filter change, a grid page click) replaces the list.
+    const append = this.appendNextLoad;
+    this.appendNextLoad = false;
+
     this.currentView.set('list');
     this.businessView.set('list');
-    this.loading.set(true);
+    if (append) this.loadingMore.set(true); else this.loading.set(true);
 
-    // Build API params
-    const params: Record<string, any> = { page: 1, limit: 100 };
-
-    // Category filter (single-select dropdown)
-    const catId = this.filterCategoryId();
-    if (catId) {
-      params['categoryId'] = catId;
-    }
-
-    // Search text
-    if (this.filterSearch()) {
-      params['search'] = this.filterSearch();
-    }
-
-    // Country filter
-    if (this.filterCountry()) {
-      params['country'] = this.filterCountry();
-    }
-
-    // Advanced filters — Pincode, Opening Hours, Date Added range
-    if (this.filterPincode()) {
-      params['pincode'] = this.filterPincode();
-    }
-    if (this.filterOpeningHours()) {
-      params['openingHours'] = this.filterOpeningHours();
-    }
-    if (this.filterDateFrom()) {
-      params['dateFrom'] = this.filterDateFrom();
-    }
-    if (this.filterDateTo()) {
-      params['dateTo'] = this.filterDateTo();
-    }
-
-    this.svc.getBusinesses(params).subscribe({
+    this.svc.getBusinesses(this.buildQueryParams()).subscribe({
       next: (res: PaginatedResponse<Business>) => {
-        let filtered = res.data;
+        this.businesses.set(res.data);
+        this.totalItems.set(res.total);
+        this.totalPages.set(Math.max(1, res.totalPages));
 
-        // Apply client-side distance filter
-        const lat = this.userLatitude();
-        const lng = this.userLongitude();
-        const dist = this.filterDistance(); // in meters
-
-        if (lat !== null && lng !== null && dist !== null) {
-          const distKm = dist / 1000;
-          filtered = filtered
-            .map(b => ({
-              ...b,
-              _distanceKm: (b.latitude != null && b.longitude != null)
-                ? haversineKm(lat, lng, b.latitude, b.longitude)
-                : Infinity,
-            }))
-            .filter(b => (b as any)._distanceKm <= distKm)
-            .sort((a, b) => ((a as any)._distanceKm || Infinity) - ((b as any)._distanceKm || Infinity));
-        } else {
-          // No distance filter — sort by newest first
-          filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        }
-
-        // Grid view — numbered-page slice.
-        const limit = 20;
-        const page = this.currentPage();
-        const start = (page - 1) * limit;
-        const paged = filtered.slice(start, start + limit);
-        const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-
-        this.businesses.set(paged);
-        this.totalItems.set(filtered.length);
-        this.totalPages.set(totalPages);
-
-        // List view — full set, lazily revealed from scratch on every fresh fetch.
-        this.allFilteredBusinesses.set(filtered);
-        this.visibleBusinessCount.set(this.BUSINESS_BATCH_SIZE);
+        // List view keeps everything loaded so far so scrolling back up
+        // doesn't lose earlier pages.
+        this.allFilteredBusinesses.update(prev => append ? [...prev, ...res.data] : res.data);
 
         this.loading.set(false);
+        this.loadingMore.set(false);
       },
       error: () => {
         this.toast.error('user.business.toast.failedLoadBusinesses');
         this.loading.set(false);
+        this.loadingMore.set(false);
       },
     });
   }
@@ -507,30 +540,77 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.currentPage.set(1);
   }
 
-  /** Set distance filter (meters) */
-  setDistance(distance: number | null): void {
-    this.filterDistance.set(distance);
+  // ── Location filter (cascading, id-based) ──
+  onFilterCountryIdsChange(ids: (string | number)[]): void {
+    const next = ids.map(Number).filter(n => Number.isInteger(n));
+    this.filterCountryIds.set(next);
+    // State/City belong to a single country — narrowing or widening the
+    // country set invalidates whatever was chosen below it.
+    this.filterStateId.set(null);
+    this.filterCityId.set(null);
+    this.divisionOptions.set([]);
+    if (next.length === 1) this.loadDivisions(next[0]);
     this.currentPage.set(1);
   }
 
-  /** Handle direct typing/editing of the distance (km) input. */
-  onDistanceKmChange(event: Event): void {
-    const raw = Number((event.target as HTMLInputElement).value);
-    if (!raw || Number.isNaN(raw)) return;
-    const clamped = Math.min(this.DISTANCE_MAX_KM, Math.max(this.DISTANCE_MIN_KM, Math.round(raw)));
-    this.setDistance(clamped * 1000);
+  private loadDivisions(countryId: number): void {
+    this.geographyService.getDivisions(countryId).subscribe({
+      next: (list) => this.divisionOptions.set(list),
+      error: () => this.divisionOptions.set([]),
+    });
   }
 
-  /** Nudge the distance (km) up/down via the stepper buttons. */
-  adjustDistanceKm(delta: number): void {
-    const current = this.filterDistanceKm() ?? this.DISTANCE_DEFAULT_M / 1000;
-    const next = Math.min(this.DISTANCE_MAX_KM, Math.max(this.DISTANCE_MIN_KM, current + delta));
-    this.setDistance(next * 1000);
+  onFilterStateChange(value: string | number | null): void {
+    this.filterStateId.set(value ? Number(value) : null);
+    this.filterCityId.set(null);
+    this.currentPage.set(1);
   }
 
-  /** Toggle between the adjustable radius and "All" (no distance cap). */
-  toggleDistanceAll(): void {
-    this.setDistance(this.filterDistance() === null ? this.DISTANCE_DEFAULT_M : null);
+  onFilterCityChange(value: string | number | null): void {
+    this.filterCityId.set(value ? Number(value) : null);
+    this.currentPage.set(1);
+  }
+
+  /** Remote city search, scoped to the selected state or country. */
+  citySearchFn = (query: string): Observable<SelectOption[]> => {
+    const countryId = this.singleSelectedCountryId();
+    const divisionId = this.filterStateId() ?? undefined;
+    if (!countryId) return of([]);
+    return this.geographyService.searchCities({
+      divisionId,
+      countryId: divisionId ? undefined : countryId,
+      search: query, page: 1, limit: 20,
+    }).pipe(map(res => res.data.map(c => ({ value: c.id, label: c.name }))));
+  };
+
+  // ── Visibility / hours / category / feature filters ──
+  onFilterVisibilityChange(value: string | number | null): void {
+    this.filterVisibility.set((value ?? '') as '' | 'COUNTRY' | 'WORLDWIDE');
+    this.currentPage.set(1);
+  }
+
+  toggleOpenNow(): void {
+    this.filterOpenNow.update(v => !v);
+    this.currentPage.set(1);
+  }
+
+  toggleOpenOnDay(day: OpeningDayKey): void {
+    this.filterOpenOnDay.update(d => (d === day ? null : day));
+    this.currentPage.set(1);
+  }
+
+  onFilterCategoryIdsChange(ids: (string | number)[]): void {
+    this.filterCategoryIds.set(ids.map(String));
+    this.currentPage.set(1);
+  }
+
+  toggleFeatureFilter(key: 'menu' | 'gallery' | 'whatsapp' | 'website'): void {
+    const sig = {
+      menu: this.filterHasMenu, gallery: this.filterHasGallery,
+      whatsapp: this.filterHasWhatsapp, website: this.filterHasWebsite,
+    }[key];
+    sig.update(v => !v);
+    this.currentPage.set(1);
   }
 
   /** Switch view between Business List and Category View */
@@ -555,7 +635,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
       next: (res: PaginatedResponse<Business>) => {
         this.businesses.set(res.data);
         this.allFilteredBusinesses.set(res.data);
-        this.visibleBusinessCount.set(this.BUSINESS_BATCH_SIZE);
         this.totalItems.set(res.total);
         this.totalPages.set(1);
         this.loading.set(false);
@@ -609,12 +688,22 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     // explicit "show all countries" action via the chip's remove button.
     this.filterCountry.set(this.getDefaultCountry());
     this.filterPincode.set('');
-    this.filterOpeningHours.set(null);
+    this.filterCountryIds.set([]);
+    this.filterStateId.set(null);
+    this.filterCityId.set(null);
+    this.divisionOptions.set([]);
+    this.filterVisibility.set('');
+    this.filterOpenNow.set(false);
+    this.filterOpenOnDay.set(null);
+    this.filterCategoryIds.set([]);
+    this.filterHasMenu.set(false);
+    this.filterHasGallery.set(false);
+    this.filterHasWhatsapp.set(false);
+    this.filterHasWebsite.set(false);
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.activeQuickRange.set(null);
     this.showAdvancedFilters.set(false);
-    this.filterDistance.set(this.DISTANCE_DEFAULT_M);
     this.filterCategoryId.set(null);
     this.currentPage.set(1);
   }
@@ -629,11 +718,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   closeAdvancedFilters(): void {
     this.showAdvancedFilters.set(false);
     this.layoutService.forceSidebarCollapsed.set(false);
-  }
-
-  onFilterOpeningHoursChange(value: string | null): void {
-    this.filterOpeningHours.set(value);
-    this.currentPage.set(1);
   }
 
   onFilterDateFromChange(value: string): void {
@@ -676,15 +760,28 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  removeFilter(filterKey: 'search' | 'country' | 'pincode' | 'hours' | 'dateFrom' | 'dateTo' | 'category'): void {
+  removeFilter(filterKey: 'search' | 'country' | 'countries' | 'state' | 'city' | 'pincode'
+    | 'visibility' | 'openNow' | 'openOnDay' | 'categories'
+    | 'hasMenu' | 'hasGallery' | 'hasWhatsapp' | 'hasWebsite'
+    | 'dateFrom' | 'dateTo' | 'category'): void {
     switch (filterKey) {
-      case 'search':   this.filterSearch.set(''); break;
-      case 'country':  this.filterCountry.set(null); break;
-      case 'pincode':  this.filterPincode.set(''); break;
-      case 'hours':    this.filterOpeningHours.set(null); break;
-      case 'dateFrom': this.filterDateFrom.set(''); break;
-      case 'dateTo':   this.filterDateTo.set(''); break;
-      case 'category': this.filterCategoryId.set(null); break;
+      case 'search':      this.filterSearch.set(''); break;
+      case 'country':     this.filterCountry.set(null); break;
+      case 'countries':   this.onFilterCountryIdsChange([]); break;
+      case 'state':       this.filterStateId.set(null); this.filterCityId.set(null); break;
+      case 'city':        this.filterCityId.set(null); break;
+      case 'pincode':     this.filterPincode.set(''); break;
+      case 'visibility':  this.filterVisibility.set(''); break;
+      case 'openNow':     this.filterOpenNow.set(false); break;
+      case 'openOnDay':   this.filterOpenOnDay.set(null); break;
+      case 'categories':  this.filterCategoryIds.set([]); break;
+      case 'hasMenu':     this.filterHasMenu.set(false); break;
+      case 'hasGallery':  this.filterHasGallery.set(false); break;
+      case 'hasWhatsapp': this.filterHasWhatsapp.set(false); break;
+      case 'hasWebsite':  this.filterHasWebsite.set(false); break;
+      case 'dateFrom':    this.filterDateFrom.set(''); break;
+      case 'dateTo':      this.filterDateTo.set(''); break;
+      case 'category':    this.filterCategoryId.set(null); break;
     }
     if (filterKey === 'dateFrom' || filterKey === 'dateTo') this.activeQuickRange.set(null);
     this.currentPage.set(1);
@@ -737,7 +834,6 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.filterCategoryId.set(null);
     this.filterSearch.set('');
     this.filterCountry.set(this.getDefaultCountry());
-    this.filterDistance.set(this.DISTANCE_DEFAULT_M);
   }
 
   // Steps back through browser history rather than jumping straight to the
@@ -807,10 +903,14 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     this.currentPage.set(page);
   }
 
-  /** List view's infinite scroll — reveals the next 10 already-fetched businesses. */
+  /** List view's infinite scroll — fetches and appends the next server page. */
   loadMoreBusinesses(): void {
-    this.visibleBusinessCount.update(n =>
-      Math.min(n + this.BUSINESS_BATCH_SIZE, this.allFilteredBusinesses().length));
+    if (this.loading() || this.loadingMore()) return;
+    if (this.currentPage() >= this.totalPages()) return;
+    // Bumping the page re-fires the filter effect; this flag tells that fetch
+    // to append rather than replace what's already on screen.
+    this.appendNextLoad = true;
+    this.currentPage.set(this.currentPage() + 1);
   }
 
   getPages(): number[] {

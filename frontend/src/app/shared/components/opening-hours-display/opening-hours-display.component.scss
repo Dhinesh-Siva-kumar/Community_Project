@@ -1,0 +1,167 @@
+@use '../../../../assets/styles/index' as *;
+
+.ohd {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.ohd-empty {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-stone-500;
+  font-style: italic;
+}
+
+// ── Legacy fallback pills (un-migrated businesses only) ───────────
+.ohd-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.ohd-pill {
+  min-width: 36px;
+  padding: 4px 9px;
+  border-radius: $radius-full;
+  border: 1.5px solid $color-border;
+  background: $color-bg-page;
+  color: $color-stone-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-align: center;
+
+  &--on {
+    background: rgba(251, 191, 36, 0.28);
+    border-color: $color-primary;
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+  }
+}
+
+// ── Open now / closed status band ─────────────────────────────────
+.ohd-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: $radius-md;
+  background: $color-stone-100;
+  border: 1px solid $color-stone-200;
+
+  &__dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    background: $color-stone-400;
+  }
+
+  &__text {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-stone-600;
+  }
+
+  &--open {
+    background: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.28);
+
+    .ohd-status__dot {
+      background: $color-success;
+      animation: ohdPulse 1.8s ease-in-out infinite;
+    }
+    .ohd-status__text { color: $color-success-text; }
+  }
+}
+
+@keyframes ohdPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// ── Week-at-a-glance mini grid ─────────────────────────────────────
+.ohd-mini {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.ohd-mini__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 2px;
+  border-radius: $radius-sm;
+  background: $color-primary-lighter;
+  border: 1px solid $color-primary-medium;
+  text-align: center;
+
+  &--closed {
+    background: $color-stone-100;
+    border-color: $color-stone-200;
+  }
+}
+
+.ohd-mini__label {
+  font-size: 10.5px;
+  font-weight: $font-weight-bold;
+  color: $color-stone-700;
+}
+
+.ohd-mini__value {
+  font-size: 9px;
+  font-weight: $font-weight-extrabold;
+  color: $color-primary-darker;
+
+  .ohd-mini__day--closed & { color: $color-danger; }
+  &--24h { color: $color-success-text; }
+}
+
+// ── Per-day schedule list ──────────────────────────────────────────
+.ohd-table {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ohd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: 9px 2px;
+  font-size: $font-size-sm;
+
+  & + & { border-top: 1px solid $color-stone-100; }
+
+  &__dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 8px;
+    background: $color-success;
+  }
+
+  &__day { display: flex; align-items: center; font-weight: $font-weight-bold; color: $color-stone-700; }
+  &__hours { color: $color-stone-700; font-weight: $font-weight-medium; text-align: right; }
+
+  &__24h {
+    padding: 2px 9px;
+    border-radius: $radius-sm;
+    background: rgba($color-success, 0.10);
+    border: 1px solid rgba($color-success, 0.24);
+    color: $color-success-text;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-xs;
+  }
+
+  &__closed { color: $color-danger; font-weight: $font-weight-bold; font-size: $font-size-xs; }
+
+  &--closed {
+    .ohd-row__dot { background: $color-stone-300; }
+    .ohd-row__day { color: $color-stone-400; font-weight: $font-weight-medium; }
+  }
+}
+
+// ── Legacy free-text fallback ────────────────────────────────────
+.ohd-legacy {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-stone-700;
+  .bi { color: $color-primary-darker; }
+}
