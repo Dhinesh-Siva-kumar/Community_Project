@@ -36,6 +36,32 @@
     border-color: #dc3545;
     background-color: #fff5f5;
   }
+
+  &.fu-zone--busy {
+    cursor: progress;
+    border-color: #6ea8fe;
+  }
+}
+
+// ── Compressing overlay ────────────────────────────────────────────
+
+// Covers the zone while large images are resized on the main thread, so the
+// pause reads as work in progress rather than a frozen control.
+.fu-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: $color-bg-card;
+  color: $color-text-muted;
+  cursor: progress;
+}
+
+.fu-busy-text {
+  font-size: 0.85rem;
 }
 
 // ── Empty state ────────────────────────────────────────────────────
@@ -248,8 +274,11 @@
   opacity: 0;
   transition: opacity 0.2s ease;
 
+  // The busy state is in the list because compression can outlast the
+  // hover that started it — the spinner must not vanish with the cursor.
   .fu-avatar-ring:hover &,
-  .fu-avatar-ring:focus-visible & {
+  .fu-avatar-ring:focus-visible &,
+  .fu-avatar-ring--busy & {
     opacity: 1;
   }
 }

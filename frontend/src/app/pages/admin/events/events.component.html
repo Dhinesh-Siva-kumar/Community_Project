@@ -994,7 +994,6 @@
           <app-file-upload
             mode="single"
             accept="image/*"
-            [maxSizeMb]="5"
             [label]="'components.fileUpload.uploadEventImage' | translate"
             [existingPreview]="editingEvent()?.images?.[0] ?? null | imageUrl"
             (filesChange)="onImageChange($event)"

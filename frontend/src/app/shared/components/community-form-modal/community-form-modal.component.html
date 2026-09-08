@@ -254,7 +254,6 @@
           <app-file-upload
             mode="single"
             accept="image/*"
-            [maxSizeMb]="5"
             [label]="'components.communityForm.imageLabel' | translate"
             [existingPreview]="editingCommunity()?.image ?? null | imageUrl"
             [showError]="formSubmitAttempted() && !isEditing() && f['communityType'].value !== 'HUB' && !selectedImage()"

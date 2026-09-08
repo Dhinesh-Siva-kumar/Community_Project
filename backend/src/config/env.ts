@@ -37,6 +37,16 @@ const envSchema = z.object({
   // empty folder inside whatever fresh app directory gets deployed.
   UPLOADS_PATH: z.string().min(1).default('uploads'),
 
+  // Image uploads. IMAGE_MAX_UPLOAD_BYTES is the largest file multer will
+  // ACCEPT — a DoS ceiling, not a UX limit: anything larger than
+  // IMAGE_TARGET_BYTES is downscaled/re-encoded by Sharp on the way to disk
+  // (see saveBufferToFile) rather than rejected, so raising this does not
+  // grow what we actually store. IMAGE_MAX_DIMENSION is the long-edge cap
+  // applied by that same resize.
+  IMAGE_MAX_UPLOAD_BYTES: z.coerce.number().default(25 * 1024 * 1024),
+  IMAGE_TARGET_BYTES: z.coerce.number().default(2 * 1024 * 1024),
+  IMAGE_MAX_DIMENSION: z.coerce.number().default(2048),
+
   // Built Angular app (same-domain production deployment) — resolved relative
   // to the backend process's cwd. If the directory doesn't contain an
   // index.html, the backend simply skips serving it (e.g. local dev, where

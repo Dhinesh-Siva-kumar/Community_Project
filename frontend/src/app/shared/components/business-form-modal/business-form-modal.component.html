@@ -85,7 +85,7 @@
                   <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                 </div>
               } @else {
-                <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
+                <app-file-upload mode="single" accept="image/*"
                   [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadBusinessLogo' | translate"
                   [showError]="businessSubmitAttempted() && !logoPreview()"
                   [errorMessage]="'components.businessForm.logoRequired' | translate"
@@ -413,7 +413,7 @@
             <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
             <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'components.businessForm.galleryLabel' | translate }} <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
           </div>
-          <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
+          <app-file-upload mode="multi" accept="image/*" [maxFiles]="10"
             [label]="'components.fileUpload.dragGalleryImages' | translate"
             [resetCounter]="fileUploadReset()"
             (filesChange)="onBusinessImagesChange($event)"></app-file-upload>

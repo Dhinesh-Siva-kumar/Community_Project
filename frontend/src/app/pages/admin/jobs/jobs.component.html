@@ -966,7 +966,7 @@
                       <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                     </div>
                   } @else {
-                    <app-file-upload mode="single" accept="image/*" [maxSizeMb]="2"
+                    <app-file-upload mode="single" accept="image/*"
                       [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadCompanyLogo' | translate"
                       (filesChange)="onLogoChange($event)"></app-file-upload>
                   }
@@ -1315,7 +1315,7 @@
                 <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
                 <div><span class="jb-form-section__num">10</span><span class="jb-form-section__name">{{ 'admin.jobs.jobImages' | translate }}</span></div>
               </div>
-              <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
+              <app-file-upload mode="multi" accept="image/*" [maxFiles]="10"
                 [resetCounter]="fileUploadReset()" [existingPreviews]="editingJob()?.images ?? []"
                 [label]="'components.fileUpload.dragOrClick' | translate"
                 (filesChange)="onJobImagesChange($event)"></app-file-upload>

@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
+import { UPLOAD_CONFIG } from '../../../core/constants/upload.constants';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -18,7 +19,7 @@ export class ProfileAvatarComponent {
   @Input() displayName = '';
   @Input() size: AvatarSize = 'md';
   @Input() editable = false;
-  @Input() maxSizeMb = 5;
+  @Input() maxSizeMb = UPLOAD_CONFIG.MAX_FILE_SIZE_MB;
   @Output() fileSelected = new EventEmitter<File[]>();
 
   get initial(): string {

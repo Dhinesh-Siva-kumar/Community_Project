@@ -348,6 +348,7 @@
       "404": "The requested resource was not found.",
       "408": "Request timed out. Please try again.",
       "409": "A conflict occurred. The resource may have been modified.",
+      "413": "That upload is too large. Please try a smaller file.",
       "422": "The submitted data is invalid.",
       "429": "Too many requests. Please try again later.",
       "500": "An internal server error occurred. Please try again later.",
@@ -433,7 +434,10 @@
       "RECIPIENTS_FOUND": "No recipients found",
       "DATE_RANGE_TOO_LARGE": "That date range is too large. Please choose a shorter period.",
       "CATEGORY_IN_USE": "This category cannot be deleted while businesses are still using it.",
-      "OTP_VERIFICATION_FAILED": "That OTP could not be verified. Please request a new one."
+      "OTP_VERIFICATION_FAILED": "That OTP could not be verified. Please request a new one.",
+      "UPLOAD_LIMIT_FILE_SIZE": "That file is too large to upload.",
+      "UPLOAD_LIMIT_FILE_COUNT": "Too many files in one upload.",
+      "UPLOAD_INVALID_TYPE": "That file type is not supported."
     }
   },
   "landing": {
@@ -1387,11 +1391,11 @@
       "removeImage": "Remove image",
       "replaceImage": "Replace image",
       "remove": "Remove",
-      "maxSize": "Max {{size}} MB",
+      "maxSize": "Up to {{size}} MB · large images are optimised automatically",
       "galleryAlt": "Gallery image",
       "logoAlt": "Logo preview",
       "typeNotAllowed": "File type not allowed: {{name}}",
-      "tooLarge": "\"{{name}}\" exceeds the {{size}} MB limit.",
+      "tooLarge": "\"{{name}}\" is over the {{size}} MB limit.",
       "tooMany": "Maximum {{count}} files already selected.",
       "clickOrDragPhotos": "Click or drag to add photos",
       "uploadBusinessLogo": "Upload business logo (JPG, PNG, WEBP)",
@@ -1401,7 +1405,9 @@
       "dragOrClick": "Drag & drop or click to upload",
       "dragOrBrowse": "Drag & drop or click to browse",
       "slotsRemaining": "Only {{available}} slot(s) remaining (max {{max}}).",
-      "upToImagesMaxSize": "Up to {{count}} images · Max {{size}} MB each"
+      "upToImagesMaxSize": "Up to {{count}} images · large ones are optimised automatically",
+      "compressing": "Optimising images...",
+      "required": "This field is required."
     },
     "dateInput": {
       "clear": "Clear date",

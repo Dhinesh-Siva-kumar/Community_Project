@@ -13,7 +13,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { ImageCompressionService } from '../../../core/services/image-compression.service';
+import { UPLOAD_CONFIG } from '../../../core/constants/upload.constants';
 
 export type UploadMode = 'single' | 'multi';
 export type UploadVariant = 'default' | 'avatar';
@@ -26,12 +28,13 @@ export type UploadVariant = 'default' | 'avatar';
   styleUrls: ['./file-upload.component.scss'],
 })
 export class FileUploadComponent implements OnChanges {
-  private translate = inject(TranslateService);
+  private compression = inject(ImageCompressionService);
   @Input() mode: UploadMode = 'single';
   @Input() variant: UploadVariant = 'default';
   @Input() accept = 'image/*';
-  @Input() maxSizeMb = 5;
-  @Input() maxFiles = 10;
+  /** Hard refusal threshold. Files under it are compressed, never rejected. */
+  @Input() maxSizeMb = UPLOAD_CONFIG.MAX_FILE_SIZE_MB;
+  @Input() maxFiles = UPLOAD_CONFIG.MAX_IMAGES;
   @Input() label = 'components.fileUpload.dragOrBrowse';
 
   // Plain @Input() fields aren't tracked by computed() — a parent that
@@ -53,7 +56,7 @@ export class FileUploadComponent implements OnChanges {
   get existingPreviews(): string[] | undefined { return this.existingPreviewsSig(); }
 
   @Input() showError = false;
-  @Input() errorMessage = 'This field is required.';
+  @Input() errorMessage = 'components.fileUpload.required';
   @Input() resetCounter = 0;
 
   @Output() filesChange   = new EventEmitter<File[]>();
@@ -64,6 +67,12 @@ export class FileUploadComponent implements OnChanges {
   readonly files      = signal<File[]>([]);
   readonly previews   = signal<string[]>([]);
   readonly isDragging = signal(false);
+  /**
+   * True while images are being resized on the main thread. Shrinking a
+   * 20MB photo takes a visible moment, so the zone shows a spinner and
+   * stops accepting input rather than appearing frozen.
+   */
+  readonly isCompressing = signal(false);
   /**
    * Holds the *key* plus its interpolation params rather than resolved text.
    * A resolved string would freeze in whichever language was active when the
@@ -101,6 +110,9 @@ export class FileUploadComponent implements OnChanges {
   }
 
   triggerInput(): void {
+    // Ignore input while a previous batch is still being resized —
+    // re-entering processFiles would clear isCompressing early.
+    if (this.isCompressing()) return;
     this.fileInputRef?.nativeElement.click();
   }
 
@@ -111,7 +123,7 @@ export class FileUploadComponent implements OnChanges {
   onInputChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    this.processFiles(Array.from(input.files));
+    void this.processFiles(Array.from(input.files));
     input.value = ''; // allow re-selecting the same file
   }
 
@@ -131,8 +143,9 @@ export class FileUploadComponent implements OnChanges {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
+    if (this.isCompressing()) return;
     const dropped = event.dataTransfer?.files;
-    if (dropped?.length) this.processFiles(Array.from(dropped));
+    if (dropped?.length) void this.processFiles(Array.from(dropped));
   }
 
   removeFile(index: number): void {
@@ -143,21 +156,32 @@ export class FileUploadComponent implements OnChanges {
 
   // ── Private ──────────────────────────────────────────────────────
 
-  private processFiles(incoming: File[]): void {
+  private async processFiles(incoming: File[]): Promise<void> {
     this.error.set(null);
     const maxBytes = this.maxSizeMb * 1024 * 1024;
+    const targetBytes = UPLOAD_CONFIG.COMPRESS_TARGET_MB * 1024 * 1024;
     const valid: File[] = [];
 
-    for (const file of incoming) {
-      if (!this.matchesAccept(file)) {
-        this.error.set({ key: 'components.fileUpload.typeNotAllowed', params: { name: file.name } });
-        continue;
+    this.isCompressing.set(true);
+    try {
+      for (const file of incoming) {
+        if (!this.matchesAccept(file)) {
+          this.error.set({ key: 'components.fileUpload.typeNotAllowed', params: { name: file.name } });
+          continue;
+        }
+        // Only a file too big to even decode is refused outright; anything
+        // between the target and this is shrunk below rather than dropped.
+        if (file.size > maxBytes) {
+          this.error.set({ key: 'components.fileUpload.tooLarge', params: { name: file.name, size: this.maxSizeMb } });
+          continue;
+        }
+        // compressToTarget hands back the original on any failure, so a
+        // browser that cannot re-encode this format still uploads — the
+        // backend compresses it again either way.
+        valid.push(file.size > targetBytes ? await this.compression.compressToTarget(file, targetBytes) : file);
       }
-      if (file.size > maxBytes) {
-        this.error.set({ key: 'components.fileUpload.tooLarge', params: { name: file.name, size: this.maxSizeMb } });
-        continue;
-      }
-      valid.push(file);
+    } finally {
+      this.isCompressing.set(false);
     }
 
     if (!valid.length) return;

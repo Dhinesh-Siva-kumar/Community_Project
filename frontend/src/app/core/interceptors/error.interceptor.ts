@@ -5,7 +5,7 @@ import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
 
 /** Status codes with a translated fallback under `errors.http.*`. */
-const KNOWN_STATUSES = new Set([400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504]);
+const KNOWN_STATUSES = new Set([400, 401, 403, 404, 408, 409, 413, 422, 429, 500, 502, 503, 504]);
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastService = inject(ToastService);
@@ -13,6 +13,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // A reverse proxy that rejects an oversized upload usually cuts the
+      // connection rather than answering, so this also catches uploads that
+      // exceeded the proxy body limit — indistinguishable here from being
+      // genuinely offline.
       if (error.status === 0) {
         toastService.error('errors.http.offline');
         return throwError(() => error);
