@@ -519,6 +519,15 @@
           </div>
         }
 
+        @if (itemVideo(vi)) {
+          <div class="pa-view-section">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi bi-camera-video"></i></span>
+              <span class="pa-view-section-title">{{ 'admin.approval.section.video' | translate }}</span>
+            </div>
+            <app-post-video [src]="itemVideo(vi)"></app-post-video>
+          </div>
+        }
         @if (itemImages(vi).length > 0) {
           <div class="pa-view-section pa-view-section--last">
             <div class="pa-view-section-header">

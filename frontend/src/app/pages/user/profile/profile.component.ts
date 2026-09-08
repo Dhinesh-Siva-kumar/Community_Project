@@ -27,6 +27,7 @@ import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -41,7 +42,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [
+  imports: [PostVideoComponent, 
     CommonModule, ReactiveFormsModule, DatePipe,
     SearchableSelectComponent,
     ProfileHeaderComponent, ProfileTabsComponent, ProfileInfoCardComponent, ProfileProgressComponent,

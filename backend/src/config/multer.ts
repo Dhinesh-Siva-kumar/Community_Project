@@ -42,6 +42,63 @@ function mimeFilter(allowed: string[]) {
   };
 }
 
+/**
+ * Video formats accepted on a post. QuickTime (.mov, what iPhones record) is
+ * deliberately excluded: Chrome and Android frequently cannot play it, and
+ * with no ffmpeg available there is no way to transcode it server-side, so
+ * accepting it would mean posts that show a blank player to part of the
+ * community. The frontend surfaces this as a named error.
+ */
+export const POST_VIDEO_MIMETYPES = ['video/mp4', 'video/webm'];
+
+/**
+ * Per-field mime allowlist, for uploaders whose fields carry different kinds
+ * of media. An unknown field name is rejected outright rather than silently
+ * accepted.
+ */
+function fieldMimeFilter(allowedByField: Record<string, string[]>) {
+  return (
+    _req: Request,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback,
+  ) => {
+    const allowed = allowedByField[file.fieldname];
+    if (allowed && allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new AppError(
+          400,
+          allowed
+            ? `File type not allowed for ${file.fieldname}. Allowed types: ${allowed.join(', ')}`
+            : `Unexpected upload field: ${file.fieldname}`,
+          'UPLOAD_INVALID_TYPE',
+        ),
+      );
+    }
+  };
+}
+
+/**
+ * Multer binds ONE storage engine per instance, but post media needs two:
+ * images must stay in memory so Sharp can validate and compress the buffer,
+ * while a 100MB video should stream straight to disk instead of being held
+ * in RAM for the length of the upload. This delegates by field name.
+ */
+function fieldRoutedStorage(
+  byField: Record<string, StorageEngine>,
+  fallback: StorageEngine,
+): StorageEngine {
+  return {
+    _handleFile(req, file, cb) {
+      (byField[file.fieldname] ?? fallback)._handleFile(req, file, cb);
+    },
+    _removeFile(req, file, cb) {
+      (byField[file.fieldname] ?? fallback)._removeFile(req, file, cb);
+    },
+  };
+}
+
 const MB = 1024 * 1024;
 
 // Memory storage — the controller validates the buffer with Sharp (via
@@ -95,4 +152,21 @@ export const uploadImages = multer({
     'application/pdf',
   ]),
   limits: { fileSize: env.IMAGE_MAX_UPLOAD_BYTES, files: 11 },
+});
+
+/**
+ * Community post media: EITHER up to ten images OR one video, never both
+ * (the DTO and controller enforce the exclusivity; multer only parses).
+ *
+ * fileSize is per-file and has to be the larger of the two limits, so it
+ * cannot express the tighter image cap — posts.controller re-checks each
+ * `images` part against env.IMAGE_MAX_UPLOAD_BYTES.
+ */
+export const uploadPostMedia = multer({
+  storage: fieldRoutedStorage({ video: makeStorage('videos') }, multer.memoryStorage()),
+  fileFilter: fieldMimeFilter({
+    images: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    video: POST_VIDEO_MIMETYPES,
+  }),
+  limits: { fileSize: env.VIDEO_MAX_UPLOAD_BYTES, files: 11 },
 });

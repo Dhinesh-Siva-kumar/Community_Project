@@ -316,6 +316,8 @@ export interface Post {
   id: string;
   content: string;
   images: string[];
+  /** Mutually exclusive with `images` — a post carries one or the other. */
+  video?: string | null;
   type: PostType;
   status: PostStatus;
   rejectionReason?: string | null;

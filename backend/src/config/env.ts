@@ -47,6 +47,11 @@ const envSchema = z.object({
   IMAGE_TARGET_BYTES: z.coerce.number().default(2 * 1024 * 1024),
   IMAGE_MAX_DIMENSION: z.coerce.number().default(2048),
 
+  // Post videos. Unlike images there is no server-side shrink step (that
+  // would need ffmpeg), so this is a hard cap rather than a ceiling before
+  // compression. Duration is enforced in the browser only.
+  VIDEO_MAX_UPLOAD_BYTES: z.coerce.number().default(100 * 1024 * 1024),
+
   // Built Angular app (same-domain production deployment) — resolved relative
   // to the backend process's cwd. If the directory doesn't contain an
   // index.html, the backend simply skips serving it (e.g. local dev, where

@@ -1,0 +1,77 @@
+<!-- A newly picked file takes priority; otherwise show the stored one when editing. -->
+@if (previewUrl()) {
+  <div class="vu-preview">
+    <video
+      class="vu-preview-video"
+      [src]="previewUrl()!"
+      controls
+      preload="metadata"
+      playsinline
+    ></video>
+    <button
+      type="button"
+      class="vu-remove"
+      (click)="clear()"
+      [title]="'components.videoUpload.remove' | translate"
+      [attr.aria-label]="'components.videoUpload.remove' | translate"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+} @else if (existingPreview) {
+  <div class="vu-preview">
+    <video
+      class="vu-preview-video"
+      [src]="existingPreview"
+      controls
+      preload="metadata"
+      playsinline
+    ></video>
+    <button
+      type="button"
+      class="vu-remove"
+      (click)="removeExisting()"
+      [title]="'components.videoUpload.remove' | translate"
+      [attr.aria-label]="'components.videoUpload.remove' | translate"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+} @else {
+  <div
+    class="vu-zone"
+    [class.vu-zone--drag]="isDragging()"
+    [class.vu-zone--busy]="isChecking()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="triggerInput()"
+  >
+    @if (isChecking()) {
+      <div class="vu-busy">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span class="vu-busy-text">{{ 'components.videoUpload.checking' | translate }}</span>
+      </div>
+    } @else {
+      <div class="vu-empty">
+        <i class="bi bi-camera-video fu-empty-icon"></i>
+        <span class="vu-empty-label">{{ label | translate }}</span>
+        <span class="vu-empty-hint">
+          {{ 'components.videoUpload.limits' | translate: { size: maxSizeMb, minutes: maxDurationMinutes } }}
+        </span>
+      </div>
+    }
+  </div>
+}
+
+@if (error()) {
+  <p class="vu-error text-danger small mt-1 mb-0">{{ error()!.key | translate: error()!.params }}</p>
+}
+
+<input
+  #videoInput
+  type="file"
+  class="vu-hidden-input"
+  [accept]="accept"
+  (change)="onInputChange($event)"
+/>

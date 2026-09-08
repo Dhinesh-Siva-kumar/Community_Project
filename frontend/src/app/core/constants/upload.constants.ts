@@ -34,10 +34,26 @@ export const UPLOAD_CONFIG = {
   SUPPORTED_FORMATS: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 } as const;
 
+/**
+ * Post videos. There is no compression fallback the way there is for images
+ * — a video that breaks either limit is refused outright — so these are hard
+ * caps, and MAX_FILE_SIZE_MB must stay in step with the backend's
+ * VIDEO_MAX_UPLOAD_BYTES.
+ *
+ * QuickTime (.mov) is absent on purpose: iPhone-recorded .mov often will not
+ * play in Chrome or on Android, and the server cannot transcode it.
+ */
+export const VIDEO_CONFIG = {
+  MAX_FILE_SIZE_MB: 100,
+  MAX_DURATION_SECONDS: 120,
+  SUPPORTED_FORMATS: ['video/mp4', 'video/webm'],
+} as const;
+
 export const FORM_DATA_FIELD_NAMES = {
   IMAGES: 'images',
   IMAGE: 'image',
   LOGO: 'logo',
   AVATAR: 'avatar',
   FILE: 'file',
+  VIDEO: 'video',
 } as const;

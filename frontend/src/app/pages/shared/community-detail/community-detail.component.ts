@@ -11,6 +11,8 @@ import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { VideoUploadComponent } from '../../../shared/components/video-upload/video-upload.component';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 import { DeletePostModalComponent } from '../../../shared/components/delete-post-modal/delete-post-modal.component';
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
@@ -28,7 +30,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -69,7 +71,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   // Post creation
   submittingPost = signal(false);
   selectedPostImages = signal<File[]>([]);
+  selectedPostVideo = signal<File | null>(null);
   postImageResetCounter = signal(0);
+  postVideoResetCounter = signal(0);
   selectedPostType = signal<PostType>('GENERAL');
 
   // My Posts (this community) — surfaces the caller's own pending/rejected/
@@ -136,6 +140,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   editExistingImages   = signal<string[]>([]);
   editImages           = signal<File[]>([]);
   editImageResetCounter = signal(0);
+  // Existing video path kept separately from a newly picked file: sending
+  // the path back unchanged is what tells the API to keep it, while null
+  // clears it.
+  editExistingVideo    = signal<string | null>(null);
+  editVideo            = signal<File | null>(null);
+  editVideoResetCounter = signal(0);
 
   // Delete post modal
   deletePostTarget    = signal<Post | null>(null);
@@ -567,6 +577,32 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.selectedPostImages.set(files);
   }
 
+  onPostVideoChange(file: File | null): void {
+    this.selectedPostVideo.set(file);
+  }
+
+  /**
+   * A post carries images or a video, never both (the backend rejects the
+   * combination), so each picker hides once the other has a selection.
+   */
+  readonly canPickPostImages = computed(() => this.selectedPostVideo() === null);
+  readonly canPickPostVideo  = computed(() => this.selectedPostImages().length === 0);
+
+  readonly canPickEditImages = computed(
+    () => this.editVideo() === null && !this.editExistingVideo(),
+  );
+  readonly canPickEditVideo = computed(
+    () => this.editImages().length === 0 && this.editExistingImages().length === 0,
+  );
+
+  onEditVideoChange(file: File | null): void {
+    this.editVideo.set(file);
+  }
+
+  removeEditExistingVideo(): void {
+    this.editExistingVideo.set(null);
+  }
+
   submitPost(): void {
     if (this.postForm.invalid) { this.postForm.markAllAsTouched(); return; }
 
@@ -574,14 +610,17 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     const content = this.postForm.get('content')!.value;
     const type    = this.selectedPostType();
     const images  = this.selectedPostImages();
+    const video   = this.selectedPostVideo();
 
-    this.postService.createPost(this.communityId(), { content, type }, images.length > 0 ? images : undefined).subscribe({
+    this.postService.createPost(this.communityId(), { content, type }, images.length > 0 ? images : undefined, video).subscribe({
       next: (post) => {
         const successMsg = this.isAdmin() ? 'Post published successfully!' : 'Post submitted! It will appear after approval.';
         this.toast.success(successMsg);
         this.postForm.reset();
         this.selectedPostImages.set([]);
+        this.selectedPostVideo.set(null);
         this.postImageResetCounter.update((n) => n + 1);
+        this.postVideoResetCounter.update((n) => n + 1);
         this.submittingPost.set(false);
         if (post.status === 'APPROVED') {
           this.posts.update((current) => [post, ...current]);
@@ -1090,6 +1129,9 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editExistingImages.set([...(post.images ?? [])]);
     this.editImages.set([]);
     this.editImageResetCounter.update((n) => n + 1);
+    this.editExistingVideo.set(post.video ?? null);
+    this.editVideo.set(null);
+    this.editVideoResetCounter.update((n) => n + 1);
     this.editModalOpen.set(true);
   }
 
@@ -1097,6 +1139,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     this.editModalOpen.set(false);
     this.editingPost.set(null);
     this.editExistingImages.set([]);
+    this.editExistingVideo.set(null);
+    this.editVideo.set(null);
     this.editPostForm.reset();
   }
 
@@ -1118,8 +1162,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
     const type    = this.selectedEditType();
     const retainedImages = this.editExistingImages();
     const images  = this.editImages();
+    const video   = this.editVideo();
+    // An empty string is how a multipart body says "clear it"; when a new
+    // file is attached the API ignores this and stores the upload instead.
+    const retainedVideo = this.editExistingVideo() ?? '';
 
-    this.postService.updatePost(post.id, { content, type, images: retainedImages }, images.length > 0 ? images : undefined).subscribe({
+    this.postService.updatePost(post.id, { content, type, images: retainedImages, video: retainedVideo }, images.length > 0 ? images : undefined, video).subscribe({
       next: (updated) => {
         this.posts.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
         this.myPostsInCommunity.update((current) => current.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));

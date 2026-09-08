@@ -18,6 +18,7 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -46,7 +47,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -625,9 +626,14 @@ export class ApprovalComponent implements OnInit {
       case 'business':  return item['logo'] ?? item['images']?.[0] ?? null;
       case 'jobs':       return item['companyLogo'] ?? item['images']?.[0] ?? null;
       case 'events':     return item['images']?.[0] ?? null;
-      case 'posts':      return item['images']?.[0] ?? null;
+      case 'posts':      return item['images']?.[0] ?? null; // video posts fall back to the player below
       default:           return null;
     }
+  }
+
+  /** A post's attached video, so an admin can watch it before approving. */
+  itemVideo(item: PendingItem): string | null {
+    return this.activeEntity() === 'posts' ? (item['video'] as string | null) ?? null : null;
   }
 
   itemImages(item: PendingItem): string[] {

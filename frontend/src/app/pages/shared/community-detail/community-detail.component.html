@@ -164,14 +164,25 @@
 
             <!-- Add images (optional) -->
             <div class="mb-1">
-              <label class="cm-label">{{ 'shared.communityDetail.addImages' | translate }} <span class="text-muted fw-normal">{{ 'common.optionalParen' | translate }}</span></label>
-              <app-file-upload
-                mode="multi"
-                accept="image/*"
-                [label]="'components.fileUpload.clickOrDragPhotos' | translate"
-                [resetCounter]="editImageResetCounter()"
-                (filesChange)="onEditImagesChange($event)"
-              ></app-file-upload>
+              <label class="cm-label">{{ 'shared.communityDetail.addMedia' | translate }} <span class="text-muted fw-normal">{{ 'common.optionalParen' | translate }}</span></label>
+              @if (canPickEditImages()) {
+                <app-file-upload
+                  mode="multi"
+                  accept="image/*"
+                  [label]="'components.fileUpload.clickOrDragPhotos' | translate"
+                  [resetCounter]="editImageResetCounter()"
+                  (filesChange)="onEditImagesChange($event)"
+                ></app-file-upload>
+              }
+              @if (canPickEditVideo()) {
+                <app-video-upload
+                  class="mt-2 d-block"
+                  [resetCounter]="editVideoResetCounter()"
+                  [existingPreview]="editExistingVideo() | imageUrl"
+                  (existingRemoved)="removeEditExistingVideo()"
+                  (videoChange)="onEditVideoChange($event)"
+                ></app-video-upload>
+              }
             </div>
 
             </div>
@@ -552,6 +563,9 @@
                   </p>
 
 
+                   @if (post.video) {
+                     <app-post-video [src]="post.video" class="mb-3 d-block"></app-post-video>
+                   }
                    @if (post.images && post.images.length > 0) {
                       <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                         @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
@@ -767,13 +781,22 @@
 
                     <!-- Image upload -->
                     <div class="cd-compose-upload">
-                      <app-file-upload
-                        mode="multi"
-                        accept="image/*"
-                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
-                        [resetCounter]="postImageResetCounter()"
-                        (filesChange)="onPostImagesChange($event)"
-                      ></app-file-upload>
+                      @if (canPickPostImages()) {
+                        <app-file-upload
+                          mode="multi"
+                          accept="image/*"
+                          [label]="'components.fileUpload.clickOrDragPhotos' | translate"
+                          [resetCounter]="postImageResetCounter()"
+                          (filesChange)="onPostImagesChange($event)"
+                        ></app-file-upload>
+                      }
+                      @if (canPickPostVideo()) {
+                        <app-video-upload
+                          class="mt-2 d-block"
+                          [resetCounter]="postVideoResetCounter()"
+                          (videoChange)="onPostVideoChange($event)"
+                        ></app-video-upload>
+                      }
                     </div>
 
                     <!-- Compose footer -->
@@ -963,6 +986,9 @@
                       </button>
                     }
                   </p>
+                  @if (post.video) {
+                    <app-post-video [src]="post.video" class="mb-3 d-block"></app-post-video>
+                  }
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
@@ -1124,13 +1150,22 @@
 
                     <!-- Image upload -->
                     <div class="cd-compose-upload">
-                      <app-file-upload
-                        mode="multi"
-                        accept="image/*"
-                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
-                        [resetCounter]="postImageResetCounter()"
-                        (filesChange)="onPostImagesChange($event)"
-                      ></app-file-upload>
+                      @if (canPickPostImages()) {
+                        <app-file-upload
+                          mode="multi"
+                          accept="image/*"
+                          [label]="'components.fileUpload.clickOrDragPhotos' | translate"
+                          [resetCounter]="postImageResetCounter()"
+                          (filesChange)="onPostImagesChange($event)"
+                        ></app-file-upload>
+                      }
+                      @if (canPickPostVideo()) {
+                        <app-video-upload
+                          class="mt-2 d-block"
+                          [resetCounter]="postVideoResetCounter()"
+                          (videoChange)="onPostVideoChange($event)"
+                        ></app-video-upload>
+                      }
                     </div>
 
                     <div class="cd-compose-footer cd-compose-footer--single">
@@ -1272,6 +1307,9 @@
                       </button>
                     }
                   </p>
+                  @if (post.video) {
+                    <app-post-video [src]="post.video" class="mb-3 d-block"></app-post-video>
+                  }
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
@@ -1433,13 +1471,22 @@
 
                     <!-- Image upload -->
                     <div class="cd-compose-upload">
-                      <app-file-upload
-                        mode="multi"
-                        accept="image/*"
-                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
-                        [resetCounter]="postImageResetCounter()"
-                        (filesChange)="onPostImagesChange($event)"
-                      ></app-file-upload>
+                      @if (canPickPostImages()) {
+                        <app-file-upload
+                          mode="multi"
+                          accept="image/*"
+                          [label]="'components.fileUpload.clickOrDragPhotos' | translate"
+                          [resetCounter]="postImageResetCounter()"
+                          (filesChange)="onPostImagesChange($event)"
+                        ></app-file-upload>
+                      }
+                      @if (canPickPostVideo()) {
+                        <app-video-upload
+                          class="mt-2 d-block"
+                          [resetCounter]="postVideoResetCounter()"
+                          (videoChange)="onPostVideoChange($event)"
+                        ></app-video-upload>
+                      }
                     </div>
 
                     <div class="cd-compose-footer cd-compose-footer--single">
@@ -1581,6 +1628,9 @@
                       </button>
                     }
                   </p>
+                  @if (post.video) {
+                    <app-post-video [src]="post.video" class="mb-3 d-block"></app-post-video>
+                  }
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mb-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {
@@ -1754,13 +1804,22 @@
 
                     <!-- Image upload -->
                     <div class="cd-compose-upload">
-                      <app-file-upload
-                        mode="multi"
-                        accept="image/*"
-                        [label]="'components.fileUpload.clickOrDragPhotos' | translate"
-                        [resetCounter]="postImageResetCounter()"
-                        (filesChange)="onPostImagesChange($event)"
-                      ></app-file-upload>
+                      @if (canPickPostImages()) {
+                        <app-file-upload
+                          mode="multi"
+                          accept="image/*"
+                          [label]="'components.fileUpload.clickOrDragPhotos' | translate"
+                          [resetCounter]="postImageResetCounter()"
+                          (filesChange)="onPostImagesChange($event)"
+                        ></app-file-upload>
+                      }
+                      @if (canPickPostVideo()) {
+                        <app-video-upload
+                          class="mt-2 d-block"
+                          [resetCounter]="postVideoResetCounter()"
+                          (videoChange)="onPostVideoChange($event)"
+                        ></app-video-upload>
+                      }
                     </div>
 
                     <div class="cd-compose-footer cd-compose-footer--single">
@@ -2321,6 +2380,9 @@
 
                   <!-- Same grid + lightbox the community feed uses, so an author
                        reviewing their own post sees exactly what they submitted. -->
+                  @if (post.video) {
+                    <app-post-video [src]="post.video" class="mb-3 d-block"></app-post-video>
+                  }
                   @if (post.images && post.images.length > 0) {
                     <div class="post-images mt-3" [class.post-images--single]="post.images.length === 1" [class.post-images--two]="post.images.length === 2" [class.post-images--three]="post.images.length === 3" [class.post-images--four-plus]="post.images.length >= 4">
                       @for (img of post.images.slice(0, 4); track $index; let imgIndex = $index) {

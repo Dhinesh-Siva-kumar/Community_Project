@@ -437,7 +437,9 @@
       "OTP_VERIFICATION_FAILED": "That OTP could not be verified. Please request a new one.",
       "UPLOAD_LIMIT_FILE_SIZE": "Image size is too large. Please upload a smaller image.",
       "UPLOAD_LIMIT_FILE_COUNT": "Too many files in one upload.",
-      "UPLOAD_INVALID_TYPE": "That file type is not supported."
+      "UPLOAD_INVALID_TYPE": "That file type is not supported.",
+      "POST_MEDIA_CONFLICT": "A post can have either images or a video, not both.",
+      "IMAGE_VALIDATION_FAILED": "That image could not be processed. Please try a different file."
     }
   },
   "landing": {
@@ -1592,6 +1594,16 @@
       "addCommunity": "Add Community",
       "addJob": "Add Job",
       "addEvent": "Add Event"
+    },
+    "videoUpload": {
+      "addVideo": "Click or drag to add a video",
+      "limits": "MP4 or WebM · up to {{size}} MB and {{minutes}} minutes",
+      "checking": "Checking video...",
+      "remove": "Remove video",
+      "tooLarge": "Video size is too large. Please upload a video smaller than {{size}} MB.",
+      "tooLong": "Video is too long ({{actual}}). Please upload a video shorter than {{minutes}} minutes.",
+      "typeNotAllowed": "Only MP4 and WebM videos are supported. iPhone .mov files need to be converted first.",
+      "unreadable": "That video could not be read. Please try a different file."
     }
   },
   "shared": {
@@ -1743,7 +1755,11 @@
       "membersOnly": "Members only",
       "joinToParticipate": "Join this community to post, like and comment. You can keep browsing everything here.",
       "joinToComment": "Join this community to comment",
-      "joinCommunity": "Join Community"
+      "joinCommunity": "Join Community",
+      "addVideo": "Add a video",
+      "currentVideo": "Current video",
+      "orAddVideo": "or add a video",
+      "addMedia": "Add images or a video"
     }
   },
   "user": {
@@ -3358,7 +3374,8 @@
         "companyIcon": "Company Icon",
         "businessIcon": "Business Icon",
         "communityIcon": "Community Icon",
-        "imagesCount": "Images ({{count}})"
+        "imagesCount": "Images ({{count}})",
+        "video": "Video"
       },
       "value": {
         "standard": "Standard",
