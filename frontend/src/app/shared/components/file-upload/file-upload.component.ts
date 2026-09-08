@@ -16,6 +16,7 @@ import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ImageCompressionService } from '../../../core/services/image-compression.service';
 import { UPLOAD_CONFIG } from '../../../core/constants/upload.constants';
+import { ToastService } from '../../../core/services/toast.service';
 
 export type UploadMode = 'single' | 'multi';
 export type UploadVariant = 'default' | 'avatar';
@@ -29,6 +30,7 @@ export type UploadVariant = 'default' | 'avatar';
 })
 export class FileUploadComponent implements OnChanges {
   private compression = inject(ImageCompressionService);
+  private toast = inject(ToastService);
   @Input() mode: UploadMode = 'single';
   @Input() variant: UploadVariant = 'default';
   @Input() accept = 'image/*';
@@ -161,18 +163,24 @@ export class FileUploadComponent implements OnChanges {
     const maxBytes = this.maxSizeMb * 1024 * 1024;
     const targetBytes = UPLOAD_CONFIG.COMPRESS_TARGET_MB * 1024 * 1024;
     const valid: File[] = [];
+    // Collected rather than reported inline: a per-file set() would leave
+    // only the LAST rejection visible, so selecting five oversized images
+    // used to surface a complaint about one of them and drop the rest
+    // without a word.
+    const oversized: string[] = [];
+    const wrongType: string[] = [];
 
     this.isCompressing.set(true);
     try {
       for (const file of incoming) {
         if (!this.matchesAccept(file)) {
-          this.error.set({ key: 'components.fileUpload.typeNotAllowed', params: { name: file.name } });
+          wrongType.push(file.name);
           continue;
         }
         // Only a file too big to even decode is refused outright; anything
         // between the target and this is shrunk below rather than dropped.
         if (file.size > maxBytes) {
-          this.error.set({ key: 'components.fileUpload.tooLarge', params: { name: file.name, size: this.maxSizeMb } });
+          oversized.push(file.name);
           continue;
         }
         // compressToTarget hands back the original on any failure, so a
@@ -184,6 +192,8 @@ export class FileUploadComponent implements OnChanges {
       this.isCompressing.set(false);
     }
 
+    this.reportRejected(oversized, wrongType);
+
     if (!valid.length) return;
 
     if (this.mode === 'single') {
@@ -193,16 +203,55 @@ export class FileUploadComponent implements OnChanges {
       const current = this.files();
       const available = Math.max(0, this.maxFiles - current.length);
       if (!available) {
-        this.error.set({ key: 'components.fileUpload.tooMany', params: { count: this.maxFiles } });
+        this.announce('error', 'components.fileUpload.tooMany', { count: this.maxFiles });
         return;
       }
       const toAdd = valid.slice(0, available);
       if (toAdd.length < valid.length) {
-        this.error.set({ key: 'components.fileUpload.slotsRemaining', params: { available, max: this.maxFiles } });
+        this.announce('warning', 'components.fileUpload.slotsRemaining', { available, max: this.maxFiles });
       }
       this.files.update(arr => [...arr, ...toAdd]);
       this.readAndSet(toAdd, current.length);
     }
+  }
+
+  /**
+   * Tells the user which files were dropped and why. Size is reported in
+   * preference to type when both happened — it is the common case and the
+   * one with an action attached (upload something smaller).
+   */
+  private reportRejected(oversized: string[], wrongType: string[]): void {
+    if (oversized.length) {
+      this.announce(
+        'error',
+        oversized.length === 1
+          ? 'components.fileUpload.tooLarge'
+          : 'components.fileUpload.tooLargeMultiple',
+        { count: oversized.length, size: this.maxSizeMb },
+      );
+      return;
+    }
+
+    if (wrongType.length) {
+      this.announce(
+        'error',
+        wrongType.length === 1
+          ? 'components.fileUpload.typeNotAllowed'
+          : 'components.fileUpload.typeNotAllowedMultiple',
+        { name: wrongType[0], count: wrongType.length },
+      );
+    }
+  }
+
+  /**
+   * Shows a rejection inline AND as a toast. The inline message alone is not
+   * enough: this component is often inside a modal or far down a long form,
+   * where a dropped file with an off-screen explanation just looks like
+   * nothing happened.
+   */
+  private announce(kind: 'error' | 'warning', key: string, params: Record<string, unknown>): void {
+    this.error.set({ key, params });
+    this.toast[kind](key, params);
   }
 
   private readAndSet(newFiles: File[], offset: number): void {

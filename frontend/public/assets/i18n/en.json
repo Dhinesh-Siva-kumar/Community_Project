@@ -348,7 +348,7 @@
       "404": "The requested resource was not found.",
       "408": "Request timed out. Please try again.",
       "409": "A conflict occurred. The resource may have been modified.",
-      "413": "That upload is too large. Please try a smaller file.",
+      "413": "Image size is too large. Please upload a smaller image.",
       "422": "The submitted data is invalid.",
       "429": "Too many requests. Please try again later.",
       "500": "An internal server error occurred. Please try again later.",
@@ -435,7 +435,7 @@
       "DATE_RANGE_TOO_LARGE": "That date range is too large. Please choose a shorter period.",
       "CATEGORY_IN_USE": "This category cannot be deleted while businesses are still using it.",
       "OTP_VERIFICATION_FAILED": "That OTP could not be verified. Please request a new one.",
-      "UPLOAD_LIMIT_FILE_SIZE": "That file is too large to upload.",
+      "UPLOAD_LIMIT_FILE_SIZE": "Image size is too large. Please upload a smaller image.",
       "UPLOAD_LIMIT_FILE_COUNT": "Too many files in one upload.",
       "UPLOAD_INVALID_TYPE": "That file type is not supported."
     }
@@ -1395,7 +1395,7 @@
       "galleryAlt": "Gallery image",
       "logoAlt": "Logo preview",
       "typeNotAllowed": "File type not allowed: {{name}}",
-      "tooLarge": "\"{{name}}\" is over the {{size}} MB limit.",
+      "tooLarge": "Image size is too large. Please upload an image smaller than {{size}} MB.",
       "tooMany": "Maximum {{count}} files already selected.",
       "clickOrDragPhotos": "Click or drag to add photos",
       "uploadBusinessLogo": "Upload business logo (JPG, PNG, WEBP)",
@@ -1407,7 +1407,9 @@
       "slotsRemaining": "Only {{available}} slot(s) remaining (max {{max}}).",
       "upToImagesMaxSize": "Up to {{count}} images · large ones are optimised automatically",
       "compressing": "Optimising images...",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "tooLargeMultiple": "{{count}} images are too large. Please upload images smaller than {{size}} MB.",
+      "typeNotAllowedMultiple": "{{count}} files were skipped because that file type is not allowed."
     },
     "dateInput": {
       "clear": "Clear date",
