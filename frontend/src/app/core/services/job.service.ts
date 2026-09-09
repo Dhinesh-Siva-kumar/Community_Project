@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { ApprovalStatus, Job, PaginatedResponse } from '../models';
+import { ApprovalStatus, Job, PaginatedResponse, VisibilityType } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface MyJobsQueryParams {
@@ -36,12 +36,26 @@ export interface JobsQueryParams {
   country?: string;
   state?:   string;
   city?:    string;
+  /** Comma-separated master_countries ids — independent of the free-text `country` above. */
+  countryIds?: string;
+  stateId?:    number;
+  cityId?:     number;
+
+  // ── Visibility scope ───────────────────────────────────────────
+  visibilityType?: VisibilityType;
 
   // ── Role filters ─────────────────────────────────────────────
+  // Singular exact-match, kept for existing callers. jobTypes/workModes are
+  // the multi-select CSV form.
   jobType?:   string;
   workMode?:  string;
   shiftType?: string;
   education?: string;
+  jobTypes?:  string;
+  workModes?: string;
+
+  // ── Recruiter / poster search (admin) ─────────────────────────
+  postedBy?: string;
 
   // ── Experience range ─────────────────────────────────────────
   expMin?: number;
@@ -70,31 +84,11 @@ export class JobService {
   private api = inject(ApiService);
 
   getJobs(query: JobsQueryParams = {}): Observable<PaginatedResponse<Job>> {
-    const params: Record<string, any> = {};
-
-    if (query.pincode)              params['pincode']       = query.pincode;
-    if (query.page && query.page > 1) params['page']        = query.page;
-    if (query.limit)                params['limit']         = query.limit;
-    if (query.search)               params['search']        = query.search;
-    if (query.country)              params['country']       = query.country;
-    if (query.state)                params['state']         = query.state;
-    if (query.city)                 params['city']          = query.city;
-    if (query.jobType)              params['jobType']       = query.jobType;
-    if (query.workMode)             params['workMode']      = query.workMode;
-    if (query.shiftType)            params['shiftType']     = query.shiftType;
-    if (query.education)            params['education']     = query.education;
-    if (query.expMin != null)       params['expMin']        = query.expMin;
-    if (query.expMax != null)       params['expMax']        = query.expMax;
-    if (query.salaryMin != null)    params['salaryMin']     = query.salaryMin;
-    if (query.salaryMax != null)    params['salaryMax']     = query.salaryMax;
-    if (query.salaryHidden != null) params['salaryHidden']  = query.salaryHidden;
-    if (query.postedWithin != null) params['postedWithin']  = query.postedWithin;
-    if (query.status)                params['status']       = query.status;
-    if (query.dateFrom)              params['dateFrom']     = query.dateFrom;
-    if (query.dateTo)                params['dateTo']       = query.dateTo;
-    if (query.sortBy && query.sortBy !== 'newest') params['sortBy'] = query.sortBy;
-
-    return this.api.get<PaginatedResponse<Job>>('/jobs', params);
+    // Forward every param as-is — api.get() already strips null/undefined/''
+    // values, so there's no need to cherry-pick fields into a fresh object
+    // (which previously had to be kept in sync by hand every time a new
+    // filter was added).
+    return this.api.get<PaginatedResponse<Job>>('/jobs', query);
   }
 
   getJob(id: string): Observable<Job> {

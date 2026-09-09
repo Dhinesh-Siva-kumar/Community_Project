@@ -10,7 +10,8 @@ import { EventService, PendingEventsQueryParams } from '../../../core/services/e
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Country, PaginatedResponse } from '../../../core/models';
+import { Country, OpeningHoursJson, PaginatedResponse } from '../../../core/models';
+import { DAY_LABEL_KEYS, formatDayRange, selectedDayKeys } from '../../../shared/utils/opening-hours';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
@@ -18,6 +19,7 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -46,7 +48,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -625,9 +627,14 @@ export class ApprovalComponent implements OnInit {
       case 'business':  return item['logo'] ?? item['images']?.[0] ?? null;
       case 'jobs':       return item['companyLogo'] ?? item['images']?.[0] ?? null;
       case 'events':     return item['images']?.[0] ?? null;
-      case 'posts':      return item['images']?.[0] ?? null;
+      case 'posts':      return item['images']?.[0] ?? null; // video posts fall back to the player below
       default:           return null;
     }
+  }
+
+  /** A post's attached video, so an admin can watch it before approving. */
+  itemVideo(item: PendingItem): string | null {
+    return this.activeEntity() === 'posts' ? (item['video'] as string | null) ?? null : null;
   }
 
   itemImages(item: PendingItem): string[] {
@@ -689,6 +696,43 @@ export class ApprovalComponent implements OnInit {
    * translate pipe), so any literal built here has to be resolved up front. */
   private t(key: string): string { return this.translate.instant(key) as string; }
 
+  /**
+   * A row per opening day, so an admin reviewing a submission sees the same
+   * per-day hours the owner actually entered — not the one-line summary the
+   * legacy `opening_hours` column collapses them to.
+   */
+  private businessHoursFields(item: PendingItem): { label: string; value: string }[] {
+    const json = item['opening_hours_json'] as OpeningHoursJson | null | undefined;
+    const keys = selectedDayKeys(json);
+
+    if (!keys.length) {
+      return [
+        { label: 'admin.approval.label.openingHours', value: this.fmt(item['opening_hours']) },
+        { label: 'admin.approval.label.openingDays', value: this.fmt(item['opening_days']) },
+      ];
+    }
+
+    return keys.map((k) => ({
+      label: DAY_LABEL_KEYS[k],
+      value: json!.days[k]!.is24h
+        ? this.t('components.openingHours.open24h')
+        : formatDayRange(json!.days[k]!),
+    }));
+  }
+
+  /**
+   * The two extra business galleries, rendered as their own labelled
+   * sections alongside the gallery photos so a reviewer can actually see
+   * the menu and business cards that were submitted.
+   */
+  itemImageGroups(item: PendingItem): { labelKey: string; images: string[] }[] {
+    if (this.activeEntity() !== 'business') return [];
+    return [
+      { labelKey: 'components.businessDetail.menuCardImages', images: (item['menu_images'] ?? []) as string[] },
+      { labelKey: 'components.businessDetail.businessCardImages', images: (item['card_images'] ?? []) as string[] },
+    ].filter((g) => g.images.length > 0);
+  }
+
   itemDetailSections(item: PendingItem): { title: string; icon: string; fields: { label: string; value: string }[] }[] {
     switch (this.activeEntity()) {
       case 'posts':
@@ -724,6 +768,9 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.state', value: this.fmt(item['state']) },
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },
             { label: 'admin.approval.label.pincode', value: this.fmt(item['pincode']) },
+            { label: 'admin.approval.label.visibility', value: this.t(item['visibility_type'] === 'WORLDWIDE'
+                ? 'components.businessForm.visibilityWorldwide'
+                : 'components.businessForm.visibilityCountry') },
           ]},
           { title: 'admin.approval.section.contact', icon: 'bi-telephone', fields: [
             { label: 'admin.approval.label.phone', value: this.fmt(item['phone']) },
@@ -731,10 +778,9 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.website', value: this.fmt(item['website']) },
             { label: 'admin.approval.label.whatsapp', value: this.fmt(item['whatsapp']) },
           ]},
-          { title: 'admin.approval.section.hours', icon: 'bi-clock', fields: [
-            { label: 'admin.approval.label.openingHours', value: this.fmt(item['opening_hours']) },
-            { label: 'admin.approval.label.openingDays', value: this.fmt(item['opening_days']) },
-          ]},
+          // Structured hours are the source of truth; the free-text columns
+          // are only a fallback for businesses submitted before they existed.
+          { title: 'admin.approval.section.hours', icon: 'bi-clock', fields: this.businessHoursFields(item) },
         ];
 
       case 'jobs':

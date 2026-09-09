@@ -36,6 +36,21 @@ export const CreateJobDto = z.object({
   fullAddress: z.string().optional(),
   isRemote:    optionalBool,
   workMode:    z.enum(['Remote', 'Hybrid', 'On-site']).optional(),
+  // Country-aware address hierarchy — optional so existing callers that
+  // only send the free-text city/state/country above keep working
+  // unchanged. The Angular form already collected these; the backend
+  // simply had nowhere to put them until this field existed.
+  countryId: z.coerce.number().int().positive().optional(),
+  stateId:   z.coerce.number().int().positive().optional(),
+  cityId:    z.coerce.number().int().positive().optional(),
+
+  // Visibility scope. Deliberately .optional() and NOT .default('COUNTRY'):
+  // UpdateJobDto below is CreateJobDto.partial(), which does not strip a
+  // ZodDefault — an update that omitted this field would parse to
+  // 'COUNTRY', clear the service's `!== undefined` guard and silently
+  // demote a WORLDWIDE job. create() applies the default instead, exactly
+  // as the business module's visibilityType already does.
+  visibilityType: z.enum(['COUNTRY', 'WORLDWIDE']).optional(),
 
   // ── Role ─────────────────────────────────────────────────────
   expMin:    optionalInt,
@@ -47,7 +62,7 @@ export const CreateJobDto = z.object({
   // ── Salary ───────────────────────────────────────────────────
   salaryMin:      optionalInt,
   salaryMax:      optionalInt,
-  salaryType:     z.enum(['Fixed', 'Hourly', 'Monthly', 'Annual']).optional(),
+  salaryType:     z.enum(['Fixed', 'Hourly', 'Monthly', 'Annual', 'Negotiable']).optional(),
   salaryCurrency: z.string().optional(),
   salaryHidden:   optionalBool,
 
@@ -90,12 +105,27 @@ export const ListJobsQueryDto = z.object({
   country: z.string().optional(),
   state:   z.string().optional(),
   city:    z.string().optional(),
+  // Id-based, from the geography master data — independent of the
+  // free-text `country` ILIKE above. Comma-separated master_countries ids.
+  countryIds: z.string().optional(),
+  stateId:    z.coerce.number().int().positive().optional(),
+  cityId:     z.coerce.number().int().positive().optional(),
+
+  // ── Visibility scope ─────────────────────────────────────────
+  visibilityType: z.enum(['COUNTRY', 'WORLDWIDE']).optional(),
 
   // ── Role filters ─────────────────────────────────────────────
+  // Singular exact-match, kept for existing callers. jobTypes/workModes
+  // below are the multi-select CSV form (mirrors business's categoryIds).
   jobType:   z.string().optional(),
   workMode:  z.string().optional(),
   shiftType: z.string().optional(),
   education: z.string().optional(),
+  jobTypes:  z.string().optional(),
+  workModes: z.string().optional(),
+
+  // ── Recruiter / poster (admin) ────────────────────────────────
+  postedBy: z.string().optional(),
 
   // ── Experience range ─────────────────────────────────────────
   expMin: z.coerce.number().int().min(0).optional(),

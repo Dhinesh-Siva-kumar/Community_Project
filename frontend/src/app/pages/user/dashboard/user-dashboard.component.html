@@ -187,6 +187,9 @@
               }
             </p>
 
+            @if (post.video) {
+              <app-post-video [src]="post.video" class="mb-2 d-block"></app-post-video>
+            }
             @if (post.images?.length) {
               <div class="post__imgs"
                    [class.post__imgs--single]="post.images.length === 1"

@@ -316,6 +316,8 @@ export interface Post {
   id: string;
   content: string;
   images: string[];
+  /** Mutually exclusive with `images` — a post carries one or the other. */
+  video?: string | null;
   type: PostType;
   status: PostStatus;
   rejectionReason?: string | null;
@@ -363,11 +365,46 @@ export interface BusinessCategory {
   createdAt: string;
 }
 
+/** Who a business is visible to. `COUNTRY` is the default on create. */
+/** Who a listing is visible to — used by both Business and Jobs. */
+export type VisibilityType = 'COUNTRY' | 'WORLDWIDE';
+
+export type OpeningDayKey = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
+export interface OpeningHoursDay {
+  /** 24h `HH:mm`. */
+  open: string;
+  /** 24h `HH:mm`. May be earlier than `open` for an overnight range. */
+  close: string;
+  /** Display-only — a 24-hour day still stores a real 00:00–23:59 range. */
+  is24h?: boolean;
+}
+
+/**
+ * Structured opening hours (`businesses.opening_hours_json`).
+ *
+ * `SAME` — one shared range applied to every selected day.
+ * `PER_DAY` — each selected day carries its own range.
+ *
+ * The legacy `openingHours`/`openingDays` strings on `Business` are derived
+ * from this by the backend and kept in sync; they remain the fallback for
+ * businesses created before this field existed.
+ */
+export interface OpeningHoursJson {
+  mode: 'SAME' | 'PER_DAY';
+  days: Partial<Record<OpeningDayKey, OpeningHoursDay>>;
+}
+
 export interface Business {
   id: string;
   name: string;
   description?: string;
+  /** Gallery Photos. */
   images: string[];
+  /** Menu Card Images. */
+  menuImages?: string[];
+  /** Business Card Images. */
+  cardImages?: string[];
   address?: string;
   pincode?: string;
   country: string;
@@ -383,6 +420,8 @@ export interface Business {
   mapsLink?: string;
   openingHours?: string;
   openingDays?: string;
+  openingHoursJson?: OpeningHoursJson | null;
+  visibilityType?: VisibilityType;
   logo?: string;
   categoryId: string;
   userId: string;
@@ -468,6 +507,14 @@ export interface Job {
   fullAddress?: string;
   isRemote?: boolean;
   workMode?: 'Remote' | 'Hybrid' | 'On-site';
+  countryId?: number;
+  stateId?: number;
+  cityId?: number;
+  countryName?: string;
+  stateName?: string;
+  cityName?: string;
+  /** Who this job is listed for. `COUNTRY` is the default on create. */
+  visibilityType?: VisibilityType;
 
   // ── Role details ─────────────────────────────────────────────
   expMin?: number;
@@ -479,7 +526,8 @@ export interface Job {
   // ── Structured salary ─────────────────────────────────────────
   salaryMin?: number;
   salaryMax?: number;
-  salaryType?: string;
+  /** 'Negotiable' hides the amount and shows a plain "Negotiable" label. */
+  salaryType?: 'Fixed' | 'Hourly' | 'Monthly' | 'Annual' | 'Negotiable' | string;
   salaryCurrency?: string;
   salaryHidden?: boolean;
 

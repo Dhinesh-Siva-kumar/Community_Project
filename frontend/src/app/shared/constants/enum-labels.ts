@@ -44,10 +44,11 @@ export const ENUM_LABELS: Record<EnumGroup, Record<string, string>> = {
     'Flexible':   P + 'shiftType.flexible',
   },
   salaryType: {
-    'Fixed':   P + 'salaryType.fixed',
-    'Hourly':  P + 'salaryType.hourly',
-    'Monthly': P + 'salaryType.monthly',
-    'Annual':  P + 'salaryType.annual',
+    'Fixed':      P + 'salaryType.fixed',
+    'Hourly':     P + 'salaryType.hourly',
+    'Monthly':    P + 'salaryType.monthly',
+    'Annual':     P + 'salaryType.annual',
+    'Negotiable': P + 'salaryType.negotiable',
   },
   education: {
     'None':       P + 'education.none',

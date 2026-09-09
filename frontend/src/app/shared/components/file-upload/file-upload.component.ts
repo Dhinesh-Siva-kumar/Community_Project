@@ -13,7 +13,10 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { ImageCompressionService } from '../../../core/services/image-compression.service';
+import { UPLOAD_CONFIG } from '../../../core/constants/upload.constants';
+import { ToastService } from '../../../core/services/toast.service';
 
 export type UploadMode = 'single' | 'multi';
 export type UploadVariant = 'default' | 'avatar';
@@ -26,12 +29,14 @@ export type UploadVariant = 'default' | 'avatar';
   styleUrls: ['./file-upload.component.scss'],
 })
 export class FileUploadComponent implements OnChanges {
-  private translate = inject(TranslateService);
+  private compression = inject(ImageCompressionService);
+  private toast = inject(ToastService);
   @Input() mode: UploadMode = 'single';
   @Input() variant: UploadVariant = 'default';
   @Input() accept = 'image/*';
-  @Input() maxSizeMb = 5;
-  @Input() maxFiles = 10;
+  /** Hard refusal threshold. Files under it are compressed, never rejected. */
+  @Input() maxSizeMb = UPLOAD_CONFIG.MAX_FILE_SIZE_MB;
+  @Input() maxFiles = UPLOAD_CONFIG.MAX_IMAGES;
   @Input() label = 'components.fileUpload.dragOrBrowse';
 
   // Plain @Input() fields aren't tracked by computed() — a parent that
@@ -53,7 +58,7 @@ export class FileUploadComponent implements OnChanges {
   get existingPreviews(): string[] | undefined { return this.existingPreviewsSig(); }
 
   @Input() showError = false;
-  @Input() errorMessage = 'This field is required.';
+  @Input() errorMessage = 'components.fileUpload.required';
   @Input() resetCounter = 0;
 
   @Output() filesChange   = new EventEmitter<File[]>();
@@ -64,6 +69,12 @@ export class FileUploadComponent implements OnChanges {
   readonly files      = signal<File[]>([]);
   readonly previews   = signal<string[]>([]);
   readonly isDragging = signal(false);
+  /**
+   * True while images are being resized on the main thread. Shrinking a
+   * 20MB photo takes a visible moment, so the zone shows a spinner and
+   * stops accepting input rather than appearing frozen.
+   */
+  readonly isCompressing = signal(false);
   /**
    * Holds the *key* plus its interpolation params rather than resolved text.
    * A resolved string would freeze in whichever language was active when the
@@ -101,6 +112,9 @@ export class FileUploadComponent implements OnChanges {
   }
 
   triggerInput(): void {
+    // Ignore input while a previous batch is still being resized —
+    // re-entering processFiles would clear isCompressing early.
+    if (this.isCompressing()) return;
     this.fileInputRef?.nativeElement.click();
   }
 
@@ -111,7 +125,7 @@ export class FileUploadComponent implements OnChanges {
   onInputChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    this.processFiles(Array.from(input.files));
+    void this.processFiles(Array.from(input.files));
     input.value = ''; // allow re-selecting the same file
   }
 
@@ -131,8 +145,9 @@ export class FileUploadComponent implements OnChanges {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
+    if (this.isCompressing()) return;
     const dropped = event.dataTransfer?.files;
-    if (dropped?.length) this.processFiles(Array.from(dropped));
+    if (dropped?.length) void this.processFiles(Array.from(dropped));
   }
 
   removeFile(index: number): void {
@@ -143,22 +158,41 @@ export class FileUploadComponent implements OnChanges {
 
   // ── Private ──────────────────────────────────────────────────────
 
-  private processFiles(incoming: File[]): void {
+  private async processFiles(incoming: File[]): Promise<void> {
     this.error.set(null);
     const maxBytes = this.maxSizeMb * 1024 * 1024;
+    const targetBytes = UPLOAD_CONFIG.COMPRESS_TARGET_MB * 1024 * 1024;
     const valid: File[] = [];
+    // Collected rather than reported inline: a per-file set() would leave
+    // only the LAST rejection visible, so selecting five oversized images
+    // used to surface a complaint about one of them and drop the rest
+    // without a word.
+    const oversized: string[] = [];
+    const wrongType: string[] = [];
 
-    for (const file of incoming) {
-      if (!this.matchesAccept(file)) {
-        this.error.set({ key: 'components.fileUpload.typeNotAllowed', params: { name: file.name } });
-        continue;
+    this.isCompressing.set(true);
+    try {
+      for (const file of incoming) {
+        if (!this.matchesAccept(file)) {
+          wrongType.push(file.name);
+          continue;
+        }
+        // Only a file too big to even decode is refused outright; anything
+        // between the target and this is shrunk below rather than dropped.
+        if (file.size > maxBytes) {
+          oversized.push(file.name);
+          continue;
+        }
+        // compressToTarget hands back the original on any failure, so a
+        // browser that cannot re-encode this format still uploads — the
+        // backend compresses it again either way.
+        valid.push(file.size > targetBytes ? await this.compression.compressToTarget(file, targetBytes) : file);
       }
-      if (file.size > maxBytes) {
-        this.error.set({ key: 'components.fileUpload.tooLarge', params: { name: file.name, size: this.maxSizeMb } });
-        continue;
-      }
-      valid.push(file);
+    } finally {
+      this.isCompressing.set(false);
     }
+
+    this.reportRejected(oversized, wrongType);
 
     if (!valid.length) return;
 
@@ -169,16 +203,55 @@ export class FileUploadComponent implements OnChanges {
       const current = this.files();
       const available = Math.max(0, this.maxFiles - current.length);
       if (!available) {
-        this.error.set({ key: 'components.fileUpload.tooMany', params: { count: this.maxFiles } });
+        this.announce('error', 'components.fileUpload.tooMany', { count: this.maxFiles });
         return;
       }
       const toAdd = valid.slice(0, available);
       if (toAdd.length < valid.length) {
-        this.error.set({ key: 'components.fileUpload.slotsRemaining', params: { available, max: this.maxFiles } });
+        this.announce('warning', 'components.fileUpload.slotsRemaining', { available, max: this.maxFiles });
       }
       this.files.update(arr => [...arr, ...toAdd]);
       this.readAndSet(toAdd, current.length);
     }
+  }
+
+  /**
+   * Tells the user which files were dropped and why. Size is reported in
+   * preference to type when both happened — it is the common case and the
+   * one with an action attached (upload something smaller).
+   */
+  private reportRejected(oversized: string[], wrongType: string[]): void {
+    if (oversized.length) {
+      this.announce(
+        'error',
+        oversized.length === 1
+          ? 'components.fileUpload.tooLarge'
+          : 'components.fileUpload.tooLargeMultiple',
+        { count: oversized.length, size: this.maxSizeMb },
+      );
+      return;
+    }
+
+    if (wrongType.length) {
+      this.announce(
+        'error',
+        wrongType.length === 1
+          ? 'components.fileUpload.typeNotAllowed'
+          : 'components.fileUpload.typeNotAllowedMultiple',
+        { name: wrongType[0], count: wrongType.length },
+      );
+    }
+  }
+
+  /**
+   * Shows a rejection inline AND as a toast. The inline message alone is not
+   * enough: this component is often inside a modal or far down a long form,
+   * where a dropped file with an off-screen explanation just looks like
+   * nothing happened.
+   */
+  private announce(kind: 'error' | 'warning', key: string, params: Record<string, unknown>): void {
+    this.error.set({ key, params });
+    this.toast[kind](key, params);
   }
 
   private readAndSet(newFiles: File[], offset: number): void {

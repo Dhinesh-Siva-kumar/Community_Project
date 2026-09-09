@@ -3,13 +3,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Image validation constraints
+ * Image validation constraints.
+ *
+ * The minimum is only a sanity floor — small favicon/logo-sized images are
+ * legitimate, so it stays low rather than rejecting them. The maximum is a
+ * decompression-bomb guard and must stay above env.IMAGE_MAX_DIMENSION,
+ * since validation runs BEFORE saveBufferToFile() downscales the image.
  */
 const IMAGE_CONSTRAINTS = {
-  JPEG: { minWidth: 100, maxWidth: 10000, minHeight: 100, maxHeight: 10000 },
-  PNG: { minWidth: 100, maxWidth: 10000, minHeight: 100, maxHeight: 10000 },
-  WebP: { minWidth: 100, maxWidth: 10000, minHeight: 100, maxHeight: 10000 },
-  GIF: { minWidth: 100, maxWidth: 10000, minHeight: 100, maxHeight: 10000 },
+  JPEG: { minWidth: 16, maxWidth: 10000, minHeight: 16, maxHeight: 10000 },
+  PNG: { minWidth: 16, maxWidth: 10000, minHeight: 16, maxHeight: 10000 },
+  WebP: { minWidth: 16, maxWidth: 10000, minHeight: 16, maxHeight: 10000 },
+  GIF: { minWidth: 16, maxWidth: 10000, minHeight: 16, maxHeight: 10000 },
 };
 
 /**

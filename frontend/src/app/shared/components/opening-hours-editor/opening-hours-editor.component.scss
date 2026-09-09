@@ -1,0 +1,147 @@
+@use '../../../../assets/styles/index' as *;
+
+// ═══════════════════════════════════════════════════════════════
+// Opening days & hours editor.
+//
+// .jb-label / .jb-field-error / .jb-field-hint / .jb-day-toggle* are
+// carried over verbatim from the business form modal so the editor keeps
+// looking native inside it (view encapsulation means they have to live
+// here, not be inherited).
+// ═══════════════════════════════════════════════════════════════
+
+.ohe {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.ohe-block { display: flex; flex-direction: column; }
+
+// ── Shared field chrome ──────────────────────────────────────────
+.jb-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-stone-700;
+}
+
+.jb-field-error {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 4px;
+  font-size: $font-size-xs;
+  color: $color-danger;
+  .bi { font-size: 0.8rem; flex-shrink: 0; }
+}
+
+.jb-field-hint {
+  display: flex; align-items: center; gap: 4px;
+  margin: 6px 0 0;
+  font-size: $font-size-xs;
+  color: $color-stone-500;
+  .bi { font-size: 0.8rem; flex-shrink: 0; }
+}
+
+// ── Day pills ────────────────────────────────────────────────────
+.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.jb-day-toggle {
+  padding: 6px 14px; border-radius: $radius-full;
+  border: 1.5px solid $color-border; background: $color-bg-page;
+  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  @include transition-short(all);
+
+  &:hover:not(.jb-day-toggle--on):not(:disabled) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &--on {
+    background: rgba(251, 191, 36, 0.28);
+    border-color: $color-primary;
+    color: $color-primary-darker;
+    font-weight: $font-weight-bold;
+    &:hover:not(:disabled) { background: rgba(251, 191, 36, 0.36); border-color: $color-primary-dark; }
+  }
+}
+
+// ── Time range ───────────────────────────────────────────────────
+.ohe-range {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &__field { flex: 1 1 0; min-width: 0; }
+
+  &__sep {
+    flex-shrink: 0;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-stone-500;
+  }
+
+  &--compact { flex: 1 1 auto; min-width: 0; }
+}
+
+// ── 24-hour checkbox ─────────────────────────────────────────────
+.ohe-24h {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 4px 10px 4px 6px;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; background: none; cursor: pointer;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-stone-600;
+  @include transition-short(all);
+
+  .bi { font-size: 0.95rem; }
+
+  &:hover:not(:disabled) { background: $color-stone-100; color: $color-stone-800; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &--on { color: $color-primary-darker; font-weight: $font-weight-semibold; }
+  &--inline { margin-top: 0; flex-shrink: 0; }
+}
+
+// ── Per-day rows ─────────────────────────────────────────────────
+.ohe-days {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.ohe-day {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+
+  &__name {
+    flex: 0 0 84px;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-stone-700;
+  }
+
+  &__all {
+    flex: 1 1 auto;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    color: $color-primary-darker;
+  }
+
+  // Stack on narrow screens — two time pickers plus a label and a
+  // checkbox don't fit on one line on a phone.
+  @include media-sm-max {
+    flex-wrap: wrap;
+    &__name { flex: 1 0 100%; }
+  }
+}
+
+.ohe--error .ohe-day { border-color: rgba(220, 38, 38, 0.35); }

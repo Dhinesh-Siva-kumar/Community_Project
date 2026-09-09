@@ -26,21 +26,35 @@ export class PostService {
     return this.api.get<PaginatedResponse<Post>>('/posts', { communityId, ...params });
   }
 
-   createPost(communityId: string, data: { content: string; type: PostType }, images?: File[]): Observable<Post> {
+   /**
+    * A post carries either images or a single video — the backend rejects a
+    * request holding both with POST_MEDIA_CONFLICT.
+    */
+   createPost(communityId: string, data: { content: string; type: PostType }, images?: File[], video?: File | null): Observable<Post> {
      const body = { ...data, communityId };
-     if (images && images.length > 0) {
-       const files = images.map((file, index) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+     const files = this.mediaParts(images, video);
+     if (files.length > 0) {
        return this.api.postWithFile<Post>('/posts', body, files);
      }
      return this.api.post<Post>('/posts', body);
    }
 
-   updatePost(id: string, data: { content?: string; type?: PostType; images?: string[] }, images?: File[]): Observable<Post> {
-     if (images && images.length > 0) {
-       const files = images.map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
+   /**
+    * `data.video` carries the RETAINED path (or an empty string to clear it);
+    * a newly picked file in `video` overrides it and is uploaded instead.
+    */
+   updatePost(id: string, data: { content?: string; type?: PostType; images?: string[]; video?: string | null }, images?: File[], video?: File | null): Observable<Post> {
+     const files = this.mediaParts(images, video);
+     if (files.length > 0) {
        return this.api.putWithFile<Post>(`/posts/${id}`, data, files);
      }
      return this.api.put<Post>(`/posts/${id}`, data);
+   }
+
+   /** Builds the multipart file parts for whichever media the caller supplied. */
+   private mediaParts(images?: File[], video?: File | null): { field: string; file: File }[] {
+     if (video) return [{ field: FORM_DATA_FIELD_NAMES.VIDEO, file: video }];
+     return (images ?? []).map((file) => ({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
    }
 
   deletePost(id: string): Observable<void> {

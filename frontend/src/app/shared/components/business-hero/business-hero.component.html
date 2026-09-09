@@ -1,0 +1,104 @@
+@let biz = business();
+
+<div class="bh">
+  <div class="bh__top">
+
+    <div class="bh__identity">
+      @if (biz.logo) {
+        <button type="button" class="bh__logo" (click)="logoClick.emit()"
+          [attr.aria-label]="'View ' + biz.name + ' logo'">
+          <img [src]="biz.logo | imageUrl" [alt]="biz.name + ' logo'" loading="eager" />
+        </button>
+      }
+
+      <div class="bh__info">
+        <div class="bh__badges">
+          @switch (status()) {
+            @case ('ACTIVE') {
+              <span class="bh-badge bh-badge--active"><span class="bh-badge__dot"></span>{{ 'common.active' | translate }}</span>
+            }
+            @case ('INACTIVE') {
+              <span class="bh-badge bh-badge--inactive"><i class="bi bi-dash-circle-fill"></i>{{ 'common.inactive' | translate }}</span>
+            }
+            @case ('PENDING') {
+              @if (pendingApprovalRoute(); as route) {
+                <a class="bh-badge bh-badge--pending" [routerLink]="route" [queryParams]="pendingApprovalQueryParams()">
+                  <i class="bi bi-hourglass-split"></i>{{ 'common.pendingApproval' | translate }}
+                </a>
+              } @else {
+                <span class="bh-badge bh-badge--pending"><i class="bi bi-hourglass-split"></i>{{ 'common.pendingApproval' | translate }}</span>
+              }
+            }
+            @case ('REJECTED') {
+              <span class="bh-badge bh-badge--rejected" [title]="biz.rejectionReason || ''"><i class="bi bi-x-circle-fill"></i>{{ 'common.rejected' | translate }}</span>
+            }
+            @case ('NEEDS_INFO') {
+              @if (pendingApprovalRoute(); as route) {
+                <a class="bh-badge bh-badge--needs-info" [routerLink]="route" [queryParams]="pendingApprovalQueryParams()" [title]="biz.rejectionReason || ''">
+                  <i class="bi bi-question-circle-fill"></i>{{ 'common.needsMoreInfo' | translate }}
+                </a>
+              } @else {
+                <span class="bh-badge bh-badge--needs-info" [title]="biz.rejectionReason || ''"><i class="bi bi-question-circle-fill"></i>{{ 'common.needsMoreInfo' | translate }}</span>
+              }
+            }
+          }
+
+          @if (showOwnerBadge()) {
+            <span class="bh-badge bh-badge--owner"><i class="bi bi-person-check-fill"></i>{{ 'components.businessDetail.yourBusiness' | translate }}</span>
+          }
+          @if (biz.category?.name) {
+            <span class="bh-badge bh-badge--neutral">{{ biz.category!.name }}</span>
+          }
+          <span class="bh-badge bh-badge--neutral">
+            <i class="bi" [class.bi-globe-americas]="biz.visibilityType === 'WORLDWIDE'" [class.bi-pin-map-fill]="biz.visibilityType !== 'WORLDWIDE'"></i>
+            {{ (biz.visibilityType === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry') | translate }}
+          </span>
+        </div>
+
+        <h1 class="bh__name">{{ biz.name }}</h1>
+
+        @if (fullLocation()) {
+          <p class="bh__location"><i class="bi bi-geo-alt-fill"></i>{{ fullLocation() }}</p>
+        }
+
+        @if (showReason()) {
+          <p class="bh__reason"><i class="bi bi-exclamation-circle-fill"></i>{{ biz.rejectionReason }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="bh__actions">
+      @if (biz.phone) {
+        <a class="bh-btn bh-btn--solid-primary" [href]="'tel:' + biz.phone">
+          <i class="bi bi-telephone-fill"></i><span>{{ 'components.businessDetail.call' | translate }}</span>
+        </a>
+      }
+      @if (biz.whatsapp) {
+        <a class="bh-btn bh-btn--solid-whatsapp" [href]="whatsappUrl(biz.whatsapp)" target="_blank" rel="noopener">
+          <i class="bi bi-whatsapp"></i><span>{{ 'components.businessDetail.whatsapp' | translate }}</span>
+        </a>
+      }
+      @if (biz.website) {
+        <a class="bh-btn bh-btn--outline" [href]="biz.website" target="_blank" rel="noopener">
+          <i class="bi bi-globe2"></i><span>{{ 'components.businessDetail.website' | translate }}</span>
+        </a>
+      }
+      @if (directionsUrl(); as url) {
+        <a class="bh-btn bh-btn--outline" [href]="url" target="_blank" rel="noopener">
+          <i class="bi bi-signpost-split-fill"></i><span>{{ 'components.businessDetail.getDirections' | translate }}</span>
+        </a>
+      }
+      @if (canManage()) {
+        <button type="button" class="bh-btn bh-btn--icon" (click)="edit.emit($event)"
+          [attr.aria-label]="'common.edit' | translate" [title]="'common.edit' | translate">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button type="button" class="bh-btn bh-btn--icon bh-btn--icon-danger" (click)="delete.emit($event)"
+          [disabled]="deleting()" [attr.aria-label]="'common.delete' | translate" [title]="'common.delete' | translate">
+          @if (deleting()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-trash3"></i> }
+        </button>
+      }
+    </div>
+
+  </div>
+</div>

@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-export const CreatePostDto = z.object({
+// Refined below rather than inline: .superRefine() returns a ZodEffects,
+// which no longer exposes .partial()/.omit(), so the update variants have to
+// branch off the plain object first.
+const PostBaseDto = z.object({
   content: z.string().min(1, 'Content is required'),
   communityId: z.string().uuid('Valid community ID required'),
   type: z.enum(['GENERAL', 'HELP', 'EMERGENCY', 'ENQUIRY']).optional(),
@@ -8,11 +11,39 @@ export const CreatePostDto = z.object({
     .union([z.array(z.string()), z.string()])
     .transform((value) => (typeof value === 'string' ? [value] : value))
     .optional(),
+  // A multipart form has no way to send null, so an empty string is how the
+  // client says "clear the video"; normalise it here.
+  video: z
+    .union([z.string(), z.null()])
+    .transform((value) => (typeof value === 'string' && value.length === 0 ? null : value))
+    .optional(),
 });
 
-export const UpdatePostDto = CreatePostDto.partial();
+/**
+ * A post carries EITHER images OR a video, never both — the feed renders one
+ * or the other, and allowing both would leave the combination undefined on
+ * every surface that displays a post.
+ */
+function assertMediaExclusive(
+  value: { images?: string[]; video?: string | null },
+  ctx: z.RefinementCtx,
+): void {
+  if (value.images?.length && value.video) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['video'],
+      message: 'A post can have either images or a video, not both',
+    });
+  }
+}
 
-export const UpdatePostBodyDto = CreatePostDto.omit({ communityId: true }).partial();
+export const CreatePostDto = PostBaseDto.superRefine(assertMediaExclusive);
+
+export const UpdatePostDto = PostBaseDto.partial().superRefine(assertMediaExclusive);
+
+export const UpdatePostBodyDto = PostBaseDto.omit({ communityId: true })
+  .partial()
+  .superRefine(assertMediaExclusive);
 
 export const ListPostsQueryDto = z.object({
   communityId: z.string().uuid().optional(),

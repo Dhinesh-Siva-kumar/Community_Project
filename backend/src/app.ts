@@ -32,7 +32,19 @@ import analyticsRouter from './modules/analytics/analytics.router';
 const app = express();
 
 // 1. Helmet
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // The business details page embeds a Google Maps location preview
+      // (a plain `output=embed` iframe, no API key) — helmet's default
+      // frame-src falls back to default-src 'self' and would silently
+      // block it.
+      'frame-src': ["'self'", 'https://www.google.com', 'https://maps.google.com'],
+    },
+  },
+}));
 
 // 2. Trust proxy (required for rate limiters behind nginx/load-balancers)
 app.set('trust proxy', 1);

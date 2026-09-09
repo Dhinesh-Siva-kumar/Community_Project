@@ -1,0 +1,134 @@
+<div class="ohe" [class.ohe--error]="invalid()">
+
+  <!-- ── Days ─────────────────────────────────────────────── -->
+  <div class="ohe-block">
+    <label class="jb-label">
+      {{ 'components.openingHours.selectDays' | translate }} <span class="text-danger">*</span>
+    </label>
+    <div class="jb-day-toggles" role="group" [attr.aria-label]="'components.openingHours.selectDays' | translate">
+      @for (day of DAY_KEYS; track day) {
+        <button type="button" class="jb-day-toggle"
+          [class.jb-day-toggle--on]="selected().includes(day)"
+          [attr.aria-pressed]="selected().includes(day)"
+          [attr.aria-label]="DAY_LABEL_KEYS[day] | translate"
+          [disabled]="isDisabled()"
+          (click)="toggleDay(day)">{{ DAY_SHORT_KEYS[day] | translate }}</button>
+      }
+    </div>
+    @if (invalid() && selected().length === 0) {
+      <span class="jb-field-error">
+        <i class="bi bi-exclamation-circle"></i> {{ 'components.openingHours.daysRequired' | translate }}
+      </span>
+    }
+  </div>
+
+  <!-- ── Mode + hours ─────────────────────────────────────── -->
+  @if (selected().length > 0) {
+    <div class="ohe-block">
+      <label class="jb-label">{{ 'components.openingHours.modeLabel' | translate }}</label>
+      <app-radio-group
+        [options]="modeOptions"
+        variant="pill"
+        [ariaLabel]="'components.openingHours.modeLabel' | translate"
+        [ngModel]="mode()"
+        (ngModelChange)="setMode($event)"
+        [ngModelOptions]="{ standalone: true }"></app-radio-group>
+    </div>
+
+    @if (mode() === 'SAME') {
+      <!-- One range shared by every selected day -->
+      <div class="ohe-block">
+        <label class="jb-label">
+          {{ 'components.openingHours.sharedHoursLabel' | translate }} <span class="text-danger">*</span>
+        </label>
+        <div class="ohe-range">
+          <app-time-input class="ohe-range__field"
+            [minuteStep]="15"
+            [clearable]="false"
+            [invalid]="invalid() && !sameOpen()"
+            [ariaLabel]="'components.openingHours.openLabel' | translate"
+            [placeholder]="'components.openingHours.openLabel' | translate"
+            [ngModel]="sameOpen()"
+            (ngModelChange)="setSameTime('open', $event)"
+            [ngModelOptions]="{ standalone: true }"></app-time-input>
+
+          <span class="ohe-range__sep">{{ 'components.openingHours.to' | translate }}</span>
+
+          <app-time-input class="ohe-range__field"
+            [minuteStep]="15"
+            [clearable]="false"
+            [invalid]="invalid() && !sameClose()"
+            [ariaLabel]="'components.openingHours.closeLabel' | translate"
+            [placeholder]="'components.openingHours.closeLabel' | translate"
+            [ngModel]="sameClose()"
+            (ngModelChange)="setSameTime('close', $event)"
+            [ngModelOptions]="{ standalone: true }"></app-time-input>
+        </div>
+
+        <button type="button" class="ohe-24h" [class.ohe-24h--on]="same24h()"
+          [attr.aria-pressed]="same24h()" [disabled]="isDisabled()" (click)="toggleSame24h()">
+          <i class="bi" [class.bi-check-square-fill]="same24h()" [class.bi-square]="!same24h()"></i>
+          {{ 'components.openingHours.open24h' | translate }}
+        </button>
+
+        <p class="jb-field-hint">
+          <i class="bi bi-info-circle"></i> {{ 'components.openingHours.sameHint' | translate }}
+        </p>
+      </div>
+    } @else {
+      <!-- A separate range per selected day -->
+      <div class="ohe-block">
+        <label class="jb-label">
+          {{ 'components.openingHours.perDayHoursLabel' | translate }} <span class="text-danger">*</span>
+        </label>
+
+        <div class="ohe-days">
+          @for (day of orderedSelection(); track day) {
+            <div class="ohe-day">
+              <span class="ohe-day__name">{{ DAY_LABEL_KEYS[day] | translate }}</span>
+
+              @if (dayOf(day).is24h) {
+                <span class="ohe-day__all">{{ 'components.openingHours.open24h' | translate }}</span>
+              } @else {
+                <div class="ohe-range ohe-range--compact">
+                  <app-time-input class="ohe-range__field"
+                    [minuteStep]="15"
+                    [clearable]="false"
+                    [invalid]="invalid() && !dayOf(day).open"
+                    [ariaLabel]="(DAY_LABEL_KEYS[day] | translate) + ' — ' + ('components.openingHours.openLabel' | translate)"
+                    [placeholder]="'components.openingHours.openLabel' | translate"
+                    [ngModel]="dayOf(day).open"
+                    (ngModelChange)="setDayTime(day, 'open', $event)"
+                    [ngModelOptions]="{ standalone: true }"></app-time-input>
+
+                  <span class="ohe-range__sep">{{ 'components.openingHours.to' | translate }}</span>
+
+                  <app-time-input class="ohe-range__field"
+                    [minuteStep]="15"
+                    [clearable]="false"
+                    [invalid]="invalid() && !dayOf(day).close"
+                    [ariaLabel]="(DAY_LABEL_KEYS[day] | translate) + ' — ' + ('components.openingHours.closeLabel' | translate)"
+                    [placeholder]="'components.openingHours.closeLabel' | translate"
+                    [ngModel]="dayOf(day).close"
+                    (ngModelChange)="setDayTime(day, 'close', $event)"
+                    [ngModelOptions]="{ standalone: true }"></app-time-input>
+                </div>
+              }
+
+              <button type="button" class="ohe-24h ohe-24h--inline" [class.ohe-24h--on]="dayOf(day).is24h"
+                [attr.aria-pressed]="dayOf(day).is24h" [disabled]="isDisabled()" (click)="toggleDay24h(day)">
+                <i class="bi" [class.bi-check-square-fill]="dayOf(day).is24h" [class.bi-square]="!dayOf(day).is24h"></i>
+                {{ 'components.openingHours.open24hShort' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+
+        <p class="jb-field-hint">
+          <i class="bi bi-info-circle"></i> {{ 'components.openingHours.perDayHint' | translate }}
+        </p>
+      </div>
+    }
+  }
+
+</div>

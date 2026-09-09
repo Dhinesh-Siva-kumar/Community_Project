@@ -1,6 +1,6 @@
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { deleteUploadedFiles } from '../../services/upload-storage.service';
+import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
 import { getUserCountry, applyNonAdminVisibilityRestriction } from '../../services/community-visibility.service';
 import * as notificationsService from '../notifications/notifications.service';
@@ -24,6 +24,7 @@ function formatPost(row: Record<string, unknown>, commentCount: number, likeCoun
     id: row['id'],
     content: row['content'],
     images: row['images'],
+    video: row['video'] ?? null,
     type: row['type'],
     status: row['status'],
     rejectionReason: row['rejection_reason'] ?? null,
@@ -119,6 +120,7 @@ export async function create(data: CreatePostDtoType, userId: string) {
       user_id: userId,
       type: data.type ?? 'GENERAL',
       images: data.images ?? [],
+      video: data.video ?? null,
       status,
     })
     .returning('*');
@@ -433,6 +435,7 @@ export async function deletePost(postId: string, userId: string) {
 
   await db('posts').where({ id: postId }).delete();
   deleteUploadedFiles(post['images']);
+  deleteUploadedFile(post['video']);
 
   const byAdmin = post['user_id'] !== userId;
   await logAudit(userId, 'POST_DELETED', { byAdmin, communityId: post['community_id'] }, 'posts', postId);
@@ -457,6 +460,7 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
   if (data.content  !== undefined) updateFields['content'] = data.content;
   if (data.type     !== undefined) updateFields['type']    = data.type;
   if (data.images   !== undefined) updateFields['images']  = data.images;
+  if (data.video    !== undefined) updateFields['video']   = data.video;
 
   // Resubmitting a rejected or needs-info post: the author editing their own
   // post re-enters the approval gate exactly like a brand-new post, instead
@@ -475,6 +479,12 @@ export async function updatePost(postId: string, userId: string, data: UpdatePos
     const oldImages = Array.isArray(post['images']) ? (post['images'] as unknown[]) : [];
     const newImages = data.images ?? [];
     deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  }
+
+  // Same rule for the video: drop the old file once it is no longer the
+  // one referenced by the row, whether it was replaced or cleared.
+  if (data.video !== undefined && post['video'] && post['video'] !== data.video) {
+    deleteUploadedFile(post['video']);
   }
 
   if (updateFields['status'] === 'PENDING') {

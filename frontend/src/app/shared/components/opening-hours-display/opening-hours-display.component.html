@@ -1,0 +1,62 @@
+<div class="ohd" [class.ohd--section]="variant() === 'section'">
+
+  @if (!hasAnything()) {
+    <p class="ohd-empty">{{ 'components.openingHours.noneSet' | translate }}</p>
+  } @else {
+
+    @if (hasStructured()) {
+      <!-- Open-now status, evaluated against the viewer's own device clock —
+           businesses carry no timezone, so the pill says so out loud. -->
+      <div class="ohd-status" [class.ohd-status--open]="isOpenNow()">
+        <span class="ohd-status__dot"></span>
+        <span class="ohd-status__text">
+          {{ (isOpenNow() ? 'components.openingHours.openNow' : 'components.openingHours.closedNow') | translate }}
+          – {{ 'components.openingHours.deviceTimeHint' | translate }}
+        </span>
+      </div>
+
+      <!-- Week-at-a-glance mini grid. -->
+      <div class="ohd-mini" role="list">
+        @for (row of rows(); track row.key) {
+          <div class="ohd-mini__day" [class.ohd-mini__day--closed]="!row.open" role="listitem"
+            [attr.title]="row.labelKey | translate">
+            <span class="ohd-mini__label">{{ DAY_SHORT_KEYS[row.key] | translate }}</span>
+            <span class="ohd-mini__value" [class.ohd-mini__value--24h]="row.is24h">
+              {{ row.open ? row.shortRange : ('components.openingHours.closed' | translate) }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <ul class="ohd-table">
+        @for (row of rows(); track row.key) {
+          <li class="ohd-row" [class.ohd-row--closed]="!row.open">
+            <span class="ohd-row__day">
+              <span class="ohd-row__dot"></span>{{ row.labelKey | translate }}
+            </span>
+            @if (!row.open) {
+              <span class="ohd-row__closed">{{ 'components.openingHours.closed' | translate }}</span>
+            } @else if (row.is24h) {
+              <span class="ohd-row__24h">{{ 'components.openingHours.open24h' | translate }}</span>
+            } @else {
+              <span class="ohd-row__hours">{{ row.range }}</span>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <!-- Un-migrated business: no per-day structure to draw from, only the
+           plain day pills + the original single free-text line. -->
+      <div class="ohd-pills" role="list">
+        @for (day of DAY_KEYS; track day) {
+          <span class="ohd-pill" [class.ohd-pill--on]="isActiveDay(day)" role="listitem"
+            [attr.title]="DAY_LABEL_KEYS[day] | translate">{{ DAY_SHORT_KEYS[day] | translate }}</span>
+        }
+      </div>
+      @if (legacyHours()) {
+        <p class="ohd-legacy"><i class="bi bi-clock"></i> {{ legacyHours() }}</p>
+      }
+    }
+  }
+
+</div>

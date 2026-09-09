@@ -34,47 +34,63 @@ export async function deleteCategory(req: Request, res: Response, next: NextFunc
   } catch (err) { next(err); }
 }
 
+/**
+ * The three separate business galleries. Each has its own multipart file
+ * field, its own DTO field, and (on update) its own kept-list of URLs the
+ * user didn't remove — see the note in `update` below.
+ */
+const GALLERY_FIELDS = [
+  { file: 'images', body: 'images', kept: 'existingImages' },
+  { file: 'menuImages', body: 'menuImages', kept: 'existingMenuImages' },
+  { file: 'cardImages', body: 'cardImages', kept: 'existingCardImages' },
+] as const;
+
+/** Sharp-validates a gallery's uploads, then writes them to disk. */
+async function saveGalleryFiles(
+  gallery: Express.Multer.File[],
+): Promise<{ ok: true; paths: string[] } | { ok: false; errors: unknown }> {
+  if (gallery.length === 0) return { ok: true, paths: [] };
+  const validation = await FileValidationService.validateMulterFiles(gallery);
+  if (!validation.valid) return { ok: false, errors: validation.invalidFiles };
+
+  const filenames = await Promise.all(
+    gallery.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
+  );
+  return { ok: true, paths: filenames.map((f) => `/uploads/${f}`) };
+}
+
+/** Validates and stores the optional logo, writing it onto `rawBody`. */
+async function saveLogoFile(
+  logoFiles: Express.Multer.File[],
+  rawBody: Record<string, unknown>,
+): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  if (logoFiles.length === 0) return { ok: true };
+  const validation = await FileValidationService.validateMulterFile(logoFiles[0]);
+  if (!validation.valid) return { ok: false, error: validation.error };
+
+  const filename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'business');
+  rawBody['logo'] = `/uploads/${filename}`;
+  return { ok: true };
+}
+
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Record<string, Express.Multer.File[]> | undefined) ?? {};
-    const imageFiles = files['images'] ?? [];
-    const logoFiles = files['logo'] ?? [];
+    const rawBody = { ...req.body };
 
-    // Validate uploaded images
-    const validation = await FileValidationService.validateMulterFiles(imageFiles);
-    if (!validation.valid) {
-      res.status(400).json({
-        message: 'Image validation failed',
-        errors: validation.invalidFiles,
-      });
-      return;
-    }
-
-    // Validate logo if present
-    if (logoFiles.length > 0) {
-      const logoValidation = await FileValidationService.validateMulterFile(logoFiles[0]);
-      if (!logoValidation.valid) {
-        res.status(400).json({
-          message: 'Logo validation failed',
-          error: logoValidation.error,
-        });
+    for (const gallery of GALLERY_FIELDS) {
+      const saved = await saveGalleryFiles(files[gallery.file] ?? []);
+      if (!saved.ok) {
+        res.status(400).json({ message: 'Image validation failed', errors: saved.errors });
         return;
       }
+      if (saved.paths.length) rawBody[gallery.body] = saved.paths;
     }
 
-    // Save validated files to disk
-    const filenames = await Promise.all(
-      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
-    );
-    const imagePaths = filenames.map((f) => `/uploads/${f}`);
-
-    const rawBody = { ...req.body };
-    if (imagePaths.length) rawBody['images'] = imagePaths;
-
-    // Save logo if present
-    if (logoFiles.length > 0) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'business');
-      rawBody['logo'] = `/uploads/${logoFilename}`;
+    const logo = await saveLogoFile(files['logo'] ?? [], rawBody);
+    if (!logo.ok) {
+      res.status(400).json({ message: 'Logo validation failed', error: logo.error });
+      return;
     }
 
     const body = CreateBusinessDto.parse(rawBody);
@@ -87,7 +103,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   try {
     const query = ListBusinessQueryDto.parse(req.query);
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await businessService.findAll({ ...query, skipActiveFilter });
+    const result = await businessService.findAll({ ...query, skipActiveFilter, viewerId: req.user!.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -148,66 +164,49 @@ export async function findOne(req: Request, res: Response, next: NextFunction): 
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const files = (req.files as Record<string, Express.Multer.File[]> | undefined) ?? {};
-    const imageFiles = files['images'] ?? [];
-    const logoFiles = files['logo'] ?? [];
+    const rawBody = { ...req.body };
 
-    // Validate uploaded images
-    const validation = await FileValidationService.validateMulterFiles(imageFiles);
-    if (!validation.valid) {
-      res.status(400).json({
-        message: 'Image validation failed',
-        errors: validation.invalidFiles,
-      });
-      return;
-    }
-
-    // Validate logo if present
-    if (logoFiles.length > 0) {
-      const logoValidation = await FileValidationService.validateMulterFile(logoFiles[0]);
-      if (!logoValidation.valid) {
-        res.status(400).json({
-          message: 'Logo validation failed',
-          error: logoValidation.error,
-        });
+    // Each gallery's kept-list (e.g. `existingImages`, a JSON-stringified
+    // string[] sent alongside the `images` file field) carries the URLs the
+    // user chose to KEEP — i.e. didn't remove — on this edit. Without it,
+    // uploading new photos would silently wipe out every existing one
+    // instead of adding to them. It has to be a JSON *string* rather than a
+    // repeated form field because an empty array would otherwise vanish
+    // from the request entirely, which is indistinguishable from "not sent".
+    //
+    // Only rebuild a gallery when it was actually touched (a kept-list was
+    // sent, or new files were uploaded); otherwise leave it out of the DTO
+    // so the service's `!== undefined` check skips the column and the
+    // existing gallery is left alone.
+    for (const gallery of GALLERY_FIELDS) {
+      const saved = await saveGalleryFiles(files[gallery.file] ?? []);
+      if (!saved.ok) {
+        res.status(400).json({ message: 'Image validation failed', errors: saved.errors });
         return;
+      }
+
+      const keptRaw = rawBody[gallery.kept];
+      delete rawBody[gallery.kept];
+
+      let kept: string[] = [];
+      let keptProvided = false;
+      if (typeof keptRaw === 'string') {
+        keptProvided = true;
+        try {
+          const parsed = JSON.parse(keptRaw);
+          if (Array.isArray(parsed)) kept = parsed.filter((v): v is string => typeof v === 'string');
+        } catch { /* malformed — treat as no images kept */ }
+      }
+
+      if (keptProvided || saved.paths.length > 0) {
+        rawBody[gallery.body] = [...kept, ...saved.paths];
       }
     }
 
-    // Save validated files to disk
-    const filenames = await Promise.all(
-      imageFiles.map((f) => saveBufferToFile(f.buffer, f.originalname, 'business'))
-    );
-    const newImagePaths = filenames.map((f) => `/uploads/${f}`);
-
-    const rawBody = { ...req.body };
-
-    // `existingImages` (a JSON-stringified string[], sent separately from
-    // the `images` file field) carries the gallery URLs the admin chose to
-    // KEEP — i.e. didn't remove — on this edit. Without it, uploading new
-    // photos would silently wipe out every existing one instead of adding
-    // to them. Only rebuild `images` when the gallery was actually touched
-    // (a kept-list was sent, or new files were uploaded); otherwise leave
-    // it out of the DTO so the service's `data.images !== undefined` check
-    // skips the column entirely and the existing gallery is left alone.
-    const existingImagesRaw = rawBody['existingImages'];
-    delete rawBody['existingImages'];
-    let keptImages: string[] = [];
-    let existingImagesProvided = false;
-    if (typeof existingImagesRaw === 'string') {
-      existingImagesProvided = true;
-      try {
-        const parsed = JSON.parse(existingImagesRaw);
-        if (Array.isArray(parsed)) keptImages = parsed.filter((v): v is string => typeof v === 'string');
-      } catch { /* malformed — treat as no photos kept */ }
-    }
-    if (existingImagesProvided || newImagePaths.length > 0) {
-      rawBody['images'] = [...keptImages, ...newImagePaths];
-    }
-
-    // Save logo if present
-    if (logoFiles.length > 0) {
-      const logoFilename = await saveBufferToFile(logoFiles[0].buffer, logoFiles[0].originalname, 'business');
-      rawBody['logo'] = `/uploads/${logoFilename}`;
+    const logo = await saveLogoFile(files['logo'] ?? [], rawBody);
+    if (!logo.ok) {
+      res.status(400).json({ message: 'Logo validation failed', error: logo.error });
+      return;
     }
 
     const body = UpdateBusinessDto.parse(rawBody);

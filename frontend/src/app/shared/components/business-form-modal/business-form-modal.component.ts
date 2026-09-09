@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, Observable, map } from 'rxjs';
@@ -7,10 +7,13 @@ import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
-import { Business, BusinessCategory, Country, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
+import { Business, BusinessCategory, Country, GeoCountry, CountryAddressConfig, Division, OpeningHoursJson } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
+import { OpeningHoursEditorComponent } from '../opening-hours-editor/opening-hours-editor.component';
+import { RadioGroupComponent, RadioOption } from '../radio-group/radio-group.component';
+import { deriveLegacyDays, parseLegacyOpeningHours } from '../../utils/opening-hours';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { getPhoneRule } from '../../utils/phone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -45,7 +48,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 @Component({
   selector: 'app-business-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, ImageUrlPipe, TranslatePipe, ScrollLockDirective],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, ToggleComponent, FileUploadComponent, OpeningHoursEditorComponent, RadioGroupComponent, ImageUrlPipe, TranslatePipe, ScrollLockDirective],
   templateUrl: './business-form-modal.component.html',
   styleUrls: ['./business-form-modal.component.scss'],
 })
@@ -62,6 +65,12 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   @Input() editBusinessId: string | null = null;
   /** Pre-selected category for the "Add" entry point reached from within a category browse view. */
   @Input() defaultCategoryId: string | null = null;
+  /**
+   * Rendered inside the admin console. Only affects copy — the admin page
+   * uses this same modal rather than keeping its own duplicate of the form.
+   * Authorization stays entirely server-side.
+   */
+  @Input() isAdmin = false;
 
   @Output() closed = new EventEmitter<void>();
   /** Emitted after a successful create/update; the host is responsible for updating its own list state. */
@@ -78,13 +87,70 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     this.categories().map(c => ({ value: c.id, label: c.name }))
   );
 
-  // Image / Logo
-  selectedImages         = signal<File[]>([]);
-  fileUploadReset        = signal(0);
-  selectedLogo            = signal<File | null>(null);
-  logoPreview            = signal<string | null>(null);
-  logoUploadReset        = signal(0);
+  // ── Logo ──
+  selectedLogo  = signal<File | null>(null);
+  logoPreview   = signal<string | null>(null);
+  logoUploadReset = signal(0);
+
+  // ── The three galleries ──
+  // Each carries the same trio of state: newly picked files, the existing
+  // URLs the user hasn't removed, and a counter that resets its uploader.
+  // GALLERIES below drives one set of markup in the template instead of
+  // three near-identical copies.
+  selectedImages     = signal<File[]>([]);
+  selectedMenuImages = signal<File[]>([]);
+  selectedCardImages = signal<File[]>([]);
+
   existingGalleryImages = signal<string[]>([]);
+  existingMenuImages    = signal<string[]>([]);
+  existingCardImages    = signal<string[]>([]);
+
+  fileUploadReset     = signal(0);
+  menuUploadReset     = signal(0);
+  cardUploadReset     = signal(0);
+
+  readonly GALLERIES = [
+    {
+      key: 'gallery' as const, num: '05',
+      icon: 'bi-images',
+      titleKey: 'components.businessForm.galleryLabel',
+      dropKey: 'components.fileUpload.dragGalleryImages',
+      selected: this.selectedImages, existing: this.existingGalleryImages, reset: this.fileUploadReset,
+      source: (b: Business) => b.images ?? [],
+    },
+    {
+      key: 'menu' as const, num: '06',
+      icon: 'bi-card-list',
+      titleKey: 'components.businessForm.menuImagesLabel',
+      dropKey: 'components.fileUpload.dragMenuImages',
+      selected: this.selectedMenuImages, existing: this.existingMenuImages, reset: this.menuUploadReset,
+      source: (b: Business) => b.menuImages ?? [],
+    },
+    {
+      key: 'card' as const, num: '07',
+      icon: 'bi-credit-card-2-front',
+      titleKey: 'components.businessForm.cardImagesLabel',
+      dropKey: 'components.fileUpload.dragCardImages',
+      selected: this.selectedCardImages, existing: this.existingCardImages, reset: this.cardUploadReset,
+      source: (b: Business) => b.cardImages ?? [],
+    },
+  ];
+
+  /**
+   * Whether the business being edited started with images in this gallery.
+   * Drives the "existing photos" block: without it, a gallery that was
+   * always empty would render a "all photos removed" note on every edit.
+   */
+  galleryHadImages(gallery: { source: (b: Business) => string[] }): boolean {
+    const biz = this.editingBusiness();
+    return !!biz && gallery.source(biz).length > 0;
+  }
+
+  // ── Visibility ──
+  readonly visibilityOptions: RadioOption[] = [
+    { value: 'COUNTRY', label: 'components.businessForm.visibilityCountry', icon: 'bi-geo-alt-fill' },
+    { value: 'WORLDWIDE', label: 'components.businessForm.visibilityWorldwide', icon: 'bi-globe2' },
+  ];
 
   // ── Country-aware address hierarchy (Country → Division(s) → City → Postal) ──
   // Mirrors the admin Business form's implementation — see
@@ -137,121 +203,9 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   // ── "Same as phone" checkbox for WhatsApp ──
   sameAsPhone = signal(false);
 
-  // Opening days
-  // Stored values stay English (the API contract); the template translates
-  // each through DAY_LABELS for display.
-  readonly DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  /** Short forms for the day toggles — slicing a Tamil word to 3 chars
-   * would cut it mid-grapheme, so each abbreviation is its own key. */
-  readonly DAY_SHORT: Record<string, string> = {
-    Monday:    'components.calendar.weekday.mon',
-    Tuesday:   'components.calendar.weekday.tue',
-    Wednesday: 'components.calendar.weekday.wed',
-    Thursday:  'components.calendar.weekday.thu',
-    Friday:    'components.calendar.weekday.fri',
-    Saturday:  'components.calendar.weekday.sat',
-    Sunday:    'components.calendar.weekday.sun',
-  };
-
-  readonly DAY_LABELS: Record<string, string> = {
-    Monday:    'components.businessForm.day.monday',
-    Tuesday:   'components.businessForm.day.tuesday',
-    Wednesday: 'components.businessForm.day.wednesday',
-    Thursday:  'components.businessForm.day.thursday',
-    Friday:    'components.businessForm.day.friday',
-    Saturday:  'components.businessForm.day.saturday',
-    Sunday:    'components.businessForm.day.sunday',
-  };
-  selectedDays = signal<string[]>([]);
-  toggleDay(day: string): void {
-    this.selectedDays.update(d => d.includes(day) ? d.filter(x => x !== day) : [...d, day]);
-    const ctrl = this.businessForm.get('openingDays');
-    ctrl?.setValue(this.selectedDays().join(','));
-    ctrl?.markAsTouched();
-    ctrl?.updateValueAndValidity();
-  }
-
-  // Opening hours time pickers
-  openingHoursTouched = signal(false);
-  timeDropdownOpen = signal<'from' | 'to' | null>(null);
-
-  /** Generate time options in 30-min intervals: 00:00, 00:30, 01:00 ... 23:30 */
-  readonly TIME_OPTIONS: string[] = Array.from({ length: 48 }, (_, i) => {
-    const h = Math.floor(i / 2);
-    const m = i % 2 === 0 ? '00' : '30';
-    return `${String(h).padStart(2, '0')}:${m}`;
-  });
-
-  displayTime(time24: string): string {
-    if (!time24) return this.translate.instant('components.businessForm.selectTime');
-    const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return this.translate.instant('components.businessForm.selectTime');
-    const period = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-  }
-
-  openTimeDropdown(type: 'from' | 'to'): void {
-    this.timeDropdownOpen.set(type);
-  }
-
-  closeTimeDropdown(): void {
-    this.timeDropdownOpen.set(null);
-  }
-
-  selectTime(type: 'from' | 'to', value: string): void {
-    this.businessForm.get(type === 'from' ? 'openingHoursFrom' : 'openingHoursTo')?.setValue(value);
-    this.closeTimeDropdown();
-    this.markOpeningHoursTouched();
-  }
-
-  markOpeningHoursTouched(): void {
-    this.openingHoursTouched.set(true);
-  }
-
-  /** Convert "09:00" (24h) → "9:00 AM" (12h) */
-  private formatTo12h(time24: string): string {
-    if (!time24) return '';
-    const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return '';
-    const period = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-  }
-
-  /** Parse "9:00 AM" (12h) → "09:00" (24h) */
-  private parseTo24h(time12: string): string {
-    if (!time12) return '';
-    const cleaned = time12.trim().toUpperCase();
-    const match = cleaned.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-    if (!match) return '';
-    let h = parseInt(match[1], 10);
-    const m = match[2];
-    const p = match[3];
-    if (p === 'PM' && h !== 12) h += 12;
-    if (p === 'AM' && h === 12) h = 0;
-    return `${String(h).padStart(2, '0')}:${m}`;
-  }
-
-  /** Parse existing openingHours string into from/to and set the form */
-  private parseOpeningHoursToForm(hours: string): void {
-    if (!hours) return;
-    const dashMatch = hours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[–\-]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
-    if (dashMatch) {
-      const from = this.parseTo24h(dashMatch[1].trim());
-      const to   = this.parseTo24h(dashMatch[2].trim());
-      if (from) this.businessForm.get('openingHoursFrom')?.setValue(from);
-      if (to)   this.businessForm.get('openingHoursTo')?.setValue(to);
-      return;
-    }
-    const hyphenMatch = hours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[-–]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
-    if (hyphenMatch) {
-      const from = this.parseTo24h(hyphenMatch[1].trim());
-      const to   = this.parseTo24h(hyphenMatch[2].trim());
-      if (from) this.businessForm.get('openingHoursFrom')?.setValue(from);
-      if (to)   this.businessForm.get('openingHoursTo')?.setValue(to);
-    }
-  }
+  // Opening days & hours are owned entirely by app-opening-hours-editor,
+  // which binds to the `openingHoursJson` control, marks it touched through
+  // the CVA and reports its own validity — nothing to track here.
 
   // Auto-generated maps link tracking
   mapsLinkAutoGenerated = signal(false);
@@ -298,10 +252,10 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       pincode:      ['', [postalCodeValidator(null)]],
       phoneCountryId: [null, Validators.required],
       phone:        ['', [Validators.required, Validators.maxLength(15), this.phoneValidator()]],
-      openingDays:  ['', Validators.required],
-      openingHours: ['', Validators.required],
-      openingHoursFrom: ['09:00'],
-      openingHoursTo: ['17:00'],
+      // Structured days + hours in one control. The editor component is
+      // both the CVA and the validator, so `required` here only guards the
+      // null/empty case and the per-day rules live with the editor.
+      openingHoursJson: [null as OpeningHoursJson | null, Validators.required],
       email:        ['', [Validators.email, Validators.maxLength(255)]],
       website:      ['', [urlValidator, Validators.maxLength(500)]],
       sameAsPhone:  [false],
@@ -314,9 +268,10 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       // Settable by the owner or an admin — reset()'s default (below) is
       // this literal `true`, matching the DB column's own default.
       isActive:     [true],
+      // Country Based is the default, matching the DB column default.
+      visibilityType: ['COUNTRY', Validators.required],
     });
 
-    this.setupOpeningHoursSync();
     this.setupMapsLinkAutoGeneration();
 
     // Re-run phone validation whenever the phone country changes — also
@@ -356,21 +311,6 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
           this.businessForm.get('whatsapp')?.setValue(val ?? '');
         }
       });
-  }
-
-  private setupOpeningHoursSync(): void {
-    combineLatest([
-      (this.businessForm.get('openingHoursFrom')?.valueChanges ?? new Subject()),
-      (this.businessForm.get('openingHoursTo')?.valueChanges ?? new Subject()),
-    ]).pipe(takeUntil(this.destroy$)).subscribe(() => {
-      const from = this.formatTo12h(this.businessForm.get('openingHoursFrom')?.value ?? '');
-      const to   = this.formatTo12h(this.businessForm.get('openingHoursTo')?.value ?? '');
-      if (from && to) {
-        this.businessForm.get('openingHours')?.setValue(`${from} – ${to}`);
-      } else {
-        this.businessForm.get('openingHours')?.setValue('');
-      }
-    });
   }
 
   private setupMapsLinkAutoGeneration(): void {
@@ -519,20 +459,21 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
 
   private resetForCreate(): void {
     this.editingBusiness.set(null);
-    this.businessForm.reset();
+    // A bare reset() nulls every control — including `isActive`, which must
+    // start Active (matching the DB default) for a new business, and
+    // `visibilityType`, which defaults to Country Based. Both are restored
+    // here rather than left for the template to guess.
+    this.businessForm.reset({ isActive: true, visibilityType: 'COUNTRY' });
     this.businessSubmitAttempted.set(false);
     // reset() clears phoneCountryId/whatsappCountryId — re-apply the India
     // default (applyDefaultPhoneCountry() only auto-fills them once, on first load).
     this.applyDefaultPhoneCountry();
-    this.selectedImages.set([]); this.selectedLogo.set(null); this.logoPreview.set(null);
-    this.existingGalleryImages.set([]);
-    this.selectedDays.set([]);
-    this.businessForm.get('openingDays')?.setValue('');
+    this.selectedLogo.set(null); this.logoPreview.set(null);
+    this.clearGalleryState();
     this.resetDivisionState();
     this.applyDivisionValidators();
     this.applyPincodeValidators();
-    this.fileUploadReset.update(v => v + 1); this.logoUploadReset.update(v => v + 1);
-    this.openingHoursTouched.set(false);
+    this.logoUploadReset.update(v => v + 1);
     if (this.defaultCategoryId) this.businessForm.get('categoryId')?.setValue(this.defaultCategoryId);
   }
 
@@ -547,9 +488,15 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     this.editingBusiness.set(biz);
     this.businessSubmitAttempted.set(false);
 
-    const days = biz.openingDays ?? (biz as any).opening_days ?? '';
-    const parsedDays = days ? days.split(',').map((d: string) => d.trim()).filter(Boolean) : [];
-    this.selectedDays.set(parsedDays);
+    // Structured hours when the business has them; otherwise reconstruct
+    // them from the two legacy free-text fields, so editing a business
+    // created before this feature pre-fills the editor instead of showing
+    // an empty required field. Unparsable free text falls through as null.
+    const openingHoursJson = biz.openingHoursJson
+      ?? parseLegacyOpeningHours(
+        biz.openingDays ?? (biz as any).opening_days ?? null,
+        biz.openingHours ?? (biz as any).opening_hours ?? null,
+      );
 
     this.businessForm.patchValue({
       name:         biz.name         ?? '',
@@ -560,11 +507,12 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       email:        biz.email        ?? '',
       website:      biz.website      ?? '',
       mapsLink:     biz.mapsLink     ?? (biz as any).maps_link ?? '',
-      openingDays:  parsedDays.join(','),
+      openingHoursJson,
       country:      biz.country      ?? '',
       latitude:     biz.latitude     ?? '',
       longitude:    biz.longitude    ?? '',
       isActive:     biz.isActive     ?? true,
+      visibilityType: biz.visibilityType ?? (biz as any).visibility_type ?? 'COUNTRY',
     });
 
     // Phone/WhatsApp are stored as "<dial_code> <digits>" — split each back
@@ -592,17 +540,16 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       });
     }
 
-    // Parse existing openingHours into the time pickers
-    this.parseOpeningHoursToForm(biz.openingHours ?? (biz as any).opening_hours ?? '');
-
     // Logo
     const logoUrl = biz.logo ?? (biz.images?.length ? biz.images[0] : null);
     this.selectedLogo.set(null);
     this.logoPreview.set(logoUrl ?? null);
-    this.selectedImages.set([]);
-    this.existingGalleryImages.set(biz.images ? [...biz.images] : []);
-    this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
+
+    this.clearGalleryState();
+    this.existingGalleryImages.set([...(biz.images ?? [])]);
+    this.existingMenuImages.set([...(biz.menuImages ?? (biz as any).menu_images ?? [])]);
+    this.existingCardImages.set([...(biz.cardImages ?? (biz as any).card_images ?? [])]);
 
     // Country-aware address hierarchy — resurrected directly from the
     // stored ids (countryId/stateId/cityId + stateChain, all returned by
@@ -667,10 +614,6 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       this.selectedCityOption.set({ value: cityId, label: cityName ?? '' });
       if (cityName) this.cityNameCache.set(cityId, cityName);
     }
-  }
-
-  removeExistingImage(img: string): void {
-    this.existingGalleryImages.update(imgs => imgs.filter(i => i !== img));
   }
 
   private getLeafDivisionId(): number | null {
@@ -790,8 +733,23 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     this.logoUploadReset.update(v => v + 1);
   }
 
-  onBusinessImagesChange(files: File[]): void {
-    this.selectedImages.set(files);
+  /** Newly picked files for one gallery — `gallery` comes from GALLERIES. */
+  onGalleryFilesChange(gallery: { selected: WritableSignal<File[]> }, files: File[]): void {
+    gallery.selected.set(files);
+  }
+
+  /** Drops one already-uploaded image from a gallery's kept-list. */
+  removeExistingGalleryImage(gallery: { existing: WritableSignal<string[]> }, url: string): void {
+    gallery.existing.update(list => list.filter(i => i !== url));
+  }
+
+  /** Clears every gallery's picked files, kept-list and uploader. */
+  private clearGalleryState(): void {
+    for (const g of this.GALLERIES) {
+      g.selected.set([]);
+      g.existing.set([]);
+      g.reset.update(v => v + 1);
+    }
   }
 
   requestClose(): void {
@@ -851,24 +809,38 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       raw['whatsapp'] = '';
     }
 
-    raw['openingDays'] = this.selectedDays().join(',');
+    // Nested objects can't survive FormData, so the structured hours go as
+    // a JSON string. `openingDays` is still derived and sent so the value
+    // is right even on the plain-JSON (no files) path.
+    const hours = raw['openingHoursJson'] as OpeningHoursJson | null;
+    raw['openingHoursJson'] = hours ? JSON.stringify(hours) : '';
+    raw['openingDays'] = deriveLegacyDays(hours);
 
     delete raw['phoneCountryId'];
     delete raw['whatsappCountryId'];
-    delete raw['openingHoursFrom'];
-    delete raw['openingHoursTo'];
 
-    const images = this.selectedImages();
-    const logo = this.selectedLogo();
     const editing = this.editingBusiness();
-    // Existing gallery photos the user didn't remove — sent alongside any
-    // newly uploaded files so the backend can rebuild the full gallery
-    // (kept + new) instead of the new upload wiping everything out.
-    if (editing) raw['existingImages'] = JSON.stringify(this.existingGalleryImages());
+    if (editing) {
+      // The images in each gallery the user didn't remove, sent alongside
+      // any newly uploaded files so the backend rebuilds the full gallery
+      // (kept + new) instead of the new upload wiping everything out.
+      // JSON strings, not arrays: an empty array would vanish from the
+      // FormData entirely and read as "gallery untouched".
+      raw['existingImages'] = JSON.stringify(this.existingGalleryImages());
+      raw['existingMenuImages'] = JSON.stringify(this.existingMenuImages());
+      raw['existingCardImages'] = JSON.stringify(this.existingCardImages());
+    }
+
+    const files = {
+      images: this.selectedImages(),
+      menuImages: this.selectedMenuImages(),
+      cardImages: this.selectedCardImages(),
+      logo: this.selectedLogo() ?? undefined,
+    };
 
     const req = editing
-      ? this.svc.updateBusiness(editing.id, raw, images.length > 0 ? images : undefined, logo ?? undefined)
-      : this.svc.createBusiness(raw, images.length > 0 ? images : undefined, logo ?? undefined);
+      ? this.svc.updateBusiness(editing.id, raw, files)
+      : this.svc.createBusiness(raw, files);
 
     req.subscribe({
       next: (biz) => {

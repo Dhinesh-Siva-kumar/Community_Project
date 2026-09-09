@@ -15,6 +15,7 @@ import { CommunityLeaveModalComponent } from '../../../shared/components/communi
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe } from '@ngx-translate/core';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -29,7 +30,7 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })

@@ -467,6 +467,9 @@
             @for (post of myPosts(); track post.id) {
               <div class="prf-item">
                 <div class="prf-item__lead">
+                  @if (post.video) {
+                    <app-post-video [src]="post.video" variant="thumb" class="prf-item__thumb"></app-post-video>
+                  }
                   @if (post.images?.length) {
                     <img [src]="post.images[0] | imageUrl" class="prf-item__thumb" [alt]="'user.profile.postImage' | translate" loading="lazy" fetchpriority="auto" />
                   }

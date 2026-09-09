@@ -1,0 +1,232 @@
+@let biz = business();
+
+<div class="bdv-layout">
+
+  <!-- ══ Main column: Business Information + the three image categories ══ -->
+  <div class="bdv-col bdv-col--main">
+
+    <!-- ══ 01 · Business Information ══════════════════════════ -->
+    <section class="bdv-section">
+      <h3 class="bdv-section__title">
+        <span class="bdv-section__badge"><i class="bi bi-info-circle-fill"></i></span>
+        <span class="bdv-section__heading">
+          <span class="bdv-section__num">01</span>
+          {{ 'components.businessDetail.businessInformation' | translate }}
+        </span>
+        @if (hasStructuredHours()) {
+          <span class="bdv-section__tag" [class.bdv-section__tag--open]="isOpenNow()">
+            <span class="bdv-section__tag-dot"></span>
+            {{ (isOpenNow() ? 'components.openingHours.openNow' : 'components.openingHours.closedNow') | translate }}
+          </span>
+        }
+        <span class="bdv-section__tag bdv-section__tag--neutral">
+          {{ (biz.visibilityType === 'WORLDWIDE'
+                ? 'components.businessForm.visibilityWorldwide'
+                : 'components.businessForm.visibilityCountry') | translate }}
+        </span>
+      </h3>
+
+      @if (biz.description) {
+        <div class="bdv-block">
+          <h4 class="bdv-block__title">{{ 'components.businessDetail.about' | translate }}</h4>
+          <div class="bdv-about">{{ biz.description }}</div>
+        </div>
+      }
+
+      <!-- Contact -->
+      <div class="bdv-block">
+        <h4 class="bdv-block__title">{{ 'components.businessDetail.contact' | translate }}</h4>
+        @if (hasContact()) {
+          <div class="bdv-contact-grid">
+            @if (biz.phone) {
+              <div class="bdv-contact-item">
+                <div class="bdv-contact-item__icon bdv-contact-item__icon--phone"><i class="bi bi-telephone-fill"></i></div>
+                <div class="bdv-contact-item__body">
+                  <span class="bdv-contact-item__label">{{ 'components.businessDetail.phone' | translate }}</span>
+                  <a [href]="'tel:' + biz.phone" class="bdv-contact-item__value">{{ biz.phone }}</a>
+                </div>
+              </div>
+            }
+            @if (biz.whatsapp) {
+              <div class="bdv-contact-item">
+                <div class="bdv-contact-item__icon bdv-contact-item__icon--whatsapp"><i class="bi bi-whatsapp"></i></div>
+                <div class="bdv-contact-item__body">
+                  <span class="bdv-contact-item__label">{{ 'components.businessDetail.whatsapp' | translate }}</span>
+                  <a [href]="whatsappUrl(biz.whatsapp)" target="_blank" rel="noopener" class="bdv-contact-item__value">{{ biz.whatsapp }}</a>
+                </div>
+              </div>
+            }
+            @if (biz.email) {
+              <div class="bdv-contact-item">
+                <div class="bdv-contact-item__icon bdv-contact-item__icon--email"><i class="bi bi-envelope-fill"></i></div>
+                <div class="bdv-contact-item__body">
+                  <span class="bdv-contact-item__label">{{ 'components.businessDetail.email' | translate }}</span>
+                  <a [href]="'mailto:' + biz.email" (click)="openMailto(biz.email!, $event)" class="bdv-contact-item__value bdv-contact-item__value--truncate">{{ biz.email }}</a>
+                </div>
+              </div>
+            }
+            @if (biz.website) {
+              <div class="bdv-contact-item">
+                <div class="bdv-contact-item__icon bdv-contact-item__icon--website"><i class="bi bi-globe2"></i></div>
+                <div class="bdv-contact-item__body">
+                  <span class="bdv-contact-item__label">{{ 'components.businessDetail.website' | translate }}</span>
+                  <a [href]="biz.website" target="_blank" rel="noopener" class="bdv-contact-item__value bdv-contact-item__value--truncate">{{ biz.website }}</a>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="bdv-empty">{{ 'components.businessDetail.noContact' | translate }}</p>
+        }
+      </div>
+
+      <!-- Location -->
+      <div class="bdv-block">
+        <h4 class="bdv-block__title">{{ 'components.businessDetail.location' | translate }}</h4>
+        @if (hasLocation()) {
+          <div class="bdv-location-box">
+            <div class="bdv-location-grid">
+              @if (biz.address) {
+                <div class="bdv-location-field">
+                  <span class="bdv-location-field__label">{{ 'components.businessDetail.address' | translate }}</span>
+                  <span class="bdv-location-field__value">{{ biz.address }}</span>
+                </div>
+              }
+              @if (biz.city) {
+                <div class="bdv-location-field">
+                  <span class="bdv-location-field__label">{{ 'components.businessDetail.city' | translate }}</span>
+                  <span class="bdv-location-field__value">{{ biz.city }}</span>
+                </div>
+              }
+              @if (biz.state) {
+                <div class="bdv-location-field">
+                  <span class="bdv-location-field__label">{{ 'components.businessDetail.state' | translate }}</span>
+                  <span class="bdv-location-field__value">{{ biz.state }}</span>
+                </div>
+              }
+              @if (biz.country) {
+                <div class="bdv-location-field">
+                  <span class="bdv-location-field__label">{{ 'components.businessDetail.country' | translate }}</span>
+                  <span class="bdv-location-field__value">{{ biz.country }}</span>
+                </div>
+              }
+              @if (biz.pincode) {
+                <div class="bdv-location-field">
+                  <span class="bdv-location-field__label">{{ 'components.businessDetail.pinCode' | translate }}</span>
+                  <span class="bdv-location-field__value">{{ biz.pincode }}</span>
+                </div>
+              }
+              <div class="bdv-location-field">
+                <span class="bdv-location-field__label">{{ 'components.businessDetail.visibility' | translate }}</span>
+                <span class="bdv-location-field__value">
+                  {{ (biz.visibilityType === 'WORLDWIDE'
+                        ? 'components.businessForm.visibilityWorldwide'
+                        : 'components.businessForm.visibilityCountry') | translate }}
+                </span>
+              </div>
+            </div>
+
+            @if (mapsUrl() !== '#') {
+              <a [href]="mapsUrl()" target="_blank" rel="noopener" class="bdv-location-link">
+                <i class="bi bi-map"></i>
+                {{ (hasOwnMapsLink() ? 'components.businessDetail.viewGoogleMaps' : 'components.businessDetail.getDirections') | translate }}
+                <i class="bi bi-arrow-right"></i>
+              </a>
+            }
+          </div>
+        } @else {
+          <p class="bdv-empty">{{ 'components.businessDetail.noLocation' | translate }}</p>
+        }
+      </div>
+    </section>
+
+    <!-- ══ 03–05 · The three image categories ════════════════
+         Always all three, each with its own empty state, so the
+         categories stay clearly separated and easy to scan. -->
+    @for (gallery of galleries(); track gallery.key) {
+      <section class="bdv-section">
+        <h3 class="bdv-section__title">
+          <span class="bdv-section__badge"><i class="bi" [ngClass]="gallery.icon"></i></span>
+          <span class="bdv-section__heading">
+            <span class="bdv-section__num">{{ gallery.num }}</span>
+            {{ gallery.titleKey | translate }}
+          </span>
+          @if (gallery.images.length) {
+            <span class="bdv-section__count">
+              {{ gallery.images.length }} {{ (gallery.images.length === 1 ? 'components.businessDetail.image' : 'components.businessDetail.images') | translate }}
+            </span>
+          }
+        </h3>
+
+        @if (gallery.images.length) {
+          <div class="bdv-media-grid" [class.bdv-media-grid--single]="gallery.images.length === 1">
+            @for (img of gallery.images; track img) {
+              <button type="button" class="bdv-media-card"
+                (click)="openImage(gallery.images, $index)"
+                [attr.aria-label]="gallery.caption($index, gallery.images.length) + ' — ' + biz.name">
+                <span class="bdv-media-card__frame">
+                  <img [src]="img | imageUrl" [alt]="gallery.caption($index, gallery.images.length)" class="bdv-media-card__img" loading="lazy" />
+                </span>
+                <span class="bdv-media-card__footer">
+                  <span class="bdv-media-card__text">
+                    <span class="bdv-media-card__caption">{{ gallery.caption($index, gallery.images.length) }}</span>
+                    @if (gallery.subtitle($index, gallery.images.length); as sub) {
+                      <span class="bdv-media-card__subtitle">{{ sub }}</span>
+                    }
+                  </span>
+                  <i class="bi bi-zoom-in bdv-media-card__zoom"></i>
+                </span>
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="bdv-empty">{{ gallery.emptyKey | translate }}</p>
+        }
+      </section>
+    }
+
+  </div>
+
+  <!-- ══ Side column: Opening Hours + Map preview, sticky on desktop ══ -->
+  <aside class="bdv-col bdv-col--side">
+
+    <!-- ══ 02 · Opening Days & Hours ══════════════════════════ -->
+    <section class="bdv-section">
+      <h3 class="bdv-section__title">
+        <span class="bdv-section__badge"><i class="bi bi-clock-fill"></i></span>
+        <span class="bdv-section__heading">
+          <span class="bdv-section__num">02</span>
+          {{ 'components.businessDetail.openingDaysAndHours' | translate }}
+        </span>
+      </h3>
+      <app-opening-hours-display variant="section"
+        [hoursJson]="biz.openingHoursJson"
+        [legacyDays]="biz.openingDays"
+        [legacyHours]="biz.openingHours"></app-opening-hours-display>
+    </section>
+
+    <!-- ══ Map preview ══════════════════════════════════════── -->
+    @if (mapEmbedUrl(); as embedUrl) {
+      <section class="bdv-map">
+        <div class="bdv-map__frame">
+          <iframe [src]="embedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            [title]="'components.businessDetail.mapPreview' | translate"></iframe>
+          <span class="bdv-map__pin"><i class="bi bi-pin-map-fill"></i>{{ mapPinLabel() }}</span>
+        </div>
+        <div class="bdv-map__footer">
+          <div class="bdv-map__info">
+            <h4 class="bdv-map__name">{{ biz.name }}</h4>
+            <p class="bdv-map__address">{{ mapAddressLine() }}</p>
+          </div>
+          @if (mapsUrl() !== '#') {
+            <a class="bdv-map__btn" [href]="mapsUrl()" target="_blank" rel="noopener">
+              <i class="bi bi-signpost-split-fill"></i>{{ 'components.businessDetail.getDirections' | translate }}
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+  </aside>
+
+</div>

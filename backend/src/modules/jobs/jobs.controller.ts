@@ -60,7 +60,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   try {
     const query = ListJobsQueryDto.parse(req.query);
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await jobsService.findAll({ ...query, skipActiveFilter });
+    const result = await jobsService.findAll({ ...query, skipActiveFilter, viewerId: req.user!.sub });
     res.json(result);
   } catch (err) { next(err); }
 }

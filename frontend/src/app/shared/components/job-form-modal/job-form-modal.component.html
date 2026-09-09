@@ -1,0 +1,532 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="jbModalTitle" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [class.bi-briefcase-fill]="!editingJob()" [class.bi-pencil-square]="editingJob()"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title" id="jbModalTitle">
+          {{ (editingJob() ? 'components.jobForm.editTitle' : 'components.jobForm.createTitle') | translate }}
+        </h5>
+        <p class="au-header__sub cm-modal-subtitle">
+          {{ (editingJob() ? 'components.jobForm.editSubtitle' : 'components.jobForm.createSubtitle') | translate }}
+        </p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="jobForm" novalidate class="au-form cm-form">
+
+        <!-- ── Company Information ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-building"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.companyInformation' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.companyName2' | translate }} <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-building cm-input-icon"></i>
+                <input type="text" formControlName="companyName" maxlength="150"
+                  [placeholder]="'user.jobs.eGAcmeCorp' | translate" class="cm-input"
+                  [class.cm-input-error]="jobForm.get('companyName')!.touched && jobForm.get('companyName')!.invalid" />
+              </div>
+              @if (jobForm.get('companyName')!.touched && jobForm.get('companyName')!.invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  {{ jobForm.get('companyName')!.errors?.['required'] ? ('components.jobForm.companyNameRequired' | translate) : ('components.jobForm.companyNameMinLength' | translate) }}
+                </div>
+              }
+            </div>
+
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.website' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-globe2 cm-input-icon"></i>
+                <input type="url" formControlName="companyWebsite" [placeholder]="'user.jobs.httpsCompanyCom' | translate" class="cm-input"
+                  [class.cm-input-error]="jobForm.get('companyWebsite')!.touched && jobForm.get('companyWebsite')!.invalid" />
+              </div>
+              @if (jobForm.get('companyWebsite')!.errors?.['invalidUrl'] && jobForm.get('companyWebsite')!.touched) {
+                <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ jobForm.get('companyWebsite')!.errors?.['invalidUrl'] }}</div>
+              }
+            </div>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.logo' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+            @if (logoPreview()) {
+              <div class="jbf-logo-preview">
+                <img [src]="logoPreview()! | imageUrl" [alt]="'user.jobs.logoPreview' | translate" class="jbf-logo-preview__img" appImageError />
+                <button type="button" class="jbf-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
+              </div>
+            } @else {
+              <app-file-upload mode="single" accept="image/*" [resetCounter]="logoUploadReset()"
+                [label]="'components.fileUpload.uploadCompanyLogo' | translate" (filesChange)="onLogoChange($event)"></app-file-upload>
+            }
+          </div>
+        </div>
+
+        <!-- ── Job Overview ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-file-earmark-text"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.jobOverview' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.jobTitle' | translate }} <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-briefcase cm-input-icon"></i>
+                <input type="text" formControlName="title" [placeholder]="'user.jobs.eGSeniorSoftwareEngineer' | translate" class="cm-input"
+                  [class.cm-input-error]="jobForm.get('title')!.touched && jobForm.get('title')!.invalid" />
+              </div>
+              @if (jobForm.get('title')!.touched && jobForm.get('title')!.invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  {{ jobForm.get('title')!.errors?.['required'] ? ('components.jobForm.titleRequired' | translate) : ('components.jobForm.titleMinLength' | translate) }}
+                </div>
+              }
+            </div>
+
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.employmentType' | translate }}</label>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-tag cm-input-icon"></i>
+                <app-searchable-select formControlName="jobType" [options]="jobTypeOptions" [placeholder]="'user.jobs.selectType' | translate"></app-searchable-select>
+              </div>
+            </div>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.workMode' | translate }}</label>
+            <app-radio-group formControlName="workMode" variant="pill" [options]="workModeOptions" [ariaLabel]="'user.jobs.workMode' | translate"></app-radio-group>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.minimumEducation' | translate }}</label>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-mortarboard cm-input-icon"></i>
+                <app-searchable-select formControlName="education" [options]="educationOptions" [placeholder]="'user.jobs.anyEducationLevel' | translate"></app-searchable-select>
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.openings' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-people cm-input-icon"></i>
+                <input type="number" formControlName="openings" min="1" placeholder="1" class="cm-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Visibility ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-globe2"></i></span>
+            <span class="cm-section-title">{{ 'components.jobForm.visibility' | translate }}</span>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'components.businessForm.visibilityLabel' | translate }} <span class="cm-required">*</span></label>
+            <app-radio-group formControlName="visibilityType" variant="pill" [options]="visibilityOptions"
+              [ariaLabel]="'components.businessForm.visibilityLabel' | translate"></app-radio-group>
+            <p class="cm-default-hint">
+              {{ (jobForm.get('visibilityType')!.value === 'WORLDWIDE'
+                    ? 'components.businessForm.visibilityWorldwideHint'
+                    : 'components.businessForm.visibilityCountryHint') | translate }}
+            </p>
+          </div>
+          @if (isAdmin) {
+            <p class="cm-default-hint"><i class="bi bi-shield-check"></i> {{ 'components.businessForm.adminAutoApproveHint' | translate }}</p>
+          }
+        </div>
+
+        <!-- ── Experience ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-award"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.experienceRequired' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.minimum' | translate }}</label>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-hourglass-split cm-input-icon"></i>
+                <app-searchable-select formControlName="expMin" [options]="expOptions" [placeholder]="'user.jobs.minYears' | translate"></app-searchable-select>
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.maximum' | translate }}</label>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-hourglass cm-input-icon"></i>
+                <app-searchable-select formControlName="expMax" [options]="expOptions" [placeholder]="'user.jobs.maxYearsOptional' | translate"></app-searchable-select>
+              </div>
+            </div>
+          </div>
+          @if (jobForm.errors?.['expRange']) {
+            <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'common.maxMustBeGteMin' | translate }}</div>
+          }
+        </div>
+
+        <!-- ── Compensation ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-cash-stack"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.compensation' | translate }}</span>
+          </div>
+
+          <div class="cm-default-row">
+            <div class="cm-default-label">
+              <i class="bi bi-eye-slash-fill"></i>
+              <span>{{ 'components.jobForm.hideSalaryShow' | translate }}</span>
+            </div>
+            <app-toggle formControlName="salaryHidden" [ariaLabel]="'user.jobs.hideSalary' | translate"></app-toggle>
+          </div>
+
+          @if (!isSalaryHidden) {
+            <div class="cm-field-group jbf-mt">
+              <label class="cm-label">{{ 'user.jobs.salaryType' | translate }}</label>
+              <app-radio-group formControlName="salaryType" variant="pill" [options]="salaryTypeOptions" [ariaLabel]="'user.jobs.salaryType' | translate"></app-radio-group>
+            </div>
+
+            @if (!isSalaryNegotiable) {
+              <div class="cm-field-row">
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.jobs.currency' | translate }}</label>
+                  <div class="cm-input-wrap cm-select-wrap">
+                    <i class="bi bi-currency-exchange cm-input-icon"></i>
+                    <app-searchable-select formControlName="salaryCurrency" [options]="currencyOptions" [placeholder]="'user.jobs.currency' | translate"></app-searchable-select>
+                  </div>
+                </div>
+              </div>
+              <div class="cm-field-row">
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.jobs.minimumSalary' | translate }}</label>
+                  <div class="cm-input-wrap">
+                    <span class="cm-input-icon jbf-currency-prefix">{{ getCurrencySymbol(jobForm.get('salaryCurrency')!.value) }}</span>
+                    <input type="number" formControlName="salaryMin" min="0" placeholder="30,000" class="cm-input"
+                      [class.cm-input-error]="jobForm.get('salaryMin')!.invalid && jobForm.get('salaryMin')!.touched" />
+                  </div>
+                  @if (jobForm.get('salaryMin')!.errors?.['min'] && jobForm.get('salaryMin')!.touched) {
+                    <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'user.jobs.salaryCanTNegative' | translate }}</div>
+                  }
+                </div>
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.jobs.maximumSalary' | translate }}</label>
+                  <div class="cm-input-wrap">
+                    <span class="cm-input-icon jbf-currency-prefix">{{ getCurrencySymbol(jobForm.get('salaryCurrency')!.value) }}</span>
+                    <input type="number" formControlName="salaryMax" min="0" placeholder="60,000" class="cm-input"
+                      [class.cm-input-error]="jobForm.get('salaryMax')!.invalid && jobForm.get('salaryMax')!.touched" />
+                  </div>
+                  @if (jobForm.get('salaryMax')!.errors?.['min'] && jobForm.get('salaryMax')!.touched) {
+                    <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'user.jobs.salaryCanTNegative' | translate }}</div>
+                  }
+                </div>
+              </div>
+              @if (jobForm.errors?.['salaryRange']) {
+                <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'common.maxSalaryMustBeGteMin' | translate }}</div>
+              }
+            } @else {
+              <p class="cm-default-hint"><i class="bi bi-info-circle"></i> {{ 'components.jobForm.negotiableHint' | translate }}</p>
+            }
+          }
+        </div>
+
+        <!-- ── Location ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-geo-alt-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.location' | translate }}</span>
+          </div>
+
+          <div class="cm-default-row">
+            <div class="cm-default-label">
+              <i class="bi bi-house-door-fill"></i>
+              <span>{{ 'components.jobForm.fullyRemote' | translate }}</span>
+            </div>
+            <app-toggle formControlName="isRemote" [ariaLabel]="'user.jobs.fullyRemotePosition' | translate"></app-toggle>
+          </div>
+
+          @if (!isRemoteCtrl) {
+            <div class="cm-field-row jbf-mt">
+              <div class="cm-field-group">
+                <label class="cm-label">{{ 'user.jobs.country' | translate }}</label>
+                <div class="cm-input-wrap cm-select-wrap">
+                  <i class="bi bi-globe2 cm-input-icon"></i>
+                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
+                    [placeholder]="'user.jobs.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
+                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
+                </div>
+              </div>
+              @if (adminLevels().length >= 1) {
+                <div class="cm-field-group">
+                  <label class="cm-label">
+                    {{ adminLevels()[0].label }}
+                    @if (division1Loading()) { <i class="bi bi-arrow-clockwise jbf-spin"></i> }
+                  </label>
+                  <div class="cm-input-wrap cm-select-wrap">
+                    <i class="bi bi-map cm-input-icon"></i>
+                    <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
+                      [placeholder]="division1Options().length
+                        ? ('user.jobs.selectLevel' | translate:{ level: adminLevels()[0].label })
+                        : ('user.jobs.selectFirstCountry' | translate)"
+                      [searchPlaceholder]="'components.search.generic' | translate"
+                      (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
+                  </div>
+                </div>
+              }
+              @if (adminLevels().length >= 2) {
+                <div class="cm-field-group">
+                  <label class="cm-label">
+                    {{ adminLevels()[1].label }}
+                    @if (division2Loading()) { <i class="bi bi-arrow-clockwise jbf-spin"></i> }
+                  </label>
+                  <div class="cm-input-wrap cm-select-wrap">
+                    <i class="bi bi-map cm-input-icon"></i>
+                    <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
+                      [placeholder]="division2Options().length
+                        ? ('user.jobs.selectLevel' | translate:{ level: adminLevels()[1].label })
+                        : ('admin.geo.selectLevelFirst' | translate:{ level: adminLevels()[0].label })"
+                      [searchPlaceholder]="'components.search.generic' | translate"
+                      (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
+                  </div>
+                </div>
+              }
+              <div class="cm-field-group">
+                <label class="cm-label">{{ 'user.jobs.city' | translate }}</label>
+                <div class="cm-input-wrap cm-select-wrap">
+                  <i class="bi bi-buildings cm-input-icon"></i>
+                  <app-searchable-select formControlName="cityId" [remoteSearchFn]="citySearchFn"
+                    [selectedOption]="selectedCityOption()" [placeholder]="'user.jobs.searchCity' | translate"
+                    (ngModelChange)="onCityChange($event)"></app-searchable-select>
+                </div>
+              </div>
+              <div class="cm-field-group">
+                <label class="cm-label">
+                  {{ 'user.jobs.pincode' | translate }}
+                  @if (countryConfig()?.postalCode?.required) { <span class="cm-required">*</span> }
+                </label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-mailbox cm-input-icon"></i>
+                  <input type="text" formControlName="pincode" [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'" class="cm-input"
+                    [class.cm-input-error]="jobForm.get('pincode')!.invalid && jobForm.get('pincode')!.touched" />
+                </div>
+                @if (jobForm.get('pincode')!.errors?.['postalFormat'] && jobForm.get('pincode')!.touched) {
+                  <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'user.jobs.doesnTMatchExpectedFormat' | translate }}</div>
+                }
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.fullAddress' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-signpost cm-input-icon"></i>
+                <input type="text" formControlName="fullAddress" [placeholder]="'user.jobs.streetBuilding' | translate" class="cm-input" />
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── Schedule & Hours ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-clock-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.scheduleAmpHours' | translate }}</span>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.shiftType' | translate }}</label>
+            <app-radio-group formControlName="shiftType" variant="pill" [options]="shiftTypeOptions" [ariaLabel]="'user.jobs.shiftType' | translate"></app-radio-group>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.workingHours' | translate }}</label>
+            <div class="jbf-time-range">
+              <div class="jbf-time-range__field">
+                <span class="jbf-time-range__label"><i class="bi bi-sunrise"></i> {{ 'user.jobs.start' | translate }}</span>
+                <app-time-input formControlName="workStartTime" [minuteStep]="15" [ariaLabel]="'user.jobs.startTime' | translate" [placeholder]="'user.jobs.start' | translate"></app-time-input>
+              </div>
+              <i class="bi bi-arrow-right jbf-time-range__sep"></i>
+              <div class="jbf-time-range__field">
+                <span class="jbf-time-range__label"><i class="bi bi-sunset"></i> {{ 'user.jobs.end' | translate }}</span>
+                <app-time-input formControlName="workEndTime" [minuteStep]="15" [ariaLabel]="'user.jobs.endTime' | translate" [placeholder]="'user.jobs.end' | translate"></app-time-input>
+              </div>
+            </div>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.workingDays' | translate }}</label>
+            <div class="jbf-day-toggles">
+              @for (day of workDays; track day) {
+                <button type="button" class="jbf-day-toggle" [class.jbf-day-toggle--on]="isWorkingDay(day)" (click)="toggleWorkingDay(day)">{{ day }}</button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Contact Information ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-person-lines-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.contactInformation' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.contactPerson' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-person cm-input-icon"></i>
+                <input type="text" formControlName="contactPerson" [placeholder]="'user.jobs.fullName' | translate" class="cm-input" />
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.emailAddress' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-envelope cm-input-icon"></i>
+                <input type="email" formControlName="contactEmail" [placeholder]="'user.jobs.hrCompanyCom' | translate" class="cm-input"
+                  [class.cm-input-error]="jobForm.get('contactEmail')!.invalid && jobForm.get('contactEmail')!.touched" />
+              </div>
+              @if (jobForm.get('contactEmail')!.errors?.['email'] && jobForm.get('contactEmail')!.touched) {
+                <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'user.jobs.pleaseEnterValidEmailAddress' | translate }}</div>
+              }
+            </div>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.phoneNumber2' | translate }}</label>
+            <div class="jbf-phone-field">
+              <div class="jbf-phone-field__dial cm-select-wrap">
+                <app-searchable-select formControlName="contactDialCode" [options]="dialCodeOptions()" placeholder="+44" [searchPlaceholder]="'components.search.generic' | translate"></app-searchable-select>
+              </div>
+              <input type="tel" class="cm-input jbf-phone-field__number" formControlName="contactPhone" [placeholder]="'user.jobs.phoneNumber' | translate" inputmode="numeric" maxlength="15" />
+            </div>
+            @if (getPhoneError() && jobForm.get('contactPhone')!.touched) {
+              <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ getPhoneError() }}</div>
+            }
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.applicationUrl' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+            <div class="cm-input-wrap">
+              <i class="bi bi-link-45deg cm-input-icon"></i>
+              <input type="url" formControlName="applicationUrl" [placeholder]="'user.jobs.httpsApplyCompanyComJob' | translate" class="cm-input"
+                [class.cm-input-error]="jobForm.get('applicationUrl')!.invalid && jobForm.get('applicationUrl')!.touched" />
+            </div>
+            @if (jobForm.get('applicationUrl')!.errors?.['invalidUrl'] && jobForm.get('applicationUrl')!.touched) {
+              <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i>{{ jobForm.get('applicationUrl')!.errors?.['invalidUrl'] }}</div>
+            }
+          </div>
+        </div>
+
+        <!-- ── Skills ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-tags-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.skillsRequired' | translate }}</span>
+          </div>
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.skills' | translate }} <span class="cm-optional">{{ 'common.typeAndPressEnter' | translate }}</span></label>
+            <div class="cm-input-wrap cm-rules-wrap">
+              <i class="bi bi-tags cm-input-icon"></i>
+              <app-tag-input formControlName="skills" [placeholder]="'user.jobs.eGReactNodeJs' | translate"></app-tag-input>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Job Description ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-file-text-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.jobDescription' | translate }}</span>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.description' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+            <div class="cm-input-wrap cm-textarea-wrap">
+              <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+              <textarea formControlName="description" rows="4" [placeholder]="'user.jobs.describeRole' | translate" class="cm-input cm-textarea"></textarea>
+            </div>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.responsibilities' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap cm-textarea-wrap">
+                <i class="bi bi-list-check cm-input-icon cm-textarea-icon"></i>
+                <textarea formControlName="responsibilities" rows="4" [placeholder]="'user.jobs.keyDayDayResponsibilities' | translate" class="cm-input cm-textarea"></textarea>
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.qualifications' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap cm-textarea-wrap">
+                <i class="bi bi-patch-check cm-input-icon cm-textarea-icon"></i>
+                <textarea formControlName="qualifications" rows="4" [placeholder]="'user.jobs.degreesCertifications' | translate" class="cm-input cm-textarea"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.requirements' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap cm-textarea-wrap">
+                <i class="bi bi-clipboard-check cm-input-icon cm-textarea-icon"></i>
+                <textarea formControlName="requirements" rows="4" [placeholder]="'user.jobs.mustHaveSkillsExperience' | translate" class="cm-input cm-textarea"></textarea>
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.benefits' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+              <div class="cm-input-wrap cm-textarea-wrap">
+                <i class="bi bi-gift cm-input-icon cm-textarea-icon"></i>
+                <textarea formControlName="benefits" rows="4" [placeholder]="'user.jobs.perksInsuranceBonuses' | translate" class="cm-input cm-textarea"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Images ── -->
+        <div class="cm-section cm-section-last">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-images"></i></span>
+            <span class="cm-section-title">{{ 'user.jobs.jobImages' | translate }}</span>
+            <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
+          </div>
+          <app-file-upload mode="multi" accept="image/*" [maxFiles]="10"
+            [resetCounter]="fileUploadReset()" [existingPreviews]="editingJob()?.images ?? []"
+            [label]="'components.fileUpload.dragOrClick' | translate"
+            (filesChange)="onJobImagesChange($event)"></app-file-upload>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" [disabled]="submitting()" (click)="requestClose()">{{ 'common.cancel' | translate }}</button>
+      <button type="button" class="au-btn au-btn--primary cm-btn-submit" [disabled]="submitting()" (click)="submitJob()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ (editingJob() ? 'components.jobForm.saving' : 'components.jobForm.publishing') | translate }}
+        } @else {
+          <i class="bi me-1" [class.bi-check-lg]="editingJob()" [class.bi-send-fill]="!editingJob()"></i>
+          {{ (editingJob() ? 'components.jobForm.saveChanges' : 'components.jobForm.publishJob') | translate }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

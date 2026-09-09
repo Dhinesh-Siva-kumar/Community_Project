@@ -581,6 +581,9 @@
               <span class="uc-post-community">{{ post.community?.name || 'Community' }}</span>
               <p class="uc-post-excerpt">{{ post.content }}</p>
 
+              @if (post.video) {
+                <app-post-video [src]="post.video" class="mb-2 d-block"></app-post-video>
+              }
               @if (post.images && post.images.length > 0) {
                 <button
                   type="button"

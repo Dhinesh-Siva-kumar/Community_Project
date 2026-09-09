@@ -85,7 +85,7 @@
                   <button type="button" class="jb-logo-preview__remove" (click)="clearLogo()"><i class="bi bi-x-lg"></i></button>
                 </div>
               } @else {
-                <app-file-upload mode="single" accept="image/*" [maxSizeMb]="5"
+                <app-file-upload mode="single" accept="image/*"
                   [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadBusinessLogo' | translate"
                   [showError]="businessSubmitAttempted() && !logoPreview()"
                   [errorMessage]="'components.businessForm.logoRequired' | translate"
@@ -105,6 +105,27 @@
                 </div>
                 <app-toggle formControlName="isActive" [ariaLabel]="'components.businessForm.statusAria' | translate"></app-toggle>
               </div>
+              @if (isAdmin) {
+                <p class="jb-field-hint">
+                  <i class="bi bi-shield-check"></i> {{ 'components.businessForm.adminAutoApproveHint' | translate }}
+                </p>
+              }
+            </div>
+
+            <!-- Visibility Type — who the business is listed for -->
+            <div class="col-12">
+              <label class="jb-label">
+                {{ 'components.businessForm.visibilityLabel' | translate }} <span class="text-danger">*</span>
+              </label>
+              <app-radio-group formControlName="visibilityType" variant="pill"
+                [options]="visibilityOptions"
+                [ariaLabel]="'components.businessForm.visibilityLabel' | translate"></app-radio-group>
+              <p class="jb-field-hint">
+                <i class="bi bi-info-circle"></i>
+                {{ (businessForm.get('visibilityType')?.value === 'WORLDWIDE'
+                      ? 'components.businessForm.visibilityWorldwideHint'
+                      : 'components.businessForm.visibilityCountryHint') | translate }}
+              </p>
             </div>
           </div>
         </div>
@@ -336,108 +357,59 @@
           </div>
           <div class="row g-3">
             <div class="col-12">
-              <label class="jb-label">{{ 'components.businessForm.openingDaysLabel' | translate }} <span class="text-danger">*</span></label>
-              <div class="jb-day-toggles">
-                @for (day of DAYS; track day) {
-                  <button type="button" class="jb-day-toggle"
-                    [class.jb-day-toggle--on]="selectedDays().includes(day)"
-                    [attr.aria-pressed]="selectedDays().includes(day)"
-                    (click)="toggleDay(day)">{{ DAY_SHORT[day] | translate }}</button>
-                }
-              </div>
-              @if (businessForm.get('openingDays')?.invalid && businessForm.get('openingDays')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.openingDaysRequired' | translate }}</span>
-              }
-            </div>
-            <div class="col-12">
-              <label class="jb-label">{{ 'components.businessForm.openingHoursLabel' | translate }} <span class="text-danger">*</span></label>
-              <div class="row g-2 align-items-center">
-                <div class="col-5">
-                  <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'from'"
-                    [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursFrom')?.value">
-                    <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('from')" (blur)="closeTimeDropdown()">
-                      <i class="bi bi-clock time-dropdown__icon"></i>
-                      <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursFrom')?.value ?? '') }}</span>
-                      <i class="bi bi-chevron-down time-dropdown__chevron"></i>
-                    </button>
-                    @if (timeDropdownOpen() === 'from') {
-                      <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
-                        <div class="time-dropdown__list">
-                          @for (t of TIME_OPTIONS; track t) {
-                            <button type="button" class="time-dropdown__option"
-                              [class.time-dropdown__option--selected]="businessForm.get('openingHoursFrom')?.value === t"
-                              (click)="selectTime('from', t)">
-                              <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-                <div class="col-auto" style="padding-top: 6px;"><span class="biz-hours-sep">{{ 'components.businessForm.timeRangeSeparator' | translate }}</span></div>
-                <div class="col-5">
-                  <div class="time-dropdown" [class.time-dropdown--open]="timeDropdownOpen() === 'to'"
-                    [class.time-dropdown--error]="openingHoursTouched() && !businessForm.get('openingHoursTo')?.value">
-                    <button type="button" class="time-dropdown__trigger" (click)="openTimeDropdown('to')" (blur)="closeTimeDropdown()">
-                      <i class="bi bi-clock time-dropdown__icon"></i>
-                      <span class="time-dropdown__value">{{ displayTime(businessForm.get('openingHoursTo')?.value ?? '') }}</span>
-                      <i class="bi bi-chevron-down time-dropdown__chevron"></i>
-                    </button>
-                    @if (timeDropdownOpen() === 'to') {
-                      <div class="time-dropdown__panel" (mousedown)="$event.preventDefault()">
-                        <div class="time-dropdown__list">
-                          @for (t of TIME_OPTIONS; track t) {
-                            <button type="button" class="time-dropdown__option"
-                              [class.time-dropdown__option--selected]="businessForm.get('openingHoursTo')?.value === t"
-                              (click)="selectTime('to', t)">
-                              <span class="time-dropdown__option-time">{{ displayTime(t) }}</span>
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-              </div>
-              @if (openingHoursTouched() && (!businessForm.get('openingHoursFrom')?.value || !businessForm.get('openingHoursTo')?.value)) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.openingHoursRequired' | translate }}</span>
-              }
+              <app-opening-hours-editor formControlName="openingHoursJson"
+                [invalid]="businessForm.get('openingHoursJson')!.invalid
+                  && (businessSubmitAttempted() || businessForm.get('openingHoursJson')!.touched)"></app-opening-hours-editor>
             </div>
           </div>
         </div>
 
-        <!-- S5: Gallery -->
-        <div class="jb-form-section">
-          <div class="jb-form-section__header">
-            <div class="jb-form-section__badge"><i class="bi bi-images"></i></div>
-            <div><span class="jb-form-section__num">05</span><span class="jb-form-section__name">{{ 'components.businessForm.galleryLabel' | translate }} <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span></span></div>
-          </div>
-          <app-file-upload mode="multi" accept="image/*" [maxSizeMb]="5" [maxFiles]="10"
-            [label]="'components.fileUpload.dragGalleryImages' | translate"
-            [resetCounter]="fileUploadReset()"
-            (filesChange)="onBusinessImagesChange($event)"></app-file-upload>
-          @if (editingBusiness() && editingBusiness()!.images && editingBusiness()!.images.length) {
-            <div class="biz-gallery-existing">
-              <p class="biz-gallery-existing__label">{{ 'components.businessForm.existingPhotos' | translate }}</p>
-              @if (existingGalleryImages().length) {
-                <div class="biz-gallery-existing__grid">
-                  @for (img of existingGalleryImages(); track img) {
-                    <div class="biz-gallery-existing__item">
-                      <img [src]="img | imageUrl" [alt]="'components.fileUpload.galleryAlt' | translate" class="biz-gallery-existing__img" loading="lazy" />
-                      <button type="button" class="biz-gallery-existing__remove" (click)="removeExistingImage(img)" [attr.aria-label]="'components.businessForm.removePhoto' | translate">
-                        <i class="bi bi-x-lg"></i>
-                      </button>
-                    </div>
-                  }
-                </div>
-                <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryHintPre' | translate }} <i class="bi bi-x-lg"></i> {{ 'components.businessForm.galleryHintPost' | translate }}</p>
-              } @else {
-                <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryCleared' | translate }}</p>
-              }
+        <!-- S5–S7: the three image categories. One block of markup driven by
+             GALLERIES, so Gallery Photos / Menu Cards / Business Cards can
+             never drift apart. -->
+        @for (gallery of GALLERIES; track gallery.key) {
+          <div class="jb-form-section">
+            <div class="jb-form-section__header">
+              <div class="jb-form-section__badge"><i class="bi" [ngClass]="gallery.icon"></i></div>
+              <div>
+                <span class="jb-form-section__num">{{ gallery.num }}</span>
+                <span class="jb-form-section__name">
+                  {{ gallery.titleKey | translate }}
+                  <span class="jb-form-section__optional">{{ 'common.optionalParen' | translate }}</span>
+                </span>
+              </div>
             </div>
-          }
-        </div>
+            <app-file-upload mode="multi" accept="image/*" [maxFiles]="10"
+              [label]="gallery.dropKey | translate"
+              [resetCounter]="gallery.reset()"
+              (filesChange)="onGalleryFilesChange(gallery, $event)"></app-file-upload>
+            <!-- Only for a gallery this business actually had images in —
+                 otherwise an untouched empty gallery would render a
+                 confusing "all photos removed" note. -->
+            @if (galleryHadImages(gallery)) {
+              <div class="biz-gallery-existing">
+                @if (gallery.existing().length) {
+                  <p class="biz-gallery-existing__label">{{ 'components.businessForm.existingPhotos' | translate }}</p>
+                  <div class="biz-gallery-existing__grid">
+                    @for (img of gallery.existing(); track img) {
+                      <div class="biz-gallery-existing__item">
+                        <img [src]="img | imageUrl" [alt]="'components.fileUpload.galleryAlt' | translate" class="biz-gallery-existing__img" loading="lazy" />
+                        <button type="button" class="biz-gallery-existing__remove"
+                          (click)="removeExistingGalleryImage(gallery, img)"
+                          [attr.aria-label]="'components.businessForm.removePhoto' | translate">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                  <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryHintPre' | translate }} <i class="bi bi-x-lg"></i> {{ 'components.businessForm.galleryHintPost' | translate }}</p>
+                } @else {
+                  <p class="biz-gallery-existing__hint">{{ 'components.businessForm.galleryCleared' | translate }}</p>
+                }
+              </div>
+            }
+          </div>
+        }
 
       </form>
     </div>

@@ -1,9 +1,12 @@
+import type { Knex } from 'knex';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
 import { geocodeAddress } from '../../services/geocoding.service';
 import { validateAddressHierarchy, getDivisionChain } from '../geography/geography.service';
+import { getViewerScope, applyBusinessVisibilityRestriction } from '../../services/business-visibility.service';
+import { formatLegacyDays, formatLegacyHours } from './opening-hours.util';
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreateBusinessDtoType, UpdateBusinessDtoType, CreateBusinessCategoryDtoType, UpdateBusinessCategoryDtoType, ListBusinessQueryDtoType } from './business.dto';
 
@@ -96,6 +99,8 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       category_id: data.categoryId,
       description: data.description ?? null,
       images: data.images ?? [],
+      menu_images: data.menuImages ?? [],
+      card_images: data.cardImages ?? [],
       logo: data.logo ?? null,
       address: data.address ?? null,
       pincode: data.pincode ?? null,
@@ -106,16 +111,23 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
       phone: data.phone ?? null,
       email: data.email ?? null,
       website: data.website ?? null,
-      opening_hours: data.openingHours ?? null,
+      // The two legacy free-text columns are derived from the structured
+      // hours whenever those are supplied, so every consumer still reading
+      // them stays correct without knowing about the JSON.
+      opening_hours: data.openingHoursJson ? formatLegacyHours(data.openingHoursJson) : (data.openingHours ?? null),
+      opening_days:  data.openingHoursJson ? formatLegacyDays(data.openingHoursJson)  : (data.openingDays  ?? null),
+      opening_hours_json: data.openingHoursJson ? JSON.stringify(data.openingHoursJson) : null,
       city:          data.city         ?? null,
       state:         data.state        ?? null,
-      opening_days:  data.openingDays  ?? null,
       whatsapp:      data.whatsapp     ?? null,
       maps_link:     data.mapsLink     ?? null,
       country_id:    data.countryId    ?? null,
       state_id:      data.stateId      ?? null,
       city_id:       data.cityId       ?? null,
       is_active:     data.isActive     ?? true,
+      // Default applied here rather than in the DTO — see the note on
+      // visibilityType in business.dto.ts.
+      visibility_type: data.visibilityType ?? 'COUNTRY',
       status,
       user_id: userId,
     })
@@ -137,11 +149,95 @@ export async function create(data: CreateBusinessDtoType, userId: string) {
   };
 }
 
-export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
+type BusinessFilterParams = Pick<
+  ListBusinessQueryDtoType,
+  'status' | 'approvalStatus' | 'categoryId' | 'categoryIds' | 'pincode' | 'search'
+  | 'country' | 'countryIds' | 'stateId' | 'cityId' | 'visibilityType'
+  | 'openOnDay' | 'openNowDay' | 'openNowTime'
+  | 'hasMenu' | 'hasGallery' | 'hasWhatsapp' | 'hasWebsite'
+  | 'dateFrom' | 'dateTo'
+> & { skipActiveFilter?: boolean; userId?: string };
+
+/**
+ * Every business list filter, written once with a `b.` prefix.
+ *
+ * Both the page query and the count query alias `businesses as b` — even
+ * though the count query joins nothing — so each filter is applied to both
+ * from a single definition and the rows returned can never drift from the
+ * `total` reported alongside them.
+ */
+function applyBusinessFilters(qb: Knex.QueryBuilder, params: BusinessFilterParams): void {
   const {
-    categoryId, categoryIds, pincode, page, limit, search, country, openingHours,
-    dateFrom, dateTo, status, approvalStatus, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, userId,
+    skipActiveFilter, status, approvalStatus, userId, categoryId, categoryIds,
+    pincode, search, country, countryIds, stateId, cityId, visibilityType,
+    openOnDay, openNowDay, openNowTime,
+    hasMenu, hasGallery, hasWhatsapp, hasWebsite, dateFrom, dateTo,
   } = params;
+
+  // Admin callers set skipActiveFilter=true to see inactive businesses too,
+  // unless they've explicitly picked a status to filter by below.
+  if (!skipActiveFilter) qb.where('b.is_active', true);
+  if (status) qb.andWhere('b.is_active', status === 'active');
+
+  // ── Moderation status — non-owner/non-admin callers only ever see
+  // APPROVED businesses; skipActiveFilter=true (admin browse, or the
+  // caller's own "mine" list) bypasses this the same way it already
+  // bypasses the is_active filter above.
+  if (!skipActiveFilter) qb.where('b.status', 'APPROVED');
+  if (approvalStatus?.length) qb.whereIn('b.status', approvalStatus);
+
+  if (userId) qb.andWhere('b.user_id', userId);
+  if (categoryId) qb.andWhere('b.category_id', categoryId);
+  if (categoryIds) {
+    const ids = categoryIds.split(',').map((s) => s.trim()).filter(Boolean);
+    if (ids.length > 0) qb.whereIn('b.category_id', ids);
+  }
+  if (pincode) qb.andWhere('b.pincode', pincode);
+  if (search) {
+    qb.andWhere(function () {
+      this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`);
+    });
+  }
+  if (country) qb.andWhereILike('b.country', `%${country}%`);
+  if (countryIds) {
+    const ids = countryIds.split(',').map((s) => Number(s.trim())).filter((n) => Number.isInteger(n) && n > 0);
+    if (ids.length > 0) qb.whereIn('b.country_id', ids);
+  }
+  if (stateId) qb.andWhere('b.state_id', stateId);
+  if (cityId) qb.andWhere('b.city_id', cityId);
+
+  if (visibilityType) qb.andWhere('b.visibility_type', visibilityType);
+
+  // Structured opening hours. Both predicates read opening_hours_json only,
+  // so a business whose hours were never migrated off the legacy free-text
+  // columns simply doesn't match — running the backfill script is what
+  // brings older rows into these filters.
+  if (openOnDay) qb.andWhereRaw(`jsonb_exists(b.opening_hours_json -> 'days', ?)`, [openOnDay]);
+  if (openNowDay && openNowTime) {
+    qb.andWhereRaw('business_is_open_at(b.opening_hours_json, ?, ?)', [openNowDay, openNowTime]);
+  }
+
+  // array_length() returns NULL (not 0) for an empty array, and `NULL > 0`
+  // is NULL — so these correctly exclude businesses with no images.
+  if (hasMenu) qb.andWhereRaw('array_length(b.menu_images, 1) > 0');
+  if (hasGallery) qb.andWhereRaw('array_length(b.images, 1) > 0');
+  if (hasWhatsapp) qb.whereNotNull('b.whatsapp').andWhereRaw(`b.whatsapp <> ''`);
+  if (hasWebsite) qb.whereNotNull('b.website').andWhereRaw(`b.website <> ''`);
+
+  if (dateFrom) qb.andWhere('b.created_at', '>=', dateFrom);
+  if (dateTo) qb.andWhere('b.created_at', '<=', `${dateTo}T23:59:59.999Z`);
+}
+
+export async function findAll(
+  params: ListBusinessQueryDtoType & {
+    skipActiveFilter?: boolean;
+    /** Owner filter — restricts the list to one user's businesses ("mine"). */
+    userId?: string;
+    /** The signed-in caller, for the country/worldwide visibility gate. */
+    viewerId?: string;
+  },
+) {
+  const { page, limit, sortBy = 'joined', sortDir = 'desc', skipActiveFilter, viewerId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('businesses as b')
@@ -155,88 +251,18 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
       'mc.name as geo_country_name', 'ms.name as geo_state_name', 'mci.name as geo_city_name',
     );
 
-  const countQuery = db('businesses');
+  const countQuery = db('businesses as b');
 
-  // Admin callers set skipActiveFilter=true to see inactive businesses too,
-  // unless they've explicitly picked a status to filter by below.
-  if (!skipActiveFilter) {
-    query.where('b.is_active', true);
-    countQuery.where({ is_active: true });
-  }
-  if (status) {
-    const isActive = status === 'active';
-    query.andWhere('b.is_active', isActive);
-    countQuery.andWhere('is_active', isActive);
-  }
+  applyBusinessFilters(query, params);
+  applyBusinessFilters(countQuery, params);
 
-  // ── Moderation status — non-owner/non-admin callers only ever see
-  // APPROVED businesses; skipActiveFilter=true (admin browse, or the
-  // caller's own "mine" list) bypasses this the same way it already
-  // bypasses the is_active filter above.
-  if (!skipActiveFilter) {
-    query.where('b.status', 'APPROVED');
-    countQuery.where('status', 'APPROVED');
-  }
-  if (approvalStatus?.length) {
-    query.whereIn('b.status', approvalStatus);
-    countQuery.whereIn('status', approvalStatus);
-  }
-
-  if (userId) { query.andWhere('b.user_id', userId); countQuery.andWhere('user_id', userId); }
-  if (categoryId) { query.andWhere('b.category_id', categoryId); countQuery.andWhere('category_id', categoryId); }
-  if (categoryIds) {
-    const ids = categoryIds.split(',').map(s => s.trim()).filter(Boolean);
-    if (ids.length > 0) {
-      query.whereIn('b.category_id', ids);
-      countQuery.whereIn('category_id', ids);
-    }
-  }
-  if (pincode) { query.andWhere('b.pincode', pincode); countQuery.andWhere({ pincode }); }
-  if (search) {
-    query.andWhere(function () { this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`); });
-    countQuery.andWhere(function () { this.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`); });
-  }
-  if (country) {
-    query.andWhereILike('b.country', `%${country}%`);
-    countQuery.andWhereILike('country', `%${country}%`);
-  }
-  if (openingHours) {
-    // `opening_hours` is free text. Businesses created/edited through the
-    // admin form always get an exact "9:00 AM – 5:00 PM" style string built
-    // from its time pickers — which never literally contains "9-5" or
-    // "24/7" — while businesses created through the user-facing form (a
-    // plain text input) might. Match both: the literal preset text (for
-    // free-typed values) and the admin form's canonical pattern for that
-    // preset, so the filter actually returns admin-created businesses too.
-    query.andWhere((qb) => {
-      qb.whereILike('b.opening_hours', `%${openingHours}%`);
-      if (openingHours === '9-5') {
-        qb.orWhereILike('b.opening_hours', '9:00 AM%');
-      } else if (openingHours === '24/7') {
-        qb.orWhere((qb2) => {
-          qb2.whereILike('b.opening_hours', '12:00 AM%').andWhereILike('b.opening_hours', '%11:30 PM');
-        });
-      }
-    });
-    countQuery.andWhere((qb) => {
-      qb.whereILike('opening_hours', `%${openingHours}%`);
-      if (openingHours === '9-5') {
-        qb.orWhereILike('opening_hours', '9:00 AM%');
-      } else if (openingHours === '24/7') {
-        qb.orWhere((qb2) => {
-          qb2.whereILike('opening_hours', '12:00 AM%').andWhereILike('opening_hours', '%11:30 PM');
-        });
-      }
-    });
-  }
-  if (dateFrom) {
-    query.andWhere('b.created_at', '>=', dateFrom);
-    countQuery.andWhere('created_at', '>=', dateFrom);
-  }
-  if (dateTo) {
-    const toEnd = `${dateTo}T23:59:59.999Z`;
-    query.andWhere('b.created_at', '<=', toEnd);
-    countQuery.andWhere('created_at', '<=', toEnd);
+  // Country/worldwide visibility — lands on exactly the same callers as the
+  // moderation gate above: admins and "mine" lists set skipActiveFilter and
+  // are therefore exempt.
+  if (!skipActiveFilter && viewerId) {
+    const scope = await getViewerScope(viewerId);
+    applyBusinessVisibilityRestriction(query, 'b.', viewerId, scope);
+    applyBusinessVisibilityRestriction(countQuery, 'b.', viewerId, scope);
   }
 
   const sortColumn = sortBy === 'name' ? 'b.name' : 'b.created_at';
@@ -251,9 +277,12 @@ export async function findAll(params: ListBusinessQueryDtoType & { skipActiveFil
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],
+    openingHoursJson: b['opening_hours_json'] ?? null,
+    menuImages:   b['menu_images'] ?? [],
+    cardImages:   b['card_images'] ?? [],
+    visibilityType: b['visibility_type'],
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
-    isRemote:     b['is_remote'],
     rejectionReason: b['rejection_reason'] ?? null,
     createdAt:    b['created_at'],
     countryId:    b['country_id'],
@@ -299,6 +328,10 @@ export async function findOne(id: string) {
     categoryId:   b['category_id'],
     openingHours: b['opening_hours'],
     openingDays:  b['opening_days'],
+    openingHoursJson: b['opening_hours_json'] ?? null,
+    menuImages:   b['menu_images'] ?? [],
+    cardImages:   b['card_images'] ?? [],
+    visibilityType: b['visibility_type'],
     mapsLink:     b['maps_link'],
     isActive:     b['is_active'],
     rejectionReason: b['rejection_reason'] ?? null,
@@ -341,24 +374,19 @@ export async function findPendingOnly(options: FindPendingBusinessOptions) {
     .where('b.status', 'PENDING')
     .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon');
 
-  const countQuery = db('businesses').where({ status: 'PENDING' });
+  const countQuery = db('businesses as b').where('b.status', 'PENDING');
 
-  if (search) {
-    query.andWhere(function () { this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`); });
-    countQuery.andWhere(function () { this.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`); });
-  }
-  if (country) {
-    query.andWhereILike('b.country', `%${country}%`);
-    countQuery.andWhereILike('country', `%${country}%`);
-  }
-  if (dateFrom) {
-    query.andWhere('b.created_at', '>=', dateFrom);
-    countQuery.andWhere('created_at', '>=', dateFrom);
-  }
-  if (dateTo) {
-    const toEnd = `${dateTo}T23:59:59.999Z`;
-    query.andWhere('b.created_at', '<=', toEnd);
-    countQuery.andWhere('created_at', '<=', toEnd);
+  // Same single-definition treatment as findAll — the pending list only ever
+  // needs this four-filter subset.
+  for (const qb of [query, countQuery]) {
+    if (search) {
+      qb.andWhere(function () {
+        this.whereILike('b.name', `%${search}%`).orWhereILike('b.description', `%${search}%`);
+      });
+    }
+    if (country) qb.andWhereILike('b.country', `%${country}%`);
+    if (dateFrom) qb.andWhere('b.created_at', '>=', dateFrom);
+    if (dateTo) qb.andWhere('b.created_at', '<=', `${dateTo}T23:59:59.999Z`);
   }
 
   const sortColumn = sortBy === 'name' ? 'b.name'
@@ -408,6 +436,8 @@ export async function reject(id: string, adminId: string, reason?: string) {
 
   await db('businesses').where({ id }).delete();
   deleteUploadedFiles(business['images']);
+  deleteUploadedFiles(business['menu_images']);
+  deleteUploadedFiles(business['card_images']);
   deleteUploadedFile(business['logo']);
 
   return { message: 'Business rejected and removed' };
@@ -439,6 +469,8 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.categoryId !== undefined) updateData['category_id'] = data.categoryId;
    if (data.description !== undefined) updateData['description'] = data.description;
    if (data.images !== undefined) updateData['images'] = data.images;
+   if (data.menuImages !== undefined) updateData['menu_images'] = data.menuImages;
+   if (data.cardImages !== undefined) updateData['card_images'] = data.cardImages;
    if (data.logo !== undefined) updateData['logo'] = data.logo;
    if (data.address !== undefined) updateData['address'] = data.address;
    if (data.pincode !== undefined) updateData['pincode'] = data.pincode;
@@ -459,6 +491,14 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
    if (data.stateId !== undefined) updateData['state_id'] = data.stateId;
    if (data.cityId !== undefined) updateData['city_id'] = data.cityId;
    if (data.isActive !== undefined) updateData['is_active'] = data.isActive;
+   if (data.visibilityType !== undefined) updateData['visibility_type'] = data.visibilityType;
+   // Applied after the two legacy openingHours/openingDays branches above so
+   // the structured value always wins when both are sent.
+   if (data.openingHoursJson !== undefined) {
+     updateData['opening_hours_json'] = JSON.stringify(data.openingHoursJson);
+     updateData['opening_hours'] = formatLegacyHours(data.openingHoursJson);
+     updateData['opening_days'] = formatLegacyDays(data.openingHoursJson);
+   }
 
   // Resubmitting a rejected or needs-info business: the owner editing their
   // own business re-enters the approval gate exactly like a brand-new one,
@@ -513,10 +553,18 @@ export async function update(id: string, data: UpdateBusinessDtoType, userId: st
     await notifyAdminsOfPendingBusiness(id, (data.name as string | undefined) ?? (business['name'] as string));
   }
 
-  if (data.images !== undefined) {
-    const oldImages = Array.isArray(business['images']) ? (business['images'] as unknown[]) : [];
-    const newImages = data.images ?? [];
-    deleteUploadedFiles(oldImages.filter((img) => typeof img === 'string' && !newImages.includes(img)));
+  // Drop the files for any image the user removed from a gallery, per
+  // gallery — a gallery left out of this partial update is untouched.
+  const galleryColumns: Array<[keyof UpdateBusinessDtoType, string]> = [
+    ['images', 'images'],
+    ['menuImages', 'menu_images'],
+    ['cardImages', 'card_images'],
+  ];
+  for (const [dtoKey, column] of galleryColumns) {
+    const next = data[dtoKey] as string[] | undefined;
+    if (next === undefined) continue;
+    const previous = Array.isArray(business[column]) ? (business[column] as unknown[]) : [];
+    deleteUploadedFiles(previous.filter((img) => typeof img === 'string' && !next.includes(img)));
   }
   if (data.logo !== undefined && business['logo'] !== data.logo) {
     deleteUploadedFile(business['logo']);
@@ -539,6 +587,8 @@ export async function deleteBusiness(id: string, userId: string) {
 
   await db('businesses').where({ id }).delete();
   deleteUploadedFiles(business['images']);
+  deleteUploadedFiles(business['menu_images']);
+  deleteUploadedFiles(business['card_images']);
   deleteUploadedFile(business['logo']);
   await logAudit(userId, 'BUSINESS_DELETED', { byAdmin, name: business['name'] }, 'businesses', id);
   if (byAdmin) {

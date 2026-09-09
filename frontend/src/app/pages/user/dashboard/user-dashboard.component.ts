@@ -30,6 +30,7 @@ import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
+import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
 
 type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -81,7 +82,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })

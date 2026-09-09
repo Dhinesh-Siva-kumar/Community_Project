@@ -255,26 +255,8 @@
 
 .jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
 
-.jb-day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.jb-day-toggle {
-  padding: 6px 14px; border-radius: $radius-full;
-  border: 1.5px solid $color-border; background: $color-bg-page;
-  color: $color-stone-600; font-size: $font-size-xs; font-weight: $font-weight-semibold; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 4px;
-  @include transition-short(all);
-
-  &:hover:not(.jb-day-toggle--on) { border-color: $color-stone-400; background: $color-stone-100; color: $color-stone-800; }
-  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
-
-  &--on {
-    background: rgba(251,191,36,0.28);
-    border-color: $color-primary;
-    color: $color-primary-darker;
-    font-weight: $font-weight-bold;
-    &:hover { background: rgba(251,191,36,0.36); border-color: $color-primary-dark; }
-  }
-}
+// The day pills and the time pickers now live inside
+// app-opening-hours-editor, along with their styles.
 
 .jb-logo-preview {
   position: relative; display: inline-flex; align-items: center; margin-bottom: $spacing-sm;

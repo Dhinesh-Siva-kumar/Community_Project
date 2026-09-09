@@ -1,8 +1,59 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { ApprovalStatus, Business, BusinessCategory, PaginatedResponse } from '../models';
+import {
+  ApprovalStatus, Business, BusinessCategory, VisibilityType,
+  OpeningDayKey, PaginatedResponse,
+} from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
+
+/** Files for a business create/update, one bag per gallery plus the logo. */
+export interface BusinessFilePayload {
+  /** Gallery Photos. */
+  images?: File[];
+  menuImages?: File[];
+  cardImages?: File[];
+  logo?: File;
+}
+
+export interface BusinessQueryParams {
+  categoryId?: string;
+  /** Comma-separated category ids — the multi-select category filter. */
+  categoryIds?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  /** Free-text country match. Prefer `countryIds`. */
+  country?: string;
+  /** Comma-separated master_countries ids. */
+  countryIds?: string;
+  stateId?: number;
+  cityId?: number;
+  visibilityType?: VisibilityType;
+  /** "Open on <day>" — a day key such as `TUE`. */
+  openOnDay?: OpeningDayKey;
+  /**
+   * "Open now". Businesses carry no timezone, so the *viewer's* current day
+   * and `HH:mm` are sent explicitly rather than the server using its clock.
+   */
+  openNowDay?: OpeningDayKey;
+  openNowTime?: string;
+  /**
+   * Feature-presence toggles. Only set these when true — api.get() strips
+   * ''/null/undefined but a literal `false` would survive and be parsed as
+   * an active filter.
+   */
+  hasMenu?: boolean;
+  hasGallery?: boolean;
+  hasWhatsapp?: boolean;
+  hasWebsite?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  pincode?: string;
+  status?: 'active' | 'inactive' | '';
+  sortBy?: string;
+  sortDir?: string;
+}
 
 export interface PendingBusinessQueryParams {
   page?:     number;
@@ -27,21 +78,7 @@ export class BusinessService {
     return this.api.post<BusinessCategory>('/business/categories', data);
   }
 
-  getBusinesses(params: {
-    categoryId?: string;
-    categoryIds?: string;
-    page?: number;
-    limit?: number;
-    search?: string;
-    country?: string;
-    openingHours?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    pincode?: string;
-    status?: 'active' | 'inactive' | '';
-    sortBy?: string;
-    sortDir?: string;
-  }): Observable<PaginatedResponse<Business>> {
+  getBusinesses(params: BusinessQueryParams): Observable<PaginatedResponse<Business>> {
     // Forward every param as-is — api.get() already strips null/undefined/''
     // values. Previously this cherry-picked individual fields into a fresh
     // object and silently dropped `status`, `limit`, `sortBy` and `sortDir`
@@ -91,33 +128,46 @@ export class BusinessService {
     return this.api.get<{ count: number }>('/business/pending-count');
   }
 
-   createBusiness(data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {
-     const files: Array<{ field: string; file: File }> = [];
-     if (images && images.length > 0) {
-       images.forEach((file) => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
-     }
-     if (logo) {
-       files.push({ field: 'logo', file: logo });
-     }
-     if (files.length > 0) {
-       return this.api.postWithFile<Business>('/business', data, files);
-     }
-     return this.api.post<Business>('/business', data);
-   }
+  /**
+   * Flattens the three galleries plus the logo into the repeated-field form
+   * postWithFile/putWithFile expect.
+   *
+   * Note what is NOT here: an emptied gallery. Removing every image from a
+   * gallery is expressed by the caller through the JSON-stringified
+   * `existingImages` / `existingMenuImages` / `existingCardImages` fields in
+   * `data`, because an empty file list is indistinguishable from an
+   * untouched gallery once it reaches FormData.
+   */
+  private toFileParts(payload?: BusinessFilePayload): Array<{ field: string; file: File }> {
+    const parts: Array<{ field: string; file: File }> = [];
+    if (!payload) return parts;
 
-   updateBusiness(id: string, data: Record<string, any>, images?: File[], logo?: File): Observable<Business> {
-     const files: Array<{ field: string; file: File }> = [];
-     if (images && images.length > 0) {
-       images.forEach((file) => files.push({ field: FORM_DATA_FIELD_NAMES.IMAGES, file }));
-     }
-     if (logo) {
-       files.push({ field: 'logo', file: logo });
-     }
-     if (files.length > 0) {
-       return this.api.putWithFile<Business>(`/business/${id}`, data, files);
-     }
-     return this.api.put<Business>(`/business/${id}`, data);
-   }
+    const galleries: Array<[string, File[] | undefined]> = [
+      [FORM_DATA_FIELD_NAMES.IMAGES, payload.images],
+      [FORM_DATA_FIELD_NAMES.MENU_IMAGES, payload.menuImages],
+      [FORM_DATA_FIELD_NAMES.CARD_IMAGES, payload.cardImages],
+    ];
+    for (const [field, list] of galleries) {
+      list?.forEach((file) => parts.push({ field, file }));
+    }
+    if (payload.logo) parts.push({ field: FORM_DATA_FIELD_NAMES.LOGO, file: payload.logo });
+
+    return parts;
+  }
+
+  createBusiness(data: Record<string, any>, files?: BusinessFilePayload): Observable<Business> {
+    const parts = this.toFileParts(files);
+    return parts.length > 0
+      ? this.api.postWithFile<Business>('/business', data, parts)
+      : this.api.post<Business>('/business', data);
+  }
+
+  updateBusiness(id: string, data: Record<string, any>, files?: BusinessFilePayload): Observable<Business> {
+    const parts = this.toFileParts(files);
+    return parts.length > 0
+      ? this.api.putWithFile<Business>(`/business/${id}`, data, parts)
+      : this.api.put<Business>(`/business/${id}`, data);
+  }
 
   deleteBusiness(id: string): Observable<void> {
     return this.api.delete<void>(`/business/${id}`);

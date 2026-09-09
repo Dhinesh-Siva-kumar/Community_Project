@@ -1,7 +1,9 @@
+import type { Knex } from 'knex';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFile, deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
+import { getViewerScope, applyJobVisibilityRestriction } from '../../services/job-visibility.service';
 import * as notificationsService from '../notifications/notifications.service';
 import type { CreateJobDtoType, UpdateJobDtoType, ListJobsQueryDtoType } from './jobs.dto';
 
@@ -35,6 +37,10 @@ function mapNewFields(data: Partial<CreateJobDtoType>): Record<string, unknown> 
   if (data.fullAddress !== undefined) m['full_address'] = data.fullAddress ?? null;
   if (data.isRemote    !== undefined) m['is_remote']    = data.isRemote    ?? false;
   if (data.workMode    !== undefined) m['work_mode']    = data.workMode    ?? null;
+  if (data.countryId   !== undefined) m['country_id']   = data.countryId   ?? null;
+  if (data.stateId     !== undefined) m['state_id']     = data.stateId     ?? null;
+  if (data.cityId      !== undefined) m['city_id']      = data.cityId      ?? null;
+  if (data.visibilityType !== undefined) m['visibility_type'] = data.visibilityType;
 
   // Role
   if (data.expMin    !== undefined) m['exp_min']   = data.expMin    ?? null;
@@ -105,6 +111,10 @@ function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
     fullAddress: j['full_address'],
     isRemote:    j['is_remote'],
     workMode:    j['work_mode'],
+    countryId:   j['country_id'],
+    stateId:     j['state_id'],
+    cityId:      j['city_id'],
+    visibilityType: j['visibility_type'],
 
     // Role
     expMin:    j['exp_min'],
@@ -188,199 +198,141 @@ export async function create(data: CreateJobDtoType, userId: string) {
 // ─────────────────────────────────────────────────────────────
 // findAll
 // ─────────────────────────────────────────────────────────────
-export async function findAll(params: ListJobsQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
+type JobFilterParams = Pick<
+  ListJobsQueryDtoType,
+  'pincode' | 'search' | 'country' | 'state' | 'city' | 'countryIds' | 'stateId' | 'cityId'
+  | 'visibilityType' | 'jobType' | 'workMode' | 'shiftType' | 'jobTypes' | 'workModes'
+  | 'education' | 'expMin' | 'expMax' | 'salaryMin' | 'salaryMax' | 'salaryHidden'
+  | 'postedWithin' | 'dateFrom' | 'dateTo' | 'status' | 'approvalStatus' | 'postedBy'
+> & { skipActiveFilter?: boolean; userId?: string };
+
+/**
+ * Every job list filter, written once with a `j.` prefix.
+ *
+ * Both the page query and the count query alias `jobs as j` — even though
+ * the count query joins nothing — so each filter is applied to both from a
+ * single definition and the rows returned can never drift from the `total`
+ * reported alongside them. Mirrors `applyBusinessFilters` in
+ * `business.service.ts`.
+ */
+function applyJobFilters(qb: Knex.QueryBuilder, params: JobFilterParams): void {
   const {
-    pincode, page, limit, search,
-    country, state, city,
-    jobType, workMode, shiftType, education,
-    expMin, expMax,
-    salaryMin, salaryMax, salaryHidden,
-    postedWithin, dateFrom, dateTo, status, approvalStatus, sortBy, skipActiveFilter, userId,
+    skipActiveFilter, status, approvalStatus, userId, pincode, search,
+    country, state, city, countryIds, stateId, cityId, visibilityType,
+    jobType, workMode, shiftType, jobTypes, workModes, education,
+    salaryHidden, expMin, expMax, salaryMin, salaryMax,
+    postedWithin, dateFrom, dateTo, postedBy,
   } = params;
+
+  // Admin callers set skipActiveFilter=true to see inactive jobs too,
+  // unless they've explicitly picked a status to filter by below.
+  if (!skipActiveFilter) qb.where('j.is_active', true);
+  if (status) qb.andWhere('j.is_active', status === 'active');
+
+  // ── Moderation status — non-owner/non-admin callers only ever see
+  // APPROVED jobs; skipActiveFilter=true (admin browse, or the caller's own
+  // "mine" list) bypasses this the same way it already bypasses the
+  // is_active filter above.
+  if (!skipActiveFilter) qb.where('j.status', 'APPROVED');
+  if (approvalStatus?.length) qb.whereIn('j.status', approvalStatus);
+
+  if (userId) qb.andWhere('j.user_id', userId);
+  if (pincode) qb.andWhere('j.pincode', pincode);
+
+  if (search) {
+    const term = `%${search}%`;
+    qb.andWhere(function () {
+      this.whereILike('j.title', term)
+        .orWhereILike('j.company_name', term)
+        .orWhereILike('j.description', term)
+        .orWhereILike('j.specification', term);
+    });
+  }
+
+  if (country) qb.andWhereILike('j.country', `%${country}%`);
+  if (state) qb.andWhereILike('j.state', `%${state}%`);
+  if (city) qb.andWhereILike('j.city', `%${city}%`);
+  if (countryIds) {
+    const ids = countryIds.split(',').map((s) => Number(s.trim())).filter((n) => Number.isInteger(n) && n > 0);
+    if (ids.length > 0) qb.whereIn('j.country_id', ids);
+  }
+  if (stateId) qb.andWhere('j.state_id', stateId);
+  if (cityId) qb.andWhere('j.city_id', cityId);
+
+  if (visibilityType) qb.andWhere('j.visibility_type', visibilityType);
+
+  if (jobType) qb.andWhere('j.job_type', jobType);
+  if (workMode) qb.andWhere('j.work_mode', workMode);
+  if (shiftType) qb.andWhere('j.shift_type', shiftType);
+  if (education) qb.andWhere('j.education', education);
+  if (jobTypes) {
+    const types = jobTypes.split(',').map((s) => s.trim()).filter(Boolean);
+    if (types.length > 0) qb.whereIn('j.job_type', types);
+  }
+  if (workModes) {
+    const modes = workModes.split(',').map((s) => s.trim()).filter(Boolean);
+    if (modes.length > 0) qb.whereIn('j.work_mode', modes);
+  }
+
+  // Recruiter/poster search (admin) — a subquery rather than a join, so it
+  // works identically on the joined `query` and the un-joined `countQuery`.
+  if (postedBy) {
+    const term = `%${postedBy}%`;
+    qb.whereIn('j.user_id', function (this: Knex.QueryBuilder) {
+      this.select('id').from('users').andWhere(function () {
+        this.whereILike('user_name', term).orWhereILike('display_name', term);
+      });
+    });
+  }
+
+  if (salaryHidden !== undefined) qb.andWhere('j.salary_hidden', salaryHidden);
+
+  if (expMin != null) {
+    qb.andWhere(function () { this.whereNull('j.exp_min').orWhere('j.exp_min', '>=', expMin); });
+  }
+  if (expMax != null) {
+    qb.andWhere(function () { this.whereNull('j.exp_max').orWhere('j.exp_max', '<=', expMax); });
+  }
+  if (salaryMin != null) {
+    qb.andWhere(function () { this.whereNull('j.salary_min').orWhere('j.salary_min', '>=', salaryMin); });
+  }
+  if (salaryMax != null) {
+    qb.andWhere(function () { this.whereNull('j.salary_max').orWhere('j.salary_max', '<=', salaryMax); });
+  }
+
+  if (postedWithin) qb.andWhereRaw(`j.created_at >= NOW() - INTERVAL '${Number(postedWithin)} days'`);
+  if (dateFrom) qb.andWhere('j.created_at', '>=', dateFrom);
+  if (dateTo) qb.andWhere('j.created_at', '<=', `${dateTo}T23:59:59.999Z`);
+}
+
+export async function findAll(
+  params: ListJobsQueryDtoType & {
+    skipActiveFilter?: boolean;
+    /** Owner filter — restricts the list to one user's jobs ("mine"). */
+    userId?: string;
+    /** The signed-in caller, for the country/worldwide visibility gate. */
+    viewerId?: string;
+  },
+) {
+  const { page, limit, sortBy, skipActiveFilter, viewerId } = params;
   const offset = (page - 1) * limit;
 
   const query = db('jobs as j')
     .join('users as u', 'j.user_id', 'u.id')
     .select('j.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
 
-  const countQuery = db('jobs');
+  const countQuery = db('jobs as j');
 
-  // Admin callers set skipActiveFilter=true to see inactive jobs too,
-  // unless they've explicitly picked a status to filter by below.
-  if (!skipActiveFilter) {
-    query.where('j.is_active', true);
-    countQuery.where({ is_active: true });
-  }
-  if (status) {
-    const isActive = status === 'active';
-    query.andWhere('j.is_active', isActive);
-    countQuery.andWhere('is_active', isActive);
-  }
+  applyJobFilters(query, params);
+  applyJobFilters(countQuery, params);
 
-  // ── Moderation status — non-owner/non-admin callers only ever see
-  // APPROVED jobs; skipActiveFilter=true (admin browse, or the caller's own
-  // "mine" list) bypasses this the same way it already bypasses the
-  // is_active filter above.
-  if (!skipActiveFilter) {
-    query.where('j.status', 'APPROVED');
-    countQuery.where('status', 'APPROVED');
-  }
-  if (approvalStatus?.length) {
-    query.whereIn('j.status', approvalStatus);
-    countQuery.whereIn('status', approvalStatus);
-  }
-  if (userId) { query.andWhere('j.user_id', userId); countQuery.andWhere('user_id', userId); }
-
-  // ── Helper to apply the same condition to both queries ──────
-  const addFilter = (queryFn: (q: typeof query) => void, countFn: (q: typeof countQuery) => void) => {
-    queryFn(query);
-    countFn(countQuery);
-  };
-
-  // ── Pincode (exact match) ────────────────────────────────────
-  if (pincode) {
-    addFilter(
-      q => q.andWhere('j.pincode', pincode),
-      q => q.andWhere({ pincode }),
-    );
-  }
-
-  // ── Text search (ILIKE across key fields) ────────────────────
-  if (search) {
-    const term = `%${search}%`;
-    query.andWhere(function () {
-      this.whereILike('j.title', term)
-        .orWhereILike('j.company_name', term)
-        .orWhereILike('j.description', term)
-        .orWhereILike('j.specification', term);
-    });
-    countQuery.andWhere(function () {
-      this.whereILike('title', term)
-        .orWhereILike('company_name', term)
-        .orWhereILike('description', term)
-        .orWhereILike('specification', term);
-    });
-  }
-
-  // ── Location filters (case-insensitive) ──────────────────────
-  if (country) {
-    addFilter(
-      q => q.andWhereILike('j.country', `%${country}%`),
-      q => q.andWhereILike('country', `%${country}%`),
-    );
-  }
-  if (state) {
-    addFilter(
-      q => q.andWhereILike('j.state', `%${state}%`),
-      q => q.andWhereILike('state', `%${state}%`),
-    );
-  }
-  if (city) {
-    addFilter(
-      q => q.andWhereILike('j.city', `%${city}%`),
-      q => q.andWhereILike('city', `%${city}%`),
-    );
-  }
-
-  // ── Exact enum filters ───────────────────────────────────────
-  if (jobType) {
-    addFilter(
-      q => q.andWhere('j.job_type', jobType),
-      q => q.andWhere({ job_type: jobType }),
-    );
-  }
-  if (workMode) {
-    addFilter(
-      q => q.andWhere('j.work_mode', workMode),
-      q => q.andWhere({ work_mode: workMode }),
-    );
-  }
-  if (shiftType) {
-    addFilter(
-      q => q.andWhere('j.shift_type', shiftType),
-      q => q.andWhere({ shift_type: shiftType }),
-    );
-  }
-  if (education) {
-    addFilter(
-      q => q.andWhere('j.education', education),
-      q => q.andWhere({ education }),
-    );
-  }
-
-  // ── Salary visibility ────────────────────────────────────────
-  if (salaryHidden !== undefined) {
-    addFilter(
-      q => q.andWhere('j.salary_hidden', salaryHidden),
-      q => q.andWhere({ salary_hidden: salaryHidden }),
-    );
-  }
-
-  // ── Experience range ─────────────────────────────────────────
-  if (expMin != null) {
-    addFilter(
-      q => q.andWhere(function () {
-        this.whereNull('j.exp_min').orWhere('j.exp_min', '>=', expMin);
-      }),
-      q => q.andWhere(function () {
-        this.whereNull('exp_min').orWhere('exp_min', '>=', expMin);
-      }),
-    );
-  }
-  if (expMax != null) {
-    addFilter(
-      q => q.andWhere(function () {
-        this.whereNull('j.exp_max').orWhere('j.exp_max', '<=', expMax);
-      }),
-      q => q.andWhere(function () {
-        this.whereNull('exp_max').orWhere('exp_max', '<=', expMax);
-      }),
-    );
-  }
-
-  // ── Salary range ─────────────────────────────────────────────
-  if (salaryMin != null) {
-    addFilter(
-      q => q.andWhere(function () {
-        this.whereNull('j.salary_min').orWhere('j.salary_min', '>=', salaryMin);
-      }),
-      q => q.andWhere(function () {
-        this.whereNull('salary_min').orWhere('salary_min', '>=', salaryMin);
-      }),
-    );
-  }
-  if (salaryMax != null) {
-    addFilter(
-      q => q.andWhere(function () {
-        this.whereNull('j.salary_max').orWhere('j.salary_max', '<=', salaryMax);
-      }),
-      q => q.andWhere(function () {
-        this.whereNull('salary_max').orWhere('salary_max', '<=', salaryMax);
-      }),
-    );
-  }
-
-  // ── Posted within N days ─────────────────────────────────────
-  if (postedWithin) {
-    addFilter(
-      q => q.andWhereRaw(`j.created_at >= NOW() - INTERVAL '${Number(postedWithin)} days'`),
-      q => q.andWhereRaw(`created_at >= NOW() - INTERVAL '${Number(postedWithin)} days'`),
-    );
-  }
-
-  // ── Explicit date range ───────────────────────────────────────
-  if (dateFrom) {
-    addFilter(
-      q => q.andWhere('j.created_at', '>=', dateFrom),
-      q => q.andWhere('created_at', '>=', dateFrom),
-    );
-  }
-  if (dateTo) {
-    const toEnd = `${dateTo}T23:59:59.999Z`;
-    addFilter(
-      q => q.andWhere('j.created_at', '<=', toEnd),
-      q => q.andWhere('created_at', '<=', toEnd),
-    );
+  // Country/worldwide visibility — lands on exactly the same callers as the
+  // moderation gate above: admins and "mine" lists set skipActiveFilter and
+  // are therefore exempt.
+  if (!skipActiveFilter && viewerId) {
+    const scope = await getViewerScope(viewerId);
+    applyJobVisibilityRestriction(query, 'j.', viewerId, scope);
+    applyJobVisibilityRestriction(countQuery, 'j.', viewerId, scope);
   }
 
   // ── Sorting ──────────────────────────────────────────────────
@@ -464,25 +416,18 @@ export async function findPendingOnly(options: FindPendingJobsOptions) {
     .where('j.status', 'PENDING')
     .select('j.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
 
-  const countQuery = db('jobs').where({ status: 'PENDING' });
+  const countQuery = db('jobs as j').where('j.status', 'PENDING');
 
-  if (search) {
-    const term = `%${search}%`;
-    query.andWhere(function () { this.whereILike('j.title', term).orWhereILike('j.company_name', term); });
-    countQuery.andWhere(function () { this.whereILike('title', term).orWhereILike('company_name', term); });
-  }
-  if (country) {
-    query.andWhereILike('j.country', `%${country}%`);
-    countQuery.andWhereILike('country', `%${country}%`);
-  }
-  if (dateFrom) {
-    query.andWhere('j.created_at', '>=', dateFrom);
-    countQuery.andWhere('created_at', '>=', dateFrom);
-  }
-  if (dateTo) {
-    const toEnd = `${dateTo}T23:59:59.999Z`;
-    query.andWhere('j.created_at', '<=', toEnd);
-    countQuery.andWhere('created_at', '<=', toEnd);
+  // Same single-definition treatment as findAll — the pending list only ever
+  // needs this four-filter subset.
+  for (const qb of [query, countQuery]) {
+    if (search) {
+      const term = `%${search}%`;
+      qb.andWhere(function () { this.whereILike('j.title', term).orWhereILike('j.company_name', term); });
+    }
+    if (country) qb.andWhereILike('j.country', `%${country}%`);
+    if (dateFrom) qb.andWhere('j.created_at', '>=', dateFrom);
+    if (dateTo) qb.andWhere('j.created_at', '<=', `${dateTo}T23:59:59.999Z`);
   }
 
   const sortColumn = sortBy === 'name' ? 'j.title'
