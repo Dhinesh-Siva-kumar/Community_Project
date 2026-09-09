@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
-  ApprovalStatus, Business, BusinessCategory, BusinessVisibilityType,
+  ApprovalStatus, Business, BusinessCategory, VisibilityType,
   OpeningDayKey, PaginatedResponse,
 } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
@@ -29,7 +29,7 @@ export interface BusinessQueryParams {
   countryIds?: string;
   stateId?: number;
   cityId?: number;
-  visibilityType?: BusinessVisibilityType;
+  visibilityType?: VisibilityType;
   /** "Open on <day>" — a day key such as `TUE`. */
   openOnDay?: OpeningDayKey;
   /**

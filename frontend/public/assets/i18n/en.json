@@ -1590,8 +1590,22 @@
       "categories": "Search categories…"
     },
     "jobForm": {
+      "editTitle": "Edit Job",
+      "createTitle": "Post a New Job",
+      "editSubtitle": "Update the details of this job posting",
+      "createSubtitle": "Fill in the details to post a new job listing",
+      "companyNameRequired": "Company name is required.",
+      "companyNameMinLength": "Company name must be at least 2 characters.",
+      "titleRequired": "Job title is required.",
+      "titleMinLength": "Job title must be at least 3 characters.",
+      "visibility": "Visibility",
       "fullyRemote": "Fully remote position",
-      "hideSalaryShow": "Hide salary — show \"Not Disclosed\""
+      "hideSalaryShow": "Hide salary — show \"Not Disclosed\"",
+      "negotiableHint": "Salary will be discussed directly with candidates instead of showing a fixed figure.",
+      "saving": "Saving...",
+      "publishing": "Publishing...",
+      "saveChanges": "Save Changes",
+      "publishJob": "Publish Job"
     },
     "emptyState": {
       "addBusiness": "Add Business",
@@ -2279,6 +2293,7 @@
       "salaryCanTNegative": "Salary can't be negative",
       "maximumSalary": "Maximum Salary",
       "city": "City",
+      "pincode": "Pincode",
       "doesnTMatchExpectedFormat": "Doesn't match the expected format for this country",
       "fullAddress": "Full Address",
       "scheduleAmpHours": "Schedule &amp; Hours",
@@ -2986,6 +3001,8 @@
       "any": "Any",
       "location": "Location",
       "company": "Company",
+      "recruiterCompany": "Recruiter / Company",
+      "recruiterCompanyPlaceholder": "Search by recruiter username or company",
       "shiftType": "Shift Type",
       "education": "Education",
       "experience": "Experience",
@@ -4035,6 +4052,7 @@
       "postcode": "Postcode {{code}}",
       "selectDialCodeFirst": "Please select a dial code first",
       "notDisclosed": "Not Disclosed",
+      "negotiable": "Negotiable",
       "paidType": "Paid {{type}}.",
       "shiftSuffix": "{{shift}} Shift"
     }

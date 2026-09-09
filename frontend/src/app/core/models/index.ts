@@ -366,7 +366,8 @@ export interface BusinessCategory {
 }
 
 /** Who a business is visible to. `COUNTRY` is the default on create. */
-export type BusinessVisibilityType = 'COUNTRY' | 'WORLDWIDE';
+/** Who a listing is visible to — used by both Business and Jobs. */
+export type VisibilityType = 'COUNTRY' | 'WORLDWIDE';
 
 export type OpeningDayKey = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
 
@@ -420,7 +421,7 @@ export interface Business {
   openingHours?: string;
   openingDays?: string;
   openingHoursJson?: OpeningHoursJson | null;
-  visibilityType?: BusinessVisibilityType;
+  visibilityType?: VisibilityType;
   logo?: string;
   categoryId: string;
   userId: string;
@@ -506,6 +507,14 @@ export interface Job {
   fullAddress?: string;
   isRemote?: boolean;
   workMode?: 'Remote' | 'Hybrid' | 'On-site';
+  countryId?: number;
+  stateId?: number;
+  cityId?: number;
+  countryName?: string;
+  stateName?: string;
+  cityName?: string;
+  /** Who this job is listed for. `COUNTRY` is the default on create. */
+  visibilityType?: VisibilityType;
 
   // ── Role details ─────────────────────────────────────────────
   expMin?: number;
@@ -517,7 +526,8 @@ export interface Job {
   // ── Structured salary ─────────────────────────────────────────
   salaryMin?: number;
   salaryMax?: number;
-  salaryType?: string;
+  /** 'Negotiable' hides the amount and shows a plain "Negotiable" label. */
+  salaryType?: 'Fixed' | 'Hourly' | 'Monthly' | 'Annual' | 'Negotiable' | string;
   salaryCurrency?: string;
   salaryHidden?: boolean;
 

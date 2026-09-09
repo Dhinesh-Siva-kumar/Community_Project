@@ -3,28 +3,19 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {
-  ReactiveFormsModule, FormsModule, FormBuilder, FormGroup,
-  Validators, AbstractControl, ValidationErrors, ValidatorFn
-} from '@angular/forms';
-import { Subject, takeUntil, Observable, map } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { JobService, JobsQueryParams } from '../../../core/services/job.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService, MasterState, MasterCity } from '../../../core/services/master-data.service';
-import { GeographyService } from '../../../core/services/geography.service';
-import { Country, Job, PaginatedResponse, GeoCountry, CountryAddressConfig, Division } from '../../../core/models';
+import { Country, Job, PaginatedResponse, VisibilityType } from '../../../core/models';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
-import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
-import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
-import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
-import { TagInputComponent } from '../../../shared/components/tag-input/tag-input.component';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
-import { getCurrencySymbol, getCurrencySelectOptions } from '../../../shared/constants/currencies';
-import { getPhoneRule } from '../../../shared/utils/phone';
+import { formatCompensation } from '../../../shared/utils/job-compensation';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -32,6 +23,7 @@ import { LanguageService } from '../../../core/services/language.service';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
+import { JobFormModalComponent } from '../../../shared/components/job-form-modal/job-form-modal.component';
 
 type JobSharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -47,55 +39,14 @@ const VIEW_STORAGE_KEY = 'admin-jobs:viewMode';
  */
 const CONFIRM_CLOSE_DELAY_MS = 900;
 
-function urlValidator(control: AbstractControl): ValidationErrors | null {
-  const v = control.value;
-  if (!v || v === '') return null;
-  try {
-    const url = new URL(v);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      return { invalidUrl: 'URL must start with http:// or https://' };
-    }
-    return null;
-  } catch {
-    return { invalidUrl: 'Please enter a valid URL (e.g. https://example.com)' };
-  }
-}
-
-function salaryRangeValidator(group: AbstractControl): ValidationErrors | null {
-  const min = group.get('salaryMin')?.value;
-  const max = group.get('salaryMax')?.value;
-  if (min != null && max != null && min !== '' && max !== '' && Number(max) < Number(min)) {
-    return { salaryRange: true };
-  }
-  return null;
-}
-
-function expRangeValidator(group: AbstractControl): ValidationErrors | null {
-  const min = group.get('expMin')?.value;
-  const max = group.get('expMax')?.value;
-  if (min != null && max != null && min !== '' && max !== '' && Number(max) < Number(min)) {
-    return { expRange: true };
-  }
-  return null;
-}
-
-/** Country-aware postal code validator — see business-form-modal.component.ts for the fuller explanation. */
-function postalCodeValidator(regex: string | null): ValidatorFn {
-  return (c: AbstractControl): ValidationErrors | null => {
-    const v = ((c.value as string) ?? '').trim();
-    if (!v || !regex) return null;
-    try { return new RegExp(regex).test(v) ? null : { postalFormat: true }; }
-    catch { return null; }
-  };
-}
-
 @Component({
   selector: 'app-admin-jobs',
   standalone: true,
-  imports: [DateInputComponent, 
-    CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink,
-    SearchableSelectComponent, TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
-    SortBarComponent, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent,
+    CommonModule, FormsModule, DatePipe, RouterLink,
+    SearchableSelectComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
+    SortBarComponent, ScrollLockDirective, TranslatePipe, EnumLabelPipe,
+    JobFormModalComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -110,8 +61,6 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
-  private geographyService  = inject(GeographyService);
-  private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
   // ─── Data ───────────────────────────────────────────────────
@@ -153,6 +102,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   filterCompanyName   = signal('');
   filterSalaryHidden  = signal<boolean | null>(null);
   filterPostedWithin  = signal<number | null>(null);
+  filterVisibilityType = signal<VisibilityType | ''>('');
+  /** Recruiter/company account search — matches the posting user's username/display name. */
+  filterPostedBy      = signal('');
   filterStatus        = signal<'active' | 'inactive' | ''>('');
   filterDateFrom      = signal('');
   filterDateTo        = signal('');
@@ -264,6 +216,11 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
         ? this.translate.instant(keys[days])
         : this.translate.instant('filters.postedDaysN', { days }), days);
     }
+    if (this.filterVisibilityType()) {
+      const key = this.filterVisibilityType() === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry';
+      add('visibilityType', this.translate.instant(key), this.filterVisibilityType());
+    }
+    if (this.filterPostedBy()) add('postedBy', this.filterPostedBy(), this.filterPostedBy());
     if (this.filterStatus())   add('status',   this.translate.instant(enumLabelKey('activeStatus', this.filterStatus())), this.filterStatus());
     if (this.filterDateFrom()) add('dateFrom', this.translate.instant('filters.dateFrom', { date: this.filterDateFrom() }), this.filterDateFrom());
     if (this.filterDateTo())   add('dateTo',   this.translate.instant('filters.dateTo', { date: this.filterDateTo() }), this.filterDateTo());
@@ -309,18 +266,11 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.imageViewerOpen.set(false);
   }
 
-  // ─── Modal ───────────────────────────────────────────────────
-  showAddModal    = signal(false);
-  selectedImages  = signal<File[]>([]);
-  selectedLogo    = signal<File | null>(null);
-  logoPreview     = signal<string | null>(null);
-  jobForm!: FormGroup;
-  fileUploadReset = signal(0);
-  logoUploadReset = signal(0);
-
-  // ─── Edit mode ───────────────────────────────────────────────
-  editingJob     = signal<Job | null>(null);
-  editSubmitting = signal(false);
+  // ─── Add/Edit Job modal — the form itself is app-job-form-modal (shared
+  // with the user Jobs page), so this page only owns *which* job is being
+  // edited and what to do once it saves. ──────────────────────────────
+  showAddModal = signal(false);
+  editJobId    = signal<string | null>(null);
 
   // ─── Delete confirmation modal (for accordion body action) ───
   showDeleteConfirm = signal(false);
@@ -380,54 +330,11 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}` }))
   );
 
-  // ─── Location — Country → Division(s) → City → Postal cascade ──────
-  // Mirrors business-form-modal.component.ts's implementation; Jobs has no
-  // stored location ids (only plain city/state/country strings), so on
-  // submit the leaf division/city NAME is resolved and written into those
-  // string columns exactly as Business does for its own legacy fields.
-  geoCountries  = signal<GeoCountry[]>([]);
-  countryConfig = signal<CountryAddressConfig | null>(null);
-  adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
-
-  geoCountryOptions = computed<SelectOption[]>(() =>
-    this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
-  );
-
-  division1Options = signal<Division[]>([]);
-  division2Options = signal<Division[]>([]);
-  division1Loading = signal(false);
-  division2Loading = signal(false);
-
-  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map(d => ({ value: d.id, label: d.name })));
-  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map(d => ({ value: d.id, label: d.name })));
-
-  selectedDivision1Name = signal<string | null>(null);
-  selectedDivision2Name = signal<string | null>(null);
-  selectedCityOption    = signal<SelectOption | null>(null);
-  selectedCityName      = signal<string | null>(null);
-
-  private cityNameCache = new Map<number, string>();
-
-  citySearchFn = (query: string): Observable<SelectOption[]> => {
-    const countryId  = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : undefined;
-    const divisionId = this.getLeafDivisionId() ?? undefined;
-    if (!countryId) return new Observable<SelectOption[]>(sub => { sub.next([]); sub.complete(); });
-    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
-      map(res => {
-        res.data.forEach(c => this.cityNameCache.set(c.id, c.name));
-        return res.data.map(c => ({ value: c.id, label: c.name }));
-      }),
-    );
-  };
-
   // ─── Static Options ─────────────────────────────────────────
   readonly jobTypes    = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Temporary'];
   readonly jobTypeOptions: SelectOption[] = enumSelectOptions('jobType', this.jobTypes);
   readonly workModes   = ['Remote', 'Hybrid', 'On-site'] as const;
   readonly shiftTypes  = ['Day', 'Night', 'Rotational', 'Flexible'] as const;
-  readonly salaryTypes = ['Fixed', 'Hourly', 'Monthly', 'Annual'] as const;
-  readonly workDays    = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  readonly currencyOptions: SelectOption[] = getCurrencySelectOptions();
 
   readonly educationOptions: SelectOption[] = [
     { value: 'None',       label: 'admin.jobs.label.noEducationNeeded' },
@@ -487,12 +394,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
 
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
-    this.initForm();
     this.restoreSavedViewMode();
     this.loadJobs(1);
     this.loadCountries();
-    this.loadGeoCountries();
-    this.subscribeToSalaryHidden();
   }
 
   private restoreSavedViewMode(): void {
@@ -524,192 +428,6 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private subscribeToSalaryHidden(): void {
-    this.jobForm.get('salaryHidden')!.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((hidden: boolean) => {
-        if (hidden) {
-          ['salaryType', 'salaryCurrency', 'salaryMin', 'salaryMax'].forEach(f => {
-            this.jobForm.get(f)?.setValue(null);
-            this.jobForm.get(f)?.clearValidators();
-            this.jobForm.get(f)?.updateValueAndValidity({ emitEvent: false });
-          });
-        }
-      });
-  }
-
-  // ─── Location cascade ────────────────────────────────────────
-  private getLeafDivisionId(): number | null {
-    const levels = this.adminLevels().length;
-    if (levels >= 2) { const v = this.jobForm.get('division2Id')?.value; return v ? Number(v) : null; }
-    if (levels === 1) { const v = this.jobForm.get('division1Id')?.value; return v ? Number(v) : null; }
-    return null;
-  }
-
-  private getLeafDivisionName(): string | null {
-    const levels = this.adminLevels().length;
-    if (levels >= 2) return this.selectedDivision2Name();
-    if (levels === 1) return this.selectedDivision1Name();
-    return null;
-  }
-
-  private applyDivisionValidators(): void {
-    const levels = this.adminLevels().length;
-    const d1 = this.jobForm.get('division1Id');
-    const d2 = this.jobForm.get('division2Id');
-    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
-    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
-    d1?.updateValueAndValidity({ emitEvent: false });
-    d2?.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private applyPincodeValidators(): void {
-    const postal = this.countryConfig()?.postalCode;
-    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
-    if (postal?.required) validators.push(Validators.required);
-    const ctrl = this.jobForm.get('pincode');
-    ctrl?.setValidators(validators);
-    ctrl?.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private resetDivisionState(): void {
-    this.countryConfig.set(null);
-    this.division1Options.set([]);
-    this.division2Options.set([]);
-    this.selectedDivision1Name.set(null);
-    this.selectedDivision2Name.set(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-    const silent = { emitEvent: false, emitViewToModelChange: false };
-    this.jobForm.get('division1Id')?.setValue(null, silent);
-    this.jobForm.get('division2Id')?.setValue(null, silent);
-    this.jobForm.get('cityId')?.setValue(null, silent);
-  }
-
-  onCountryChange(countryId: any): void {
-    this.resetDivisionState();
-    const id = countryId ? Number(countryId) : null;
-    if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
-
-    this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (config) => {
-        this.countryConfig.set(config);
-        this.applyDivisionValidators();
-        this.applyPincodeValidators();
-        if (config.divisionLevels.length > 0) {
-          this.division1Loading.set(true);
-          this.geographyService.getDivisions(id).pipe(takeUntil(this.destroy$)).subscribe({
-            next: divisions => { this.division1Options.set(divisions); this.division1Loading.set(false); },
-            error: () => this.division1Loading.set(false),
-          });
-        }
-      },
-      error: () => this.toast.error('admin.jobs.toast.failedLoadCountryAddressDetails'),
-    });
-  }
-
-  onDivision1Change(divisionId: any): void {
-    this.jobForm.get('division2Id')?.setValue(null);
-    this.jobForm.get('cityId')?.setValue(null);
-    this.division2Options.set([]);
-    this.selectedDivision2Name.set(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-
-    const id = divisionId ? Number(divisionId) : null;
-    this.selectedDivision1Name.set(id ? (this.division1Options().find(d => d.id === id)?.name ?? null) : null);
-
-    const countryId = this.jobForm.get('countryId')?.value ? Number(this.jobForm.get('countryId')?.value) : null;
-    if (id && countryId && this.adminLevels().length >= 2) {
-      this.division2Loading.set(true);
-      this.geographyService.getDivisions(countryId, id).pipe(takeUntil(this.destroy$)).subscribe({
-        next: divisions => { this.division2Options.set(divisions); this.division2Loading.set(false); },
-        error: () => this.division2Loading.set(false),
-      });
-    }
-  }
-
-  onDivision2Change(divisionId: any): void {
-    this.jobForm.get('cityId')?.setValue(null);
-    this.selectedCityOption.set(null);
-    this.selectedCityName.set(null);
-    const id = divisionId ? Number(divisionId) : null;
-    this.selectedDivision2Name.set(id ? (this.division2Options().find(d => d.id === id)?.name ?? null) : null);
-  }
-
-  onCityChange(cityId: any): void {
-    const id = cityId ? Number(cityId) : null;
-    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
-    this.selectedCityName.set(name);
-    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
-  }
-
-  private loadGeoCountries(): void {
-    this.geographyService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
-      next: data => this.geoCountries.set(data),
-      error: () => {},
-    });
-  }
-
-  /**
-   * Best-effort edit-mode resurrection: unlike Business, Jobs stores only
-   * plain city/state/country strings (no ids), so the previously-picked
-   * division/city can't be looked up directly — instead we fetch the
-   * country's division list and match the stored name case-insensitively.
-   * If no match is found (e.g. a 2-level country whose stored name was the
-   * leaf/district rather than the top-level division) the field is simply
-   * left blank for the admin to re-pick, same graceful fallback the page
-   * already had before this rework.
-   */
-  private resurrectJobLocation(job: Job): void {
-    const silent = { emitEvent: false, emitViewToModelChange: false };
-    this.resetDivisionState();
-    const country = job.country ? this.geoCountries().find(c => c.name.toLowerCase() === job.country!.toLowerCase()) : null;
-    if (!country) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
-
-    this.jobForm.get('countryId')?.setValue(country.id, silent);
-    this.geographyService.getCountryConfig(country.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (config) => {
-        this.countryConfig.set(config);
-        this.applyDivisionValidators();
-        this.applyPincodeValidators();
-        if (config.divisionLevels.length === 0 || !job.state) return;
-
-        this.division1Loading.set(true);
-        this.geographyService.getDivisions(country.id).pipe(takeUntil(this.destroy$)).subscribe({
-          next: (divisions) => {
-            this.division1Options.set(divisions);
-            this.division1Loading.set(false);
-            const match = divisions.find(d => d.name.toLowerCase() === job.state!.toLowerCase());
-            if (!match) return;
-            this.jobForm.get('division1Id')?.setValue(match.id, silent);
-            this.selectedDivision1Name.set(match.name);
-            if (job.city) this.resurrectJobCity(match.id, job.city);
-          },
-          error: () => this.division1Loading.set(false),
-        });
-      },
-      error: () => {},
-    });
-  }
-
-  private resurrectJobCity(divisionId: number, cityName: string): void {
-    this.geographyService.searchCities({ divisionId, countryId: undefined, search: cityName, page: 1, limit: 20 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          const match = cityName ? res.data.find(c => c.name.toLowerCase() === cityName.toLowerCase()) : null;
-          if (!match) return;
-          const silent = { emitEvent: false, emitViewToModelChange: false };
-          this.jobForm.get('cityId')?.setValue(match.id, silent);
-          this.selectedCityName.set(match.name);
-          this.selectedCityOption.set({ value: match.id, label: match.name });
-          this.cityNameCache.set(match.id, match.name);
-        },
-        error: () => {},
-      });
-  }
-
   // ─── Data Loading ────────────────────────────────────────────
   loadJobs(page = 1): void {
     this.loading.set(true);
@@ -732,6 +450,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     if (this.filterSalaryMax() != null) query.salaryMax = this.filterSalaryMax()!;
     if (this.filterSalaryHidden() != null) query.salaryHidden = this.filterSalaryHidden()!;
     if (this.filterPostedWithin() != null) query.postedWithin = this.filterPostedWithin()!;
+    if (this.filterVisibilityType())  query.visibilityType = this.filterVisibilityType() as VisibilityType;
+    if (this.filterPostedBy())        query.postedBy    = this.filterPostedBy();
     if (this.filterStatus())          query.status      = this.filterStatus() as 'active' | 'inactive';
     if (this.filterDateFrom())        query.dateFrom    = this.filterDateFrom();
     if (this.filterDateTo())          query.dateTo      = this.filterDateTo();
@@ -768,6 +488,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     if (this.filterSalaryMax() != null) base.salaryMax = this.filterSalaryMax()!;
     if (this.filterSalaryHidden() != null) base.salaryHidden = this.filterSalaryHidden()!;
     if (this.filterPostedWithin() != null) base.postedWithin = this.filterPostedWithin()!;
+    if (this.filterVisibilityType())  base.visibilityType = this.filterVisibilityType() as VisibilityType;
+    if (this.filterPostedBy())        base.postedBy    = this.filterPostedBy();
     if (this.filterStatus())          base.status      = this.filterStatus() as 'active' | 'inactive';
     if (this.filterDateFrom())        base.dateFrom    = this.filterDateFrom();
     if (this.filterDateTo())          base.dateTo      = this.filterDateTo();
@@ -934,6 +656,8 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
       case 'salaryMax':    this.filterSalaryMax.set(null);   break;
       case 'salaryHidden': this.filterSalaryHidden.set(null); break;
       case 'postedWithin': this.filterPostedWithin.set(null); break;
+      case 'visibilityType': this.filterVisibilityType.set(''); break;
+      case 'postedBy':     this.filterPostedBy.set('');        break;
       case 'status':       this.filterStatus.set('');        break;
       case 'dateFrom':     this.filterDateFrom.set('');      break;
       case 'dateTo':       this.filterDateTo.set('');        break;
@@ -944,6 +668,16 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   setStatusFilter(v: string | number): void {
     this.filterStatus.set(v as 'active' | 'inactive' | '');
     this.loadJobs(1);
+  }
+
+  setVisibilityTypeFilter(v: VisibilityType | ''): void {
+    this.filterVisibilityType.set(this.filterVisibilityType() === v ? '' : v);
+    this.triggerFilteredLoad();
+  }
+
+  onFilterPostedByChange(value: string): void {
+    this.filterPostedBy.set(value);
+    this.triggerFilteredLoad();
   }
 
   onFilterDateFromChange(value: string): void {
@@ -968,6 +702,7 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     this.filterExpMin.set(null); this.filterExpMax.set(null);
     this.filterSalaryMin.set(null); this.filterSalaryMax.set(null);
     this.filterSalaryHidden.set(null); this.filterPostedWithin.set(null);
+    this.filterVisibilityType.set(''); this.filterPostedBy.set('');
     this.filterStatus.set(''); this.filterDateFrom.set(''); this.filterDateTo.set('');
     this.filterStates.set([]); this.filterCities.set([]);
     this.sortBy.set('newest');
@@ -979,155 +714,33 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   // filteredJobs (all jobs are already server-filtered)
   filteredJobs = computed(() => this.jobs());
 
-  // ─── Working Days ────────────────────────────────────────────
-  isWorkingDay(day: string): boolean {
-    return ((this.jobForm.get('workingDays')?.value as string[]) ?? []).includes(day);
-  }
 
-  toggleWorkingDay(day: string): void {
-    const current: string[] = this.jobForm.get('workingDays')?.value ?? [];
-    const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day];
-    this.jobForm.get('workingDays')?.setValue(next);
-  }
-
-  get isRemoteCtrl(): boolean { return !!this.jobForm.get('isRemote')?.value; }
-  get isSalaryHidden(): boolean { return !!this.jobForm.get('salaryHidden')?.value; }
-
-  // ─── Logo ─────────────────────────────────────────────────────
-  onLogoChange(files: File[]): void {
-    const file = files[0] ?? null;
-    this.selectedLogo.set(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => this.logoPreview.set(e.target?.result as string);
-      reader.readAsDataURL(file);
-    } else { this.logoPreview.set(null); }
-  }
-
-  clearLogo(): void {
-    this.selectedLogo.set(null);
-    this.logoPreview.set(null);
-    this.logoUploadReset.update(v => v + 1);
-  }
-
-  onJobImagesChange(files: File[]): void { this.selectedImages.set(files); }
-
-  // ─── Modal ───────────────────────────────────────────────────
+  // ─── Add/Edit Job modal ───────────────────────────────────────
   openAddModal(): void {
-    this.editingJob.set(null);
-    this.jobForm.reset({
-      jobType: 'Full-time', workMode: 'On-site', salaryType: 'Monthly',
-      salaryCurrency: 'GBP', shiftType: 'Day', openings: 1,
-      isRemote: false, salaryHidden: false, workingDays: [], skills: [],
-    });
-    this.resetDivisionState();
-    this.applyDivisionValidators();
-    this.applyPincodeValidators();
-    this.selectedImages.set([]);
-    this.selectedLogo.set(null);
-    this.logoPreview.set(null);
-    this.fileUploadReset.update(v => v + 1);
-    this.logoUploadReset.update(v => v + 1);
+    this.editJobId.set(null);
     this.showAddModal.set(true);
   }
 
   openEditModal(job: Job, event: Event): void {
     event.stopPropagation();
-    this.editingJob.set(job);
-    this.selectedImages.set([]);
-    this.selectedLogo.set(null);
-    this.logoPreview.set(job.companyLogo ?? null);
-
-    this.jobForm.patchValue({
-      companyName:     job.companyName    ?? '',
-      companyWebsite:  job.companyWebsite ?? '',
-      title:           job.title,
-      jobType:         job.jobType        ?? 'Full-time',
-      workMode:        job.workMode       ?? 'On-site',
-      education:       job.education      ?? '',
-      openings:        job.openings       ?? 1,
-      expMin:          job.expMin         ?? null,
-      expMax:          job.expMax         ?? null,
-      salaryType:      job.salaryType     ?? 'Monthly',
-      salaryCurrency:  job.salaryCurrency ?? 'GBP',
-      salaryMin:       job.salaryMin      ?? null,
-      salaryMax:       job.salaryMax      ?? null,
-      salaryHidden:    job.salaryHidden   ?? false,
-      isRemote:        job.isRemote       ?? false,
-      pincode:         job.pincode        ?? '',
-      fullAddress:     job.fullAddress    ?? '',
-      shiftType:       job.shiftType      ?? 'Day',
-      workStartTime:   job.workStartTime  ?? '',
-      workEndTime:     job.workEndTime    ?? '',
-      workingDays:     job.workingDays    ?? [],
-      contactPerson:   job.contactPerson  ?? '',
-      contactPhone:    job.contactPhone   ?? '',
-      contactEmail:    job.contactEmail   ?? '',
-      applicationUrl:  job.applicationUrl ?? '',
-      skills:          job.skills         ?? [],
-      description:     job.description    ?? '',
-      responsibilities: job.responsibilities ?? '',
-      qualifications:   job.qualifications   ?? '',
-      requirements:     job.requirements     ?? '',
-      benefits:         job.benefits         ?? '',
-    });
-    this.resurrectJobLocation(job);
-    this.fileUploadReset.update(v => v + 1);
-    this.logoUploadReset.update(v => v + 1);
+    // No prefetch here: the modal loads the full record itself.
+    this.editJobId.set(job.id);
     this.showAddModal.set(true);
   }
 
-  closeAddModal(): void { this.showAddModal.set(false); this.editingJob.set(null); }
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.editJobId.set(null);
+  }
 
-  submitJob(): void {
-    if (this.jobForm.invalid) { this.jobForm.markAllAsTouched(); return; }
-
-    const editing = this.editingJob();
-    if (editing) {
-      this.doUpdateJob(editing);
+  onJobSaved(job: Job): void {
+    const wasEditing = this.editJobId() !== null;
+    if (wasEditing) {
+      this.jobs.update(list => list.map(j => j.id === job.id ? job : j));
     } else {
-      this.doCreateJob();
+      this.jobs.update(list => [job, ...list]);
+      this.totalItems.update(v => v + 1);
     }
-  }
-
-  private doCreateJob(): void {
-    this.submitting.set(true);
-    const raw    = this.jobForm.value;
-    const data   = this.buildJobPayload(raw);
-    const images = this.selectedImages();
-    const logo   = this.selectedLogo();
-
-    this.jobService.createJob(data, images.length > 0 ? images : undefined, logo ?? undefined)
-      .subscribe({
-        next: (job) => {
-          this.jobs.update(list => [job, ...list]);
-          this.totalItems.update(v => v + 1);
-          this.toast.success('admin.jobs.toast.jobPostedSuccessfully');
-          // Keep the popup (and its disabled/spinner button, so it can't be
-          // double-submitted) up just long enough for the confirmation toast
-          // to be visible above it, then close.
-          setTimeout(() => { this.closeAddModal(); this.submitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
-        },
-        error: () => { this.toast.error('admin.jobs.toast.failedPostJobPleaseTry'); this.submitting.set(false); },
-      });
-  }
-
-  private doUpdateJob(job: Job): void {
-    this.editSubmitting.set(true);
-    const raw    = this.jobForm.value;
-    const data   = this.buildEditPayload(raw, job);
-    const images = this.selectedImages();
-    const logo   = this.selectedLogo();
-
-    this.jobService.updateJob(job.id, data, images.length > 0 ? images : undefined, logo ?? undefined)
-      .subscribe({
-        next: (updated) => {
-          this.jobs.update(list => list.map(j => j.id === updated.id ? updated : j));
-          this.toast.success('admin.jobs.toast.jobUpdatedSuccessfully');
-          setTimeout(() => { this.closeAddModal(); this.editSubmitting.set(false); }, CONFIRM_CLOSE_DELAY_MS);
-        },
-        error: () => { this.toast.error('admin.jobs.toast.failedUpdateJob'); this.editSubmitting.set(false); },
-      });
   }
 
   // ─── Delete confirmation modal ───────────────────────────────
@@ -1166,35 +779,6 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private buildJobPayload(raw: Record<string, any>): Record<string, any> {
-    const country = this.geoCountries().find(c => c.id === raw['countryId']);
-    const leafDivisionName = this.getLeafDivisionName();
-    const cityName = this.selectedCityName();
-    const phone   = (raw['contactDialCode'] && raw['contactPhone'])
-      ? `${raw['contactDialCode']}${raw['contactPhone']}`
-      : (raw['contactPhone'] ?? '');
-
-    const payload: Record<string, any> = {};
-    for (const [key, val] of Object.entries(raw)) {
-      if (['countryId', 'division1Id', 'division2Id', 'cityId', 'contactDialCode'].includes(key)) continue;
-      if (val === null || val === undefined || val === '') continue;
-      if (Array.isArray(val) && val.length === 0) continue;
-      payload[key] = val;
-    }
-    if (country)         payload['country'] = country.name;
-    if (leafDivisionName) payload['state']  = leafDivisionName;
-    if (cityName)        payload['city']    = cityName;
-    if (phone)            payload['contactPhone'] = phone;
-    return payload;
-  }
-
-  private buildEditPayload(raw: Record<string, any>, original: Job): Record<string, any> {
-    const payload = this.buildJobPayload(raw);
-    if (!payload['country'] && original.country) payload['country'] = original.country;
-    if (!payload['state']   && original.state)   payload['state']   = original.state;
-    if (!payload['city']    && original.city)     payload['city']    = original.city;
-    return payload;
-  }
 
   // ─── Pagination ──────────────────────────────────────────────
   goToPage(page: number): void {
@@ -1216,30 +800,9 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
     return pages;
   }
 
-  // ─── Phone Validation ────────────────────────────────────────
-  getPhoneError(): string | null {
-    const dialCode = this.jobForm.get('contactDialCode')?.value ?? '';
-    const phone    = this.jobForm.get('contactPhone')?.value ?? '';
-    if (!phone) return null;
-    if (!dialCode) return this.translate.instant('jobs.value.selectDialCodeFirst');
-    const rule = getPhoneRule(dialCode);
-    if (rule.pattern && !rule.pattern.test(phone)) return rule.hint;
-    return null;
-  }
-
   // ─── Display Helpers ─────────────────────────────────────────
-  getCurrencySymbol(code: string | undefined): string { return getCurrencySymbol(code); }
-
   getSalaryDisplay(job: Job): string {
-    if (job.salaryHidden) return this.translate.instant('jobs.value.notDisclosed');
-    const sym  = getCurrencySymbol(job.salaryCurrency);
-    const type = job.salaryType ? ` / ${job.salaryType}` : '';
-    if (job.salaryMin != null && job.salaryMax != null) {
-      return `${sym}${job.salaryMin.toLocaleString()} – ${sym}${job.salaryMax.toLocaleString()}${type}`;
-    }
-    if (job.salaryMin != null) return this.translate.instant('jobs.value.salaryFrom', { amount: `${sym}${job.salaryMin.toLocaleString()}${type}` });
-    if (job.salaryMax != null) return this.translate.instant('jobs.value.salaryUpTo', { amount: `${sym}${job.salaryMax.toLocaleString()}${type}` });
-    return job.salary ?? '';
+    return formatCompensation(job, (key, params) => this.translate.instant(key, params));
   }
 
   getExperienceLabel(job: Job): string {
@@ -1472,47 +1035,4 @@ export class AdminJobsComponent implements OnInit, OnDestroy {
   inputVal(event: Event): string { return (event.target as HTMLInputElement).value; }
   inputNum(event: Event): number | null { const v = (event.target as HTMLInputElement).value; return v ? +v : null; }
 
-  // ─── Form Init ───────────────────────────────────────────────
-  private initForm(): void {
-    this.jobForm = this.fb.group({
-      companyName:     ['', [Validators.required, Validators.minLength(2)]],
-      companyWebsite:  ['', urlValidator],
-      title:           ['', [Validators.required, Validators.minLength(3)]],
-      jobType:         ['Full-time'],
-      workMode:        ['On-site'],
-      education:       [''],
-      openings:        [1, [Validators.min(1)]],
-      expMin:          [null],
-      expMax:          [null],
-      salaryType:      ['Monthly'],
-      salaryCurrency:  ['GBP'],
-      salaryMin:       [null, [Validators.min(0)]],
-      salaryMax:       [null, [Validators.min(0)]],
-      salaryHidden:    [false],
-      isRemote:        [false],
-      countryId:       [null],
-      division1Id:     [null],
-      division2Id:     [null],
-      cityId:          [null],
-      pincode:         [''],
-      fullAddress:     [''],
-      shiftType:       ['Day'],
-      workStartTime:   [''],
-      workEndTime:     [''],
-      workingDays:     [[]],
-      contactPerson:   [''],
-      contactDialCode: [''],
-      contactPhone:    [''],
-      contactEmail:    ['', [Validators.email]],
-      applicationUrl:  ['', urlValidator],
-      skills:          [[]],
-      description:     [''],
-      responsibilities: [''],
-      qualifications:   [''],
-      requirements:     [''],
-      benefits:         [''],
-    }, {
-      validators: [salaryRangeValidator, expRangeValidator],
-    });
-  }
 }
