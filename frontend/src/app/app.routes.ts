@@ -124,6 +124,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./pages/admin/events/event-detail/event-detail.component').then(
+            (m) => m.EventDetailComponent
+          ),
+      },
+      {
         path: 'jobs',
         loadComponent: () =>
           import('./pages/admin/jobs/jobs.component').then(
@@ -208,6 +215,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/user/events/events.component').then(
             (m) => m.UserEventsComponent
+          ),
+      },
+      {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./pages/user/events/event-detail/event-detail.component').then(
+            (m) => m.EventDetailComponent
           ),
       },
       {

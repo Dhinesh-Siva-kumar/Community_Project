@@ -365,8 +365,7 @@ export interface BusinessCategory {
   createdAt: string;
 }
 
-/** Who a business is visible to. `COUNTRY` is the default on create. */
-/** Who a listing is visible to — used by both Business and Jobs. */
+/** Who a listing is visible to — used by Business, Jobs, and Events. */
 export type VisibilityType = 'COUNTRY' | 'WORLDWIDE';
 
 export type OpeningDayKey = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
@@ -462,6 +461,10 @@ export interface Event {
   pincode?: string;
   location?: string;
   country: string;
+  countryId?: number | null;
+  visibilityType?: VisibilityType;
+  /** Optional registration/booking link — the Event Details page shows it plus a QR code generated client-side from this same value. */
+  bookingUrl?: string | null;
   userId: string;
   user?: User;
   isActive: boolean;

@@ -20,6 +20,25 @@ export const CreateEventDto = z.object({
     (val) => (typeof val === 'string' && val.trim() === '' ? null : val),
     z.string().url().nullable().optional()
   ),
+  // Optional booking/registration link — the Event Details page renders both
+  // the link itself and a QR code generated client-side from this value, so
+  // no separate QR image needs to be stored. Same blank-to-null preprocessing
+  // as locationLink above (an empty form field submits '', not undefined).
+  bookingUrl: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? null : val),
+    z.string().url().max(500).nullable().optional()
+  ),
+  // Id-based country, from the geography master data — used for the
+  // visibility gate below. Optional so existing callers that only send the
+  // free-text `country` above keep working.
+  countryId: z.coerce.number().int().positive().optional(),
+  // Visibility scope. Deliberately .optional() and NOT .default('COUNTRY'):
+  // UpdateEventDto below is CreateEventDto.partial(), which does not strip a
+  // ZodDefault — an update that omitted this field would parse to
+  // 'COUNTRY', clear the service's `!== undefined` guard and silently
+  // demote a WORLDWIDE event. create() applies the default instead (see
+  // business.dto.ts's visibilityType for the same reasoning).
+  visibilityType: z.enum(['COUNTRY', 'WORLDWIDE']).optional(),
 });
 
 export const UpdateEventDto = CreateEventDto.partial();
@@ -33,6 +52,7 @@ export const ListEventsQueryDto = z.object({
   eventMode: z.enum(['Offline', 'Online', 'Hybrid']).optional(),
   search: z.string().optional(),
   country: z.string().optional(),
+  eventCategory: z.string().optional(),
   /** Filters by event date: 'upcoming' (today or later) vs 'completed' (before today). */
   status: z.enum(['upcoming', 'completed']).optional(),
   // Moderation status — distinct from `status` above (which means upcoming/completed).
@@ -48,6 +68,9 @@ export const ListEventsQueryDto = z.object({
   eventDateTo:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDateTo must be YYYY-MM-DD').optional(),
   sortBy:   z.enum(['name', 'eventDate', 'joined', 'near', 'category', 'mode', 'location', 'status']).default('eventDate'),
   sortDir:  z.enum(['asc', 'desc']).default('asc'),
+  // Opt-in visibility filter ("show me only Worldwide events") — independent
+  // of the automatic country/worldwide access-control gate applied server-side.
+  visibilityType: z.enum(['COUNTRY', 'WORLDWIDE']).optional(),
 });
 
 export const ListPendingEventsQueryDto = z.object({

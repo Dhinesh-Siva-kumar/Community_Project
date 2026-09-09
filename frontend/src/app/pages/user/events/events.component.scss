@@ -193,7 +193,7 @@
   }
 }
 
-.jb-sort-wrap { min-width: 155px; flex-shrink: 0; }
+.jb-quickstatus { flex-shrink: 0; }
 
 .jb-advanced-toggle {
   display: inline-flex;
@@ -637,12 +637,19 @@
 
   &--past {
     .ev-card__media img { filter: grayscale(0.35) brightness(0.92); }
-    .ev-card__date { background: color-mix(in srgb, $color-bg-card 85%, transparent); }
   }
 
   // Deep-link scroll target (dashboard calendar → jump to this event).
   &--highlight {
     animation: ev-card-highlight-pulse 1.6s ease-out 2;
+  }
+
+  // The whole card navigates to the event's details page — edit/delete,
+  // zoom, and the other links inside it stop propagation so they still
+  // work on their own instead of also triggering this.
+  &--clickable {
+    cursor: pointer;
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
 }
 
@@ -674,16 +681,9 @@
   }
 }
 
-// Calendar-style date badge, top-left over the image.
-.ev-card__date {
-  position: absolute; top: 12px; left: 12px;
-  display: flex; flex-direction: column; align-items: center; line-height: 1;
-  min-width: 46px; padding: 6px 8px 7px; border-radius: $radius-md;
-  background: color-mix(in srgb, $color-bg-card 96%, transparent); box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
-  transition: background-color 220ms ease;
-}
-.ev-card__date-day { font-family: $font-family-header; font-size: 1.25rem; font-weight: 800; color: $color-stone-900; }
-.ev-card__date-mon { margin-top: 1px; font-size: 10px; font-weight: $font-weight-bold; text-transform: uppercase; letter-spacing: 0.06em; color: $color-primary-dark; }
+// Calendar-style date badge, top-left over the image — the badge's own
+// look-and-feel lives in app-event-date-badge; this just places it.
+.ev-card__date { position: absolute; top: 12px; left: 12px; z-index: 1; }
 
 // Status ribbon, top-right over the image.
 .ev-card__status { position: absolute; top: 12px; right: 12px; box-shadow: 0 2px 8px rgba(28, 25, 23, 0.16); }
@@ -753,6 +753,8 @@
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   transition: color 180ms ease;
   .ev-card:hover & { color: $color-primary-darker; }
+
+  a { color: inherit; text-decoration: none; }
 }
 
 .ev-card__description {
@@ -806,9 +808,25 @@
 .ev-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
 .ev-chip-sm {
+  display: inline-flex; align-items: center; gap: 4px;
   padding: 4px 10px; border-radius: $radius-sm; background: $color-bg-page;
   color: $color-text-muted; font-size: 12px; font-weight: $font-weight-medium;
   border: 1px solid $color-border;
+  i { font-size: 11px; }
+
+  // Colorful per-category treatment — reuses the same badge palette Jobs
+  // already uses for job-type chips, instead of every category reading as
+  // the same flat gray.
+  &--workshop   { background: $color-badge-violet-bg; color: $color-badge-violet-text; border-color: transparent; }
+  &--meetup     { background: $color-badge-blue-bg; color: $color-badge-blue-text; border-color: transparent; }
+  &--webinar    { background: $color-info-light; color: $color-info-text; border-color: transparent; }
+  &--festival   { background: $color-badge-pink-bg; color: $color-badge-pink-text; border-color: transparent; }
+  &--conference { background: $color-indigo-100; color: $color-indigo-600; border-color: transparent; }
+  &--exhibition { background: $color-badge-orange-bg; color: $color-badge-orange-text; border-color: transparent; }
+  &--concert    { background: $color-badge-purple-bg; color: $color-badge-purple-text; border-color: transparent; }
+  &--sports     { background: $color-success-light; color: $color-success-text; border-color: transparent; }
+  &--social     { background: rgba(251, 191, 36, 0.16); color: $color-primary-darker; border-color: transparent; }
+  &--other      { background: $color-badge-gray-bg; color: $color-badge-gray-text; border-color: transparent; }
 }
 
 .ev-meta-item {

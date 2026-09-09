@@ -505,6 +505,21 @@
           </div>
         }
 
+        <!-- Booking URL / QR — events only, so a reviewer can check the
+             booking link actually works and scan the same code attendees would. -->
+        @if (activeEntity() === 'events' && vi['bookingUrl']) {
+          <div class="pa-view-section">
+            <div class="pa-view-section-header">
+              <span class="pa-view-section-badge"><i class="bi bi-ticket-perforated"></i></span>
+              <span class="pa-view-section-title">{{ 'admin.approval.section.booking' | translate }}</span>
+            </div>
+            <div class="pa-view-booking">
+              <app-qr-code [value]="vi['bookingUrl']" [size]="128" [ariaLabel]="'user.events.bookingQrAlt' | translate"></app-qr-code>
+              <a [href]="vi['bookingUrl']" target="_blank" rel="noopener" class="pa-view-booking__link">{{ vi['bookingUrl'] }}</a>
+            </div>
+          </div>
+        }
+
         @if (itemLogo(vi); as logo) {
           <div class="pa-view-section" [class.pa-view-section--last]="itemImages(vi).length === 0">
             <div class="pa-view-section-header">

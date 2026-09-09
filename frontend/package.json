@@ -31,6 +31,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "libphonenumber-js": "^1.12.40",
+    "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.3",
     "tslib": "^2.3.0",

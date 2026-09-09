@@ -20,6 +20,7 @@ import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
+import { QrCodeComponent } from '../../../shared/components/qr-code/qr-code.component';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -48,7 +49,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, QrCodeComponent, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -829,6 +830,9 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.date', value: this.fmt(item['eventDate']) },
             { label: 'admin.approval.label.time', value: item['eventTime'] ? `${item['eventTime']}${item['eventEndTime'] ? ' – ' + item['eventEndTime'] : ''}` : '—' },
             { label: 'admin.approval.label.timezone', value: this.fmt(item['timezone']) },
+            { label: 'admin.approval.label.visibility', value: this.t(item['visibilityType'] === 'WORLDWIDE'
+                ? 'components.businessForm.visibilityWorldwide'
+                : 'components.businessForm.visibilityCountry') },
           ]},
           { title: 'admin.approval.section.location', icon: 'bi-geo-alt', fields: [
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },

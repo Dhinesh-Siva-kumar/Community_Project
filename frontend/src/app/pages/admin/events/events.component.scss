@@ -582,11 +582,18 @@
     &:hover { transform: none; .ev-card__media img { transform: none; } }
   }
 
-  // Past events read as "archived" — dimmed photo, muted date badge — without
-  // hiding any of the information itself.
+  // Past events read as "archived" — dimmed photo — without hiding any of
+  // the information itself.
   &--past {
     .ev-card__media img { filter: grayscale(0.35) brightness(0.92); }
-    .ev-card__date { background: color-mix(in srgb, $color-bg-card 85%, transparent); }
+  }
+
+  // The whole card navigates to the event's details page — edit/delete and
+  // the other links inside it stop propagation so they still work on their
+  // own instead of also triggering this.
+  &--clickable {
+    cursor: pointer;
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
   }
 }
 
@@ -621,36 +628,9 @@
   &--hybrid { background: linear-gradient(135deg, rgba(168, 85, 247, 0.14), rgba(126, 34, 206, 0.08)); color: #7E22CE; }
 }
 
-// Calendar-style date badge, top-left over the image.
-.ev-card__date {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
-  min-width: 46px;
-  padding: 6px 8px 7px;
-  border-radius: $radius-md;
-  background: color-mix(in srgb, $color-bg-card 96%, transparent);
-  box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
-  transition: background-color 220ms ease;
-}
-.ev-card__date-day {
-  font-family: $font-family-header;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: $color-stone-900;
-}
-.ev-card__date-mon {
-  margin-top: 1px;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: $color-primary-dark;
-}
+// Calendar-style date badge, top-left over the image — the badge's own
+// look-and-feel lives in app-event-date-badge; this just places it.
+.ev-card__date { position: absolute; top: 12px; left: 12px; z-index: 1; }
 
 // Status ribbon, top-right over the image.
 .ev-card__status {
@@ -728,6 +708,8 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  a { color: inherit; text-decoration: none; }
 }
 
 .ev-card__description {
@@ -805,9 +787,25 @@
 .ev-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
 .ev-chip-sm {
+  display: inline-flex; align-items: center; gap: 4px;
   padding: 4px 10px; border-radius: $radius-sm; background: $color-bg-page;
   color: $color-text-muted; font-size: 12px; font-weight: $font-weight-medium;
   border: 1px solid $color-border;
+  i { font-size: 11px; }
+
+  // Colorful per-category treatment — reuses the same badge palette Jobs
+  // already uses for job-type chips, instead of every category reading as
+  // the same flat gray.
+  &--workshop   { background: $color-badge-violet-bg; color: $color-badge-violet-text; border-color: transparent; }
+  &--meetup     { background: $color-badge-blue-bg; color: $color-badge-blue-text; border-color: transparent; }
+  &--webinar    { background: $color-info-light; color: $color-info-text; border-color: transparent; }
+  &--festival   { background: $color-badge-pink-bg; color: $color-badge-pink-text; border-color: transparent; }
+  &--conference { background: $color-indigo-100; color: $color-indigo-600; border-color: transparent; }
+  &--exhibition { background: $color-badge-orange-bg; color: $color-badge-orange-text; border-color: transparent; }
+  &--concert    { background: $color-badge-purple-bg; color: $color-badge-purple-text; border-color: transparent; }
+  &--sports     { background: $color-success-light; color: $color-success-text; border-color: transparent; }
+  &--social     { background: rgba(251, 191, 36, 0.16); color: $color-primary-darker; border-color: transparent; }
+  &--other      { background: $color-badge-gray-bg; color: $color-badge-gray-text; border-color: transparent; }
 }
 
 .ev-meta-item {
@@ -1569,9 +1567,13 @@
   &:not(:last-child) .um-td { border-bottom: 1px solid $color-border; }
   &:hover { background: $color-primary-lighter; }
 
-  // No admin detail page for a single event — the row itself isn't clickable,
-  // only the Edit/Delete action buttons in the last column are.
-  &--static { cursor: default; }
+  // "Static" here means not draggable/reorderable — it still navigates to
+  // the event's details page; only Edit/Delete stop that and do their own
+  // thing.
+  &--clickable {
+    cursor: pointer;
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+  }
 }
 
 .um-td {

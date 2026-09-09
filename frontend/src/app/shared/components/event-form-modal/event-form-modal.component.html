@@ -1,0 +1,500 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="editingEvent() ? 'Edit Event' : 'Add Event'" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [class.bi-calendar-plus]="!editingEvent()" [class.bi-pencil-square]="editingEvent()"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title">{{ editingEvent() ? 'Edit Event' : 'Add Event' }}</h5>
+        <p class="au-header__sub cm-modal-subtitle">
+          {{ editingEvent() ? 'Update the details of this event' : 'Fill in the details to create a new event' }}
+        </p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="au-body cm-modal-body">
+      <form [formGroup]="eventForm" (ngSubmit)="submitEvent()" class="au-form cm-form">
+
+        <!-- ── SECTION 1: Event Details ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-calendar-event"></i></span>
+            <span class="cm-section-title">{{ 'user.events.eventDetails' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <!-- Title -->
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.events.title' | translate }} <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-card-heading cm-input-icon"></i>
+                <input
+                  type="text"
+                  formControlName="title"
+                  maxlength="100"
+                  [placeholder]="'user.events.eGCommunityTechMeetup' | translate"
+                  class="cm-input"
+                  [class.cm-input-error]="f['title'].touched && f['title'].invalid"
+                />
+              </div>
+              @if (f['title'].touched && f['title'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  @if (f['title'].errors?.['required'] || f['title'].errors?.['whitespace']) {
+                    Title is required.
+                  } @else if (f['title'].errors?.['minlengthTrimmed']) {
+                    Title must contain at least 3 characters.
+                  } @else if (f['title'].errors?.['maxlength']) {
+                    Maximum 100 characters allowed.
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Category -->
+            <div class="cm-field-group" [class.cm-field-group--error]="f['eventCategory'].touched && f['eventCategory'].invalid">
+              <label class="cm-label">{{ 'user.events.category' | translate }} <span class="cm-required">*</span></label>
+              <app-searchable-select
+                formControlName="eventCategory"
+                [options]="categoryOptions"
+                [placeholder]="'user.events.selectCategory' | translate"
+              ></app-searchable-select>
+              @if (f['eventCategory'].touched && f['eventCategory'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.pleaseSelectCategory' | translate }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="cm-field-group">
+            <div class="cm-label-row">
+              <label class="cm-label">{{ 'user.events.description' | translate }} <span class="cm-required">*</span></label>
+              <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/1000</span>
+            </div>
+            <div class="cm-input-wrap cm-textarea-wrap">
+              <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+              <textarea
+                formControlName="description"
+                rows="3"
+                maxlength="1000"
+                [placeholder]="'user.events.describeEventAgendaPurposeHighlights' | translate"
+                class="cm-input cm-textarea"
+                [class.cm-input-error]="f['description'].touched && f['description'].invalid"
+              ></textarea>
+            </div>
+            @if (f['description'].touched && f['description'].invalid) {
+              <div class="cm-error-msg">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                @if (f['description'].errors?.['required'] || f['description'].errors?.['whitespace']) {
+                  Description is required.
+                } @else if (f['description'].errors?.['minlengthTrimmed']) {
+                  Description must contain at least 10 characters.
+                } @else if (f['description'].errors?.['maxlength']) {
+                  Maximum 1000 characters allowed.
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ── SECTION 2: Date & Time ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-clock"></i></span>
+            <span class="cm-section-title">{{ 'user.events.dateAmpTime' | translate }}</span>
+          </div>
+
+          <div class="cm-field-row">
+            <!-- Event Date -->
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.events.eventDate2' | translate }} <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <app-date-input
+                  formControlName="eventDate"
+                  [ariaLabel]="'user.events.eventDate' | translate"
+                  [placeholder]="'user.events.eventDate' | translate"
+                  [invalid]="f['eventDate'].touched && f['eventDate'].invalid"
+                ></app-date-input>
+              </div>
+              @if (f['eventDate'].touched && f['eventDate'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  @if (f['eventDate'].errors?.['required']) {
+                    Date is required.
+                  } @else if (f['eventDate'].errors?.['pastDate']) {
+                    Date must be today or later.
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Timezone -->
+            <div class="cm-field-group" [class.cm-field-group--error]="f['timezone'].touched && f['timezone'].invalid">
+              <label class="cm-label">{{ 'user.events.timeZone' | translate }} <span class="cm-required">*</span></label>
+              <app-searchable-select
+                formControlName="timezone"
+                [options]="timezoneOptions"
+                [placeholder]="'user.events.selectTimezone' | translate"
+              ></app-searchable-select>
+            </div>
+          </div>
+
+          <!-- Start / End time — paired on one row so the relationship between
+               them (and the duration/overnight hint below) reads clearly. -->
+          <div class="cm-field-row cm-time-range">
+            <!-- Start Time -->
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.events.startTime2' | translate }} <span class="cm-required">*</span></label>
+              <div class="cm-input-wrap">
+                <app-time-input
+                  formControlName="eventTime"
+                  [ariaLabel]="'user.events.startTime' | translate"
+                  [placeholder]="'user.events.startTime' | translate"
+                  [invalid]="f['eventTime'].touched && f['eventTime'].invalid"
+                ></app-time-input>
+              </div>
+              @if (f['eventTime'].touched && f['eventTime'].invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.startTimeRequired' | translate }}
+                </div>
+              }
+            </div>
+
+            <span class="cm-time-range__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+
+            <!-- End Time -->
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.events.endTime2' | translate }}</label>
+              <div class="cm-input-wrap">
+                <app-time-input
+                  formControlName="eventEndTime"
+                  [ariaLabel]="'user.events.endTime' | translate"
+                  [placeholder]="'user.events.endTime' | translate"
+                  [invalid]="!!eventForm.errors?.['sameTime'] && f['eventEndTime'].touched"
+                ></app-time-input>
+              </div>
+              @if (eventForm.errors?.['sameTime'] && f['eventEndTime'].touched) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.endTimeSameAsStart' | translate }}
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (timeRangeInfo(); as range) {
+            <p class="cm-field-hint" [class.cm-field-hint--accent]="range.overnight">
+              <i class="bi" [class.bi-moon-stars-fill]="range.overnight" [class.bi-hourglass-split]="!range.overnight"></i>
+              {{ (range.overnight ? 'user.events.endsNextDayHint' : 'user.events.durationHint') | translate: { duration: range.durationLabel } }}
+            </p>
+          }
+        </div>
+
+        <!-- ── SECTION 3: Mode & Location ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-geo-alt"></i></span>
+            <span class="cm-section-title">{{ 'user.events.modeAmpLocation' | translate }}</span>
+          </div>
+
+          <!-- Event Mode — the big, visual decision that gates everything
+               below it, so it gets the roomier icon-card treatment rather
+               than a plain pill row. -->
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.events.eventMode2' | translate }} <span class="cm-required">*</span></label>
+            <app-radio-group
+              formControlName="eventMode"
+              variant="card"
+              [options]="eventModeOptions"
+              [ariaLabel]="'user.events.eventMode' | translate">
+            </app-radio-group>
+            <p class="cm-field-hint">
+              <i class="bi bi-info-circle" aria-hidden="true"></i>
+              {{ 'user.events.chooseModeHint' | translate }}
+            </p>
+          </div>
+
+          <!-- Mode-specific details live directly under the mode picker, in
+               a panel of their own — only the fields relevant to the chosen
+               mode are ever rendered, so there's nothing to disable/hide. -->
+          @if (showAddress) {
+            <div class="cm-mode-panel cm-mode-panel--onsite">
+              <div class="cm-mode-panel__header">
+                <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                <span>{{ 'user.events.inPersonDetails' | translate }}</span>
+              </div>
+
+              <div class="cm-field-row">
+                <!-- Address -->
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.events.address' | translate }} <span class="cm-required">*</span></label>
+                  <div class="cm-input-wrap">
+                    <i class="bi bi-signpost cm-input-icon" aria-hidden="true"></i>
+                    <input
+                      type="text"
+                      formControlName="address"
+                      maxlength="200"
+                      [placeholder]="'user.events.streetAddressVenueName' | translate"
+                      class="cm-input"
+                      [class.cm-input-error]="f['address'].touched && f['address'].invalid"
+                    />
+                  </div>
+                  @if (f['address'].touched && f['address'].invalid) {
+                    <div class="cm-error-msg" role="alert">
+                      <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                      @if (f['address'].errors?.['required'] || f['address'].errors?.['whitespace']) {
+                        Address is required for {{ eventMode }} events.
+                      } @else if (f['address'].errors?.['minlengthTrimmed']) {
+                        Address must contain at least 3 characters.
+                      } @else if (f['address'].errors?.['maxlength']) {
+                        Maximum 200 characters allowed.
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Pincode -->
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.events.pincode' | translate }}</label>
+                  <div class="cm-input-wrap">
+                    <i class="bi bi-mailbox cm-input-icon" aria-hidden="true"></i>
+                    <input
+                      type="text"
+                      formControlName="pincode"
+                      maxlength="12"
+                      [placeholder]="'user.events.pincode' | translate"
+                      class="cm-input"
+                      [class.cm-input-error]="f['pincode'].touched && f['pincode'].invalid"
+                    />
+                  </div>
+                  @if (f['pincode'].touched && f['pincode'].invalid) {
+                    <div class="cm-error-msg" role="alert">
+                      <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>{{ 'user.events.maximum12CharactersAllowed' | translate }}
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Venue / City -->
+              <div class="cm-field-group">
+                <label class="cm-label">{{ 'user.events.venueCity' | translate }}</label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-building cm-input-icon" aria-hidden="true"></i>
+                  <input
+                    type="text"
+                    formControlName="location"
+                    maxlength="150"
+                    [placeholder]="'user.events.eGCityHallChennai' | translate"
+                    class="cm-input"
+                    [class.cm-input-error]="f['location'].touched && f['location'].invalid"
+                  />
+                </div>
+                @if (f['location'].touched && f['location'].invalid) {
+                  <div class="cm-error-msg" role="alert">
+                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>{{ 'user.events.maximum150CharactersAllowed' | translate }}
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (showLocationLink) {
+            <div class="cm-mode-panel cm-mode-panel--online">
+              <div class="cm-mode-panel__header">
+                <i class="bi bi-camera-video-fill" aria-hidden="true"></i>
+                <span>{{ 'user.events.onlineMeetingDetails' | translate }}</span>
+              </div>
+
+              <div class="cm-field-group">
+                <label class="cm-label">{{ 'user.events.meetingStreamLink' | translate }} <span class="cm-required">*</span></label>
+                <div class="cm-input-wrap">
+                  <i class="bi bi-link-45deg cm-input-icon" aria-hidden="true"></i>
+                  <input
+                    type="url"
+                    formControlName="locationLink"
+                    maxlength="300"
+                    [placeholder]="'user.events.httpsZoomUsJHttps' | translate"
+                    class="cm-input"
+                    [class.cm-input-error]="f['locationLink'].touched && f['locationLink'].invalid"
+                  />
+                </div>
+                @if (f['locationLink'].touched && f['locationLink'].invalid) {
+                  <div class="cm-error-msg" role="alert">
+                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                    @if (f['locationLink'].errors?.['required']) {
+                      Meeting link is required.
+                    } @else if (f['locationLink'].errors?.['pattern']) {
+                      Enter a valid URL starting with https://
+                    } @else if (f['locationLink'].errors?.['maxlength']) {
+                      Maximum 300 characters allowed.
+                    }
+                  </div>
+                }
+                <p class="cm-field-hint">
+                  <i class="bi bi-info-circle" aria-hidden="true"></i>
+                  {{ 'user.events.meetingLinkHint' | translate }}
+                </p>
+              </div>
+            </div>
+          }
+
+          <!-- Audience — who can find this listing at all, independent of mode. -->
+          <p class="cm-subhead">{{ 'user.events.audienceAmpVisibility' | translate }}</p>
+
+          <!-- Country — always shown (even for Online events) since it drives
+               Visibility scoping below, not just the physical address block. -->
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.events.country' | translate }}</label>
+            <app-searchable-select
+              formControlName="countryId"
+              [options]="countryOptions()"
+              [placeholder]="'user.events.selectCountry' | translate"
+            ></app-searchable-select>
+          </div>
+
+          <!-- Visibility Type — who the event is listed for -->
+          <div class="cm-field-group">
+            <label class="cm-label">
+              {{ 'components.businessForm.visibilityLabel' | translate }} <span class="cm-required">*</span>
+            </label>
+            <app-radio-group formControlName="visibilityType" variant="pill"
+              [options]="visibilityOptions"
+              [ariaLabel]="'components.businessForm.visibilityLabel' | translate"></app-radio-group>
+            <p class="cm-field-hint">
+              <i class="bi bi-info-circle" aria-hidden="true"></i>
+              {{ (eventForm.get('visibilityType')?.value === 'WORLDWIDE'
+                    ? 'components.businessForm.visibilityWorldwideHint'
+                    : 'components.businessForm.visibilityCountryHint') | translate }}
+            </p>
+          </div>
+        </div>
+
+        <!-- ── SECTION 4: Booking URL / QR Code ── -->
+        <div class="cm-section">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-qr-code" aria-hidden="true"></i></span>
+            <span class="cm-section-title">{{ 'user.events.bookingSectionTitle' | translate }}</span>
+          </div>
+          <p class="cm-section-caption">{{ 'user.events.bookingSectionCaption' | translate }}</p>
+
+          <div class="cm-booking-row">
+            <div class="cm-field-group cm-booking-row__field">
+              <label class="cm-label">{{ 'user.events.bookingUrl' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-ticket-perforated cm-input-icon" aria-hidden="true"></i>
+                <input
+                  type="url"
+                  formControlName="bookingUrl"
+                  maxlength="500"
+                  [placeholder]="'user.events.bookingUrlPlaceholder' | translate"
+                  class="cm-input cm-input--copyable"
+                  [class.cm-input-error]="f['bookingUrl'].touched && f['bookingUrl'].invalid"
+                />
+                @if (f['bookingUrl'].value) {
+                  <button type="button" class="cm-input-copy-btn"
+                    (click)="copyBookingUrl()"
+                    [attr.aria-label]="'user.events.copyBookingUrl' | translate"
+                    [title]="'user.events.copyBookingUrl' | translate">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                  </button>
+                }
+              </div>
+              @if (f['bookingUrl'].touched && f['bookingUrl'].invalid) {
+                <div class="cm-error-msg" role="alert">
+                  <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                  @if (f['bookingUrl'].errors?.['pattern']) {
+                    Enter a valid URL starting with https://
+                  } @else if (f['bookingUrl'].errors?.['maxlength']) {
+                    Maximum 500 characters allowed.
+                  }
+                </div>
+              }
+              <p class="cm-field-hint">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                {{ 'user.events.bookingUrlHint' | translate }}
+              </p>
+            </div>
+
+            <!-- Fixed-footprint preview box — its size never changes across
+                 empty/invalid/valid states, so the section doesn't jump
+                 around as the field is filled in. -->
+            <div class="cm-booking-row__qr">
+              @switch (bookingQrState()) {
+                @case ('valid') {
+                  <a [href]="f['bookingUrl'].value" target="_blank" rel="noopener"
+                     class="cm-booking-qr-box cm-booking-qr-box--ready"
+                     [title]="'user.events.openBookingLink' | translate">
+                    <app-qr-code [value]="f['bookingUrl'].value" [size]="104" [ariaLabel]="'user.events.bookingQrAlt' | translate"></app-qr-code>
+                  </a>
+                  <span class="cm-booking-row__qr-label">{{ 'user.events.scanToBook' | translate }}</span>
+                }
+                @case ('invalid') {
+                  <div class="cm-booking-qr-box cm-booking-qr-box--invalid">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                  </div>
+                  <span class="cm-booking-row__qr-label cm-booking-row__qr-label--muted">{{ 'user.events.qrPreviewInvalid' | translate }}</span>
+                }
+                @default {
+                  <div class="cm-booking-qr-box cm-booking-qr-box--empty">
+                    <i class="bi bi-qr-code" aria-hidden="true"></i>
+                  </div>
+                  <span class="cm-booking-row__qr-label cm-booking-row__qr-label--muted">{{ 'user.events.qrPreviewEmpty' | translate }}</span>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 5: Media ── -->
+        <div class="cm-section cm-section-last">
+          <div class="cm-section-header">
+            <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
+            <span class="cm-section-title">{{ 'user.events.eventImage' | translate }}</span>
+          </div>
+
+          <app-file-upload
+            mode="single"
+            accept="image/*"
+            [label]="'components.fileUpload.uploadEventImage' | translate"
+            [existingPreview]="existingImage() | imageUrl"
+            (filesChange)="onImageChange($event)"
+          ></app-file-upload>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="au-footer cm-modal-footer">
+      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="au-btn au-btn--primary cm-btn-submit"
+        [disabled]="submitting()"
+        (click)="submitEvent()"
+      >
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          {{ editingEvent() ? 'Updating...' : 'Creating...' }}
+        } @else {
+          <i class="bi me-1" [class.bi-check-lg]="editingEvent()" [class.bi-calendar-plus]="!editingEvent()"></i>
+          {{ editingEvent() ? 'Update Event' : 'Create Event' }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

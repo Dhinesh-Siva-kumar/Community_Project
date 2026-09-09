@@ -3,6 +3,7 @@ import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
 import { logAudit } from '../../services/audit.service';
 import * as notificationsService from '../notifications/notifications.service';
+import { getViewerScope, applyEventVisibilityRestriction } from '../../services/event-visibility.service';
 import type { CreateEventDtoType, UpdateEventDtoType, ListEventsQueryDtoType } from './events.dto';
 
 async function notifyAdminsOfPendingEvent(eventId: string, title: string): Promise<void> {
@@ -37,6 +38,9 @@ export async function create(data: CreateEventDtoType, userId: string) {
       pincode: data.pincode ?? null,
       location: data.location ?? null,
       country: data.country ?? 'United Kingdom',
+      country_id: data.countryId ?? null,
+      visibility_type: data.visibilityType ?? 'COUNTRY',
+      booking_url: data.bookingUrl ?? null,
       user_id: userId,
       status,
     })
@@ -66,6 +70,9 @@ export async function create(data: CreateEventDtoType, userId: string) {
     pincode: e['pincode'],
     location: e['location'],
     country: e['country'],
+    countryId: e['country_id'],
+    visibilityType: e['visibility_type'],
+    bookingUrl: e['booking_url'],
     userId: e['user_id'],
     isActive: e['is_active'],
     status: e['status'],
@@ -76,10 +83,11 @@ export async function create(data: CreateEventDtoType, userId: string) {
   };
 }
 
-export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean; userId?: string }) {
+export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilter?: boolean; userId?: string; viewerId?: string }) {
   const {
-    pincode, nearPincode, eventMode, page, limit, search, country, status, approvalStatus,
-    dateFrom, dateTo, eventDateFrom, eventDateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter, userId,
+    pincode, nearPincode, eventMode, page, limit, search, country, eventCategory, status, approvalStatus,
+    dateFrom, dateTo, eventDateFrom, eventDateTo, sortBy = 'eventDate', sortDir = 'asc', skipActiveFilter, userId, viewerId,
+    visibilityType,
   } = params;
   const offset = (page - 1) * limit;
 
@@ -87,7 +95,7 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     .join('users as u', 'e.user_id', 'u.id')
     .select('e.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
 
-  const countQuery = db('events');
+  const countQuery = db('events as e');
 
   // Admin callers set skipActiveFilter=true to see inactive events too.
   if (!skipActiveFilter) {
@@ -125,6 +133,7 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
 
   if (pincode) { query.andWhere('e.pincode', pincode); countQuery.andWhere({ pincode }); }
   if (eventMode) { query.andWhere('e.event_mode', eventMode); countQuery.andWhere({ event_mode: eventMode }); }
+  if (eventCategory) { query.andWhere('e.event_category', eventCategory); countQuery.andWhere({ event_category: eventCategory }); }
   if (search) {
     query.andWhere(function () { this.whereILike('e.title', `%${search}%`).orWhereILike('e.description', `%${search}%`); });
     countQuery.andWhere(function () { this.whereILike('title', `%${search}%`).orWhereILike('description', `%${search}%`); });
@@ -132,6 +141,12 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
   if (country) {
     query.andWhereILike('e.country', `%${country}%`);
     countQuery.andWhereILike('country', `%${country}%`);
+  }
+  // Opt-in visibility filter ("show me only Worldwide events") — independent
+  // of the automatic country/worldwide access-control gate applied below.
+  if (visibilityType) {
+    query.andWhere('e.visibility_type', visibilityType);
+    countQuery.andWhere('visibility_type', visibilityType);
   }
   if (dateFrom) {
     query.andWhere('e.created_at', '>=', dateFrom);
@@ -150,6 +165,15 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     const toEnd = `${eventDateTo}T23:59:59.999Z`;
     query.andWhere('e.event_date', '<=', toEnd);
     countQuery.andWhere('event_date', '<=', toEnd);
+  }
+
+  // Country/worldwide visibility — lands on exactly the same callers as the
+  // moderation gate above: admins and "mine" lists set skipActiveFilter and
+  // are therefore exempt.
+  if (!skipActiveFilter && viewerId) {
+    const scope = await getViewerScope(viewerId);
+    applyEventVisibilityRestriction(query, 'e.', viewerId, scope);
+    applyEventVisibilityRestriction(countQuery, 'e.', viewerId, scope);
   }
 
   // 'near' sorts offline/hybrid events in nearPincode to the top (event date
@@ -196,6 +220,9 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     pincode: e['pincode'],
     location: e['location'],
     country: e['country'],
+    countryId: e['country_id'],
+    visibilityType: e['visibility_type'],
+    bookingUrl: e['booking_url'],
     userId: e['user_id'],
     isActive: e['is_active'],
     status: e['status'],
@@ -208,7 +235,16 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
-export async function findOne(id: string) {
+/**
+ * Detail lookup. Unlike business.service.ts's findOne (which stays fully
+ * open), events deliberately gate this the same way findAll does: a
+ * Country-scoped event is invisible to a viewer from a different country
+ * unless they're the owner or an admin. Pass viewerRole/viewerId from the
+ * authenticated caller; omit viewerId only for internal callers that have
+ * already established access (e.g. update()/deleteEvent() below, which do
+ * their own owner/admin check).
+ */
+export async function findOne(id: string, viewerId?: string, viewerRole?: string) {
   const event = await db('events as e')
     .join('users as u', 'e.user_id', 'u.id')
     .where('e.id', id)
@@ -218,6 +254,18 @@ export async function findOne(id: string) {
   if (!event) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
 
   const e = event as Record<string, unknown>;
+
+  if (viewerId && viewerRole !== 'ADMIN' && e['user_id'] !== viewerId) {
+    const scope = await getViewerScope(viewerId);
+    const visible = await db('events as e')
+      .where('e.id', id)
+      .modify((qb) => applyEventVisibilityRestriction(qb, 'e.', viewerId, scope))
+      .first('e.id');
+    // Same 404 shape as "not found" — a hidden event shouldn't leak its
+    // existence to a viewer who isn't allowed to see it.
+    if (!visible) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
+  }
+
   return {
     id: e['id'],
     title: e['title'],
@@ -234,6 +282,9 @@ export async function findOne(id: string) {
     pincode: e['pincode'],
     location: e['location'],
     country: e['country'],
+    countryId: e['country_id'],
+    visibilityType: e['visibility_type'],
+    bookingUrl: e['booking_url'],
     userId: e['user_id'],
     isActive: e['is_active'],
     status: e['status'],
@@ -242,6 +293,87 @@ export async function findOne(id: string) {
     updatedAt: e['updated_at'],
     user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], email: e['user_email'], avatar: e['avatar'] },
   };
+}
+
+/**
+ * Other events the viewer is also allowed to see, related to `id` by
+ * category first, topped up by country if there aren't enough category
+ * matches. Only ever surfaces active/approved events, gated by the same
+ * visibility restriction as findAll/findOne.
+ */
+export async function findRelated(id: string, viewerId?: string, limit = 6) {
+  const source = await db('events').where({ id }).first('event_category', 'country_id', 'country') as
+    { event_category: string | null; country_id: number | null; country: string | null } | undefined;
+  if (!source) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
+
+  const scope = viewerId ? await getViewerScope(viewerId) : null;
+
+  const baseQuery = () => {
+    const qb = db('events as e')
+      .join('users as u', 'e.user_id', 'u.id')
+      .where('e.is_active', true)
+      .andWhere('e.status', 'APPROVED')
+      .andWhere('e.id', '!=', id)
+      .select('e.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.avatar');
+    if (viewerId && scope) applyEventVisibilityRestriction(qb, 'e.', viewerId, scope);
+    return qb;
+  };
+
+  const seen = new Set<string>([id]);
+  const rows: Array<Record<string, unknown>> = [];
+
+  if (source.event_category) {
+    const byCategory = await baseQuery()
+      .andWhere('e.event_category', source.event_category)
+      .orderBy('e.event_date', 'asc')
+      .limit(limit);
+    for (const r of byCategory as Array<Record<string, unknown>>) {
+      if (!seen.has(r['id'] as string)) { seen.add(r['id'] as string); rows.push(r); }
+    }
+  }
+
+  if (rows.length < limit && (source.country_id || source.country)) {
+    const remaining = limit - rows.length;
+    const byCountry = await baseQuery()
+      .andWhere((qb) => {
+        if (source.country_id) qb.orWhere('e.country_id', source.country_id);
+        if (source.country) qb.orWhereILike('e.country', source.country);
+      })
+      .orderBy('e.event_date', 'asc')
+      .limit(remaining + seen.size); // over-fetch to allow for de-dupe below
+    for (const r of byCountry as Array<Record<string, unknown>>) {
+      if (rows.length >= limit) break;
+      if (!seen.has(r['id'] as string)) { seen.add(r['id'] as string); rows.push(r); }
+    }
+  }
+
+  return rows.slice(0, limit).map((e) => ({
+    id: e['id'],
+    title: e['title'],
+    description: e['description'],
+    images: e['images'],
+    eventDate: e['event_date'],
+    eventTime: e['event_time'],
+    eventEndTime: e['event_end_time'],
+    eventCategory: e['event_category'],
+    timezone: e['timezone'],
+    eventMode: e['event_mode'],
+    locationLink: e['location_link'],
+    address: e['address'],
+    pincode: e['pincode'],
+    location: e['location'],
+    country: e['country'],
+    countryId: e['country_id'],
+    visibilityType: e['visibility_type'],
+    bookingUrl: e['booking_url'],
+    userId: e['user_id'],
+    isActive: e['is_active'],
+    status: e['status'],
+    rejectionReason: e['rejection_reason'] ?? null,
+    createdAt: e['created_at'],
+    updatedAt: e['updated_at'],
+    user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], avatar: e['avatar'] },
+  }));
 }
 
 export async function countPending() {
@@ -314,6 +446,9 @@ export async function findPendingOnly(options: FindPendingEventsOptions) {
     pincode: e['pincode'],
     location: e['location'],
     country: e['country'],
+    countryId: e['country_id'],
+    visibilityType: e['visibility_type'],
+    bookingUrl: e['booking_url'],
     userId: e['user_id'],
     status: e['status'],
     rejectionReason: e['rejection_reason'] ?? null,
@@ -389,6 +524,9 @@ export async function update(id: string, data: UpdateEventDtoType, userId: strin
   if (data.pincode !== undefined) updateData['pincode'] = data.pincode;
   if (data.location !== undefined) updateData['location'] = data.location;
   if (data.country !== undefined) updateData['country'] = data.country;
+  if (data.countryId !== undefined) updateData['country_id'] = data.countryId;
+  if (data.visibilityType !== undefined) updateData['visibility_type'] = data.visibilityType;
+  if (data.bookingUrl !== undefined) updateData['booking_url'] = data.bookingUrl;
 
   // Resubmitting a rejected or needs-info event: the owner editing their own
   // event re-enters the approval gate exactly like a brand-new one, instead

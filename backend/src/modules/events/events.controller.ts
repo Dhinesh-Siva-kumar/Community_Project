@@ -46,7 +46,7 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
   try {
     const query = ListEventsQueryDto.parse(req.query);
     const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await eventsService.findAll({ ...query, skipActiveFilter });
+    const result = await eventsService.findAll({ ...query, skipActiveFilter, viewerId: req.user!.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -99,7 +99,16 @@ export async function requestMoreInfo(req: Request, res: Response, next: NextFun
 
 export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await eventsService.findOne(req.params['id'] as string);
+    const result = await eventsService.findOne(req.params['id'] as string, req.user!.sub, req.user!.role);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function findRelated(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const limitParam = Number(req.query['limit']);
+    const limit = Number.isInteger(limitParam) && limitParam > 0 ? Math.min(limitParam, 20) : undefined;
+    const result = await eventsService.findRelated(req.params['id'] as string, req.user!.sub, limit);
     res.json(result);
   } catch (err) { next(err); }
 }

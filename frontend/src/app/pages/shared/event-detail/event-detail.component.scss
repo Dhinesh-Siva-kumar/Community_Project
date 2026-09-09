@@ -1,0 +1,522 @@
+@use '../../../../assets/styles/index' as *;
+
+// ═══════════════════════════════════════════════════════════════
+// Event Details page — deliberately mirrors the Business Details layout
+// (business-hero + business-detail-view): a compact identity card up top,
+// then a two-column body (numbered content cards on the left, a sticky
+// organizer/booking card on the right), so the two "detail" pages in this
+// app read as one consistent pattern instead of two different designs.
+//
+// Type scale — every piece of text on this page maps to one of these four
+// tokens (from _typography.scss); nothing here is a hand-picked px/rem
+// value, so the hierarchy stays deliberate instead of drifting per element:
+//   $font-size-2xl (24px) — the page title only.
+//   $font-size-md   (16px) — section headings, the date emphasis line.
+//   $font-size-sm   (14px) — body copy: description, organizer, quick
+//                            facts, field values, card titles.
+//   $font-size-xs   (12px) — the smallest tier: breadcrumb, tags/badges,
+//                            field labels, captions, meta rows.
+// ═══════════════════════════════════════════════════════════════
+
+.edp-page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+}
+
+// ── Breadcrumb — same recipe as the Business page's .bl-breadcrumb, so the
+// two "detail" pages share one navigation pattern. ─────────────────────
+.edp-breadcrumb {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  list-style: none; padding: 0; margin: 0 0 16px;
+}
+.edp-breadcrumb__item { font-size: $font-size-xs; color: $color-stone-500; }
+.edp-breadcrumb__item--active { color: $color-stone-700; font-weight: $font-weight-medium; }
+.edp-breadcrumb__sep { color: $color-stone-300; font-size: 0.7rem; }
+.edp-breadcrumb__link {
+  border: none; background: none; padding: 0; cursor: pointer; color: $color-primary-darker;
+  font-size: $font-size-xs; font-weight: $font-weight-medium; display: inline-flex; align-items: center; gap: 4px;
+  @include transition-quick(color);
+  &:hover { color: $color-primary-dark; }
+}
+
+// ── Loading / error states ───────────────────────────────────────
+.edp-skeleton { display: flex; flex-direction: column; gap: $spacing-lg; }
+.edp-skeleton__hero { height: 320px; border-radius: $radius-xl; }
+.edp-skeleton__card { height: 120px; border-radius: $radius-lg; }
+.edp-skeleton__card--tall { height: 220px; }
+.edp-skeleton__grid { display: grid; grid-template-columns: 1fr 1fr; gap: $spacing-lg; @include media-sm-max { grid-template-columns: 1fr; } }
+.skel-pulse {
+  background: linear-gradient(90deg, $color-stone-100 25%, $color-stone-200 37%, $color-stone-100 63%);
+  background-size: 400% 100%;
+  animation: edp-shimmer 1.4s ease infinite;
+}
+@keyframes edp-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+.edp-error {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 80px 24px; color: $color-text-muted; font-size: $font-size-sm; text-align: center;
+  i { font-size: 2rem; color: $color-stone-300; }
+}
+.edp-error__btn {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+  height: 40px; padding: 0 18px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary; font-weight: $font-weight-semibold; font-size: $font-size-sm;
+  &:hover { background: $color-primary-dark; color: $color-on-primary; }
+}
+
+// ── Identity card — mirrors business-hero's compact card, now with the
+// event image as this same card's top section (not a separate block
+// floating above it) so the photo, badges, title and actions read as one
+// unit instead of two stacked pieces. ─────────────────────────────
+.edp-identity {
+  background: $color-bg-card;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-xl;
+  overflow: hidden; // clips the image to the card's rounded corners
+  box-shadow: $shadow-2;
+  margin-bottom: $spacing-lg;
+}
+
+.edp-identity__body {
+  padding: $spacing-lg;
+  @include media-md-max { padding: $spacing-md; }
+}
+
+.edp-identity-media {
+  position: relative;
+
+  &__hero { width: 100%; height: 320px; object-fit: cover; display: block; }
+  &__strip { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: $color-bg-page; border-top: 1px solid $color-border; }
+  &__thumb { width: 68px; height: 68px; object-fit: cover; border-radius: $radius-sm; flex-shrink: 0; @include transition-short(opacity); }
+
+  &--placeholder {
+    height: 260px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(249, 115, 22, 0.08));
+    color: $color-primary-dark; font-size: 4rem;
+  }
+
+  // Click-to-zoom affordances — opens the same full-screen viewer the
+  // listing pages use, instead of the photo just sitting there inert.
+  &__hero-btn {
+    display: block; width: 100%; padding: 0; border: none; background: none;
+    cursor: zoom-in; position: relative;
+    &:hover .edp-identity-media__zoom { opacity: 1; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: -2px; }
+  }
+
+  &__zoom {
+    position: absolute; bottom: 12px; right: 12px;
+    width: 34px; height: 34px; border-radius: $radius-full;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(28, 25, 23, 0.55); color: #fff; font-size: 0.85rem;
+    opacity: 0; @include transition-short(opacity);
+    @include media-sm-max { opacity: 1; } // no hover on touch — always visible
+  }
+
+  &__thumb-btn {
+    padding: 0; border: none; background: none; cursor: zoom-in; flex-shrink: 0;
+    &:hover .edp-identity-media__thumb { opacity: 0.8; }
+    &:focus-visible { outline: 2px solid $color-primary; outline-offset: 1px; }
+  }
+}
+
+.edp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+.edp-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 999px;
+  font-size: $font-size-xs; font-weight: $font-weight-bold;
+  background: $color-stone-100; border: 1px solid $color-stone-200; color: $color-stone-600;
+  i { font-size: $font-size-xs; }
+
+  &--visibility { background: $color-info-light; border-color: rgba(14, 165, 233, 0.28); color: $color-info-text; }
+  &--pending    { background: rgba(217, 119, 6, 0.14); border-color: rgba(217, 119, 6, 0.3); color: $color-primary-darker; }
+
+  // Admin-only: the pending tag becomes a link to the Approval page.
+  &--link {
+    text-decoration: none; cursor: pointer;
+    @include transition-quick(all);
+    &:hover { background: rgba(217, 119, 6, 0.22); border-color: rgba(217, 119, 6, 0.45); }
+  }
+
+  // Colorful per-category treatment — same palette as the listing pages'
+  // .ev-chip-sm, so a category reads as the same color everywhere it appears.
+  &--category-workshop   { background: $color-badge-violet-bg; border-color: transparent; color: $color-badge-violet-text; }
+  &--category-meetup     { background: $color-badge-blue-bg; border-color: transparent; color: $color-badge-blue-text; }
+  &--category-webinar    { background: $color-info-light; border-color: transparent; color: $color-info-text; }
+  &--category-festival   { background: $color-badge-pink-bg; border-color: transparent; color: $color-badge-pink-text; }
+  &--category-conference { background: $color-indigo-100; border-color: transparent; color: $color-indigo-600; }
+  &--category-exhibition { background: $color-badge-orange-bg; border-color: transparent; color: $color-badge-orange-text; }
+  &--category-concert    { background: $color-badge-purple-bg; border-color: transparent; color: $color-badge-purple-text; }
+  &--category-sports     { background: $color-success-light; border-color: transparent; color: $color-success-text; }
+  &--category-social     { background: rgba(251, 191, 36, 0.16); border-color: transparent; color: $color-primary-darker; }
+  &--category-other      { background: $color-badge-gray-bg; border-color: transparent; color: $color-badge-gray-text; }
+}
+
+.edp-title {
+  font-family: $font-family-header;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.edp-organizer {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+  font-size: $font-size-sm; color: $color-text-muted;
+  i { color: $color-stone-400; font-size: 1.05rem; }
+  strong { color: $color-text-body; font-weight: $font-weight-semibold; }
+}
+
+// ── Quick facts — the at-a-glance date/time/location summary line ────
+.edp-quickfacts {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding-top: 12px; margin-top: 2px;
+  border-top: 1px solid $color-stone-100;
+}
+.edp-quickfacts__item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-stone-700;
+  // Each fact gets its own icon color — a quick, catchy way to tell date/
+  // time/location apart at a glance — while the text itself stays neutral
+  // so the row doesn't compete with the solid-filled CTA button below it.
+  i { font-size: 0.95rem; }
+  i.bi-calendar3          { color: $color-primary-darker; }
+  i.bi-clock               { color: $color-info-text; }
+  i.bi-geo-alt-fill        { color: $color-success-text; }
+  i.bi-camera-video-fill   { color: $color-badge-violet-text; }
+}
+
+// ── Primary actions — Book Now / Join Meeting, same slot business-hero
+// uses for Call/WhatsApp/Website. ─────────────────────────────────
+.edp-actions {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 14px;
+}
+.edp-action-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  // 44px, not 40 — matches this app's own primary-button height convention
+  // (.cm-btn-submit, .au-btn) and the 44×44 minimum touch-target guideline.
+  height: 44px; padding: 0 18px; border-radius: $radius-md;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  line-height: 1;
+  @include transition-short(all);
+
+  &--primary {
+    background: $color-primary; color: $color-on-primary;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    &:hover { background: $color-primary-dark; color: $color-on-primary; transform: translateY(-1px); }
+  }
+  &--outline {
+    background: $color-bg-page; color: $color-stone-700; border: 1.5px solid $color-border;
+    &:hover { border-color: $color-primary; color: $color-primary-darker; background: $color-amber-50; }
+  }
+
+  // Edit/Delete — icon-only, pushed to the end of the row (business-hero
+  // puts its own edit/delete buttons in the same spot).
+  &--icon {
+    margin-left: auto;
+    width: 44px; padding: 0; flex-shrink: 0;
+    background: $color-bg-page; color: $color-stone-600; border: 1.5px solid $color-border;
+    cursor: pointer;
+    &:hover:not(:disabled) { background: $color-stone-50; color: $color-stone-900; border-color: $color-stone-300; }
+    & + & { margin-left: 0; }
+
+    &.edp-action-btn--icon-danger {
+      color: $color-danger; border-color: rgba($color-danger, 0.3);
+      &:hover:not(:disabled) { background: rgba($color-danger, 0.06); color: $color-danger; border-color: $color-danger; }
+    }
+  }
+}
+
+// ── Two-column body ───────────────────────────────────────────
+.edp-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-lg;
+  align-items: start;
+
+  @media (min-width: 1025px) {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+.edp-col {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  min-width: 0;
+
+  &--side {
+    @media (min-width: 1025px) {
+      position: sticky;
+      top: $spacing-lg;
+    }
+  }
+}
+
+// ── Section card shell — same recipe as the Business detail view's
+// .bdv-section, so both pages share one visual language. ─────────
+.edp-section {
+  position: relative;
+  background: $color-bg-card;
+  border: 1.5px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.04);
+  @include transition-short(box-shadow);
+
+  &:hover { box-shadow: 0 4px 16px rgba(28, 25, 23, 0.07); }
+
+  &::before {
+    content: '';
+    position: absolute; inset: 0 auto 0 0;
+    width: 3px;
+    border-radius: $radius-lg 0 0 $radius-lg;
+    background: linear-gradient(180deg, $color-primary 0%, rgba(251, 191, 36, 0.15) 100%);
+  }
+
+  &--compact { padding: $spacing-md $spacing-lg; }
+}
+
+.edp-section__title {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  margin: 0 0 $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1.5px solid rgba(251, 191, 36, 0.18);
+}
+
+.edp-section--compact .edp-section__title { margin-bottom: $spacing-sm; }
+
+.edp-section__badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex-shrink: 0;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.22) 0%, rgba(251, 191, 36, 0.10) 100%);
+  color: $color-primary-darker;
+  font-size: 0.95rem;
+
+  // A distinct color per card — About/Organizer/Booking each get their own
+  // hue instead of every section badge being the same amber.
+  &--info    { background: linear-gradient(135deg, rgba(14, 165, 233, 0.22) 0%, rgba(14, 165, 233, 0.10) 100%); color: $color-info-text; }
+  &--success { background: linear-gradient(135deg, rgba(22, 163, 74, 0.20) 0%, rgba(22, 163, 74, 0.08) 100%); color: $color-success-text; }
+  &--violet  { background: linear-gradient(135deg, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0.08) 100%); color: $color-badge-violet-text; }
+}
+
+.edp-section__heading {
+  display: flex; flex-direction: column; gap: 1px;
+  font-family: $font-family-header;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-stone-800;
+  line-height: 1.25;
+}
+
+.edp-description {
+  padding: 12px 14px;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  border: 1px solid $color-stone-100;
+  color: $color-stone-800;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: 1.65;
+  white-space: pre-line;
+  margin: 0;
+  // Caps line length for readability on wide screens — without this a
+  // one-paragraph description stretches the full ~600px column width,
+  // well past the ~75-character line the eye can track comfortably.
+  max-width: 68ch;
+}
+
+// ── Date & Time ───────────────────────────────────────────────
+.edp-datetime { display: flex; align-items: center; gap: 18px; }
+
+// When Location/Meeting-link rows follow the date row in the combined
+// "Event Details" card, separate them with a light rule instead of a
+// second bordered card — one card, two clearly-related groups.
+.edp-datetime + .edp-info-grid {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-stone-100;
+}
+.edp-datetime__text { display: flex; flex-direction: column; gap: 6px; }
+.edp-datetime__date { font-size: $font-size-md; font-weight: $font-weight-semibold; color: $color-text-body; }
+.edp-datetime__time {
+  display: flex; align-items: center; gap: 6px;
+  font-size: $font-size-sm; color: $color-text-muted;
+  i { color: $color-stone-400; }
+}
+
+// ── Mode & Location — icon-chip rows, matches .bdv-contact-item ───
+// Always a single column here: inside the combined Event Details card this
+// reads as one continuous "where" list under the date row above it, rather
+// than a multi-column grid that would compete with it for attention.
+.edp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-sm;
+}
+
+.edp-info-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px;
+  border-radius: $radius-md;
+  border: 1px solid $color-stone-100;
+  background: rgba($color-stone-50, 0.6);
+  @include transition-short(all);
+
+  &:hover { background: $color-bg-page; border-color: $color-border; }
+
+  &__icon {
+    width: 32px; height: 32px; border-radius: $radius-sm; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; margin-top: 1px;
+
+    &--location { background: rgba(251, 191, 36, 0.14); color: $color-primary-darker; }
+    &--online   { background: $color-info-light; color: $color-info-text; }
+  }
+
+  &__body { min-width: 0; display: flex; flex-direction: column; }
+
+  &__label {
+    font-size: $font-size-xs; font-weight: $font-weight-semibold;
+    color: $color-stone-400; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  &__value {
+    font-size: $font-size-sm; font-weight: $font-weight-bold;
+    color: $color-stone-900; text-decoration: none; word-break: break-word;
+    &--link { color: $color-primary-darker; word-break: break-all; }
+    &--link:hover { text-decoration: underline; }
+  }
+}
+
+// ── Organizer card (side column) ─────────────────────────────────
+.edp-organizer-card {
+  display: flex; align-items: center; gap: 10px;
+}
+.edp-organizer-card__avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(251, 191, 36, 0.14); color: $color-primary-darker; font-size: 1.6rem;
+}
+.edp-organizer-card__name { font-size: $font-size-sm; font-weight: $font-weight-bold; color: $color-stone-900; }
+
+// ── Booking card (side column) ───────────────────────────────────
+.edp-booking { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+
+.edp-booking__qr {
+  display: block; transition: transform 0.15s ease;
+  &:hover, &:focus-visible { transform: translateY(-2px); }
+}
+.edp-booking__qr-label { font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-stone-500; }
+
+.edp-booking__link-row {
+  display: flex; align-items: center; gap: 2px; min-width: 0; width: 100%;
+  margin-top: 8px; padding-top: 10px; border-top: 1px solid $color-stone-100;
+  // .edp-booking above centers the QR + label; without this the row would
+  // inherit that and center-truncate the URL, which makes the ellipsis
+  // land in an unexpected spot instead of at the visible end of the text.
+  text-align: left;
+}
+.edp-booking__link {
+  flex: 1; min-width: 0;
+  font-size: $font-size-xs; color: $color-text-body;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;
+  &:hover { color: $color-primary-dark; text-decoration: underline; }
+}
+.edp-booking__copy {
+  // 32px, not 26 — still compact enough for this card, but closer to a
+  // tappable size (matches .cm-input-copy-btn's copy button elsewhere in
+  // this same booking-URL feature, for consistency).
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: $radius-sm; border: none;
+  background: transparent; color: $color-stone-400; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+  &:hover { background: $color-amber-100; color: $color-primary-darker; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 1px; }
+  i { font-size: 13px; }
+}
+.edp-booking__cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
+  height: 38px; padding: 0 18px; border-radius: $radius-full;
+  background: $color-primary; color: $color-on-primary;
+  font-size: $font-size-sm; font-weight: $font-weight-semibold;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3); transition: all 0.15s ease;
+  &:hover { background: $color-primary-dark; color: $color-on-primary; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edp-booking__qr:hover, .edp-booking__qr:focus-visible,
+  .edp-action-btn--primary:hover,
+  .edp-related-card:hover { transform: none; }
+}
+
+// ── Related / More Events ────────────────────────────────────────
+.edp-related { margin-top: $spacing-lg; }
+
+.edp-related__header {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 14px;
+}
+.edp-related__title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: $font-size-xs; font-weight: $font-weight-bold; text-transform: uppercase;
+  letter-spacing: 0.06em; color: $color-stone-500;
+  i { color: $color-primary; }
+}
+.edp-related__all {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: $font-size-xs; font-weight: $font-weight-bold; color: $color-primary-darker;
+  &:hover { color: $color-primary-dark; }
+  i { font-size: 0.7rem; }
+}
+
+.edp-related__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: $spacing-md;
+}
+
+.edp-related-card {
+  display: flex; flex-direction: column;
+  border: 1px solid $color-border; background: $color-bg-card;
+  border-radius: $radius-md; overflow: hidden; cursor: pointer;
+  text-align: left; padding: 0; @include transition-short(all);
+
+  &:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(28, 25, 23, 0.1); border-color: $color-primary-medium; }
+  &:focus-visible { outline: 2px solid $color-primary; outline-offset: 2px; }
+
+  &__img { width: 100%; height: 110px; object-fit: cover; display: block; background: $color-stone-100; }
+  &__img--placeholder { display: flex; align-items: center; justify-content: center; color: $color-stone-400; font-size: 1.5rem; }
+
+  &__body { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; }
+  &__title { font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__meta {
+    display: flex; align-items: center; gap: 5px;
+    font-size: $font-size-xs; color: $color-text-muted;
+    i { font-size: 10px; color: $color-stone-400; }
+  }
+
+  &--skeleton {
+    height: 168px;
+    background: linear-gradient(90deg, $color-stone-100 25%, $color-stone-200 37%, $color-stone-100 63%);
+    background-size: 400% 100%; animation: edp-shimmer 1.4s ease infinite; cursor: default;
+    &:hover { transform: none; box-shadow: none; border-color: $color-border; }
+  }
+}
+
+@include media-sm-max {
+  .edp-identity-media__hero { height: 220px; }
+  .edp-title { font-size: $font-size-xl; }
+  .edp-datetime { flex-wrap: wrap; }
+  .edp-related__grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  // Once Book Now/Join Meeting are wide enough to wrap onto their own
+  // line, the auto-margin that pins Edit/Delete to the right edge of the
+  // desktop row would instead strand them alone on a line by themselves,
+  // right-aligned with empty space to their left. Flow left-to-right instead.
+  .edp-action-btn--icon { margin-left: 0; }
+}

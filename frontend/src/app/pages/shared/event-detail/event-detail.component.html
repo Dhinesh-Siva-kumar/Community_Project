@@ -1,0 +1,317 @@
+<div class="edp-page">
+
+  <!-- Same breadcrumb pattern as the Business page's detail view — a link
+       back to the list, plus the current record's name once it's loaded. -->
+  <nav [attr.aria-label]="'user.events.breadcrumb' | translate">
+    <ol class="edp-breadcrumb">
+      <li class="edp-breadcrumb__item">
+        <a class="edp-breadcrumb__link" [routerLink]="[basePath()]">
+          <i class="bi bi-list-ul"></i> {{ (isAdmin() ? 'admin.events.events' : 'user.events.events') | translate }}
+        </a>
+      </li>
+      @if (event(); as evt) {
+        <li class="edp-breadcrumb__sep"><i class="bi bi-chevron-right"></i></li>
+        <li class="edp-breadcrumb__item edp-breadcrumb__item--active">{{ evt.title }}</li>
+      }
+    </ol>
+  </nav>
+
+  @if (loading()) {
+    <div class="edp-skeleton">
+      <div class="edp-skeleton__hero skel-pulse"></div>
+      <div class="edp-skeleton__card skel-pulse"></div>
+      <div class="edp-skeleton__grid">
+        <div class="edp-skeleton__card edp-skeleton__card--tall skel-pulse"></div>
+        <div class="edp-skeleton__card edp-skeleton__card--tall skel-pulse"></div>
+      </div>
+    </div>
+  } @else if (notFound() || !event()) {
+    <div class="edp-error">
+      <i class="bi bi-exclamation-circle"></i>
+      <span>{{ 'user.events.toast.eventNotFoundNoLonger' | translate }}</span>
+      <a [routerLink]="[basePath()]" class="edp-error__btn">
+        <i class="bi bi-arrow-left"></i> {{ (isAdmin() ? 'admin.events.events' : 'user.events.events') | translate }}
+      </a>
+    </div>
+  } @else {
+    @let evt = event()!;
+
+    <!-- ══ Identity card: image, badges, title, organizer ═══════ -->
+    <div class="edp-identity">
+
+      <!-- Event image/banner lives at the top of this same card now,
+           instead of floating above it as a separate block. -->
+      @if (evt.images?.length) {
+        <div class="edp-identity-media">
+          <button type="button" class="edp-identity-media__hero-btn" (click)="openImageViewer(0)" [attr.aria-label]="'user.events.viewPhoto' | translate">
+            <img [src]="evt.images[0] | imageUrl" [alt]="evt.title" class="edp-identity-media__hero" />
+            <span class="edp-identity-media__zoom"><i class="bi bi-arrows-fullscreen"></i></span>
+          </button>
+          @if (evt.images.length > 1) {
+            <div class="edp-identity-media__strip">
+              @for (img of evt.images.slice(1); track img; let i = $index) {
+                <button type="button" class="edp-identity-media__thumb-btn" (click)="openImageViewer(i + 1)" [attr.aria-label]="'user.events.viewPhoto' | translate">
+                  <img [src]="img | imageUrl" [alt]="evt.title" class="edp-identity-media__thumb" />
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="edp-identity-media edp-identity-media--placeholder">
+          <i class="bi" [ngClass]="categoryIcon(evt.eventCategory)"></i>
+        </div>
+      }
+
+      <div class="edp-identity__body">
+      <div class="edp-tags">
+        @if (evt.eventCategory) {
+          <span [class]="'edp-tag edp-tag--category-' + evt.eventCategory.toLowerCase()"><i class="bi" [ngClass]="categoryIcon(evt.eventCategory)"></i> {{ evt.eventCategory }}</span>
+        }
+        @if (evt.eventMode) {
+          <span class="edp-tag edp-tag--mode">
+            <i class="bi" [ngClass]="evt.eventMode === 'Offline' ? 'bi-geo-alt-fill' : evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
+            {{ evt.eventMode }}
+          </span>
+        }
+        <span class="edp-tag edp-tag--visibility">
+          <i class="bi" [ngClass]="evt.visibilityType === 'WORLDWIDE' ? 'bi-globe2' : 'bi-geo-alt-fill'"></i>
+          {{ evt.visibilityType === 'WORLDWIDE' ? ('components.businessForm.visibilityWorldwide' | translate) : ('components.businessForm.visibilityCountry' | translate) }}
+        </span>
+        @if (evt.status === 'PENDING') {
+          @if (isAdmin()) {
+            <a class="edp-tag edp-tag--pending edp-tag--link" [routerLink]="['/admin/approval']" [queryParams]="{ tab: 'events' }" [title]="'admin.events.goApprovalPage' | translate">
+              <i class="bi bi-hourglass-split"></i> {{ 'user.events.pendingApproval' | translate }}
+            </a>
+          } @else {
+            <span class="edp-tag edp-tag--pending"><i class="bi bi-hourglass-split"></i> {{ 'user.events.pendingApproval' | translate }}</span>
+          }
+        }
+      </div>
+
+      <h1 class="edp-title">{{ evt.title }}</h1>
+
+      @if (evt.user?.displayName) {
+        <p class="edp-organizer"><i class="bi bi-person-circle"></i> {{ 'user.events.hostedBy' | translate }} <strong>{{ evt.user?.displayName }}</strong></p>
+      }
+
+      <!-- At-a-glance summary — the 3 things a visitor actually scans for
+           first, visible immediately without reading further down the page. -->
+      <div class="edp-quickfacts">
+        <span class="edp-quickfacts__item">
+          <i class="bi bi-calendar3"></i> {{ evt.eventDate | date:'EEE, d MMM y' }}
+        </span>
+        @if (formatEventTime(evt); as time) {
+          <span class="edp-quickfacts__item"><i class="bi bi-clock"></i> {{ time }}</span>
+        }
+        @if (evt.eventMode === 'Online') {
+          <span class="edp-quickfacts__item"><i class="bi bi-camera-video-fill"></i> {{ 'user.events.onlineEvent' | translate }}</span>
+        } @else {
+          @if (formatEventAddress(evt); as address) {
+            <span class="edp-quickfacts__item"><i class="bi bi-geo-alt-fill"></i> {{ address }}</span>
+          }
+        }
+      </div>
+
+      <!-- Primary actions — same spot business-hero puts Call/WhatsApp/Website,
+           so the one or two things a visitor is here to actually do are
+           reachable without scrolling. Edit/Delete (host or admin only)
+           live at the end of this same row, mirroring business-hero's
+           own edit/delete icon buttons. -->
+      @if (evt.bookingUrl || evt.locationLink || canManage()) {
+        <div class="edp-actions">
+          @if (evt.bookingUrl) {
+            <a class="edp-action-btn edp-action-btn--primary" [href]="evt.bookingUrl" target="_blank" rel="noopener">
+              <i class="bi bi-ticket-perforated-fill"></i> {{ 'user.events.bookNow' | translate }}
+            </a>
+          }
+          @if (evt.locationLink && (evt.eventMode === 'Online' || evt.eventMode === 'Hybrid')) {
+            <a class="edp-action-btn edp-action-btn--outline" [href]="evt.locationLink" target="_blank" rel="noopener">
+              <i class="bi bi-camera-video-fill"></i> {{ 'user.events.joinMeeting' | translate }}
+            </a>
+          }
+          @if (canManage()) {
+            <button type="button" class="edp-action-btn edp-action-btn--icon" (click)="openEditModal()"
+              [attr.aria-label]="'user.events.editEvent' | translate" [title]="'user.events.editEvent' | translate">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="edp-action-btn edp-action-btn--icon edp-action-btn--icon-danger" (click)="openDeleteConfirm()"
+              [attr.aria-label]="'user.events.deleteEvent' | translate" [title]="'user.events.deleteEvent' | translate">
+              <i class="bi bi-trash3"></i>
+            </button>
+          }
+        </div>
+      }
+      </div>
+    </div>
+
+    <!-- ══ Two-column body: main content + sticky side card ══════ -->
+    <div class="edp-layout">
+      <div class="edp-col edp-col--main">
+
+        <!-- Event Details — date/time + location/meeting link together,
+             since visitors scan them as one "when & where" unit. -->
+        <section class="edp-section">
+          <h3 class="edp-section__title">
+            <span class="edp-section__badge"><i class="bi bi-info-circle-fill"></i></span>
+            <span class="edp-section__heading">{{ 'user.events.eventDetails' | translate }}</span>
+          </h3>
+
+          <div class="edp-datetime">
+            <app-event-date-badge [date]="evt.eventDate" [time]="evt.eventTime" size="md"></app-event-date-badge>
+            <div class="edp-datetime__text">
+              <span class="edp-datetime__date">{{ evt.eventDate | date:'fullDate' }}</span>
+              @if (formatEventTime(evt); as time) {
+                <span class="edp-datetime__time"><i class="bi bi-clock"></i> {{ time }}</span>
+              }
+            </div>
+          </div>
+
+          @if (formatEventAddress(evt) || evt.locationLink) {
+            <div class="edp-info-grid">
+              @if (formatEventAddress(evt); as address) {
+                <div class="edp-info-item">
+                  <div class="edp-info-item__icon edp-info-item__icon--location"><i class="bi bi-geo-alt-fill"></i></div>
+                  <div class="edp-info-item__body">
+                    <span class="edp-info-item__label">{{ 'user.events.address' | translate }}</span>
+                    <span class="edp-info-item__value">{{ address }}</span>
+                  </div>
+                </div>
+              }
+              @if (evt.locationLink) {
+                <div class="edp-info-item">
+                  <div class="edp-info-item__icon edp-info-item__icon--online"><i class="bi bi-camera-video-fill"></i></div>
+                  <div class="edp-info-item__body">
+                    <span class="edp-info-item__label">{{ 'user.events.meetingStreamLink' | translate }}</span>
+                    <a [href]="evt.locationLink" target="_blank" rel="noopener" class="edp-info-item__value edp-info-item__value--link">{{ evt.locationLink }}</a>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- About -->
+        @if (evt.description) {
+          <section class="edp-section">
+            <h3 class="edp-section__title">
+              <span class="edp-section__badge edp-section__badge--info"><i class="bi bi-card-text"></i></span>
+              <span class="edp-section__heading">{{ 'user.events.description' | translate }}</span>
+            </h3>
+            <p class="edp-description">{{ evt.description }}</p>
+          </section>
+        }
+
+      </div>
+
+      <!-- ══ Side column — organizer + booking, sticky on desktop ══ -->
+      <aside class="edp-col edp-col--side">
+
+        @if (evt.user?.displayName) {
+          <section class="edp-section edp-section--compact">
+            <h3 class="edp-section__title">
+              <span class="edp-section__badge edp-section__badge--success"><i class="bi bi-person-fill"></i></span>
+              <span class="edp-section__heading">{{ 'user.events.hostedBy' | translate }}</span>
+            </h3>
+            <div class="edp-organizer-card">
+              <span class="edp-organizer-card__avatar"><i class="bi bi-person-circle"></i></span>
+              <span class="edp-organizer-card__name">{{ evt.user?.displayName }}</span>
+            </div>
+          </section>
+        }
+
+        @if (evt.bookingUrl) {
+          <section class="edp-section edp-section--compact edp-section--booking">
+            <h3 class="edp-section__title">
+              <span class="edp-section__badge edp-section__badge--violet"><i class="bi bi-ticket-perforated-fill"></i></span>
+              <span class="edp-section__heading">{{ 'user.events.bookingSectionTitle' | translate }}</span>
+            </h3>
+            <div class="edp-booking">
+              <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__qr" [title]="'user.events.openBookingLink' | translate">
+                <app-qr-code [value]="evt.bookingUrl" [size]="128" [ariaLabel]="'user.events.bookingQrAlt' | translate"></app-qr-code>
+              </a>
+              <span class="edp-booking__qr-label">{{ 'user.events.scanToBook' | translate }}</span>
+
+              <div class="edp-booking__link-row">
+                <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__link">{{ evt.bookingUrl }}</a>
+                <button type="button" class="edp-booking__copy"
+                  (click)="copyBookingUrl(evt.bookingUrl)"
+                  [attr.aria-label]="'user.events.copyBookingUrl' | translate"
+                  [title]="'user.events.copyBookingUrl' | translate">
+                  <i class="bi bi-clipboard" aria-hidden="true"></i>
+                </button>
+              </div>
+              <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__cta">
+                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {{ 'user.events.bookNow' | translate }}
+              </a>
+            </div>
+          </section>
+        }
+
+      </aside>
+    </div>
+
+    <!-- ══ Related / More Events ══════════════════════════════ -->
+    @if (relatedLoading() || related().length) {
+      <section class="edp-related">
+        <div class="edp-related__header">
+          <span class="edp-related__title"><i class="bi bi-collection"></i> {{ 'user.events.relatedEvents' | translate }}</span>
+          <a [routerLink]="[basePath()]" class="edp-related__all">
+            {{ 'user.events.viewAllEvents' | translate }} <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        @if (relatedLoading()) {
+          <div class="edp-related__grid">
+            @for (s of [1,2,3,4,5,6]; track s) {
+              <div class="edp-related-card edp-related-card--skeleton"></div>
+            }
+          </div>
+        } @else {
+          <div class="edp-related__grid">
+            @for (r of related(); track r.id) {
+              <button type="button" class="edp-related-card" (click)="viewEvent(r.id)">
+                @if (r.images?.length) {
+                  <img [src]="r.images[0] | imageUrl" [alt]="r.title" class="edp-related-card__img" />
+                } @else {
+                  <div class="edp-related-card__img edp-related-card__img--placeholder"><i class="bi" [ngClass]="categoryIcon(r.eventCategory)"></i></div>
+                }
+                <div class="edp-related-card__body">
+                  <span class="edp-related-card__title">{{ r.title }}</span>
+                  <span class="edp-related-card__meta">
+                    <i class="bi bi-calendar3"></i> {{ r.eventDate | date:'MMM d, y' }}
+                  </span>
+                  <span class="edp-related-card__meta">
+                    <i class="bi" [class.bi-globe2]="r.visibilityType === 'WORLDWIDE'" [class.bi-geo-alt-fill]="r.visibilityType !== 'WORLDWIDE'"></i>
+                    {{ r.visibilityType === 'WORLDWIDE' ? ('components.businessForm.visibilityWorldwide' | translate) : (r.country || ('components.businessForm.visibilityCountry' | translate)) }}
+                  </span>
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <app-image-viewer
+      [images]="evt.images"
+      [isOpen]="imageViewerOpen()"
+      [initialIndex]="imageViewerIndex()"
+      (close)="closeImageViewer()"></app-image-viewer>
+
+    @if (canManage()) {
+      <app-event-form-modal
+        [open]="showEditModal()"
+        [editEventId]="evt.id"
+        [isAdmin]="isAdmin()"
+        (closed)="closeEditModal()"
+        (saved)="onEventSaved($event)"></app-event-form-modal>
+
+      <app-event-delete-modal
+        [open]="showDeleteConfirm()"
+        [event]="evt"
+        (closed)="closeDeleteConfirm()"
+        (deleted)="onEventDeleted()"></app-event-delete-modal>
+    }
+  }
+</div>
