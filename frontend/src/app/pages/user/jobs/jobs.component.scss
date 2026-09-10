@@ -220,6 +220,15 @@
     padding: 8px 16px;
     font-size: $font-size-xs;
   }
+
+  // Applications closed — a status indicator, not a clickable action, so
+  // it's not styled destructively like a delete/reject button.
+  &--disabled {
+    background: $color-stone-100;
+    border: 1.5px solid $color-stone-200;
+    color: $color-stone-500;
+    cursor: not-allowed;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -966,10 +975,15 @@
   background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
-  cursor: default;
+  cursor: pointer;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06), 0 4px 16px rgba(28, 25, 23, 0.03);
   transition: border-color $duration-short $easing-standard,
               box-shadow $duration-short $easing-standard;
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
 
   &:not(.jb-card--active):hover {
     border-color: rgba(251, 191, 36, 0.50);
@@ -1648,6 +1662,19 @@ ms; }
     font-weight: $font-weight-bold;
     color: $color-stone-800;
     letter-spacing: 0.02em;
+  }
+
+  // Marks an overnight shift's end time (e.g. 10:00 PM → 6:00 AM) as
+  // falling on the following day, so it doesn't read as chronologically
+  // "before" the start time.
+  &__nextday {
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    color: $color-stone-500;
+    background: $color-stone-100;
+    border-radius: $radius-full;
+    padding: 1px 6px;
+    margin-left: 2px;
   }
 }
 

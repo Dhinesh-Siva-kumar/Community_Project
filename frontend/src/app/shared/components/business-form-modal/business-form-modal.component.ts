@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed, WritableSignal } from '@angular/core';
+import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, HostListener, inject, signal, computed, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, Observable, map } from 'rxjs';
@@ -7,6 +7,7 @@ import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GeographyService } from '../../../core/services/geography.service';
+import { UnsavedChangesService } from '../../../core/services/unsaved-changes.service';
 import { Business, BusinessCategory, Country, GeoCountry, CountryAddressConfig, Division, OpeningHoursJson } from '../../../core/models';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { ToggleComponent } from '../toggle/toggle.component';
@@ -36,6 +37,15 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   };
 }
 
+/** Phone, WhatsApp and Email are each individually optional — this is the
+ * group-level rule that at least one of the three must be filled in. */
+function atLeastOneContactValidator(group: AbstractControl): ValidationErrors | null {
+  const phone = ((group.get('phone')?.value as string) ?? '').trim();
+  const whatsapp = ((group.get('whatsapp')?.value as string) ?? '').trim();
+  const email = ((group.get('email')?.value as string) ?? '').trim();
+  return (phone || whatsapp || email) ? null : { noContactMethod: true };
+}
+
 /**
  * The single Add/Edit Business form modal — a straight port of the admin
  * Business page's modal (same fields, same phone/WhatsApp dial-code
@@ -58,6 +68,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   private toast             = inject(ToastService);
   private translate         = inject(TranslateService);
   private geographyService  = inject(GeographyService);
+  private unsavedChanges    = inject(UnsavedChangesService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
 
@@ -83,9 +94,16 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   categories = signal<BusinessCategory[]>([]);
   private categoriesLoaded = false;
 
-  categoryOptions = computed<SelectOption[]>(() =>
-    this.categories().map(c => ({ value: c.id, label: c.name }))
-  );
+  // A deprioritised category (e.g. "Bar" — kept, not deleted, because a
+  // business already uses it) is hidden from selection for a new business,
+  // but stays selectable while editing the one business that already has
+  // it — otherwise its category would appear to vanish from the dropdown.
+  categoryOptions = computed<SelectOption[]>(() => {
+    const editingCategoryId = this.editingBusiness()?.categoryId ?? null;
+    return this.categories()
+      .filter(c => c.isActive !== false || c.id === editingCategoryId)
+      .map(c => ({ value: c.id, label: c.name }));
+  });
 
   // ── Logo ──
   selectedLogo  = signal<File | null>(null);
@@ -162,6 +180,33 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   geoCountryOptions = computed<SelectOption[]>(() =>
     this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() }))
   );
+
+  // ── Region label (level-1 division) — the country/state DETECTION logic
+  // (which countries get a division dropdown, how many, what data
+  // populates it) is untouched; this only overrides what the *first*
+  // dropdown is CALLED, since the backend's own computed label is derived
+  // from the raw admin-division `type` in the geo dataset (e.g. Germany's
+  // literally comes back "Land") rather than a name a user would recognize.
+  // Tracked as its own signal (not just read off `businessForm.get(...)`)
+  // because Angular's `computed()` only reacts to signal reads, and
+  // `applyEditFormData()` sets `countryId` silently (no valueChanges) so a
+  // plain form-control read wouldn't update when editing a business.
+  private static readonly REGION_LABEL_KEYS: Record<string, string> = {
+    GB: 'components.businessForm.regionLabel.countyRegion', // United Kingdom
+    IN: 'components.businessForm.regionLabel.state',        // India
+    CA: 'components.businessForm.regionLabel.province',     // Canada
+    DE: 'components.businessForm.regionLabel.stateRegion',  // Germany
+  };
+
+  selectedRegionCountryId = signal<number | null>(null);
+
+  regionLabelKey = computed<string>(() => {
+    const id = this.selectedRegionCountryId();
+    if (!id) return 'components.businessForm.regionLabel.default'; // "Region"
+    const iso2 = this.geoCountries().find(c => String(c.id) === String(id))?.iso2?.toUpperCase();
+    return (iso2 && BusinessFormModalComponent.REGION_LABEL_KEYS[iso2])
+      || 'components.businessForm.regionLabel.fallback'; // "State / Province / Region"
+  });
 
   division1Options = signal<Division[]>([]);
   division2Options = signal<Division[]>([]);
@@ -249,9 +294,13 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       division2Id:  [null],
       cityId:       [null, Validators.required],
       address:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+      // Optional in every country now — applyPincodeValidators() only ever
+      // adds the country's format check, never Validators.required.
       pincode:      ['', [postalCodeValidator(null)]],
-      phoneCountryId: [null, Validators.required],
-      phone:        ['', [Validators.required, Validators.maxLength(15), this.phoneValidator()]],
+      // Optional — enforced only as "at least one of phone/WhatsApp/email"
+      // via atLeastOneContactValidator below, not individually required.
+      phoneCountryId: [null],
+      phone:        ['', [Validators.maxLength(15), this.phoneValidator()]],
       // Structured days + hours in one control. The editor component is
       // both the CVA and the validator, so `required` here only guards the
       // null/empty case and the per-day rules live with the editor.
@@ -270,7 +319,11 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
       isActive:     [true],
       // Country Based is the default, matching the DB column default.
       visibilityType: ['COUNTRY', Validators.required],
-    });
+      // Phone/WhatsApp/Email are each individually optional, but the group
+      // needs at least one — Angular already re-runs group-level validators
+      // whenever any child control's value changes, so this rule clears
+      // itself the moment it's satisfied without any extra wiring here.
+    }, { validators: atLeastOneContactValidator });
 
     this.setupMapsLinkAutoGeneration();
 
@@ -459,11 +512,20 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
 
   private resetForCreate(): void {
     this.editingBusiness.set(null);
-    // A bare reset() nulls every control — including `isActive`, which must
-    // start Active (matching the DB default) for a new business, and
-    // `visibilityType`, which defaults to Country Based. Both are restored
-    // here rather than left for the template to guess.
-    this.businessForm.reset({ isActive: true, visibilityType: 'COUNTRY' });
+    // A bare reset() nulls every control not explicitly listed here — not
+    // just `isActive`/`visibilityType`, but also every optional text field
+    // (pincode, phone, email, website, whatsapp, mapsLink, country,
+    // latitude, longitude). The backend DTO types those as `string |
+    // undefined`, never `null`, so a business submitted without ever
+    // touching one of those optional fields (very possible now that they're
+    // no longer required) would fail backend validation with "Expected
+    // string, received null" the moment it reached the API. Restore them
+    // all to the same '' default initForm() uses.
+    this.businessForm.reset({
+      pincode: '', phone: '', email: '', website: '', whatsapp: '',
+      mapsLink: '', country: '', latitude: '', longitude: '',
+      isActive: true, visibilityType: 'COUNTRY',
+    });
     this.businessSubmitAttempted.set(false);
     // reset() clears phoneCountryId/whatsappCountryId — re-apply the India
     // default (applyDefaultPhoneCountry() only auto-fills them once, on first load).
@@ -471,6 +533,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     this.selectedLogo.set(null); this.logoPreview.set(null);
     this.clearGalleryState();
     this.resetDivisionState();
+    this.selectedRegionCountryId.set(null);
     this.applyDivisionValidators();
     this.applyPincodeValidators();
     this.logoUploadReset.update(v => v + 1);
@@ -562,6 +625,9 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     const silent = { emitEvent: false, emitViewToModelChange: false };
     this.resetDivisionState();
     const countryId = biz.countryId ?? (biz as any).country_id ?? null;
+    // Set silently below (no valueChanges), so the region label's own
+    // signal needs updating explicitly here rather than via onCountryChange.
+    this.selectedRegionCountryId.set(countryId);
     if (countryId) {
       this.businessForm.get('countryId')?.setValue(countryId, silent);
       this.geographyService.getCountryConfig(countryId).pipe(takeUntil(this.destroy$)).subscribe({
@@ -640,12 +706,14 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     d2?.updateValueAndValidity({ emitEvent: false });
   }
 
+  // Postal Code is optional in every country — this only ever applies the
+  // selected country's format check (when a value is actually entered),
+  // never a required rule, regardless of what the country's own postal
+  // config says.
   private applyPincodeValidators(): void {
     const postal = this.countryConfig()?.postalCode;
-    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
-    if (postal?.required) validators.push(Validators.required);
     const ctrl = this.businessForm.get('pincode');
-    ctrl?.setValidators(validators);
+    ctrl?.setValidators([postalCodeValidator(postal?.regex ?? null)]);
     ctrl?.updateValueAndValidity({ emitEvent: false });
   }
 
@@ -666,6 +734,7 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   onCountryChange(countryId: any): void {
     this.resetDivisionState();
     const id = countryId ? Number(countryId) : null;
+    this.selectedRegionCountryId.set(id);
     if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
 
     this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
@@ -752,18 +821,47 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
     }
   }
 
-  requestClose(): void {
+  /** True once the user has actually edited something — patchValue() during
+   * edit-data hydration never marks the form dirty, only real input does. */
+  isDirty(): boolean {
+    return this.open && this.businessForm.dirty;
+  }
+
+  // Browser tab close/refresh isn't something Angular Router (or this
+  // component) can intercept with a custom prompt — this is the one
+  // browser-supported hook for that case. The browser shows its own fixed
+  // wording regardless of what's set here; only setting returnValue at all
+  // triggers it.
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.isDirty()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
+
+  /** Backdrop click, the × button, and Cancel all route through here, so this is the one place that needs to guard against discarding unsaved edits. */
+  async requestClose(): Promise<void> {
+    if (this.isDirty()) {
+      const leave = await this.unsavedChanges.confirm();
+      if (!leave) return;
+    }
     this.closed.emit();
   }
 
   submitBusiness(): void {
     this.businessSubmitAttempted.set(true);
     this.businessForm.markAllAsTouched();
-    // logoPreview() covers both cases: a freshly-selected file, or an
-    // untouched existing logo when editing. It's only empty when the user
-    // never picked one (create) or explicitly cleared it (edit) without
-    // choosing a replacement — either way, the logo is required.
-    if (this.businessForm.invalid || !this.logoPreview()) return;
+    // Logo is optional — no logoPreview() check here anymore.
+    if (this.businessForm.invalid) {
+      // The "at least one contact method" rule is a form-level error, not
+      // tied to any single highlighted field, so nothing on screen points
+      // at it unless we scroll there ourselves.
+      if (this.businessForm.errors?.['noContactMethod']) {
+        document.getElementById('bizFormContactSection')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
 
     this.submitting.set(true);
     // getRawValue() (not .value) — .value silently drops disabled controls,

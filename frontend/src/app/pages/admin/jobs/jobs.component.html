@@ -161,6 +161,40 @@
                 [placeholder]="'admin.jobs.companyName' | translate" />
             </div>
           </div>
+
+          <!-- Skills Search — matches jobs against any stored skill, not just an exact tag. -->
+          <div class="jb-adv-field">
+            <label class="jb-adv-label"><i class="bi bi-stars"></i> {{ 'admin.jobs.skills' | translate }}</label>
+            <div class="jb-adv-input-wrap">
+              <input type="text" class="jb-adv-input" [value]="filterSkills()"
+                (input)="setAdvancedFilter(filterSkills, inputVal($event))"
+                [placeholder]="'admin.jobs.skillsSearchPlaceholder' | translate" />
+            </div>
+          </div>
+
+          <!-- Visa Sponsorship -->
+          <div class="jb-adv-field">
+            <label class="jb-adv-label"><i class="bi bi-passport"></i> {{ 'admin.jobs.visaSponsorship' | translate }}</label>
+            <div class="jb-chip-group jb-chip-group--sm">
+              <button class="jb-chip jb-chip--sm" [class.jb-chip--active]="filterVisaSponsorship() === ''"
+                (click)="setAdvancedFilter(filterVisaSponsorship, '')">{{ 'admin.jobs.any' | translate }}</button>
+              @for (v of visaSponsorshipFilterValues; track v) {
+                <button class="jb-chip jb-chip--sm" [class.jb-chip--active]="filterVisaSponsorship() === v"
+                  (click)="setAdvancedFilter(filterVisaSponsorship, filterVisaSponsorship() === v ? '' : v)">{{ v | enumLabel:'visaSponsorship' }}</button>
+              }
+            </div>
+          </div>
+
+          <!-- Referral Available -->
+          <div class="jb-adv-field">
+            <label class="jb-adv-label"><i class="bi bi-person-check"></i> {{ 'admin.jobs.referralAvailable' | translate }}</label>
+            <div class="jb-chip-group jb-chip-group--sm">
+              <button class="jb-chip jb-chip--sm" [class.jb-chip--active]="filterReferralAvailable() === null"
+                (click)="setAdvancedFilter(filterReferralAvailable, null)">{{ 'admin.jobs.any' | translate }}</button>
+              <button class="jb-chip jb-chip--sm" [class.jb-chip--active]="filterReferralAvailable() === true"
+                (click)="setAdvancedFilter(filterReferralAvailable, filterReferralAvailable() === true ? null : true)">{{ 'common.yes' | translate }}</button>
+            </div>
+          </div>
           <div class="jb-adv-field">
             <label class="jb-adv-label"><i class="bi bi-clock"></i> {{ 'admin.jobs.shiftType' | translate }}</label>
             <div class="jb-chip-group jb-chip-group--sm">
@@ -333,7 +367,7 @@
 <ng-template #jobDetailSections let-job="job">
 
   <!-- S2: Job Overview -->
-  @if (job.workMode || job.shiftType || getExperienceLabel(job) || job.education || job.openings || job.jobType) {
+  @if (job.workMode || job.shiftType || getExperienceLabel(job) || job.education || job.openings || job.jobType || (job.visaSponsorship && job.visaSponsorship !== 'Not Specified') || job.referralAvailable || job.applicationDeadline) {
     <div class="jbd-section">
       <div class="jbd-section__header"><i class="bi bi-grid-3x2-gap-fill"></i><span>{{ 'admin.jobs.jobOverview' | translate }}</span></div>
       <div class="jbd-info-grid">
@@ -373,6 +407,31 @@
             <div class="jbd-info-card__body"><span class="jbd-info-card__label">{{ 'admin.jobs.shift' | translate }}</span><span class="jbd-info-card__value">{{ 'admin.jobs.shiftSuffix' | translate:{ shift: job.shiftType | enumLabel:'shiftType' } }}</span></div>
           </div>
         }
+        @if (job.visaSponsorship && job.visaSponsorship !== 'Not Specified') {
+          <div class="jbd-info-card">
+            <div class="jbd-info-card__icon jbd-info-card__icon--type"><i class="bi bi-passport-fill"></i></div>
+            <div class="jbd-info-card__body"><span class="jbd-info-card__label">{{ 'admin.jobs.visaSponsorship' | translate }}</span><span class="jbd-info-card__value">{{ job.visaSponsorship | enumLabel:'visaSponsorship' }}</span></div>
+          </div>
+        }
+        @if (job.referralAvailable) {
+          <div class="jbd-info-card">
+            <div class="jbd-info-card__icon jbd-info-card__icon--openings"><i class="bi bi-person-check-fill"></i></div>
+            <div class="jbd-info-card__body"><span class="jbd-info-card__label">{{ 'admin.jobs.referralAvailable' | translate }}</span><span class="jbd-info-card__value">{{ 'common.yes' | translate }}</span></div>
+          </div>
+        }
+        @if (job.applicationDeadline) {
+          <div class="jbd-info-card">
+            <div class="jbd-info-card__icon" [class.jbd-info-card__icon--exp]="job.isExpired" [class.jbd-info-card__icon--shift]="!job.isExpired"><i class="bi bi-calendar-x-fill"></i></div>
+            <div class="jbd-info-card__body">
+              <span class="jbd-info-card__label">{{ 'admin.jobs.applicationDeadline' | translate }}</span>
+              <span class="jbd-info-card__value">
+                {{ job.applicationDeadline | date:'mediumDate' }}
+                @if (job.isExpired) { <span class="jb-badge jb-badge--rejected">{{ 'admin.jobs.applicationsClosed' | translate }}</span> }
+                @else if (job.isClosingSoon) { <span class="jb-badge jb-badge--pending">{{ 'admin.jobs.closingSoon' | translate }}</span> }
+              </span>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }
@@ -400,10 +459,15 @@
           <div class="jbd-section__header"><i class="bi bi-geo-alt-fill"></i><span>{{ 'admin.jobs.location' | translate }}</span></div>
           <div class="jbd-location-card">
             <div class="jbd-location-card__text">
-              <p class="jbd-location-card__headline">{{ getLocationDisplay(job) || (job.isRemote ? 'Remote' : job.location) }}</p>
+              <p class="jbd-location-card__headline">{{ getLocationDisplay(job) || job.location }}</p>
               @if (getLocationSubtext(job)) { <p class="jbd-location-card__sub">{{ getLocationSubtext(job) }}</p> }
             </div>
-            <div class="jbd-location-card__icon"><i class="bi" [class.bi-house-door-fill]="job.isRemote" [class.bi-globe-americas]="!job.isRemote"></i></div>
+            <div class="jbd-location-card__icon">
+              <i class="bi"
+                [class.bi-house-door-fill]="job.workMode === 'Remote'"
+                [class.bi-shuffle]="job.workMode === 'Hybrid'"
+                [class.bi-globe-americas]="job.workMode === 'On-site' || !job.workMode"></i>
+            </div>
           </div>
         </div>
       }
@@ -415,11 +479,14 @@
     <div class="jbd-section">
       <div class="jbd-section__header"><i class="bi bi-calendar-week-fill"></i><span>{{ 'admin.jobs.workingSchedule' | translate }}</span></div>
       <div class="jbd-schedule-card">
-        @if (job.workStartTime && job.workEndTime) {
+        @if (getWorkingHoursDisplay(job); as hours) {
           <div class="jbd-schedule-hours">
-            <div class="jbd-schedule-time"><i class="bi bi-sunrise"></i><span class="jbd-schedule-time__val">{{ job.workStartTime }}</span></div>
+            <div class="jbd-schedule-time"><i class="bi bi-sunrise"></i><span class="jbd-schedule-time__val">{{ hours.start }}</span></div>
             <i class="bi bi-arrow-right jbd-schedule-arrow"></i>
-            <div class="jbd-schedule-time"><i class="bi bi-sunset"></i><span class="jbd-schedule-time__val">{{ job.workEndTime }}</span></div>
+            <div class="jbd-schedule-time">
+              <i class="bi bi-sunset"></i><span class="jbd-schedule-time__val">{{ hours.end }}</span>
+              @if (hours.overnight) { <span class="jbd-schedule-time__nextday">{{ 'admin.jobs.nextDay' | translate }}</span> }
+            </div>
           </div>
         }
         @if (job.workStartTime && job.workEndTime && job.workingDays && job.workingDays.length) {
@@ -511,10 +578,14 @@
               <div class="jbd-hiring-card__body">
                 <p class="jbd-hiring-card__name">{{ job.contactPerson || job.companyName || 'Hiring Team' }}</p>
                 @if (job.contactEmail) {
-                  <a [href]="'mailto:' + job.contactEmail" class="jbd-hiring-card__link" (click)="$event.stopPropagation()">{{ job.contactEmail }}</a>
+                  <a [href]="'mailto:' + job.contactEmail" class="jbd-hiring-card__link"
+                    [title]="(isTouchDevice() ? 'admin.jobs.sendEmail' : 'admin.jobs.copyEmail') | translate"
+                    (click)="onEmailClick(job.contactEmail, $event)">{{ job.contactEmail }}</a>
                 }
                 @if (job.contactPhone) {
-                  <a [href]="'tel:' + job.contactPhone" class="jbd-hiring-card__link" (click)="$event.stopPropagation()">{{ job.contactPhone }}</a>
+                  <a [href]="'tel:' + job.contactPhone" class="jbd-hiring-card__link"
+                    [title]="(isTouchDevice() ? 'admin.jobs.callNumber' : 'admin.jobs.copyPhone') | translate"
+                    (click)="onPhoneClick(job.contactPhone, $event)">{{ job.contactPhone }}</a>
                 }
                 @if (!job.contactEmail && !job.contactPhone && job.contactInfo) {
                   <p class="jbd-hiring-card__link">{{ job.contactInfo }}</p>
@@ -547,13 +618,18 @@
 
   <!-- S10: Actions -->
   <div class="jbd-actions-bar">
-    @if (job.applicationUrl) {
+    @if (job.isExpired) {
+      <span class="jb-btn jb-btn--ghost jb-btn--disabled" [title]="'admin.jobs.deadlinePassed' | translate">
+        <i class="bi bi-calendar-x"></i> {{ 'admin.jobs.applicationsClosed' | translate }}
+      </span>
+    } @else if (job.applicationUrl) {
       <a [href]="job.applicationUrl" target="_blank" rel="noopener" class="jb-btn jb-btn--neon" (click)="$event.stopPropagation()">
         <i class="bi bi-send-fill"></i> {{ 'admin.jobs.applyNow' | translate }}
       </a>
     } @else if (job.contactEmail) {
-      <a [href]="'mailto:' + job.contactEmail" class="jb-btn jb-btn--neon" (click)="$event.stopPropagation()">
-        <i class="bi bi-send"></i> {{ 'admin.jobs.contact' | translate }}
+      <a [href]="'mailto:' + job.contactEmail" class="jb-btn jb-btn--neon" (click)="onEmailClick(job.contactEmail, $event)">
+        <i class="bi" [class.bi-send]="isTouchDevice()" [class.bi-clipboard]="!isTouchDevice()"></i>
+        {{ (isTouchDevice() ? 'admin.jobs.contact' : 'admin.jobs.copyEmailToApply') | translate }}
       </a>
     }
     <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="shareJob(job, $event)">
@@ -597,7 +673,9 @@
       @for (job of filteredJobs(); track job.id) {
         <article class="jb-card animate-slide-in-up" [id]="'job-card-' + job.id"
           [class.jb-card--active]="activeJobId() === job.id"
-          role="listitem" [attr.aria-expanded]="activeJobId() === job.id">
+          role="listitem" tabindex="0"
+          (click)="toggleAccordion(job.id, $event)" (keydown.enter)="toggleAccordion(job.id, $event)"
+          [attr.aria-label]="job.title" [attr.aria-expanded]="activeJobId() === job.id">
 
           <!-- ── CARD HEADER ─────────────────────────────────── -->
           <div class="jb-card__header">
@@ -684,7 +762,7 @@
 
             <!-- Chevron toggle -->
             <button class="jb-card__toggle" [class.jb-card__toggle--open]="activeJobId() === job.id"
-              (click)="toggleAccordion(job.id)" type="button"
+              (click)="toggleAccordion(job.id, $event)" type="button"
               [attr.aria-expanded]="activeJobId() === job.id">
               <i class="bi bi-chevron-down"></i>
             </button>
@@ -692,7 +770,7 @@
 
           <!-- ── ACCORDION BODY — Premium Redesign ────────────── -->
           @if (activeJobId() === job.id) {
-            <div class="jbd-body" role="region" [attr.aria-label]="job.title + ' full details'">
+            <div class="jbd-body" role="region" [attr.aria-label]="job.title + ' full details'" (click)="$event.stopPropagation()">
               <ng-container *ngTemplateOutlet="jobDetailSections; context: { job: job }"></ng-container>
             </div>
           }
@@ -920,7 +998,7 @@
   <i class="bi bi-plus-lg"></i>
 </button>
 
-<app-job-form-modal
+<app-job-form-modal #jobFormModal
   [open]="showAddModal()"
   [editJobId]="editJobId()"
   [isAdmin]="true"

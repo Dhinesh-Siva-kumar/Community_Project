@@ -15,7 +15,10 @@ export const CreateJobDto = z.object({
   // ── Existing fields (kept for backward compatibility) ────────
   title:         z.string().min(1, 'Job title is required'),
   specification: z.string().optional(),
-  description:   z.string().optional(),
+  // The general/summary description — required before a job can be
+  // published; Responsibilities/Qualifications/Requirements/Benefits below
+  // stay optional.
+  description:   z.string().min(1, 'Job description is required'),
   images:        z.array(z.string()).optional(),
   location:      z.string().optional(),
   pincode:       z.string().optional(),
@@ -58,6 +61,13 @@ export const CreateJobDto = z.object({
   education: z.string().optional(),
   openings:  z.coerce.number().int().min(1).optional(),
   shiftType: z.enum(['Day', 'Night', 'Rotational', 'Flexible']).optional(),
+  // Kept as separate attributes rather than folded into jobType/Employment
+  // Type — see 20240049_add_job_visa_referral.ts.
+  visaSponsorship:   z.enum(['Available', 'Not Available', 'Not Specified']).optional(),
+  referralAvailable: optionalBool,
+  // '' explicitly clears a previously-set deadline (distinct from omitting
+  // the field entirely, which a partial update leaves untouched).
+  applicationDeadline: z.string().optional(),
 
   // ── Salary ───────────────────────────────────────────────────
   salaryMin:      optionalInt,
@@ -123,6 +133,12 @@ export const ListJobsQueryDto = z.object({
   education: z.string().optional(),
   jobTypes:  z.string().optional(),
   workModes: z.string().optional(),
+  visaSponsorship:   z.enum(['Available', 'Not Available', 'Not Specified']).optional(),
+  referralAvailable: z.coerce.boolean().optional(),
+  // Free-text, matched against any of the job's stored skills
+  // (case-insensitive substring) — not restricted to an exact tag match,
+  // so searching "react" also finds a job tagged "React.js".
+  skills:    z.string().optional(),
 
   // ── Recruiter / poster (admin) ────────────────────────────────
   postedBy: z.string().optional(),

@@ -1,0 +1,12 @@
+@if (unsavedChanges.isOpen()) {
+  <div class="au-backdrop" (click)="stay()"></div>
+  <div class="ucd-modal" appScrollLock role="alertdialog" aria-modal="true" aria-labelledby="ucdTitle" aria-describedby="ucdMessage" (click)="$event.stopPropagation()">
+    <div class="ucd-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    <h5 class="ucd-title" id="ucdTitle">{{ 'components.unsavedChanges.title' | translate }}</h5>
+    <p class="ucd-message" id="ucdMessage">{{ 'components.unsavedChanges.message' | translate }}</p>
+    <div class="ucd-actions">
+      <button type="button" class="ucd-btn ucd-btn--stay" (click)="stay()">{{ 'components.unsavedChanges.stay' | translate }}</button>
+      <button type="button" class="ucd-btn ucd-btn--leave" (click)="leave()">{{ 'components.unsavedChanges.leave' | translate }}</button>
+    </div>
+  </div>
+}

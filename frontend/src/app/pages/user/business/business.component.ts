@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, inject, signal, computed, effect, viewChildren } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, WritableSignal, ViewChild, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,6 +24,7 @@ import { BusinessQueryParams } from '../../../core/services/business.service';
 import { DAY_KEYS, DAY_SHORT_KEYS, currentDayKey, currentHHmm } from '../../../shared/utils/opening-hours';
 import { BusinessDeleteModalComponent } from '../../../shared/components/business-delete-modal/business-delete-modal.component';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe } from '@ngx-translate/core';
 
 type ViewState = 'categories' | 'list' | 'detail';
@@ -52,7 +53,7 @@ const BUSINESS_PAGE_SIZE = 20;
   // drawer just sit on top of — and hide — the right edge of the business list.
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserBusinessComponent implements OnInit, OnDestroy {
+export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
   private layoutService     = inject(LayoutService);
@@ -60,6 +61,13 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
   private route             = inject(ActivatedRoute);
   private router            = inject(Router);
   private geographyService  = inject(GeographyService);
+
+  @ViewChild('bizFormModal') bizFormModal?: BusinessFormModalComponent;
+
+  /** Backs the `canDeactivate` route guard — the Add/Edit Business modal is the only unsaved-changes risk on this page. */
+  hasUnsavedChanges(): boolean {
+    return !!this.bizFormModal?.isDirty();
+  }
 
   // ── View state ──────────────────────────────────────────────
   currentView      = signal<ViewState>('list');
@@ -220,12 +228,17 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
 
   // ── Category view (legacy) controls ─────────────────────────
   catSearch   = signal('');
-  catSortBy   = signal<'name'|'count'|'newest'>('name');
+  // 'order' mirrors the admin-configured Display Order (the backend already
+  // returns categories sorted that way) — the default, so a category an
+  // admin has deliberately promoted or deprioritised shows accordingly here
+  // too, not just in Admin's own category management page.
+  catSortBy   = signal<'order'|'name'|'count'|'newest'>('order');
   catViewMode = signal<'grid'|'list'>('grid');
   bizViewMode = signal<'grid'|'list'>('grid');
 
   /** Sort options for the Category view's sort dropdown — same app-searchable-select used everywhere else on this page. */
   readonly catSortOptions: SelectOption[] = [
+    { value: 'order',  label: 'user.business.sortOption.recommended' },
     { value: 'name',   label: 'user.business.sortOption.name' },
     { value: 'count',  label: 'user.business.sortOption.count' },
     { value: 'newest', label: 'user.business.sortOption.newest' },
@@ -237,7 +250,8 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     switch (this.catSortBy()) {
       case 'count':  list = [...list].sort((a,b) => (b._count?.businesses??0) - (a._count?.businesses??0)); break;
       case 'newest': list = [...list].sort((a,b) => new Date((b as any).created_at ?? b.createdAt ?? 0).getTime() - new Date((a as any).created_at ?? a.createdAt ?? 0).getTime()); break;
-      default:       list = [...list].sort((a,b) => a.name.localeCompare(b.name));
+      case 'name':   list = [...list].sort((a,b) => a.name.localeCompare(b.name)); break;
+      // 'order' — already sorted by display_order (then name) from the API.
     }
     return list;
   });
@@ -434,9 +448,13 @@ export class UserBusinessComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** activeOnly — a deprioritised category (e.g. "Bar") shouldn't appear as
+   * a browsable tile or filter option for regular users; a business that
+   * already has one keeps showing it correctly on its own card/detail page
+   * regardless, since that reads the business record directly, not this list. */
   loadCategories(): void {
     this.loading.set(true);
-    this.svc.getCategories().subscribe({
+    this.svc.getCategories(true).subscribe({
       next: data => { this.categories.set(data); this.loading.set(false); },
       error: () => { this.toast.error('user.business.toast.failedLoadCategories'); this.loading.set(false); },
     });

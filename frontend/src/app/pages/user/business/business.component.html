@@ -709,6 +709,7 @@
 
 <!-- ==================== ADD / EDIT BUSINESS MODAL ==================== -->
 <app-business-form-modal
+  #bizFormModal
   [open]="showBusinessModal()"
   [editBusinessId]="editBusinessId()"
   [defaultCategoryId]="selectedCategory()?.id ?? null"

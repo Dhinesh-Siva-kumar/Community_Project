@@ -1,23 +1,23 @@
 import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Event as AppEvent, PaginatedResponse, Country } from '../../../core/models';
-import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { Event as AppEvent, VisibilityType, PaginatedResponse, Country } from '../../../core/models';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
-import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
-import { TimeInputComponent } from '../../../shared/components/time-input/time-input.component';
 import { SortBarComponent, SortField, SortChange, SortDir } from '../../../shared/components/sort-bar/sort-bar.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+import { EventFormModalComponent } from '../../../shared/components/event-form-modal/event-form-modal.component';
+import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
+import { EVENT_CATEGORIES, EVENT_CATEGORY_ICON } from '../../../shared/constants/event-categories';
 
 // Remembers the last selected view mode (grid/table) across navigations.
 const VIEW_STORAGE_KEY = 'admin-events:viewMode';
@@ -25,41 +25,10 @@ const VIEW_STORAGE_KEY = 'admin-events:viewMode';
 /** Every column the table view can sort by (all but Actions). */
 type EventSortField = 'name' | 'eventDate' | 'joined' | 'category' | 'mode' | 'location' | 'status';
 
-function futureDateValidator(c: AbstractControl): ValidationErrors | null {
-  if (!c.value) return null;
-  return new Date(c.value) < new Date(new Date().toDateString()) ? { pastDate: true } : null;
-}
-
-function endTimeValidator(group: AbstractControl): ValidationErrors | null {
-  const start = group.get('eventTime')?.value;
-  const end   = group.get('eventEndTime')?.value;
-  if (start && end && end <= start) return { endBeforeStart: true };
-  return null;
-}
-
-/** Fails when the trimmed value is empty (catches whitespace-only strings). */
-function noWhitespace(control: AbstractControl): ValidationErrors | null {
-  const val = ((control.value as string) ?? '').trim();
-  return val.length === 0 ? { whitespace: true } : null;
-}
-
-/**
- * Fails when the trimmed value is shorter than `min`.
- * Does NOT fail on empty/null (let `required` + `noWhitespace` handle that).
- */
-function minLengthTrimmed(min: number) {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const val = ((control.value as string) ?? '').trim();
-    return val.length > 0 && val.length < min
-      ? { minlengthTrimmed: { requiredLength: min, actualLength: val.length } }
-      : null;
-  };
-}
-
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, DatePipe, RouterLink, FileUploadComponent, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, RadioGroupComponent, TimeInputComponent, SortBarComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, DatePipe, RouterLink, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, SortBarComponent, EventFormModalComponent, EventDateBadgeComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -72,7 +41,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
-  private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);
@@ -86,7 +55,6 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   // results meta / list stay mounted throughout instead of unmounting into
   // a skeleton and back, which read as the whole page blinking.
   pageReady  = signal(false);
-  submitting = signal(false);
   skeletons  = Array(6);
 
   // Floating header action (shows once scrolled past the page header)
@@ -114,6 +82,12 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   filterDateFrom = signal('');
   filterDateTo   = signal('');
   activeQuickRange = signal<'today' | '7d' | '30d' | null>(null);
+  // Opt-in visibility filter, independent of the automatic country/worldwide
+  // access gate applied server-side (mirrors the user Events/Jobs pages).
+  filterVisibility = signal<'' | VisibilityType>('');
+  // Category filter — same option list the Add/Edit Event form uses.
+  filterCategory = signal('');
+  readonly categoryFilterOptions: SelectOption[] = EVENT_CATEGORIES.map((c) => ({ value: c, label: c }));
   private searchDebounce: any = null;
 
   // Premium filter UI state
@@ -185,47 +159,25 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     if (this.filterCountry()) count++;
     if (this.filterStatus()) count++;
     if (this.filterEventMode()) count++;
+    if (this.filterVisibility()) count++;
+    if (this.filterCategory()) count++;
     if (this.filterDateFrom()) count++;
     if (this.filterDateTo()) count++;
     return count;
   });
 
-  showAddModal        = signal(false);
-  editingEvent        = signal<AppEvent | null>(null);
-  showDeleteConfirm   = signal(false);
-  eventToDelete       = signal<AppEvent | null>(null);
-  deleting            = signal(false);
-  formSubmitAttempted = signal(false);
+  // ── Add/Edit Event modal — the form itself is app-event-form-modal
+  // (shared with the user Events page); this component only tracks
+  // open/closed state and which id (if any) is being edited. ──
+  showAddModal      = signal(false);
+  editEventId       = signal<string | null>(null);
+  showDeleteConfirm = signal(false);
+  eventToDelete     = signal<AppEvent | null>(null);
+  deleting          = signal(false);
 
-  selectedImage = signal<File | null>(null);
-
-  eventForm!: FormGroup;
-
-  readonly EVENT_TYPES = ['Workshop','Meetup','Webinar','Festival','Conference','Exhibition','Concert','Sports','Social','Other'];
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
 
-  /** Event Mode radio group in the create/edit modal (app-radio-group). */
-  readonly eventModeOptions: RadioOption[] = [
-    { value: 'Offline', label: 'admin.events.label.offline', icon: 'bi-geo-alt-fill' },
-    { value: 'Online',  label: 'admin.events.label.online',  icon: 'bi-camera-video-fill' },
-    { value: 'Hybrid',  label: 'admin.events.label.hybrid',  icon: 'bi-diagram-2-fill' },
-  ];
-  readonly TIMEZONES   = [
-    'UTC','Asia/Kolkata','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Asia/Singapore','Australia/Sydney',
-  ];
-
-  readonly categoryOptions: SelectOption[] = this.EVENT_TYPES.map((t) => ({ value: t, label: t }));
-  readonly timezoneOptions: SelectOption[] = this.TIMEZONES.map((t) => ({ value: t, label: t }));
-
-  get eventMode(): string { return this.eventForm?.get('eventMode')?.value ?? ''; }
-  get showAddress(): boolean      { return this.eventMode === 'Offline' || this.eventMode === 'Hybrid'; }
-  get showLocationLink(): boolean { return this.eventMode === 'Online'  || this.eventMode === 'Hybrid'; }
-
-  get f() {
-    return this.eventForm.controls;
-  }
-
-  ngOnInit(): void { this.initForm(); this.restoreSavedViewMode(); this.loadEvents(); this.loadCountries(); }
+  ngOnInit(): void { this.restoreSavedViewMode(); this.loadEvents(); this.loadCountries(); }
 
   /** Resume the last selected grid/table view across navigations. */
   private restoreSavedViewMode(): void {
@@ -241,50 +193,6 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initForm(): void {
-    this.eventForm = this.fb.group({
-      title:        ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(100)]],
-      description:  ['', [Validators.required, noWhitespace, minLengthTrimmed(10), Validators.maxLength(1000)]],
-      eventCategory:['', Validators.required],
-      eventDate:    ['', [Validators.required, futureDateValidator]],
-      eventTime:    ['', Validators.required],
-      eventEndTime: [''],
-      timezone:     ['Asia/Kolkata', Validators.required],
-      eventMode:    ['Offline', Validators.required],
-      address:      ['', [Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]],
-      locationLink: ['', Validators.maxLength(300)],
-      pincode:      ['', Validators.maxLength(12)],
-      location:     ['', Validators.maxLength(150)],
-      country:      [''],
-    }, { validators: endTimeValidator });
-
-    // Apply mode-specific validators immediately (not just on the next change) so
-    // address/link stay correctly required even if the default eventMode value
-    // above ever changes — valueChanges alone only fires on a later user edit.
-    this.applyModeValidators(this.eventForm.get('eventMode')!.value);
-    this.eventForm.get('eventMode')!.valueChanges.subscribe((mode) => this.applyModeValidators(mode));
-  }
-
-  /** (Re)apply the conditional required/format validators for address & meeting link based on event mode. */
-  private applyModeValidators(mode: string): void {
-    const addr = this.eventForm.get('address')!;
-    const link = this.eventForm.get('locationLink')!;
-
-    if (mode === 'Offline') {
-      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
-      link.setValidators([Validators.maxLength(300)]);
-    } else if (mode === 'Online') {
-      addr.setValidators([Validators.maxLength(200)]);
-      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
-    } else if (mode === 'Hybrid') {
-      addr.setValidators([Validators.required, noWhitespace, minLengthTrimmed(3), Validators.maxLength(200)]);
-      link.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/), Validators.maxLength(300)]);
-    }
-
-    addr.updateValueAndValidity({ emitEvent: false });
-    link.updateValueAndValidity({ emitEvent: false });
-  }
-
   loadEvents(): void {
     this.loading.set(true);
     this.loadEventStatCounts();
@@ -298,6 +206,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     if (this.filterCountry())      params['country'] = this.filterCountry();
     if (this.filterStatus())       params['status']  = this.filterStatus();
     if (this.filterEventMode())    params['eventMode'] = this.filterEventMode();
+    if (this.filterVisibility())   params['visibilityType'] = this.filterVisibility();
+    if (this.filterCategory())     params['eventCategory'] = this.filterCategory();
     if (this.filterDateFrom())     params['dateFrom'] = this.filterDateFrom();
     if (this.filterDateTo())       params['dateTo']   = this.filterDateTo();
 
@@ -357,6 +267,16 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   setEventModeFilter(mode: 'Offline' | 'Online' | 'Hybrid' | null): void {
     this.filterEventMode.set(mode ?? '');
+    this.applyFilters();
+  }
+
+  setVisibilityFilter(v: '' | VisibilityType): void {
+    this.filterVisibility.set(v);
+    this.applyFilters();
+  }
+
+  setCategoryFilter(v: string | number): void {
+    this.filterCategory.set(v as string);
     this.applyFilters();
   }
 
@@ -442,6 +362,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.filterCountry.set('');
     this.filterStatus.set('');
     this.filterEventMode.set('');
+    this.filterVisibility.set('');
+    this.filterCategory.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
     this.activeQuickRange.set(null);
@@ -450,81 +372,51 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   removeFilter(key: string): void {
     switch (key) {
-      case 'search':    this.searchQuery.set('');   break;
-      case 'country':   this.filterCountry.set(''); break;
-      case 'status':    this.filterStatus.set('');  break;
-      case 'eventMode': this.filterEventMode.set(''); break;
-      case 'dateFrom':  this.filterDateFrom.set(''); break;
-      case 'dateTo':    this.filterDateTo.set('');  break;
+      case 'search':     this.searchQuery.set('');   break;
+      case 'country':    this.filterCountry.set(''); break;
+      case 'status':     this.filterStatus.set('');  break;
+      case 'eventMode':  this.filterEventMode.set(''); break;
+      case 'visibility': this.filterVisibility.set(''); break;
+      case 'category':   this.filterCategory.set(''); break;
+      case 'dateFrom':   this.filterDateFrom.set(''); break;
+      case 'dateTo':     this.filterDateTo.set('');  break;
     }
     if (key === 'dateFrom' || key === 'dateTo') this.activeQuickRange.set(null);
     this.applyFilters();
   }
 
+  // ─── Add/Edit Event modal — the form itself is app-event-form-modal
+  // (shared with the user Events page); it loads the full record itself,
+  // so this component only tracks which id (if any) is being edited. ───
   openAddModal(): void {
-    this.editingEvent.set(null); this.eventForm.reset();
-    this.formSubmitAttempted.set(false);
-    this.selectedImage.set(null);
+    this.editEventId.set(null);
     this.showAddModal.set(true);
   }
 
+  /** The whole card/row is clickable — this is what it navigates to (edit/delete/links inside it stop propagation so they don't also trigger this). */
+  viewEventDetails(evt: AppEvent): void {
+    this.router.navigate(['/admin/events', evt.id]);
+  }
+
   openEditModal(evt: AppEvent, event: Event): void {
-    event.stopPropagation(); this.editingEvent.set(evt);
-    this.formSubmitAttempted.set(false);
-    this.eventForm.patchValue({
-      title: evt.title, description: evt.description ?? '',
-      eventCategory: (evt as any).eventCategory ?? '',
-      eventDate: evt.eventDate ? evt.eventDate.substring(0, 10) : '',
-      eventTime: evt.eventTime ?? '', eventEndTime: (evt as any).eventEndTime ?? '',
-      timezone: (evt as any).timezone ?? 'Asia/Kolkata',
-      eventMode: (evt as any).eventMode ?? 'Offline',
-      address: evt.address ?? '', locationLink: (evt as any).locationLink ?? '',
-      pincode: evt.pincode ?? '', location: evt.location ?? '', country: evt.country ?? '',
-    });
-    this.selectedImage.set(null);
+    event.stopPropagation();
+    this.editEventId.set(evt.id);
     this.showAddModal.set(true);
   }
 
   closeAddModal(): void {
     this.showAddModal.set(false);
-    this.editingEvent.set(null);
-    this.formSubmitAttempted.set(false);
+    this.editEventId.set(null);
   }
 
-  onImageChange(files: File[]): void {
-    this.selectedImage.set(files[0] ?? null);
-  }
-
-  submitEvent(): void {
-    this.formSubmitAttempted.set(true);
-    this.eventForm.markAllAsTouched();
-    if (this.eventForm.invalid) { this.scrollToFirstError(); return; }
-
-    this.submitting.set(true);
-    const data = this.eventForm.value;
-    const images = this.selectedImage() ? [this.selectedImage()!] : undefined;
-    const editing = this.editingEvent();
-    const req = editing
-      ? this.eventService.updateEvent(editing.id, data, images)
-      : this.eventService.createEvent(data, images);
-    req.subscribe({
-      next: (evt) => {
-        if (editing) { this.events.update(l => l.map(e => e.id === evt.id ? evt : e)); this.toast.success('admin.events.toast.eventUpdated'); }
-        else { this.events.update(l => [evt, ...l]); this.totalItems.update(v => v + 1); this.toast.success('admin.events.toast.eventCreated'); }
-        this.closeAddModal(); this.submitting.set(false);
-      },
-      error: (err) => { this.toast.error(err?.error?.message ?? 'Failed to save event'); this.submitting.set(false); },
-    });
-  }
-
-  /** Scrolls the modal body to the first visible error message. */
-  private scrollToFirstError(): void {
-    setTimeout(() => {
-      const firstError = document.querySelector<HTMLElement>('.cm-error-msg');
-      firstError
-        ?.closest<HTMLElement>('.cm-field-group, .cm-section')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 60);
+  onEventSaved(evt: AppEvent): void {
+    const wasEditing = this.editEventId() !== null;
+    if (wasEditing) {
+      this.events.update(l => l.map(e => e.id === evt.id ? evt : e));
+    } else {
+      this.events.update(l => [evt, ...l]);
+      this.totalItems.update(v => v + 1);
+    }
   }
 
   openDeleteConfirm(evt: AppEvent, event: Event): void {
@@ -558,6 +450,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   truncate(text: string | undefined, n: number): string {
     if (!text) return ''; return text.length > n ? text.substring(0, n) + '…' : text;
   }
+
+  categoryIcon(cat?: string): string { return EVENT_CATEGORY_ICON[cat ?? ''] ?? 'bi-calendar-event'; }
 
   getEventStatus(evt: AppEvent): { label: string; type: string } {
     const today = new Date();

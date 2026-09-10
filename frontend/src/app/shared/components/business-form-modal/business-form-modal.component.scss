@@ -251,6 +251,13 @@
   display: flex; align-items: center; gap: 4px; margin-top: 4px;
   font-size: $font-size-xs; font-weight: $font-weight-semibold; color: $color-danger;
   .bi { font-size: 12px; flex-shrink: 0; }
+
+  // Group-level error shown once for a whole section (e.g. "at least one
+  // contact method") rather than under a single field.
+  &--section {
+    margin: 0 0 $spacing-sm; padding: 8px 12px;
+    background: $color-error-bg; border-radius: $radius-md;
+  }
 }
 
 .jb-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }

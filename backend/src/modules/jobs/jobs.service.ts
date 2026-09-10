@@ -35,12 +35,40 @@ function mapNewFields(data: Partial<CreateJobDtoType>): Record<string, unknown> 
   if (data.city        !== undefined) m['city']         = data.city        ?? null;
   if (data.state       !== undefined) m['state']        = data.state       ?? null;
   if (data.fullAddress !== undefined) m['full_address'] = data.fullAddress ?? null;
-  if (data.isRemote    !== undefined) m['is_remote']    = data.isRemote    ?? false;
-  if (data.workMode    !== undefined) m['work_mode']    = data.workMode    ?? null;
   if (data.countryId   !== undefined) m['country_id']   = data.countryId   ?? null;
   if (data.stateId     !== undefined) m['state_id']     = data.stateId     ?? null;
   if (data.cityId      !== undefined) m['city_id']      = data.cityId      ?? null;
   if (data.visibilityType !== undefined) m['visibility_type'] = data.visibilityType;
+
+  // Work Mode drives is_remote and the physical-location fields, not the
+  // other way around — the two used to be independently settable in the
+  // frontend form and could silently drift apart (confirmed against real
+  // data: several jobs had work_mode='On-site' with is_remote=true, so
+  // their cards/detail wrongly showed "Remote"). Whenever workMode is part
+  // of this payload it's treated as authoritative: is_remote is derived
+  // from it, and Remote additionally clears any physical-location details
+  // so a stale on-site address can never linger under a Remote job.
+  // `country`/`country_id` are deliberately left untouched even for
+  // Remote — they drive the separate applicant-country eligibility
+  // restriction ("Germany applicants only"), which is independent of Work
+  // Mode and must keep working the same regardless of it.
+  if (data.workMode !== undefined) {
+    m['work_mode'] = data.workMode ?? null;
+    m['is_remote'] = data.workMode === 'Remote';
+    if (data.workMode === 'Remote') {
+      m['city'] = null;
+      m['state'] = null;
+      m['state_id'] = null;
+      m['city_id'] = null;
+      m['full_address'] = null;
+      m['pincode'] = null;
+      m['location'] = null;
+    }
+  } else if (data.isRemote !== undefined) {
+    // No workMode in this payload (e.g. a partial update that doesn't
+    // touch it) — fall back to whatever isRemote was explicitly sent.
+    m['is_remote'] = data.isRemote ?? false;
+  }
 
   // Role
   if (data.expMin    !== undefined) m['exp_min']   = data.expMin    ?? null;
@@ -48,6 +76,10 @@ function mapNewFields(data: Partial<CreateJobDtoType>): Record<string, unknown> 
   if (data.education !== undefined) m['education'] = data.education ?? null;
   if (data.openings  !== undefined) m['openings']  = data.openings  ?? null;
   if (data.shiftType !== undefined) m['shift_type'] = data.shiftType ?? null;
+  if (data.visaSponsorship   !== undefined) m['visa_sponsorship']   = data.visaSponsorship   ?? 'Not Specified';
+  if (data.referralAvailable !== undefined) m['referral_available'] = data.referralAvailable ?? false;
+  // '' clears the deadline (null); any other value is stored as-is.
+  if (data.applicationDeadline !== undefined) m['application_deadline'] = data.applicationDeadline || null;
 
   // Salary
   if (data.salaryMin      !== undefined) m['salary_min']      = data.salaryMin      ?? null;
@@ -78,8 +110,30 @@ function mapNewFields(data: Partial<CreateJobDtoType>): Record<string, unknown> 
   return m;
 }
 
+const CLOSING_SOON_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
+/**
+ * `isExpired`/`isClosingSoon` are computed here — server-side, on every
+ * response that carries a job — rather than left for each client to work
+ * out from the raw deadline. That's what makes the deadline "respected by
+ * backend logic" in a way a client can't just lie to itself about: the
+ * canonical answer always comes from the API, not from trusting whatever
+ * date math a caller happens to run locally.
+ */
+function computeDeadlineStatus(deadline: unknown): { isExpired: boolean; isClosingSoon: boolean } {
+  if (!deadline) return { isExpired: false, isClosingSoon: false };
+  const deadlineMs = new Date(deadline as string).getTime();
+  if (Number.isNaN(deadlineMs)) return { isExpired: false, isClosingSoon: false };
+  const msRemaining = deadlineMs - Date.now();
+  return {
+    isExpired: msRemaining < 0,
+    isClosingSoon: msRemaining >= 0 && msRemaining <= CLOSING_SOON_WINDOW_MS,
+  };
+}
+
 /** Reshape a raw DB row (snake_case) → camelCase response object */
 function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
+  const deadlineStatus = computeDeadlineStatus(j['application_deadline']);
   return {
     id: j['id'],
     title: j['title'],
@@ -122,6 +176,11 @@ function shapeJob(j: Record<string, unknown>, user: Record<string, unknown>) {
     education: j['education'],
     openings:  j['openings'],
     shiftType: j['shift_type'],
+    visaSponsorship:   j['visa_sponsorship'],
+    referralAvailable: j['referral_available'],
+    applicationDeadline: j['application_deadline'],
+    isExpired:      deadlineStatus.isExpired,
+    isClosingSoon:  deadlineStatus.isClosingSoon,
 
     // Salary
     salaryMin:      j['salary_min'],
@@ -201,7 +260,8 @@ export async function create(data: CreateJobDtoType, userId: string) {
 type JobFilterParams = Pick<
   ListJobsQueryDtoType,
   'pincode' | 'search' | 'country' | 'state' | 'city' | 'countryIds' | 'stateId' | 'cityId'
-  | 'visibilityType' | 'jobType' | 'workMode' | 'shiftType' | 'jobTypes' | 'workModes'
+  | 'visibilityType' | 'jobType' | 'workMode' | 'shiftType' | 'jobTypes' | 'workModes' | 'skills'
+  | 'visaSponsorship' | 'referralAvailable'
   | 'education' | 'expMin' | 'expMax' | 'salaryMin' | 'salaryMax' | 'salaryHidden'
   | 'postedWithin' | 'dateFrom' | 'dateTo' | 'status' | 'approvalStatus' | 'postedBy'
 > & { skipActiveFilter?: boolean; userId?: string };
@@ -219,7 +279,8 @@ function applyJobFilters(qb: Knex.QueryBuilder, params: JobFilterParams): void {
   const {
     skipActiveFilter, status, approvalStatus, userId, pincode, search,
     country, state, city, countryIds, stateId, cityId, visibilityType,
-    jobType, workMode, shiftType, jobTypes, workModes, education,
+    jobType, workMode, shiftType, jobTypes, workModes, skills,
+    visaSponsorship, referralAvailable, education,
     salaryHidden, expMin, expMax, salaryMin, salaryMax,
     postedWithin, dateFrom, dateTo, postedBy,
   } = params;
@@ -273,6 +334,18 @@ function applyJobFilters(qb: Knex.QueryBuilder, params: JobFilterParams): void {
     const modes = workModes.split(',').map((s) => s.trim()).filter(Boolean);
     if (modes.length > 0) qb.whereIn('j.work_mode', modes);
   }
+
+  // Case-insensitive substring match against any stored skill — "react"
+  // matches a job tagged "React.js", not just an exact "react" tag.
+  if (skills) {
+    qb.andWhereRaw(
+      `EXISTS (SELECT 1 FROM unnest(j.skills) AS s WHERE s ILIKE ?)`,
+      [`%${skills.trim()}%`],
+    );
+  }
+
+  if (visaSponsorship) qb.andWhere('j.visa_sponsorship', visaSponsorship);
+  if (referralAvailable !== undefined) qb.andWhere('j.referral_available', referralAvailable);
 
   // Recruiter/poster search (admin) — a subquery rather than a join, so it
   // works identically on the joined `query` and the un-joined `countQuery`.

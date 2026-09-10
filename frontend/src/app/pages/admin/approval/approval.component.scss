@@ -961,6 +961,22 @@
   }
 }
 
+// Booking URL + QR — events only.
+.pa-view-booking {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pa-view-booking__link {
+  min-width: 0;
+  font-size: $font-size-sm;
+  color: $color-primary-darker;
+  word-break: break-all;
+  &:hover { color: $color-primary-dark; text-decoration: underline; }
+}
+
 .pa-view-images {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));

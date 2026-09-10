@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { userGuard } from './core/guards/user.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -111,6 +112,7 @@ export const routes: Routes = [
       },
       {
         path: 'business',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/admin/business/business.component').then(
             (m) => m.AdminBusinessComponent
@@ -124,7 +126,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./pages/admin/events/event-detail/event-detail.component').then(
+            (m) => m.EventDetailComponent
+          ),
+      },
+      {
         path: 'jobs',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/admin/jobs/jobs.component').then(
             (m) => m.AdminJobsComponent
@@ -198,6 +208,7 @@ export const routes: Routes = [
       },
       {
         path: 'business',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/user/business/business.component').then(
             (m) => m.UserBusinessComponent
@@ -211,7 +222,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'events/:id',
+        loadComponent: () =>
+          import('./pages/user/events/event-detail/event-detail.component').then(
+            (m) => m.EventDetailComponent
+          ),
+      },
+      {
         path: 'jobs',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/user/jobs/jobs.component').then(
             (m) => m.UserJobsComponent

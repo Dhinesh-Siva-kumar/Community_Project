@@ -53,10 +53,17 @@
         }
       </div>
 
-      <div class="jb-sort-wrap">
-        <app-searchable-select [options]="sortOptions" [ngModel]="sortOption()"
-          (ngModelChange)="setSortOption($event)" [placeholder]="'user.events.sort' | translate" [attr.aria-label]="'user.events.sortEvents' | translate">
-        </app-searchable-select>
+      <!-- Quick filter — Upcoming is the default view; Past/All Events are one click away. -->
+      <div class="jb-pill-row jb-quickstatus" role="group" [attr.aria-label]="'user.events.filterByStatus' | translate">
+        <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === 'upcoming'" (click)="setStatusFilter('upcoming')">
+          <i class="bi bi-calendar-event"></i> {{ 'user.events.quickFilter.upcoming' | translate }}
+        </button>
+        <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === 'completed'" (click)="setStatusFilter('completed')">
+          <i class="bi bi-calendar-check"></i> {{ 'user.events.quickFilter.past' | translate }}
+        </button>
+        <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === ''" (click)="setStatusFilter('')">
+          <i class="bi bi-collection"></i> {{ 'user.events.quickFilter.all' | translate }}
+        </button>
       </div>
 
       <div class="jb-filter-row">
@@ -92,6 +99,18 @@
         <span class="jb-active-chip">
           Country: {{ filterCountry() }}
           <button class="jb-active-chip__remove" (click)="removeFilter('country')" [attr.aria-label]="'user.events.removeCountryFilter' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterVisibility()) {
+        <span class="jb-active-chip">
+          {{ (filterVisibility() === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry') | translate }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('visibility')" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (filterCategory()) {
+        <span class="jb-active-chip">
+          {{ filterCategory() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('category')" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x"></i></button>
         </span>
       }
       @if (filterDateFrom()) {
@@ -142,12 +161,36 @@
         </div>
       </div>
 
+      <!-- ── Category ───────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'user.events.category' | translate }}</span>
+        <app-searchable-select [options]="categoryFilterOptions" [ngModel]="filterCategory()"
+          (ngModelChange)="setCategoryFilter($event)" [placeholder]="'user.events.allCategories' | translate">
+        </app-searchable-select>
+      </div>
+
       <!-- ── Country ────────────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> {{ 'user.events.country' | translate }}</span>
         <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
           (ngModelChange)="onFilterCountryChange($event)" [placeholder]="'user.events.allCountries' | translate" [searchPlaceholder]="'components.search.countries' | translate">
         </app-searchable-select>
+      </div>
+
+      <!-- ── Visibility ─────────────────────────────────── -->
+      <div class="jb-adv-section">
+        <span class="jb-filter-section-label"><i class="bi bi-globe2"></i> {{ 'components.jobForm.visibility' | translate }}</span>
+        <div class="jb-pill-row" role="group" [attr.aria-label]="'components.jobForm.visibility' | translate">
+          <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterVisibility() === ''" (click)="setVisibilityFilter('')">
+            {{ 'common.all' | translate }}
+          </button>
+          <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterVisibility() === 'COUNTRY'" (click)="setVisibilityFilter('COUNTRY')">
+            <i class="bi bi-geo-alt-fill"></i> {{ 'components.businessForm.visibilityCountry' | translate }}
+          </button>
+          <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterVisibility() === 'WORLDWIDE'" (click)="setVisibilityFilter('WORLDWIDE')">
+            <i class="bi bi-globe2"></i> {{ 'components.businessForm.visibilityWorldwide' | translate }}
+          </button>
+        </div>
       </div>
 
       <!-- ── Event Date ─────────────────────────────────── -->
@@ -249,8 +292,11 @@
       @let rt = relTime(evt.eventDate);
       @let near = isNear(evt);
       @let mine = isMine(evt);
-      <article class="ev-card" [class.ev-card--past]="rt.isPast" [class.ev-card--highlight]="evt.id === highlightedEventId()"
-        [id]="'event-card-' + evt.id">
+      <article class="ev-card ev-card--clickable" [class.ev-card--past]="rt.isPast" [class.ev-card--highlight]="evt.id === highlightedEventId()"
+        [id]="'event-card-' + evt.id"
+        role="button" tabindex="0"
+        (click)="viewEventDetails(evt)" (keydown.enter)="viewEventDetails(evt)"
+        [attr.aria-label]="('user.events.viewDetails' | translate) + ': ' + evt.title">
 
         <!-- Media -->
         <div class="ev-card__media" [class]="!evt.images?.length ? categoryGradient(evt.eventCategory) : ''">
@@ -261,10 +307,7 @@
           }
 
           <!-- Date badge -->
-          <div class="ev-card__date" aria-hidden="true">
-            <span class="ev-card__date-day">{{ evt.eventDate | date:'d' }}</span>
-            <span class="ev-card__date-mon">{{ evt.eventDate | date:'MMM' }}</span>
-          </div>
+          <app-event-date-badge class="ev-card__date" [date]="evt.eventDate" [time]="evt.eventTime" aria-hidden="true"></app-event-date-badge>
 
           <!-- Status ribbon -->
           <span class="ev-badge ev-card__status" [class]="'ev-badge--' + (rt.isPast ? 'completed' : 'upcoming')">
@@ -274,7 +317,7 @@
 
           <!-- Zoom — view the full photo(s) -->
           @if (evt.images && evt.images.length > 0) {
-            <button class="ev-card__zoom-btn" (click)="openImageViewer(evt.images, 0)" [title]="'user.events.viewPhoto' | translate" [attr.aria-label]="'user.events.viewPhoto' | translate">
+            <button class="ev-card__zoom-btn" (click)="$event.stopPropagation(); openImageViewer(evt.images, 0)" [title]="'user.events.viewPhoto' | translate" [attr.aria-label]="'user.events.viewPhoto' | translate">
               <i class="bi bi-arrows-fullscreen"></i>
             </button>
           }
@@ -282,10 +325,10 @@
           <!-- Edit / Delete overlay — only for the caller's own events -->
           @if (mine) {
             <div class="ev-card__actions">
-              <button class="ev-card__action ev-card__action--edit" (click)="openEditModal(evt)" [title]="'user.events.editEvent' | translate" [attr.aria-label]="'user.events.editEvent' | translate">
+              <button class="ev-card__action ev-card__action--edit" (click)="$event.stopPropagation(); openEditModal(evt)" [title]="'user.events.editEvent' | translate" [attr.aria-label]="'user.events.editEvent' | translate">
                 <i class="bi bi-pencil-fill"></i>
               </button>
-              <button class="ev-card__action ev-card__action--danger" (click)="requestDelete(evt)" [title]="'user.events.deleteEvent' | translate" [attr.aria-label]="'user.events.deleteEvent' | translate">
+              <button class="ev-card__action ev-card__action--danger" (click)="$event.stopPropagation(); requestDelete(evt)" [title]="'user.events.deleteEvent' | translate" [attr.aria-label]="'user.events.deleteEvent' | translate">
                 <i class="bi bi-trash3-fill"></i>
               </button>
             </div>
@@ -303,7 +346,9 @@
               </span>
             }
             @if (evt.eventCategory) {
-              <span class="ev-chip-sm">{{ evt.eventCategory }}</span>
+              <span [class]="'ev-chip-sm ev-chip-sm--' + evt.eventCategory.toLowerCase()">
+                <i class="bi" [ngClass]="categoryIcon(evt.eventCategory)"></i> {{ evt.eventCategory }}
+              </span>
             }
             @if (near) {
               <span class="ev-badge ev-badge--near"><i class="bi bi-house-fill"></i> {{ 'user.events.near' | translate }}</span>
@@ -315,7 +360,7 @@
             }
           </div>
 
-          <h3 class="ev-card__title">{{ evt.title }}</h3>
+          <h3 class="ev-card__title"><a [routerLink]="['/user/events', evt.id]" (click)="$event.stopPropagation()">{{ evt.title }}</a></h3>
 
           @if (evt.description) {
             <p class="ev-card__description" [class.ev-card__description--expanded]="expandedDescriptions().has(evt.id)">{{ evt.description }}</p>
@@ -358,12 +403,15 @@
             </p>
           }
 
-          <!-- Footer: host + join link -->
+          <!-- Footer: host + view details + join link -->
           <div class="ev-card__footer">
             <span class="ev-meta-item ev-meta-item--host ev-card__host">
               <span class="ev-meta-item__icon"><i class="bi bi-person-fill"></i></span>
               <span>{{ evt.user?.displayName ?? evt.user?.userName }}</span>
             </span>
+            <a class="ev-card__join" [routerLink]="['/user/events', evt.id]" (click)="$event.stopPropagation()">
+              <i class="bi bi-info-circle"></i> {{ 'user.events.viewDetails' | translate }}
+            </a>
             @if ((evt.eventMode === 'Online' || evt.eventMode === 'Hybrid') && evt.locationLink) {
               <a class="ev-card__join" [href]="evt.locationLink" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
                 <i class="bi bi-camera-video-fill"></i> {{ 'user.events.joinMeeting' | translate }}
@@ -437,372 +485,9 @@
   </div>
 }
 
-<!-- ── ADD / EDIT EVENT MODAL — same design language as the Admin Add
-     Event popup (.au-*/.cm-* shell, sections, inputs, pills, validation). ── -->
-@if (showAddModal()) {
-  <div class="au-backdrop" (click)="closeAddModal()"></div>
-  <div class="au-modal cm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="editingId() ? 'Edit Event' : 'Add Event'">
+<app-event-form-modal
+  [open]="showAddModal()"
+  [editEventId]="editingId()"
+  (closed)="closeAddModal()"
+  (saved)="onEventSaved($event)"></app-event-form-modal>
 
-    <!-- Modal Header -->
-    <div class="au-header cm-modal-header">
-      <div class="au-header__cover-shapes" aria-hidden="true">
-        <span class="shape shape--1"></span>
-        <span class="shape shape--2"></span>
-      </div>
-      <div class="au-header__icon cm-modal-icon">
-        <i class="bi" [class.bi-calendar-plus]="!editingId()" [class.bi-pencil-square]="editingId()"></i>
-      </div>
-      <div class="au-header__text cm-modal-header-inner">
-        <h5 class="au-header__title cm-modal-title">{{ editingId() ? 'Edit Event' : 'Add Event' }}</h5>
-        <p class="au-header__sub cm-modal-subtitle">
-          {{ editingId() ? 'Update the details of this event' : 'Fill in the details to create a new event' }}
-        </p>
-      </div>
-      <button type="button" class="au-close cm-close-btn" (click)="closeAddModal()" [attr.aria-label]="'common.close' | translate">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-
-    <!-- Modal Body -->
-    <div class="au-body cm-modal-body">
-      <form [formGroup]="eventForm" (ngSubmit)="submitEvent()" class="au-form cm-form">
-
-        <!-- ── SECTION 1: Event Details ── -->
-        <div class="cm-section">
-          <div class="cm-section-header">
-            <span class="cm-section-badge"><i class="bi bi-calendar-event"></i></span>
-            <span class="cm-section-title">{{ 'user.events.eventDetails' | translate }}</span>
-          </div>
-
-          <div class="cm-field-row">
-            <!-- Title -->
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.events.title' | translate }} <span class="cm-required">*</span></label>
-              <div class="cm-input-wrap">
-                <i class="bi bi-card-heading cm-input-icon"></i>
-                <input
-                  type="text"
-                  formControlName="title"
-                  maxlength="100"
-                  [placeholder]="'user.events.eGCommunityTechMeetup' | translate"
-                  class="cm-input"
-                  [class.cm-input-error]="f['title'].touched && f['title'].invalid"
-                />
-              </div>
-              @if (f['title'].touched && f['title'].invalid) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>
-                  @if (f['title'].errors?.['required'] || f['title'].errors?.['whitespace']) {
-                    Title is required.
-                  } @else if (f['title'].errors?.['minlengthTrimmed']) {
-                    Title must contain at least 3 characters.
-                  } @else if (f['title'].errors?.['maxlength']) {
-                    Maximum 100 characters allowed.
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Category -->
-            <div class="cm-field-group" [class.cm-field-group--error]="f['eventCategory'].touched && f['eventCategory'].invalid">
-              <label class="cm-label">{{ 'user.events.category' | translate }} <span class="cm-required">*</span></label>
-              <app-searchable-select
-                formControlName="eventCategory"
-                [options]="categoryOptions"
-                [placeholder]="'user.events.selectCategory' | translate"
-              ></app-searchable-select>
-              @if (f['eventCategory'].touched && f['eventCategory'].invalid) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.pleaseSelectCategory' | translate }}
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="cm-field-group">
-            <div class="cm-label-row">
-              <label class="cm-label">{{ 'user.events.description' | translate }} <span class="cm-required">*</span></label>
-              <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/1000</span>
-            </div>
-            <div class="cm-input-wrap cm-textarea-wrap">
-              <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
-              <textarea
-                formControlName="description"
-                rows="3"
-                maxlength="1000"
-                [placeholder]="'user.events.describeEventAgendaPurposeHighlights' | translate"
-                class="cm-input cm-textarea"
-                [class.cm-input-error]="f['description'].touched && f['description'].invalid"
-              ></textarea>
-            </div>
-            @if (f['description'].touched && f['description'].invalid) {
-              <div class="cm-error-msg">
-                <i class="bi bi-exclamation-circle me-1"></i>
-                @if (f['description'].errors?.['required'] || f['description'].errors?.['whitespace']) {
-                  Description is required.
-                } @else if (f['description'].errors?.['minlengthTrimmed']) {
-                  Description must contain at least 10 characters.
-                } @else if (f['description'].errors?.['maxlength']) {
-                  Maximum 1000 characters allowed.
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- ── SECTION 2: Date & Time ── -->
-        <div class="cm-section">
-          <div class="cm-section-header">
-            <span class="cm-section-badge"><i class="bi bi-clock"></i></span>
-            <span class="cm-section-title">{{ 'user.events.dateAmpTime' | translate }}</span>
-          </div>
-
-          <div class="cm-field-row">
-            <!-- Event Date -->
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.events.eventDate2' | translate }} <span class="cm-required">*</span></label>
-              <div class="cm-input-wrap">
-                <app-date-input
-                  formControlName="eventDate"
-                  [ariaLabel]="'user.events.eventDate' | translate"
-                  [placeholder]="'user.events.eventDate' | translate"
-                  [invalid]="f['eventDate'].touched && f['eventDate'].invalid"
-                ></app-date-input>
-              </div>
-              @if (f['eventDate'].touched && f['eventDate'].invalid) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>
-                  @if (f['eventDate'].errors?.['required']) {
-                    Date is required.
-                  } @else if (f['eventDate'].errors?.['pastDate']) {
-                    Date must be today or later.
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Start Time -->
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.events.startTime2' | translate }} <span class="cm-required">*</span></label>
-              <div class="cm-input-wrap">
-                <app-time-input
-                  formControlName="eventTime"
-                  [ariaLabel]="'user.events.startTime' | translate"
-                  [placeholder]="'user.events.startTime' | translate"
-                  [invalid]="f['eventTime'].touched && f['eventTime'].invalid"
-                ></app-time-input>
-              </div>
-              @if (f['eventTime'].touched && f['eventTime'].invalid) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.startTimeRequired' | translate }}
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="cm-field-row">
-            <!-- End Time -->
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.events.endTime2' | translate }}</label>
-              <div class="cm-input-wrap">
-                <app-time-input
-                  formControlName="eventEndTime"
-                  [ariaLabel]="'user.events.endTime' | translate"
-                  [placeholder]="'user.events.endTime' | translate"
-                  [invalid]="!!eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched"
-                ></app-time-input>
-              </div>
-              @if (eventForm.errors?.['endBeforeStart'] && f['eventEndTime'].touched) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.endTimeMustAfterStart' | translate }}
-                </div>
-              }
-            </div>
-
-            <!-- Timezone -->
-            <div class="cm-field-group" [class.cm-field-group--error]="f['timezone'].touched && f['timezone'].invalid">
-              <label class="cm-label">{{ 'user.events.timeZone' | translate }} <span class="cm-required">*</span></label>
-              <app-searchable-select
-                formControlName="timezone"
-                [options]="timezoneOptions"
-                [placeholder]="'user.events.selectTimezone' | translate"
-              ></app-searchable-select>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── SECTION 3: Mode & Location ── -->
-        <div class="cm-section">
-          <div class="cm-section-header">
-            <span class="cm-section-badge"><i class="bi bi-geo-alt"></i></span>
-            <span class="cm-section-title">{{ 'user.events.modeAmpLocation' | translate }}</span>
-          </div>
-
-          <!-- Event Mode -->
-          <div class="cm-field-group">
-            <label class="cm-label">{{ 'user.events.eventMode2' | translate }} <span class="cm-required">*</span></label>
-            <app-radio-group
-              formControlName="eventMode"
-              [options]="eventModeOptions"
-              [ariaLabel]="'user.events.eventMode' | translate">
-            </app-radio-group>
-          </div>
-
-          @if (showAddress) {
-            <div class="cm-field-row">
-              <!-- Address -->
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.events.address' | translate }} <span class="cm-required">*</span></label>
-                <div class="cm-input-wrap">
-                  <i class="bi bi-signpost cm-input-icon"></i>
-                  <input
-                    type="text"
-                    formControlName="address"
-                    maxlength="200"
-                    [placeholder]="'user.events.streetAddressVenueName' | translate"
-                    class="cm-input"
-                    [class.cm-input-error]="f['address'].touched && f['address'].invalid"
-                  />
-                </div>
-                @if (f['address'].touched && f['address'].invalid) {
-                  <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>
-                    @if (f['address'].errors?.['required'] || f['address'].errors?.['whitespace']) {
-                      Address is required for {{ eventMode }} events.
-                    } @else if (f['address'].errors?.['minlengthTrimmed']) {
-                      Address must contain at least 3 characters.
-                    } @else if (f['address'].errors?.['maxlength']) {
-                      Maximum 200 characters allowed.
-                    }
-                  </div>
-                }
-              </div>
-
-              <!-- Pincode -->
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.events.pincode' | translate }}</label>
-                <div class="cm-input-wrap">
-                  <i class="bi bi-mailbox cm-input-icon"></i>
-                  <input
-                    type="text"
-                    formControlName="pincode"
-                    maxlength="12"
-                    [placeholder]="'user.events.pincode' | translate"
-                    class="cm-input"
-                    [class.cm-input-error]="f['pincode'].touched && f['pincode'].invalid"
-                  />
-                </div>
-                @if (f['pincode'].touched && f['pincode'].invalid) {
-                  <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.maximum12CharactersAllowed' | translate }}
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="cm-field-row">
-              <!-- Venue / City -->
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.events.venueCity' | translate }}</label>
-                <div class="cm-input-wrap">
-                  <i class="bi bi-building cm-input-icon"></i>
-                  <input
-                    type="text"
-                    formControlName="location"
-                    maxlength="150"
-                    [placeholder]="'user.events.eGCityHallChennai' | translate"
-                    class="cm-input"
-                    [class.cm-input-error]="f['location'].touched && f['location'].invalid"
-                  />
-                </div>
-                @if (f['location'].touched && f['location'].invalid) {
-                  <div class="cm-error-msg">
-                    <i class="bi bi-exclamation-circle me-1"></i>{{ 'user.events.maximum150CharactersAllowed' | translate }}
-                  </div>
-                }
-              </div>
-
-              <!-- Country -->
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.events.country' | translate }}</label>
-                <app-searchable-select
-                  formControlName="country"
-                  [options]="filterCountryOptions"
-                  [placeholder]="'user.events.selectCountry' | translate"
-                ></app-searchable-select>
-              </div>
-            </div>
-          }
-
-          @if (showLocationLink) {
-            <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.events.meetingStreamLink' | translate }} <span class="cm-required">*</span></label>
-              <div class="cm-input-wrap">
-                <i class="bi bi-link-45deg cm-input-icon"></i>
-                <input
-                  type="url"
-                  formControlName="locationLink"
-                  maxlength="300"
-                  [placeholder]="'user.events.httpsZoomUsJHttps' | translate"
-                  class="cm-input"
-                  [class.cm-input-error]="f['locationLink'].touched && f['locationLink'].invalid"
-                />
-              </div>
-              @if (f['locationLink'].touched && f['locationLink'].invalid) {
-                <div class="cm-error-msg">
-                  <i class="bi bi-exclamation-circle me-1"></i>
-                  @if (f['locationLink'].errors?.['required']) {
-                    Meeting link is required.
-                  } @else if (f['locationLink'].errors?.['pattern']) {
-                    Enter a valid URL starting with https://
-                  } @else if (f['locationLink'].errors?.['maxlength']) {
-                    Maximum 300 characters allowed.
-                  }
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- ── SECTION 4: Media ── -->
-        <div class="cm-section cm-section-last">
-          <div class="cm-section-header">
-            <span class="cm-section-badge"><i class="bi bi-image-fill"></i></span>
-            <span class="cm-section-title">{{ 'user.events.eventImage' | translate }}</span>
-          </div>
-
-          <app-file-upload
-            mode="single"
-            accept="image/*"
-            [label]="'components.fileUpload.uploadEventImage' | translate"
-            [existingPreview]="existingImage() | imageUrl"
-            (filesChange)="onImageChange($event)"
-          ></app-file-upload>
-        </div>
-      </form>
-    </div>
-
-    <!-- Modal Footer -->
-    <div class="au-footer cm-modal-footer">
-      <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="closeAddModal()">
-        {{ 'common.cancel' | translate }}
-      </button>
-      <button
-        type="button"
-        class="au-btn au-btn--primary cm-btn-submit"
-        [disabled]="submitting()"
-        (click)="submitEvent()"
-      >
-        @if (submitting()) {
-          <span class="spinner-border spinner-border-sm me-1"></span>
-          {{ editingId() ? 'Updating...' : 'Creating...' }}
-        } @else {
-          <i class="bi me-1" [class.bi-check-lg]="editingId()" [class.bi-calendar-plus]="!editingId()"></i>
-          {{ editingId() ? 'Update Event' : 'Create Event' }}
-        }
-      </button>
-    </div>
-
-  </div>
-}

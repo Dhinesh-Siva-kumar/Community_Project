@@ -359,14 +359,20 @@ export interface BusinessCategory {
   id: string;
   name: string;
   icon?: string;
+  description?: string;
+  /** Deprioritised categories (e.g. "Bar") are excluded from the Add/Edit
+   * Business form's picker but still shown — and manageable — in Admin's
+   * category list, since an existing business may still reference one. */
+  isActive?: boolean;
+  /** Lower sorts first — respected wherever categories are listed or filtered. */
+  displayOrder?: number;
   _count?: {
     businesses: number;
   };
   createdAt: string;
 }
 
-/** Who a business is visible to. `COUNTRY` is the default on create. */
-/** Who a listing is visible to — used by both Business and Jobs. */
+/** Who a listing is visible to — used by Business, Jobs, and Events. */
 export type VisibilityType = 'COUNTRY' | 'WORLDWIDE';
 
 export type OpeningDayKey = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
@@ -462,6 +468,10 @@ export interface Event {
   pincode?: string;
   location?: string;
   country: string;
+  countryId?: number | null;
+  visibilityType?: VisibilityType;
+  /** Optional registration/booking link — the Event Details page shows it plus a QR code generated client-side from this same value. */
+  bookingUrl?: string | null;
   userId: string;
   user?: User;
   isActive: boolean;
@@ -522,6 +532,16 @@ export interface Job {
   education?: string;
   openings?: number;
   shiftType?: string;
+  /** Kept separate from Employment Type — relevant to the Tamil diaspora
+   * job audience without corrupting existing jobType values. */
+  visaSponsorship?: 'Available' | 'Not Available' | 'Not Specified';
+  referralAvailable?: boolean;
+  /** Optional closing date — `isExpired`/`isClosingSoon` are computed
+   * server-side (see jobs.service.ts computeDeadlineStatus()), so every
+   * client sees the same answer rather than doing its own date math. */
+  applicationDeadline?: string;
+  isExpired?: boolean;
+  isClosingSoon?: boolean;
 
   // ── Structured salary ─────────────────────────────────────────
   salaryMin?: number;

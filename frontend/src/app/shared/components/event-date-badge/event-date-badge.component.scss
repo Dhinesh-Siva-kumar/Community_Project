@@ -1,0 +1,78 @@
+@use '../../../../assets/styles/index' as *;
+
+:host { display: block; }
+
+// Compact "ticket" tile — weekday strip, big day number, month, and (when
+// given) a time row, so all four are legible without opening the card.
+.edb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+  padding: 5px 8px 6px;
+  border-radius: $radius-md;
+  background: color-mix(in srgb, $color-bg-card 96%, transparent);
+  box-shadow: 0 4px 12px rgba(28, 25, 23, 0.18);
+  line-height: 1;
+}
+
+.edb__weekday {
+  font-size: 9px;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $color-primary-dark;
+}
+
+.edb__day {
+  margin-top: 2px;
+  font-family: $font-family-header;
+  font-size: 1.2rem;
+  font-weight: $font-weight-extrabold;
+  color: $color-stone-900;
+}
+
+.edb__month {
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-stone-500;
+}
+
+.edb__time {
+  margin-top: 4px;
+  padding-top: 4px;
+  width: 100%;
+  text-align: center;
+  border-top: 1px solid $color-border;
+  font-size: 9.5px;
+  font-weight: $font-weight-semibold;
+  color: $color-stone-600;
+  white-space: nowrap;
+}
+
+// md — used on the Event Details page, sitting flat inside a plain content
+// card rather than floating over a photo, so it trades the sm variant's
+// drop-shadow (which reads as a stray floating chip on a flat background)
+// for a simple border that belongs next to the card's other bordered rows.
+.edb--md {
+  min-width: 86px;
+  padding: 12px 16px 14px;
+  border-radius: $radius-lg;
+  box-shadow: none;
+  border: 1px solid $color-border;
+  background: $color-bg-page;
+
+  .edb__weekday { font-size: 11px; }
+  .edb__day { font-size: 2.1rem; margin-top: 3px; }
+  .edb__month { font-size: 12px; margin-top: 2px; }
+  .edb__time { font-size: 12.5px; margin-top: 7px; padding-top: 7px; }
+}
+
+@include media-sm-max {
+  .edb { min-width: 46px; padding: 4px 6px 5px; }
+  .edb__day { font-size: 1.05rem; }
+  .edb__time { font-size: 8.5px; }
+}

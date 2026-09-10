@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
-import { ApprovalStatus, Event, PaginatedResponse } from '../models';
+import { ApprovalStatus, Event, VisibilityType, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface MyEventsQueryParams {
@@ -31,6 +31,7 @@ export interface EventsQueryParams {
   limit?:       number;
   search?:      string;
   country?:     string;
+  eventCategory?: string;
   status?:      'upcoming' | 'completed';
   dateFrom?:    string;
   dateTo?:      string;
@@ -39,6 +40,8 @@ export interface EventsQueryParams {
   eventDateTo?:   string;
   sortBy?:      'name' | 'eventDate' | 'joined' | 'near' | 'category' | 'mode' | 'location' | 'status';
   sortDir?:     'asc' | 'desc';
+  /** Opt-in filter ("show me only Worldwide events"), independent of the automatic country/worldwide access gate. */
+  visibilityType?: VisibilityType;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +58,12 @@ export class EventService {
 
   getEvent(id: string): Observable<Event> {
     return this.api.get<Event>(`/events/${id}`);
+  }
+
+  /** Other events the caller is also allowed to see, related to `id` by category/country. */
+  getRelatedEvents(id: string, limit?: number): Observable<Event[]> {
+    const params: Record<string, any> = limit ? { limit } : {};
+    return this.api.get<Event[]>(`/events/${id}/related`, params).pipe(map((res) => res ?? []));
   }
 
    createEvent(data: Record<string, any>, images?: File[]): Observable<Event> {

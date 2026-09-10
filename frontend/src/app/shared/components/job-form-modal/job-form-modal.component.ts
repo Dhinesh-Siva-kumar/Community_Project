@@ -1,5 +1,5 @@
 import {
-  Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed,
+  Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed, HostListener, ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -16,6 +16,7 @@ import { Country, Job, GeoCountry, CountryAddressConfig, Division } from '../../
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { RadioGroupComponent, RadioOption } from '../radio-group/radio-group.component';
 import { TimeInputComponent } from '../time-input/time-input.component';
+import { DateInputComponent } from '../date-input/date-input.component';
 import { ToggleComponent } from '../toggle/toggle.component';
 import { FileUploadComponent } from '../file-upload/file-upload.component';
 import { TagInputComponent } from '../tag-input/tag-input.component';
@@ -26,6 +27,7 @@ import { CURRENCIES, getCurrencySymbol, getCurrencySelectOptions } from '../../c
 import { getPhoneRule } from '../../utils/phone';
 import { enumSelectOptions } from '../../constants/enum-labels';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { UnsavedChangesService } from '../../../core/services/unsaved-changes.service';
 
 function urlValidator(control: AbstractControl): ValidationErrors | null {
   const v = control.value;
@@ -59,6 +61,33 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+/** Only enforces a minimum length when a value is actually present —
+ * `Validators.minLength` alone treats an empty string as *shorter than*
+ * the minimum and fails it, which silently blocks Save on a genuinely
+ * optional field (backend has this field as `z.string().optional()`,
+ * with no length floor at all) the moment a control is left blank. */
+function optionalMinLengthValidator(min: number): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = ((c.value as string) ?? '').trim();
+    if (!v) return null;
+    return v.length >= min ? null : { minlength: { requiredLength: min, actualLength: v.length } };
+  };
+}
+
+/** Openings: a whole number of 1 or more. `Validators.min` alone lets a
+ * decimal like 1.5 through (it only checks the numeric floor, not
+ * integer-ness) and silently skips validation entirely once the control is
+ * empty/null — paired with Validators.required here to actually catch that. */
+function wholeNumberMinValidator(min: number): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = c.value;
+    if (v === null || v === undefined || v === '') return null; // Validators.required covers emptiness
+    const n = Number(v);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n < min) return { wholeNumberMin: { min } };
+    return null;
+  };
+}
+
 /** Country-aware postal code validator — see business-form-modal.component.ts for the fuller explanation. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
   return (c: AbstractControl): ValidationErrors | null => {
@@ -83,7 +112,7 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
   standalone: true,
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, SearchableSelectComponent, RadioGroupComponent,
-    TimeInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe,
+    TimeInputComponent, DateInputComponent, ToggleComponent, FileUploadComponent, TagInputComponent, ImageUrlPipe,
     ImageErrorHandlerDirective, TranslatePipe, ScrollLockDirective,
   ],
   templateUrl: './job-form-modal.component.html',
@@ -96,6 +125,8 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   private toast             = inject(ToastService);
   private translate         = inject(TranslateService);
   private fb                = inject(FormBuilder);
+  private unsavedChanges    = inject(UnsavedChangesService);
+  private el                = inject(ElementRef);
   private destroy$          = new Subject<void>();
 
   @Input() open = false;
@@ -141,6 +172,28 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   countryConfig = signal<CountryAddressConfig | null>(null);
   adminLevels   = computed(() => this.countryConfig()?.divisionLevels ?? []);
 
+  // Country-specific label for the level-1 division field, replacing the
+  // generic backend-derived label (e.g. Germany's "Land") with wording
+  // that reads naturally for a Job posting. A plain computed() can't react
+  // to a FormControl read directly, so the selected country id is tracked
+  // in its own signal, kept in sync at every mutation site (onCountryChange,
+  // resurrectJobLocation, resetForCreate) — same approach as
+  // business-form-modal's regionLabelKey.
+  private static readonly REGION_LABEL_KEYS: Record<string, string> = {
+    GB: 'components.jobForm.regionLabel.county',
+    IN: 'components.jobForm.regionLabel.state',
+    DE: 'components.jobForm.regionLabel.state',
+    CA: 'components.jobForm.regionLabel.province',
+  };
+  selectedRegionCountryId = signal<number | null>(null);
+  regionLabelKey = computed<string>(() => {
+    const id = this.selectedRegionCountryId();
+    if (!id) return 'components.jobForm.regionLabel.default';
+    const iso2 = this.geoCountries().find(c => String(c.id) === String(id))?.iso2?.toUpperCase();
+    return (iso2 && JobFormModalComponent.REGION_LABEL_KEYS[iso2])
+      || 'components.jobForm.regionLabel.fallback';
+  });
+
   geoCountryOptions = computed<SelectOption[]>(() =>
     this.geoCountries().map(c => ({ value: c.id, label: `${c.flagEmoji ?? ''} ${c.name}`.trim() })),
   );
@@ -177,6 +230,7 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   readonly jobTypeOptions: SelectOption[] = enumSelectOptions('jobType', this.jobTypes);
   readonly workModeOptions: RadioOption[] = enumSelectOptions('workMode', ['Remote', 'Hybrid', 'On-site']);
   readonly shiftTypeOptions: RadioOption[] = enumSelectOptions('shiftType', ['Day', 'Night', 'Rotational', 'Flexible']);
+  readonly visaSponsorshipOptions: RadioOption[] = enumSelectOptions('visaSponsorship', ['Available', 'Not Available', 'Not Specified']);
   readonly salaryTypeOptions: RadioOption[] = enumSelectOptions('salaryType', ['Fixed', 'Hourly', 'Monthly', 'Annual', 'Negotiable']);
   readonly workDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -214,7 +268,10 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
 
   protected getCurrencySymbol(code: string | undefined): string { return getCurrencySymbol(code); }
 
-  get isRemoteCtrl(): boolean { return !!this.jobForm.get('isRemote')?.value; }
+  // `workMode` — not the separate `isRemote` control — is the single
+  // source of truth for what's shown here; see subscribeToWorkMode().
+  get isRemoteCtrl(): boolean { return this.jobForm.get('workMode')?.value === 'Remote'; }
+  get isHybridCtrl(): boolean { return this.jobForm.get('workMode')?.value === 'Hybrid'; }
   get isSalaryHidden(): boolean { return !!this.jobForm.get('salaryHidden')?.value; }
   get isSalaryNegotiable(): boolean { return this.jobForm.get('salaryType')?.value === 'Negotiable'; }
 
@@ -241,13 +298,22 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
 
   private initForm(): void {
     this.jobForm = this.fb.group({
-      companyName:    ['', [Validators.required, Validators.minLength(2)]],
+      // Optional — matches CreateJobDto's companyName: z.string().optional()
+      // on the backend. Was Validators.required here, which the backend
+      // never actually enforced; editing any existing job with no company
+      // name (created before this field existed, or via direct API/seed)
+      // silently blocked Save the moment it loaded, since the form was
+      // already invalid before the user touched anything.
+      companyName:    ['', optionalMinLengthValidator(2)],
       companyWebsite: ['', urlValidator],
       title:          ['', [Validators.required, Validators.minLength(3)]],
-      jobType:        ['Full-time'],
+      // No default — an unset value shows the "Select employment type"
+      // placeholder rather than silently pre-selecting Full-time for every
+      // new job regardless of what it actually is.
+      jobType:        [null],
       workMode:       ['On-site'],
       education:      [''],
-      openings:       [1, [Validators.min(1)]],
+      openings:       [1, [Validators.required, wholeNumberMinValidator(1)]],
       expMin:         [null],
       expMax:         [null],
       salaryType:     ['Monthly'],
@@ -267,6 +333,9 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
       // re-applies this same 'COUNTRY' value, matching the DB column default.
       visibilityType: ['COUNTRY', Validators.required],
       shiftType:      ['Day'],
+      visaSponsorship: ['Not Specified'],
+      referralAvailable: [false],
+      applicationDeadline: [''],
       workStartTime:  [''],
       workEndTime:    [''],
       workingDays:    [[]],
@@ -276,7 +345,7 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
       contactEmail:   ['', [Validators.email]],
       applicationUrl: ['', urlValidator],
       skills:         [[]],
-      description:    [''],
+      description:    ['', Validators.required],
       responsibilities: [''],
       qualifications:   [''],
       requirements:     [''],
@@ -287,6 +356,44 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
 
     this.subscribeToSalaryHidden();
     this.subscribeToSalaryNegotiable();
+    this.subscribeToWorkMode();
+  }
+
+  /**
+   * Keeps `isRemote` in sync with `workMode` — the two used to be
+   * independently editable (a separate "Fully Remote" toggle) and could
+   * drift apart, which was confirmed against real data as the cause of
+   * On-site jobs wrongly displaying "Remote". `workMode` is now the only
+   * thing the user sets; `isRemote` is purely a derived value still sent
+   * in the payload for backward compatibility with the `is_remote` column.
+   *
+   * Also clears the physical-location fields when switching to Remote, so
+   * a stale on-site address can't linger if the user flips back and forth
+   * before saving. Country is deliberately left alone — it drives the
+   * separate applicant-country eligibility restriction ("Germany
+   * applicants only"), independent of Work Mode.
+   */
+  private subscribeToWorkMode(): void {
+    this.jobForm.get('workMode')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((mode: string) => {
+        this.jobForm.get('isRemote')?.setValue(mode === 'Remote', { emitEvent: false });
+        if (mode === 'Remote') {
+          this.jobForm.get('division1Id')?.setValue(null, { emitEvent: false });
+          this.jobForm.get('division2Id')?.setValue(null, { emitEvent: false });
+          this.jobForm.get('cityId')?.setValue(null, { emitEvent: false });
+          this.jobForm.get('pincode')?.setValue('', { emitEvent: false });
+          this.jobForm.get('fullAddress')?.setValue('', { emitEvent: false });
+        }
+        // division1Id/division2Id/pincode can carry a Validators.required
+        // from the selected country's own config (applyDivisionValidators/
+        // applyPincodeValidators) — that's independent of Work Mode, so
+        // switching to Remote (which hides those fields) has to re-run
+        // both here or a hidden, now-empty field would keep the form stuck
+        // invalid; switching back to On-site/Hybrid re-applies them.
+        this.applyDivisionValidators();
+        this.applyPincodeValidators();
+      });
   }
 
   /** Hides & clears the amount fields while salary is hidden entirely. */
@@ -383,22 +490,40 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
     return null;
   }
 
+  /** Division/pincode required-ness comes from the selected country's own
+   * config — but a Remote job hides these fields entirely (see the
+   * Location section), so they must never be required while Remote,
+   * regardless of what the country would otherwise demand. */
+  /**
+   * division1Id/division2Id are never required — matches CreateJobDto's
+   * stateId: z.coerce.number().int().positive().optional() on the
+   * backend. This used to require them whenever the selected country had
+   * state-level divisions, which broke editing the majority of existing
+   * jobs: confirmed against real data that most jobs predate the
+   * id-based geography columns (country stored as free text only, no
+   * state/city). resurrectJobLocation() resolves their country by name
+   * for display, which — combined with the old required rule — silently
+   * left division1Id required-but-empty (job.state was never set, so its
+   * value was never populated) the moment such a job was opened for
+   * edit, permanently blocking Save until a state was picked for a
+   * field the job never had to begin with.
+   */
   private applyDivisionValidators(): void {
-    const levels = this.adminLevels().length;
     const d1 = this.jobForm.get('division1Id');
     const d2 = this.jobForm.get('division2Id');
-    d1?.setValidators(levels >= 1 ? [Validators.required] : []);
-    d2?.setValidators(levels >= 2 ? [Validators.required] : []);
+    d1?.setValidators([]);
+    d2?.setValidators([]);
     d1?.updateValueAndValidity({ emitEvent: false });
     d2?.updateValueAndValidity({ emitEvent: false });
   }
 
+  // Optional in every country and every Work Mode — matches the Business
+  // module's Postal Code field — only the country's format check applies
+  // when a value is actually entered.
   private applyPincodeValidators(): void {
     const postal = this.countryConfig()?.postalCode;
-    const validators: ValidatorFn[] = [postalCodeValidator(postal?.regex ?? null)];
-    if (postal?.required) validators.push(Validators.required);
     const ctrl = this.jobForm.get('pincode');
-    ctrl?.setValidators(validators);
+    ctrl?.setValidators([postalCodeValidator(postal?.regex ?? null)]);
     ctrl?.updateValueAndValidity({ emitEvent: false });
   }
 
@@ -419,6 +544,7 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   onCountryChange(countryId: any): void {
     this.resetDivisionState();
     const id = countryId ? Number(countryId) : null;
+    this.selectedRegionCountryId.set(id);
     if (!id) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
 
     this.geographyService.getCountryConfig(id).pipe(takeUntil(this.destroy$)).subscribe({
@@ -487,21 +613,30 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
     const country = job.countryId != null
       ? this.geoCountries().find(c => c.id === job.countryId)
       : (job.country ? this.geoCountries().find(c => c.name.toLowerCase() === job.country!.toLowerCase()) : null);
-    if (!country) { this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
+    if (!country) { this.selectedRegionCountryId.set(null); this.applyDivisionValidators(); this.applyPincodeValidators(); return; }
 
+    this.selectedRegionCountryId.set(country.id);
     this.jobForm.get('countryId')?.setValue(country.id, silent);
     this.geographyService.getCountryConfig(country.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (config) => {
         this.countryConfig.set(config);
         this.applyDivisionValidators();
         this.applyPincodeValidators();
-        if (config.divisionLevels.length === 0 || !job.state) return;
+        // Always fetch the State/Region options once we know the country
+        // has any — regardless of whether this job already has a state
+        // saved. The old `|| !job.state` guard skipped fetching the list
+        // entirely for any job without one (the majority of existing
+        // jobs, which predate this field), so the dropdown looked empty
+        // even though the country was correctly selected — there was
+        // simply nothing to pick from.
+        if (config.divisionLevels.length === 0) return;
 
         this.division1Loading.set(true);
         this.geographyService.getDivisions(country.id).pipe(takeUntil(this.destroy$)).subscribe({
           next: (divisions) => {
             this.division1Options.set(divisions);
             this.division1Loading.set(false);
+            if (!job.state && job.stateId == null) return;
             const match = job.stateId != null
               ? divisions.find(d => d.id === job.stateId)
               : divisions.find(d => d.name.toLowerCase() === job.state!.toLowerCase());
@@ -552,12 +687,16 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
     this.editingJob.set(null);
     this.jobSubmitAttempted.set(false);
     this.jobForm.reset({
-      jobType: 'Full-time', workMode: 'On-site', salaryType: 'Monthly',
+      // jobType intentionally left unset (reset()'s default of null) — no
+      // pre-selected Employment Type; the placeholder shows until chosen.
+      workMode: 'On-site', salaryType: 'Monthly',
       salaryCurrency: 'GBP', shiftType: 'Day', openings: 1,
       isRemote: false, salaryHidden: false, workingDays: [], skills: [],
       visibilityType: 'COUNTRY',
+      visaSponsorship: 'Not Specified', referralAvailable: false,
     });
     this.resetDivisionState();
+    this.selectedRegionCountryId.set(null);
     this.applyDivisionValidators();
     this.applyPincodeValidators();
     this.selectedImages.set([]);
@@ -585,7 +724,7 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
       companyName:     job.companyName    ?? '',
       companyWebsite:  job.companyWebsite ?? '',
       title:           job.title,
-      jobType:         job.jobType        ?? 'Full-time',
+      jobType:         job.jobType        ?? null,
       workMode:        job.workMode       ?? 'On-site',
       education:       job.education      ?? '',
       openings:        job.openings       ?? 1,
@@ -596,16 +735,26 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
       salaryMin:       job.salaryMin      ?? null,
       salaryMax:       job.salaryMax      ?? null,
       salaryHidden:    job.salaryHidden   ?? false,
-      isRemote:        job.isRemote       ?? false,
+      // Derived from workMode rather than trusted from job.isRemote — a
+      // legacy job saved before the two were kept in sync could still have
+      // a stale isRemote value that disagrees with its own workMode.
+      isRemote:        (job.workMode ?? 'On-site') === 'Remote',
       pincode:         job.pincode        ?? '',
       fullAddress:     job.fullAddress    ?? '',
       visibilityType:  job.visibilityType ?? 'COUNTRY',
       shiftType:       job.shiftType      ?? 'Day',
+      visaSponsorship: job.visaSponsorship ?? 'Not Specified',
+      referralAvailable: job.referralAvailable ?? false,
+      applicationDeadline: job.applicationDeadline ? job.applicationDeadline.slice(0, 10) : '',
       workStartTime:   job.workStartTime  ?? '',
       workEndTime:     job.workEndTime    ?? '',
       workingDays:     job.workingDays    ?? [],
       contactPerson:   job.contactPerson  ?? '',
-      contactPhone:    job.contactPhone   ?? '',
+      // contactPhone is patched below by resurrectPhoneFields(), once
+      // phoneCountries() is guaranteed loaded — it needs to split the
+      // stored "<dial_code><digits>" string back into contactDialCode +
+      // bare digits, or contactDialCode is left blank and the "select a
+      // dial code" error wrongly fires the moment the field is touched.
       contactEmail:    job.contactEmail   ?? '',
       applicationUrl:  job.applicationUrl ?? '',
       skills:          job.skills         ?? [],
@@ -616,18 +765,91 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
       benefits:         job.benefits         ?? '',
     });
     this.resurrectJobLocation(job);
+    this.resurrectPhoneField(job.contactPhone);
     this.fileUploadReset.update(v => v + 1);
     this.logoUploadReset.update(v => v + 1);
   }
 
-  requestClose(): void {
+  /**
+   * Splits a stored "<dial_code><digits>" value (or legacy bare-digits)
+   * back into contactDialCode + clean local digits, mirroring
+   * business-form-modal's splitPhoneValue()/applyPhoneFields(). Without
+   * this, contactPhone patched the raw combined string while
+   * contactDialCode stayed blank — a real (not just cosmetic) mismatch
+   * that made "Please select a dial code first" fire the moment the phone
+   * field was touched, even though the phone number itself was already
+   * saved with its dial code.
+   */
+  private resurrectPhoneField(storedPhone: string | undefined | null): void {
+    const apply = () => {
+      const { dialCode, digits } = this.splitPhoneValue(storedPhone);
+      this.jobForm.patchValue({ contactDialCode: dialCode, contactPhone: digits });
+    };
+    if (this.phoneCountries().length > 0) {
+      apply();
+    } else {
+      this.masterDataService.getCountries().pipe(takeUntil(this.destroy$)).subscribe({
+        next: (data) => { this.phoneCountries.set(data); apply(); },
+        error: () => apply(),
+      });
+    }
+  }
+
+  private splitPhoneValue(value: string | undefined | null): { dialCode: string; digits: string } {
+    const raw = (value ?? '').trim();
+    if (!raw) return { dialCode: '', digits: '' };
+    const withoutPlus = raw.replace(/[^\d+]/g, '').replace(/^\+/, '');
+    const countries = [...this.phoneCountries()].sort((a, b) => b.dial_code.length - a.dial_code.length);
+    for (const c of countries) {
+      const dial = c.dial_code.replace(/\D/g, '');
+      if (dial && withoutPlus.startsWith(dial)) {
+        return { dialCode: c.dial_code, digits: withoutPlus.slice(dial.length) };
+      }
+    }
+    return { dialCode: '', digits: withoutPlus };
+  }
+
+  /** Reused as-is from business-form-modal's identical pattern — the one
+   * shared "You have unsaved changes" dialog, driven by UnsavedChangesService. */
+  isDirty(): boolean {
+    return this.open && this.jobForm.dirty;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.isDirty()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
+
+  /** Backdrop click, the × button, and Cancel all route through here, so this is the one place that needs to guard against discarding unsaved edits. */
+  async requestClose(): Promise<void> {
+    if (this.isDirty()) {
+      const leave = await this.unsavedChanges.confirm();
+      if (!leave) return;
+    }
     this.closed.emit();
   }
 
   submitJob(): void {
     this.jobSubmitAttempted.set(true);
     this.jobForm.markAllAsTouched();
-    if (this.jobForm.invalid) return;
+    if (this.jobForm.invalid) {
+      // A bare `return` here left Save looking completely inert whenever
+      // some already-saved field (e.g. an older job's blank company name,
+      // before that became optional) failed validation the moment the
+      // form loaded — the user would click Save and nothing would
+      // visibly happen. Always surface *something*, and jump to the
+      // actual offending field instead of leaving it to be found by
+      // scrolling through the whole form.
+      this.toast.error('components.jobForm.formHasErrors');
+      setTimeout(() => {
+        const firstInvalid = (this.el.nativeElement as HTMLElement)
+          .querySelector('.ng-invalid.ng-touched, .cm-input-error');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
 
     this.submitting.set(true);
     const raw     = this.jobForm.value;

@@ -76,9 +76,9 @@
                 </span>
               }
             </div>
-            <!-- Business Logo -->
+            <!-- Business Logo — optional -->
             <div class="col-12">
-              <label class="jb-label">{{ 'components.businessForm.logoLabel' | translate }} <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.logoLabel' | translate }} <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span></label>
               @if (logoPreview()) {
                 <div class="jb-logo-preview">
                   <img [src]="logoPreview() | imageUrl" [alt]="'components.fileUpload.logoAlt' | translate" class="jb-logo-preview__img" />
@@ -87,8 +87,6 @@
               } @else {
                 <app-file-upload mode="single" accept="image/*"
                   [resetCounter]="logoUploadReset()" [label]="'components.fileUpload.uploadBusinessLogo' | translate"
-                  [showError]="businessSubmitAttempted() && !logoPreview()"
-                  [errorMessage]="'components.businessForm.logoRequired' | translate"
                   (filesChange)="onLogoChange($event)"></app-file-upload>
               }
             </div>
@@ -131,23 +129,31 @@
         </div>
 
         <!-- S2: Contact -->
-        <div class="jb-form-section">
+        <div class="jb-form-section" id="bizFormContactSection">
           <div class="jb-form-section__header">
             <div class="jb-form-section__badge"><i class="bi bi-telephone"></i></div>
             <div><span class="jb-form-section__num">02</span><span class="jb-form-section__name">{{ 'components.businessForm.contactDetails' | translate }}</span></div>
           </div>
+
+          <!-- Phone, WhatsApp and Email are each optional on their own, but
+               at least one of the three is required — this is the group-
+               level rule, so it's shown once for the section rather than
+               repeated on every field. -->
+          @if (businessSubmitAttempted() && businessForm.errors?.['noContactMethod']) {
+            <p class="jb-field-error jb-field-error--section">
+              <i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.contactMethodRequired' | translate }}
+            </p>
+          }
+
           <div class="row g-3">
             <!-- Row 1: Phone Country + Phone -->
             <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched">
-              <label class="jb-label">{{ 'components.businessForm.phoneCountryLabel' | translate }} <span class="text-danger">*</span></label>
+              <label class="jb-label">{{ 'components.businessForm.phoneCountryLabel' | translate }} <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span></label>
               <app-searchable-select formControlName="phoneCountryId" [options]="phoneCountryOptions()"
                 [placeholder]="'components.businessForm.countryCodePlaceholder' | translate"></app-searchable-select>
-              @if (businessForm.get('phoneCountryId')?.invalid && businessForm.get('phoneCountryId')?.touched) {
-                <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'components.businessForm.countryCodeRequired' | translate }}</span>
-              }
             </div>
             <div class="col-md-8">
-              <label class="jb-label" for="bizFormPhone">{{ 'components.businessForm.phoneLabel' | translate }} <span class="text-danger">*</span></label>
+              <label class="jb-label" for="bizFormPhone">{{ 'components.businessForm.phoneLabel' | translate }} <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span></label>
               <div class="jb-input-group">
                 <i class="bi bi-telephone jb-input-group__icon"></i>
                 <input id="bizFormPhone" type="tel" class="jb-input jb-input--icon-left" formControlName="phone" [placeholder]="'components.businessForm.phonePlaceholder' | translate" maxlength="15"
@@ -260,14 +266,14 @@
             @if (adminLevels().length >= 1) {
               <div class="col-md-4" [class.cm-field-group--error]="businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched">
                 <label class="jb-label">
-                  {{ adminLevels()[0].label }} <span class="text-danger">*</span>
+                  {{ regionLabelKey() | translate }} <span class="text-danger">*</span>
                   @if (division1Loading()) { <span class="jb-label__loading"><i class="bi bi-arrow-clockwise"></i></span> }
                 </label>
                 <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
-                  [placeholder]="division1Options().length ? ('Select ' + adminLevels()[0].label.toLowerCase()) : 'Select country first'"
+                  [placeholder]="division1Options().length ? ('Select ' + (regionLabelKey() | translate).toLowerCase()) : 'Select country first'"
                   (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
                 @if (businessForm.get('division1Id')?.invalid && businessForm.get('division1Id')?.touched) {
-                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (adminLevels()[0].label) } }}</span>
+                  <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'common.fieldIsRequired' | translate: { field: (regionLabelKey() | translate) } }}</span>
                 }
               </div>
             }
@@ -328,9 +334,7 @@
                  countries that don't use postal codes leave it optional. -->
             <div class="col-md-4">
               <label class="jb-label" for="bizFormPin">
-                Postal Code
-                @if (countryConfig()?.postalCode?.required) { <span class="text-danger">*</span> }
-                @else { <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span> }
+                Postal Code <span class="jb-optional">{{ 'common.optionalParen' | translate }}</span>
               </label>
               <input id="bizFormPin" type="text" class="jb-input" formControlName="pincode"
                 [placeholder]="countryConfig()?.postalCode?.format || 'e.g. SW1A 1AA'" maxlength="12"
@@ -338,11 +342,7 @@
               @if (businessForm.get('pincode')?.invalid && businessForm.get('pincode')?.touched) {
                 <span class="jb-field-error">
                   <i class="bi bi-exclamation-circle"></i>
-                  @if (businessForm.get('pincode')?.errors?.['required']) {
-                    Postal code is required
-                  } @else {
-                    Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}
-                  }
+                  Doesn't match the expected format{{ countryConfig()?.postalCode?.format ? ' (' + countryConfig()?.postalCode?.format + ')' : '' }}
                 </span>
               }
             </div>
@@ -418,7 +418,7 @@
     <div class="au-footer cm-modal-footer">
       <button type="button" class="au-btn au-btn--ghost cm-btn-cancel" (click)="requestClose()">{{ 'common.cancel' | translate }}</button>
       <button type="button" class="au-btn au-btn--primary cm-btn-submit"
-        [disabled]="businessForm.invalid || !logoPreview() || submitting()"
+        [disabled]="submitting()"
         (click)="submitBusiness()">
         @if (submitting()) {
           <span class="spinner-border spinner-border-sm me-1"></span>

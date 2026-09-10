@@ -12,6 +12,7 @@ router.get('/', ctrl.findAll);
 router.get('/mine', ctrl.findMine);
 router.get('/pending', authorize('ADMIN'), ctrl.findPending);
 router.get('/pending-count', authorize('ADMIN'), ctrl.getPendingCount);
+router.get('/:id/related', ctrl.findRelated);
 router.get('/:id', ctrl.findOne);
 router.put('/:id/approve', authorize('ADMIN'), ctrl.approve);
 router.put('/:id/reject', authorize('ADMIN'), ctrl.reject);

@@ -20,6 +20,7 @@ import { PendingPostsQueryParams } from '../../../core/services/post.service';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
+import { QrCodeComponent } from '../../../shared/components/qr-code/qr-code.component';
 
 export type EntityKey = 'posts' | 'community' | 'business' | 'jobs' | 'events';
 
@@ -48,7 +49,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, QrCodeComponent, TranslatePipe],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -409,6 +410,29 @@ export class ApprovalComponent implements OnInit {
   // ── Single approve / reject ─────────────────────────────────
   requestApprove(item: PendingItem): void { this.confirmApproveTarget.set(item); }
   cancelApproveConfirm(): void { this.confirmApproveTarget.set(null); }
+
+  /**
+   * The approve-confirm popup's "who will see this" line. For a Business,
+   * this has to match its actual Visibility Type rather than the generic
+   * "everyone" wording every other entity uses — a Country Based business
+   * is NOT visible to everyone.
+   */
+  approveVisibilityMessage(item: PendingItem): string {
+    const entity = this.activeEntity();
+    if (entity === 'business') {
+      return this.t(item['visibility_type'] === 'WORLDWIDE'
+        ? 'admin.approval.visibleToWorldwide'
+        : 'admin.approval.visibleToCountry');
+    }
+    if (entity === 'jobs') {
+      // findPendingOnly() for jobs already maps camelCase via shapeJob() —
+      // unlike business, no snake_case fallback needed here.
+      return this.t(item['visibilityType'] === 'WORLDWIDE'
+        ? 'admin.approval.visibleToWorldwide'
+        : 'admin.approval.visibleToCountryJob');
+    }
+    return this.t('admin.approval.visibleToEveryone');
+  }
 
   confirmApproveExecute(): void {
     const item = this.confirmApproveTarget();
@@ -771,6 +795,7 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.visibility', value: this.t(item['visibility_type'] === 'WORLDWIDE'
                 ? 'components.businessForm.visibilityWorldwide'
                 : 'components.businessForm.visibilityCountry') },
+            { label: 'admin.approval.label.businessStatus', value: this.t(item['isActive'] ? 'common.active' : 'common.inactive') },
           ]},
           { title: 'admin.approval.section.contact', icon: 'bi-telephone', fields: [
             { label: 'admin.approval.label.phone', value: this.fmt(item['phone']) },
@@ -829,6 +854,9 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.date', value: this.fmt(item['eventDate']) },
             { label: 'admin.approval.label.time', value: item['eventTime'] ? `${item['eventTime']}${item['eventEndTime'] ? ' – ' + item['eventEndTime'] : ''}` : '—' },
             { label: 'admin.approval.label.timezone', value: this.fmt(item['timezone']) },
+            { label: 'admin.approval.label.visibility', value: this.t(item['visibilityType'] === 'WORLDWIDE'
+                ? 'components.businessForm.visibilityWorldwide'
+                : 'components.businessForm.visibilityCountry') },
           ]},
           { title: 'admin.approval.section.location', icon: 'bi-geo-alt', fields: [
             { label: 'admin.approval.label.country', value: this.fmt(item['country']) },

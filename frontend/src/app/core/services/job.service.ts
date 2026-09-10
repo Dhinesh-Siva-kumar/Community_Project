@@ -53,6 +53,10 @@ export interface JobsQueryParams {
   education?: string;
   jobTypes?:  string;
   workModes?: string;
+  /** Free-text, matched against any of the job's stored skills. */
+  skills?:    string;
+  visaSponsorship?:   'Available' | 'Not Available' | 'Not Specified';
+  referralAvailable?: boolean;
 
   // ── Recruiter / poster search (admin) ─────────────────────────
   postedBy?: string;

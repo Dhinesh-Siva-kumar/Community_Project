@@ -62,6 +62,14 @@
             <span class="admin-stat-card__label">{{ 'admin.business.emptyCategories' | translate }}</span>
           </div>
         </button>
+        <button type="button" class="admin-stat-card admin-stat-card--btn" [class.admin-stat-card--active]="catFilter() === 'inactive'"
+          (click)="setCatFilter('inactive')" [attr.aria-label]="'admin.business.filterByInactiveCategories' | translate">
+          <div class="admin-stat-card__icon admin-stat-card__icon--parttime"><i class="bi bi-toggle-off"></i></div>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__value">{{ inactiveCategoriesCount() }}</span>
+            <span class="admin-stat-card__label">{{ 'admin.business.label.inactive' | translate }}</span>
+          </div>
+        </button>
       </div>
     }
 
@@ -155,7 +163,12 @@
                 <i class="bi {{ getCategoryIcon(cat.icon) }}"></i>
               </div>
               <div class="biz-cat-card__main">
-                <h3 class="biz-cat-card__name">{{ cat.name }}</h3>
+                <h3 class="biz-cat-card__name">
+                  {{ cat.name }}
+                  @if (cat.isActive === false) {
+                    <span class="biz-cat-card__inactive-badge">{{ 'admin.business.categoryInactive' | translate }}</span>
+                  }
+                </h3>
                 <span class="biz-cat-card__count">
                   @if ((cat._count?.businesses ?? 0) > 0) {
                     {{ cat._count!.businesses }} {{ cat._count!.businesses === 1 ? 'business' : 'businesses' }}
@@ -171,6 +184,17 @@
                   (click)="openEditCategory($event, cat)"
                   [attr.aria-label]="'Edit ' + cat.name" [title]="'common.edit' | translate">
                   <i class="bi bi-pencil"></i>
+                </button>
+                <button class="biz-cat-card__action-btn biz-cat-card__action-btn--toggle"
+                  (click)="toggleCategoryActive($event, cat)"
+                  [attr.aria-label]="(cat.isActive === false ? 'admin.business.enableCategory' : 'admin.business.disableCategory') | translate"
+                  [title]="(cat.isActive === false ? 'admin.business.enableCategory' : 'admin.business.disableCategory') | translate"
+                  [disabled]="togglingCategoryId() === cat.id">
+                  @if (togglingCategoryId() === cat.id) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    <i class="bi" [ngClass]="cat.isActive === false ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+                  }
                 </button>
                 <button class="biz-cat-card__action-btn biz-cat-card__action-btn--delete"
                   (click)="openDeleteCategory($event, cat)"
@@ -281,7 +305,12 @@
                       <i class="bi {{ getCategoryIcon(cat.icon) }}"></i>
                     </div>
                   </td>
-                  <td class="um-td"><span class="um-user-name">{{ cat.name }}</span></td>
+                  <td class="um-td">
+                    <span class="um-user-name">{{ cat.name }}</span>
+                    @if (cat.isActive === false) {
+                      <span class="biz-cat-card__inactive-badge">{{ 'admin.business.categoryInactive' | translate }}</span>
+                    }
+                  </td>
                   <td class="um-td">
                     <span class="um-td-text text-truncate d-inline-block" style="max-width:360px">{{ $any(cat).description || '—' }}</span>
                   </td>
@@ -298,6 +327,17 @@
                         (click)="openEditCategory($event, cat)"
                         [attr.aria-label]="'Edit ' + cat.name" data-tip="Edit">
                         <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="um-iab um-iab--toggle"
+                        (click)="toggleCategoryActive($event, cat)"
+                        [attr.aria-label]="(cat.isActive === false ? 'admin.business.enableCategory' : 'admin.business.disableCategory') | translate"
+                        [attr.data-tip]="(cat.isActive === false ? 'admin.business.enableCategory' : 'admin.business.disableCategory') | translate"
+                        [disabled]="togglingCategoryId() === cat.id">
+                        @if (togglingCategoryId() === cat.id) {
+                          <span class="spinner-border spinner-border-sm"></span>
+                        } @else {
+                          <i class="bi" [ngClass]="cat.isActive === false ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+                        }
                       </button>
                       <button class="um-iab um-iab--delete"
                         (click)="openDeleteCategory($event, cat)"
@@ -1269,6 +1309,22 @@
                     <span class="jb-field-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.business.maximum300CharactersAllowed' | translate }}</span>
                   }
                 </div>
+                <div class="col-12 col-sm-6">
+                  <label class="jb-label" for="catOrder">{{ 'admin.business.displayOrder' | translate }}</label>
+                  <input id="catOrder" type="number" class="jb-input" formControlName="displayOrder" step="1" />
+                  <span class="jb-field-hint"><i class="bi bi-info-circle"></i> {{ 'admin.business.displayOrderHint' | translate }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label class="jb-label">{{ 'admin.business.categoryStatus' | translate }}</label>
+                  <div class="cm-default-row">
+                    <div class="cm-default-label">
+                      <i class="bi" [ngClass]="categoryForm.get('isActive')?.value ? 'bi-check-circle-fill' : 'bi-dash-circle-fill'"></i>
+                      <span>{{ categoryForm.get('isActive')?.value ? ('admin.business.label.active' | translate) : ('admin.business.label.inactive' | translate) }}</span>
+                      <span class="cm-default-hint">{{ 'admin.business.categoryStatusHint' | translate }}</span>
+                    </div>
+                    <app-toggle formControlName="isActive" [ariaLabel]="'admin.business.categoryStatus' | translate"></app-toggle>
+                  </div>
+                </div>
                 <div class="col-12">
                   <label class="jb-label">{{ 'admin.business.bootstrapIcon' | translate }} <span class="text-danger">*</span></label>
                   <button type="button" class="cat-icon-trigger w-100"
@@ -1408,6 +1464,7 @@
      the three image categories and the opening-hours editor only exist once.
      [isAdmin] only affects copy; authorization stays server-side. -->
 <app-business-form-modal
+  #bizFormModal
   [open]="showAddBusinessModal()"
   [editBusinessId]="editBusinessId()"
   [defaultCategoryId]="selectedCategory()?.id ?? null"

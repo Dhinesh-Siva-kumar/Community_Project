@@ -70,12 +70,31 @@ export const CreateBusinessCategoryDto = z.object({
   name: z.string().min(2, 'Category name must be at least 2 characters').max(100, 'Category name must be at most 100 characters'),
   icon: z.string().optional(),
   description: z.string().max(300, 'Description must be at most 300 characters').optional(),
+  // Deprioritise instead of delete — a disabled category is hidden from
+  // the Add/Edit Business picker and active filters, but a business that
+  // already uses it keeps resolving it normally.
+  isActive: z.boolean().optional(),
+  // Lower sorts first. Respected everywhere categories are listed
+  // (getCategories()); defaults to 0, which — combined with the name
+  // tiebreaker used everywhere — reads as plain alphabetical until an
+  // admin explicitly reorders categories.
+  displayOrder: z.coerce.number().int().optional(),
 });
 
 export const UpdateBusinessCategoryDto = CreateBusinessCategoryDto.partial();
 export type UpdateBusinessCategoryDtoType = z.infer<typeof UpdateBusinessCategoryDto>;
 
-export const CreateBusinessDto = z.object({
+// Phone, WhatsApp and Email are each individually optional, but at least one
+// of the three must be provided so a business always has a reachable
+// contact method. Enforced here (not just in the frontend form) so the rule
+// can't be bypassed by calling the API directly.
+const CONTACT_METHOD_MESSAGE = 'Please provide at least one contact method: Phone, WhatsApp, or Email.';
+
+function hasContactMethod(data: { phone?: string; whatsapp?: string; email?: string }): boolean {
+  return Boolean((data.phone ?? '').trim() || (data.whatsapp ?? '').trim() || (data.email ?? '').trim());
+}
+
+const BusinessBaseObject = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters').max(100, 'Business name must be at most 100 characters'),
   categoryId: z.string().uuid('Valid category ID required'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(1000, 'Description must be at most 1000 characters'),
@@ -117,18 +136,33 @@ export const CreateBusinessDto = z.object({
   // when omitted on create.
   isActive: activeBool,
   // Visibility scope. Deliberately .optional() and NOT .default('COUNTRY'):
-  // UpdateBusinessDto below is CreateBusinessDto.partial(), which does not
-  // strip a ZodDefault — an update that omitted this field would parse to
-  // 'COUNTRY', clear the service's `!== undefined` guard and silently
-  // demote a WORLDWIDE business. create() applies the default instead,
-  // exactly as isActive already does.
+  // UpdateBusinessDto below is built from this same object via .partial(),
+  // which does not strip a ZodDefault — an update that omitted this field
+  // would parse to 'COUNTRY', clear the service's `!== undefined` guard and
+  // silently demote a WORLDWIDE business. create() applies the default
+  // instead, exactly as isActive already does.
   visibilityType: z.enum(['COUNTRY', 'WORLDWIDE']).optional(),
   // Structured per-day opening hours. Supersedes the free-text
   // openingHours/openingDays above, which the service now derives from this.
   openingHoursJson: jsonBody(OpeningHoursJsonDto).optional(),
 });
 
-export const UpdateBusinessDto = CreateBusinessDto.partial();
+export const CreateBusinessDto = BusinessBaseObject.refine(hasContactMethod, {
+  message: CONTACT_METHOD_MESSAGE,
+  path: ['phone'],
+});
+
+// Partial update — only enforce the "at least one contact method" rule when
+// the payload actually touches phone/whatsapp/email; a partial update that
+// doesn't include any of them (e.g. renaming a business) shouldn't be
+// rejected for a contact state it never intended to change.
+export const UpdateBusinessDto = BusinessBaseObject.partial().refine(
+  (data) => {
+    const touchesContact = 'phone' in data || 'whatsapp' in data || 'email' in data;
+    return !touchesContact || hasContactMethod(data);
+  },
+  { message: CONTACT_METHOD_MESSAGE, path: ['phone'] },
+);
 
 export const ListBusinessQueryDto = z.object({
   page: z.coerce.number().int().min(1).default(1),

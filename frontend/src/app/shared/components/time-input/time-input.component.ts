@@ -136,7 +136,16 @@ export class TimeInputComponent implements ControlValueAccessor {
 
   protected pickHour(h12: number): void {
     const p = this.parts();
-    const meridiem = this.selectedMeridiem() ?? (h12 >= 8 ? 'AM' : 'AM');
+    // Was `h12 >= 8 ? 'AM' : 'AM'` — a dead ternary that always evaluated
+    // to 'AM' regardless of the condition. Harmless on its own, but it
+    // meant clicking only an hour (before ever touching AM/PM) silently
+    // committed an AM value — e.g. clicking "6" alone would commit
+    // 06:00 (6 AM), and if the user then picked a minute and closed the
+    // picker without explicitly clicking PM, an intended 6:00 PM entry
+    // saved as 6:00 AM. Defaulting to the already-selected meridiem (or
+    // 'AM' only when nothing is selected yet) matches pickMinute()'s and
+    // pickMeridiem()'s existing default exactly.
+    const meridiem = this.selectedMeridiem() ?? 'AM';
     this.commit(to24(h12, p?.m ?? 0, meridiem));
   }
 
