@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { userGuard } from './core/guards/user.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -111,6 +112,7 @@ export const routes: Routes = [
       },
       {
         path: 'business',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/admin/business/business.component').then(
             (m) => m.AdminBusinessComponent
@@ -205,6 +207,7 @@ export const routes: Routes = [
       },
       {
         path: 'business',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/user/business/business.component').then(
             (m) => m.UserBusinessComponent

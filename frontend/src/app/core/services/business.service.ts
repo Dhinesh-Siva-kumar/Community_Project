@@ -70,8 +70,12 @@ export interface PendingBusinessQueryParams {
 export class BusinessService {
   private api = inject(ApiService);
 
-  getCategories(): Observable<BusinessCategory[]> {
-    return this.api.get<BusinessCategory[]>('/business/categories');
+  /** `activeOnly` excludes a deprioritised category — pass it from the
+   * Add/Edit Business form's category picker so a category like "Bar" (kept
+   * only because an existing business still references it) can't be chosen
+   * for a new or edited business. */
+  getCategories(activeOnly = false): Observable<BusinessCategory[]> {
+    return this.api.get<BusinessCategory[]>('/business/categories', activeOnly ? { activeOnly: 'true' } : {});
   }
 
   createCategory(data: Partial<BusinessCategory>): Observable<BusinessCategory> {

@@ -21,13 +21,28 @@ async function notifyAdminsOfPendingBusiness(businessId: string, name: string): 
   );
 }
 
+/** camelCase DTO → snake_case columns; `db.raw`/knex won't do this for us. */
+function toCategoryColumns(data: CreateBusinessCategoryDtoType | UpdateBusinessCategoryDtoType): Record<string, unknown> {
+  const cols: Record<string, unknown> = {};
+  if (data.name !== undefined) cols['name'] = data.name;
+  if (data.icon !== undefined) cols['icon'] = data.icon;
+  if (data.description !== undefined) cols['description'] = data.description;
+  if (data.isActive !== undefined) cols['is_active'] = data.isActive;
+  if (data.displayOrder !== undefined) cols['display_order'] = data.displayOrder;
+  return cols;
+}
+
+function mapCategory(c: Record<string, unknown>): Record<string, unknown> {
+  return { ...c, isActive: c['is_active'] ?? true, displayOrder: c['display_order'] ?? 0 };
+}
+
 export async function createCategory(data: CreateBusinessCategoryDtoType, adminId: string) {
   const existing = await db('business_categories').where({ name: data.name }).first();
   if (existing) throw new AppError(409, 'Category already exists', 'CATEGORY_ALREADY_EXISTS');
 
-  const [category] = await db('business_categories').insert(data).returning('*');
+  const [category] = await db('business_categories').insert(toCategoryColumns(data)).returning('*');
   await logAudit(adminId, 'BUSINESS_CATEGORY_CREATED', { name: data.name }, 'business_categories', (category as Record<string, unknown>)['id'] as string);
-  return category;
+  return mapCategory(category as Record<string, unknown>);
 }
 
 export async function updateCategory(id: string, data: UpdateBusinessCategoryDtoType, adminId: string) {
@@ -37,9 +52,9 @@ export async function updateCategory(id: string, data: UpdateBusinessCategoryDto
     const dup = await db('business_categories').where({ name: data.name }).whereNot({ id }).first();
     if (dup) throw new AppError(409, 'Category name already exists', 'CATEGORY_NAME_ALREADY_EXISTS');
   }
-  const [updated] = await db('business_categories').where({ id }).update(data).returning('*');
+  const [updated] = await db('business_categories').where({ id }).update(toCategoryColumns(data)).returning('*');
   await logAudit(adminId, 'BUSINESS_CATEGORY_UPDATED', { fields: Object.keys(data) }, 'business_categories', id);
-  return updated;
+  return mapCategory(updated as Record<string, unknown>);
 }
 
 export async function deleteCategory(id: string, adminId: string) {
@@ -53,15 +68,27 @@ export async function deleteCategory(id: string, adminId: string) {
   return { message: 'Category deleted successfully' };
 }
 
-export async function getCategories() {
-  const categories = await db('business_categories as bc')
+/**
+ * `activeOnly` excludes a category that's been deprioritised (deactivated
+ * rather than deleted, so an existing business referencing it keeps
+ * working) — the Add/Edit Business category picker passes this so a
+ * deprioritised category can no longer be chosen for new/edited businesses.
+ * Admin's own category management list omits it, so it still sees and can
+ * manage every category, active or not.
+ */
+export async function getCategories(activeOnly = false) {
+  const query = db('business_categories as bc')
     .leftJoin('businesses as b', 'bc.id', 'b.category_id')
     .groupBy('bc.id')
     .select('bc.*', db.raw('COUNT(b.id) as business_count'))
-    .orderBy('bc.name', 'asc');
+    .orderBy([{ column: 'bc.display_order', order: 'asc' }, { column: 'bc.name', order: 'asc' }]);
+
+  if (activeOnly) query.andWhere('bc.is_active', true);
+
+  const categories = await query;
 
   return (categories as Array<Record<string, unknown>>).map((c) => ({
-    ...c,
+    ...mapCategory(c),
     _count: { businesses: Number(c['business_count']) },
   }));
 }
@@ -368,11 +395,22 @@ export async function findPendingOnly(options: FindPendingBusinessOptions) {
   const { page, limit, search, country, dateFrom, dateTo, sortBy = 'joined', sortDir = 'desc' } = options;
   const offset = (page - 1) * limit;
 
+  // Same joins and field shape as findAll()/findOne() — the Admin Approval
+  // page's Business tab reviews a submission in full (including fields like
+  // visibilityType, isActive, mapsLink, the id-based geography and the
+  // submitter's contact details), not just the summary this used to select.
   const query = db('businesses as b')
     .join('users as u', 'b.user_id', 'u.id')
     .join('business_categories as bc', 'b.category_id', 'bc.id')
+    .leftJoin('master_countries as mc', 'b.country_id', 'mc.id')
+    .leftJoin('master_states as ms', 'b.state_id', 'ms.id')
+    .leftJoin('master_cities as mci', 'b.city_id', 'mci.id')
     .where('b.status', 'PENDING')
-    .select('b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon');
+    .select(
+      'b.*', 'u.id as uid', 'u.user_name', 'u.display_name', 'u.email as user_email', 'u.avatar',
+      'bc.id as cat_id', 'bc.name as cat_name', 'bc.icon as cat_icon',
+      'mc.name as geo_country_name', 'ms.name as geo_state_name', 'mci.name as geo_city_name',
+    );
 
   const countQuery = db('businesses as b').where('b.status', 'PENDING');
 
@@ -400,11 +438,25 @@ export async function findPendingOnly(options: FindPendingBusinessOptions) {
 
   const data = (businesses as Array<Record<string, unknown>>).map((b) => ({
     ...b,
-    userId: b['user_id'],
-    categoryId: b['category_id'],
+    userId:       b['user_id'],
+    categoryId:   b['category_id'],
+    openingHours: b['opening_hours'],
+    openingDays:  b['opening_days'],
+    openingHoursJson: b['opening_hours_json'] ?? null,
+    menuImages:   b['menu_images'] ?? [],
+    cardImages:   b['card_images'] ?? [],
+    visibilityType: b['visibility_type'],
+    mapsLink:     b['maps_link'],
+    isActive:     b['is_active'],
     rejectionReason: b['rejection_reason'] ?? null,
-    createdAt: b['created_at'],
-    user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'] },
+    createdAt:    b['created_at'],
+    countryId:    b['country_id'],
+    stateId:      b['state_id'],
+    cityId:       b['city_id'],
+    countryName:  b['geo_country_name'],
+    stateName:    b['geo_state_name'],
+    cityName:     b['geo_city_name'],
+    user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'], email: b['user_email'], avatar: b['avatar'] },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   }));
 

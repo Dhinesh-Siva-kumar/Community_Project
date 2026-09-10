@@ -1,0 +1,93 @@
+@use '../../../../assets/styles/index' as *;
+
+// Sits above every other modal in the app ($z-modal) — this dialog can be
+// triggered while a form modal (Add/Edit Business, etc.) is already open.
+.au-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: $z-toast;
+}
+
+.ucd-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  z-index: $z-toast;
+  padding: $spacing-xl $spacing-lg $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 32px 64px rgba(28, 25, 23, 0.22), 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.ucd-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.16);
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-primary-darker;
+  font-size: 1.5rem;
+  margin-bottom: $spacing-md;
+}
+
+.ucd-title {
+  font-family: $font-family-header;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0 0 8px;
+}
+
+.ucd-message {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  line-height: 1.6;
+  margin: 0 0 $spacing-lg;
+}
+
+.ucd-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.ucd-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  // "Stay" is the safe default — solid and primary, same weight the app
+  // gives its main submit action — so it's the visually obvious choice.
+  &--stay {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-on-primary;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    &:hover { background: $color-primary-dark; border-color: $color-primary-dark; }
+  }
+
+  // "Leave" discards data — de-emphasized, not colored as a destructive
+  // (red) action since nothing stored is actually being deleted.
+  &--leave {
+    background: transparent;
+    border-color: $color-border;
+    color: $color-text-muted;
+    &:hover { border-color: $color-stone-400; color: $color-text-body; background: $color-bg-page; }
+  }
+}

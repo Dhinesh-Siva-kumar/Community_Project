@@ -1275,6 +1275,12 @@
     "deleteModal": {
       "cannotBeUndone": "This action cannot be undone"
     },
+    "unsavedChanges": {
+      "title": "Unsaved Changes",
+      "message": "You have unsaved changes. Are you sure you want to leave?",
+      "stay": "Stay on Page",
+      "leave": "Leave Page"
+    },
     "businessDelete": {
       "title": "Delete Business",
       "confirmPre": "Are you sure you want to delete",
@@ -1521,6 +1527,15 @@
       "descriptionPlaceholder": "Describe the business… (min 10 characters)",
       "logoLabel": "Business Logo",
       "logoRequired": "Business logo is required.",
+      "contactMethodRequired": "Please provide at least one contact method: Phone, WhatsApp, or Email.",
+      "regionLabel": {
+        "countyRegion": "County / Region",
+        "state": "State",
+        "province": "Province",
+        "stateRegion": "State / Region",
+        "default": "Region",
+        "fallback": "State / Province / Region"
+      },
       "statusLabel": "Business Status",
       "emailLabel": "Email",
       "emailPlaceholder": "info@business.com",
@@ -2083,6 +2098,7 @@
       },
       "hoursOption": {},
       "sortOption": {
+        "recommended": "Recommended",
         "count": "Most Businesses",
         "name": "Name A–Z",
         "newest": "Newest First"
@@ -2786,6 +2802,7 @@
       "filterByCategoriesBusinesses": "Filter by categories with businesses",
       "filterByCategoriesAboveAverage": "Filter by categories at or above the average",
       "filterByEmptyCategories": "Filter by empty categories",
+      "filterByInactiveCategories": "Filter by inactive categories",
       "searchCategories2": "Search categories",
       "switchBusinessScope": "Switch business scope",
       "categoryView": "Category View",
@@ -2836,6 +2853,7 @@
       "emptyCategories": "Empty Categories",
       "createCategory": "Create Category",
       "noBusinessesYet": "No businesses yet",
+      "categoryInactive": "Inactive",
       "showing": "Showing",
       "of": "of",
       "categories2": "categories",
@@ -2890,6 +2908,12 @@
       "pleaseSelectIcon": "Please select an icon",
       "noIconsFound": "No icons found",
       "preview": "Preview",
+      "displayOrder": "Display Order",
+      "displayOrderHint": "Lower numbers appear first wherever categories are listed.",
+      "categoryStatus": "Category Status",
+      "categoryStatusHint": "A disabled category is hidden from new business selection, but stays valid for existing businesses that already use it.",
+      "enableCategory": "Enable Category",
+      "disableCategory": "Disable Category",
       "deleteCategory": "Delete Category",
       "actionCannotUndone": "This action cannot be undone",
       "sureWantDelete": "Are you sure you want to delete",
@@ -2927,6 +2951,8 @@
         "categoryUpdated": "Category updated",
         "categoryCreatedSuccessfully": "Category created successfully",
         "categoryDeleted": "Category deleted",
+        "categoryEnabled": "Category enabled",
+        "categoryDisabled": "Category disabled",
         "failedLoadBusinessDetails": "Failed to load business details",
         "businessUpdatedSuccessfully": "Business updated successfully",
         "businessCreatedSuccessfully": "Business created successfully",
@@ -2948,7 +2974,8 @@
         "inactive": "Inactive",
         "name": "Name",
         "created": "Created",
-        "businesses": "Businesses"
+        "businesses": "Businesses",
+        "displayOrder": "Display Order"
       },
       "businessesAcrossEveryCategory": "businesses across every category",
       "filter": {
@@ -3439,6 +3466,9 @@
       "approve": "Approve",
       "sureWantReject": "Are you sure you want to reject",
       "theseWillBecomeVisibleEveryone": "These will become visible to everyone.",
+      "visibleToEveryone": "It will become visible to everyone.",
+      "visibleToCountry": "It will become visible to users in the same country as this business.",
+      "visibleToWorldwide": "It will become visible to users across all countries.",
       "submittersWillNotified": "Submitters will be notified.",
       "description": "Description",
       "toast": {
@@ -3469,6 +3499,7 @@
         "location": "Location",
         "pincode": "Pincode",
         "visibility": "Visibility",
+        "businessStatus": "Business Status",
         "defaultCommunity": "Default Community",
         "mode": "Mode",
         "communityRules": "Community Rules",

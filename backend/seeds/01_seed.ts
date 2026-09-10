@@ -318,19 +318,25 @@ const interests = [
 //   },
 // ];
 
+// Curated for the Tamil diaspora business ecosystem — see migration
+// 20240046_business_category_review, which applies the equivalent rename/
+// deactivate/delete transforms to a database seeded before this list was
+// updated (so an existing business's category is never silently orphaned).
 const businessCategories = [
   { name: 'Restaurant',        icon: 'bi-fork-knife',       description: 'Dine-in and takeaway restaurants' },
+  { name: 'Tamil Restaurant',  icon: 'bi-fork-knife',        description: 'Tamil cuisine restaurants and takeaways' },
   { name: 'Coffee Shop',       icon: 'bi-cup-hot',          description: 'Cafes and coffee houses' },
   { name: 'Hotel',             icon: 'bi-building',         description: 'Hotels and accommodation' },
   { name: 'Bakery',            icon: 'bi-cake',             description: 'Bakeries and pastry shops' },
   { name: 'Supermarket',       icon: 'bi-cart',             description: 'Supermarkets and hypermarkets' },
   { name: 'Grocery',           icon: 'bi-basket',           description: 'Grocery and convenience stores' },
+  { name: 'Tamil Grocery',     icon: 'bi-basket',            description: 'Tamil and South Asian grocery stores' },
   { name: 'Pharmacy',          icon: 'bi-capsule',          description: 'Pharmacies and chemists' },
   { name: 'Hospital',          icon: 'bi-hospital',         description: 'Hospitals and medical centres' },
-  { name: 'Clinic',            icon: 'bi-stethoscope',      description: 'Clinics and health centres' },
+  { name: 'Healthcare / GP',   icon: 'bi-stethoscope',      description: 'GP surgeries and healthcare clinics' },
   { name: 'Gym',               icon: 'bi-activity',         description: 'Gyms and fitness centres' },
   { name: 'Spa',               icon: 'bi-flower1',          description: 'Spas and wellness centres' },
-  { name: 'Salon',             icon: 'bi-scissors',         description: 'Hair and beauty salons' },
+  { name: 'Beauty Salon / Barber', icon: 'bi-scissors',     description: 'Hair, beauty salons and barbers' },
   { name: 'Shopping Mall',     icon: 'bi-bag',              description: 'Shopping malls and plazas' },
   { name: 'Electronics Store', icon: 'bi-laptop',           description: 'Electronics and gadget stores' },
   { name: 'Clothing Store',    icon: 'bi-handbag',          description: 'Fashion and clothing stores' },
@@ -342,18 +348,29 @@ const businessCategories = [
   { name: 'School',            icon: 'bi-pencil',           description: 'Schools and educational institutions' },
   { name: 'College',           icon: 'bi-journal',          description: 'Colleges and technical institutes' },
   { name: 'University',        icon: 'bi-mortarboard',      description: 'Universities and higher education' },
-  { name: 'Real Estate',       icon: 'bi-house-door',       description: 'Real estate and property agencies' },
-  { name: 'Travel Agency',     icon: 'bi-airplane',         description: 'Travel agencies and tour operators' },
+  { name: 'Tutoring / Education', icon: 'bi-mortarboard',   description: 'Private tutoring and supplementary education' },
+  { name: 'Estate Agent / Property', icon: 'bi-house-door', description: 'Estate agents and property services' },
+  { name: 'Mortgage Advisor',  icon: 'bi-house-check',      description: 'Mortgage and home-loan advisory services' },
+  { name: 'Travel Agent',      icon: 'bi-airplane',         description: 'Travel agents and tour operators' },
   { name: 'Bank',              icon: 'bi-bank',             description: 'Banks and financial institutions' },
-  { name: 'Insurance',         icon: 'bi-shield-check',     description: 'Insurance companies and brokers' },
+  { name: 'Insurance Services',icon: 'bi-shield-check',     description: 'Insurance services and brokers' },
+  { name: 'Money Transfer',    icon: 'bi-cash-coin',        description: 'Money transfer and remittance services' },
+  { name: 'Accountant / Tax Advisor', icon: 'bi-calculator', description: 'Accounting, bookkeeping and tax advisory services' },
+  { name: 'Immigration / Legal Services', icon: 'bi-passport', description: 'Immigration and visa advisory services' },
+  { name: 'Solicitor / Legal Services', icon: 'bi-briefcase', description: 'Solicitors and general legal services' },
   { name: 'Event Hall',        icon: 'bi-calendar-event',   description: 'Event halls and banquet venues' },
   { name: 'Cinema',            icon: 'bi-film',             description: 'Cinemas and movie theatres' },
-  { name: 'Bar',               icon: 'bi-beer',             description: 'Bars and nightlife venues' },
-  { name: 'Pub',               icon: 'bi-cup-straw',        description: 'Pubs and taverns' },
   { name: 'Cafe',              icon: 'bi-cup',              description: 'Casual cafes and bistros' },
   { name: 'Fast Food',         icon: 'bi-bag-heart',        description: 'Fast food and quick service restaurants' },
   { name: 'Food Truck',        icon: 'bi-truck',            description: 'Food trucks and mobile eateries' },
   { name: 'Ice Cream Shop',    icon: 'bi-ice-cream',        description: 'Ice cream parlours and dessert shops' },
+  { name: 'Catering Services', icon: 'bi-egg-fried',        description: 'Event and occasion catering services' },
+  { name: 'Software & IT Services', icon: 'bi-code-slash',  description: 'Software development and IT support services' },
+  { name: 'Driving Instructor', icon: 'bi-car-front-fill',  description: 'Driving lessons and instructors' },
+  { name: 'Childcare / Nursery', icon: 'bi-balloon',        description: 'Childcare, nurseries and creches' },
+  { name: 'Translation Services', icon: 'bi-translate',     description: 'Document and interpreting translation services' },
+  { name: 'Courier Services',  icon: 'bi-box-seam',         description: 'Courier, parcel and delivery services' },
+  { name: 'Cleaning Services', icon: 'bi-bucket',           description: 'Domestic and commercial cleaning services' },
 ];
 
 export async function seed(knex: Knex): Promise<void> {

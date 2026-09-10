@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
@@ -22,7 +22,9 @@ import { BusinessDetailViewComponent } from '../../../shared/components/business
 import { OpeningHoursSummaryComponent } from '../../../shared/components/opening-hours-summary/opening-hours-summary.component';
 import { ChipMultiSelectComponent } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { RadioGroupComponent, RadioOption } from '../../../shared/components/radio-group/radio-group.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { DAY_KEYS, DAY_SHORT_KEYS, currentDayKey, currentHHmm } from '../../../shared/utils/opening-hours';
+import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 // Remembers the last selected category view mode (grid/list) across navigations.
@@ -50,7 +52,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ImageErrorHandlerDirective, TruncatedDirective, ScrollLockDirective, ImageUrlPipe, SortBarComponent, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ImageErrorHandlerDirective, TruncatedDirective, ScrollLockDirective, ImageUrlPipe, SortBarComponent, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, ToggleComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -58,7 +60,7 @@ interface BusinessNavState {
   // drawer just sit on top of — and hide — the right edge of the business list.
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class AdminBusinessComponent implements OnInit, OnDestroy {
+export class AdminBusinessComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private translate = inject(TranslateService);
   private businessService   = inject(BusinessService);
   private authService       = inject(AuthService);
@@ -67,6 +69,13 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
+
+  @ViewChild('bizFormModal') bizFormModal?: BusinessFormModalComponent;
+
+  /** Backs the `canDeactivate` route guard — the Add/Edit Business modal is the only unsaved-changes risk on this page. */
+  hasUnsavedChanges(): boolean {
+    return !!this.bizFormModal?.isDirty();
+  }
 
   // ── Countries for filter dropdown ──────────────────────────
   filterCountryOptions: SelectOption[] = [];
@@ -136,6 +145,7 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   showDeleteCategoryConfirm = signal(false);
   categoryToDelete = signal<BusinessCategory | null>(null);
   deletingCategoryId = signal<string | null>(null);
+  togglingCategoryId = signal<string | null>(null);
 
   // Icon picker
   iconPickerOpen = signal(false);
@@ -171,6 +181,8 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     'bi-vehicle-front','bi-person-workspace','bi-map-fill',
     'bi-house-heart','bi-joystick','bi-sign-stop','bi-translate',
     'bi-smartwatch','bi-speakerphone','bi-flower2','bi-emoji-smile',
+    'bi-passport','bi-balloon','bi-box-seam','bi-bucket','bi-house-check',
+    'bi-code-slash','bi-car-front-fill',
   ];
 
   filteredIcons = computed(() => {
@@ -338,20 +350,23 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   emptyCategoriesCount = computed(() =>
     this.categories().filter((c) => (c._count?.businesses ?? 0) === 0).length
   );
+  inactiveCategoriesCount = computed(() =>
+    this.categories().filter((c) => c.isActive === false).length
+  );
 
   // ── Category view controls ───────────────────────────────────
   catSearch   = signal('');
-  catSortBy   = signal<'name'|'count'>('name');
+  catSortBy   = signal<'name'|'count'|'order'>('order');
   catSortDir  = signal<SortDir>('asc');
   catViewMode = signal<'grid'|'list'>('grid');
   /** Stat-card filter — every card in the row drives this one signal, so
    * exactly one card is ever selected at a time (radio-button behaviour)
    * instead of the "Businesses"/"Avg per Category" cards living on a
    * separate, independently-toggleable axis from "Empty Categories". */
-  catFilter = signal<'all' | 'nonEmpty' | 'empty' | 'aboveAvg'>('all');
+  catFilter = signal<'all' | 'nonEmpty' | 'empty' | 'aboveAvg' | 'inactive'>('all');
 
   /** Toggles off back to 'all' on a repeat click of the same filter. */
-  setCatFilter(value: 'all' | 'nonEmpty' | 'empty' | 'aboveAvg'): void {
+  setCatFilter(value: 'all' | 'nonEmpty' | 'empty' | 'aboveAvg' | 'inactive'): void {
     this.catFilter.set(this.catFilter() === value ? 'all' : value);
     this.catPage.set(1);
   }
@@ -359,18 +374,19 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
   // Grid-view sort — same pill-style sort-bar as the community grid, shown
   // above the grid only (the table view sorts via its own column headers).
   readonly catSortFields: SortField[] = [
+    { key: 'order', label: 'admin.business.label.displayOrder' },
     { key: 'name',  label: 'admin.business.label.name' },
     { key: 'count', label: 'admin.business.label.businesses' },
   ];
 
   onCatSortBarChange(change: SortChange): void {
-    this.catSortBy.set(change.sortBy as 'name' | 'count');
+    this.catSortBy.set(change.sortBy as 'name' | 'count' | 'order');
     this.catSortDir.set(change.sortDir);
     this.catPage.set(1);
   }
 
   /** Toggle sort for a clickable table column header — re-clicking the same column flips direction. */
-  toggleCatSort(field: 'name' | 'count'): void {
+  toggleCatSort(field: 'name' | 'count' | 'order'): void {
     if (this.catSortBy() === field) {
       this.catSortDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -456,10 +472,12 @@ export class AdminBusinessComponent implements OnInit, OnDestroy {
     if (catFilter === 'empty')    list = list.filter(c => (c._count?.businesses ?? 0) === 0);
     if (catFilter === 'nonEmpty') list = list.filter(c => (c._count?.businesses ?? 0) > 0);
     if (catFilter === 'aboveAvg') { const avg = this.avgBusinessesPerCategory(); list = list.filter(c => (c._count?.businesses ?? 0) >= avg); }
+    if (catFilter === 'inactive') list = list.filter(c => c.isActive === false);
     const dir = this.catSortDir() === 'asc' ? 1 : -1;
     switch (this.catSortBy()) {
-      case 'count':  list = [...list].sort((a,b) => dir * ((a._count?.businesses??0) - (b._count?.businesses??0))); break;
-      default:       list = [...list].sort((a,b) => dir * a.name.localeCompare(b.name));
+      case 'count': list = [...list].sort((a,b) => dir * ((a._count?.businesses??0) - (b._count?.businesses??0))); break;
+      case 'order': list = [...list].sort((a,b) => dir * ((a.displayOrder??0) - (b.displayOrder??0)) || a.name.localeCompare(b.name)); break;
+      default:      list = [...list].sort((a,b) => dir * a.name.localeCompare(b.name));
     }
     return list;
   });
@@ -619,6 +637,8 @@ getCategoryAccent(icon?: string): string {
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       icon: ['bi-shop', Validators.required],
       description: ['', [Validators.maxLength(300)]],
+      isActive: [true],
+      displayOrder: [0],
     });
   }
 
@@ -1030,7 +1050,9 @@ getCategoryAccent(icon?: string): string {
     this.editingCategory.set(null);
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
-    this.categoryForm.reset({ name: '', icon: 'bi-shop', description: '' });
+    // reset() nulls every control not listed here — isActive/displayOrder
+    // included, since the backend types them as boolean/number, never null.
+    this.categoryForm.reset({ name: '', icon: 'bi-shop', description: '', isActive: true, displayOrder: 0 });
     this.showAddCategoryModal.set(true);
   }
 
@@ -1039,8 +1061,30 @@ getCategoryAccent(icon?: string): string {
     this.editingCategory.set(cat);
     this.iconPickerOpen.set(false);
     this.iconSearch.set('');
-    this.categoryForm.patchValue({ name: cat.name, icon: cat.icon ?? 'bi-shop', description: (cat as any).description ?? '' });
+    this.categoryForm.patchValue({
+      name: cat.name, icon: cat.icon ?? 'bi-shop', description: (cat as any).description ?? '',
+      isActive: cat.isActive !== false, displayOrder: cat.displayOrder ?? 0,
+    });
     this.showAddCategoryModal.set(true);
+  }
+
+  /** Instant, fully-reversible toggle — a disabled category stays fully
+   * valid for any business that already uses it, so no confirm dialog is
+   * needed the way a hard delete gets one. */
+  toggleCategoryActive(event: Event, cat: BusinessCategory): void {
+    event.stopPropagation();
+    this.togglingCategoryId.set(cat.id);
+    this.businessService.updateCategory(cat.id, { isActive: !(cat.isActive !== false) }).subscribe({
+      next: (updated) => {
+        this.categories.update(list => list.map(c => c.id === cat.id ? { ...c, ...updated } : c));
+        this.toast.success(cat.isActive === false ? 'admin.business.toast.categoryEnabled' : 'admin.business.toast.categoryDisabled');
+        this.togglingCategoryId.set(null);
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Failed to update category');
+        this.togglingCategoryId.set(null);
+      },
+    });
   }
 
   selectCategoryIcon(icon: string): void {

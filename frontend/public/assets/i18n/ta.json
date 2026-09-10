@@ -1275,6 +1275,12 @@
     "deleteModal": {
       "cannotBeUndone": "இந்தச் செயலை மீட்டமைக்க முடியாது"
     },
+    "unsavedChanges": {
+      "title": "சேமிக்கப்படாத மாற்றங்கள்",
+      "message": "உங்களிடம் சேமிக்கப்படாத மாற்றங்கள் உள்ளன. நீங்கள் வெளியேற விரும்புகிறீர்களா?",
+      "stay": "பக்கத்தில் தொடரவும்",
+      "leave": "பக்கத்தை விட்டு வெளியேறவும்"
+    },
     "businessDelete": {
       "title": "வணிகத்தை நீக்கு",
       "confirmPre": "நீங்கள் நிச்சயமாக நீக்க விரும்புகிறீர்களா",
@@ -1521,6 +1527,15 @@
       "descriptionPlaceholder": "வணிகத்தை விவரிக்கவும்… (குறைந்தது 10 எழுத்துகள்)",
       "logoLabel": "வணிகச் சின்னம்",
       "logoRequired": "வணிகச் சின்னம் தேவை.",
+      "contactMethodRequired": "தொடர்பு கொள்ள குறைந்தது ஒரு வழியை வழங்கவும்: தொலைபேசி, வாட்ஸ்அப் அல்லது மின்னஞ்சல்.",
+      "regionLabel": {
+        "countyRegion": "மாவட்டம் / பகுதி",
+        "state": "மாநிலம்",
+        "province": "மாகாணம்",
+        "stateRegion": "மாநிலம் / பகுதி",
+        "default": "பகுதி",
+        "fallback": "மாநிலம் / மாகாணம் / பகுதி"
+      },
       "statusLabel": "வணிக நிலை",
       "emailLabel": "மின்னஞ்சல்",
       "emailPlaceholder": "info@business.com",
@@ -2209,6 +2224,7 @@
       },
       "hoursOption": {},
       "sortOption": {
+        "recommended": "பரிந்துரைக்கப்பட்டவை",
         "count": "அதிக வணிகங்கள்",
         "name": "பெயர் A–Z",
         "newest": "புதியவை முதலில்"
@@ -2612,6 +2628,9 @@
       "approve": "அங்கீகரி",
       "sureWantReject": "நீங்கள் நிச்சயமாக நிராகரிக்க விரும்புகிறீர்களா",
       "theseWillBecomeVisibleEveryone": "இவை அனைவருக்கும் தெரியும்.",
+      "visibleToEveryone": "இது அனைவருக்கும் தெரியும்.",
+      "visibleToCountry": "இந்த வணிகம் இருக்கும் நாட்டைச் சேர்ந்த பயனர்களுக்கு மட்டும் இது தெரியும்.",
+      "visibleToWorldwide": "இது அனைத்து நாடுகளிலும் உள்ள பயனர்களுக்கும் தெரியும்.",
       "submittersWillNotified": "சமர்ப்பித்தவர்களுக்குத் தெரிவிக்கப்படும்.",
       "description": "விளக்கம்",
       "toast": {
@@ -2642,6 +2661,7 @@
         "location": "இருப்பிடம்",
         "pincode": "அஞ்சல் குறியீடு",
         "visibility": "தெரிவுநிலை",
+        "businessStatus": "வணிக நிலை",
         "defaultCommunity": "இயல்புநிலைச் சமூகம்",
         "mode": "முறை",
         "communityRules": "சமூக விதிகள்",
@@ -3499,6 +3519,7 @@
       "filterByCategoriesBusinesses": "வணிகங்கள் உள்ள வகைகளை வடிகட்டு",
       "filterByCategoriesAboveAverage": "சராசரி அல்லது அதற்கு மேல் உள்ள வகைகளை வடிகட்டு",
       "filterByEmptyCategories": "காலி வகைகளை வடிகட்டு",
+      "filterByInactiveCategories": "செயலற்ற வகைகளை வடிகட்டு",
       "searchCategories2": "வகைகளைத் தேடு",
       "switchBusinessScope": "வணிக நோக்கத்தை மாற்று",
       "categoryView": "வகைக் காட்சி",
@@ -3549,6 +3570,7 @@
       "emptyCategories": "காலி வகைகள்",
       "createCategory": "வகையை உருவாக்கு",
       "noBusinessesYet": "இதுவரை வணிகங்கள் இல்லை",
+      "categoryInactive": "செயலற்றது",
       "showing": "காட்டுகிறது",
       "of": "/",
       "categories2": "வகைகள்",
@@ -3603,6 +3625,12 @@
       "pleaseSelectIcon": "ஒரு ஐகானைத் தேர்ந்தெடுக்கவும்",
       "noIconsFound": "ஐகான்கள் எதுவும் இல்லை",
       "preview": "முன்னோட்டம்",
+      "displayOrder": "காட்சி வரிசை",
+      "displayOrderHint": "குறைந்த எண்கள் கொண்டவை எங்கும் முதலில் தோன்றும்.",
+      "categoryStatus": "வகை நிலை",
+      "categoryStatusHint": "செயலிழக்கச் செய்யப்பட்ட வகை புதிய வணிகங்களுக்கு காட்டப்படாது, ஆனால் அதை ஏற்கனவே பயன்படுத்தும் வணிகங்களுக்கு தொடர்ந்து செல்லுபடியாகும்.",
+      "enableCategory": "வகையை இயக்கு",
+      "disableCategory": "வகையை முடக்கு",
       "deleteCategory": "வகையை நீக்கு",
       "actionCannotUndone": "இந்தச் செயலை மீட்டமைக்க முடியாது",
       "sureWantDelete": "நீங்கள் நிச்சயமாக நீக்க விரும்புகிறீர்களா",
@@ -3640,6 +3668,8 @@
         "categoryUpdated": "வகை புதுப்பிக்கப்பட்டது",
         "categoryCreatedSuccessfully": "வகை வெற்றிகரமாக உருவாக்கப்பட்டது",
         "categoryDeleted": "வகை நீக்கப்பட்டது",
+        "categoryEnabled": "வகை இயக்கப்பட்டது",
+        "categoryDisabled": "வகை முடக்கப்பட்டது",
         "failedLoadBusinessDetails": "வணிக விவரங்களை ஏற்ற முடியவில்லை",
         "businessUpdatedSuccessfully": "வணிகம் வெற்றிகரமாகப் புதுப்பிக்கப்பட்டது",
         "businessCreatedSuccessfully": "வணிகம் வெற்றிகரமாக உருவாக்கப்பட்டது",
@@ -3661,7 +3691,8 @@
         "inactive": "செயலற்றது",
         "name": "பெயர்",
         "created": "உருவாக்கப்பட்டது",
-        "businesses": "வணிகங்கள்"
+        "businesses": "வணிகங்கள்",
+        "displayOrder": "காட்சி வரிசை"
       },
       "businessesAcrossEveryCategory": "ஒவ்வொரு வகையிலும் உள்ள வணிகங்கள்",
       "filter": {

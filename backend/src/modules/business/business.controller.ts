@@ -12,9 +12,9 @@ export async function createCategory(req: Request, res: Response, next: NextFunc
   } catch (err) { next(err); }
 }
 
-export async function getCategories(_req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await businessService.getCategories();
+    const result = await businessService.getCategories(req.query['activeOnly'] === 'true');
     res.json(result);
   } catch (err) { next(err); }
 }

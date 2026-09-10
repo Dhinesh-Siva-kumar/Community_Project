@@ -411,6 +411,21 @@ export class ApprovalComponent implements OnInit {
   requestApprove(item: PendingItem): void { this.confirmApproveTarget.set(item); }
   cancelApproveConfirm(): void { this.confirmApproveTarget.set(null); }
 
+  /**
+   * The approve-confirm popup's "who will see this" line. For a Business,
+   * this has to match its actual Visibility Type rather than the generic
+   * "everyone" wording every other entity uses — a Country Based business
+   * is NOT visible to everyone.
+   */
+  approveVisibilityMessage(item: PendingItem): string {
+    if (this.activeEntity() === 'business') {
+      return this.t(item['visibility_type'] === 'WORLDWIDE'
+        ? 'admin.approval.visibleToWorldwide'
+        : 'admin.approval.visibleToCountry');
+    }
+    return this.t('admin.approval.visibleToEveryone');
+  }
+
   confirmApproveExecute(): void {
     const item = this.confirmApproveTarget();
     if (!item) return;
@@ -772,6 +787,7 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.visibility', value: this.t(item['visibility_type'] === 'WORLDWIDE'
                 ? 'components.businessForm.visibilityWorldwide'
                 : 'components.businessForm.visibilityCountry') },
+            { label: 'admin.approval.label.businessStatus', value: this.t(item['isActive'] ? 'common.active' : 'common.inactive') },
           ]},
           { title: 'admin.approval.section.contact', icon: 'bi-telephone', fields: [
             { label: 'admin.approval.label.phone', value: this.fmt(item['phone']) },

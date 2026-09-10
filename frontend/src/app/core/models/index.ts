@@ -359,6 +359,13 @@ export interface BusinessCategory {
   id: string;
   name: string;
   icon?: string;
+  description?: string;
+  /** Deprioritised categories (e.g. "Bar") are excluded from the Add/Edit
+   * Business form's picker but still shown — and manageable — in Admin's
+   * category list, since an existing business may still reference one. */
+  isActive?: boolean;
+  /** Lower sorts first — respected wherever categories are listed or filtered. */
+  displayOrder?: number;
   _count?: {
     businesses: number;
   };

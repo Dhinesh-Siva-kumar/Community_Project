@@ -272,7 +272,7 @@
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          {{ 'admin.approval.sureWantApprove' | translate }} <strong>{{ itemName(item) }}</strong>? It will become visible to everyone.
+          {{ 'admin.approval.sureWantApprove' | translate }} <strong>{{ itemName(item) }}</strong>? {{ approveVisibilityMessage(item) }}
         </p>
       </div>
       <div class="pa-confirm-footer">
