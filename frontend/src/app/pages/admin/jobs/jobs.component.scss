@@ -290,6 +290,15 @@
   }
 
   &--sm { padding: 8px 16px; font-size: $font-size-xs; }
+
+  // Applications closed — a status indicator, not a clickable action, so
+  // it's not styled destructively like a delete/reject button.
+  &--disabled {
+    background: $color-stone-100;
+    border: 1.5px solid $color-stone-200;
+    color: $color-stone-500;
+    cursor: not-allowed;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -754,10 +763,15 @@
   background: $color-bg-card;
   border: 1px solid rgba(251, 191, 36, 0.18);
   border-radius: $radius-lg;
-  cursor: default;
+  cursor: pointer;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.06), 0 4px 16px rgba(28, 25, 23, 0.03);
   transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
 
   &:not(.jb-card--active):hover {
     border-color: $color-primary;
@@ -1101,7 +1115,7 @@ a{color:$color-info;text-decoration:none;&:hover{text-decoration:underline;}}} }
 
 .jbd-schedule-hours { display:flex;align-items:center;gap:6px;flex-shrink:0; }
 
-.jbd-schedule-time { display:flex;align-items:center;gap:4px;.bi{font-size:0.8rem;color:$color-primary-dark;} &__val{font-family:$font-family-header;font-size:$font-size-sm;font-weight:$font-weight-bold;color:$color-stone-800;letter-spacing:0.02em;} }
+.jbd-schedule-time { display:flex;align-items:center;gap:4px;.bi{font-size:0.8rem;color:$color-primary-dark;} &__val{font-family:$font-family-header;font-size:$font-size-sm;font-weight:$font-weight-bold;color:$color-stone-800;letter-spacing:0.02em;} &__nextday{font-size:10px;font-weight:$font-weight-semibold;color:$color-stone-500;background:$color-stone-100;border-radius:$radius-full;padding:1px 6px;margin-left:2px;} }
 
 .jbd-schedule-arrow { font-size:0.75rem;color:$color-stone-300;flex-shrink:0; }
 

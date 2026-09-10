@@ -19,7 +19,8 @@ export type EnumGroup =
   | 'eventMode'
   | 'approvalStatus'
   | 'activeStatus'
-  | 'role';
+  | 'role'
+  | 'visaSponsorship';
 
 const P = 'enums.';
 
@@ -49,6 +50,11 @@ export const ENUM_LABELS: Record<EnumGroup, Record<string, string>> = {
     'Monthly':    P + 'salaryType.monthly',
     'Annual':     P + 'salaryType.annual',
     'Negotiable': P + 'salaryType.negotiable',
+  },
+  visaSponsorship: {
+    'Available':     P + 'visaSponsorship.available',
+    'Not Available': P + 'visaSponsorship.notAvailable',
+    'Not Specified': P + 'visaSponsorship.notSpecified',
   },
   education: {
     'None':       P + 'education.none',

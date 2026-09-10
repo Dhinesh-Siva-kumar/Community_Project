@@ -532,6 +532,16 @@ export interface Job {
   education?: string;
   openings?: number;
   shiftType?: string;
+  /** Kept separate from Employment Type — relevant to the Tamil diaspora
+   * job audience without corrupting existing jobType values. */
+  visaSponsorship?: 'Available' | 'Not Available' | 'Not Specified';
+  referralAvailable?: boolean;
+  /** Optional closing date — `isExpired`/`isClosingSoon` are computed
+   * server-side (see jobs.service.ts computeDeadlineStatus()), so every
+   * client sees the same answer rather than doing its own date math. */
+  applicationDeadline?: string;
+  isExpired?: boolean;
+  isClosingSoon?: boolean;
 
   // ── Structured salary ─────────────────────────────────────────
   salaryMin?: number;

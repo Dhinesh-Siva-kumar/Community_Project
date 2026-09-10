@@ -134,6 +134,7 @@ export const routes: Routes = [
       },
       {
         path: 'jobs',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/admin/jobs/jobs.component').then(
             (m) => m.AdminJobsComponent
@@ -229,6 +230,7 @@ export const routes: Routes = [
       },
       {
         path: 'jobs',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/user/jobs/jobs.component').then(
             (m) => m.UserJobsComponent

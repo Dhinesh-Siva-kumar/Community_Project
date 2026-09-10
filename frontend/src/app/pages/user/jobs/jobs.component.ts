@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, HostListener, ElementRef, inject, signal, computed, effect, viewChildren
+  Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild, inject, signal, computed, effect, viewChildren
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,12 +18,14 @@ import { ImageErrorHandlerDirective } from '../../../shared/directives/image-err
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { formatCompensation } from '../../../shared/utils/job-compensation';
+import { to12h } from '../../../shared/utils/opening-hours';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
 import { JobFormModalComponent } from '../../../shared/components/job-form-modal/job-form-modal.component';
+import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 
 type JobSharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -57,7 +59,13 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
   // drawer just sit on top of — and hide — the right edge of the job list.
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserJobsComponent implements OnInit, OnDestroy {
+export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
+  @ViewChild('jobFormModal') jobFormModal?: JobFormModalComponent;
+
+  hasUnsavedChanges(): boolean {
+    return !!this.jobFormModal?.isDirty();
+  }
+
   private translate = inject(TranslateService);
   private language = inject(LanguageService);
   private jobService        = inject(JobService);
@@ -246,6 +254,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   filterShiftType     = signal('');
   filterEducation     = signal('');
   filterCompanyName   = signal('');
+  filterSkills        = signal('');
+  filterVisaSponsorship   = signal('');
+  filterReferralAvailable = signal<boolean | null>(null);
   filterSalaryHidden  = signal<boolean | null>(null);
   filterPostedWithin  = signal<number | null>(null);
   filterVisibilityType = signal<VisibilityType | ''>('');
@@ -268,6 +279,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (this.filterState())           add('state',        this.filterState(), this.filterState());
     if (this.filterCity())            add('city',         this.filterCity(), this.filterCity());
     if (this.filterCompanyName())     add('companyName',  this.filterCompanyName(), this.filterCompanyName());
+    if (this.filterSkills())          add('skills',       this.translate.instant('filters.skill', { value: this.filterSkills() }), this.filterSkills());
+    if (this.filterVisaSponsorship()) add('visaSponsorship', this.translate.instant(enumLabelKey('visaSponsorship', this.filterVisaSponsorship())), this.filterVisaSponsorship());
+    if (this.filterReferralAvailable() != null) add('referralAvailable', this.translate.instant('user.jobs.referralAvailable'), this.filterReferralAvailable());
     if (this.filterShiftType())       add('shiftType',    this.translate.instant(enumLabelKey('shiftType', this.filterShiftType())), this.filterShiftType());
     if (this.filterEducation())       add('education',    this.translate.instant(enumLabelKey('education', this.filterEducation())), this.filterEducation());
     if (this.filterExpMin() != null)  add('expMin',       this.translate.instant('filters.expMin', { years: this.filterExpMin() }), this.filterExpMin());
@@ -299,6 +313,7 @@ export class UserJobsComponent implements OnInit, OnDestroy {
   readonly jobTypeOptions: SelectOption[] = enumSelectOptions('jobType', this.jobTypes);
   readonly workModes   = ['Remote', 'Hybrid', 'On-site'] as const;
   readonly shiftTypes  = ['Day', 'Night', 'Rotational', 'Flexible'] as const;
+  readonly visaSponsorshipFilterValues = ['Available', 'Not Available', 'Not Specified'] as const;
 
   readonly educationOptions: SelectOption[] = [
     { value: 'None',       label: 'user.jobs.educationOption.none' },
@@ -511,6 +526,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     if (this.filterShiftType())       query.shiftType   = this.filterShiftType();
     if (this.filterEducation())       query.education   = this.filterEducation();
     if (this.filterCompanyName())     query.search      = (query.search ? query.search + ' ' : '') + this.filterCompanyName();
+    if (this.filterSkills().trim())   query.skills      = this.filterSkills().trim();
+    if (this.filterVisaSponsorship()) query.visaSponsorship = this.filterVisaSponsorship() as any;
+    if (this.filterReferralAvailable() != null) query.referralAvailable = this.filterReferralAvailable()!;
     if (this.filterExpMin() != null)  query.expMin      = this.filterExpMin()!;
     if (this.filterExpMax() != null)  query.expMax      = this.filterExpMax()!;
     if (this.filterSalaryMin() != null) query.salaryMin = this.filterSalaryMin()!;
@@ -624,6 +642,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
       case 'state':        this.filterState.set(''); this.filterCity.set(''); this.filterCities.set([]); break;
       case 'city':         this.filterCity.set('');          break;
       case 'companyName':  this.filterCompanyName.set('');   break;
+      case 'skills':       this.filterSkills.set('');        break;
+      case 'visaSponsorship':   this.filterVisaSponsorship.set('');   break;
+      case 'referralAvailable': this.filterReferralAvailable.set(null); break;
       case 'shiftType':    this.filterShiftType.set('');     break;
       case 'education':    this.filterEducation.set('');     break;
       case 'expMin':       this.filterExpMin.set(null);      break;
@@ -656,6 +677,9 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.filterShiftType.set('');
     this.filterEducation.set('');
     this.filterCompanyName.set('');
+    this.filterSkills.set('');
+    this.filterVisaSponsorship.set('');
+    this.filterReferralAvailable.set(null);
     this.filterExpMin.set(null);
     this.filterExpMax.set(null);
     this.filterSalaryMin.set(null);
@@ -667,6 +691,23 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     this.filterCities.set([]);
     this.sortBy.set('newest');
     this.loadJobs(1);
+  }
+
+  /**
+   * Whole-card click target — mirrors the same pattern already used for
+   * Business/Events listings. Routes to whichever "view details" action
+   * the card's own view mode already exposes (the chevron toggle in Card
+   * view, the eye-icon modal in Grid/List view), so clicking anywhere on
+   * the card does what the small action control used to do alone.
+   * Nested interactive elements (edit/delete/view buttons, the accordion
+   * body once expanded) stop propagation so they don't also fire this.
+   */
+  onCardClick(job: Job, event: Event): void {
+    if (this.jobViewMode() === 'card') {
+      this.toggleAccordion(job.id, event);
+    } else {
+      this.openJobDetailsModal(job, event);
+    }
   }
 
   // ─── Accordion ───────────────────────────────────────────────
@@ -778,17 +819,60 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     return this.translate.instant('jobs.value.expUpTo', { max: job.expMax });
   }
 
+  /**
+   * `workMode` — not the separate `isRemote` flag — is the single source of
+   * truth for what's displayed here. The two used to be independently
+   * settable in the Add/Edit Job form and could drift apart (a job could be
+   * work_mode='On-site' with is_remote=true), which is exactly what made
+   * On-site jobs wrongly show "Remote" on cards/detail. The backend now
+   * derives is_remote from workMode on every save, but this display logic
+   * reads workMode directly regardless, so it can never regress.
+   */
   getLocationDisplay(job: Job): string {
-    if (job.isRemote) return this.translate.instant('jobs.value.remote');
+    if (job.workMode === 'Remote') return this.translate.instant('jobs.value.remote');
     const parts = [job.city, job.state, job.country].filter(Boolean);
     return parts.join(', ') || job.location || '';
   }
 
+  /**
+   * Remote: the country here is the applicant-country eligibility
+   * restriction ("Germany applicants only"), independent of Work Mode —
+   * unchanged from before. Hybrid: prefixes the physical address with a
+   * "Hybrid" label so it isn't mistaken for a plain On-site address.
+   */
   getLocationSubtext(job: Job): string {
-    if (job.isRemote) return job.country ? this.translate.instant('jobs.value.applicantsOnly', { country: job.country }) : '';
-    if (job.fullAddress) return job.fullAddress;
-    if (job.pincode) return this.translate.instant('jobs.value.postcode', { code: job.pincode });
-    return '';
+    if (job.workMode === 'Remote') {
+      return job.country ? this.translate.instant('jobs.value.applicantsOnly', { country: job.country }) : '';
+    }
+    const address = job.fullAddress || (job.pincode ? this.translate.instant('jobs.value.postcode', { code: job.pincode }) : '');
+    if (job.workMode === 'Hybrid') {
+      const hybridLabel = this.translate.instant('enums.workMode.hybrid');
+      return address ? `${hybridLabel} · ${address}` : hybridLabel;
+    }
+    return address;
+  }
+
+  /**
+   * Formats workStartTime/workEndTime (stored as 24h "HH:mm") into the
+   * same 12-hour AM/PM text the Add/Edit picker already shows, using the
+   * same to12h() the Business module's opening hours already rely on —
+   * one proven conversion, not a second reimplementation that could drift
+   * out of sync or introduce its own AM/PM bug. Job Detail previously
+   * showed the raw 24h string with no AM/PM at all, which is exactly what
+   * made it inconsistent with the picker.
+   *
+   * Overnight shifts (e.g. 10:00 PM → 6:00 AM) are detected the same way
+   * isOpenNow() does for Business hours — lexicographic end < start means
+   * the shift crosses midnight — and flagged rather than silently
+   * displayed as if the end time were earlier the same day.
+   */
+  getWorkingHoursDisplay(job: Job): { start: string; end: string; overnight: boolean } | null {
+    if (!job.workStartTime || !job.workEndTime) return null;
+    return {
+      start: to12h(job.workStartTime),
+      end: to12h(job.workEndTime),
+      overnight: job.workEndTime < job.workStartTime,
+    };
   }
 
   getCompanyLogoSrc(job: Job): string | null {
@@ -906,6 +990,35 @@ export class UserJobsComponent implements OnInit, OnDestroy {
     navigator.clipboard.writeText(shareUrl)
       .then(() => this.toast.success('user.jobs.toast.shareLinkCopied'))
       .catch(() => this.toast.error('user.jobs.toast.failedCopyShareLink'));
+  }
+
+  /** Touch-primary devices (phones/tablets) get the native mail/dialer
+   * hand-off; anything else (including a narrow desktop browser window —
+   * width alone isn't a reliable signal here) copies instead, since a
+   * desktop `mailto:`/`tel:` click with no default app configured just
+   * shows Windows' "Select an app" dialog instead of doing anything useful. */
+  protected isTouchDevice(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
+  }
+
+  onEmailClick(email: string | undefined, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!email) return;
+    if (this.isTouchDevice()) { window.location.href = 'mailto:' + email; return; }
+    navigator.clipboard.writeText(email)
+      .then(() => this.toast.success('user.jobs.toast.emailCopied'))
+      .catch(() => this.toast.error('user.jobs.toast.failedCopyEmail'));
+  }
+
+  onPhoneClick(phone: string | undefined, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!phone) return;
+    if (this.isTouchDevice()) { window.location.href = 'tel:' + phone; return; }
+    navigator.clipboard.writeText(phone)
+      .then(() => this.toast.success('user.jobs.toast.phoneCopied'))
+      .catch(() => this.toast.error('user.jobs.toast.failedCopyPhone'));
   }
 
   getShareText(job: Job): string {

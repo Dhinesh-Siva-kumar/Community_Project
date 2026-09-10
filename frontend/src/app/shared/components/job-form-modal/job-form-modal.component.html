@@ -116,6 +116,25 @@
             <app-radio-group formControlName="workMode" variant="pill" [options]="workModeOptions" [ariaLabel]="'user.jobs.workMode' | translate"></app-radio-group>
           </div>
 
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.visaSponsorship' | translate }}</label>
+            <app-radio-group formControlName="visaSponsorship" variant="pill" [options]="visaSponsorshipOptions" [ariaLabel]="'user.jobs.visaSponsorship' | translate"></app-radio-group>
+          </div>
+
+          <div class="cm-default-row">
+            <div class="cm-default-label">
+              <i class="bi bi-people-fill"></i>
+              <span>{{ 'user.jobs.referralAvailable' | translate }}</span>
+            </div>
+            <app-toggle formControlName="referralAvailable" [ariaLabel]="'user.jobs.referralAvailable' | translate"></app-toggle>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'user.jobs.applicationDeadline' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+            <app-date-input formControlName="applicationDeadline" [ariaLabel]="'user.jobs.applicationDeadline' | translate" [placeholder]="'user.jobs.applicationDeadline' | translate"></app-date-input>
+            <p class="cm-default-hint"><i class="bi bi-info-circle"></i> {{ 'user.jobs.applicationDeadlineHint' | translate }}</p>
+          </div>
+
           <div class="cm-field-row">
             <div class="cm-field-group">
               <label class="cm-label">{{ 'user.jobs.minimumEducation' | translate }}</label>
@@ -128,8 +147,14 @@
               <label class="cm-label">{{ 'user.jobs.openings' | translate }}</label>
               <div class="cm-input-wrap">
                 <i class="bi bi-people cm-input-icon"></i>
-                <input type="number" formControlName="openings" min="1" placeholder="1" class="cm-input" />
+                <input type="number" formControlName="openings" min="1" step="1" placeholder="1" class="cm-input"
+                  [class.cm-input-error]="jobForm.get('openings')!.touched && jobForm.get('openings')!.invalid" />
               </div>
+              @if (jobForm.get('openings')!.touched && jobForm.get('openings')!.invalid) {
+                <div class="cm-error-msg">
+                  <i class="bi bi-exclamation-circle me-1"></i> {{ 'components.jobForm.openingsInvalid' | translate }}
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -248,43 +273,49 @@
           }
         </div>
 
-        <!-- ── Location ── -->
+        <!-- ── Location ──
+             Work Mode (above, in Job Details) is the single control for
+             Remote/Hybrid/On-site — there's no separate "Fully Remote"
+             toggle here any more, since the two used to be independently
+             settable and could disagree (an On-site job left flagged
+             Remote). Country stays visible for every Work Mode: it drives
+             the separate applicant-country eligibility restriction
+             ("Germany applicants only"), not the physical location, so it
+             applies just as much to a Remote role. -->
         <div class="cm-section">
           <div class="cm-section-header">
             <span class="cm-section-badge"><i class="bi bi-geo-alt-fill"></i></span>
             <span class="cm-section-title">{{ 'user.jobs.location' | translate }}</span>
           </div>
 
-          <div class="cm-default-row">
-            <div class="cm-default-label">
-              <i class="bi bi-house-door-fill"></i>
-              <span>{{ 'components.jobForm.fullyRemote' | translate }}</span>
-            </div>
-            <app-toggle formControlName="isRemote" [ariaLabel]="'user.jobs.fullyRemotePosition' | translate"></app-toggle>
-          </div>
+          @if (isRemoteCtrl) {
+            <p class="cm-default-hint"><i class="bi bi-info-circle"></i> {{ 'components.jobForm.remoteLocationHint' | translate }}</p>
+          } @else if (isHybridCtrl) {
+            <p class="cm-default-hint"><i class="bi bi-info-circle"></i> {{ 'components.jobForm.hybridLocationHint' | translate }}</p>
+          }
 
-          @if (!isRemoteCtrl) {
-            <div class="cm-field-row jbf-mt">
-              <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.jobs.country' | translate }}</label>
-                <div class="cm-input-wrap cm-select-wrap">
-                  <i class="bi bi-globe2 cm-input-icon"></i>
-                  <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
-                    [placeholder]="'user.jobs.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
-                    (ngModelChange)="onCountryChange($event)"></app-searchable-select>
-                </div>
+          <div class="cm-field-row jbf-mt">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'user.jobs.country' | translate }}</label>
+              <div class="cm-input-wrap cm-select-wrap">
+                <i class="bi bi-globe2 cm-input-icon"></i>
+                <app-searchable-select formControlName="countryId" [options]="geoCountryOptions()"
+                  [placeholder]="'user.jobs.selectCountry' | translate" [searchPlaceholder]="'components.search.countries' | translate"
+                  (ngModelChange)="onCountryChange($event)"></app-searchable-select>
               </div>
+            </div>
+            @if (!isRemoteCtrl) {
               @if (adminLevels().length >= 1) {
                 <div class="cm-field-group">
                   <label class="cm-label">
-                    {{ adminLevels()[0].label }}
+                    {{ regionLabelKey() | translate }}
                     @if (division1Loading()) { <i class="bi bi-arrow-clockwise jbf-spin"></i> }
                   </label>
                   <div class="cm-input-wrap cm-select-wrap">
                     <i class="bi bi-map cm-input-icon"></i>
                     <app-searchable-select formControlName="division1Id" [options]="division1SelectOptions()"
                       [placeholder]="division1Options().length
-                        ? ('user.jobs.selectLevel' | translate:{ level: adminLevels()[0].label })
+                        ? ('user.jobs.selectLevel' | translate:{ level: (regionLabelKey() | translate) })
                         : ('user.jobs.selectFirstCountry' | translate)"
                       [searchPlaceholder]="'components.search.generic' | translate"
                       (ngModelChange)="onDivision1Change($event)"></app-searchable-select>
@@ -302,7 +333,7 @@
                     <app-searchable-select formControlName="division2Id" [options]="division2SelectOptions()"
                       [placeholder]="division2Options().length
                         ? ('user.jobs.selectLevel' | translate:{ level: adminLevels()[1].label })
-                        : ('admin.geo.selectLevelFirst' | translate:{ level: adminLevels()[0].label })"
+                        : ('admin.geo.selectLevelFirst' | translate:{ level: (regionLabelKey() | translate) })"
                       [searchPlaceholder]="'components.search.generic' | translate"
                       (ngModelChange)="onDivision2Change($event)"></app-searchable-select>
                   </div>
@@ -319,8 +350,7 @@
               </div>
               <div class="cm-field-group">
                 <label class="cm-label">
-                  {{ 'user.jobs.pincode' | translate }}
-                  @if (countryConfig()?.postalCode?.required) { <span class="cm-required">*</span> }
+                  {{ 'user.jobs.pincode' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
                 </label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-mailbox cm-input-icon"></i>
@@ -331,7 +361,9 @@
                   <div class="cm-error-msg"><i class="bi bi-exclamation-circle me-1"></i> {{ 'user.jobs.doesnTMatchExpectedFormat' | translate }}</div>
                 }
               </div>
-            </div>
+            }
+          </div>
+          @if (!isRemoteCtrl) {
             <div class="cm-field-group">
               <label class="cm-label">{{ 'user.jobs.fullAddress' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
               <div class="cm-input-wrap">
@@ -456,11 +488,18 @@
           </div>
 
           <div class="cm-field-group">
-            <label class="cm-label">{{ 'user.jobs.description' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
+            <label class="cm-label">{{ 'user.jobs.description' | translate }} <span class="cm-required">*</span></label>
             <div class="cm-input-wrap cm-textarea-wrap">
               <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
-              <textarea formControlName="description" rows="4" [placeholder]="'user.jobs.describeRole' | translate" class="cm-input cm-textarea"></textarea>
+              <textarea formControlName="description" rows="4" [placeholder]="'user.jobs.describeRole' | translate" class="cm-input cm-textarea"
+                [class.cm-input-error]="jobForm.get('description')!.touched && jobForm.get('description')!.invalid"></textarea>
             </div>
+            @if (jobForm.get('description')!.touched && jobForm.get('description')!.invalid) {
+              <div class="cm-error-msg">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                {{ 'components.jobForm.descriptionRequired' | translate }}
+              </div>
+            }
           </div>
 
           <div class="cm-field-row">

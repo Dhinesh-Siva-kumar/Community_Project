@@ -418,10 +418,18 @@ export class ApprovalComponent implements OnInit {
    * is NOT visible to everyone.
    */
   approveVisibilityMessage(item: PendingItem): string {
-    if (this.activeEntity() === 'business') {
+    const entity = this.activeEntity();
+    if (entity === 'business') {
       return this.t(item['visibility_type'] === 'WORLDWIDE'
         ? 'admin.approval.visibleToWorldwide'
         : 'admin.approval.visibleToCountry');
+    }
+    if (entity === 'jobs') {
+      // findPendingOnly() for jobs already maps camelCase via shapeJob() —
+      // unlike business, no snake_case fallback needed here.
+      return this.t(item['visibilityType'] === 'WORLDWIDE'
+        ? 'admin.approval.visibleToWorldwide'
+        : 'admin.approval.visibleToCountryJob');
     }
     return this.t('admin.approval.visibleToEveryone');
   }
