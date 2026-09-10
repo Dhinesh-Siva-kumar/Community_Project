@@ -37,7 +37,7 @@
 
           <div class="cm-field-row">
             <div class="cm-field-group">
-              <label class="cm-label">{{ 'user.jobs.companyName2' | translate }} <span class="cm-required">*</span></label>
+              <label class="cm-label">{{ 'user.jobs.companyName2' | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span></label>
               <div class="cm-input-wrap">
                 <i class="bi bi-building cm-input-icon"></i>
                 <input type="text" formControlName="companyName" maxlength="150"
@@ -47,7 +47,7 @@
               @if (jobForm.get('companyName')!.touched && jobForm.get('companyName')!.invalid) {
                 <div class="cm-error-msg">
                   <i class="bi bi-exclamation-circle me-1"></i>
-                  {{ jobForm.get('companyName')!.errors?.['required'] ? ('components.jobForm.companyNameRequired' | translate) : ('components.jobForm.companyNameMinLength' | translate) }}
+                  {{ 'components.jobForm.companyNameMinLength' | translate }}
                 </div>
               }
             </div>
@@ -308,7 +308,7 @@
               @if (adminLevels().length >= 1) {
                 <div class="cm-field-group">
                   <label class="cm-label">
-                    {{ regionLabelKey() | translate }}
+                    {{ regionLabelKey() | translate }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
                     @if (division1Loading()) { <i class="bi bi-arrow-clockwise jbf-spin"></i> }
                   </label>
                   <div class="cm-input-wrap cm-select-wrap">
@@ -325,7 +325,7 @@
               @if (adminLevels().length >= 2) {
                 <div class="cm-field-group">
                   <label class="cm-label">
-                    {{ adminLevels()[1].label }}
+                    {{ adminLevels()[1].label }} <span class="cm-optional">{{ 'components.communityForm.optional' | translate }}</span>
                     @if (division2Loading()) { <i class="bi bi-arrow-clockwise jbf-spin"></i> }
                   </label>
                   <div class="cm-input-wrap cm-select-wrap">

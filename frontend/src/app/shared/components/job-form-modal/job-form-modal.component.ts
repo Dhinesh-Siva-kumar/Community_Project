@@ -1,5 +1,5 @@
 import {
-  Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed, HostListener,
+  Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, inject, signal, computed, HostListener, ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -61,6 +61,19 @@ function expRangeValidator(group: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+/** Only enforces a minimum length when a value is actually present —
+ * `Validators.minLength` alone treats an empty string as *shorter than*
+ * the minimum and fails it, which silently blocks Save on a genuinely
+ * optional field (backend has this field as `z.string().optional()`,
+ * with no length floor at all) the moment a control is left blank. */
+function optionalMinLengthValidator(min: number): ValidatorFn {
+  return (c: AbstractControl): ValidationErrors | null => {
+    const v = ((c.value as string) ?? '').trim();
+    if (!v) return null;
+    return v.length >= min ? null : { minlength: { requiredLength: min, actualLength: v.length } };
+  };
+}
+
 /** Openings: a whole number of 1 or more. `Validators.min` alone lets a
  * decimal like 1.5 through (it only checks the numeric floor, not
  * integer-ness) and silently skips validation entirely once the control is
@@ -113,6 +126,7 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   private translate         = inject(TranslateService);
   private fb                = inject(FormBuilder);
   private unsavedChanges    = inject(UnsavedChangesService);
+  private el                = inject(ElementRef);
   private destroy$          = new Subject<void>();
 
   @Input() open = false;
@@ -284,7 +298,13 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
 
   private initForm(): void {
     this.jobForm = this.fb.group({
-      companyName:    ['', [Validators.required, Validators.minLength(2)]],
+      // Optional — matches CreateJobDto's companyName: z.string().optional()
+      // on the backend. Was Validators.required here, which the backend
+      // never actually enforced; editing any existing job with no company
+      // name (created before this field existed, or via direct API/seed)
+      // silently blocked Save the moment it loaded, since the form was
+      // already invalid before the user touched anything.
+      companyName:    ['', optionalMinLengthValidator(2)],
       companyWebsite: ['', urlValidator],
       title:          ['', [Validators.required, Validators.minLength(3)]],
       // No default — an unset value shows the "Select employment type"
@@ -474,13 +494,25 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
    * config — but a Remote job hides these fields entirely (see the
    * Location section), so they must never be required while Remote,
    * regardless of what the country would otherwise demand. */
+  /**
+   * division1Id/division2Id are never required — matches CreateJobDto's
+   * stateId: z.coerce.number().int().positive().optional() on the
+   * backend. This used to require them whenever the selected country had
+   * state-level divisions, which broke editing the majority of existing
+   * jobs: confirmed against real data that most jobs predate the
+   * id-based geography columns (country stored as free text only, no
+   * state/city). resurrectJobLocation() resolves their country by name
+   * for display, which — combined with the old required rule — silently
+   * left division1Id required-but-empty (job.state was never set, so its
+   * value was never populated) the moment such a job was opened for
+   * edit, permanently blocking Save until a state was picked for a
+   * field the job never had to begin with.
+   */
   private applyDivisionValidators(): void {
-    const levels = this.adminLevels().length;
-    const remote = this.isRemoteCtrl;
     const d1 = this.jobForm.get('division1Id');
     const d2 = this.jobForm.get('division2Id');
-    d1?.setValidators(!remote && levels >= 1 ? [Validators.required] : []);
-    d2?.setValidators(!remote && levels >= 2 ? [Validators.required] : []);
+    d1?.setValidators([]);
+    d2?.setValidators([]);
     d1?.updateValueAndValidity({ emitEvent: false });
     d2?.updateValueAndValidity({ emitEvent: false });
   }
@@ -590,13 +622,21 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
         this.countryConfig.set(config);
         this.applyDivisionValidators();
         this.applyPincodeValidators();
-        if (config.divisionLevels.length === 0 || !job.state) return;
+        // Always fetch the State/Region options once we know the country
+        // has any — regardless of whether this job already has a state
+        // saved. The old `|| !job.state` guard skipped fetching the list
+        // entirely for any job without one (the majority of existing
+        // jobs, which predate this field), so the dropdown looked empty
+        // even though the country was correctly selected — there was
+        // simply nothing to pick from.
+        if (config.divisionLevels.length === 0) return;
 
         this.division1Loading.set(true);
         this.geographyService.getDivisions(country.id).pipe(takeUntil(this.destroy$)).subscribe({
           next: (divisions) => {
             this.division1Options.set(divisions);
             this.division1Loading.set(false);
+            if (!job.state && job.stateId == null) return;
             const match = job.stateId != null
               ? divisions.find(d => d.id === job.stateId)
               : divisions.find(d => d.name.toLowerCase() === job.state!.toLowerCase());
@@ -794,7 +834,22 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   submitJob(): void {
     this.jobSubmitAttempted.set(true);
     this.jobForm.markAllAsTouched();
-    if (this.jobForm.invalid) return;
+    if (this.jobForm.invalid) {
+      // A bare `return` here left Save looking completely inert whenever
+      // some already-saved field (e.g. an older job's blank company name,
+      // before that became optional) failed validation the moment the
+      // form loaded — the user would click Save and nothing would
+      // visibly happen. Always surface *something*, and jump to the
+      // actual offending field instead of leaving it to be found by
+      // scrolling through the whole form.
+      this.toast.error('components.jobForm.formHasErrors');
+      setTimeout(() => {
+        const firstInvalid = (this.el.nativeElement as HTMLElement)
+          .querySelector('.ng-invalid.ng-touched, .cm-input-error');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
 
     this.submitting.set(true);
     const raw     = this.jobForm.value;

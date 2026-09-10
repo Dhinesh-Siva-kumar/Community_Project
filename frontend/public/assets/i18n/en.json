@@ -1621,6 +1621,7 @@
       "titleRequired": "Job title is required.",
       "titleMinLength": "Job title must be at least 3 characters.",
       "descriptionRequired": "Job description is required.",
+      "formHasErrors": "Please fix the highlighted fields before saving.",
       "openingsInvalid": "Openings must be a whole number of 1 or more.",
       "visibility": "Visibility",
       "fullyRemote": "Fully remote position",
