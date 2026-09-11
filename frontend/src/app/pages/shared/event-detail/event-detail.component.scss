@@ -121,7 +121,8 @@
   }
 }
 
-.edp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.edp-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.edp-tag-sep { color: $color-text-muted; font-weight: $font-weight-bold; }
 
 .edp-tag {
   display: inline-flex; align-items: center; gap: 5px;

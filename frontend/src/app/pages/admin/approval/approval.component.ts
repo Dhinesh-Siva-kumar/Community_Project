@@ -169,6 +169,23 @@ export class ApprovalComponent implements OnInit {
     this.loadCountries();
     this.loadPending();
     this.loadAllPendingCounts();
+
+    // Handles a `?tab=` navigation to this SAME route while this component
+    // is already mounted — Angular Router reuses the existing instance for
+    // a query-param-only navigation, so ngOnInit itself never re-fires and
+    // the snapshot read above only ever reflects the very first load. This
+    // is exactly what happens clicking an Events "Pending Approval" link
+    // while already on this page showing a different tab: without this,
+    // the tab silently stayed on whatever was already active. The
+    // subscription's own first (redundant) emission — the same value
+    // already handled above — is a no-op via switchEntity()'s existing
+    // "already this tab" guard.
+    this.route.queryParamMap.subscribe((params) => {
+      const tab = params.get('tab') as EntityKey | null;
+      if (tab && this.entityTabs.some(t => t.id === tab)) {
+        this.switchEntity(tab);
+      }
+    });
   }
 
   loadCountries(): void {
@@ -461,11 +478,31 @@ export class ApprovalComponent implements OnInit {
   }
   cancelRejectConfirm(): void { this.confirmRejectTarget.set(null); }
 
+  /** Events specifically require a reason (the record is kept, not deleted,
+   * so the reason is what tells the creator what to fix before resubmitting)
+   * — other entities keep their existing optional-reason behavior. */
+  rejectReasonRequired(): boolean {
+    return this.activeEntity() === 'events';
+  }
+
+  /** The reject-confirm dialog's warning line — events no longer describes a
+   * permanent delete (that stopped being true: rejecting an event now only
+   * changes its status, same as Community's "marked as rejected" wording),
+   * community keeps its own existing copy, everything else keeps warning
+   * about the permanent delete that's still accurate for them. */
+  rejectWarningKey(): string {
+    if (this.activeEntity() === 'events') return 'admin.approval.rejectEventWarning';
+    if (this.activeEntity() === 'community') return 'admin.approval.rejectCommunityWarning';
+    return 'admin.approval.rejectPermanentWarning';
+  }
+
   confirmRejectExecute(): void {
     const item = this.confirmRejectTarget();
+    const reason = this.rejectReason().trim();
     if (!item) return;
+    if (this.rejectReasonRequired() && !reason) return;
     this.rejectingId.set(item.id);
-    this.rejectItem(item.id, this.rejectReason().trim() || undefined).subscribe({
+    this.rejectItem(item.id, reason || undefined).subscribe({
       next: () => {
         this.items.update(list => list.filter(i => i.id !== item.id));
         this.totalItems.update(v => Math.max(0, v - 1));
@@ -474,10 +511,13 @@ export class ApprovalComponent implements OnInit {
         this.confirmRejectTarget.set(null);
         this.refreshCountForActiveEntity();
       },
+      // Deliberately does NOT clear confirmRejectTarget — the dialog stays
+      // open (with the reason the admin already typed still in place) so
+      // they can see the error and retry, instead of silently discarding
+      // their input and forcing them to reopen the dialog and start over.
       error: () => {
         this.toast.error('admin.approval.toast.failedReject');
         this.rejectingId.set(null);
-        this.confirmRejectTarget.set(null);
       },
     });
   }
@@ -530,7 +570,10 @@ export class ApprovalComponent implements OnInit {
   }
 
   confirmBulkApproveExecute(): void { this.runBulk('approve'); }
-  confirmBulkRejectExecute(): void { this.runBulk('reject'); }
+  confirmBulkRejectExecute(): void {
+    if (this.rejectReasonRequired() && !this.rejectReason().trim()) return;
+    this.runBulk('reject');
+  }
   confirmBulkRequestInfoExecute(): void {
     if (!this.moreInfoReason().trim()) return;
     this.runBulk('requestMoreInfo');

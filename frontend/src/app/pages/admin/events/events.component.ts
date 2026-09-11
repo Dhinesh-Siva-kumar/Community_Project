@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +6,7 @@ import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Event as AppEvent, VisibilityType, PaginatedResponse, Country } from '../../../core/models';
+import { Event as AppEvent, EventCategory, VisibilityType, PaginatedResponse, Country } from '../../../core/models';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -14,10 +14,13 @@ import { SortBarComponent, SortField, SortChange, SortDir } from '../../../share
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { EventFormModalComponent } from '../../../shared/components/event-form-modal/event-form-modal.component';
+import { EventCategoryManagerComponent } from '../../../shared/components/event-category-manager/event-category-manager.component';
 import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
-import { EVENT_CATEGORIES, EVENT_CATEGORY_ICON } from '../../../shared/constants/event-categories';
+import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
+import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil, eventModeCategorySummary as eventModeCategorySummaryUtil } from '../../../shared/utils/event-location';
+import { formatEventTimeRange as formatEventTimeRangeUtil, eventCardDateTimeLabel as eventCardDateTimeLabelUtil } from '../../../shared/utils/event-date-format';
 
 // Remembers the last selected view mode (grid/table) across navigations.
 const VIEW_STORAGE_KEY = 'admin-events:viewMode';
@@ -28,7 +31,7 @@ type EventSortField = 'name' | 'eventDate' | 'joined' | 'category' | 'mode' | 'l
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, DatePipe, RouterLink, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, SortBarComponent, EventFormModalComponent, EventDateBadgeComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, DatePipe, RouterLink, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, SortBarComponent, EventFormModalComponent, EventCategoryManagerComponent, EventDateBadgeComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -36,12 +39,20 @@ type EventSortField = 'name' | 'eventDate' | 'joined' | 'category' | 'mode' | 'l
   // drawer just sit on top of — and hide — the right edge of the events list.
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class AdminEventsComponent implements OnInit, OnDestroy {
+export class AdminEventsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private eventService = inject(EventService);
   private authService = inject(AuthService);
   private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
+
+  @ViewChild('eventFormModal') eventFormModal?: EventFormModalComponent;
+
+  /** Backs the `admin/events` route's `canDeactivate: [unsavedChangesGuard]` — see app.routes.ts. */
+  hasUnsavedChanges(): boolean {
+    return !!this.eventFormModal?.isDirty();
+  }
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);
@@ -85,9 +96,15 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   // Opt-in visibility filter, independent of the automatic country/worldwide
   // access gate applied server-side (mirrors the user Events/Jobs pages).
   filterVisibility = signal<'' | VisibilityType>('');
-  // Category filter — same option list the Add/Edit Event form uses.
+  // Category filter — DB-backed (event_categories table). Loads the FULL
+  // list (not active-only): unlike the Add/Edit picker, admin needs to be
+  // able to filter by/find events still using a disabled/legacy category.
   filterCategory = signal('');
-  readonly categoryFilterOptions: SelectOption[] = EVENT_CATEGORIES.map((c) => ({ value: c, label: c }));
+  categories = signal<EventCategory[]>([]);
+  categoryFilterOptions = computed<SelectOption[]>(() =>
+    this.categories().map((c) => ({ value: c.name, label: c.name, icon: c.icon })),
+  );
+  showCategoryManager = signal(false);
   private searchDebounce: any = null;
 
   // Premium filter UI state
@@ -148,6 +165,12 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   upcomingEventsCount = signal(0);
   hybridEventsCount   = signal(0);
   offlineEventsCount  = signal(0);
+  // Bumped on every loadEventStatCounts() call and captured per in-flight
+  // request — an older scope's response (e.g. the "Completed" Offline count,
+  // which is legitimately 0 whenever nothing completed is Offline) landing
+  // AFTER a newer one (e.g. after switching to "All Events") would otherwise
+  // silently overwrite the correct number with a stale one.
+  private statCountsRequestId = 0;
 
   // Server-side filtering: component list is whatever the API returned.
   filteredEvents = computed(() => this.events());
@@ -177,7 +200,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
 
   readonly EVENT_MODES = ['Offline','Online','Hybrid'] as const;
 
-  ngOnInit(): void { this.restoreSavedViewMode(); this.loadEvents(); this.loadCountries(); }
+  ngOnInit(): void { this.restoreSavedViewMode(); this.loadEvents(); this.loadCountries(); this.loadCategories(); }
 
   /** Resume the last selected grid/table view across navigations. */
   private restoreSavedViewMode(): void {
@@ -192,6 +215,16 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  loadCategories(): void {
+    this.eventService.getCategories().subscribe({
+      next: (data) => this.categories.set(data),
+      error: () => {},
+    });
+  }
+
+  openCategoryManager(): void { this.showCategoryManager.set(true); }
+  closeCategoryManager(): void { this.showCategoryManager.set(false); this.loadCategories(); }
 
   loadEvents(): void {
     this.loading.set(true);
@@ -222,25 +255,59 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
   }
 
   /** Powers the four stat cards — lightweight `limit:1` calls scoped by
-   * search/country only (every filter EXCEPT status/eventMode, which is
-   * what the cards themselves toggle), so each count stays accurate no
-   * matter which card is currently selected. */
+   * search/country/quick-filter (every filter EXCEPT eventMode, which is
+   * what the Hybrid/Offline cards themselves toggle — Total/Upcoming/
+   * Hybrid/Offline stay in step with each other and with the mode you pick,
+   * instead of collapsing whichever mode ISN'T selected to 0).
+   *
+   * The Upcoming/Past/All Events quick filter (`filterStatus`), on the
+   * other hand, DOES scope every number here — selecting "Upcoming" should
+   * show the breakdown of just the upcoming events (Total/Hybrid/Offline
+   * recomputed within that subset), not the same global figures regardless
+   * of what's actually listed below.
+   *
+   * No `approvalStatus` filter is applied: the admin table below
+   * intentionally lists events of every moderation status (with a status
+   * badge per row), so the cards must count that same set — pinning them to
+   * APPROVED-only used to make a card's number disagree with what clicking
+   * it actually listed (e.g. a PENDING Offline submission would show up in
+   * the list but not get counted on the Offline card, while a mode with no
+   * pending submissions looked "correct" purely by coincidence). Pending
+   * review still has its own separate count elsewhere in the console. */
   private loadEventStatCounts(): void {
+    const requestId = ++this.statCountsRequestId;
+    // Discards a response from a scope that's no longer current — e.g. a
+    // slow "Completed" Offline lookup (0) resolving after the user has
+    // already switched to "All Events", which must show the real combined
+    // (upcoming + completed) Offline count instead of being clobbered by 0.
+    const isCurrent = () => requestId === this.statCountsRequestId;
+
+    const activeStatus = this.filterStatus(); // '' | 'upcoming' | 'completed'
     const base: Record<string, any> = { page: 1, limit: 1 };
     if (this.searchQuery().trim()) base['search']  = this.searchQuery().trim();
     if (this.filterCountry())      base['country'] = this.filterCountry();
+    if (activeStatus)              base['status']  = activeStatus;
 
     this.eventService.getEvents(base).subscribe({
-      next: (res) => this.totalEventsCount.set(res.total), error: () => {},
+      next: (res) => { if (isCurrent()) this.totalEventsCount.set(res.total); }, error: () => {},
     });
-    this.eventService.getEvents({ ...base, status: 'upcoming' }).subscribe({
-      next: (res) => this.upcomingEventsCount.set(res.total), error: () => {},
-    });
+
+    // Upcoming and Completed are mutually exclusive by definition — a
+    // Completed-scoped view can never contain an upcoming event, so that
+    // count is 0 without a round trip; scoping to 'upcoming' on top of an
+    // already-'upcoming' (or unfiltered) base is what a real API call needs.
+    if (activeStatus === 'completed') {
+      this.upcomingEventsCount.set(0);
+    } else {
+      this.eventService.getEvents({ ...base, status: 'upcoming' }).subscribe({
+        next: (res) => { if (isCurrent()) this.upcomingEventsCount.set(res.total); }, error: () => {},
+      });
+    }
     this.eventService.getEvents({ ...base, eventMode: 'Hybrid' }).subscribe({
-      next: (res) => this.hybridEventsCount.set(res.total), error: () => {},
+      next: (res) => { if (isCurrent()) this.hybridEventsCount.set(res.total); }, error: () => {},
     });
     this.eventService.getEvents({ ...base, eventMode: 'Offline' }).subscribe({
-      next: (res) => this.offlineEventsCount.set(res.total), error: () => {},
+      next: (res) => { if (isCurrent()) this.offlineEventsCount.set(res.total); }, error: () => {},
     });
   }
 
@@ -280,24 +347,32 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  /** The four stat cards (Total/Upcoming/Hybrid/Offline) all drive this one
-   * derived value, so exactly one is ever selected at a time — "Upcoming"
-   * reuses the existing server-side `filterStatus` ("Status" in Advanced
-   * Filters) rather than a separate client-side date hack, and Hybrid/
-   * Offline reuse `filterEventMode`; each setter clears the other axis so
-   * they can't both be active simultaneously. */
-  eventStatFilter = computed<'all' | 'upcoming' | 'hybrid' | 'offline'>(() => {
-    if (this.filterStatus() === 'upcoming') return 'upcoming';
-    if (this.filterEventMode() === 'Hybrid') return 'hybrid';
-    if (this.filterEventMode() === 'Offline') return 'offline';
-    return 'all';
-  });
+  /** The four stat cards reuse the server-side `filterStatus` ("Status" in
+   * Advanced Filters, and the Upcoming/Past/All Events quick filter pills)
+   * and `filterEventMode` — but Upcoming and Hybrid/Offline are independent
+   * axes (a quick filter of "Upcoming" plus a mode of "Hybrid" is a
+   * perfectly valid combination), so each is highlighted independently
+   * rather than only one of the four ever being "active" at a time. */
+  isTotalCardActive    = computed(() => this.filterStatus() === '' && this.filterEventMode() === '');
+  isUpcomingCardActive = computed(() => this.filterStatus() === 'upcoming');
+  isHybridCardActive   = computed(() => this.filterEventMode() === 'Hybrid');
+  isOfflineCardActive  = computed(() => this.filterEventMode() === 'Offline');
 
-  /** Toggles off back to 'all' on a repeat click of the same card. */
+  /** Applies the clicked card's own filter directly (no toggle-off on a
+   * repeat click — see git history for why) and, other than "Total" (the
+   * explicit clear-everything card), leaves the OTHER axis untouched:
+   * clicking Hybrid/Offline must not reset whichever quick filter
+   * (Upcoming/Past/All Events) is currently selected, and vice versa,
+   * so the two can be combined (e.g. Upcoming + Hybrid together). */
   setEventStatFilter(value: 'all' | 'upcoming' | 'hybrid' | 'offline'): void {
-    const next = this.eventStatFilter() === value ? 'all' : value;
-    this.filterStatus.set(next === 'upcoming' ? 'upcoming' : '');
-    this.filterEventMode.set(next === 'hybrid' ? 'Hybrid' : next === 'offline' ? 'Offline' : '');
+    if (value === 'all') {
+      this.filterStatus.set('');
+      this.filterEventMode.set('');
+    } else if (value === 'upcoming') {
+      this.filterStatus.set('upcoming');
+    } else {
+      this.filterEventMode.set(value === 'hybrid' ? 'Hybrid' : 'Offline');
+    }
     this.applyFilters();
   }
 
@@ -417,6 +492,9 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
       this.events.update(l => [evt, ...l]);
       this.totalItems.update(v => v + 1);
     }
+    // Create/edit can change status (auto-approve), date/time, or mode —
+    // any of which the stat cards above depend on.
+    this.loadEventStatCounts();
   }
 
   openDeleteConfirm(evt: AppEvent, event: Event): void {
@@ -427,7 +505,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     const evt = this.eventToDelete(); if (!evt) return;
     this.deleting.set(true);
     this.eventService.deleteEvent(evt.id).subscribe({
-      next: () => { this.events.update(l => l.filter(e => e.id !== evt.id)); this.totalItems.update(v => v - 1); this.toast.success('admin.events.toast.eventDeleted'); this.closeDeleteConfirm(); this.deleting.set(false); },
+      next: () => { this.events.update(l => l.filter(e => e.id !== evt.id)); this.totalItems.update(v => v - 1); this.loadEventStatCounts(); this.toast.success('admin.events.toast.eventDeleted'); this.closeDeleteConfirm(); this.deleting.set(false); },
       error: () => { this.toast.error('admin.events.toast.failedDeleteEvent'); this.deleting.set(false); },
     });
   }
@@ -451,7 +529,7 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     if (!text) return ''; return text.length > n ? text.substring(0, n) + '…' : text;
   }
 
-  categoryIcon(cat?: string): string { return EVENT_CATEGORY_ICON[cat ?? ''] ?? 'bi-calendar-event'; }
+  categoryIcon(cat?: string): string { return this.categories().find((c) => c.name === cat)?.icon ?? 'bi-calendar-event'; }
 
   getEventStatus(evt: AppEvent): { label: string; type: string } {
     const today = new Date();
@@ -465,31 +543,30 @@ export class AdminEventsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** "09:11" → "9:11 AM" */
-  private to12h(time24: string): string {
-    const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return time24;
-    const period = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-  }
-
-  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  /** "09:11" + "11:12" → "9:11 AM – 11:12 AM" — no timezone appended; shown
+   * as its own field on the full Event Details page instead. */
   formatEventTime(evt: AppEvent): string {
-    if (!evt.eventTime) return '';
-    let text = this.to12h(evt.eventTime);
-    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
-    if (evt.timezone) text += ` (${evt.timezone})`;
-    return text;
+    return formatEventTimeRangeUtil(evt.eventTime, evt.eventEndTime);
   }
 
-  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  /** "Thu · 24 Sep · 6:00 AM" — the compact single-line date/time used on
+   * event cards, same for Online/Offline/Hybrid alike. */
+  eventCardDateTimeLabel(evt: AppEvent): string {
+    return eventCardDateTimeLabelUtil(evt);
+  }
+
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" — Offline/Hybrid only, see eventLocationSummary() for the Online-aware version. */
   formatEventAddress(evt: AppEvent): string {
-    const parts: string[] = [];
-    if (evt.address) parts.push(evt.address);
-    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
-    if (venuePincode) parts.push(venuePincode);
-    if (evt.country) parts.push(evt.country);
-    return parts.join(', ');
+    return formatEventAddressUtil(evt);
+  }
+
+  /** "Online Event · Worldwide"/"...Country Based" for Online events (never a physical address); the real address for Offline/Hybrid. */
+  eventLocationSummary(evt: AppEvent): string {
+    return eventLocationSummaryUtil(evt, (key) => this.translate.instant(key));
+  }
+
+  /** "Offline · Sports" / "Online · Workshop" — mode and category separated with " · ", never concatenated raw. */
+  eventModeCategorySummary(evt: AppEvent): string {
+    return eventModeCategorySummaryUtil(evt);
   }
 }

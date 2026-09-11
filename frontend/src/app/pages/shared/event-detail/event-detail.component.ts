@@ -4,16 +4,18 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Event as AppEvent } from '../../../core/models';
+import { Event as AppEvent, EventCategory } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
 import { QrCodeComponent } from '../../../shared/components/qr-code/qr-code.component';
-import { EVENT_CATEGORY_ICON } from '../../../shared/constants/event-categories';
 import { ToastService } from '../../../core/services/toast.service';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { EventFormModalComponent } from '../../../shared/components/event-form-modal/event-form-modal.component';
 import { EventDeleteModalComponent } from '../../../shared/components/event-delete-modal/event-delete-modal.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil } from '../../../shared/utils/event-location';
+import { formatEventTimeRange as formatEventTimeRangeUtil } from '../../../shared/utils/event-date-format';
+import { isHttpUrl } from '../../../shared/validators/url.validator';
 
 /**
  * Dedicated, routed Event Details page (`/admin/events/:id`, `/user/events/:id`)
@@ -32,6 +34,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
   private authService  = inject(AuthService);
   private toast        = inject(ToastService);
+  private translate     = inject(TranslateService);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
@@ -41,10 +44,30 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   event          = signal<AppEvent | null>(null);
   related        = signal<AppEvent[]>([]);
   relatedLoading = signal(false);
+  // Full list (not active-only) — this event's own category may be
+  // disabled/legacy and must still resolve to the correct icon.
+  categories     = signal<EventCategory[]>([]);
 
   isAdmin   = computed(() => this.authService.currentUser()?.role === 'ADMIN');
   /** Where the back link and related-event clicks go, depending on which console this page was reached from. */
   basePath  = computed(() => this.isAdmin() ? '/admin/events' : '/user/events');
+
+  /** The list page's search/filter/sort state, forwarded here as query
+   * params when the card was clicked — handed straight back on the "back
+   * to list" breadcrumb below so returning to the list restores exactly
+   * the same filtered view it was reached from (no separate state store,
+   * just round-tripping the URL's own query params). Read live off the
+   * route snapshot (not a computed signal) since it must stay current
+   * across in-place navigations between two events (e.g. via Related
+   * Events), which don't recreate this component. */
+  listQueryParams(): Record<string, string> {
+    const out: Record<string, string> = {};
+    this.route.snapshot.queryParamMap.keys.forEach((k) => {
+      const v = this.route.snapshot.queryParamMap.get(k);
+      if (v) out[k] = v;
+    });
+    return out;
+  }
   /** The host who submitted the event, or an admin, can edit/delete it from here. */
   canManage = computed(() => {
     const evt = this.event();
@@ -69,7 +92,7 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   closeDeleteConfirm(): void { this.showDeleteConfirm.set(false); }
 
   onEventDeleted(): void {
-    this.router.navigate([this.basePath()]);
+    this.router.navigate([this.basePath()], { queryParams: this.listQueryParams() });
   }
 
   // ── Image viewer — clicking the hero photo or a thumbnail opens the
@@ -89,6 +112,10 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('id');
       if (id) this.loadEvent(id);
+    });
+    this.eventService.getCategories().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => this.categories.set(data),
+      error: () => {},
     });
   }
 
@@ -118,39 +145,43 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Re-targets the page at a related event without a full navigation reload. */
+  /** Re-targets the page at a related event without a full navigation reload — keeps
+   * whatever list query params got us here so the breadcrumb still works after browsing. */
   viewEvent(id: string): void {
-    this.router.navigate([this.basePath(), id]);
+    this.router.navigate([this.basePath(), id], { queryParamsHandling: 'preserve' });
   }
 
-  categoryIcon(cat?: string): string { return EVENT_CATEGORY_ICON[cat ?? ''] ?? 'bi-calendar-event'; }
+  categoryIcon(cat?: string): string { return this.categories().find((c) => c.name === cat)?.icon ?? 'bi-calendar-event'; }
 
-  /** "09:11" → "9:11 AM" */
-  private to12h(time24: string): string {
-    const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return time24;
-    const period = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-  }
-
-  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  /** "09:11" + "11:12" → "9:11 AM – 11:12 AM" — Time Zone is shown as its
+   * own separate info row now (see the Time Zone info-item in the
+   * template), not appended here; keeps "Time:" and "Time Zone:" as two
+   * distinct pieces of information instead of one concatenated string. */
   formatEventTime(evt: AppEvent): string {
-    if (!evt.eventTime) return '';
-    let text = this.to12h(evt.eventTime);
-    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
-    if (evt.timezone) text += ` (${evt.timezone})`;
-    return text;
+    return formatEventTimeRangeUtil(evt.eventTime, evt.eventEndTime);
   }
 
-  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" — Offline/Hybrid only, see eventLocationSummary() for the Online-aware version. */
   formatEventAddress(evt: AppEvent): string {
-    const parts: string[] = [];
-    if (evt.address) parts.push(evt.address);
-    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
-    if (venuePincode) parts.push(venuePincode);
-    if (evt.country) parts.push(evt.country);
-    return parts.join(', ');
+    return formatEventAddressUtil(evt);
+  }
+
+  /** "Online Event · Worldwide"/"...Country Based" for Online events (never a physical address); the real address for Offline/Hybrid. Used as the dedicated "Location" row, kept separate from the Meeting/Stream Link row. */
+  eventLocationSummary(evt: AppEvent): string {
+    return eventLocationSummaryUtil(evt, (key) => this.translate.instant(key));
+  }
+
+  /** Gates the Book Now CTA/QR/sidebar section — a bare truthy check on
+   * evt.bookingUrl isn't enough defense against a legacy/malformed
+   * persisted value (new events are already validated server-side, but
+   * this page has no control over what's already in the database). */
+  hasValidBookingUrl(evt: AppEvent): boolean {
+    return isHttpUrl(evt.bookingUrl);
+  }
+
+  /** Same reasoning as hasValidBookingUrl(), for the Join Meeting CTA / Meeting Link info row. */
+  hasValidMeetingLink(evt: AppEvent): boolean {
+    return isHttpUrl(evt.locationLink);
   }
 
   async copyBookingUrl(url: string): Promise<void> {

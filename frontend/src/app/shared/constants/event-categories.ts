@@ -1,32 +1,38 @@
 /**
- * Single source of truth for event categories — was previously duplicated as
- * `EVENT_TYPES` in event-form-modal.component.ts plus two copies of
- * `CATEGORY_ICON` (event-detail-modal, user events page) and one
- * `CATEGORY_GRADIENT` map (user events page). Used by the Add/Edit Event
- * form, the Category filter on both listing pages, and the Event Details page.
+ * Event categories themselves are now DB-managed (`event_categories` table,
+ * via `EventService.getCategories()`) rather than a hardcoded list here —
+ * see EventCategory in core/models. This file now only keeps the decorative
+ * card-background gradient used by the user Events page when a card has no
+ * image; there's no DB equivalent for that (purely visual), so it stays a
+ * small local map, with a deterministic fallback for any category name not
+ * in the curated list below (so new/admin-added categories still render
+ * *some* gradient instead of none).
  */
-export const EVENT_CATEGORIES = [
-  'Workshop', 'Meetup', 'Webinar', 'Festival', 'Conference',
-  'Exhibition', 'Concert', 'Sports', 'Social', 'Other',
-] as const;
-
-export type EventCategory = typeof EVENT_CATEGORIES[number];
-
-export const EVENT_CATEGORY_ICON: Record<string, string> = {
-  Festival: 'bi-stars', Exhibition: 'bi-stars',
-  Workshop: 'bi-laptop', Conference: 'bi-laptop', Webinar: 'bi-laptop',
-  Concert: 'bi-mic-fill',
-  Sports: 'bi-trophy-fill',
-  Meetup: 'bi-people-fill', Social: 'bi-people-fill',
-  Other: 'bi-calendar-event',
-};
 
 /** Card media background gradient class when an event has no image — user Events page only. */
 export const EVENT_CATEGORY_GRADIENT: Record<string, string> = {
-  Festival: 'g-fest', Exhibition: 'g-fest',
-  Workshop: 'g-work', Conference: 'g-work', Webinar: 'g-work',
-  Concert: 'g-conc',
-  Sports: 'g-sport',
-  Meetup: 'g-meet', Social: 'g-meet',
+  Festival: 'g-fest', 'Festival / Celebration': 'g-fest', Exhibition: 'g-fest',
+  Workshop: 'g-work', 'Workshop / Training': 'g-work', Conference: 'g-work', Webinar: 'g-work', Seminar: 'g-work',
+  Concert: 'g-conc', 'Music / Concert': 'g-conc',
+  Sports: 'g-sport', 'Sports / Fitness': 'g-sport',
+  Meetup: 'g-meet', 'Community Meetup': 'g-meet', 'Networking / Meetup': 'g-meet', Social: 'g-meet', 'Social Gathering': 'g-meet',
   Other: 'g-meet',
 };
+
+/** Every gradient class actually defined in events.component.scss — the fallback pool. */
+const GRADIENT_FALLBACKS = ['g-fest', 'g-work', 'g-conc', 'g-sport', 'g-meet'] as const;
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/** Curated gradient for the well-known names above; otherwise a stable, deterministic pick from the same pool so every category still gets a gradient. */
+export function eventCategoryGradient(name?: string): string {
+  if (!name) return 'g-meet';
+  return EVENT_CATEGORY_GRADIENT[name] ?? GRADIENT_FALLBACKS[hashCode(name) % GRADIENT_FALLBACKS.length];
+}

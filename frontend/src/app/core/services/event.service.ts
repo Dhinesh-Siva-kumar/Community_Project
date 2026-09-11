@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
-import { ApprovalStatus, Event, VisibilityType, PaginatedResponse } from '../models';
+import { ApprovalStatus, Event, EventCategory, VisibilityType, PaginatedResponse } from '../models';
 import { FORM_DATA_FIELD_NAMES } from '../constants/upload.constants';
 
 export interface MyEventsQueryParams {
@@ -31,6 +31,8 @@ export interface EventsQueryParams {
   limit?:       number;
   search?:      string;
   country?:     string;
+  stateId?:     number;
+  cityId?:      number;
   eventCategory?: string;
   status?:      'upcoming' | 'completed';
   dateFrom?:    string;
@@ -47,6 +49,19 @@ export interface EventsQueryParams {
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private api = inject(ApiService);
+
+  /** `activeOnly` excludes disabled categories — the Add/Edit Event picker passes true. */
+  getCategories(activeOnly = false): Observable<EventCategory[]> {
+    return this.api.get<EventCategory[]>('/events/categories', activeOnly ? { activeOnly: 'true' } : {});
+  }
+
+  createCategory(data: Partial<EventCategory>): Observable<EventCategory> {
+    return this.api.post<EventCategory>('/events/categories', data);
+  }
+
+  updateCategory(id: string, data: Partial<EventCategory>): Observable<EventCategory> {
+    return this.api.put<EventCategory>(`/events/categories/${id}`, data);
+  }
 
   getEvents(params: EventsQueryParams = {}): Observable<PaginatedResponse<Event>> {
     const clean: Record<string, any> = {};

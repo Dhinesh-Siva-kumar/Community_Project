@@ -1,12 +1,14 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef, inject, signal, computed, effect, viewChildren } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild, inject, signal, computed, effect, viewChildren } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Observable, Subject, map, takeUntil } from 'rxjs';
 import { EventService, EventsQueryParams } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Event as AppEvent, VisibilityType, PaginatedResponse, Country } from '../../../core/models';
+import { GeographyService } from '../../../core/services/geography.service';
+import { Event as AppEvent, EventCategory, VisibilityType, PaginatedResponse, Country, CountryAddressConfig, Division } from '../../../core/models';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -16,8 +18,11 @@ import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scr
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
-import { EVENT_CATEGORIES, EVENT_CATEGORY_ICON, EVENT_CATEGORY_GRADIENT } from '../../../shared/constants/event-categories';
+import { EVENT_CATEGORY_GRADIENT, eventCategoryGradient } from '../../../shared/constants/event-categories';
 import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
+import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
+import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil, eventModeCategorySummary as eventModeCategorySummaryUtil } from '../../../shared/utils/event-location';
+import { formatEventTimeRange as formatEventTimeRangeUtil, eventCardDateTimeLabel as eventCardDateTimeLabelUtil } from '../../../shared/utils/event-date-format';
 
 type ModeFilter = 'all' | 'Offline' | 'Online' | 'Hybrid';
 /** '' = All Events. Drives the quick filter in the search card — defaults to 'upcoming'. */
@@ -34,7 +39,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
   // drawer just sit on top of — and hide — the right edge of the events list.
   host: { '[class.jb-adv-open]': 'showAdvancedFilters()' },
 })
-export class UserEventsComponent implements OnInit, OnDestroy {
+export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private translate = inject(TranslateService);
   private eventService = inject(EventService);
   private authService  = inject(AuthService);
@@ -42,6 +47,15 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private geographyService = inject(GeographyService);
+  private destroy$ = new Subject<void>();
+
+  @ViewChild('eventFormModal') eventFormModal?: EventFormModalComponent;
+
+  /** Backs the `user/events` route's `canDeactivate: [unsavedChangesGuard]` — see app.routes.ts. */
+  hasUnsavedChanges(): boolean {
+    return !!this.eventFormModal?.isDirty();
+  }
 
   events     = signal<AppEvent[]>([]);
   loading    = signal(true);
@@ -109,9 +123,59 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   // everything else collapsed behind Advanced Filters) ──
   filterCountry        = signal<string | null>(null);
   filterCountryOptions: SelectOption[] = [];
+  private countriesRaw: Country[] = [];
+
+  // ── Location filters — Country already above; State/Province/Region ->
+  // City cascade underneath it, same shared geography service (country-
+  // specific division labels/leaf-division-as-stateId semantics) used by
+  // the Add/Edit Event form's own cascade, so a State/City picked here
+  // filters on exactly the same `stateId`/`cityId` columns an event was
+  // saved with. ──
+  filterCountryId  = signal<number | null>(null);
+  filterStateId    = signal<number | null>(null);
+  filterCityId     = signal<number | null>(null);
+  countryConfig    = signal<CountryAddressConfig | null>(null);
+  division1Options = signal<Division[]>([]);
+  division2Options = signal<Division[]>([]);
+  division1Loading = signal(false);
+  division2Loading = signal(false);
+  division1SelectOptions = computed<SelectOption[]>(() => this.division1Options().map((d) => ({ value: d.id, label: d.name })));
+  division2SelectOptions = computed<SelectOption[]>(() => this.division2Options().map((d) => ({ value: d.id, label: d.name })));
+  adminLevels = computed(() => this.countryConfig()?.divisionLevels ?? []);
+  selectedDivision1Name = signal<string | null>(null);
+  selectedDivision2Name = signal<string | null>(null);
+  selectedCityOption    = signal<SelectOption | null>(null);
+  selectedCityName      = signal<string | null>(null);
+
+  private static readonly REGION_LABEL_KEYS: Record<string, string> = {
+    GB: 'components.jobForm.regionLabel.county',
+    IN: 'components.jobForm.regionLabel.state',
+    DE: 'components.jobForm.regionLabel.state',
+    CA: 'components.jobForm.regionLabel.province',
+  };
+  regionLabelKey = computed<string>(() => {
+    const id = this.filterCountryId();
+    if (!id) return 'components.jobForm.regionLabel.default';
+    const iso2 = this.countriesRaw.find((c) => c.id === id)?.iso2?.toUpperCase();
+    return (iso2 && UserEventsComponent.REGION_LABEL_KEYS[iso2]) || 'components.jobForm.regionLabel.fallback';
+  });
+
+  private cityNameCache = new Map<number, string>();
+  citySearchFn = (query: string): Observable<SelectOption[]> => {
+    const countryId  = this.filterCountryId() ?? undefined;
+    const divisionId = this.getLeafDivisionId() ?? undefined;
+    if (!countryId) return new Observable<SelectOption[]>((sub) => { sub.next([]); sub.complete(); });
+    return this.geographyService.searchCities({ divisionId, countryId: divisionId ? undefined : countryId, search: query, page: 1, limit: 20 }).pipe(
+      map((res) => {
+        res.data.forEach((c) => this.cityNameCache.set(c.id, c.name));
+        return res.data.map((c) => ({ value: c.id, label: c.name }));
+      }),
+    );
+  };
+
   filterDateFrom        = signal('');
   filterDateTo          = signal('');
-  activeQuickRange      = signal<'today' | '7d' | '30d' | null>(null);
+  activeQuickRange      = signal<'today' | '7d' | '30d' | 'next7d' | 'next30d' | 'thisMonth' | null>(null);
   showAdvancedFilters   = signal(false);
 
   // ── Visibility filter — opt-in ("show me only Worldwide events"),
@@ -119,8 +183,13 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   // server-side. Mirrors the Jobs page's filterVisibilityType pill filter. ──
   filterVisibility = signal<'' | VisibilityType>('');
 
-  // ── Category filter — same option list the Add/Edit Event form uses. ──
-  readonly categoryFilterOptions: SelectOption[] = EVENT_CATEGORIES.map((c) => ({ value: c, label: c }));
+  // ── Category filter — DB-backed (event_categories table). Loads the full
+  // list (not active-only): an event using a now-disabled category must
+  // stay findable/filterable while it's still live. ──
+  categories = signal<EventCategory[]>([]);
+  categoryFilterOptions = computed<SelectOption[]>(() =>
+    this.categories().map((c) => ({ value: c.name, label: c.name, icon: c.icon })),
+  );
   filterCategory = signal('');
 
   // ── Status quick filter — Upcoming (default) / Past / All Events, front
@@ -135,6 +204,8 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     let count = 0;
     if (this.modeFilter() !== 'all') count++;
     if (this.filterCountry()) count++;
+    if (this.filterStateId()) count++;
+    if (this.filterCityId()) count++;
     if (this.filterVisibility()) count++;
     if (this.filterCategory()) count++;
     if (this.filterDateFrom()) count++;
@@ -165,8 +236,10 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   imageViewerInitialIndex = signal(0);
 
   ngOnInit(): void {
+    this.restoreFiltersFromQueryParams();
     this.loadEvents();
     this.loadCountries();
+    this.loadCategories();
     this.route.queryParams.subscribe(params => {
       const eventId = params['eventId'];
       if (eventId) this.openEventFromQueryParam(eventId);
@@ -187,13 +260,162 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── Filter/search/sort state preservation — the active search/filters
+  // are mirrored into this page's own URL query params (see
+  // syncFiltersToUrl(), called from applyFilters()), and every event card
+  // link carries them forward via [queryParams] so the Event Details page
+  // can hand them straight back on its "back to list" breadcrumb. Combined
+  // with reading them back out here on init, this means: refreshing the
+  // page, using the browser Back button, or following that breadcrumb all
+  // land back on the exact same filtered/sorted view — all via the URL,
+  // no separate state-management library. ──
+  private restoreFiltersFromQueryParams(): void {
+    const q = this.route.snapshot.queryParamMap;
+    if (q.get('search')) this.searchQuery.set(q.get('search')!);
+    const mode = q.get('mode');
+    if (mode === 'Offline' || mode === 'Online' || mode === 'Hybrid') this.modeFilter.set(mode);
+    if (q.get('category')) this.filterCategory.set(q.get('category')!);
+    const vis = q.get('visibility');
+    if (vis === 'COUNTRY' || vis === 'WORLDWIDE') this.filterVisibility.set(vis);
+    const status = q.get('status');
+    if (status === 'upcoming' || status === 'completed' || status === '') this.filterStatus.set(status);
+    if (q.get('dateFrom')) this.filterDateFrom.set(q.get('dateFrom')!);
+    if (q.get('dateTo')) this.filterDateTo.set(q.get('dateTo')!);
+    const range = q.get('range');
+    if (range === 'today' || range === '7d' || range === '30d' || range === 'next7d' || range === 'next30d' || range === 'thisMonth') this.activeQuickRange.set(range);
+    // countryId/stateId/cityId are restored once loadCountries() resolves
+    // (the cascade needs the country list/division data first) — see
+    // restoreLocationFromQueryParams() below.
+  }
+
+  /** Reflects the current search/filter state into the URL — call after any filter change. */
+  private syncFiltersToUrl(): void {
+    const params: Record<string, string | null> = {
+      search: this.searchQuery() || null,
+      mode: this.modeFilter() !== 'all' ? this.modeFilter() : null,
+      category: this.filterCategory() || null,
+      countryId: this.filterCountryId() ? String(this.filterCountryId()) : null,
+      stateId: this.filterStateId() ? String(this.filterStateId()) : null,
+      cityId: this.filterCityId() ? String(this.filterCityId()) : null,
+      visibility: this.filterVisibility() || null,
+      status: this.filterStatus() !== 'upcoming' ? this.filterStatus() : null,
+      dateFrom: this.filterDateFrom() || null,
+      dateTo: this.filterDateTo() || null,
+      range: this.activeQuickRange() || null,
+    };
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** Everything the Event Details page's breadcrumb needs to carry back to this exact filtered view. */
+  currentFilterQueryParams(): Record<string, string> {
+    const out: Record<string, string> = {};
+    this.route.snapshot.queryParamMap.keys.forEach((k) => {
+      if (k === 'eventId' || k === 'openAdd') return;
+      const v = this.route.snapshot.queryParamMap.get(k);
+      if (v) out[k] = v;
+    });
+    return out;
   }
 
   loadCountries(): void {
     this.authService.getCountries().subscribe({
       next: (res: any) => {
-        this.filterCountryOptions = (res.data ?? res ?? []).map((c: Country) => ({ value: c.name, label: c.name }));
+        const list: Country[] = res.data ?? res ?? [];
+        this.countriesRaw = list;
+        this.filterCountryOptions = list.map((c: Country) => ({ value: c.id, label: c.name }));
+        this.restoreLocationFromQueryParams();
       },
+      error: () => {},
+    });
+  }
+
+  /** Resolves countryId/stateId/cityId from the URL once the country list is loaded, rebuilding the division cascade. */
+  private restoreLocationFromQueryParams(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const countryId = q.get('countryId') ? Number(q.get('countryId')) : null;
+    if (!countryId) return;
+    const country = this.countriesRaw.find((c) => c.id === countryId);
+    if (!country) return;
+    this.filterCountryId.set(countryId);
+    this.filterCountry.set(country.name);
+    const stateId = q.get('stateId') ? Number(q.get('stateId')) : null;
+    const cityId  = q.get('cityId')  ? Number(q.get('cityId'))  : null;
+
+    this.geographyService.getCountryConfig(countryId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        if (config.divisionLevels.length === 0) return;
+        this.division1Loading.set(true);
+        this.geographyService.getDivisions(countryId).pipe(takeUntil(this.destroy$)).subscribe({
+          next: (divisions) => {
+            this.division1Options.set(divisions);
+            this.division1Loading.set(false);
+            if (!stateId) return;
+            // The saved leaf state could be a level-1 or level-2 division —
+            // try level 1 first, then search level 2 under each level-1
+            // parent until found (mirrors the form's leaf-id semantics).
+            const atLevel1 = divisions.find((d) => d.id === stateId);
+            if (atLevel1) {
+              this.filterStateId.set(stateId);
+              this.selectedDivision1Name.set(atLevel1.name);
+              if (cityId) this.resolveFilterCity(cityId);
+              return;
+            }
+            if (config.divisionLevels.length < 2) return;
+            this.division2Loading.set(true);
+            // Fall back: fetch children for each level-1 division until the stateId is found.
+            const tryNext = (idx: number): void => {
+              if (idx >= divisions.length) { this.division2Loading.set(false); return; }
+              this.geographyService.getDivisions(countryId, divisions[idx].id).pipe(takeUntil(this.destroy$)).subscribe({
+                next: (children) => {
+                  const match = children.find((d) => d.id === stateId);
+                  if (match) {
+                    this.division2Options.set(children);
+                    this.filterStateId.set(stateId);
+                    this.selectedDivision1Name.set(divisions[idx].name);
+                    this.selectedDivision2Name.set(match.name);
+                    this.division2Loading.set(false);
+                    if (cityId) this.resolveFilterCity(cityId);
+                  } else {
+                    tryNext(idx + 1);
+                  }
+                },
+                error: () => tryNext(idx + 1),
+              });
+            };
+            tryNext(0);
+          },
+          error: () => this.division1Loading.set(false),
+        });
+      },
+      error: () => {},
+    });
+  }
+
+  /** City name isn't strictly needed for filtering (the id alone drives the query) — resolve it so the select shows a label instead of blank. */
+  private resolveFilterCity(cityId: number): void {
+    this.geographyService.searchCities({ divisionId: this.getLeafDivisionId() ?? undefined, countryId: this.filterCountryId() ?? undefined, search: '', page: 1, limit: 20 }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        const match = res.data.find((c) => c.id === cityId);
+        this.filterCityId.set(cityId);
+        this.selectedCityOption.set({ value: cityId, label: match?.name ?? String(cityId) });
+        this.selectedCityName.set(match?.name ?? null);
+      },
+    });
+  }
+
+  loadCategories(): void {
+    this.eventService.getCategories().subscribe({
+      next: (data) => this.categories.set(data),
       error: () => {},
     });
   }
@@ -270,6 +492,8 @@ export class UserEventsComponent implements OnInit, OnDestroy {
       search: this.searchQuery() || undefined,
       eventMode: mode === 'all' ? undefined : mode,
       country: this.filterCountry() || undefined,
+      stateId: this.filterStateId() ?? undefined,
+      cityId: this.filterCityId() ?? undefined,
       visibilityType: this.filterVisibility() || undefined,
       eventCategory: this.filterCategory() || undefined,
       status: this.filterStatus() || undefined,
@@ -313,7 +537,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyFilters(): void { this.loadEvents(); }
+  applyFilters(): void { this.loadEvents(); this.syncFiltersToUrl(); }
 
   onSearchInput(value: string): void {
     this.searchQuery.set(value);
@@ -335,8 +559,81 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.layoutService.forceSidebarCollapsed.set(false);
   }
 
-  onFilterCountryChange(value: string | null): void {
-    this.filterCountry.set(value);
+  onFilterCountryChange(id: number | string | null): void {
+    const countryId = id ? Number(id) : null;
+    this.filterCountryId.set(countryId);
+    this.filterCountry.set(countryId ? (this.countriesRaw.find((c) => c.id === countryId)?.name ?? null) : null);
+    this.resetDivisionState();
+    if (!countryId) { this.applyFilters(); return; }
+    this.geographyService.getCountryConfig(countryId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (config) => {
+        this.countryConfig.set(config);
+        if (config.divisionLevels.length === 0) return;
+        this.division1Loading.set(true);
+        this.geographyService.getDivisions(countryId).pipe(takeUntil(this.destroy$)).subscribe({
+          next: (divisions) => { this.division1Options.set(divisions); this.division1Loading.set(false); },
+          error: () => this.division1Loading.set(false),
+        });
+      },
+      error: () => {},
+    });
+    this.applyFilters();
+  }
+
+  private getLeafDivisionId(): number | null {
+    const levels = this.adminLevels().length;
+    if (levels >= 2) return this.filterStateId();
+    if (levels === 1) return this.filterStateId();
+    return null;
+  }
+
+  private resetDivisionState(): void {
+    this.countryConfig.set(null);
+    this.division1Options.set([]);
+    this.division2Options.set([]);
+    this.selectedDivision1Name.set(null);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    this.filterStateId.set(null);
+    this.filterCityId.set(null);
+  }
+
+  onDivision1Change(id: number | string | null): void {
+    const divId = id ? Number(id) : null;
+    this.division2Options.set([]);
+    this.selectedDivision2Name.set(null);
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    this.filterCityId.set(null);
+    this.filterStateId.set(divId);
+    this.selectedDivision1Name.set(divId ? (this.division1Options().find((d) => d.id === divId)?.name ?? null) : null);
+    if (divId && this.adminLevels().length >= 2) {
+      this.division2Loading.set(true);
+      this.geographyService.getDivisions(this.filterCountryId()!, divId).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (divisions) => { this.division2Options.set(divisions); this.division2Loading.set(false); },
+        error: () => this.division2Loading.set(false),
+      });
+    }
+    this.applyFilters();
+  }
+
+  onDivision2Change(id: number | string | null): void {
+    const divId = id ? Number(id) : null;
+    this.selectedCityOption.set(null);
+    this.selectedCityName.set(null);
+    this.filterCityId.set(null);
+    this.filterStateId.set(divId);
+    this.selectedDivision2Name.set(divId ? (this.division2Options().find((d) => d.id === divId)?.name ?? null) : null);
+    this.applyFilters();
+  }
+
+  onFilterCityChange(cityId: any): void {
+    const id = cityId ? Number(cityId) : null;
+    this.filterCityId.set(id);
+    const name = id ? (this.cityNameCache.get(id) ?? null) : null;
+    this.selectedCityName.set(name);
+    this.selectedCityOption.set(id ? { value: id, label: name ?? '' } : null);
     this.applyFilters();
   }
 
@@ -367,23 +664,32 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  /** Fills From/To Date with a preset range (mirrors the Business list page's quick date presets). */
-  applyQuickDatePreset(preset: 'today' | '7d' | '30d'): void {
+  /** Fills From/To Date with a preset range (mirrors the Business list page's quick date presets).
+   * 'today'/'next7d'/'next30d'/'thisMonth' look forward from today (useful
+   * alongside the Upcoming quick filter); '7d'/'30d' — kept for backward
+   * compatibility with any saved/shared filter links — look back. */
+  applyQuickDatePreset(preset: 'today' | '7d' | '30d' | 'next7d' | 'next30d' | 'thisMonth'): void {
     const today = new Date();
-    const to = this.toInputDate(today);
+    const todayStr = this.toInputDate(today);
 
     if (preset === 'today') {
-      this.filterDateFrom.set(to);
-      this.filterDateTo.set(to);
-      this.activeQuickRange.set('today');
-      this.applyFilters();
-      return;
+      this.filterDateFrom.set(todayStr);
+      this.filterDateTo.set(todayStr);
+    } else if (preset === '7d' || preset === '30d') {
+      const fromDate = new Date(today);
+      fromDate.setDate(today.getDate() - (preset === '7d' ? 6 : 29));
+      this.filterDateFrom.set(this.toInputDate(fromDate));
+      this.filterDateTo.set(todayStr);
+    } else if (preset === 'next7d' || preset === 'next30d') {
+      const toDate = new Date(today);
+      toDate.setDate(today.getDate() + (preset === 'next7d' ? 6 : 29));
+      this.filterDateFrom.set(todayStr);
+      this.filterDateTo.set(this.toInputDate(toDate));
+    } else if (preset === 'thisMonth') {
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      this.filterDateFrom.set(todayStr);
+      this.filterDateTo.set(this.toInputDate(monthEnd));
     }
-
-    const fromDate = new Date(today);
-    fromDate.setDate(today.getDate() - (preset === '7d' ? 6 : 29));
-    this.filterDateFrom.set(this.toInputDate(fromDate));
-    this.filterDateTo.set(to);
     this.activeQuickRange.set(preset);
     this.applyFilters();
   }
@@ -395,10 +701,12 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  removeFilter(key: 'mode' | 'country' | 'visibility' | 'category' | 'dateFrom' | 'dateTo'): void {
+  removeFilter(key: 'mode' | 'country' | 'state' | 'city' | 'visibility' | 'category' | 'dateFrom' | 'dateTo'): void {
     switch (key) {
       case 'mode':       this.modeFilter.set('all'); break;
-      case 'country':    this.filterCountry.set(null); break;
+      case 'country':    this.filterCountryId.set(null); this.filterCountry.set(null); this.resetDivisionState(); break;
+      case 'state':      this.filterStateId.set(null); this.selectedDivision1Name.set(null); this.selectedDivision2Name.set(null); this.division2Options.set([]); this.filterCityId.set(null); this.selectedCityOption.set(null); break;
+      case 'city':       this.filterCityId.set(null); this.selectedCityOption.set(null); this.selectedCityName.set(null); break;
       case 'visibility': this.filterVisibility.set(''); break;
       case 'category':   this.filterCategory.set(''); break;
       case 'dateFrom':   this.filterDateFrom.set(''); break;
@@ -411,7 +719,9 @@ export class UserEventsComponent implements OnInit, OnDestroy {
   clearAllFilters(): void {
     this.searchQuery.set('');
     this.modeFilter.set('all');
+    this.filterCountryId.set(null);
     this.filterCountry.set(null);
+    this.resetDivisionState();
     this.filterVisibility.set('');
     this.filterCategory.set('');
     // Not reset to '' — Upcoming is the default view, not an "extra" filter.
@@ -432,8 +742,8 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     const pin = this.userPincode();
     return !!pin && evt.eventMode !== 'Online' && evt.pincode === pin;
   }
-  categoryIcon(cat?: string): string { return EVENT_CATEGORY_ICON[cat ?? ''] ?? 'bi-calendar-event'; }
-  categoryGradient(cat?: string): string { return EVENT_CATEGORY_GRADIENT[cat ?? ''] ?? 'g-meet'; }
+  categoryIcon(cat?: string): string { return this.categories().find((c) => c.name === cat)?.icon ?? 'bi-calendar-event'; }
+  categoryGradient(cat?: string): string { return eventCategoryGradient(cat); }
 
   relTime(dateStr: string): { label: string; cls: string; isPast: boolean } {
     const d = new Date(dateStr);
@@ -446,32 +756,31 @@ export class UserEventsComponent implements OnInit, OnDestroy {
     if (days <= 14) return { label: this.translate.instant('components.calendar.status.inDays', { days }), cls: 'is-soon', isPast: false };
     return { label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'long' }), cls: '', isPast: false };
   }
-  /** "09:11" → "9:11 AM" — same formatting as the Admin Events card. */
-  private to12h(time24: string): string {
-    const [h, m] = time24.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return time24;
-    const period = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-  }
-
-  /** "09:11" + "11:12" + "Asia/Kolkata" → "9:11 AM – 11:12 AM (Asia/Kolkata)" */
+  /** "09:11" + "11:12" → "9:11 AM – 11:12 AM" — no timezone appended; shown
+   * as its own field on the full Event Details page instead. */
   formatEventTime(evt: AppEvent): string {
-    if (!evt.eventTime) return '';
-    let text = this.to12h(evt.eventTime);
-    if (evt.eventEndTime) text += ' – ' + this.to12h(evt.eventEndTime);
-    if (evt.timezone) text += ` (${evt.timezone})`;
-    return text;
+    return formatEventTimeRangeUtil(evt.eventTime, evt.eventEndTime);
   }
 
-  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" */
+  /** "Thu · 24 Sep · 6:00 AM" — the compact single-line date/time used on
+   * event cards, same for Online/Offline/Hybrid alike. */
+  eventCardDateTimeLabel(evt: AppEvent): string {
+    return eventCardDateTimeLabelUtil(evt);
+  }
+
+  /** Address + Venue/City - Pincode, Country → "12 Main St, City Hall - 600001, India" — Offline/Hybrid only, see eventLocationSummary() for the Online-aware version. */
   formatEventAddress(evt: AppEvent): string {
-    const parts: string[] = [];
-    if (evt.address) parts.push(evt.address);
-    const venuePincode = [evt.location, evt.pincode].filter(Boolean).join(' - ');
-    if (venuePincode) parts.push(venuePincode);
-    if (evt.country) parts.push(evt.country);
-    return parts.join(', ');
+    return formatEventAddressUtil(evt);
+  }
+
+  /** "Online Event · Worldwide"/"...Country Based" for Online events (never a physical address); the real address for Offline/Hybrid. */
+  eventLocationSummary(evt: AppEvent): string {
+    return eventLocationSummaryUtil(evt, (key) => this.translate.instant(key));
+  }
+
+  /** "Offline · Sports" / "Online · Workshop" — mode and category separated with " · ", never concatenated raw. */
+  eventModeCategorySummary(evt: AppEvent): string {
+    return eventModeCategorySummaryUtil(evt);
   }
 
   // ── card description expand/collapse ──
@@ -494,7 +803,7 @@ export class UserEventsComponent implements OnInit, OnDestroy {
 
   /** The whole card is clickable — this is what it navigates to (edit/delete/zoom/links inside it stop propagation so they don't also trigger this). */
   viewEventDetails(evt: AppEvent): void {
-    this.router.navigate(['/user/events', evt.id]);
+    this.router.navigate(['/user/events', evt.id], { queryParams: this.currentFilterQueryParams() });
   }
 
   // ── add / edit modal (form owned by app-event-form-modal) ──

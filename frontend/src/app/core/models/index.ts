@@ -372,6 +372,26 @@ export interface BusinessCategory {
   createdAt: string;
 }
 
+/** Mirrors BusinessCategory — the same admin-manageable, soft-disable
+ * category pattern, applied to Events. `name` (not `id`) is what an event's
+ * `eventCategory` field stores, so category selection/matching is by name. */
+export interface EventCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  description?: string;
+  /** Disabled categories are excluded from the Add/Edit Event form's picker
+   * but still shown — and manageable — in Admin's category list, since an
+   * existing event may still reference one. */
+  isActive?: boolean;
+  /** Lower sorts first — respected wherever categories are listed or filtered. */
+  displayOrder?: number;
+  _count?: {
+    events: number;
+  };
+  createdAt: string;
+}
+
 /** Who a listing is visible to — used by Business, Jobs, and Events. */
 export type VisibilityType = 'COUNTRY' | 'WORLDWIDE';
 
@@ -469,6 +489,8 @@ export interface Event {
   location?: string;
   country: string;
   countryId?: number | null;
+  stateId?: number | null;
+  cityId?: number | null;
   visibilityType?: VisibilityType;
   /** Optional registration/booking link — the Event Details page shows it plus a QR code generated client-side from this same value. */
   bookingUrl?: string | null;

@@ -7,6 +7,10 @@ import * as ctrl from './events.controller';
 const router = Router();
 router.use(authenticate);
 
+router.post('/categories', authorize('ADMIN'), ctrl.createCategory);
+router.get('/categories', ctrl.getCategories); // public — feeds the create/edit Event category picker for any user
+router.put('/categories/:id', authorize('ADMIN'), ctrl.updateCategory);
+
 router.post('/', uploadImages.array('images', 10), ctrl.create);
 router.get('/', ctrl.findAll);
 router.get('/mine', ctrl.findMine);

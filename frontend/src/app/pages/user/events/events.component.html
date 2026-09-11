@@ -101,6 +101,18 @@
           <button class="jb-active-chip__remove" (click)="removeFilter('country')" [attr.aria-label]="'user.events.removeCountryFilter' | translate"><i class="bi bi-x"></i></button>
         </span>
       }
+      @if (selectedDivision1Name() || selectedDivision2Name()) {
+        <span class="jb-active-chip">
+          {{ regionLabelKey() | translate }}: {{ selectedDivision2Name() ?? selectedDivision1Name() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('state')" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
+      @if (selectedCityName()) {
+        <span class="jb-active-chip">
+          {{ 'user.jobs.city' | translate }}: {{ selectedCityName() }}
+          <button class="jb-active-chip__remove" (click)="removeFilter('city')" [attr.aria-label]="'common.close' | translate"><i class="bi bi-x"></i></button>
+        </span>
+      }
       @if (filterVisibility()) {
         <span class="jb-active-chip">
           {{ (filterVisibility() === 'WORLDWIDE' ? 'components.businessForm.visibilityWorldwide' : 'components.businessForm.visibilityCountry') | translate }}
@@ -164,18 +176,54 @@
       <!-- ── Category ───────────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'user.events.category' | translate }}</span>
-        <app-searchable-select [options]="categoryFilterOptions" [ngModel]="filterCategory()"
+        <app-searchable-select [options]="categoryFilterOptions()" [ngModel]="filterCategory()"
           (ngModelChange)="setCategoryFilter($event)" [placeholder]="'user.events.allCategories' | translate">
         </app-searchable-select>
       </div>
 
-      <!-- ── Country ────────────────────────────────────── -->
+      <!-- ── Country / State / City — cascading, same shared geography
+           service and country-specific division labels as the Add/Edit
+           Event form, so State/City picked here match exactly what an
+           event was saved with. ──────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-geo-alt"></i> {{ 'user.events.country' | translate }}</span>
-        <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountry()"
+        <app-searchable-select [options]="filterCountryOptions" [ngModel]="filterCountryId()"
           (ngModelChange)="onFilterCountryChange($event)" [placeholder]="'user.events.allCountries' | translate" [searchPlaceholder]="'components.search.countries' | translate">
         </app-searchable-select>
       </div>
+
+      @if (adminLevels().length >= 1) {
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label">
+            <i class="bi bi-map"></i> {{ regionLabelKey() | translate }}
+            @if (division1Loading()) { <i class="bi bi-arrow-clockwise"></i> }
+          </span>
+          <app-searchable-select [options]="division1SelectOptions()" [ngModel]="filterStateId()"
+            (ngModelChange)="onDivision1Change($event)"
+            [placeholder]="'user.jobs.selectLevel' | translate:{ level: (regionLabelKey() | translate) }">
+          </app-searchable-select>
+        </div>
+      }
+      @if (adminLevels().length >= 2) {
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label">
+            <i class="bi bi-map"></i> {{ adminLevels()[1].label }}
+            @if (division2Loading()) { <i class="bi bi-arrow-clockwise"></i> }
+          </span>
+          <app-searchable-select [options]="division2SelectOptions()" [ngModel]="filterStateId()"
+            (ngModelChange)="onDivision2Change($event)"
+            [placeholder]="'user.jobs.selectLevel' | translate:{ level: adminLevels()[1].label }">
+          </app-searchable-select>
+        </div>
+      }
+      @if (filterCountryId()) {
+        <div class="jb-adv-section">
+          <span class="jb-filter-section-label"><i class="bi bi-pin-map"></i> {{ 'user.jobs.city' | translate }}</span>
+          <app-searchable-select [ngModel]="filterCityId()" [remoteSearchFn]="citySearchFn" [selectedOption]="selectedCityOption()"
+            (ngModelChange)="onFilterCityChange($event)" [placeholder]="'user.jobs.searchCity' | translate">
+          </app-searchable-select>
+        </div>
+      }
 
       <!-- ── Visibility ─────────────────────────────────── -->
       <div class="jb-adv-section">
@@ -232,6 +280,21 @@
             [class.jb-quick-date-btn--active]="activeQuickRange() === 'today'"
             (click)="applyQuickDatePreset('today')">
             {{ 'user.events.today' | translate }}
+          </button>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === 'next7d'"
+            (click)="applyQuickDatePreset('next7d')">
+            {{ 'user.events.next7Days' | translate }}
+          </button>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === 'next30d'"
+            (click)="applyQuickDatePreset('next30d')">
+            {{ 'user.events.next30Days' | translate }}
+          </button>
+          <button type="button" class="jb-quick-date-btn"
+            [class.jb-quick-date-btn--active]="activeQuickRange() === 'thisMonth'"
+            (click)="applyQuickDatePreset('thisMonth')">
+            {{ 'user.events.thisMonth' | translate }}
           </button>
           <button type="button" class="jb-quick-date-btn"
             [class.jb-quick-date-btn--active]="activeQuickRange() === '7d'"
@@ -360,7 +423,7 @@
             }
           </div>
 
-          <h3 class="ev-card__title"><a [routerLink]="['/user/events', evt.id]" (click)="$event.stopPropagation()">{{ evt.title }}</a></h3>
+          <h3 class="ev-card__title"><a [routerLink]="['/user/events', evt.id]" [queryParams]="currentFilterQueryParams()" (click)="$event.stopPropagation()">{{ evt.title }}</a></h3>
 
           @if (evt.description) {
             <p class="ev-card__description" [class.ev-card__description--expanded]="expandedDescriptions().has(evt.id)">{{ evt.description }}</p>
@@ -371,24 +434,18 @@
             }
           }
 
-          <!-- Quick facts -->
+          <!-- Quick facts — "Thu · 24 Sep · 6:00 AM" as one line (never
+               concatenated without separators), same format regardless of
+               Event Mode. -->
           <ul class="ev-card__facts">
             <li class="ev-meta-item ev-meta-item--time">
               <span class="ev-meta-item__icon"><i class="bi bi-calendar3"></i></span>
-              <span>{{ evt.eventDate | date:'EEEE, d MMMM y' }}</span>
+              <span>{{ eventCardDateTimeLabel(evt) }}</span>
             </li>
-            @if (evt.eventTime) {
-              <li class="ev-meta-item ev-meta-item--time">
-                <span class="ev-meta-item__icon"><i class="bi bi-clock-fill"></i></span>
-                <span>{{ formatEventTime(evt) }}</span>
-              </li>
-            }
-            @if (evt.address || evt.location || evt.country) {
-              <li class="ev-meta-item ev-meta-item--location">
-                <span class="ev-meta-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                <span>{{ formatEventAddress(evt) }}</span>
-              </li>
-            }
+            <li class="ev-meta-item ev-meta-item--location">
+              <span class="ev-meta-item__icon"><i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-geo-alt-fill'"></i></span>
+              <span>{{ eventLocationSummary(evt) }}</span>
+            </li>
           </ul>
 
           @if (evt.status === 'REJECTED' && evt.rejectionReason) {
@@ -409,7 +466,7 @@
               <span class="ev-meta-item__icon"><i class="bi bi-person-fill"></i></span>
               <span>{{ evt.user?.displayName ?? evt.user?.userName }}</span>
             </span>
-            <a class="ev-card__join" [routerLink]="['/user/events', evt.id]" (click)="$event.stopPropagation()">
+            <a class="ev-card__join" [routerLink]="['/user/events', evt.id]" [queryParams]="currentFilterQueryParams()" (click)="$event.stopPropagation()">
               <i class="bi bi-info-circle"></i> {{ 'user.events.viewDetails' | translate }}
             </a>
             @if ((evt.eventMode === 'Online' || evt.eventMode === 'Hybrid') && evt.locationLink) {
@@ -485,7 +542,7 @@
   </div>
 }
 
-<app-event-form-modal
+<app-event-form-modal #eventFormModal
   [open]="showAddModal()"
   [editEventId]="editingId()"
   (closed)="closeAddModal()"

@@ -218,6 +218,7 @@
 .cm-label-row { display: flex; align-items: center; justify-content: space-between; }
 .cm-required { color: $color-danger; margin-left: 2px; }
 .cm-char-count { font-size: $font-size-xs; color: $color-text-muted; font-variant-numeric: tabular-nums; }
+.cm-char-count--over { color: $color-danger; font-weight: $font-weight-semibold; }
 
 .cm-field-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: $font-size-xs; color: $color-stone-500; .bi { font-size: 0.8rem; flex-shrink: 0; } }
 .cm-field-hint--accent { color: $color-primary-dark; font-weight: $font-weight-semibold; }

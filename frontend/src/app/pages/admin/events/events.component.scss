@@ -292,6 +292,8 @@
   &--footer { padding-top: $spacing-sm; border-top: 1px solid $color-border; gap: $spacing-sm; }
 }
 
+.jb-quickstatus { flex-shrink: 0; }
+
 .jb-search-wrap {
   position: relative;
   display: flex;

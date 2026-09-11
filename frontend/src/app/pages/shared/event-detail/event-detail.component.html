@@ -5,7 +5,7 @@
   <nav [attr.aria-label]="'user.events.breadcrumb' | translate">
     <ol class="edp-breadcrumb">
       <li class="edp-breadcrumb__item">
-        <a class="edp-breadcrumb__link" [routerLink]="[basePath()]">
+        <a class="edp-breadcrumb__link" [routerLink]="[basePath()]" [queryParams]="listQueryParams()">
           <i class="bi bi-list-ul"></i> {{ (isAdmin() ? 'admin.events.events' : 'user.events.events') | translate }}
         </a>
       </li>
@@ -68,15 +68,17 @@
         @if (evt.eventCategory) {
           <span [class]="'edp-tag edp-tag--category-' + evt.eventCategory.toLowerCase()"><i class="bi" [ngClass]="categoryIcon(evt.eventCategory)"></i> {{ evt.eventCategory }}</span>
         }
+        @if (evt.eventCategory && evt.eventMode) { <span class="edp-tag-sep" aria-hidden="true">·</span> }
         @if (evt.eventMode) {
           <span class="edp-tag edp-tag--mode">
             <i class="bi" [ngClass]="evt.eventMode === 'Offline' ? 'bi-geo-alt-fill' : evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-diagram-2-fill'"></i>
             {{ evt.eventMode }}
           </span>
         }
+        @if (evt.eventMode) { <span class="edp-tag-sep" aria-hidden="true">·</span> }
         <span class="edp-tag edp-tag--visibility">
           <i class="bi" [ngClass]="evt.visibilityType === 'WORLDWIDE' ? 'bi-globe2' : 'bi-geo-alt-fill'"></i>
-          {{ evt.visibilityType === 'WORLDWIDE' ? ('components.businessForm.visibilityWorldwide' | translate) : ('components.businessForm.visibilityCountry' | translate) }}
+          {{ evt.visibilityType === 'WORLDWIDE' ? ('user.events.visibility.worldwideLabel' | translate) : ('user.events.visibility.countryLabel' | translate) }}
         </span>
         @if (evt.status === 'PENDING') {
           @if (isAdmin()) {
@@ -104,28 +106,30 @@
         @if (formatEventTime(evt); as time) {
           <span class="edp-quickfacts__item"><i class="bi bi-clock"></i> {{ time }}</span>
         }
-        @if (evt.eventMode === 'Online') {
-          <span class="edp-quickfacts__item"><i class="bi bi-camera-video-fill"></i> {{ 'user.events.onlineEvent' | translate }}</span>
-        } @else {
-          @if (formatEventAddress(evt); as address) {
-            <span class="edp-quickfacts__item"><i class="bi bi-geo-alt-fill"></i> {{ address }}</span>
-          }
-        }
+        <span class="edp-quickfacts__item">
+          <i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-geo-alt-fill'"></i>
+          {{ eventLocationSummary(evt) }}
+        </span>
       </div>
 
       <!-- Primary actions — same spot business-hero puts Call/WhatsApp/Website,
            so the one or two things a visitor is here to actually do are
            reachable without scrolling. Edit/Delete (host or admin only)
            live at the end of this same row, mirroring business-hero's
-           own edit/delete icon buttons. -->
-      @if (evt.bookingUrl || evt.locationLink || canManage()) {
+           own edit/delete icon buttons. Book Now / Join Meeting are two
+           independent CTAs, each gated on its own field actually being a
+           valid URL — never a bare truthy check, and never rendered a
+           second time elsewhere on the page (the booking sidebar section
+           below keeps only its QR code + copyable link, not a second
+           "Book Now" button). -->
+      @if (hasValidBookingUrl(evt) || (hasValidMeetingLink(evt) && (evt.eventMode === 'Online' || evt.eventMode === 'Hybrid')) || canManage()) {
         <div class="edp-actions">
-          @if (evt.bookingUrl) {
+          @if (hasValidBookingUrl(evt)) {
             <a class="edp-action-btn edp-action-btn--primary" [href]="evt.bookingUrl" target="_blank" rel="noopener">
               <i class="bi bi-ticket-perforated-fill"></i> {{ 'user.events.bookNow' | translate }}
             </a>
           }
-          @if (evt.locationLink && (evt.eventMode === 'Online' || evt.eventMode === 'Hybrid')) {
+          @if (hasValidMeetingLink(evt) && (evt.eventMode === 'Online' || evt.eventMode === 'Hybrid')) {
             <a class="edp-action-btn edp-action-btn--outline" [href]="evt.locationLink" target="_blank" rel="noopener">
               <i class="bi bi-camera-video-fill"></i> {{ 'user.events.joinMeeting' | translate }}
             </a>
@@ -160,35 +164,39 @@
           <div class="edp-datetime">
             <app-event-date-badge [date]="evt.eventDate" [time]="evt.eventTime" size="md"></app-event-date-badge>
             <div class="edp-datetime__text">
-              <span class="edp-datetime__date">{{ evt.eventDate | date:'fullDate' }}</span>
+              <span class="edp-datetime__date">{{ 'user.events.dateLabel' | translate }}: {{ evt.eventDate | date:'EEE, d MMM y' }}</span>
               @if (formatEventTime(evt); as time) {
-                <span class="edp-datetime__time"><i class="bi bi-clock"></i> {{ time }}</span>
+                <span class="edp-datetime__time"><i class="bi bi-clock"></i> {{ 'user.events.time' | translate }}: {{ time }}</span>
+              }
+              @if (evt.timezone) {
+                <span class="edp-datetime__time"><i class="bi bi-globe"></i> {{ 'user.events.timeZone' | translate }}: {{ evt.timezone }}</span>
               }
             </div>
           </div>
 
-          @if (formatEventAddress(evt) || evt.locationLink) {
-            <div class="edp-info-grid">
-              @if (formatEventAddress(evt); as address) {
-                <div class="edp-info-item">
-                  <div class="edp-info-item__icon edp-info-item__icon--location"><i class="bi bi-geo-alt-fill"></i></div>
-                  <div class="edp-info-item__body">
-                    <span class="edp-info-item__label">{{ 'user.events.address' | translate }}</span>
-                    <span class="edp-info-item__value">{{ address }}</span>
-                  </div>
-                </div>
-              }
-              @if (evt.locationLink) {
-                <div class="edp-info-item">
-                  <div class="edp-info-item__icon edp-info-item__icon--online"><i class="bi bi-camera-video-fill"></i></div>
-                  <div class="edp-info-item__body">
-                    <span class="edp-info-item__label">{{ 'user.events.meetingStreamLink' | translate }}</span>
-                    <a [href]="evt.locationLink" target="_blank" rel="noopener" class="edp-info-item__value edp-info-item__value--link">{{ evt.locationLink }}</a>
-                  </div>
-                </div>
-              }
+          <!-- Location (Online-aware summary — never a physical address for
+               Online events) and Meeting/Stream Link are two distinct rows;
+               Meeting Link only ever appears for Online/Hybrid, and only
+               once it's actually a valid URL, so a stray leftover value
+               from a previous mode can't produce an empty/broken row. -->
+          <div class="edp-info-grid">
+            <div class="edp-info-item">
+              <div class="edp-info-item__icon edp-info-item__icon--location"><i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-geo-alt-fill'"></i></div>
+              <div class="edp-info-item__body">
+                <span class="edp-info-item__label">{{ 'user.events.location' | translate }}</span>
+                <span class="edp-info-item__value">{{ eventLocationSummary(evt) }}</span>
+              </div>
             </div>
-          }
+            @if (hasValidMeetingLink(evt) && (evt.eventMode === 'Online' || evt.eventMode === 'Hybrid')) {
+              <div class="edp-info-item">
+                <div class="edp-info-item__icon edp-info-item__icon--online"><i class="bi bi-camera-video-fill"></i></div>
+                <div class="edp-info-item__body">
+                  <span class="edp-info-item__label">{{ 'user.events.meetingStreamLink' | translate }}</span>
+                  <a [href]="evt.locationLink" target="_blank" rel="noopener" class="edp-info-item__value edp-info-item__value--link">{{ evt.locationLink }}</a>
+                </div>
+              </div>
+            }
+          </div>
         </section>
 
         <!-- About -->
@@ -220,7 +228,11 @@
           </section>
         }
 
-        @if (evt.bookingUrl) {
+        <!-- QR/copy affordances only — the actual "Book Now" CTA button
+             lives once, in the top .edp-actions row (gated the same way, on
+             hasValidBookingUrl); this sidebar used to render a second,
+             redundant "Book Now" button of its own directly below the QR. -->
+        @if (hasValidBookingUrl(evt)) {
           <section class="edp-section edp-section--compact edp-section--booking">
             <h3 class="edp-section__title">
               <span class="edp-section__badge edp-section__badge--violet"><i class="bi bi-ticket-perforated-fill"></i></span>
@@ -228,22 +240,19 @@
             </h3>
             <div class="edp-booking">
               <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__qr" [title]="'user.events.openBookingLink' | translate">
-                <app-qr-code [value]="evt.bookingUrl" [size]="128" [ariaLabel]="'user.events.bookingQrAlt' | translate"></app-qr-code>
+                <app-qr-code [value]="evt.bookingUrl!" [size]="128" [ariaLabel]="'user.events.bookingQrAlt' | translate"></app-qr-code>
               </a>
               <span class="edp-booking__qr-label">{{ 'user.events.scanToBook' | translate }}</span>
 
               <div class="edp-booking__link-row">
                 <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__link">{{ evt.bookingUrl }}</a>
                 <button type="button" class="edp-booking__copy"
-                  (click)="copyBookingUrl(evt.bookingUrl)"
+                  (click)="copyBookingUrl(evt.bookingUrl!)"
                   [attr.aria-label]="'user.events.copyBookingUrl' | translate"
                   [title]="'user.events.copyBookingUrl' | translate">
                   <i class="bi bi-clipboard" aria-hidden="true"></i>
                 </button>
               </div>
-              <a [href]="evt.bookingUrl" target="_blank" rel="noopener" class="edp-booking__cta">
-                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {{ 'user.events.bookNow' | translate }}
-              </a>
             </div>
           </section>
         }
@@ -256,7 +265,7 @@
       <section class="edp-related">
         <div class="edp-related__header">
           <span class="edp-related__title"><i class="bi bi-collection"></i> {{ 'user.events.relatedEvents' | translate }}</span>
-          <a [routerLink]="[basePath()]" class="edp-related__all">
+          <a [routerLink]="[basePath()]" [queryParams]="listQueryParams()" class="edp-related__all">
             {{ 'user.events.viewAllEvents' | translate }} <i class="bi bi-arrow-right"></i>
           </a>
         </div>
@@ -283,7 +292,7 @@
                   </span>
                   <span class="edp-related-card__meta">
                     <i class="bi" [class.bi-globe2]="r.visibilityType === 'WORLDWIDE'" [class.bi-geo-alt-fill]="r.visibilityType !== 'WORLDWIDE'"></i>
-                    {{ r.visibilityType === 'WORLDWIDE' ? ('components.businessForm.visibilityWorldwide' | translate) : (r.country || ('components.businessForm.visibilityCountry' | translate)) }}
+                    {{ r.visibilityType === 'WORLDWIDE' ? ('user.events.visibility.worldwideLabel' | translate) : (r.country || ('user.events.visibility.countryLabel' | translate)) }}
                   </span>
                 </div>
               </button>

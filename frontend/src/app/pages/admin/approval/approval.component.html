@@ -299,14 +299,18 @@
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
           {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ itemName(item) }}</strong>?
-          {{ (activeEntity() === 'community' ? 'admin.approval.rejectCommunityWarning' : 'admin.approval.rejectPermanentWarning') | translate }}
+          {{ rejectWarningKey() | translate }}
         </p>
-        <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownSubmitter' | translate"
+        <textarea class="pa-reason-input" rows="3" maxlength="500" [attr.required]="rejectReasonRequired() ? true : null"
+          [placeholder]="(rejectReasonRequired() ? 'admin.approval.reasonRequiredShownSubmitter' : 'admin.approval.reasonOptionalShownSubmitter') | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+        @if (rejectReasonRequired() && !rejectReason().trim()) {
+          <p class="pa-confirm-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.approval.rejectionReasonRequired' | translate }}</p>
+        }
       </div>
       <div class="pa-confirm-footer">
         <button class="um-btn um-btn--ghost" (click)="cancelRejectConfirm()">{{ 'common.cancel' | translate }}</button>
-        <button class="um-btn um-btn--danger" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
+        <button class="um-btn um-btn--danger" [disabled]="rejectReasonRequired() && !rejectReason().trim()" (click)="confirmRejectExecute()"><i class="bi bi-x-lg"></i> {{ 'admin.approval.reject' | translate }}</button>
       </div>
     </div>
   </div>
@@ -384,14 +388,18 @@
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
           {{ 'admin.approval.submittersWillNotified' | translate }}
-          {{ (activeEntity() === 'community' ? 'admin.approval.rejectCommunityWarning' : 'admin.approval.rejectPermanentWarning') | translate }}
+          {{ rejectWarningKey() | translate }}
         </p>
-        <textarea class="pa-reason-input" rows="3" maxlength="500" [placeholder]="'admin.approval.reasonOptionalShownEverySubmitter' | translate"
+        <textarea class="pa-reason-input" rows="3" maxlength="500" [attr.required]="rejectReasonRequired() ? true : null"
+          [placeholder]="(rejectReasonRequired() ? 'admin.approval.reasonRequiredShownEverySubmitter' : 'admin.approval.reasonOptionalShownEverySubmitter') | translate"
           [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"></textarea>
+        @if (rejectReasonRequired() && !rejectReason().trim()) {
+          <p class="pa-confirm-error"><i class="bi bi-exclamation-circle"></i> {{ 'admin.approval.rejectionReasonRequired' | translate }}</p>
+        }
       </div>
       <div class="pa-confirm-footer">
         <button class="um-btn um-btn--ghost" [disabled]="bulkProcessing()" (click)="cancelBulkConfirm()">{{ 'common.cancel' | translate }}</button>
-        <button class="um-btn um-btn--danger" [disabled]="bulkProcessing()" (click)="confirmBulkRejectExecute()">
+        <button class="um-btn um-btn--danger" [disabled]="bulkProcessing() || (rejectReasonRequired() && !rejectReason().trim())" (click)="confirmBulkRejectExecute()">
           @if (bulkProcessing()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-x-lg"></i> Reject All }
         </button>
       </div>

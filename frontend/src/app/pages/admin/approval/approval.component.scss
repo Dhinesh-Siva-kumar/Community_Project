@@ -671,6 +671,16 @@
   &:focus { border-color: $color-danger; box-shadow: 0 0 0 3px rgba($color-danger, 0.15); }
 }
 
+.pa-confirm-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-danger;
+}
+
 .um-btn {
   display: inline-flex;
   align-items: center;
