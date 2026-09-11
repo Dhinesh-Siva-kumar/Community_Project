@@ -5,6 +5,10 @@
     <p class="jb-page-header__sub">{{ 'admin.events.reviewModerateManageAllCommunity' | translate }}</p>
   </div>
   <div class="jb-page-header__actions">
+    <button class="jb-btn jb-btn--ghost jb-btn--sm" (click)="openCategoryManager()">
+      <i class="bi bi-tags"></i>
+      <span>{{ 'admin.events.manageCategories' | translate }}</span>
+    </button>
     <button class="jb-btn jb-btn--neon jb-btn--sm jb-btn--header-cta" (click)="openAddModal()">
       <i class="bi bi-plus-lg"></i>
       <span>{{ 'admin.events.newEvent' | translate }}</span>
@@ -12,9 +16,13 @@
   </div>
 </div>
 
+<app-event-category-manager
+  [open]="showCategoryManager()"
+  (closed)="closeCategoryManager()"></app-event-category-manager>
+
 <!-- ── STATISTICS BAR ─────────────────────────────────────── -->
 <div class="admin-stats-bar">
-  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'all'"
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="isTotalCardActive()"
     (click)="setEventStatFilter('all')" [attr.aria-label]="'admin.events.showAllEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--jobs">
       <i class="bi bi-calendar-event"></i>
@@ -24,7 +32,7 @@
       <div class="admin-stat-card__label">{{ 'admin.events.totalEvents' | translate }}</div>
     </div>
   </button>
-  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'upcoming'"
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="isUpcomingCardActive()"
     (click)="setEventStatFilter('upcoming')" [attr.aria-label]="'admin.events.filterByUpcomingEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--fulltime">
       <i class="bi bi-clock-history"></i>
@@ -34,7 +42,7 @@
       <div class="admin-stat-card__label">{{ 'admin.events.upcoming' | translate }}</div>
     </div>
   </button>
-  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'hybrid'"
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="isHybridCardActive()"
     (click)="setEventStatFilter('hybrid')" [attr.aria-label]="'admin.events.filterByHybridEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--parttime">
       <i class="bi bi-diagram-2"></i>
@@ -44,7 +52,7 @@
       <div class="admin-stat-card__label">{{ 'admin.events.hybrid' | translate }}</div>
     </div>
   </button>
-  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="eventStatFilter() === 'offline'"
+  <button type="button" class="admin-stat-card" [class.admin-stat-card--active]="isOfflineCardActive()"
     (click)="setEventStatFilter('offline')" [attr.aria-label]="'admin.events.filterByOfflineEvents' | translate">
     <div class="admin-stat-card__icon admin-stat-card__icon--contract">
       <i class="bi bi-geo-alt"></i>
@@ -72,6 +80,21 @@
           <i class="bi bi-x"></i>
         </button>
       }
+    </div>
+
+    <!-- Quick filter — same Upcoming/Past/All Events pills as the User Events
+         Search Card; reuses filterStatus/setStatusFilter, so the Upcoming
+         stat card above and the "Status" advanced filter stay in sync. -->
+    <div class="jb-pill-row jb-quickstatus" role="group" [attr.aria-label]="'admin.events.filterByStatus' | translate">
+      <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === 'upcoming'" (click)="setStatusFilter('upcoming')">
+        <i class="bi bi-calendar-event"></i> {{ 'admin.events.quickFilter.upcoming' | translate }}
+      </button>
+      <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === 'completed'" (click)="setStatusFilter('completed')">
+        <i class="bi bi-calendar-check"></i> {{ 'admin.events.quickFilter.past' | translate }}
+      </button>
+      <button type="button" class="jb-pill-btn" [class.jb-pill-btn--active]="filterStatus() === ''" (click)="setStatusFilter('')">
+        <i class="bi bi-collection"></i> {{ 'admin.events.quickFilter.all' | translate }}
+      </button>
     </div>
 
     <!-- View toggle -->
@@ -159,7 +182,7 @@
       <!-- ── Category ─────────────────────────────────────────── -->
       <div class="jb-adv-section">
         <span class="jb-filter-section-label"><i class="bi bi-tags"></i> {{ 'admin.events.category' | translate }}</span>
-        <app-searchable-select [options]="categoryFilterOptions" [ngModel]="filterCategory()"
+        <app-searchable-select [options]="categoryFilterOptions()" [ngModel]="filterCategory()"
           (ngModelChange)="setCategoryFilter($event)" [placeholder]="'admin.events.allCategories' | translate">
         </app-searchable-select>
       </div>
@@ -422,20 +445,18 @@
             <p class="ev-card__description">{{ evt.description }}</p>
           }
 
-          <!-- Quick facts -->
+          <!-- Quick facts — "Thu · 24 Sep · 6:00 AM" as one line (never
+               concatenated without separators), same format regardless of
+               Event Mode. -->
           <ul class="ev-card__facts">
-            @if (evt.eventTime) {
-              <li class="ev-meta-item ev-meta-item--time">
-                <span class="ev-meta-item__icon"><i class="bi bi-clock-fill"></i></span>
-                <span>{{ formatEventTime(evt) }}</span>
-              </li>
-            }
-            @if (evt.address || evt.location || evt.country) {
-              <li class="ev-meta-item ev-meta-item--location">
-                <span class="ev-meta-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                <span>{{ formatEventAddress(evt) }}</span>
-              </li>
-            }
+            <li class="ev-meta-item ev-meta-item--time">
+              <span class="ev-meta-item__icon"><i class="bi bi-calendar3"></i></span>
+              <span>{{ eventCardDateTimeLabel(evt) }}</span>
+            </li>
+            <li class="ev-meta-item ev-meta-item--location">
+              <span class="ev-meta-item__icon"><i class="bi" [ngClass]="evt.eventMode === 'Online' ? 'bi-camera-video-fill' : 'bi-geo-alt-fill'"></i></span>
+              <span>{{ eventLocationSummary(evt) }}</span>
+            </li>
           </ul>
 
           @if (evt.status === 'REJECTED' && evt.rejectionReason) {
@@ -605,7 +626,7 @@
               <td class="um-td d-none d-lg-table-cell">
                 <span class="um-td-text">{{ evt.eventTime ? formatEventTime(evt) : '—' }}</span>
               </td>
-              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ formatEventAddress(evt) || '—' }}</span></td>
+              <td class="um-td d-none d-lg-table-cell"><span class="um-td-text">{{ eventLocationSummary(evt) || '—' }}</span></td>
               <td class="um-td d-none d-lg-table-cell">
                 @if (evt.user) {
                   <span class="ev-meta-item ev-meta-item--host">
@@ -698,7 +719,7 @@
 </button>
 
 <!-- ── ADD / EDIT MODAL — same design language as the Community Creation popup ── -->
-<app-event-form-modal
+<app-event-form-modal #eventFormModal
   [open]="showAddModal()"
   [editEventId]="editEventId()"
   [isAdmin]="true"

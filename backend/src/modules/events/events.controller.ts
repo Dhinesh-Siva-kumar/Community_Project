@@ -1,8 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateEventDto, UpdateEventDto, ListEventsQueryDto, ListPendingEventsQueryDto, RejectEventDto, RequestMoreInfoEventDto } from './events.dto';
+import {
+  CreateEventDto, UpdateEventDto, EventFieldsShape, ListEventsQueryDto, ListPendingEventsQueryDto, RejectEventDto, RequestMoreInfoEventDto,
+  CreateEventCategoryDto, UpdateEventCategoryDto,
+} from './events.dto';
 import * as eventsService from './events.service';
 import { FileValidationService } from '../../services/file-validation.service';
 import { saveBufferToFile } from '../../services/upload-storage.service';
+
+export async function createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const body = CreateEventCategoryDto.parse(req.body);
+    const result = await eventsService.createEventCategory(body, req.user!.sub);
+    res.status(201).json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getCategories(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await eventsService.getEventCategories(req.query['activeOnly'] === 'true');
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function updateCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const body = UpdateEventCategoryDto.parse(req.body);
+    const result = await eventsService.updateEventCategory(req.params['id'] as string, body, req.user!.sub);
+    res.json(result);
+  } catch (err) { next(err); }
+}
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -28,7 +54,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
     if (imagePaths.length) rawBody['images'] = imagePaths;
     
     // Ensure all fields from DTO are present in rawBody before parsing
-    const expectedFields = Object.keys(CreateEventDto.shape);
+    const expectedFields = Object.keys(EventFieldsShape.shape);
     expectedFields.forEach(field => {
       if (!(field in rawBody)) {
         // Assign a default or empty value if missing, Zod will validate required fields
@@ -137,7 +163,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
     if (imagePaths.length) rawBody['images'] = imagePaths;
     
     // Ensure all fields from DTO are present in rawBody before parsing
-    const expectedFields = Object.keys(UpdateEventDto.shape);
+    const expectedFields = Object.keys(EventFieldsShape.shape);
     expectedFields.forEach(field => {
       if (!(field in rawBody)) {
         // Assign a default or empty value if missing, Zod will validate required fields

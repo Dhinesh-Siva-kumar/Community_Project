@@ -120,6 +120,7 @@ export const routes: Routes = [
       },
       {
         path: 'events',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/admin/events/events.component').then(
             (m) => m.AdminEventsComponent
@@ -216,6 +217,7 @@ export const routes: Routes = [
       },
       {
         path: 'events',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./pages/user/events/events.component').then(
             (m) => m.UserEventsComponent

@@ -373,6 +373,56 @@ const businessCategories = [
   { name: 'Cleaning Services', icon: 'bi-bucket',           description: 'Domestic and commercial cleaning services' },
 ];
 
+// Kept in sync with backend/migrations/20240051_create_event_categories.ts,
+// which seeds this exact same list (that migration is what actually
+// guarantees a non-empty category table, since `npm run migrate` always
+// runs and `npm run seed` is a separate manual step) — update both if this
+// list ever changes.
+const eventCategories: Array<{ name: string; icon: string; display_order: number; is_active?: boolean; description?: string }> = [
+  { name: 'Entertainment',               icon: 'bi-emoji-laughing',          display_order: 10 },
+  { name: 'Music / Concert',             icon: 'bi-mic-fill',                display_order: 20 },
+  { name: 'Cinema / Film',               icon: 'bi-film',                    display_order: 30 },
+  { name: 'Dance',                       icon: 'bi-music-note-beamed',       display_order: 40 },
+  { name: 'Arts & Culture',              icon: 'bi-palette-fill',            display_order: 50 },
+  { name: 'Tamil Cultural Events',       icon: 'bi-flag-fill',               display_order: 60 },
+  { name: 'Festival / Celebration',      icon: 'bi-stars',                   display_order: 70 },
+  { name: 'Community Event',             icon: 'bi-people-fill',             display_order: 80 },
+  { name: 'Community Meetup',            icon: 'bi-people',                  display_order: 90 },
+  { name: 'Social Gathering',            icon: 'bi-cup-hot-fill',            display_order: 100 },
+  { name: 'Business Networking',         icon: 'bi-briefcase-fill',          display_order: 110 },
+  { name: 'Business / Entrepreneurship', icon: 'bi-graph-up-arrow',          display_order: 120 },
+  { name: 'Education',                   icon: 'bi-mortarboard-fill',        display_order: 130 },
+  { name: 'Workshop / Training',         icon: 'bi-laptop',                  display_order: 140 },
+  { name: 'Seminar / Knowledge Sharing', icon: 'bi-easel-fill',              display_order: 150 },
+  { name: 'Conference',                  icon: 'bi-mic',                     display_order: 160 },
+  { name: 'Sports / Fitness',            icon: 'bi-trophy-fill',             display_order: 170 },
+  { name: 'Family & Kids',               icon: 'bi-balloon-fill',            display_order: 180 },
+  { name: 'Women',                       icon: 'bi-gender-female',           display_order: 190 },
+  { name: 'Parents & Family',            icon: 'bi-house-heart-fill',        display_order: 200 },
+  { name: 'Religious / Spiritual',       icon: 'bi-moon-stars-fill',         display_order: 210 },
+  { name: 'Charity / Fundraising',       icon: 'bi-heart-fill',              display_order: 220 },
+  { name: 'Health & Wellbeing',          icon: 'bi-heart-pulse-fill',        display_order: 230 },
+  { name: 'Book Launch / Literature',    icon: 'bi-book-fill',               display_order: 240 },
+  { name: 'Exhibition',                  icon: 'bi-image-fill',              display_order: 250 },
+  { name: 'Food / Cooking',              icon: 'bi-egg-fried',               display_order: 260 },
+  { name: 'Shopping / Fair',             icon: 'bi-bag-fill',                display_order: 270 },
+  { name: 'Picnic / Outdoor',            icon: 'bi-tree-fill',               display_order: 280 },
+  { name: 'Networking / Meetup',         icon: 'bi-diagram-3-fill',          display_order: 290 },
+  { name: 'Travel',                      icon: 'bi-airplane-fill',           display_order: 300 },
+  { name: 'Housing / Property',          icon: 'bi-house-fill',              display_order: 310 },
+  { name: 'Awareness / Campaign',        icon: 'bi-megaphone-fill',          display_order: 320 },
+  { name: 'Awards / Recognition',        icon: 'bi-award-fill',              display_order: 330 },
+  { name: 'Public Talk / Guest Speaker', icon: 'bi-chat-square-quote-fill',  display_order: 340 },
+  { name: 'Other',                       icon: 'bi-calendar-event',          display_order: 350 },
+  // Legacy — old category strings real events already use; kept resolvable
+  // but hidden from the create/edit picker (is_active: false).
+  { name: 'Concert',  icon: 'bi-mic-fill',     display_order: 9000, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
+  { name: 'Meetup',   icon: 'bi-people-fill',  display_order: 9001, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
+  { name: 'Sports',   icon: 'bi-trophy-fill',  display_order: 9002, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
+  { name: 'Webinar',  icon: 'bi-laptop',       display_order: 9003, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
+  { name: 'Workshop', icon: 'bi-laptop',       display_order: 9004, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
+];
+
 export async function seed(knex: Knex): Promise<void> {
   // ------------------------------------------------------------------
   // Countries
@@ -436,6 +486,20 @@ export async function seed(knex: Knex): Promise<void> {
       .ignore();
   }
   console.log(`Seeded ${businessCategories.length} business categories.`);
+
+  // ------------------------------------------------------------------
+  // Event Categories — kept in sync with the seed inside
+  // backend/migrations/20240051_create_event_categories.ts (see comment
+  // above eventCategories).
+  // ------------------------------------------------------------------
+  console.log('Seeding event_categories...');
+  for (const cat of eventCategories) {
+    await knex('event_categories')
+      .insert(cat)
+      .onConflict('name')
+      .ignore();
+  }
+  console.log(`Seeded ${eventCategories.length} event categories.`);
 
   // // ------------------------------------------------------------------
   // // Jobs (sample listings — skipped if any jobs already exist, so this

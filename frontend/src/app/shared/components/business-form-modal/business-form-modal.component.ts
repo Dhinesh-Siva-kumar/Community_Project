@@ -19,13 +19,7 @@ import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { getPhoneRule } from '../../utils/phone';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ScrollLockDirective } from '../../directives/scroll-lock.directive';
-
-function urlValidator(c: AbstractControl): ValidationErrors | null {
-  const v = c.value;
-  if (!v) return null;
-  try { const u = new URL(v); return (u.protocol === 'http:' || u.protocol === 'https:') ? null : { invalidUrl: true }; }
-  catch { return { invalidUrl: true }; }
-}
+import { urlValidator } from '../../validators/url.validator';
 
 /** Country-aware postal code validator — see admin business.component.ts for the fuller explanation. */
 function postalCodeValidator(regex: string | null): ValidatorFn {

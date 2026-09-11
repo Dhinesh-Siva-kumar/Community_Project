@@ -1,0 +1,146 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cm-modal ecm-modal" appScrollLock role="dialog" aria-modal="true" [attr.aria-label]="'admin.events.categoryManager.title' | translate" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="au-header cm-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon cm-modal-icon">
+        <i class="bi" [class.bi-tags]="!showForm()" [class.bi-arrow-left]="showForm()" (click)="showForm() && closeForm()" [class.ecm-back-icon]="showForm()"></i>
+      </div>
+      <div class="au-header__text cm-modal-header-inner">
+        <h5 class="au-header__title cm-modal-title">
+          {{ showForm() ? (editingCategory() ? ('admin.events.categoryManager.editCategory' | translate) : ('admin.events.categoryManager.addCategory' | translate)) : ('admin.events.categoryManager.title' | translate) }}
+        </h5>
+        <p class="au-header__sub cm-modal-subtitle">
+          {{ showForm() ? ('admin.events.categoryManager.formSub' | translate) : ('admin.events.categoryManager.listSub' | translate) }}
+        </p>
+      </div>
+      <button type="button" class="au-close cm-close-btn" (click)="requestClose()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="au-body cm-modal-body ecm-body">
+      @if (!showForm()) {
+        <!-- ── LIST VIEW ── -->
+        <div class="ecm-toolbar">
+          <div class="ecm-search-wrap">
+            <i class="bi bi-search ecm-search-icon"></i>
+            <input type="search" class="ecm-search-input"
+              [placeholder]="'admin.events.categoryManager.searchPlaceholder' | translate"
+              [value]="search()" (input)="search.set($any($event.target).value)" autocomplete="off" />
+          </div>
+          <button type="button" class="au-btn cm-btn-submit au-btn--primary ecm-add-btn" (click)="openAdd()">
+            <i class="bi bi-plus-lg"></i> {{ 'admin.events.categoryManager.addCategory' | translate }}
+          </button>
+        </div>
+
+        @if (loading()) {
+          <div class="ecm-loading"><span class="spinner-border spinner-border-sm"></span></div>
+        } @else if (filtered().length === 0) {
+          <div class="ecm-empty">
+            <i class="bi bi-tags"></i>
+            <p>{{ 'admin.events.categoryManager.noResults' | translate }}</p>
+          </div>
+        } @else {
+          <ul class="ecm-list">
+            @for (cat of filtered(); track cat.id) {
+              <li class="ecm-row" [class.ecm-row--inactive]="cat.isActive === false">
+                <span class="ecm-row__icon"><i class="bi" [ngClass]="cat.icon || 'bi-calendar-event'"></i></span>
+                <div class="ecm-row__main">
+                  <span class="ecm-row__name">{{ cat.name }}</span>
+                  @if (cat.description) { <span class="ecm-row__desc">{{ cat.description }}</span> }
+                </div>
+                <span class="ecm-row__order" [attr.title]="'admin.events.categoryManager.displayOrder' | translate">#{{ cat.displayOrder ?? 0 }}</span>
+                <span class="ecm-row__count">{{ cat._count?.events ?? 0 }} {{ 'admin.events.categoryManager.events' | translate }}</span>
+                <span class="ecm-row__status" [class.ecm-row__status--active]="cat.isActive !== false">
+                  {{ (cat.isActive !== false ? 'admin.events.categoryManager.active' : 'admin.events.categoryManager.disabled') | translate }}
+                </span>
+                <div class="ecm-row__actions">
+                  <button type="button" class="ecm-icon-btn" (click)="openEdit(cat)" [attr.aria-label]="'admin.events.editEvent' | translate">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="ecm-icon-btn" [disabled]="togglingId() === cat.id"
+                    (click)="toggleActive(cat, $event)"
+                    [attr.aria-label]="(cat.isActive !== false ? 'admin.events.categoryManager.disable' : 'admin.events.categoryManager.enable') | translate">
+                    @if (togglingId() === cat.id) {
+                      <span class="spinner-border spinner-border-sm"></span>
+                    } @else {
+                      <i class="bi" [class.bi-toggle-on]="cat.isActive !== false" [class.bi-toggle-off]="cat.isActive === false"></i>
+                    }
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <!-- ── ADD/EDIT FORM ── -->
+        <form [formGroup]="categoryForm" (ngSubmit)="submit()" class="au-form cm-form ecm-form">
+          <div class="cm-field-group" [class.cm-field-group--error]="submitAttempted() && f['name'].invalid">
+            <label class="cm-label">{{ 'admin.events.categoryManager.name' | translate }} <span class="cm-required">*</span></label>
+            <div class="cm-input-wrap">
+              <i class="bi bi-tag cm-input-icon"></i>
+              <input type="text" class="cm-input" [class.cm-input-error]="submitAttempted() && f['name'].invalid" formControlName="name" maxlength="100" />
+            </div>
+            @if (submitAttempted() && f['name'].invalid) {
+              <span class="cm-error-msg"><i class="bi bi-exclamation-circle"></i> {{ 'admin.events.categoryManager.nameRequired' | translate }}</span>
+            }
+          </div>
+
+          <div class="cm-field-row">
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'admin.events.categoryManager.icon' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi ecm-icon-preview" [ngClass]="f['icon'].value || 'bi-calendar-event'"></i>
+                <input type="text" class="cm-input" formControlName="icon" placeholder="bi-calendar-event" maxlength="50" />
+              </div>
+            </div>
+            <div class="cm-field-group">
+              <label class="cm-label">{{ 'admin.events.categoryManager.displayOrder' | translate }}</label>
+              <div class="cm-input-wrap">
+                <i class="bi bi-sort-numeric-down cm-input-icon"></i>
+                <input type="number" class="cm-input" formControlName="displayOrder" />
+              </div>
+            </div>
+          </div>
+
+          <div class="cm-field-group">
+            <label class="cm-label">{{ 'admin.events.categoryManager.description' | translate }}</label>
+            <div class="cm-input-wrap cm-textarea-wrap">
+              <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+              <textarea class="cm-input cm-textarea" rows="2" formControlName="description" maxlength="300"></textarea>
+            </div>
+          </div>
+
+          <div class="cm-field-group ecm-active-row">
+            <label class="cm-label">{{ 'admin.events.categoryManager.active' | translate }}</label>
+            <app-toggle formControlName="isActive"></app-toggle>
+          </div>
+
+          <div class="ecm-form-hint">
+            <i class="bi bi-info-circle"></i>
+            {{ 'admin.events.categoryManager.disableHint' | translate }}
+          </div>
+        </form>
+      }
+    </div>
+
+    @if (showForm()) {
+      <div class="au-footer cm-modal-footer">
+        <button type="button" class="au-btn cm-btn-cancel au-btn--ghost" (click)="closeForm()" [disabled]="submitting()">
+          {{ 'admin.events.categoryManager.cancel' | translate }}
+        </button>
+        <button type="button" class="au-btn cm-btn-submit au-btn--primary" [disabled]="submitting()" (click)="submit()">
+          @if (submitting()) { <span class="spinner-border spinner-border-sm"></span> }
+          {{ 'admin.events.categoryManager.save' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+}

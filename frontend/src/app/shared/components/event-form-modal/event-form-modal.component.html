@@ -67,7 +67,7 @@
               <label class="cm-label">{{ 'user.events.category' | translate }} <span class="cm-required">*</span></label>
               <app-searchable-select
                 formControlName="eventCategory"
-                [options]="categoryOptions"
+                [options]="categoryOptions()"
                 [placeholder]="'user.events.selectCategory' | translate"
               ></app-searchable-select>
               @if (f['eventCategory'].touched && f['eventCategory'].invalid) {
@@ -82,14 +82,19 @@
           <div class="cm-field-group">
             <div class="cm-label-row">
               <label class="cm-label">{{ 'user.events.description' | translate }} <span class="cm-required">*</span></label>
-              <span class="cm-char-count">{{ f['description'].value?.length ?? 0 }}/1000</span>
+              <span class="cm-char-count" [class.cm-char-count--over]="(f['description'].value?.length ?? 0) > 1000">{{ f['description'].value?.length ?? 0 }}/1000</span>
             </div>
             <div class="cm-input-wrap cm-textarea-wrap">
               <i class="bi bi-card-text cm-input-icon cm-textarea-icon"></i>
+              <!-- No maxlength attribute: the browser would silently cut off
+                   a paste beyond the remaining allowance with no feedback at
+                   all. Letting the full pasted text register in the
+                   FormControl means Validators.maxLength(1000) below (and
+                   the counter above) can actually show the user they've gone
+                   over instead of hiding it. -->
               <textarea
                 formControlName="description"
                 rows="3"
-                maxlength="1000"
                 [placeholder]="'user.events.describeEventAgendaPurposeHighlights' | translate"
                 class="cm-input cm-textarea"
                 [class.cm-input-error]="f['description'].touched && f['description'].invalid"
@@ -236,6 +241,60 @@
                 <span>{{ 'user.events.inPersonDetails' | translate }}</span>
               </div>
 
+              <!-- State/Province/Region -> City — same shared geography
+                   cascade as Jobs/Business (job-form-modal.component.html),
+                   driven by the Country field further down (which stays
+                   visible for Online too, since it also drives Visibility).
+                   Division fields only appear once a country with a known
+                   hierarchy is selected; City is always offered (searched
+                   directly, not tied to the division count). -->
+              <div class="cm-field-row">
+                @if (adminLevels().length >= 1) {
+                  <div class="cm-field-group">
+                    <label class="cm-label">
+                      {{ regionLabelKey() | translate }}
+                      @if (division1Loading()) { <i class="bi bi-arrow-clockwise"></i> }
+                    </label>
+                    <app-searchable-select
+                      formControlName="division1Id"
+                      [options]="division1SelectOptions()"
+                      [placeholder]="division1Options().length
+                        ? ('user.jobs.selectLevel' | translate:{ level: (regionLabelKey() | translate) })
+                        : ('user.jobs.selectFirstCountry' | translate)"
+                      (ngModelChange)="onDivision1Change($event)">
+                    </app-searchable-select>
+                  </div>
+                }
+                @if (adminLevels().length >= 2) {
+                  <div class="cm-field-group">
+                    <label class="cm-label">
+                      {{ adminLevels()[1].label }}
+                      @if (division2Loading()) { <i class="bi bi-arrow-clockwise"></i> }
+                    </label>
+                    <app-searchable-select
+                      formControlName="division2Id"
+                      [options]="division2SelectOptions()"
+                      [placeholder]="division2Options().length
+                        ? ('user.jobs.selectLevel' | translate:{ level: adminLevels()[1].label })
+                        : ('admin.geo.selectLevelFirst' | translate:{ level: (regionLabelKey() | translate) })"
+                      (ngModelChange)="onDivision2Change($event)">
+                    </app-searchable-select>
+                  </div>
+                }
+              </div>
+              @if (f['countryId'].value) {
+                <div class="cm-field-group">
+                  <label class="cm-label">{{ 'user.jobs.city' | translate }}</label>
+                  <app-searchable-select
+                    formControlName="cityId"
+                    [remoteSearchFn]="citySearchFn"
+                    [selectedOption]="selectedCityOption()"
+                    [placeholder]="'user.jobs.searchCity' | translate"
+                    (ngModelChange)="onCityChange($event)">
+                  </app-searchable-select>
+                </div>
+              }
+
               <div class="cm-field-row">
                 <!-- Address -->
                 <div class="cm-field-group">
@@ -281,15 +340,22 @@
                   </div>
                   @if (f['pincode'].touched && f['pincode'].invalid) {
                     <div class="cm-error-msg" role="alert">
-                      <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>{{ 'user.events.maximum12CharactersAllowed' | translate }}
+                      <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                      @if (f['pincode'].errors?.['postalFormat']) {
+                        {{ 'user.jobs.doesnTMatchExpectedFormat' | translate }}
+                      } @else {
+                        {{ 'user.events.maximum12CharactersAllowed' | translate }}
+                      }
                     </div>
                   }
                 </div>
               </div>
 
-              <!-- Venue / City -->
+              <!-- Venue — free-text venue/building name; City above is now
+                   the real dropdown, so this no longer doubles as "or a city
+                   name" the way it used to. -->
               <div class="cm-field-group">
-                <label class="cm-label">{{ 'user.events.venueCity' | translate }}</label>
+                <label class="cm-label">{{ 'user.events.venue' | translate }}</label>
                 <div class="cm-input-wrap">
                   <i class="bi bi-building cm-input-icon" aria-hidden="true"></i>
                   <input
@@ -335,8 +401,8 @@
                     <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
                     @if (f['locationLink'].errors?.['required']) {
                       Meeting link is required.
-                    } @else if (f['locationLink'].errors?.['pattern']) {
-                      Enter a valid URL starting with https://
+                    } @else if (f['locationLink'].errors?.['invalidUrl']) {
+                      Enter a valid URL starting with http:// or https://
                     } @else if (f['locationLink'].errors?.['maxlength']) {
                       Maximum 300 characters allowed.
                     }
@@ -354,29 +420,33 @@
           <p class="cm-subhead">{{ 'user.events.audienceAmpVisibility' | translate }}</p>
 
           <!-- Country — always shown (even for Online events) since it drives
-               Visibility scoping below, not just the physical address block. -->
+               Visibility scoping below, not just the physical address block
+               (also drives the State/City cascade above and the country-based
+               default Time Zone). -->
           <div class="cm-field-group">
             <label class="cm-label">{{ 'user.events.country' | translate }}</label>
             <app-searchable-select
               formControlName="countryId"
               [options]="countryOptions()"
               [placeholder]="'user.events.selectCountry' | translate"
+              (ngModelChange)="onCountryChange($event)"
             ></app-searchable-select>
           </div>
 
-          <!-- Visibility Type — who the event is listed for -->
+          <!-- Visibility Type — who the event is listed for. Events-owned
+               wording (not Business's "...as this business." copy). -->
           <div class="cm-field-group">
             <label class="cm-label">
-              {{ 'components.businessForm.visibilityLabel' | translate }} <span class="cm-required">*</span>
+              {{ 'user.events.visibility.label' | translate }} <span class="cm-required">*</span>
             </label>
             <app-radio-group formControlName="visibilityType" variant="pill"
               [options]="visibilityOptions"
-              [ariaLabel]="'components.businessForm.visibilityLabel' | translate"></app-radio-group>
+              [ariaLabel]="'user.events.visibility.label' | translate"></app-radio-group>
             <p class="cm-field-hint">
               <i class="bi bi-info-circle" aria-hidden="true"></i>
               {{ (eventForm.get('visibilityType')?.value === 'WORLDWIDE'
-                    ? 'components.businessForm.visibilityWorldwideHint'
-                    : 'components.businessForm.visibilityCountryHint') | translate }}
+                    ? 'user.events.visibility.worldwideHint'
+                    : 'user.events.visibility.countryHint') | translate }}
             </p>
           </div>
         </div>
@@ -414,8 +484,8 @@
               @if (f['bookingUrl'].touched && f['bookingUrl'].invalid) {
                 <div class="cm-error-msg" role="alert">
                   <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
-                  @if (f['bookingUrl'].errors?.['pattern']) {
-                    Enter a valid URL starting with https://
+                  @if (f['bookingUrl'].errors?.['invalidUrl']) {
+                    Enter a valid URL starting with http:// or https://
                   } @else if (f['bookingUrl'].errors?.['maxlength']) {
                     Maximum 500 characters allowed.
                   }
@@ -469,6 +539,8 @@
             accept="image/*"
             [label]="'components.fileUpload.uploadEventImage' | translate"
             [existingPreview]="existingImage() | imageUrl"
+            [showError]="!!imageUploadError()"
+            [errorMessage]="imageUploadError() ?? ''"
             (filesChange)="onImageChange($event)"
           ></app-file-upload>
         </div>
