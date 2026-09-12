@@ -1,3 +1,10 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate
+    icon="bi-people"
+    [title]="'user.community.guestGateTitle' | translate"
+    [message]="'user.community.guestGateMessage' | translate">
+  </app-guest-gate>
+} @else {
 <!-- ═══════════════════════════════════════════════════════════
      Communities — head + floating-pill tabs + topic chips
      + spotlight carousel + (grid/list) directory + sidebar
@@ -687,3 +694,4 @@
 </app-community-leave-modal>
 
 } <!-- /loading -->
+}

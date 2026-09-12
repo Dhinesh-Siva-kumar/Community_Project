@@ -149,7 +149,7 @@ export async function register(dto: RegisterDtoType) {
   await logAudit((user as UserRow).id, 'USER_REGISTER', undefined, 'users', (user as UserRow).id);
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
-    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    'Welcome to Tamilya! Complete your profile and join a community to get started.',
     undefined,
     undefined,
     {},
@@ -512,7 +512,7 @@ export async function googleInitiate(dto: GoogleInitiateDtoType) {
   await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
-    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    'Welcome to Tamilya! Complete your profile and join a community to get started.',
     undefined,
     undefined,
     {},
@@ -584,7 +584,7 @@ export async function googleComplete(dto: GoogleCompleteDtoType) {
   await logAudit((user as UserRow).id, 'USER_REGISTER', { google: true }, 'users', (user as UserRow).id);
   await notificationsService.create(
     (user as UserRow).id, 'WELCOME',
-    'Welcome to TamilConnect! Complete your profile and join a community to get started.',
+    'Welcome to Tamilya! Complete your profile and join a community to get started.',
     undefined,
     undefined,
     {},

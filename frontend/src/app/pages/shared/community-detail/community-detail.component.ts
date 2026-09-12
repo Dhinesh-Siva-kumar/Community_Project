@@ -23,6 +23,7 @@ import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
@@ -30,7 +31,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, GuestGateComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -41,7 +42,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
@@ -293,6 +294,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real community for them (see
+    // GuestGateComponent). Only reachable at all via /user/community/:id;
+    // the /admin/community/:id route is already behind adminGuard.
+    if (!this.authService.isAuthenticated()) return;
+
     this.initForms();
 
     // Under OnPush, this component only re-renders when something it owns

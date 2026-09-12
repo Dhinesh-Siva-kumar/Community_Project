@@ -16,6 +16,7 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { TranslatePipe } from '@ngx-translate/core';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
 import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -30,14 +31,14 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [PostVideoComponent, CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, GuestGateComponent],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
 export class UserCommunityComponent implements OnInit, OnDestroy {
   private communityService = inject(CommunityService);
   private postService       = inject(PostService);
-  private authService       = inject(AuthService);
+  authService               = inject(AuthService);
   private toast             = inject(ToastService);
   private router            = inject(Router);
 
@@ -257,6 +258,11 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
   // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real community directory for
+    // them (see GuestGateComponent).
+    if (!this.authService.isAuthenticated()) return;
+
     this.loadCommunities();
     this.loadSuggestedCommunities();
     this.loadPopularPosts();

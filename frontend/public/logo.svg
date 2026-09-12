@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="TamilConnect">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya">
   <defs>
     <!-- Amber → Saffron gradient (brand colours) -->
     <linearGradient id="tc-grad" x1="0" y1="0" x2="1" y2="1">
@@ -37,7 +37,7 @@
   <!-- ── Central hub — white circle with bold "T" ── -->
   <circle cx="20" cy="20" r="6" fill="white" filter="url(#tc-inset)"/>
 
-  <!-- "T" for TamilConnect — sized and centred precisely -->
+  <!-- "T" for Tamilya — sized and centred precisely -->
   <text
     x="20"
     y="24"

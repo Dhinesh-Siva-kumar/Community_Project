@@ -76,7 +76,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   closeMobile(): void { this.mobileOpen = false; }
   setActive(s: string): void { this.activeSection = s; }
 
-  applicationName = 'TamilConnect';
+  applicationName = 'Tamilya';
 
   // ── Communities Showcase (proper nouns — not translated) ──
   @ViewChild('commScroll') commScrollRef!: ElementRef<HTMLElement>;

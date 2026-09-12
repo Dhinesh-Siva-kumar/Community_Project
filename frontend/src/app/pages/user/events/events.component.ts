@@ -23,6 +23,7 @@ import { EventDateBadgeComponent } from '../../../shared/components/event-date-b
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil, eventModeCategorySummary as eventModeCategorySummaryUtil } from '../../../shared/utils/event-location';
 import { formatEventTimeRange as formatEventTimeRangeUtil, eventCardDateTimeLabel as eventCardDateTimeLabelUtil } from '../../../shared/utils/event-date-format';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type ModeFilter = 'all' | 'Offline' | 'Online' | 'Hybrid';
 /** '' = All Events. Drives the quick filter in the search card — defaults to 'upcoming'. */
@@ -31,7 +32,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe, GuestGateComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -42,7 +43,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
 export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private translate = inject(TranslateService);
   private eventService = inject(EventService);
-  private authService  = inject(AuthService);
+  authService          = inject(AuthService);
   private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
@@ -236,6 +237,11 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   imageViewerInitialIndex = signal(0);
 
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real events list for them
+    // (see GuestGateComponent).
+    if (!this.authService.isAuthenticated()) return;
+
     this.restoreFiltersFromQueryParams();
     this.loadEvents();
     this.loadCountries();

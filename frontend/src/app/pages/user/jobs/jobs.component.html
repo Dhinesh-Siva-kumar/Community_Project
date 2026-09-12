@@ -1,3 +1,10 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate
+    icon="bi-briefcase"
+    [title]="'user.jobs.guestGateTitle' | translate"
+    [message]="'user.jobs.guestGateMessage' | translate">
+  </app-guest-gate>
+} @else {
 <!-- ═══════════════════════════════════════════════════════════
      USER JOBS PAGE — Premium Filter + Enhanced Cards
      ═══════════════════════════════════════════════════════════ -->
@@ -1196,4 +1203,5 @@
       </div>
     </div>
   }
+}
 }

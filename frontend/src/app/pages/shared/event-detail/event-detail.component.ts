@@ -16,6 +16,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil } from '../../../shared/utils/event-location';
 import { formatEventTimeRange as formatEventTimeRangeUtil } from '../../../shared/utils/event-date-format';
 import { isHttpUrl } from '../../../shared/validators/url.validator';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 /**
  * Dedicated, routed Event Details page (`/admin/events/:id`, `/user/events/:id`)
@@ -26,13 +27,13 @@ import { isHttpUrl } from '../../../shared/validators/url.validator';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, ImageUrlPipe, EventDateBadgeComponent, QrCodeComponent, ImageViewerComponent, EventFormModalComponent, EventDeleteModalComponent, TranslatePipe],
+  imports: [CommonModule, DatePipe, RouterLink, ImageUrlPipe, EventDateBadgeComponent, QrCodeComponent, ImageViewerComponent, EventFormModalComponent, EventDeleteModalComponent, TranslatePipe, GuestGateComponent],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss'],
 })
 export class EventDetailComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
-  private authService  = inject(AuthService);
+  authService           = inject(AuthService);
   private toast        = inject(ToastService);
   private translate     = inject(TranslateService);
   private route  = inject(ActivatedRoute);
@@ -109,6 +110,12 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real event for them (see
+    // GuestGateComponent). Only reachable at all via /user/events/:id; the
+    // /admin/events/:id route is already behind adminGuard.
+    if (!this.authService.isAuthenticated()) return;
+
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('id');
       if (id) this.loadEvent(id);

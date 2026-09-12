@@ -1,3 +1,10 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate
+    icon="bi-people"
+    [title]="'shared.communityDetail.guestGateTitle' | translate"
+    [message]="'shared.communityDetail.guestGateMessage' | translate">
+  </app-guest-gate>
+} @else {
 <!-- ═══════════════════════════════════════════════════════════
      LOADING STATE — Amber Skeleton
 ══════════════════════════════════════════════════════════════ -->
@@ -2525,4 +2532,5 @@
     }
   }
 
+}
 }

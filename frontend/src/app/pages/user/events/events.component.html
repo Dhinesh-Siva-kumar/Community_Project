@@ -1,3 +1,10 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate
+    icon="bi-calendar-event"
+    [title]="'user.events.guestGateTitle' | translate"
+    [message]="'user.events.guestGateMessage' | translate">
+  </app-guest-gate>
+} @else {
 <!-- ── HEADER — same structure/alignment as the Business page's header:
      title/count on the left, tabs + Select + Add on the right. ─────── -->
 <div class="biz-head">
@@ -547,4 +554,5 @@
   [editEventId]="editingId()"
   (closed)="closeAddModal()"
   (saved)="onEventSaved($event)"></app-event-form-modal>
+}
 

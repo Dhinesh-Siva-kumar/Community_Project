@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { userGuard } from './core/guards/user.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { noAdminGuard } from './core/guards/no-admin.guard';
 import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -180,13 +181,18 @@ export const routes: Routes = [
   },
 
   // User routes
+  //
+  // No userGuard at this level: jobs/events/business/community pages stay
+  // reachable for a guest — they just render a "please register or log in"
+  // gate instead of any real content (see GuestGateComponent). Only profile
+  // and notifications — inherently account-bound — keep userGuard below.
   {
     path: 'user',
     loadComponent: () =>
       import('./layouts/user-layout/user-layout.component').then(
         (m) => m.UserLayoutComponent
       ),
-    canActivate: [userGuard],
+    canActivate: [noAdminGuard],
     children: [
       {
         path: '',
@@ -249,6 +255,7 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
+        canActivate: [userGuard],
         loadComponent: () =>
           import('./pages/user/profile/profile.component').then(
             (m) => m.UserProfileComponent
@@ -256,6 +263,7 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
+        canActivate: [userGuard],
         loadComponent: () =>
           import('./pages/shared/notifications/notifications.component').then(
             (m) => m.NotificationsComponent

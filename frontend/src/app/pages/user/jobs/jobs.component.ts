@@ -26,6 +26,7 @@ import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
 import { JobFormModalComponent } from '../../../shared/components/job-form-modal/job-form-modal.component';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type JobSharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -51,7 +52,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
     CommonModule, FormsModule, DatePipe,
     SearchableSelectComponent, ImageUrlPipe, ImageViewerComponent,
     ImageErrorHandlerDirective, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe,
-    JobFormModalComponent],
+    JobFormModalComponent, GuestGateComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -69,7 +70,7 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   private translate = inject(TranslateService);
   private language = inject(LanguageService);
   private jobService        = inject(JobService);
-  private authService       = inject(AuthService);
+  authService               = inject(AuthService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
@@ -367,6 +368,12 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
 
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real job board for them (see
+    // GuestGateComponent). Loading jobs would otherwise hit the authenticated
+    // /api/jobs endpoint and get force-redirected to /auth/login on the 401.
+    if (!this.authService.isAuthenticated()) return;
+
     // Default the Location filter to the viewer's own country — Country
     // Based jobs from other countries are invisible to them anyway (see
     // job-visibility.service.ts), so pre-filtering to "my country" starts

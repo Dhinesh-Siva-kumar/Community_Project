@@ -1,3 +1,10 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate
+    icon="bi-shop"
+    [title]="'user.business.guestGateTitle' | translate"
+    [message]="'user.business.guestGateMessage' | translate">
+  </app-guest-gate>
+} @else {
 <!-- ==================== HEAD (replicated from the User Community List page's
      header — title/subtitle left, tabs + view toggle + search right).
      Hidden in Detail view — matching the Admin Business page, where the
@@ -724,3 +731,4 @@
   (closed)="closeDeleteModal()"
   (deleted)="onBusinessDeleted($event)">
 </app-business-delete-modal>
+}

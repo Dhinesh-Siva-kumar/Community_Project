@@ -26,6 +26,7 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe } from '@ngx-translate/core';
+import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -45,7 +46,7 @@ const BUSINESS_PAGE_SIZE = 20;
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe, GuestGateComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -55,7 +56,7 @@ const BUSINESS_PAGE_SIZE = 20;
 })
 export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private svc               = inject(BusinessService);
-  private authService       = inject(AuthService);
+  authService               = inject(AuthService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private route             = inject(ActivatedRoute);
@@ -328,7 +329,9 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
       // view (which flips currentView back to 'list' via popstate) silently
       // overwrote the "Pending Approval" tab's list with the full "All"
       // businesses fetch, since this effect fires on any currentView change.
-      if (this.currentView() === 'list' && this.pageTab() === 'all') {
+      // Guests never fetch here at all — see ngOnInit()'s early return; this
+      // effect runs regardless of ngOnInit, so it needs its own guard too.
+      if (this.authService.isAuthenticated() && this.currentView() === 'list' && this.pageTab() === 'all') {
         this.loadNearbyBusinesses();
       }
     });
@@ -381,6 +384,12 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   }
 
   ngOnInit(): void {
+    // Guests never load any data here — the template renders a "please
+    // register or log in" gate instead of the real directory for them (see
+    // GuestGateComponent). The constructor's effect() has its own matching
+    // guard, since it fires independently of ngOnInit.
+    if (!this.authService.isAuthenticated()) return;
+
     // Default the country filter to the signed-in user's own country —
     // other countries' businesses only show once the user explicitly
     // picks one in the filter. Set before the first fetch so it's already
