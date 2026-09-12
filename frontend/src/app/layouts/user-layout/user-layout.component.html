@@ -25,7 +25,7 @@
 
   <!-- Navigation -->
   <nav class="sidebar-nav" [attr.aria-label]="'nav.navigationLinks' | translate">
-    @for (item of navItems; track item.route) {
+    @for (item of navItems(); track item.route) {
       @if (item.sectionLabel && (!sidebarCollapsed() || isMobile())) {
         <span class="nav-section-label" aria-hidden="true">{{ item.sectionLabel | translate }}</span>
       }
@@ -34,7 +34,7 @@
         [routerLink]="item.route"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: item.route === '/user/dashboard' }"
-        (click)="onNavClick()"
+        (click)="onNavItemClick(item, $event)"
         [title]="sidebarCollapsed() && !isMobile() ? (item.label | translate) : ''"
         [attr.aria-label]="item.label | translate"
       >
@@ -46,28 +46,39 @@
     }
   </nav>
 
-  <!-- Sidebar Footer — user profile -->
+  <!-- Sidebar Footer — user profile, or a guest onboarding nudge -->
   @if (!sidebarCollapsed() || isMobile()) {
     <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-user-avatar-wrap">
-          @if (authService.currentUser()?.avatar) {
-            <img
-              [src]="authService.currentUser()!.avatar | imageUrl"
-              alt=""
-              class="sidebar-user-avatar-img"
-              aria-hidden="true"
-            />
-          } @else {
-            <div class="sidebar-user-initials" aria-hidden="true">{{ getUserInitials() }}</div>
-          }
-          <span class="admin-online-dot" aria-hidden="true"></span>
+      @if (authService.isAuthenticated()) {
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar-wrap">
+            @if (authService.currentUser()?.avatar) {
+              <img
+                [src]="authService.currentUser()!.avatar | imageUrl"
+                alt=""
+                class="sidebar-user-avatar-img"
+                aria-hidden="true"
+              />
+            } @else {
+              <div class="sidebar-user-initials" aria-hidden="true">{{ getUserInitials() }}</div>
+            }
+            <span class="admin-online-dot" aria-hidden="true"></span>
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name">{{ getUserFullName() }}</span>
+            <span class="sidebar-user-role">{{ 'nav.member' | translate }}</span>
+          </div>
         </div>
-        <div class="sidebar-user-info">
-          <span class="sidebar-user-name">{{ getUserFullName() }}</span>
-          <span class="sidebar-user-role">{{ 'nav.member' | translate }}</span>
+      } @else {
+        <div class="sidebar-guest-card">
+          <div class="sidebar-guest-card__head">
+            <span class="sidebar-guest-card__icon" aria-hidden="true">★</span>
+            <span class="sidebar-guest-card__title">{{ 'nav.welcomeToTamilya' | translate }}</span>
+          </div>
+          <p class="sidebar-guest-card__text">{{ 'nav.welcomeToTamilyaText' | translate }}</p>
+          <a class="sidebar-guest-card__cta" routerLink="/auth/register">{{ 'nav.getStarted' | translate }}</a>
         </div>
-      </div>
+      }
     </div>
   }
 </aside>
@@ -114,59 +125,73 @@
       <!-- Light/Dark theme toggle -->
       <app-theme-toggle></app-theme-toggle>
 
-      <!-- Notification bell -->
-      <app-notification-panel [isAdmin]="false"></app-notification-panel>
+      @if (authService.isAuthenticated()) {
+        <!-- Notification bell -->
+        <app-notification-panel [isAdmin]="false"></app-notification-panel>
 
-      <div class="header-divider" aria-hidden="true"></div>
+        <div class="header-divider" aria-hidden="true"></div>
 
-      <!-- User dropdown -->
-      <div class="user-dropdown-wrapper">
-        <button
-          class="user-profile-btn"
-          (click)="toggleUserDropdown()"
-          type="button"
-          [attr.aria-expanded]="userDropdownOpen()"
-          [attr.aria-label]="'nav.userMenu' | translate:{ name: getUserFullName() }"
-          aria-haspopup="menu"
-        >
-          @if (authService.currentUser()?.avatar) {
-            <img [src]="authService.currentUser()!.avatar | imageUrl" alt="" class="avatar-img" />
-          } @else {
-            <div class="avatar-initials" aria-hidden="true">{{ getUserInitials() }}</div>
-          }
-          <span class="user-profile-name">{{ getUserFullName() }}</span>
-          <i class="bi bi-chevron-down user-profile-caret" [class.user-profile-caret--open]="userDropdownOpen()" aria-hidden="true"></i>
-        </button>
+        <!-- User dropdown -->
+        <div class="user-dropdown-wrapper">
+          <button
+            class="user-profile-btn"
+            (click)="toggleUserDropdown()"
+            type="button"
+            [attr.aria-expanded]="userDropdownOpen()"
+            [attr.aria-label]="'nav.userMenu' | translate:{ name: getUserFullName() }"
+            aria-haspopup="menu"
+          >
+            @if (authService.currentUser()?.avatar) {
+              <img [src]="authService.currentUser()!.avatar | imageUrl" alt="" class="avatar-img" />
+            } @else {
+              <div class="avatar-initials" aria-hidden="true">{{ getUserInitials() }}</div>
+            }
+            <span class="user-profile-name">{{ getUserFullName() }}</span>
+            <i class="bi bi-chevron-down user-profile-caret" [class.user-profile-caret--open]="userDropdownOpen()" aria-hidden="true"></i>
+          </button>
 
-        @if (userDropdownOpen()) {
-          <div class="user-dropdown-menu" role="menu" [attr.aria-label]="'nav.accountOptions' | translate">
-            <div class="dropdown-user-info" role="none">
-              <div class="dropdown-avatar" aria-hidden="true">{{ getUserInitials() }}</div>
-              <div class="dropdown-user-text">
-                <strong>{{ getUserFullName() }}</strong>
-                <small>{{ authService.currentUser()?.email }}</small>
+          @if (userDropdownOpen()) {
+            <div class="user-dropdown-menu" role="menu" [attr.aria-label]="'nav.accountOptions' | translate">
+              <div class="dropdown-user-info" role="none">
+                <div class="dropdown-avatar" aria-hidden="true">{{ getUserInitials() }}</div>
+                <div class="dropdown-user-text">
+                  <strong>{{ getUserFullName() }}</strong>
+                  <small>{{ authService.currentUser()?.email }}</small>
+                </div>
               </div>
+
+              <div class="dropdown-divider" role="separator"></div>
+
+              <a class="dropdown-item" routerLink="/user/profile" (click)="userDropdownOpen.set(false)" role="menuitem">
+                <i class="bi bi-person" aria-hidden="true"></i> {{ 'common.profile' | translate }}
+              </a>
+
+              <div class="dropdown-divider" role="separator"></div>
+
+              <button class="dropdown-item text-danger" (click)="logout()" type="button" role="menuitem">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i> {{ 'common.logout' | translate }}
+              </button>
             </div>
-
-            <div class="dropdown-divider" role="separator"></div>
-
-            <a class="dropdown-item" routerLink="/user/profile" (click)="userDropdownOpen.set(false)" role="menuitem">
-              <i class="bi bi-person" aria-hidden="true"></i> {{ 'common.profile' | translate }}
-            </a>
-
-            <div class="dropdown-divider" role="separator"></div>
-
-            <button class="dropdown-item text-danger" (click)="logout()" type="button" role="menuitem">
-              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> {{ 'common.logout' | translate }}
-            </button>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      } @else {
+        <div class="header-divider" aria-hidden="true"></div>
+        <a class="header-loginLink" routerLink="/auth/login">{{ 'home.header.login' | translate }}</a>
+        <a class="header-joinBtn" routerLink="/auth/register">
+          <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
+          {{ 'home.header.joinFree' | translate }}
+        </a>
+      }
     </div>
   </header>
 
   <!-- Content -->
   <main class="main-content" id="main-content" tabindex="-1">
+    <!-- Projected content when this layout is used directly (e.g. HomeComponent
+         wrapping itself for a registered viewer) rather than as a routed
+         layout — router-outlet stays empty in that case since no child route
+         targets it. -->
+    <ng-content></ng-content>
     <router-outlet />
   </main>
 </div>

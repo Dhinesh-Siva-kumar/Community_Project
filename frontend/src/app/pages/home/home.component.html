@@ -1,0 +1,11 @@
+<!-- One page for both guest and registered viewers — same sidebar + top
+     header shell (see user-layout.component.ts's own guest/registered
+     branches), with app-user-dashboard branching its own content (hero,
+     composer vs join-banner, feed, jobs/communities/events/businesses)
+     between the two states. Used directly here rather than via routing,
+     since /home must stay reachable without the 'user' route group's guard. -->
+<app-user-layout>
+  <app-user-dashboard />
+</app-user-layout>
+
+<app-auth-prompt-modal />

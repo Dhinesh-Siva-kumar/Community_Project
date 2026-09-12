@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,8 +10,13 @@ import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { JobService } from '../../../core/services/job.service';
 import { EventService } from '../../../core/services/event.service';
+import { BusinessService } from '../../../core/services/business.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { OnboardingService } from '../../../core/services/onboarding.service';
+import { DiscoveryService } from '../../../core/services/discovery.service';
+import { AuthPromptService } from '../../../core/services/auth-prompt.service';
+import { CountryPreferenceService } from '../../../core/services/country-preference.service';
+import { GeographyService } from '../../../core/services/geography.service';
 import {
   User,
   DashboardStats,
@@ -19,13 +24,22 @@ import {
   Post,
   Comment,
   Job,
+  Business,
+  Event,
+  GeoCountry,
+  JobPreview,
+  BusinessPreview,
+  EventPreview,
+  CommunityPreview,
+  PostPreview,
+  DiscoverySearchResult,
   PaginatedResponse,
 } from '../../../core/models';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { ProfileTabsComponent, ProfileTab } from '../../../shared/components/profile-tabs/profile-tabs.component';
-import { EventCalendarComponent } from '../../../shared/components/event-calendar/event-calendar.component';
+import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
 import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
@@ -37,6 +51,22 @@ type SharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | '
 type PostTab = 'ALL' | 'POPULAR' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
 
 type WelcomeLang = 'en' | 'ta';
+
+// The guest country-filter pills show only these countries (in this order),
+// matched against GeoCountry.name from the geography API — everything else
+// falls under the "Other" pill's dropdown so the row doesn't list 100+ pills.
+const PRIORITY_COUNTRY_NAMES = [
+  'United Kingdom',
+  'Germany',
+  'Canada',
+  'Australia',
+  'New Zealand',
+  'United States',
+  'United Arab Emirates',
+  'India',
+  'Sri Lanka',
+  'France',
+];
 
 // Mirrors the en/ta convention used by the landing and register pages
 // (see landing.component.ts / register.component.ts), reading the same
@@ -61,12 +91,6 @@ const WELCOME_BANNER_TEXT: Record<WelcomeLang, { subtitle: string; steps: [strin
   },
 };
 
-interface ProfileItem {
-  label: string;
-  completed: boolean;
-  route: string;
-}
-
 interface AnimatedStat {
   label: string;
   value: number;
@@ -82,7 +106,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [PostVideoComponent, CommonModule, RouterLink, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventCalendarComponent, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventDateBadgeComponent, TranslatePipe],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -90,16 +114,21 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private language = inject(LanguageService);
   private relativeTime  = inject(RelativeTimeService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private userService = inject(UserService);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
   private jobService = inject(JobService);
   private eventService = inject(EventService);
+  private businessService = inject(BusinessService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private platformId = inject(PLATFORM_ID);
   private onboardingService = inject(OnboardingService);
+  private discoveryService = inject(DiscoveryService);
+  authPromptService = inject(AuthPromptService);
+  private countryPreferenceService = inject(CountryPreferenceService);
+  private geographyService = inject(GeographyService);
 
   // Loading states
   loading = signal(true);
@@ -108,8 +137,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   loadingJobs = signal(true);
   loadingUpcomingEvents = signal(true);
 
-  // null while loading; true/false once the "any upcoming events in my area" check resolves.
-  hasUpcomingEvents = signal<boolean | null>(null);
+  upcomingEvents = signal<Event[]>([]);
 
   // Core data
   user = signal<User | null>(null);
@@ -145,11 +173,56 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // Communities, Events, Jobs
   joinedCommunities = signal<Community[]>([]);
   recentJobs = signal<Job[]>([]);
+  suggestedCommunities = signal<Community[]>([]);
+  joiningCommunity = signal<string | null>(null);
+  featuredBusinesses = signal<Business[]>([]);
+  loadingSuggestedCommunities = signal(true);
+  loadingFeaturedBusinesses = signal(true);
+
+  // ── Guest-only discovery state ─────────────────────────────
+  // Mirrors the registered signals above one-for-one (guestPosts ~ allPosts,
+  // guestJobs ~ recentJobs, etc.) but sourced from the public /discovery/*
+  // endpoints instead of the authenticated APIs — see loadGuestData().
+  guestPosts = signal<PostPreview[]>([]);
+  guestJobs = signal<JobPreview[]>([]);
+  guestEvents = signal<EventPreview[]>([]);
+  guestCommunities = signal<CommunityPreview[]>([]);
+  guestBusinesses = signal<BusinessPreview[]>([]);
+  countries = signal<GeoCountry[]>([]);
+  selectedCountryId = signal<number | null>(null);
+  searchQuery = signal('');
+  searchResults = signal<DiscoverySearchResult | null>(null);
+  searching = signal(false);
+  otherCountryDropdownOpen = signal(false);
 
   // Computed
-  profileCompletion = computed(() => this.user()?.profileCompletion ?? 0);
   firstName = computed(() => this.user()?.displayName ?? this.user()?.userName ?? 'User');
   currentUser = computed(() => this.user());
+
+  // The 10 curated countries, in PRIORITY_COUNTRY_NAMES order, restricted to
+  // whichever of them the geography API actually returned.
+  priorityCountries = computed<GeoCountry[]>(() => {
+    const byName = new Map(this.countries().map((c) => [c.name, c]));
+    return PRIORITY_COUNTRY_NAMES.map((name) => byName.get(name)).filter(
+      (c): c is GeoCountry => !!c,
+    );
+  });
+
+  // Everything not in the curated 10 — lives inside the "Other" pill's dropdown.
+  otherCountries = computed<GeoCountry[]>(() => {
+    const priorityIds = new Set(this.priorityCountries().map((c) => c.id));
+    return this.countries()
+      .filter((c) => !priorityIds.has(c.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  // Set when the selected country is one of the "other" (non-curated) ones,
+  // so the "Other" pill itself can show as active with the country's name.
+  selectedOtherCountry = computed<GeoCountry | null>(() => {
+    const id = this.selectedCountryId();
+    if (id == null) return null;
+    return this.otherCountries().find((c) => c.id === id) ?? null;
+  });
 
   greeting = computed(() => {
     // Recompute these labels when the reader switches language.
@@ -179,17 +252,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   private welcomeLang: WelcomeLang = 'en';
   welcomeBannerText = computed(() => WELCOME_BANNER_TEXT[this.welcomeLang]);
 
-  profileStrength = computed(() => {
-    // Recompute these labels when the reader switches language.
-    this.language.currentLang();
-    const pct = this.profileCompletion();
-    if (pct >= 100) return this.translate.instant('user.dashboard.progressComplete');
-    if (pct >= 75) return this.translate.instant('user.dashboard.progressStrong');
-    if (pct >= 50) return this.translate.instant('user.dashboard.progressIntermediate');
-    if (pct >= 25) return this.translate.instant('user.dashboard.progressGettingThere');
-    return this.translate.instant('user.dashboard.progressJustStarted');
-  });
-
   // allPosts() is loaded latest-first (see loadPostsFromCommunities), and a
   // filter preserves that relative order — but each case sorts explicitly
   // by createdAt anyway so this doesn't silently depend on that assumption.
@@ -218,40 +280,43 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     }
   });
 
-  private byLatest(a: Post, b: Post): number {
+  private byLatest(a: { createdAt: string }, b: { createdAt: string }): number {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   }
 
-  // Five clearly distinct hues — the previous palette had Posts/Businesses/
-  // Events all in the amber family, which made the icons hard to tell
-  // apart at a glance in a short list.
+  // Same tab-filter logic as filteredPosts, over the guest preview feed
+  // (PostPreview has no isLiked/isSaved — nothing to gate here, since a
+  // guest can only ever read this list, never react to it).
+  filteredGuestPosts = computed(() => {
+    const posts = this.guestPosts();
+    const tab = this.activeTab();
+    switch (tab) {
+      case 'POPULAR':
+        return [...posts].sort((a, b) => {
+          const scoreA = (a.likeCount ?? 0) + (a.commentCount ?? 0);
+          const scoreB = (b.likeCount ?? 0) + (b.commentCount ?? 0);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return this.byLatest(a, b);
+        });
+      case 'HELP':
+        return posts.filter((p) => p.type === 'HELP').sort((a, b) => this.byLatest(a, b));
+      case 'EMERGENCY':
+        return posts.filter((p) => p.type === 'EMERGENCY').sort((a, b) => this.byLatest(a, b));
+      default:
+        return [...posts].sort((a, b) => this.byLatest(a, b));
+    }
+  });
+
+  // Matches the "Your Activity" stat row exactly (Communities/Businesses/
+  // Events/Jobs) — Posts intentionally omitted to match the new layout.
   animatedStats = signal<AnimatedStat[]>([
-    { label: 'user.dashboard.stat.communities', value: 0, displayValue: 0, icon: 'bi-people-fill',            iconColor: 'var(--stat-communities, #16A34A)', bgColor: 'var(--stat-communities-bg, #DCFCE7)', accentColor: 'var(--stat-communities, #16A34A)', route: '/user/community' },
-    { label: 'user.dashboard.stat.posts',       value: 0, displayValue: 0, icon: 'bi-file-earmark-text-fill', iconColor: 'var(--stat-posts, #F59E0B)', bgColor: 'var(--stat-posts-bg, #FEF3C7)', accentColor: 'var(--stat-posts, #F59E0B)', route: '/user/profile', queryParams: { tab: 'posts' } },
-    { label: 'user.dashboard.stat.businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                   iconColor: 'var(--stat-businesses, #2563EB)', bgColor: 'var(--stat-businesses-bg, #DBEAFE)', accentColor: 'var(--stat-businesses, #2563EB)', route: '/user/business' },
-    { label: 'user.dashboard.stat.events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill',    iconColor: 'var(--stat-events, #7C3AED)', bgColor: 'var(--stat-events-bg, #EDE9FE)', accentColor: 'var(--stat-events, #7C3AED)', route: '/user/events' },
-    { label: 'user.dashboard.stat.jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',         iconColor: 'var(--stat-jobs, #0D9488)', bgColor: 'var(--stat-jobs-bg, #CCFBF1)', accentColor: 'var(--stat-jobs, #0D9488)', route: '/user/jobs' },
+    { label: 'user.dashboard.stat.communities', value: 0, displayValue: 0, icon: 'bi-people-fill',         iconColor: 'var(--stat-communities, #16A34A)', bgColor: 'var(--stat-communities-bg, #DCFCE7)', accentColor: 'var(--stat-communities, #16A34A)', route: '/user/community' },
+    { label: 'user.dashboard.stat.businesses',  value: 0, displayValue: 0, icon: 'bi-shop',                iconColor: 'var(--stat-businesses, #2563EB)', bgColor: 'var(--stat-businesses-bg, #DBEAFE)', accentColor: 'var(--stat-businesses, #2563EB)', route: '/user/business' },
+    { label: 'user.dashboard.stat.events',      value: 0, displayValue: 0, icon: 'bi-calendar-event-fill', iconColor: 'var(--stat-events, #7C3AED)', bgColor: 'var(--stat-events-bg, #EDE9FE)', accentColor: 'var(--stat-events, #7C3AED)', route: '/user/events' },
+    { label: 'user.dashboard.stat.jobs',        value: 0, displayValue: 0, icon: 'bi-briefcase-fill',      iconColor: 'var(--stat-jobs, #0D9488)', bgColor: 'var(--stat-jobs-bg, #CCFBF1)', accentColor: 'var(--stat-jobs, #0D9488)', route: '/user/jobs' },
   ]);
 
   private animationFrameId: number | null = null;
-
-  // Kept in sync with the backend's calculateProfileCompletion()
-  // (backend/src/modules/users/users.service.ts) — same 6 fields, same order.
-  profileItems = computed<ProfileItem[]>(() => {
-    const u = this.user();
-    if (!u) return [];
-    return [
-      { label: 'user.dashboard.checklist.profilePhoto', completed: !!u.avatar, route: '/user/profile' },
-      { label: 'user.dashboard.checklist.country', completed: !!u.countryId, route: '/user/profile' },
-      { label: 'user.dashboard.checklist.city', completed: !!u.cityId, route: '/user/profile' },
-      { label: 'user.dashboard.checklist.occupation', completed: !!u.occupationType, route: '/user/profile' },
-      { label: 'user.dashboard.checklist.interests', completed: u.interests?.length > 0, route: '/user/profile' },
-      { label: 'user.dashboard.checklist.bio', completed: !!u.bio, route: '/user/profile' },
-    ];
-  });
-
-  completedItems = computed(() => this.profileItems().filter((item) => item.completed));
-  incompleteItems = computed(() => this.profileItems().filter((item) => !item.completed));
 
   // `color` is used both as text-on-tint (hover) AND as a solid icon-chip
   // fill with a white icon on top (active) — kept as a fixed literal so
@@ -266,13 +331,25 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     { id: 'ENQUIRY',   label: 'user.dashboard.tab.enquiry',       icon: 'bi-patch-question-fill',        color: '#7C3AED', bgColor: 'var(--color-badge-violet-bg, #EDE9FE)' },
   ];
 
+  // Same as `tabs` minus Enquire — matches the guest Stitch mockup, which
+  // only shows All/Popular/Help Requests/Emergency (Enquire posts are a
+  // registered-member feature).
+  guestTabs: ProfileTab[] = this.tabs.filter((t) => t.id !== 'ENQUIRY');
+
   ngOnInit(): void {
-    this.loadUserData();
-    this.loadDashboardStats();
-    this.loadJoinedCommunities();
-    this.loadRecentJobs();
-    this.loadUpcomingEventsCheck();
-    this.initWelcomeBanner();
+    if (this.authService.isAuthenticated()) {
+      this.loadUserData();
+      this.loadDashboardStats();
+      this.loadJoinedCommunities();
+      this.loadRecentJobs();
+      this.loadUpcomingEventsCheck();
+      this.loadSuggestedCommunities();
+      this.loadFeaturedBusinesses();
+      this.initWelcomeBanner();
+    } else {
+      this.loading.set(false);
+      this.initGuestCountry();
+    }
   }
 
   ngOnDestroy(): void {
@@ -395,34 +472,165 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   /** Drives the "Your Events" rail card's empty state — is there anything upcoming in the user's own country? */
   loadUpcomingEventsCheck(): void {
     this.loadingUpcomingEvents.set(true);
-    const todayStr = this.today().toISOString().slice(0, 10);
     this.eventService.getEvents({
-      eventDateFrom: todayStr,
+      status: 'upcoming',
       country: this.authService.currentUser()?.country,
-      limit: 1,
+      limit: 3,
+      sortBy: 'eventDate',
+      sortDir: 'asc',
     }).subscribe({
       next: (res) => {
-        this.hasUpcomingEvents.set(res.total > 0);
+        this.upcomingEvents.set(res.data);
         this.loadingUpcomingEvents.set(false);
+      },
+      error: () => this.loadingUpcomingEvents.set(false),
+    });
+  }
+
+  /** Ranked by country + interest match + popularity, already excludes communities the caller has joined — see communities.service.ts getSuggested(). */
+  loadSuggestedCommunities(): void {
+    this.loadingSuggestedCommunities.set(true);
+    this.communityService.getSuggestedCommunities(3).subscribe({
+      next: (data) => { this.suggestedCommunities.set(data); this.loadingSuggestedCommunities.set(false); },
+      error: () => this.loadingSuggestedCommunities.set(false),
+    });
+  }
+
+  joinSuggestedCommunity(community: Community): void {
+    if (this.joiningCommunity() === community.id) return;
+    this.joiningCommunity.set(community.id);
+    this.communityService.joinCommunity(community.id).subscribe({
+      next: () => {
+        this.suggestedCommunities.update((list) => list.filter((c) => c.id !== community.id));
+        this.joiningCommunity.set(null);
+        this.toast.success('user.dashboard.toast.joinedCommunity');
       },
       error: () => {
-        // Fail open — show the calendar rather than a false "no events" empty state on a network hiccup.
-        this.hasUpcomingEvents.set(true);
-        this.loadingUpcomingEvents.set(false);
+        this.toast.error('user.dashboard.toast.failedJoinCommunity');
+        this.joiningCommunity.set(null);
       },
     });
+  }
+
+  loadFeaturedBusinesses(): void {
+    this.loadingFeaturedBusinesses.set(true);
+    this.businessService.getBusinesses({ limit: 3, sortBy: 'joined' }).subscribe({
+      next: (res) => { this.featuredBusinesses.set(res.data); this.loadingFeaturedBusinesses.set(false); },
+      error: () => this.loadingFeaturedBusinesses.set(false),
+    });
+  }
+
+  // ── Guest discovery (public /discovery/* previews) ─────────
+
+  private initGuestCountry(): void {
+    this.geographyService.getCountries().subscribe((countries) => {
+      this.countries.set(countries);
+      // No IP/locale-based guess exists in this app — a returning guest's
+      // last pick is honored, otherwise the country stays unselected rather
+      // than silently assuming one (see country-preference.service.ts).
+      this.selectedCountryId.set(this.countryPreferenceService.getSelected());
+      this.loadGuestData();
+    });
+  }
+
+  onCountryChange(countryId: number): void {
+    this.selectedCountryId.set(countryId);
+    this.countryPreferenceService.setSelected(countryId);
+    this.otherCountryDropdownOpen.set(false);
+    this.loadGuestData();
+  }
+
+  clearCountryFilter(): void {
+    this.selectedCountryId.set(null);
+    this.countryPreferenceService.clearSelected();
+    this.otherCountryDropdownOpen.set(false);
+    this.loadGuestData();
+  }
+
+  toggleOtherCountryDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.otherCountryDropdownOpen.update((open) => !open);
+  }
+
+  @HostListener('document:click')
+  closeOtherCountryDropdown(): void {
+    if (this.otherCountryDropdownOpen()) this.otherCountryDropdownOpen.set(false);
+  }
+
+  private loadGuestData(): void {
+    const countryId = this.selectedCountryId() ?? undefined;
+
+    this.loadingPosts.set(true);
+    this.discoveryService.getPostsPreview({ countryId, limit: 6 }).subscribe({
+      next: (res) => { this.guestPosts.set(res.data); this.loadingPosts.set(false); },
+      error: () => this.loadingPosts.set(false),
+    });
+
+    this.loadingJobs.set(true);
+    this.discoveryService.getJobsPreview({ countryId, limit: 3 }).subscribe({
+      next: (res) => { this.guestJobs.set(res.data); this.loadingJobs.set(false); },
+      error: () => this.loadingJobs.set(false),
+    });
+
+    this.loadingUpcomingEvents.set(true);
+    this.discoveryService.getEventsPreview({ countryId, limit: 3 }).subscribe({
+      next: (res) => { this.guestEvents.set(res.data); this.loadingUpcomingEvents.set(false); },
+      error: () => this.loadingUpcomingEvents.set(false),
+    });
+
+    this.loadingSuggestedCommunities.set(true);
+    this.discoveryService.getCommunitiesPreview({ countryId, limit: 3 }).subscribe({
+      next: (res) => { this.guestCommunities.set(res.data); this.loadingSuggestedCommunities.set(false); },
+      error: () => this.loadingSuggestedCommunities.set(false),
+    });
+
+    this.loadingFeaturedBusinesses.set(true);
+    this.discoveryService.getBusinessesPreview({ countryId, limit: 3 }).subscribe({
+      next: (res) => { this.guestBusinesses.set(res.data); this.loadingFeaturedBusinesses.set(false); },
+      error: () => this.loadingFeaturedBusinesses.set(false),
+    });
+  }
+
+  runGuestSearch(): void {
+    const q = this.searchQuery().trim();
+    if (!q) { this.searchResults.set(null); return; }
+    this.searching.set(true);
+    this.discoveryService.search(q, this.selectedCountryId() ?? undefined).subscribe({
+      next: (res) => { this.searchResults.set(res); this.searching.set(false); },
+      error: () => this.searching.set(false),
+    });
+  }
+
+  clearGuestSearch(): void {
+    this.searchQuery.set('');
+    this.searchResults.set(null);
+  }
+
+  guestSearchResultCount(r: DiscoverySearchResult): number {
+    return r.jobs.length + r.businesses.length + r.events.length + r.communities.length;
+  }
+
+  /** Guest CTA gate — jobs "Apply Now", RSVP/Get Tickets, community Join,
+   * business Enquire, and post replies all funnel through this instead of a
+   * real action. */
+  promptAuth(message?: string): void {
+    this.authPromptService.prompt(message);
   }
 
   // ── Tab Switching ─────────────────────────────────────────
 
   switchTab(tab: PostTab): void {
     this.activeTab.set(tab);
-    // Switching tabs swaps the whole post list, so if the reader had
-    // scrolled deep into the previous tab's feed, don't leave them stranded
-    // mid-scroll against unrelated content — bring the tab bar (and the
-    // fresh list beneath it) back into view. Same approach as
-    // community-detail's scrollToTabPanelStart.
     if (typeof window === 'undefined') return;
+
+    // .stream-card__feed now scrolls independently of the page (its own
+    // overflow-y:auto region) — reset its internal scroll first so a new
+    // tab never opens mid-scroll into the previous tab's list.
+    document.querySelector('.stream-card__feed')?.scrollTo({ top: 0 });
+
+    // Then, same as before: if the reader had scrolled the *page* deep past
+    // the stream card, bring the tab bar back into view rather than leaving
+    // them stranded against unrelated content below it.
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => this.scrollFeedToTop()));
   }
 
@@ -783,7 +991,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
     const targets = [
       data.joinedCommunities ?? data.totalCommunities ?? 0,
-      data.userPosts ?? data.totalPosts ?? 0,
       data.userBusinesses ?? data.totalBusinesses ?? 0,
       data.userEvents ?? data.totalEvents ?? 0,
       data.userJobs ?? data.totalJobs ?? 0,

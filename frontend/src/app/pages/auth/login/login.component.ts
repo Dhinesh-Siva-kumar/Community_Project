@@ -78,7 +78,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     if (raw.startsWith('/auth')) return null;
     // A returnUrl meant for the other role's section would just get bounced
     // straight back by admin.guard/user.guard — skip it and use the normal
-    // dashboard instead of round-tripping through a guard redirect.
+    // dashboard instead of round-tripping through a guard redirect. '/home'
+    // is open to both roles' guards, so it's always honored.
+    if (raw.startsWith('/home')) return raw;
     if (isAdmin ? !raw.startsWith('/admin') : !raw.startsWith('/user')) return null;
     return raw;
   }
@@ -89,7 +91,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
       this.router.navigateByUrl(returnUrl);
       return;
     }
-    this.router.navigate([isAdmin ? '/admin/dashboard' : '/user/dashboard']);
+    this.router.navigate([isAdmin ? '/admin/dashboard' : '/home']);
   }
 
   /** Forwarded onto the "create one" link so switching to Register doesn't drop a pending returnUrl (e.g. a shared post link opened while logged out). */

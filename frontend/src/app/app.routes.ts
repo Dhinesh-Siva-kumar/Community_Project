@@ -27,6 +27,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'home',
+        loadComponent: () =>
+          import('./pages/home/home.component').then(
+            (m) => m.HomeComponent
+          ),
+      },
+      {
         path: 'auth/login',
         canActivate: [guestGuard],
         loadComponent: () =>
@@ -183,15 +190,17 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: '/home',
         pathMatch: 'full',
       },
+      // The dashboard page's content (stats, post feed, jobs/communities/
+      // business widgets) is now embedded directly inside HomeComponent's
+      // registered-user view (see pages/home/home.component.html) — nothing
+      // is exclusive to this URL anymore, so it just forwards there.
       {
         path: 'dashboard',
-        loadComponent: () =>
-          import('./pages/user/dashboard/user-dashboard.component').then(
-            (m) => m.UserDashboardComponent
-          ),
+        redirectTo: '/home',
+        pathMatch: 'full',
       },
       {
         path: 'community',

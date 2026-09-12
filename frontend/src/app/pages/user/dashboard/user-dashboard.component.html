@@ -1,9 +1,9 @@
 <!-- Skeleton -->
 @if (loading()) {
   <div class="db-sk">
-    <div class="sk-hero"></div>
     <div class="sk-layout">
       <div class="sk-main">
+        <div class="sk-hero"></div>
         <div class="sk-card sk-composer"></div>
         @for (_ of [1,2,3]; track _){<div class="sk-post"></div>}
       </div>
@@ -15,34 +15,46 @@
 } @else {
 <div class="db-page">
 
-  <!-- ── Hero ──────────────────────────────────────────────── -->
-  <section class="hero">
-    <div class="hero__icon" aria-hidden="true">
-      <i class="bi" [ngClass]="greetingIcon()"></i>
-    </div>
-
-    <div class="hero__body">
-      <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
-      <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
-      <p class="hero__sub">{{ 'user.dashboard.hereSWhatSHappening' | translate }}</p>
-    </div>
-
-    <div class="hero__glance">
-      <div class="hero__glance-item">
-        <span class="hero__glance-icon"><i class="bi bi-people-fill"></i></span>
-        <span class="hero__glance-text">
-          <strong>{{ joinedCommunities().length }}</strong>
-          <small>{{ 'user.dashboard.communities' | translate }}</small>
-        </span>
-      </div>
-    </div>
-  </section>
-
   <!-- ── Social layout: feed (main) + right rail ─────────────── -->
   <div class="db-layout">
 
-    <!-- ══════════════ Main column: composer + feed ══════════════ -->
+    <!-- ══════════════ Main column: greeting + activity + community stream + jobs ══════════════ -->
     <div class="db-main">
+
+      @if (authService.isAuthenticated()) {
+        <!-- Hero — confined to the main column, same width as Your Activity /
+             Community Stream below (matches the Stitch layout: the greeting
+             banner sits inside the 8-col main column, not full page width). -->
+        <section class="hero">
+          <div class="hero__icon" aria-hidden="true">
+            <i class="bi" [ngClass]="greetingIcon()"></i>
+          </div>
+
+          <div class="hero__body">
+            <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
+            <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
+            <p class="hero__sub">{{ 'user.dashboard.hereSWhatSHappening' | translate }}</p>
+          </div>
+        </section>
+      } @else {
+        <!-- Guest hero — "TAMILYA GLOBAL" banner, same fixed-light-amber
+             card as the registered .hero above (see .hero SCSS comment on
+             why its text colors stay fixed rather than theme-reactive). -->
+        <section class="hero hero--guest">
+          <div class="hero__body">
+            <div class="hero__eyebrow">
+              <span class="hero__eyebrowBadge">{{ 'home.guestHero.badge' | translate }}</span>
+              <span class="hero__eyebrowText">{{ 'home.guestHero.subtitle' | translate }}</span>
+            </div>
+            <h1 class="hero__title hero__title--tamil">உலகம் முழுவதும் தமிழர்களை இணைக்கும் தளம்</h1>
+            <p class="hero__sub">{{ 'home.guestHero.tagline' | translate }}</p>
+          </div>
+          <a routerLink="/auth/register" class="hero__joinBtn">
+            {{ 'home.guestHero.joinButton' | translate }}
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </section>
+      }
 
       <!-- Post-registration welcome banner — confined to the main column,
            left-aligned with the composer below (not full-width under the
@@ -101,29 +113,310 @@
         </section>
       }
 
-      <!-- Composer -->
-      <a routerLink="/user/community" class="composer">
-        <div class="composer-av">
-          @if (user()?.avatar) {
-            <img [src]="user()!.avatar! | imageUrl" alt="" />
-          } @else {
-            <span>{{ getUserInitials(user() ?? undefined) }}</span>
-          }
+      @if (authService.isAuthenticated()) {
+        <!-- Your Activity -->
+        <div class="activity-card">
+          <div class="activity-card__head">
+            <h3 class="activity-card__title">{{ 'user.dashboard.activity' | translate }}</h3>
+            <span class="activity-card__overview">{{ 'common.overview' | translate }}</span>
+          </div>
+          <div class="activity-card__grid">
+            @for (stat of animatedStats(); track stat.label) {
+              <a class="activity-stat" [routerLink]="stat.route" [queryParams]="stat.queryParams ?? null" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
+                <span class="activity-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
+                <span class="activity-stat__body">
+                  <span class="activity-stat__lbl">{{ stat.label | translate }}</span>
+                  <span class="activity-stat__val">{{ stat.displayValue }}</span>
+                </span>
+              </a>
+            }
+          </div>
         </div>
-        <span class="composer-input">{{ 'user.dashboard.shareJobOpportunityAskHelp' | translate }}</span>
-      </a>
+      } @else {
+        <!-- Explore & Discover Directory — guest search + country picker -->
+        <div class="explore-card">
+          <div class="explore-card__head">
+            <div class="explore-card__heading">
+              <span class="live-dot" aria-hidden="true"></span>
+              <h3 class="explore-card__title">{{ 'home.explore.title' | translate }}</h3>
+            </div>
+            <span class="explore-card__note">{{ 'home.explore.freeAccess' | translate }}</span>
+          </div>
+
+          <div class="explore-card__search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input
+              type="text"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              (keyup.enter)="runGuestSearch()"
+              [placeholder]="'home.hero.searchPlaceholder' | translate"
+            />
+            <div class="explore-card__searchActions">
+              @if (searchQuery()) {
+                <button type="button" class="explore-card__clearBtn" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              }
+              <button type="button" class="explore-card__searchBtn" (click)="runGuestSearch()">
+                {{ 'common.search' | translate }}
+              </button>
+            </div>
+          </div>
+
+          @if (searching()) {
+            <div class="explore-card__results explore-card__results--loading">
+              @for (i of [0, 1, 2]; track i) {
+                <div class="explore-card__resultSkeleton">
+                  <span class="explore-card__resultSkeletonAvatar"></span>
+                  <span class="explore-card__resultSkeletonLines">
+                    <span></span>
+                    <span></span>
+                  </span>
+                </div>
+              }
+            </div>
+          } @else if (searchResults()) {
+            @if (searchResults(); as r) {
+            <div class="explore-card__results">
+              <div class="explore-card__resultsHead">
+                @if (guestSearchResultCount(r) > 0) {
+                  <p class="explore-card__resultsSummary">{{ guestSearchResultCount(r) }} {{ 'home.search.resultsFor' | translate: { query: r.query } }}</p>
+                } @else {
+                  <p class="explore-card__resultsSummary">{{ 'home.search.resultsFor' | translate: { query: r.query } }}</p>
+                }
+                <button type="button" class="explore-card__resultsClose" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+
+              @if (guestSearchResultCount(r) === 0) {
+                <div class="explore-card__noResults">
+                  <i class="bi bi-search"></i>
+                  <p>{{ 'home.search.noResults' | translate }}</p>
+                  <span>{{ 'home.search.noResultsHint' | translate }}</span>
+                </div>
+              }
+
+              @if (r.jobs.length) {
+                <p class="explore-card__resultsCategory">
+                  <i class="bi bi-briefcase-fill"></i>
+                  <span>{{ 'home.search.categoryJobs' | translate }}</span>
+                  <span class="explore-card__resultsCount">{{ r.jobs.length }}</span>
+                </p>
+                @for (j of r.jobs; track j.id) {
+                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
+                    <span class="explore-card__resultAvatar">
+                      @if (j.companyLogo) {
+                        <img [src]="j.companyLogo | imageUrl" alt="" />
+                      } @else {
+                        <i class="bi bi-briefcase-fill"></i>
+                      }
+                    </span>
+                    <span class="explore-card__resultBody">
+                      <span class="explore-card__resultTitle">{{ j.title }}</span>
+                      <span class="explore-card__resultMeta">{{ j.companyName }}@if (j.city) { &middot; {{ j.city }} }</span>
+                    </span>
+                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
+                  </button>
+                }
+              }
+              @if (r.businesses.length) {
+                <p class="explore-card__resultsCategory">
+                  <i class="bi bi-shop"></i>
+                  <span>{{ 'home.search.categoryBusinesses' | translate }}</span>
+                  <span class="explore-card__resultsCount">{{ r.businesses.length }}</span>
+                </p>
+                @for (b of r.businesses; track b.id) {
+                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
+                    <span class="explore-card__resultAvatar">
+                      @if (b.logo) {
+                        <img [src]="b.logo | imageUrl" alt="" />
+                      } @else {
+                        <i class="bi bi-shop"></i>
+                      }
+                    </span>
+                    <span class="explore-card__resultBody">
+                      <span class="explore-card__resultTitle">{{ b.name }}</span>
+                      <span class="explore-card__resultMeta">
+                        @if (b.category?.name) { {{ b.category?.name }} }
+                        @if (b.city) { &middot; {{ b.city }} }
+                      </span>
+                    </span>
+                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
+                  </button>
+                }
+              }
+              @if (r.events.length) {
+                <p class="explore-card__resultsCategory">
+                  <i class="bi bi-calendar-event-fill"></i>
+                  <span>{{ 'home.search.categoryEvents' | translate }}</span>
+                  <span class="explore-card__resultsCount">{{ r.events.length }}</span>
+                </p>
+                @for (e of r.events; track e.id) {
+                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
+                    <span class="explore-card__resultAvatar">
+                      @if (e.coverImage) {
+                        <img [src]="e.coverImage | imageUrl" alt="" />
+                      } @else {
+                        <i class="bi bi-calendar-event-fill"></i>
+                      }
+                    </span>
+                    <span class="explore-card__resultBody">
+                      <span class="explore-card__resultTitle">{{ e.title }}</span>
+                      <span class="explore-card__resultMeta">{{ e.eventDate | date: 'MMM d, y' }}@if (e.country) { &middot; {{ e.country }} }</span>
+                    </span>
+                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
+                  </button>
+                }
+              }
+              @if (r.communities.length) {
+                <p class="explore-card__resultsCategory">
+                  <i class="bi bi-people-fill"></i>
+                  <span>{{ 'home.search.categoryCommunities' | translate }}</span>
+                  <span class="explore-card__resultsCount">{{ r.communities.length }}</span>
+                </p>
+                @for (c of r.communities; track c.id) {
+                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
+                    <span class="explore-card__resultAvatar">
+                      @if (c.image) {
+                        <img [src]="c.image | imageUrl" alt="" />
+                      } @else {
+                        <i class="bi bi-people-fill"></i>
+                      }
+                    </span>
+                    <span class="explore-card__resultBody">
+                      <span class="explore-card__resultTitle">{{ c.name }}</span>
+                      <span class="explore-card__resultMeta">{{ c.memberCount }} {{ 'home.search.members' | translate }}</span>
+                    </span>
+                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
+                  </button>
+                }
+              }
+            </div>
+            }
+          }
+
+          <div class="explore-card__countryRow">
+            <div class="explore-card__countryHead">
+              <p class="explore-card__countryLabel">{{ 'home.hero.selectCountryLabel' | translate }}</p>
+              @if (selectedCountryId(); as cid) {
+                <span class="explore-card__countryNote">
+                  {{ 'home.explore.personalising' | translate }}
+                </span>
+              }
+            </div>
+            <div class="explore-card__countryPills">
+              <div class="explore-card__countryPillsScroll">
+                <button
+                  type="button"
+                  class="explore-card__pill"
+                  [class.active]="selectedCountryId() === null"
+                  (click)="clearCountryFilter()"
+                >
+                  <span>🌐</span>
+                  <span>{{ 'home.explore.allCountries' | translate }}</span>
+                </button>
+                @for (country of priorityCountries(); track country.id) {
+                  <button
+                    type="button"
+                    class="explore-card__pill"
+                    [class.active]="selectedCountryId() === country.id"
+                    (click)="onCountryChange(country.id)"
+                  >
+                    <span>{{ country.flagEmoji }}</span>
+                    <span>{{ country.name }}</span>
+                  </button>
+                }
+              </div>
+              @if (otherCountries().length > 0) {
+                <div class="explore-card__otherWrap">
+                  <button
+                    type="button"
+                    class="explore-card__pill explore-card__pill--other"
+                    [class.active]="!!selectedOtherCountry()"
+                    (click)="toggleOtherCountryDropdown($event)"
+                  >
+                    @if (selectedOtherCountry(); as other) {
+                      <span>{{ other.flagEmoji }}</span>
+                      <span>{{ other.name }}</span>
+                    } @else {
+                      <span>{{ 'home.explore.otherCountry' | translate }}</span>
+                    }
+                    <i class="fa-solid fa-chevron-down explore-card__pillCaret"></i>
+                  </button>
+                  @if (otherCountryDropdownOpen()) {
+                    <div class="explore-card__otherDropdown" (click)="$event.stopPropagation()">
+                      @for (country of otherCountries(); track country.id) {
+                        <button
+                          type="button"
+                          class="explore-card__otherOption"
+                          [class.active]="selectedCountryId() === country.id"
+                          (click)="onCountryChange(country.id)"
+                        >
+                          <span>{{ country.flagEmoji }}</span>
+                          <span>{{ country.name }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Community Stream -->
+      <div class="stream-card">
+        <div class="stream-card__head">
+          <div class="stream-card__live">
+            <span class="live-dot" aria-hidden="true"></span>
+            <h3 class="stream-card__title">{{ 'user.dashboard.communityStream' | translate }}</h3>
+          </div>
+        </div>
+
+      @if (authService.isAuthenticated()) {
+        <a routerLink="/user/community" class="composer">
+          <div class="composer-av">
+            @if (user()?.avatar) {
+              <img [src]="user()!.avatar! | imageUrl" alt="" />
+            } @else {
+              <span>{{ getUserInitials(user() ?? undefined) }}</span>
+            }
+          </div>
+          <span class="composer-input">{{ 'user.dashboard.shareJobOpportunityAskHelp' | translate }}</span>
+        </a>
+      } @else {
+        <div class="join-banner">
+          <div class="join-banner__info">
+            <span class="join-banner__icon"><i class="bi bi-pencil-square"></i></span>
+            <div>
+              <p class="join-banner__title">{{ 'home.joinBanner.title' | translate }}</p>
+              <p class="join-banner__text">{{ 'home.joinBanner.text' | translate }}</p>
+            </div>
+          </div>
+          <div class="join-banner__actions">
+            <a routerLink="/auth/login" class="join-banner__login">{{ 'home.header.login' | translate }}</a>
+            <a routerLink="/auth/register" class="join-banner__signup">{{ 'home.joinBanner.signUp' | translate }}</a>
+          </div>
+        </div>
+      }
 
       <!-- Feed filter tabs -->
       <div class="feed-tabs">
         <app-profile-tabs
-          [tabs]="tabs"
+          [tabs]="authService.isAuthenticated() ? tabs : guestTabs"
           [activeTab]="activeTab()"
           [fullWidth]="true"
           (tabChange)="switchTab($any($event))"
         ></app-profile-tabs>
       </div>
 
-      <!-- Feed -->
+      <!-- Feed — its own independent scroll region, separate from the page
+           scroll (matches the Stitch mockup's scrollable-community-feed). -->
+      <div class="stream-card__feed">
+      @if (authService.isAuthenticated()) {
       @if (loadingPosts()) {
         @for (_ of [1,2,3]; track _){ <div class="sk-post"></div> }
       } @else if (filteredPosts().length === 0) {
@@ -288,58 +581,359 @@
           </article>
         }
       }
+      } @else {
+        <!-- Guest post preview — read-only: no like/comment/save interaction,
+             only a "sign in to reply" link (see discovery.getPostsPreview). -->
+        @if (loadingPosts()) {
+          @for (_ of [1,2,3]; track _){ <div class="sk-post"></div> }
+        } @else if (filteredGuestPosts().length === 0) {
+          <div class="feed-empty">
+            <i class="bi bi-inbox-fill"></i>
+            <h4>{{ 'user.dashboard.noPostsYet' | translate }}</h4>
+          </div>
+        } @else {
+          @for (post of filteredGuestPosts(); track post.id; let i = $index) {
+            <article class="post post--stagger" [style.animation-delay]="(i * 60) + 'ms'">
+              <div class="post__top">
+                <div class="post__av">
+                  @if (post.user?.avatar) {
+                    <img [src]="post.user!.avatar! | imageUrl" alt="" />
+                  } @else {
+                    <span>{{ (post.user?.displayName?.charAt(0)) || 'U' }}</span>
+                  }
+                </div>
+                <div class="post__who">
+                  <strong>{{ post.user?.displayName }}</strong>
+                  <span>{{ 'user.dashboard.shared' | translate }} <b class="post__comm">{{ post.community?.name }}</b> &middot; {{ getTimeAgo(post.createdAt) }}</span>
+                </div>
+                <span class="post__badge" [ngClass]="getPostTypeBadge(post.type || 'GENERAL').class">
+                  <i class="bi" [ngClass]="getPostTypeBadge(post.type || 'GENERAL').icon"></i>
+                  {{ getPostTypeBadge(post.type || 'GENERAL').label | translate }}
+                </span>
+              </div>
+
+              <hr class="post__divider" />
+
+              <p class="post__body">
+                {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
+                @if (shouldTruncatePost(post.content)) {
+                  <button type="button" class="post__toggle" (click)="togglePostExpanded(post.id)">
+                    {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
+                  </button>
+                }
+              </p>
+
+              @if (post.image) {
+                <div class="post__imgs post__imgs--single">
+                  <button type="button" class="post__img-tile" (click)="promptAuth()">
+                    <img [src]="post.image | imageUrl" alt="" loading="lazy" />
+                  </button>
+                </div>
+              }
+
+              <hr class="post__divider" />
+
+              <div class="post__actions post__actions--guest">
+                <span class="pact pact--static"><i class="bi bi-heart"></i> {{ post.likeCount }}</span>
+                <span class="pact pact--static"><i class="bi bi-chat-dots"></i> {{ post.commentCount }}</span>
+                <button type="button" class="post__signInLink" (click)="promptAuth()">
+                  {{ 'home.post.signInToReply' | translate }} <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+            </article>
+          }
+        }
+      }
+      </div>
+      </div>
+
+      <!-- Latest Opportunities -->
+      @if (authService.isAuthenticated()) {
+      @if (!loadingJobs() && recentJobs().length) {
+        <section class="jobs-section">
+          <div class="jobs-section__head">
+            <h3 class="jobs-section__title">{{ 'user.dashboard.recentJobs' | translate }}</h3>
+            <a routerLink="/user/jobs" class="jobs-section__link">{{ 'common.viewAll' | translate }} →</a>
+          </div>
+          <div class="jobs-list">
+            @for (job of recentJobs(); track job.id) {
+              <div class="job-row">
+                <div class="job-row__avatar">
+                  @if (job.companyLogo) {
+                    <img [src]="job.companyLogo | imageUrl" alt="" />
+                  } @else {
+                    <i class="bi bi-briefcase-fill"></i>
+                  }
+                </div>
+                <div class="job-row__body">
+                  <div class="job-row__titleLine">
+                    <h4>{{ job.title }}</h4>
+                    @if (job.workMode) { <span class="job-row__badge">{{ job.workMode }}</span> }
+                    <span class="job-row__company">{{ job.companyName }}</span>
+                  </div>
+                  <div class="job-row__meta">
+                    @if (!job.salaryHidden && (job.salaryMin || job.salaryMax)) {
+                      <span class="job-row__salary">{{ job.salaryMin }}{{ job.salaryMin && job.salaryMax ? ' - ' : '' }}{{ job.salaryMax }} {{ job.salaryCurrency }}</span>
+                      <span class="job-row__dot">•</span>
+                    }
+                    <span>{{ job.city ? job.city + ', ' + job.country : job.country }}</span>
+                  </div>
+                </div>
+                <div class="job-row__action">
+                  <span class="job-row__time">{{ getTimeAgo(job.createdAt) }}</span>
+                  <a [routerLink]="['/user/jobs']" [queryParams]="{ id: job.id }" class="job-row__apply">{{ 'user.dashboard.applyNow' | translate }}</a>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+      } @else {
+        @if (!loadingJobs() && guestJobs().length) {
+          <section class="jobs-section">
+            <div class="jobs-section__head">
+              <h3 class="jobs-section__title">{{ 'user.dashboard.recentJobs' | translate }}</h3>
+              <a routerLink="/user/jobs" class="jobs-section__link" (click)="promptAuth()">{{ 'common.viewAll' | translate }} →</a>
+            </div>
+            <div class="jobs-list">
+              @for (job of guestJobs(); track job.id) {
+                <div class="job-row">
+                  <div class="job-row__avatar">
+                    @if (job.companyLogo) {
+                      <img [src]="job.companyLogo | imageUrl" alt="" />
+                    } @else {
+                      <i class="bi bi-briefcase-fill"></i>
+                    }
+                  </div>
+                  <div class="job-row__body">
+                    <div class="job-row__titleLine">
+                      <h4>{{ job.title }}</h4>
+                      @if (job.workMode) { <span class="job-row__badge">{{ job.workMode }}</span> }
+                      <span class="job-row__company">{{ job.companyName }}</span>
+                    </div>
+                    <div class="job-row__meta">
+                      @if (!job.salaryHidden && (job.salaryMin || job.salaryMax)) {
+                        <span class="job-row__salary">{{ job.salaryMin }}{{ job.salaryMin && job.salaryMax ? ' - ' : '' }}{{ job.salaryMax }} {{ job.salaryType }}</span>
+                        <span class="job-row__dot">•</span>
+                      }
+                      <span>{{ job.city ? job.city + ', ' + job.country : job.country }}</span>
+                    </div>
+                  </div>
+                  <div class="job-row__action">
+                    <button type="button" class="job-row__apply" (click)="promptAuth()">{{ 'home.post.signInToApply' | translate }}</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      }
     </div>
 
     <!-- ══════════════ Right rail ══════════════ -->
     <aside class="db-rail">
 
-      <!-- Your activity -->
-      <div class="rail-card">
-        <h3 class="rail-card__title">{{ 'user.dashboard.activity' | translate }}</h3>
-        <div class="rail-stats">
-          @for (stat of animatedStats(); track stat.label) {
-            <a class="rail-stat" [routerLink]="stat.route" [queryParams]="stat.queryParams ?? null" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
-              <span class="rail-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
-              <span class="rail-stat__lbl">{{ stat.label | translate }}</span>
-              <span class="rail-stat__val">{{ stat.displayValue }}</span>
+      <!-- Suggested communities to join -->
+      <div class="widget-card">
+        <div class="widget-card__head">
+          <div class="widget-card__heading">
+            <span class="widget-card__icon widget-card__icon--amber"><i class="bi bi-people-fill"></i></span>
+            <h3 class="widget-card__title">{{ 'user.dashboard.suggestedCommunities' | translate }}</h3>
+          </div>
+        </div>
+        @if (authService.isAuthenticated()) {
+          @if (!loadingSuggestedCommunities() && suggestedCommunities().length) {
+            <ul class="widget-list">
+              @for (community of suggestedCommunities(); track community.id) {
+                <li class="widget-list__item">
+                  <div class="widget-list__avatar widget-list__avatar--round">
+                    @if (community.image) {
+                      <img [src]="community.image | imageUrl" alt="" />
+                    } @else {
+                      <i class="bi bi-people-fill"></i>
+                    }
+                  </div>
+                  <div class="widget-list__body">
+                    <a [routerLink]="['/user/community', community.id]" class="widget-list__title">{{ community.name }}</a>
+                    <p class="widget-list__meta">
+                      {{ community._count?.members ?? 0 }} {{ 'user.dashboard.stat.communities' | translate }}
+                      @if (community.category_name) { &middot; {{ community.category_name }} }
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    class="widget-list__action"
+                    [disabled]="joiningCommunity() === community.id"
+                    (click)="joinSuggestedCommunity(community)"
+                  >
+                    {{ 'user.dashboard.join' | translate }}
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          <a routerLink="/user/community" class="widget-card__viewAll">
+            {{ 'user.dashboard.viewAllCommunities' | translate }}
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        } @else {
+          @if (!loadingSuggestedCommunities() && guestCommunities().length) {
+            <ul class="widget-list">
+              @for (community of guestCommunities(); track community.id) {
+                <li class="widget-list__item">
+                  <div class="widget-list__avatar widget-list__avatar--round">
+                    @if (community.image) {
+                      <img [src]="community.image | imageUrl" alt="" />
+                    } @else {
+                      <i class="bi bi-people-fill"></i>
+                    }
+                  </div>
+                  <div class="widget-list__body">
+                    <span class="widget-list__title">{{ community.name }}</span>
+                    <p class="widget-list__meta">
+                      {{ community.memberCount }} {{ 'user.dashboard.stat.communities' | translate }}
+                      @if (community.categoryName) { &middot; {{ community.categoryName }} }
+                    </p>
+                  </div>
+                  <button type="button" class="widget-list__action" (click)="promptAuth()">
+                    {{ 'user.dashboard.join' | translate }}
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          <a routerLink="/auth/register" class="widget-card__viewAll">
+            {{ 'user.dashboard.viewAllCommunities' | translate }}
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        }
+      </div>
+
+      <!-- Upcoming events -->
+      <div class="widget-card">
+        <div class="widget-card__head">
+          <div class="widget-card__heading">
+            <span class="widget-card__icon widget-card__icon--violet"><i class="bi bi-calendar-event-fill"></i></span>
+            <h3 class="widget-card__title">{{ 'user.dashboard.events' | translate }}</h3>
+          </div>
+          <a routerLink="/user/events" class="widget-card__link">{{ 'common.viewAll' | translate }}</a>
+        </div>
+        @if (authService.isAuthenticated()) {
+          @if (!loadingUpcomingEvents() && upcomingEvents().length === 0) {
+            <div class="rail-empty">
+              <i class="bi bi-calendar-x"></i>
+              <p>{{ 'user.dashboard.noUpcomingEventsArea' | translate }}</p>
+              <a routerLink="/user/events" class="rail-empty__btn">{{ 'user.dashboard.browseAllEvents' | translate }}</a>
+            </div>
+          } @else {
+            <div class="event-list">
+              @for (event of upcomingEvents(); track event.id) {
+                <a [routerLink]="['/user/events', event.id]" class="event-row">
+                  <app-event-date-badge [date]="event.eventDate" [time]="event.eventTime" />
+                  <div class="event-row__body">
+                    @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }
+                    <h4 class="event-row__title">{{ event.title }}</h4>
+                    <p class="event-row__location">
+                      <i class="bi bi-geo-alt"></i>
+                      {{ event.eventMode === 'Online' ? ('user.dashboard.online' | translate) : (event.location || event.address || event.country) }}
+                    </p>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+        } @else {
+          @if (!loadingUpcomingEvents() && guestEvents().length === 0) {
+            <div class="rail-empty">
+              <i class="bi bi-calendar-x"></i>
+              <p>{{ 'user.dashboard.noUpcomingEventsArea' | translate }}</p>
+            </div>
+          } @else {
+            <div class="event-list">
+              @for (event of guestEvents(); track event.id) {
+                <button type="button" class="event-row event-row--button" (click)="promptAuth()">
+                  <app-event-date-badge [date]="event.eventDate" />
+                  <div class="event-row__body">
+                    @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }
+                    <h4 class="event-row__title">{{ event.title }}</h4>
+                    <p class="event-row__location">
+                      <i class="bi bi-geo-alt"></i>
+                      {{ event.eventMode === 'Online' ? ('user.dashboard.online' | translate) : event.country }}
+                    </p>
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Featured businesses -->
+      @if (authService.isAuthenticated() ? (!loadingFeaturedBusinesses() && featuredBusinesses().length) : (!loadingFeaturedBusinesses() && guestBusinesses().length)) {
+        <div class="widget-card">
+          <div class="widget-card__glow" aria-hidden="true"></div>
+          <div class="widget-card__head">
+            <div class="widget-card__heading">
+              <span class="widget-card__icon widget-card__icon--amberSolid"><i class="bi bi-shop"></i></span>
+              <div>
+                <h3 class="widget-card__title">{{ 'user.dashboard.featuredBusinesses' | translate }}</h3>
+                <p class="widget-card__subtitle">{{ 'user.dashboard.featuredBusinessesHint' | translate }}</p>
+              </div>
+            </div>
+          </div>
+          @if (authService.isAuthenticated()) {
+            <ul class="widget-list">
+              @for (business of featuredBusinesses(); track business.id) {
+                <li class="widget-list__item widget-list__item--card">
+                  <div class="widget-list__avatar">
+                    @if (business.logo) {
+                      <img [src]="business.logo | imageUrl" alt="" />
+                    } @else {
+                      <i class="bi bi-shop"></i>
+                    }
+                  </div>
+                  <div class="widget-list__body">
+                    <a [routerLink]="['/user/business']" [queryParams]="{ id: business.id }" class="widget-list__title">{{ business.name }}</a>
+                    <p class="widget-list__meta">{{ business.category?.name }}@if (business.city) { &middot; {{ business.city }} }</p>
+                  </div>
+                  <a [routerLink]="['/user/business']" [queryParams]="{ id: business.id }" class="widget-list__action widget-list__action--outline">
+                    {{ 'user.dashboard.enquire' | translate }}
+                  </a>
+                </li>
+              }
+            </ul>
+            <a routerLink="/user/business" class="widget-card__cta">
+              {{ 'user.dashboard.exploreVerifiedDirectory' | translate }}
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          } @else {
+            <ul class="widget-list">
+              @for (business of guestBusinesses(); track business.id) {
+                <li class="widget-list__item widget-list__item--card">
+                  <div class="widget-list__avatar">
+                    @if (business.logo) {
+                      <img [src]="business.logo | imageUrl" alt="" />
+                    } @else {
+                      <i class="bi bi-shop"></i>
+                    }
+                  </div>
+                  <div class="widget-list__body">
+                    <span class="widget-list__title">{{ business.name }}</span>
+                    <p class="widget-list__meta">{{ business.category?.name }}@if (business.city) { &middot; {{ business.city }} }</p>
+                  </div>
+                  <button type="button" class="widget-list__action widget-list__action--outline" (click)="promptAuth()">
+                    {{ 'user.dashboard.enquire' | translate }}
+                  </button>
+                </li>
+              }
+            </ul>
+            <a routerLink="/auth/register" class="widget-card__cta">
+              {{ 'user.dashboard.exploreVerifiedDirectory' | translate }}
+              <i class="bi bi-arrow-right"></i>
             </a>
           }
         </div>
-      </div>
-
-      <!-- Profile completion -->
-      @if (profileCompletion() < 100) {
-        <div class="rail-card">
-          <div class="rail-card__head">
-            <h3 class="rail-card__title">{{ 'user.dashboard.completeProfile' | translate }}</h3>
-            <span class="rail-card__pct">{{ profileCompletion() }}%</span>
-          </div>
-          <div class="rail-progress"><div class="rail-progress__bar" [style.width.%]="profileCompletion()"></div></div>
-          <p class="rail-card__hint">{{ 'user.dashboard.finishToStandOut' | translate: { strength: profileStrength() } }}</p>
-          <ul class="rail-checklist">
-            @for (item of incompleteItems().slice(0,3); track item.label) {
-              <li><a [routerLink]="item.route"><i class="bi bi-circle"></i> {{ item.label | translate }}</a></li>
-            }
-          </ul>
-        </div>
       }
-
-      <!-- Events calendar -->
-      <div class="rail-card">
-        <div class="rail-card__head">
-          <h3 class="rail-card__title">{{ 'user.dashboard.events' | translate }}</h3>
-          <a routerLink="/user/events" class="rail-card__link">{{ 'common.viewAll' | translate }} →</a>
-        </div>
-        @if (!loadingUpcomingEvents() && hasUpcomingEvents() === false) {
-          <div class="rail-empty">
-            <i class="bi bi-calendar-x"></i>
-            <p>{{ 'user.dashboard.noUpcomingEventsArea' | translate }}</p>
-            <a routerLink="/user/events" class="rail-empty__btn">{{ 'user.dashboard.browseAllEvents' | translate }}</a>
-          </div>
-        } @else {
-          <app-event-calendar></app-event-calendar>
-        }
-      </div>
 
     </aside>
   </div>

@@ -4,6 +4,7 @@ import { NgClass } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
+import { AuthPromptService } from '../../core/services/auth-prompt.service';
 import { LayoutService } from '../../core/services/layout.service';
 import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NotificationPanelComponent } from '../../shared/components/notification-panel/notification-panel.component';
@@ -23,6 +24,7 @@ interface NavItem {
 // `| translate`, so the header title follows the language toggle.
 const ROUTE_TITLES: Record<string, string> = {
   dashboard: 'nav.dashboard',
+  home:      'nav.home',
   community: 'nav.community',
   business:  'nav.business',
   events:    'nav.events',
@@ -39,6 +41,7 @@ const ROUTE_TITLES: Record<string, string> = {
 })
 export class UserLayoutComponent {
   authService = inject(AuthService);
+  private authPromptService = inject(AuthPromptService);
   private layoutService = inject(LayoutService);
   private router = inject(Router);
 
@@ -53,14 +56,28 @@ export class UserLayoutComponent {
 
   // `label`/`sectionLabel` hold catalog keys; the template translates them at
   // render so they react to the language toggle.
-  navItems: NavItem[] = [
-    { label: 'nav.dashboard', icon: 'bi-grid',           route: '/user/dashboard', sectionLabel: 'nav.section.main'    },
+  // 'nav.dashboard' deliberately removed from the primary nav — the
+  // homepage (see pages/home) is now the primary landing surface post-login;
+  // /user/dashboard route/component still works for direct URL access, see
+  // ROUTE_TITLES below (kept intact so its page title still resolves). A
+  // 'nav.home' entry replaces it instead, so users navigating within
+  // /user/** (this layout) still have a way back to /home — /home itself
+  // isn't wrapped by this layout (it has its own header), so this link is
+  // the only sidebar route to it.
+  //
+  // The Account entry swaps Profile → Sign In for a guest (this layout is
+  // now also used to wrap the guest home view — see home.component.html),
+  // since /user/profile is a guarded route a guest can't reach anyway.
+  navItems = computed<NavItem[]>(() => [
+    { label: 'nav.home',      icon: 'bi-house-door',     route: '/home',           sectionLabel: 'nav.section.main'    },
     { label: 'nav.community', icon: 'bi-people',         route: '/user/community', sectionLabel: 'nav.section.explore' },
     { label: 'nav.business',  icon: 'bi-shop',           route: '/user/business'                                       },
     { label: 'nav.jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                           },
     { label: 'nav.events',    icon: 'bi-calendar-event', route: '/user/events'                                         },
-    { label: 'nav.profile',   icon: 'bi-person-circle',  route: '/user/profile',   sectionLabel: 'nav.section.account'  },
-  ];
+    this.authService.isAuthenticated()
+      ? { label: 'nav.profile', icon: 'bi-person-circle',      route: '/user/profile', sectionLabel: 'nav.section.account' }
+      : { label: 'nav.signIn', icon: 'bi-box-arrow-in-right', route: '/auth/login',  sectionLabel: 'nav.section.account' },
+  ]);
 
   constructor() {
     this.checkScreenSize();
@@ -76,6 +93,10 @@ export class UserLayoutComponent {
   private updatePageTitle(url: string): void {
     const segments = url.split('/').filter((s) => s && !/^\d+$/.test(s));
     const segment = segments[segments.length - 1] ?? '';
+    if (segment === 'home' && !this.authService.isAuthenticated()) {
+      this.pageTitle.set('nav.guestPortal');
+      return;
+    }
     this.pageTitle.set(ROUTE_TITLES[segment] ?? 'nav.dashboard');
   }
 
@@ -129,6 +150,17 @@ export class UserLayoutComponent {
 
   onNavClick(): void {
     if (this.isMobile()) this.closeMobileSidebar();
+  }
+
+  /** A guest clicking a guarded /user/** nav item (Community/Business/Jobs/
+   * Events) gets the "join to continue" gate instead of silently bouncing
+   * off userGuard straight to the login page. */
+  onNavItemClick(item: NavItem, event: MouseEvent): void {
+    this.onNavClick();
+    if (!this.authService.isAuthenticated() && item.route.startsWith('/user/')) {
+      event.preventDefault();
+      this.authPromptService.prompt();
+    }
   }
 
   get sidebarLeft(): string {

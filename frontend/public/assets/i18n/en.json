@@ -25,6 +25,7 @@
     "noData": "No data available",
     "retry": "Retry",
     "viewAll": "View all",
+    "overview": "Overview",
     "viewMore": "View more",
     "showMore": "Show more",
     "showLess": "Show less",
@@ -305,11 +306,17 @@
       "account": "ACCOUNT"
     },
     "dashboard": "Dashboard",
+    "home": "Home",
+    "guestPortal": "Guest Discovery Portal",
     "community": "Community",
     "business": "Business",
     "jobs": "Jobs",
     "events": "Events",
     "profile": "Profile",
+    "signIn": "Sign In",
+    "welcomeToTamilya": "Welcome to Tamilya",
+    "welcomeToTamilyaText": "Sign in or create a free account to join conversations, connect with businesses, and find jobs.",
+    "getStarted": "Get Started",
     "userManagement": "User Management",
     "approval": "Approval",
     "analytics": "Analytics",
@@ -327,6 +334,90 @@
     "accountOptions": "User account options",
     "platform": "Platform",
     "pendingApprovals": "Pending approvals"
+  },
+  "home": {
+    "header": {
+      "login": "Log In",
+      "joinFree": "Join Tamilya – Free",
+      "dashboard": "Dashboard"
+    },
+    "hero": {
+      "englishTagline": "Your Tamil Community, Wherever You Are",
+      "searchPlaceholder": "Search businesses, jobs, events, communities, students...",
+      "selectCountryLabel": "Choose your country",
+      "selectCountryPlaceholder": "Select your country"
+    },
+    "jobs": {
+      "title": "Latest Jobs",
+      "viewAll": "View All Jobs",
+      "empty": "No jobs to show yet.",
+      "remote": "Remote"
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "viewAll": "View All Events",
+      "empty": "No upcoming events to show yet."
+    },
+    "businesses": {
+      "title": "Featured Businesses",
+      "viewAll": "Explore Businesses",
+      "empty": "No businesses to show yet."
+    },
+    "communities": {
+      "title": "Community Highlights",
+      "exploreJoin": "Explore & Join",
+      "empty": "No communities to show yet.",
+      "viewActivityFeed": "View your full activity feed"
+    },
+    "joinCta": {
+      "title": "Join Tamilya – Free",
+      "subtitle": "Create an account to unlock full details, personalised recommendations, and the ability to post and connect.",
+      "primaryButton": "Join Tamilya – Free",
+      "secondaryButton": "Log In"
+    },
+    "authPrompt": {
+      "title": "Join Tamilya to continue",
+      "message": "Create a free account to unlock this and connect with the Tamil community.",
+      "joinButton": "Join Tamilya – Free",
+      "loginButton": "Log In"
+    },
+    "search": {
+      "noResults": "No results found.",
+      "noResultsHint": "Try a different keyword or clear the country filter.",
+      "searching": "Searching…",
+      "resultsFor": "results for \"{{query}}\"",
+      "clear": "Clear search",
+      "members": "members",
+      "categoryJobs": "Jobs",
+      "categoryBusinesses": "Businesses",
+      "categoryEvents": "Events",
+      "categoryCommunities": "Communities"
+    },
+    "guestHero": {
+      "badge": "Tamilya Global",
+      "subtitle": "Worldwide Diaspora Network",
+      "tagline": "Your Tamil Community, Wherever You Are",
+      "joinButton": "Join Tamilya"
+    },
+    "explore": {
+      "title": "Explore & Discover Directory",
+      "freeAccess": "Free diaspora access • No sign-in required to browse",
+      "personalising": "Personalising jobs, businesses, events & communities for your country",
+      "allCountries": "All Locations",
+      "otherCountry": "Other"
+    },
+    "joinBanner": {
+      "title": "Join Tamilya to post, comment, or react",
+      "text": "Engage with members worldwide across tech, culture, and business.",
+      "signUp": "Sign Up Free"
+    },
+    "post": {
+      "signInToReply": "Sign in to reply",
+      "signInToApply": "Sign in to Apply"
+    },
+    "footer": {
+      "rights": "All rights reserved."
+    }
   },
   "validation": {
     "required": "This field is required.",
@@ -451,6 +542,7 @@
     "nav_reviews": "Reviews",
     "nav_about": "About",
     "nav_contact": "Contact",
+    "nav_explore": "Explore Tamilya",
     "nav_login": "Log In",
     "nav_get_started": "Get Started",
     "mobile_light_mode": "Light Mode",
@@ -1922,8 +2014,23 @@
         "failedUpdateLike": "Failed to update like",
         "failedAddComment": "Failed to add comment",
         "shareLinkCopied": "Share link copied.",
-        "failedCopyShareLink": "Failed to copy share link."
+        "failedCopyShareLink": "Failed to copy share link.",
+        "joinedCommunity": "You joined the community.",
+        "failedJoinCommunity": "Failed to join community."
       },
+      "recentJobs": "Latest Opportunities",
+      "recentJobsHint": "Direct referrals and diaspora-friendly roles",
+      "communityStream": "Community Stream",
+      "suggestedCommunities": "Communities",
+      "suggestedCommunitiesHint": "Suggested for you",
+      "viewAllCommunities": "View All Communities",
+      "featuredBusinesses": "Featured Businesses",
+      "featuredBusinessesHint": "Verified diaspora directory",
+      "exploreVerifiedDirectory": "Explore Verified Directory",
+      "online": "Online",
+      "join": "Join",
+      "applyNow": "Apply Now",
+      "enquire": "Enquire",
       "stat": {
         "communities": "Communities",
         "posts": "Posts",

@@ -662,3 +662,81 @@ export interface ChartData {
   jobActive:       number;
   jobTotal:        number;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Discovery previews — the reduced, guest-safe shapes served by
+// GET /api/discovery/*. Deliberately distinct from Job/Business/Event/
+// Community above so a preview card can never accidentally bind to a field
+// the backend doesn't actually send (e.g. contact info, full description).
+// ─────────────────────────────────────────────────────────────
+export interface JobPreview {
+  id: string;
+  title: string;
+  companyName?: string;
+  companyLogo?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  workMode?: string;
+  jobType?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryType?: string;
+  salaryHidden?: boolean;
+  isRemote?: boolean;
+  createdAt: string;
+  user: { displayName?: string; avatar?: string } | null;
+}
+
+export interface BusinessPreview {
+  id: string;
+  name: string;
+  category: { id: string; name: string; icon?: string } | null;
+  city?: string;
+  state?: string;
+  country?: string;
+  logo?: string;
+  description?: string | null;
+  createdAt: string;
+}
+
+export interface EventPreview {
+  id: string;
+  title: string;
+  eventDate: string;
+  eventMode?: 'Offline' | 'Online' | 'Hybrid';
+  eventCategory?: string;
+  country?: string;
+  coverImage?: string | null;
+  createdAt: string;
+}
+
+export interface CommunityPreview {
+  id: string;
+  name: string;
+  description?: string | null;
+  image?: string;
+  country?: string;
+  categoryName?: string | null;
+  memberCount: number;
+}
+
+export interface PostPreview {
+  id: string;
+  content?: string;
+  image?: string | null;
+  type?: 'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
+  createdAt: string;
+  community: { id: string; name: string; image?: string } | null;
+  user: { displayName?: string; avatar?: string } | null;
+  likeCount: number;
+  commentCount: number;
+}
+
+export interface DiscoverySearchResult {
+  query: string;
+  jobs: JobPreview[];
+  businesses: BusinessPreview[];
+  events: EventPreview[];
+  communities: CommunityPreview[];
+}

@@ -357,6 +357,54 @@ $_sb-active-text:    $color-primary-dark;
   white-space: nowrap;
 }
 
+// ── Guest onboarding nudge — replaces .sidebar-user for a logged-out
+// viewer (see user-layout.component.html's sidebar-footer branch). Fixed
+// light-amber card, same reasoning as home dashboard's .hero: its own text
+// stays fixed-dark rather than the reactive $color-text-primary tokens,
+// which would turn near-white and vanish in dark mode against this surface.
+.sidebar-guest-card {
+  background: $gradient-card-amber;
+  border: 1px solid $color-primary-medium;
+  border-radius: $radius-md;
+  padding: 0.7rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sidebar-guest-card__head { display: flex; align-items: center; gap: 8px; }
+.sidebar-guest-card__icon {
+  width: 22px; height: 22px; border-radius: $radius-sm; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: $color-primary; color: $color-on-primary; font-size: 11px; font-weight: $font-weight-bold;
+}
+.sidebar-guest-card__title { font-size: 12px; font-weight: $font-weight-bold; color: #1c1917; }
+.sidebar-guest-card__text { font-size: 11px; line-height: 1.4; color: #57534e; margin: 0; }
+.sidebar-guest-card__cta {
+  display: block; text-align: center; padding: 6px; border-radius: $radius-sm;
+  background: $gradient-primary; color: $color-on-primary; font-weight: $font-weight-bold;
+  font-size: 12px; text-decoration: none;
+  &:hover { box-shadow: $shadow-primary-sm; }
+}
+
+// ── Guest header actions (Login link + Join Tamilya button) ────────────
+.header-loginLink {
+  font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body;
+  text-decoration: none; padding: 6px 12px; border-radius: $radius-md; white-space: nowrap;
+  &:hover { background: $color-bg-hover; color: $color-text-primary; }
+  @include media-sm-max { padding: 6px 8px; }
+}
+.header-joinBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: $font-size-sm; font-weight: $font-weight-bold; text-decoration: none; white-space: nowrap;
+  color: $color-on-primary; background: $gradient-primary;
+  padding: 7px 14px; border-radius: $radius-md; box-shadow: $shadow-primary-sm;
+  transition: box-shadow $transition-base $transition-easing;
+  &:hover { box-shadow: $shadow-primary-md; }
+  // Icon drops first on narrow phones — the label ("Join Tamilya – Free")
+  // is the part that actually needs to stay legible/tappable.
+  @include media-sm-max { padding: 6px 10px; i { display: none; } }
+}
+
 // ============================================================
 // MAIN WRAPPER
 // ============================================================
@@ -396,6 +444,8 @@ $_sb-active-text:    $color-primary-dark;
   display: flex;
   align-items: center;
   gap: 0.625rem;
+  min-width: 0; // lets .header-title actually truncate instead of pushing .header-right off-screen
+  flex: 1 1 auto;
 }
 
 .sidebar-toggle {
@@ -425,12 +475,27 @@ $_sb-active-text:    $color-primary-dark;
   font-weight: $font-weight-bold;
   color: $navbar-brand-color;
   letter-spacing: -0.2px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+
+  // Guest state adds two text CTAs (Login + Join Tamilya) on top of the
+  // language/theme toggles — meaningfully wider than the registered state's
+  // icon-only bell+avatar, so the language pill (least essential item here)
+  // steps aside first on narrow phones rather than letting the row overflow
+  // the header's fixed height.
+  @include media-sm-max {
+    app-language-toggle { display: none; }
+  }
 }
 
 // ── Header Icon Button (Bell) ─────────────────────────────────
