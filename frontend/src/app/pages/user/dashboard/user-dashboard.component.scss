@@ -35,7 +35,12 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
 
 // ── Hero (greeting banner) ────────────────────────────────────
 .hero {
-  position: relative; overflow: hidden;
+  // No overflow:hidden — the guest variant's country-picker dropdown
+  // (.ss-panel, position:absolute) lives inside this card, and an
+  // overflow:hidden ancestor clips it invisible regardless of z-index.
+  // Nothing in this block relies on edge-clipping (no ::before/::after
+  // here), so removing it is safe.
+  position: relative;
   // $gradient-card-amber is a fixed light wash (not theme-reactive, same as
   // .welcome-banner below) — its own text colors must stay fixed too rather
   // than using $color-text-primary/$color-text-muted, which flip to
@@ -91,15 +96,208 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
 
   &__title--tamil { font-family: $font-family-tamil; font-size: 1.2rem; }
 
-  &__joinBtn {
-    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
-    background: $gradient-primary; color: $color-on-primary; font-weight: $font-weight-bold;
-    font-size: 12.5px; padding: 9px 16px; border-radius: $radius-md; text-decoration: none;
-    box-shadow: $shadow-primary-sm; transition: box-shadow $_t;
-    &:hover { box-shadow: $shadow-primary-md; }
-    @media(max-width:640px) { width: 100%; justify-content: center; }
+  // ── Unified search bar: free-text search + country combobox + Search
+  // button, grouped into ONE continuous surface (single shared border/
+  // background/radius on `&__searchBar` itself) instead of three separate
+  // boxes side by side — segments are visually divided by a thin 1px rule
+  // (&__searchDivider), not by giving each its own border. The country
+  // combobox's own global .ss-trigger styling (styles.scss) is stripped of
+  // its border/background/radius here so it blends into the same surface.
+  // `display: inline-flex` (not `flex`) so the bar sizes to its own content
+  // instead of stretching to .hero__body's full width.
+  // NOTE: deliberately NOT `overflow:hidden` here — the country combobox's
+  // dropdown (.ss-panel) is `position:absolute` inside this bar, and an
+  // overflow:hidden ancestor clips it invisible regardless of z-index (the
+  // same bug class as the guest home page's "Other" country pill earlier).
+  // The search button's own right corners are rounded to match instead of
+  // relying on the container clipping them.
+  &__searchBar {
+    margin-top: 14px; display: inline-flex; align-items: stretch; max-width: 100%;
+    background: $color-bg-card; border: 1px solid rgba(217,119,6,.3); border-radius: $radius-md;
+    box-shadow: $shadow-1;
+    @media(max-width:640px) { display: flex; width: 100%; }
+  }
+  &__searchField {
+    flex: 1 1 220px; min-width: 0; position: relative; display: flex; align-items: center;
+    padding: 0 .3rem 0 1rem; min-height: 46px;
+    i.bi-search { color: #92400e; font-size: 14px; flex-shrink: 0; }
+    input {
+      flex: 1; border: none; outline: none; background: transparent; font-size: 13.5px;
+      color: $color-text-primary; padding: 0 .65rem; min-width: 0;
+      &::placeholder { color: $color-text-muted; }
+    }
+    @media(max-width:640px) { flex: 1 1 auto; }
+  }
+  &__searchClear {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent;
+    color: $color-text-muted; font-size: 11px; cursor: pointer; transition: background $_t;
+    &:hover { background: $color-bg-hover; }
+  }
+  &__searchDivider {
+    flex-shrink: 0; width: 1px; align-self: center; height: 24px; background: rgba(217,119,6,.25);
+    @media(max-width:640px) { display: none; }
+  }
+  // Free-text combobox — no click-to-open trigger/arrow, the visible input
+  // itself is directly typable and filters &__countryDropdown live (see
+  // filteredCountries() in the component). Own `position:relative` so the
+  // dropdown panel anchors to this 170px-wide segment specifically, not the
+  // full &__searchBar.
+  &__countryPicker {
+    flex: 0 0 170px; min-width: 0; position: relative;
+    display: flex; align-items: center; padding: 0 .3rem 0 .85rem;
+    @media(max-width:640px) { flex: 1 1 auto; }
+    i.bi-geo-alt { color: #92400e; font-size: 13px; flex-shrink: 0; }
+    input {
+      flex: 1; border: none; outline: none; background: transparent; font-size: 13.5px;
+      color: $color-text-primary; padding: 0 .5rem; min-width: 0;
+      &::placeholder { color: $color-text-muted; }
+    }
+  }
+  // Widened past the 170px trigger so full country names show without
+  // truncation ("United Kingdom", not "United Ki…").
+  &__countryDropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; z-index: 1050;
+    width: 280px; max-width: 80vw; max-height: 260px; overflow-y: auto;
+    background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-md;
+    box-shadow: $shadow-2; padding: .35rem;
+  }
+  &__countryOption {
+    width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
+    padding: .5rem .6rem; border: none; border-radius: $radius-sm; background: transparent;
+    color: $color-text-body; font-size: 13px; font-weight: 500; cursor: pointer; transition: background $_t;
+    &:hover { background: $color-bg-hover; }
+    &.active { background: $color-primary-light; color: $color-primary-darker; font-weight: 700; }
+  }
+  &__countryEmpty { padding: .75rem .6rem; font-size: 12.5px; color: $color-text-muted; text-align: center; }
+  // Light/white, not the brand gradient — a plain, low-key action that
+  // doesn't compete with the page's real "Join Tamilya" CTAs. Right corners
+  // rounded to match &__searchBar's own radius exactly (no overflow:hidden
+  // to rely on now that it would clip the country dropdown — see above).
+  &__searchBtn {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+    background: $color-bg-light; color: $color-text-primary; font-weight: $font-weight-bold;
+    font-size: 13px; padding: 0 22px; min-height: 46px; border: none; border-left: 1px solid rgba(217,119,6,.25);
+    border-top-right-radius: $radius-md; border-bottom-right-radius: $radius-md;
+    cursor: pointer; transition: background $_t;
+    &:hover { background: $color-bg-hover; }
+    @media(max-width:640px) { flex: 1 1 100%; }
+  }
+
+  // ── Search results panel ─────────────────────────────────────
+  // Fixed light-card background (not theme-reactive) — same reasoning as
+  // the rest of this guest hero: it sits on the fixed-light $gradient-card-amber
+  // banner, so its own contents stay fixed-dark too.
+  &__results {
+    margin-top: 12px; background: $color-bg-card; border: 1px solid rgba(217,119,6,.25);
+    border-radius: $radius-md; padding: .85rem 1rem; max-height: 320px; overflow-y: auto;
+  }
+  &__resultsHead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
+  &__resultsSummary { font-size: 11.5px; font-weight: 600; color: $color-text-muted; margin: 0; }
+  &__resultsClose {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 22px; height: 22px; border: none; border-radius: 50%; background: transparent;
+    color: $color-text-muted; font-size: 10px; cursor: pointer;
+    &:hover { background: $color-bg-hover; }
+  }
+  &__noResults {
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: .3rem;
+    padding: 1.1rem .5rem; color: $color-text-muted;
+    i { font-size: 18px; opacity: .6; }
+    p { font-size: 12.5px; font-weight: 600; color: $color-text-body; margin: 0; }
+    span { font-size: 11.5px; }
+  }
+  &__resultsCategory {
+    display: flex; align-items: center; gap: .4rem;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: $color-text-muted; margin: .55rem 0 .3rem;
+    &:first-child { margin-top: 0; }
+    i { font-size: 10px; }
+  }
+  &__resultsCount {
+    margin-left: auto; font-size: 10px; font-weight: 700; color: $color-primary-darker;
+    background: $color-primary-light; border-radius: $radius-full; padding: 1px 7px;
+  }
+  &__resultItem {
+    width: 100%; display: flex; align-items: center; gap: .6rem; text-align: left;
+    padding: .4rem .3rem; border: none; border-radius: $radius-sm; background: transparent;
+    cursor: pointer; transition: background $_t;
+    &:hover { background: $color-bg-hover; }
+    &:hover .hero__resultChevron { transform: translateX(2px); color: $color-primary-darker; }
+  }
+  &__resultAvatar {
+    width: 32px; height: 32px; border-radius: $_ri; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: $color-primary-light; color: $color-primary-darker; font-size: 12px;
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
+  &__resultBody { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
+  &__resultTitle {
+    font-size: 12.5px; font-weight: 600; color: $color-text-primary;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  &__resultMeta {
+    font-size: 10.5px; color: $color-text-muted;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  &__resultChevron { font-size: 10.5px; color: $color-text-muted; flex-shrink: 0; transition: transform $_t, color $_t; }
+
+  &__results--loading { display: flex; flex-direction: column; gap: .5rem; }
+  &__resultSkeleton { display: flex; align-items: center; gap: .6rem; padding: .4rem .3rem; }
+  &__resultSkeletonAvatar {
+    width: 32px; height: 32px; border-radius: $_ri; flex-shrink: 0; background: rgba(217,119,6,.14);
+    animation: hero-skeleton-pulse 1.1s ease-in-out infinite;
+  }
+  &__resultSkeletonLines {
+    flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px;
+    span {
+      display: block; height: 7px; border-radius: $radius-full; background: rgba(217,119,6,.14);
+      animation: hero-skeleton-pulse 1.1s ease-in-out infinite;
+      &:first-child { width: 55%; }
+      &:last-child { width: 32%; }
+    }
   }
 }
+@keyframes hero-skeleton-pulse {
+  0%, 100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+
+// ── Platform overview stats (guest-only) ────────────────────
+// Full-width row directly below the hero, showing platform-wide totals
+// from DiscoveryService.getPlatformStats(). Icon color-per-category scheme
+// mirrors the guest feed's empty-state "quick actions" (community=success
+// green, jobs=teal, business=warning amber, events=violet) for consistency.
+// An equal-column grid spanning the full width (not content-sized), so the
+// 5 cards fill the row edge-to-edge instead of clumping to the left with
+// leftover space.
+.platform-stats {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: .65rem;
+  @media(max-width:900px) { grid-template-columns: repeat(3, 1fr); }
+  @media(max-width:640px) { grid-template-columns: repeat(2, 1fr); }
+  @media(max-width:400px) { grid-template-columns: 1fr; }
+}
+.platform-stats__item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .6rem .85rem; border-radius: $_ri; border: 1px solid $color-border; background: $color-bg-card;
+  box-shadow: $shadow-1;
+}
+.platform-stats__icon {
+  width: 34px; height: 34px; border-radius: $radius-lg; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  i { font-size: .9rem; }
+  &--countries { background: $color-primary-light; i { color: $color-primary-darker; } }
+  &--communities { background: $color-success-light; i { color: $color-success-text; } }
+  &--jobs { background: rgba($teal-600, .14); i { color: $teal-600; } }
+  &--business { background: $color-warning-light; i { color: $color-warning-text; } }
+  &--events { background: $color-badge-violet-bg; i { color: $color-badge-violet-text; } }
+}
+.platform-stats__body { display: flex; flex-direction: column; min-width: 0; }
+.platform-stats__val {
+  font-family: $font-family-header; font-size: 1.1rem; font-weight: 800;
+  color: $color-text-primary; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.platform-stats__lbl { font-size: 10.5px; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
 
 // ── Welcome banner (post-registration, one-time) ────────────
 // Reuses the app's own tokens: hero-style corner glow + top accent bar
@@ -296,8 +494,6 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   top: 80px;
   z-index: $z-sticky;
   margin: 0;
-
-  app-profile-tabs { margin-bottom: 0; }
 
   @media(max-width:1024px) { position: static; }
 }
@@ -807,202 +1003,6 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &__body { display:flex; flex-direction:column; min-width:0; }
   &__lbl { font-size:11px; font-weight:600; color:$color-text-muted; }
   &__val { font-family:$font-family-header; font-size:1rem; font-weight:800; color:$color-text-primary; font-variant-numeric:tabular-nums; }
-}
-
-// ── Explore & Discover Directory (guest variant of .activity-card) ─────
-.explore-card {
-  background:$color-bg-card; border:1px solid $color-border; border-radius:$_r; padding:1.125rem 1.25rem;
-  display:flex; flex-direction:column; gap:.85rem;
-}
-.explore-card__head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem; }
-.explore-card__heading { display:flex; align-items:center; gap:.6rem; }
-.explore-card__title { font-family:$font-family-header; font-size:12px; font-weight:700; color:$color-text-primary; margin:0; text-transform:uppercase; letter-spacing:.04em; }
-.explore-card__note { font-size:11px; font-weight:500; color:$color-text-muted; }
-
-.explore-card__search {
-  position:relative; display:flex; align-items:center;
-  i { position:absolute; left:14px; color:$color-text-muted; font-size:14px; }
-}
-.explore-card__search input {
-  width:100%; padding:.75rem 6.5rem .75rem 2.75rem; border-radius:$_r;
-  background:$color-bg-light; border:1px solid $color-border; color:$color-text-primary;
-  font-size:13px; outline:none; transition:background $_t, border-color $_t;
-  &:focus { background:$color-bg-card; border-color:$color-primary; }
-  &::placeholder { color:$color-text-muted; }
-}
-.explore-card__searchActions {
-  position:absolute; right:6px; display:flex; align-items:center; gap:4px;
-}
-.explore-card__clearBtn {
-  display:flex; align-items:center; justify-content:center;
-  width:26px; height:26px; border:none; border-radius:50%; background:transparent;
-  color:$color-text-muted; font-size:11px; cursor:pointer; transition:background $_t, color $_t;
-  &:hover { background:$color-bg-card; color:$color-text-body; }
-}
-// A utility action (not a "Join Tamilya" CTA) — kept as a light neutral
-// button rather than the brand gradient, so it doesn't compete with the
-// page's real amber CTAs (.hero__joinBtn / .join-banner__signup).
-.explore-card__searchBtn {
-  padding:.5rem 1rem; border:1px solid $color-border; border-radius:$radius-sm;
-  background:$color-bg-card; color:$color-text-primary; font-size:12px; font-weight:700; cursor:pointer;
-  transition:background $_t, border-color $_t;
-  &:hover { background:$color-bg-light; border-color:$color-border-strong; }
-}
-
-.explore-card__results {
-  border-top:1px solid $color-border; padding-top:.65rem; max-height:280px; overflow-y:auto;
-  display:flex; flex-direction:column;
-}
-.explore-card__resultsHead {
-  display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.35rem;
-}
-.explore-card__resultsSummary { font-size:11.5px; font-weight:600; color:$color-text-muted; margin:0; }
-.explore-card__resultsClose {
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:22px; height:22px; border:none; border-radius:50%; background:transparent;
-  color:$color-text-muted; font-size:10px; cursor:pointer; transition:background $_t, color $_t;
-  &:hover { background:$color-bg-light; color:$color-text-body; }
-}
-.explore-card__noResults {
-  display:flex; flex-direction:column; align-items:center; text-align:center; gap:.3rem;
-  padding:1.25rem .5rem; color:$color-text-muted;
-  i { font-size:20px; color:$color-text-muted; opacity:.6; }
-  p { font-size:13px; font-weight:600; color:$color-text-body; margin:0; }
-  span { font-size:11.5px; }
-}
-.explore-card__resultsCategory {
-  display:flex; align-items:center; gap:.4rem;
-  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-  color:$color-text-muted; margin:.6rem 0 .3rem;
-  &:first-child { margin-top:0; }
-  i { font-size:10px; }
-}
-.explore-card__resultsCount {
-  margin-left:auto; font-size:10px; font-weight:700; color:$color-primary-darker;
-  background:$color-primary-light; border-radius:$radius-full; padding:1px 7px;
-}
-.explore-card__resultItem {
-  width:100%; display:flex; align-items:center; gap:.65rem; text-align:left;
-  padding:.45rem .3rem; border:none; border-radius:$radius-sm; background:transparent;
-  cursor:pointer; transition:background $_t;
-  &:hover { background:$color-bg-light; }
-  &:hover .explore-card__resultChevron { transform:translateX(2px); color:$color-primary-darker; }
-}
-.explore-card__resultAvatar {
-  width:34px; height:34px; border-radius:$_ri; flex-shrink:0; overflow:hidden;
-  display:flex; align-items:center; justify-content:center;
-  background:$color-primary-light; color:$color-primary-darker; font-size:13px;
-  img { width:100%; height:100%; object-fit:cover; }
-}
-.explore-card__resultBody { display:flex; flex-direction:column; gap:1px; min-width:0; flex:1 1 auto; }
-.explore-card__resultTitle {
-  font-size:13px; font-weight:600; color:$color-text-primary;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.explore-card__resultMeta {
-  font-size:11px; color:$color-text-muted;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.explore-card__resultChevron {
-  font-size:11px; color:$color-text-muted; flex-shrink:0; transition:transform $_t, color $_t;
-}
-
-.explore-card__results--loading { gap:.5rem; }
-.explore-card__resultSkeleton { display:flex; align-items:center; gap:.65rem; padding:.45rem .3rem; }
-.explore-card__resultSkeletonAvatar {
-  width:34px; height:34px; border-radius:$_ri; flex-shrink:0; background:$color-bg-light;
-  animation:explore-skeleton-pulse 1.1s ease-in-out infinite;
-}
-.explore-card__resultSkeletonLines {
-  flex:1 1 auto; display:flex; flex-direction:column; gap:6px;
-  span {
-    display:block; height:8px; border-radius:$radius-full; background:$color-bg-light;
-    animation:explore-skeleton-pulse 1.1s ease-in-out infinite;
-    &:first-child { width:60%; }
-    &:last-child { width:35%; }
-  }
-}
-@keyframes explore-skeleton-pulse {
-  0%, 100% { opacity:.55; }
-  50% { opacity:1; }
-}
-
-.explore-card__countryRow { border-top:1px solid $color-border; padding-top:.65rem; display:flex; flex-direction:column; gap:.5rem; }
-.explore-card__countryHead { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.4rem; }
-.explore-card__countryLabel { font-size:12.5px; font-weight:600; color:$color-text-body; margin:0; }
-.explore-card__countryNote {
-  font-size:10.5px; font-weight:600; color:$color-primary-darker; background:$color-primary-light;
-  padding:2px 8px; border-radius:$radius-sm; border:1px solid $color-primary-medium;
-}
-.explore-card__countryPills {
-  display:flex; align-items:center; gap:6px;
-}
-// Only the priority-country pills scroll horizontally; the "Other" pill (and
-// its dropdown) is kept outside this container. An overflow-x:auto ancestor
-// clips vertical overflow too, which would hide the dropdown, so it can't
-// live inside the scrolling region.
-.explore-card__countryPillsScroll {
-  display:flex; align-items:center; gap:6px; overflow-x:auto; padding-bottom:2px;
-  min-width:0; flex:1 1 auto;
-  scrollbar-width:none;
-  &::-webkit-scrollbar { display:none; }
-}
-.explore-card__pill {
-  flex-shrink:0; display:flex; align-items:center; gap:6px;
-  padding:.45rem .75rem; border-radius:$_r; border:1px solid $color-border; background:$color-bg-light;
-  color:$color-text-body; font-size:12px; font-weight:600; cursor:pointer; transition:all $_t;
-  &:hover { border-color:$color-primary-medium; }
-  &.active { background:$color-primary-light; border-color:$color-primary-medium; color:$color-primary-darker; font-weight:700; }
-}
-.explore-card__pill--other { white-space:nowrap; }
-.explore-card__pillCaret { font-size:9px; color:$color-text-muted; margin-left:1px; }
-.explore-card__pill--other.active .explore-card__pillCaret { color:$color-primary-darker; }
-
-// "Other" pill's attached country dropdown — patched directly under the pill.
-.explore-card__otherWrap { position:relative; flex-shrink:0; }
-.explore-card__otherDropdown {
-  position:absolute; top:calc(100% + 6px); left:0; z-index:$z-popover;
-  width:220px; max-height:260px; overflow-y:auto;
-  background:$color-bg-card; border:1px solid $color-border; border-radius:$_r;
-  box-shadow:$shadow-2; padding:.35rem;
-}
-.explore-card__otherOption {
-  width:100%; display:flex; align-items:center; gap:8px; text-align:left;
-  padding:.4rem .55rem; border:none; border-radius:$radius-sm; background:transparent;
-  color:$color-text-body; font-size:12.5px; font-weight:500; cursor:pointer; transition:background $_t;
-  &:hover { background:$color-bg-light; }
-  &.active { background:$color-primary-light; color:$color-primary-darker; font-weight:700; }
-}
-
-// ── Guest "Join Tamilya to post, comment, or react" banner ─────────────
-// Replaces .composer for a logged-out viewer. Fixed light-amber background
-// (not theme-reactive) — same reasoning as .hero/.sidebar-guest-card: its
-// own text stays fixed-dark too, rather than $color-primary-light (which
-// turns dark brown in dark mode and would swallow the fixed-dark title/text
-// below it).
-.join-banner {
-  display:flex; align-items:center; justify-content:space-between; gap:.85rem; flex-wrap:wrap;
-  background:$gradient-card-amber; border:1px solid $color-primary-medium; border-radius:$_r;
-  padding:.85rem 1rem;
-}
-.join-banner__info { display:flex; align-items:center; gap:.75rem; }
-.join-banner__icon {
-  width:36px; height:36px; border-radius:$_ri; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  background:$color-primary; color:$color-on-primary; font-size:15px;
-}
-.join-banner__title { font-size:12.5px; font-weight:700; color:#1c1917; margin:0; }
-.join-banner__text { font-size:11px; color:#57534e; margin:0; }
-.join-banner__actions { display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
-.join-banner__login {
-  padding:6px 14px; border-radius:$radius-sm; background:$color-bg-card; border:1px solid $color-border;
-  color:$color-text-body; font-size:12px; font-weight:600; text-decoration:none;
-  &:hover { background:$color-bg-hover; }
-}
-.join-banner__signup {
-  padding:6px 14px; border-radius:$radius-sm; background:$gradient-primary; color:$color-on-primary;
-  font-size:12px; font-weight:700; text-decoration:none; transition:box-shadow $_t;
-  &:hover { box-shadow:$shadow-primary-sm; }
 }
 
 // ── Community Stream wrapper card ──────────────────────────────

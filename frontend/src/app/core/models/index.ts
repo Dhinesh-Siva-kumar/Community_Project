@@ -740,3 +740,11 @@ export interface DiscoverySearchResult {
   events: EventPreview[];
   communities: CommunityPreview[];
 }
+
+export interface DiscoveryPlatformStats {
+  countries: number;
+  communities: number;
+  jobs: number;
+  businesses: number;
+  events: number;
+}

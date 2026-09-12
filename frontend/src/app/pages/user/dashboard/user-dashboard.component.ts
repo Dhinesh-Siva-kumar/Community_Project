@@ -32,6 +32,7 @@ import {
   EventPreview,
   CommunityPreview,
   PostPreview,
+  DiscoveryPlatformStats,
   DiscoverySearchResult,
   PaginatedResponse,
 } from '../../../core/models';
@@ -190,38 +191,46 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   guestBusinesses = signal<BusinessPreview[]>([]);
   countries = signal<GeoCountry[]>([]);
   selectedCountryId = signal<number | null>(null);
+  platformStats = signal<DiscoveryPlatformStats | null>(null);
+
+  // ── Hero search bar (guest) ────────────────────────────────
   searchQuery = signal('');
   searchResults = signal<DiscoverySearchResult | null>(null);
   searching = signal(false);
-  otherCountryDropdownOpen = signal(false);
+
+  // ── Hero country combobox (guest) — free-text input the user types
+  // directly into (no click-to-open trigger/arrow); typing filters the
+  // dropdown list live, matching a plain autocomplete combobox rather than
+  // a traditional select. countryQuery holds the raw input text (kept in
+  // sync with the selected country's name when the dropdown closes without
+  // a new pick — see closeCountryDropdown()).
+  countryQuery = signal('');
+  countryDropdownOpen = signal(false);
 
   // Computed
   firstName = computed(() => this.user()?.displayName ?? this.user()?.userName ?? 'User');
   currentUser = computed(() => this.user());
 
-  // The 10 curated countries, in PRIORITY_COUNTRY_NAMES order, restricted to
-  // whichever of them the geography API actually returned.
-  priorityCountries = computed<GeoCountry[]>(() => {
-    const byName = new Map(this.countries().map((c) => [c.name, c]));
-    return PRIORITY_COUNTRY_NAMES.map((name) => byName.get(name)).filter(
+  // Curated PRIORITY_COUNTRY_NAMES countries first, then everything else
+  // alphabetically — the browsing order shown before the user types anything.
+  orderedCountries = computed<GeoCountry[]>(() => {
+    const all = this.countries();
+    const byName = new Map(all.map((c) => [c.name, c]));
+    const priority = PRIORITY_COUNTRY_NAMES.map((name) => byName.get(name)).filter(
       (c): c is GeoCountry => !!c,
     );
-  });
-
-  // Everything not in the curated 10 — lives inside the "Other" pill's dropdown.
-  otherCountries = computed<GeoCountry[]>(() => {
-    const priorityIds = new Set(this.priorityCountries().map((c) => c.id));
-    return this.countries()
+    const priorityIds = new Set(priority.map((c) => c.id));
+    const rest = all
       .filter((c) => !priorityIds.has(c.id))
       .sort((a, b) => a.name.localeCompare(b.name));
+    return [...priority, ...rest];
   });
 
-  // Set when the selected country is one of the "other" (non-curated) ones,
-  // so the "Other" pill itself can show as active with the country's name.
-  selectedOtherCountry = computed<GeoCountry | null>(() => {
-    const id = this.selectedCountryId();
-    if (id == null) return null;
-    return this.otherCountries().find((c) => c.id === id) ?? null;
+  // What the dropdown actually renders — filtered live by countryQuery.
+  filteredCountries = computed<GeoCountry[]>(() => {
+    const q = this.countryQuery().trim().toLowerCase();
+    const list = this.orderedCountries();
+    return q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list;
   });
 
   greeting = computed(() => {
@@ -529,32 +538,101 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
       // last pick is honored, otherwise the country stays unselected rather
       // than silently assuming one (see country-preference.service.ts).
       this.selectedCountryId.set(this.countryPreferenceService.getSelected());
+      this.syncCountryQueryToSelection();
       this.loadGuestData();
+    });
+
+    // Platform-wide totals — unaffected by the country filter, so this is
+    // fetched once rather than being part of loadGuestData()'s re-fetch.
+    this.discoveryService.getPlatformStats().subscribe({
+      next: (res) => this.platformStats.set(res.data),
+      error: () => this.platformStats.set(null),
     });
   }
 
-  onCountryChange(countryId: number): void {
-    this.selectedCountryId.set(countryId);
-    this.countryPreferenceService.setSelected(countryId);
-    this.otherCountryDropdownOpen.set(false);
-    this.loadGuestData();
+  /** Text the input's displayed value reverts to once the dropdown closes
+   * without a fresh pick — keeps it consistent with selectedCountryId
+   * instead of leaving behind whatever the user last typed. */
+  private syncCountryQueryToSelection(): void {
+    const id = this.selectedCountryId();
+    const match = id == null ? null : this.countries().find((c) => c.id === id);
+    this.countryQuery.set(match?.name ?? '');
   }
 
-  clearCountryFilter(): void {
-    this.selectedCountryId.set(null);
-    this.countryPreferenceService.clearSelected();
-    this.otherCountryDropdownOpen.set(false);
-    this.loadGuestData();
+  /** Picking a country only stages it — it doesn't reload anything on its
+   * own. The banner's filter (text + country together) only takes effect
+   * when Search is actually clicked (or Enter is pressed in the search
+   * field), via applyGuestFilters() below. */
+  selectCountry(country: GeoCountry | null): void {
+    if (country) {
+      this.selectedCountryId.set(country.id);
+      this.countryQuery.set(country.name);
+    } else {
+      this.selectedCountryId.set(null);
+      this.countryQuery.set('');
+    }
+    this.countryDropdownOpen.set(false);
   }
 
-  toggleOtherCountryDropdown(event: MouseEvent): void {
-    event.stopPropagation();
-    this.otherCountryDropdownOpen.update((open) => !open);
+  onCountryQueryChange(value: string): void {
+    this.countryQuery.set(value);
+    if (!this.countryDropdownOpen()) this.countryDropdownOpen.set(true);
   }
 
+  onCountryQueryKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const top = this.filteredCountries()[0];
+      if (top) this.selectCountry(top);
+    } else if (event.key === 'Escape') {
+      this.countryDropdownOpen.set(false);
+      this.syncCountryQueryToSelection();
+    }
+  }
+
+  // Closes on any outside click — the country picker's own root div stops
+  // propagation on click (see template) so clicks inside it never reach
+  // here while the dropdown is open.
   @HostListener('document:click')
-  closeOtherCountryDropdown(): void {
-    if (this.otherCountryDropdownOpen()) this.otherCountryDropdownOpen.set(false);
+  closeCountryDropdown(): void {
+    if (!this.countryDropdownOpen()) return;
+    this.countryDropdownOpen.set(false);
+    this.syncCountryQueryToSelection();
+  }
+
+  /** The banner's one actual "apply" trigger — bound to the Search button
+   * and to Enter in the text field. Neither typing text nor picking a
+   * country (selectCountry() above) does anything by itself; this is what
+   * commits the staged country (persisting it + reloading the guest feed
+   * sections) and runs the free-text search together, in one step. */
+  applyGuestFilters(): void {
+    const countryId = this.selectedCountryId();
+    if (countryId == null) {
+      this.countryPreferenceService.clearSelected();
+    } else {
+      this.countryPreferenceService.setSelected(countryId);
+    }
+    this.loadGuestData();
+    this.runGuestSearch();
+  }
+
+  private runGuestSearch(): void {
+    const q = this.searchQuery().trim();
+    if (!q) { this.searchResults.set(null); return; }
+    this.searching.set(true);
+    this.discoveryService.search(q, this.selectedCountryId() ?? undefined).subscribe({
+      next: (res) => { this.searchResults.set(res); this.searching.set(false); },
+      error: () => this.searching.set(false),
+    });
+  }
+
+  clearGuestSearch(): void {
+    this.searchQuery.set('');
+    this.searchResults.set(null);
+  }
+
+  guestSearchResultCount(r: DiscoverySearchResult): number {
+    return r.jobs.length + r.businesses.length + r.events.length + r.communities.length;
   }
 
   private loadGuestData(): void {
@@ -589,25 +667,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
       next: (res) => { this.guestBusinesses.set(res.data); this.loadingFeaturedBusinesses.set(false); },
       error: () => this.loadingFeaturedBusinesses.set(false),
     });
-  }
-
-  runGuestSearch(): void {
-    const q = this.searchQuery().trim();
-    if (!q) { this.searchResults.set(null); return; }
-    this.searching.set(true);
-    this.discoveryService.search(q, this.selectedCountryId() ?? undefined).subscribe({
-      next: (res) => { this.searchResults.set(res); this.searching.set(false); },
-      error: () => this.searching.set(false),
-    });
-  }
-
-  clearGuestSearch(): void {
-    this.searchQuery.set('');
-    this.searchResults.set(null);
-  }
-
-  guestSearchResultCount(r: DiscoverySearchResult): number {
-    return r.jobs.length + r.businesses.length + r.events.length + r.communities.length;
   }
 
   /** Guest CTA gate — jobs "Apply Now", RSVP/Get Tickets, community Join,

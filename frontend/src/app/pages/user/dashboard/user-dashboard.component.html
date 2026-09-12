@@ -15,357 +15,315 @@
 } @else {
 <div class="db-page">
 
-  <!-- ── Social layout: feed (main) + right rail ─────────────── -->
-  <div class="db-layout">
+  <!-- ══════════════ Full-width top section: greeting/hero + welcome + activity/search ══════════════ -->
+  @if (authService.isAuthenticated()) {
+    <!-- Hero — now spans the full page width (both the feed and rail
+         columns below), not just the main column. -->
+    <section class="hero">
+      <div class="hero__icon" aria-hidden="true">
+        <i class="bi" [ngClass]="greetingIcon()"></i>
+      </div>
 
-    <!-- ══════════════ Main column: greeting + activity + community stream + jobs ══════════════ -->
-    <div class="db-main">
-
-      @if (authService.isAuthenticated()) {
-        <!-- Hero — confined to the main column, same width as Your Activity /
-             Community Stream below (matches the Stitch layout: the greeting
-             banner sits inside the 8-col main column, not full page width). -->
-        <section class="hero">
-          <div class="hero__icon" aria-hidden="true">
-            <i class="bi" [ngClass]="greetingIcon()"></i>
-          </div>
-
-          <div class="hero__body">
-            <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
-            <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
-            <p class="hero__sub">{{ 'user.dashboard.hereSWhatSHappening' | translate }}</p>
-          </div>
-        </section>
-      } @else {
-        <!-- Guest hero — "TAMILYA GLOBAL" banner, same fixed-light-amber
-             card as the registered .hero above (see .hero SCSS comment on
-             why its text colors stay fixed rather than theme-reactive). -->
-        <section class="hero hero--guest">
-          <div class="hero__body">
-            <div class="hero__eyebrow">
-              <span class="hero__eyebrowBadge">{{ 'home.guestHero.badge' | translate }}</span>
-              <span class="hero__eyebrowText">{{ 'home.guestHero.subtitle' | translate }}</span>
-            </div>
-            <h1 class="hero__title hero__title--tamil">உலகம் முழுவதும் தமிழர்களை இணைக்கும் தளம்</h1>
-            <p class="hero__sub">{{ 'home.guestHero.tagline' | translate }}</p>
-          </div>
-          <a routerLink="/auth/register" class="hero__joinBtn">
-            {{ 'home.guestHero.joinButton' | translate }}
-            <i class="bi bi-arrow-right"></i>
-          </a>
-        </section>
-      }
-
-      <!-- Post-registration welcome banner — confined to the main column,
-           left-aligned with the composer below (not full-width under the
-           right rail's Your Activity / Complete Your Profile / Your Events). -->
-      @if (showWelcomeBanner()) {
-        <section class="welcome-banner" role="status">
-          <button
-            type="button"
-            class="welcome-banner__close"
-            (click)="dismissWelcomeBanner()"
-            [attr.aria-label]="'user.dashboard.dismissWelcomeMessage' | translate"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-
-          <div class="welcome-banner__header">
-            <span class="welcome-banner__icon"><i class="bi bi-stars"></i></span>
-            <div class="welcome-banner__heading">
-              <h2 class="welcome-banner__title">{{ 'user.dashboard.welcomeBanner' | translate: { name: firstName() } }}</h2>
-              <p class="welcome-banner__subtitle">{{ welcomeBannerText().subtitle }}</p>
-            </div>
-          </div>
-
-          <ol class="welcome-banner__steps">
-            <li>
-              <a routerLink="/user/profile">
-                <span class="welcome-banner__step-icon welcome-banner__step-icon--profile">
-                  <i class="bi bi-person-check-fill"></i>
-                  <span class="welcome-banner__step-badge">1</span>
-                </span>
-                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[0] }}</span>
-                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/user/community">
-                <span class="welcome-banner__step-icon welcome-banner__step-icon--community">
-                  <i class="bi bi-people-fill"></i>
-                  <span class="welcome-banner__step-badge">2</span>
-                </span>
-                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[1] }}</span>
-                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
-              </a>
-            </li>
-            <li>
-              <a routerLink="/user/community">
-                <span class="welcome-banner__step-icon welcome-banner__step-icon--post">
-                  <i class="bi bi-pencil-square"></i>
-                  <span class="welcome-banner__step-badge">3</span>
-                </span>
-                <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[2] }}</span>
-                <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
-              </a>
-            </li>
-          </ol>
-        </section>
-      }
-
-      @if (authService.isAuthenticated()) {
-        <!-- Your Activity -->
-        <div class="activity-card">
-          <div class="activity-card__head">
-            <h3 class="activity-card__title">{{ 'user.dashboard.activity' | translate }}</h3>
-            <span class="activity-card__overview">{{ 'common.overview' | translate }}</span>
-          </div>
-          <div class="activity-card__grid">
-            @for (stat of animatedStats(); track stat.label) {
-              <a class="activity-stat" [routerLink]="stat.route" [queryParams]="stat.queryParams ?? null" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
-                <span class="activity-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
-                <span class="activity-stat__body">
-                  <span class="activity-stat__lbl">{{ stat.label | translate }}</span>
-                  <span class="activity-stat__val">{{ stat.displayValue }}</span>
-                </span>
-              </a>
-            }
-          </div>
+      <div class="hero__body">
+        <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
+        <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
+        <p class="hero__sub">{{ 'user.dashboard.hereSWhatSHappening' | translate }}</p>
+      </div>
+    </section>
+  } @else {
+    <!-- Guest hero — "TAMILYA GLOBAL" banner, same fixed-light-amber
+         card as the registered .hero above (see .hero SCSS comment on
+         why its text colors stay fixed rather than theme-reactive). Full
+         page width, same as the registered hero above. -->
+    <section class="hero hero--guest">
+      <div class="hero__body">
+        <div class="hero__eyebrow">
+          <span class="hero__eyebrowBadge">{{ 'home.guestHero.badge' | translate }}</span>
+          <span class="hero__eyebrowText">{{ 'home.guestHero.subtitle' | translate }}</span>
         </div>
-      } @else {
-        <!-- Explore & Discover Directory — guest search + country picker -->
-        <div class="explore-card">
-          <div class="explore-card__head">
-            <div class="explore-card__heading">
-              <span class="live-dot" aria-hidden="true"></span>
-              <h3 class="explore-card__title">{{ 'home.explore.title' | translate }}</h3>
-            </div>
-            <span class="explore-card__note">{{ 'home.explore.freeAccess' | translate }}</span>
-          </div>
+        <h1 class="hero__title hero__title--tamil">உலகம் முழுவதும் தமிழர்களை இணைக்கும் தளம்</h1>
+        <p class="hero__sub">{{ 'home.guestHero.tagline' | translate }}</p>
 
-          <div class="explore-card__search">
+        <!-- Unified search bar — free-text search + the country combobox
+             stage their own state only (typing text, picking a country)
+             and never reload anything by themselves. Both only take effect
+             together when Search is clicked / Enter is pressed here — see
+             applyGuestFilters(). -->
+        <div class="hero__searchBar">
+          <div class="hero__searchField">
             <i class="bi bi-search" aria-hidden="true"></i>
             <input
               type="text"
               [ngModel]="searchQuery()"
               (ngModelChange)="searchQuery.set($event)"
-              (keyup.enter)="runGuestSearch()"
+              (keyup.enter)="applyGuestFilters()"
               [placeholder]="'home.hero.searchPlaceholder' | translate"
             />
-            <div class="explore-card__searchActions">
-              @if (searchQuery()) {
-                <button type="button" class="explore-card__clearBtn" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
-                  <i class="bi bi-x-lg"></i>
-                </button>
-              }
-              <button type="button" class="explore-card__searchBtn" (click)="runGuestSearch()">
-                {{ 'common.search' | translate }}
+            @if (searchQuery()) {
+              <button type="button" class="hero__searchClear" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            }
+          </div>
+          <div class="hero__searchDivider" aria-hidden="true"></div>
+          <div class="hero__countryPicker" (click)="$event.stopPropagation()">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <input
+              type="text"
+              [ngModel]="countryQuery()"
+              (ngModelChange)="onCountryQueryChange($event)"
+              (focus)="countryDropdownOpen.set(true)"
+              (keydown)="onCountryQueryKeydown($event)"
+              [placeholder]="'home.hero.selectCountryPlaceholder' | translate"
+              autocomplete="off"
+              role="combobox"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="countryDropdownOpen()"
+            />
+            @if (countryDropdownOpen()) {
+              <div class="hero__countryDropdown" role="listbox">
+                @if (!countryQuery().trim()) {
+                  <button type="button" class="hero__countryOption" [class.active]="selectedCountryId() === null" (click)="selectCountry(null)">
+                    <span>🌐</span><span>{{ 'home.explore.allCountries' | translate }}</span>
+                  </button>
+                }
+                @for (c of filteredCountries(); track c.id) {
+                  <button type="button" class="hero__countryOption" [class.active]="selectedCountryId() === c.id" (click)="selectCountry(c)">
+                    <span>{{ c.flagEmoji }}</span><span>{{ c.name }}</span>
+                  </button>
+                } @empty {
+                  <div class="hero__countryEmpty">{{ 'dropdown.no_results' | translate }}</div>
+                }
+              </div>
+            }
+          </div>
+          <button type="button" class="hero__searchBtn" (click)="applyGuestFilters()">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span>{{ 'common.search' | translate }}</span>
+          </button>
+        </div>
+
+        @if (searching()) {
+          <div class="hero__results hero__results--loading">
+            @for (i of [0, 1, 2]; track i) {
+              <div class="hero__resultSkeleton">
+                <span class="hero__resultSkeletonAvatar"></span>
+                <span class="hero__resultSkeletonLines"><span></span><span></span></span>
+              </div>
+            }
+          </div>
+        } @else if (searchResults()) {
+          @if (searchResults(); as r) {
+          <div class="hero__results">
+            <div class="hero__resultsHead">
+              <p class="hero__resultsSummary">{{ guestSearchResultCount(r) }} {{ 'home.search.resultsFor' | translate: { query: r.query } }}</p>
+              <button type="button" class="hero__resultsClose" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
+                <i class="bi bi-x-lg"></i>
               </button>
             </div>
-          </div>
 
-          @if (searching()) {
-            <div class="explore-card__results explore-card__results--loading">
-              @for (i of [0, 1, 2]; track i) {
-                <div class="explore-card__resultSkeleton">
-                  <span class="explore-card__resultSkeletonAvatar"></span>
-                  <span class="explore-card__resultSkeletonLines">
-                    <span></span>
-                    <span></span>
-                  </span>
-                </div>
-              }
-            </div>
-          } @else if (searchResults()) {
-            @if (searchResults(); as r) {
-            <div class="explore-card__results">
-              <div class="explore-card__resultsHead">
-                @if (guestSearchResultCount(r) > 0) {
-                  <p class="explore-card__resultsSummary">{{ guestSearchResultCount(r) }} {{ 'home.search.resultsFor' | translate: { query: r.query } }}</p>
-                } @else {
-                  <p class="explore-card__resultsSummary">{{ 'home.search.resultsFor' | translate: { query: r.query } }}</p>
-                }
-                <button type="button" class="explore-card__resultsClose" [attr.aria-label]="'home.search.clear' | translate" (click)="clearGuestSearch()">
-                  <i class="bi bi-x-lg"></i>
-                </button>
+            @if (guestSearchResultCount(r) === 0) {
+              <div class="hero__noResults">
+                <i class="bi bi-search"></i>
+                <p>{{ 'home.search.noResults' | translate }}</p>
+                <span>{{ 'home.search.noResultsHint' | translate }}</span>
               </div>
-
-              @if (guestSearchResultCount(r) === 0) {
-                <div class="explore-card__noResults">
-                  <i class="bi bi-search"></i>
-                  <p>{{ 'home.search.noResults' | translate }}</p>
-                  <span>{{ 'home.search.noResultsHint' | translate }}</span>
-                </div>
-              }
-
-              @if (r.jobs.length) {
-                <p class="explore-card__resultsCategory">
-                  <i class="bi bi-briefcase-fill"></i>
-                  <span>{{ 'home.search.categoryJobs' | translate }}</span>
-                  <span class="explore-card__resultsCount">{{ r.jobs.length }}</span>
-                </p>
-                @for (j of r.jobs; track j.id) {
-                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
-                    <span class="explore-card__resultAvatar">
-                      @if (j.companyLogo) {
-                        <img [src]="j.companyLogo | imageUrl" alt="" />
-                      } @else {
-                        <i class="bi bi-briefcase-fill"></i>
-                      }
-                    </span>
-                    <span class="explore-card__resultBody">
-                      <span class="explore-card__resultTitle">{{ j.title }}</span>
-                      <span class="explore-card__resultMeta">{{ j.companyName }}@if (j.city) { &middot; {{ j.city }} }</span>
-                    </span>
-                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
-                  </button>
-                }
-              }
-              @if (r.businesses.length) {
-                <p class="explore-card__resultsCategory">
-                  <i class="bi bi-shop"></i>
-                  <span>{{ 'home.search.categoryBusinesses' | translate }}</span>
-                  <span class="explore-card__resultsCount">{{ r.businesses.length }}</span>
-                </p>
-                @for (b of r.businesses; track b.id) {
-                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
-                    <span class="explore-card__resultAvatar">
-                      @if (b.logo) {
-                        <img [src]="b.logo | imageUrl" alt="" />
-                      } @else {
-                        <i class="bi bi-shop"></i>
-                      }
-                    </span>
-                    <span class="explore-card__resultBody">
-                      <span class="explore-card__resultTitle">{{ b.name }}</span>
-                      <span class="explore-card__resultMeta">
-                        @if (b.category?.name) { {{ b.category?.name }} }
-                        @if (b.city) { &middot; {{ b.city }} }
-                      </span>
-                    </span>
-                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
-                  </button>
-                }
-              }
-              @if (r.events.length) {
-                <p class="explore-card__resultsCategory">
-                  <i class="bi bi-calendar-event-fill"></i>
-                  <span>{{ 'home.search.categoryEvents' | translate }}</span>
-                  <span class="explore-card__resultsCount">{{ r.events.length }}</span>
-                </p>
-                @for (e of r.events; track e.id) {
-                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
-                    <span class="explore-card__resultAvatar">
-                      @if (e.coverImage) {
-                        <img [src]="e.coverImage | imageUrl" alt="" />
-                      } @else {
-                        <i class="bi bi-calendar-event-fill"></i>
-                      }
-                    </span>
-                    <span class="explore-card__resultBody">
-                      <span class="explore-card__resultTitle">{{ e.title }}</span>
-                      <span class="explore-card__resultMeta">{{ e.eventDate | date: 'MMM d, y' }}@if (e.country) { &middot; {{ e.country }} }</span>
-                    </span>
-                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
-                  </button>
-                }
-              }
-              @if (r.communities.length) {
-                <p class="explore-card__resultsCategory">
-                  <i class="bi bi-people-fill"></i>
-                  <span>{{ 'home.search.categoryCommunities' | translate }}</span>
-                  <span class="explore-card__resultsCount">{{ r.communities.length }}</span>
-                </p>
-                @for (c of r.communities; track c.id) {
-                  <button type="button" class="explore-card__resultItem" (click)="promptAuth()">
-                    <span class="explore-card__resultAvatar">
-                      @if (c.image) {
-                        <img [src]="c.image | imageUrl" alt="" />
-                      } @else {
-                        <i class="bi bi-people-fill"></i>
-                      }
-                    </span>
-                    <span class="explore-card__resultBody">
-                      <span class="explore-card__resultTitle">{{ c.name }}</span>
-                      <span class="explore-card__resultMeta">{{ c.memberCount }} {{ 'home.search.members' | translate }}</span>
-                    </span>
-                    <i class="bi bi-chevron-right explore-card__resultChevron"></i>
-                  </button>
-                }
-              }
-            </div>
             }
-          }
 
-          <div class="explore-card__countryRow">
-            <div class="explore-card__countryHead">
-              <p class="explore-card__countryLabel">{{ 'home.hero.selectCountryLabel' | translate }}</p>
-              @if (selectedCountryId(); as cid) {
-                <span class="explore-card__countryNote">
-                  {{ 'home.explore.personalising' | translate }}
-                </span>
-              }
-            </div>
-            <div class="explore-card__countryPills">
-              <div class="explore-card__countryPillsScroll">
-                <button
-                  type="button"
-                  class="explore-card__pill"
-                  [class.active]="selectedCountryId() === null"
-                  (click)="clearCountryFilter()"
-                >
-                  <span>🌐</span>
-                  <span>{{ 'home.explore.allCountries' | translate }}</span>
+            @if (r.jobs.length) {
+              <p class="hero__resultsCategory"><i class="bi bi-briefcase-fill"></i><span>{{ 'home.search.categoryJobs' | translate }}</span><span class="hero__resultsCount">{{ r.jobs.length }}</span></p>
+              @for (j of r.jobs; track j.id) {
+                <button type="button" class="hero__resultItem" (click)="promptAuth()">
+                  <span class="hero__resultAvatar">
+                    @if (j.companyLogo) { <img [src]="j.companyLogo | imageUrl" alt="" /> } @else { <i class="bi bi-briefcase-fill"></i> }
+                  </span>
+                  <span class="hero__resultBody">
+                    <span class="hero__resultTitle">{{ j.title }}</span>
+                    <span class="hero__resultMeta">{{ j.companyName }}@if (j.city) { &middot; {{ j.city }} }</span>
+                  </span>
+                  <i class="bi bi-chevron-right hero__resultChevron"></i>
                 </button>
-                @for (country of priorityCountries(); track country.id) {
-                  <button
-                    type="button"
-                    class="explore-card__pill"
-                    [class.active]="selectedCountryId() === country.id"
-                    (click)="onCountryChange(country.id)"
-                  >
-                    <span>{{ country.flagEmoji }}</span>
-                    <span>{{ country.name }}</span>
-                  </button>
-                }
-              </div>
-              @if (otherCountries().length > 0) {
-                <div class="explore-card__otherWrap">
-                  <button
-                    type="button"
-                    class="explore-card__pill explore-card__pill--other"
-                    [class.active]="!!selectedOtherCountry()"
-                    (click)="toggleOtherCountryDropdown($event)"
-                  >
-                    @if (selectedOtherCountry(); as other) {
-                      <span>{{ other.flagEmoji }}</span>
-                      <span>{{ other.name }}</span>
-                    } @else {
-                      <span>{{ 'home.explore.otherCountry' | translate }}</span>
-                    }
-                    <i class="fa-solid fa-chevron-down explore-card__pillCaret"></i>
-                  </button>
-                  @if (otherCountryDropdownOpen()) {
-                    <div class="explore-card__otherDropdown" (click)="$event.stopPropagation()">
-                      @for (country of otherCountries(); track country.id) {
-                        <button
-                          type="button"
-                          class="explore-card__otherOption"
-                          [class.active]="selectedCountryId() === country.id"
-                          (click)="onCountryChange(country.id)"
-                        >
-                          <span>{{ country.flagEmoji }}</span>
-                          <span>{{ country.name }}</span>
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
               }
-            </div>
+            }
+            @if (r.businesses.length) {
+              <p class="hero__resultsCategory"><i class="bi bi-shop"></i><span>{{ 'home.search.categoryBusinesses' | translate }}</span><span class="hero__resultsCount">{{ r.businesses.length }}</span></p>
+              @for (b of r.businesses; track b.id) {
+                <button type="button" class="hero__resultItem" (click)="promptAuth()">
+                  <span class="hero__resultAvatar">
+                    @if (b.logo) { <img [src]="b.logo | imageUrl" alt="" /> } @else { <i class="bi bi-shop"></i> }
+                  </span>
+                  <span class="hero__resultBody">
+                    <span class="hero__resultTitle">{{ b.name }}</span>
+                    <span class="hero__resultMeta">@if (b.category?.name) { {{ b.category?.name }} } @if (b.city) { &middot; {{ b.city }} }</span>
+                  </span>
+                  <i class="bi bi-chevron-right hero__resultChevron"></i>
+                </button>
+              }
+            }
+            @if (r.events.length) {
+              <p class="hero__resultsCategory"><i class="bi bi-calendar-event-fill"></i><span>{{ 'home.search.categoryEvents' | translate }}</span><span class="hero__resultsCount">{{ r.events.length }}</span></p>
+              @for (e of r.events; track e.id) {
+                <button type="button" class="hero__resultItem" (click)="promptAuth()">
+                  <span class="hero__resultAvatar">
+                    @if (e.coverImage) { <img [src]="e.coverImage | imageUrl" alt="" /> } @else { <i class="bi bi-calendar-event-fill"></i> }
+                  </span>
+                  <span class="hero__resultBody">
+                    <span class="hero__resultTitle">{{ e.title }}</span>
+                    <span class="hero__resultMeta">{{ e.eventDate | date: 'MMM d, y' }}@if (e.country) { &middot; {{ e.country }} }</span>
+                  </span>
+                  <i class="bi bi-chevron-right hero__resultChevron"></i>
+                </button>
+              }
+            }
+            @if (r.communities.length) {
+              <p class="hero__resultsCategory"><i class="bi bi-people-fill"></i><span>{{ 'home.search.categoryCommunities' | translate }}</span><span class="hero__resultsCount">{{ r.communities.length }}</span></p>
+              @for (c of r.communities; track c.id) {
+                <button type="button" class="hero__resultItem" (click)="promptAuth()">
+                  <span class="hero__resultAvatar">
+                    @if (c.image) { <img [src]="c.image | imageUrl" alt="" /> } @else { <i class="bi bi-people-fill"></i> }
+                  </span>
+                  <span class="hero__resultBody">
+                    <span class="hero__resultTitle">{{ c.name }}</span>
+                    <span class="hero__resultMeta">{{ c.memberCount }} {{ 'home.search.members' | translate }}</span>
+                  </span>
+                  <i class="bi bi-chevron-right hero__resultChevron"></i>
+                </button>
+              }
+            }
           </div>
+          }
+        }
+      </div>
+    </section>
+  }
+
+  @if (!authService.isAuthenticated()) {
+    <!-- Platform-wide overview counts — GET /api/discovery/stats via
+         DiscoveryService.getPlatformStats(), fetched once in
+         initGuestCountry() (not country-filtered, unlike the previews
+         below). "Countries" counts distinct countries with at least one
+         active/approved community, business, job or event. -->
+    <div class="platform-stats">
+      <div class="platform-stats__item">
+        <span class="platform-stats__icon platform-stats__icon--countries"><i class="bi bi-globe2"></i></span>
+        <span class="platform-stats__body">
+          <span class="platform-stats__val">{{ platformStats()?.countries ?? 0 }}</span>
+          <span class="platform-stats__lbl">{{ 'home.stats.countries' | translate }}</span>
+        </span>
+      </div>
+      <div class="platform-stats__item">
+        <span class="platform-stats__icon platform-stats__icon--communities"><i class="bi bi-people-fill"></i></span>
+        <span class="platform-stats__body">
+          <span class="platform-stats__val">{{ platformStats()?.communities ?? 0 }}</span>
+          <span class="platform-stats__lbl">{{ 'home.stats.communities' | translate }}</span>
+        </span>
+      </div>
+      <div class="platform-stats__item">
+        <span class="platform-stats__icon platform-stats__icon--jobs"><i class="bi bi-briefcase-fill"></i></span>
+        <span class="platform-stats__body">
+          <span class="platform-stats__val">{{ platformStats()?.jobs ?? 0 }}</span>
+          <span class="platform-stats__lbl">{{ 'home.stats.jobs' | translate }}</span>
+        </span>
+      </div>
+      <div class="platform-stats__item">
+        <span class="platform-stats__icon platform-stats__icon--business"><i class="bi bi-shop"></i></span>
+        <span class="platform-stats__body">
+          <span class="platform-stats__val">{{ platformStats()?.businesses ?? 0 }}</span>
+          <span class="platform-stats__lbl">{{ 'home.stats.business' | translate }}</span>
+        </span>
+      </div>
+      <div class="platform-stats__item">
+        <span class="platform-stats__icon platform-stats__icon--events"><i class="bi bi-calendar-event"></i></span>
+        <span class="platform-stats__body">
+          <span class="platform-stats__val">{{ platformStats()?.events ?? 0 }}</span>
+          <span class="platform-stats__lbl">{{ 'home.stats.events' | translate }}</span>
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Post-registration welcome banner — now full page width, same as
+       the hero above it (was previously confined to the main column). -->
+  @if (showWelcomeBanner()) {
+    <section class="welcome-banner" role="status">
+      <button
+        type="button"
+        class="welcome-banner__close"
+        (click)="dismissWelcomeBanner()"
+        [attr.aria-label]="'user.dashboard.dismissWelcomeMessage' | translate"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <div class="welcome-banner__header">
+        <span class="welcome-banner__icon"><i class="bi bi-stars"></i></span>
+        <div class="welcome-banner__heading">
+          <h2 class="welcome-banner__title">{{ 'user.dashboard.welcomeBanner' | translate: { name: firstName() } }}</h2>
+          <p class="welcome-banner__subtitle">{{ welcomeBannerText().subtitle }}</p>
         </div>
-      }
+      </div>
+
+      <ol class="welcome-banner__steps">
+        <li>
+          <a routerLink="/user/profile">
+            <span class="welcome-banner__step-icon welcome-banner__step-icon--profile">
+              <i class="bi bi-person-check-fill"></i>
+              <span class="welcome-banner__step-badge">1</span>
+            </span>
+            <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[0] }}</span>
+            <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/user/community">
+            <span class="welcome-banner__step-icon welcome-banner__step-icon--community">
+              <i class="bi bi-people-fill"></i>
+              <span class="welcome-banner__step-badge">2</span>
+            </span>
+            <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[1] }}</span>
+            <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/user/community">
+            <span class="welcome-banner__step-icon welcome-banner__step-icon--post">
+              <i class="bi bi-pencil-square"></i>
+              <span class="welcome-banner__step-badge">3</span>
+            </span>
+            <span class="welcome-banner__step-text">{{ welcomeBannerText().steps[2] }}</span>
+            <i class="bi bi-chevron-right welcome-banner__step-arrow"></i>
+          </a>
+        </li>
+      </ol>
+    </section>
+  }
+
+  @if (authService.isAuthenticated()) {
+    <!-- Your Activity — now full page width, same as the hero above. -->
+    <div class="activity-card">
+      <div class="activity-card__head">
+        <h3 class="activity-card__title">{{ 'user.dashboard.activity' | translate }}</h3>
+        <span class="activity-card__overview">{{ 'common.overview' | translate }}</span>
+      </div>
+      <div class="activity-card__grid">
+        @for (stat of animatedStats(); track stat.label) {
+          <a class="activity-stat" [routerLink]="stat.route" [queryParams]="stat.queryParams ?? null" [style.--ac]="stat.accentColor" [style.--bg]="stat.bgColor">
+            <span class="activity-stat__icon"><i class="bi" [ngClass]="stat.icon"></i></span>
+            <span class="activity-stat__body">
+              <span class="activity-stat__lbl">{{ stat.label | translate }}</span>
+              <span class="activity-stat__val">{{ stat.displayValue }}</span>
+            </span>
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Social layout: feed (main) + right rail ─────────────── -->
+  <div class="db-layout">
+
+    <!-- ══════════════ Main column: community stream + jobs ══════════════ -->
+    <div class="db-main">
 
       <!-- Community Stream -->
       <div class="stream-card">
@@ -387,20 +345,6 @@
           </div>
           <span class="composer-input">{{ 'user.dashboard.shareJobOpportunityAskHelp' | translate }}</span>
         </a>
-      } @else {
-        <div class="join-banner">
-          <div class="join-banner__info">
-            <span class="join-banner__icon"><i class="bi bi-pencil-square"></i></span>
-            <div>
-              <p class="join-banner__title">{{ 'home.joinBanner.title' | translate }}</p>
-              <p class="join-banner__text">{{ 'home.joinBanner.text' | translate }}</p>
-            </div>
-          </div>
-          <div class="join-banner__actions">
-            <a routerLink="/auth/login" class="join-banner__login">{{ 'home.header.login' | translate }}</a>
-            <a routerLink="/auth/register" class="join-banner__signup">{{ 'home.joinBanner.signUp' | translate }}</a>
-          </div>
-        </div>
       }
 
       <!-- Feed filter tabs -->

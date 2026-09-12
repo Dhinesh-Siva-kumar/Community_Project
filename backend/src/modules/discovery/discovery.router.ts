@@ -13,6 +13,7 @@ router.get('/businesses/preview', ctrl.businessesPreview);
 router.get('/events/preview', ctrl.eventsPreview);
 router.get('/communities/preview', ctrl.communitiesPreview);
 router.get('/posts/preview', ctrl.postsPreview);
+router.get('/stats', ctrl.stats);
 router.get('/search', discoverySearchLimiter, ctrl.search);
 
 export default router;

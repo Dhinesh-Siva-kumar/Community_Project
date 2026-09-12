@@ -42,6 +42,13 @@ export async function postsPreview(req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 }
 
+export async function stats(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const data = await discoveryService.getPlatformStats();
+    res.json({ data });
+  } catch (err) { next(err); }
+}
+
 export async function search(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { q, countryId, limit } = DiscoverySearchQueryDto.parse(req.query);

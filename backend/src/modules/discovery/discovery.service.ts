@@ -1,3 +1,4 @@
+import type { Knex } from 'knex';
 import db from '../../config/db';
 import * as jobsService from '../jobs/jobs.service';
 import * as businessService from '../business/business.service';
@@ -201,6 +202,64 @@ export async function getPostsPreview(countryId: number | undefined, limit: numb
     .slice(0, limit);
 
   return merged.map(toPostPreview);
+}
+
+export interface PlatformStats {
+  countries: number;
+  communities: number;
+  jobs: number;
+  businesses: number;
+  events: number;
+}
+
+/** Same `is_active = true AND status = 'APPROVED'` gate every findAll() above
+ * applies by default with no viewerId — the exact set of rows a guest can
+ * already see via the previews, just counted instead of fetched. */
+function activeApproved(query: Knex.QueryBuilder, alias: string): Knex.QueryBuilder {
+  return query.where(`${alias}.is_active`, true).where(`${alias}.status`, 'APPROVED');
+}
+
+/** Per-table country key: prefer the `country_id` FK, falling back to a
+ * name lookup against master_countries for legacy rows where the FK backfill
+ * never ran (see jobs/business/events/communities migration notes) — so a
+ * record with only the free-text `country` column still counts. */
+function countryKeyQuery(table: string) {
+  return activeApproved(
+    db(`${table} as t`)
+      .leftJoin('master_countries as mc', 'mc.name', 't.country')
+      .select(db.raw('COALESCE(t.country_id, mc.id) as country_key')),
+    't',
+  );
+}
+
+export async function getPlatformStats(): Promise<PlatformStats> {
+  const countryUnion = countryKeyQuery('communities').union([
+    countryKeyQuery('businesses'),
+    countryKeyQuery('jobs'),
+    countryKeyQuery('events'),
+  ]);
+
+  const [
+    [{ total: communities }],
+    [{ total: businesses }],
+    [{ total: jobs }],
+    [{ total: events }],
+    countryRow,
+  ] = await Promise.all([
+    activeApproved(db('communities as t'), 't').count({ total: '*' }),
+    activeApproved(db('businesses as t'), 't').count({ total: '*' }),
+    activeApproved(db('jobs as t'), 't').count({ total: '*' }),
+    activeApproved(db('events as t'), 't').count({ total: '*' }),
+    db.from(countryUnion.as('combined')).whereNotNull('country_key').countDistinct({ total: 'country_key' }).first(),
+  ]);
+
+  return {
+    countries: Number((countryRow as { total: string | number } | undefined)?.total ?? 0),
+    communities: Number(communities),
+    jobs: Number(jobs),
+    businesses: Number(businesses),
+    events: Number(events),
+  };
 }
 
 export interface DiscoverySearchResult {

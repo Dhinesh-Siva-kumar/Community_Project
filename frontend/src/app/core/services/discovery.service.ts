@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { BusinessPreview, CommunityPreview, DiscoverySearchResult, EventPreview, JobPreview, PostPreview } from '../models';
+import { BusinessPreview, CommunityPreview, DiscoveryPlatformStats, DiscoverySearchResult, EventPreview, JobPreview, PostPreview } from '../models';
 
 export interface DiscoveryPreviewParams {
   countryId?: number;
@@ -31,6 +31,10 @@ export class DiscoveryService {
 
   getPostsPreview(params: DiscoveryPreviewParams = {}): Observable<{ data: PostPreview[] }> {
     return this.api.get<{ data: PostPreview[] }>('/discovery/posts/preview', params);
+  }
+
+  getPlatformStats(): Observable<{ data: DiscoveryPlatformStats }> {
+    return this.api.get<{ data: DiscoveryPlatformStats }>('/discovery/stats');
   }
 
   search(q: string, countryId?: number, limit?: number): Observable<DiscoverySearchResult> {

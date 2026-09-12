@@ -343,9 +343,21 @@
     },
     "hero": {
       "englishTagline": "Your Tamil Community, Wherever You Are",
-      "searchPlaceholder": "Search businesses, jobs, events, communities, students...",
       "selectCountryLabel": "Choose your country",
-      "selectCountryPlaceholder": "Select your country"
+      "selectCountryPlaceholder": "Select your country",
+      "searchPlaceholder": "Search jobs, businesses, events, communities…"
+    },
+    "search": {
+      "noResults": "No results found.",
+      "noResultsHint": "Try a different keyword or country.",
+      "searching": "Searching…",
+      "resultsFor": "results for \"{{query}}\"",
+      "clear": "Clear search",
+      "members": "members",
+      "categoryJobs": "Jobs",
+      "categoryBusinesses": "Businesses",
+      "categoryEvents": "Events",
+      "categoryCommunities": "Communities"
     },
     "jobs": {
       "title": "Latest Jobs",
@@ -381,18 +393,6 @@
       "joinButton": "Join Tamilya – Free",
       "loginButton": "Log In"
     },
-    "search": {
-      "noResults": "No results found.",
-      "noResultsHint": "Try a different keyword or clear the country filter.",
-      "searching": "Searching…",
-      "resultsFor": "results for \"{{query}}\"",
-      "clear": "Clear search",
-      "members": "members",
-      "categoryJobs": "Jobs",
-      "categoryBusinesses": "Businesses",
-      "categoryEvents": "Events",
-      "categoryCommunities": "Communities"
-    },
     "guestHero": {
       "badge": "Tamilya Global",
       "subtitle": "Worldwide Diaspora Network",
@@ -400,16 +400,14 @@
       "joinButton": "Join Tamilya"
     },
     "explore": {
-      "title": "Explore & Discover Directory",
-      "freeAccess": "Free diaspora access • No sign-in required to browse",
-      "personalising": "Personalising jobs, businesses, events & communities for your country",
-      "allCountries": "All Locations",
-      "otherCountry": "Other"
+      "allCountries": "All Locations"
     },
-    "joinBanner": {
-      "title": "Join Tamilya to post, comment, or react",
-      "text": "Engage with members worldwide across tech, culture, and business.",
-      "signUp": "Sign Up Free"
+    "stats": {
+      "countries": "Countries",
+      "communities": "Communities",
+      "jobs": "Jobs",
+      "business": "Businesses",
+      "events": "Events"
     },
     "post": {
       "signInToReply": "Sign in to reply",
