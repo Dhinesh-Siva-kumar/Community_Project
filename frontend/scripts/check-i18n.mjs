@@ -34,6 +34,7 @@ const PRESENTATIONAL_FIELDS = new Set([
   'featured',
   'rating',
   'suffix',
+  'fragment',
 ]);
 
 /** Flattens `{ a: { b: 'x' } }` to `['a.b']`, indexing into arrays. */

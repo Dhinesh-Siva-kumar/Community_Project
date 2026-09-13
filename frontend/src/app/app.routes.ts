@@ -35,6 +35,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'discover/:topic',
+        loadComponent: () =>
+          import('./pages/discover/discover.component').then(
+            (m) => m.DiscoverComponent
+          ),
+      },
+      {
         path: 'auth/login',
         canActivate: [guestGuard],
         loadComponent: () =>

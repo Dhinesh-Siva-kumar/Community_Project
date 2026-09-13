@@ -9,6 +9,7 @@
     "close": "Close",
     "confirm": "Confirm",
     "back": "Back",
+    "backToTop": "Back to top",
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
@@ -676,6 +677,46 @@
     "first30_pill": "Quick Start Guide",
     "first30_title": "Your First 30 Days in Any New Country",
     "first30_sub": "No matter which country you move to — here is how Tamilya helps from day one.",
+    "discover_pill": "Explore More",
+    "discover_title": "There's More to Discover",
+    "discover_sub": "From jobs to the business directory — explore everything Tamilya has to offer.",
+    "discoverCards": [
+      {
+        "icon": "bi-briefcase-fill",
+        "color": "green",
+        "fragment": "opportunities",
+        "title": "Jobs Available Now",
+        "blurb": "Fresh openings and gigs shared by the community."
+      },
+      {
+        "icon": "bi-chat-dots-fill",
+        "color": "green",
+        "fragment": "ask",
+        "title": "Community Q&A",
+        "blurb": "Real questions, answered by real Tamils abroad."
+      },
+      {
+        "icon": "bi-map-fill",
+        "color": "yellow",
+        "fragment": "first30",
+        "title": "Quick Start Guide",
+        "blurb": "A simple roadmap for settling in fast."
+      },
+      {
+        "icon": "bi-journal-richtext",
+        "color": "violet",
+        "fragment": "blog",
+        "title": "Blog & Updates",
+        "blurb": "Guides and stories from the community."
+      },
+      {
+        "icon": "bi-shop",
+        "color": "primary",
+        "fragment": "business-directory",
+        "title": "Tamil Business Directory",
+        "blurb": "Discover Tamil-owned businesses near you."
+      }
+    ],
     "opportunities_pill": "Jobs Available Now",
     "opportunities_heading": "Opportunities Available Today",
     "opportunities_sub": "Browse job types shared directly by Tamils — find the right opportunity for you.",
@@ -745,6 +786,12 @@
         "label": "Mobile App — First to Download",
         "desc": "First to download when we launch",
         "color": "pink"
+      },
+      {
+        "icon": "bi-megaphone-fill",
+        "label": "Help Shape What's Next",
+        "desc": "Your feedback shapes new features early",
+        "color": "accent"
       }
     ],
     "waitlist_email_placeholder": "Enter your email address",

@@ -9,6 +9,7 @@
     "close": "மூடு",
     "confirm": "உறுதிப்படுத்து",
     "back": "பின்செல்",
+    "backToTop": "மேலே செல்",
     "next": "அடுத்து",
     "previous": "முந்தையது",
     "submit": "சமர்ப்பி",
@@ -676,6 +677,46 @@
     "first30_pill": "விரைவு தொடக்க வழிகாட்டி",
     "first30_title": "எந்த புதிய நாட்டிலும் முதல் 30 நாட்கள் — என்ன செய்வது?",
     "first30_sub": "எந்த நாட்டிற்கு சென்றாலும் — முதல் நாளிலிருந்தே தமிழியா உங்களுக்கு உதவும்.",
+    "discover_pill": "மேலும் ஆராயுங்கள்",
+    "discover_title": "கண்டறிய இன்னும் பல",
+    "discover_sub": "வேலைகள் முதல் வணிக அட்டவணை வரை — தமிழியா வழங்கும் அனைத்தையும் ஆராயுங்கள்.",
+    "discoverCards": [
+      {
+        "icon": "bi-briefcase-fill",
+        "color": "green",
+        "fragment": "opportunities",
+        "title": "இப்போது வேலை கிடைக்கும்",
+        "blurb": "சமூகத்தால் பகிரப்படும் புதிய வேலை வாய்ப்புகள்."
+      },
+      {
+        "icon": "bi-chat-dots-fill",
+        "color": "green",
+        "fragment": "ask",
+        "title": "சமூக கேள்வி & பதில்",
+        "blurb": "வெளிநாடு வாழும் தமிழர்களே உண்மையான கேள்விகளுக்கு பதிலளிக்கிறார்கள்."
+      },
+      {
+        "icon": "bi-map-fill",
+        "color": "yellow",
+        "fragment": "first30",
+        "title": "விரைவு தொடக்க வழிகாட்டி",
+        "blurb": "விரைவாக குடியேற ஒரு எளிய வழிகாட்டி."
+      },
+      {
+        "icon": "bi-journal-richtext",
+        "color": "violet",
+        "fragment": "blog",
+        "title": "வலைப்பதிவு & புதுப்பிப்புகள்",
+        "blurb": "சமூகத்தின் வழிகாட்டிகளும் கதைகளும்."
+      },
+      {
+        "icon": "bi-shop",
+        "color": "primary",
+        "fragment": "business-directory",
+        "title": "தமிழ் வணிக அட்டவணை",
+        "blurb": "உங்களுக்கு அருகில் உள்ள தமிழர் வணிகங்களை கண்டறியுங்கள்."
+      }
+    ],
     "opportunities_pill": "இப்போது வேலை கிடைக்கும்",
     "opportunities_heading": "இன்று கிடைக்கும் வாய்ப்புகள்",
     "opportunities_sub": "தமிழர்களால் நேரடியாக பகிரப்படும் வேலை வகைகள் — உங்களுக்கு ஏற்ற வாய்ப்பை தேர்ந்தெடுங்கள்.",
@@ -745,6 +786,12 @@
         "label": "Mobile App",
         "desc": "முதலில் download செய்யும் வாய்ப்பு",
         "color": "pink"
+      },
+      {
+        "icon": "bi-megaphone-fill",
+        "label": "Help Shape What's Next",
+        "desc": "உங்கள் கருத்துகள் புதிய features-ஐ வடிவமைக்கும்",
+        "color": "accent"
       }
     ],
     "waitlist_email_placeholder": "உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடுங்கள்",
