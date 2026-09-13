@@ -1,0 +1,36 @@
+<div class="asv-head">
+  <h1 class="asv-title">{{ 'admin.studentVerification.title' | translate }}</h1>
+  <p class="asv-subtitle">{{ 'admin.studentVerification.subtitle' | translate }}</p>
+</div>
+
+@if (loading()) {
+  <div class="asv-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else {
+  @for (row of rows(); track row.userId) {
+    <div class="asv-row">
+      <div class="asv-avatar">{{ (row.firstName || '?').charAt(0).toUpperCase() }}</div>
+      <div class="asv-row__body">
+        <div class="asv-row__name">{{ row.firstName }} <span class="asv-row__display">({{ row.displayName }})</span></div>
+        <div class="asv-row__meta">{{ row.course }} · {{ row.universityName || row.universityFreeText }} · {{ 'admin.studentVerification.submittedAt' | translate }} {{ row.createdAt | date: 'medium' }}</div>
+      </div>
+
+      @if (rejectingUserId() === row.userId) {
+        <div class="asv-reject-form">
+          <input type="text" [ngModel]="rejectReason()" (ngModelChange)="rejectReason.set($event)"
+            [placeholder]="'admin.studentVerification.rejectReasonPlaceholder' | translate" />
+          <button type="button" class="asv-btn asv-btn--outline" (click)="cancelReject()">{{ 'common.cancel' | translate }}</button>
+          <button type="button" class="asv-btn asv-btn--danger" (click)="confirmReject(row.userId)" [disabled]="!rejectReason().trim() || actioningUserId() === row.userId">
+            {{ 'admin.studentVerification.confirmReject' | translate }}
+          </button>
+        </div>
+      } @else {
+        <div class="asv-row__actions">
+          <button type="button" class="asv-btn asv-btn--primary" (click)="approve(row.userId)" [disabled]="actioningUserId() === row.userId">{{ 'admin.studentVerification.approve' | translate }}</button>
+          <button type="button" class="asv-btn asv-btn--danger-outline" (click)="startReject(row.userId)" [disabled]="actioningUserId() === row.userId">{{ 'admin.studentVerification.reject' | translate }}</button>
+        </div>
+      }
+    </div>
+  } @empty {
+    <div class="asv-empty">{{ 'admin.studentVerification.empty' | translate }}</div>
+  }
+}

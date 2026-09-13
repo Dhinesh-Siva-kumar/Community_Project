@@ -1,0 +1,24 @@
+@if (loading()) {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else {
+  <div class="sc-conn-list">
+    @for (row of rows(); track row.key) {
+      <div class="sc-conn-row" (click)="onView(row.userId)">
+        <div class="sc-avatar">{{ (row.firstName || '?').charAt(0).toUpperCase() }}</div>
+        <div class="sc-conn-row__body">
+          <div class="sc-conn-row__name">{{ row.firstName }}</div>
+          <div class="sc-conn-row__meta">{{ row.course }}</div>
+        </div>
+        @if (mode === 'connections') {
+          <span class="sc-req-status sc-req-status--accepted">{{ 'user.studentConnect.connections.connected' | translate }}</span>
+        } @else {
+          <button type="button" class="sc-btn sc-btn--outline sc-btn--sm" (click)="removeSaved(row.userId, $event)">{{ 'user.studentConnect.connections.remove' | translate }}</button>
+        }
+      </div>
+    } @empty {
+      <div class="sc-empty-note">
+        {{ (mode === 'connections' ? 'user.studentConnect.connections.noneConnections' : 'user.studentConnect.connections.noneSaved') | translate }}
+      </div>
+    }
+  </div>
+}

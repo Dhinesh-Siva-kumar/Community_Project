@@ -1,0 +1,73 @@
+@if (loading()) {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else if (profile()) {
+  @if (profile(); as p) {
+  <div class="sc-form-card">
+    @if (p.verificationStatus === 'verified') {
+      <span class="sc-badge sc-badge--verified" style="margin-bottom:16px;"><i class="bi bi-patch-check-fill"></i> {{ 'user.studentConnect.card.verified' | translate }}</span>
+    } @else {
+      <div class="sc-verify-banner">
+        <div class="sc-verify-banner__icon"><i class="bi bi-hourglass-split"></i></div>
+        <div>
+          <b>{{ 'user.studentConnect.myProfile.verificationPending' | translate }}</b>
+          <p>{{ 'user.studentConnect.myProfile.verificationPendingHint' | translate }}</p>
+          <div class="sc-verify-steps">
+            <span class="sc-verify-step sc-verify-step--done"><i class="bi bi-check-circle-fill"></i> {{ 'user.studentConnect.myProfile.stepSubmitted' | translate }}</span>
+            <span class="sc-verify-step"><i class="bi bi-circle"></i> {{ 'user.studentConnect.myProfile.stepReview' | translate }}</span>
+            <span class="sc-verify-step"><i class="bi bi-circle"></i> {{ 'user.studentConnect.myProfile.stepBadge' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="sc-toggle-row">
+      <div>
+        <div class="sc-toggle-row__label">{{ 'user.studentConnect.myProfile.mentorAvailable' | translate }}</div>
+        <div class="sc-toggle-row__sub">{{ 'user.studentConnect.myProfile.mentorAvailableHint' | translate }}</div>
+      </div>
+      <button type="button" class="sc-switch" [class.sc-switch--on]="p.mentorAvailable" (click)="toggleMentorAvailable()" [disabled]="savingMentorAvailable()"></button>
+    </div>
+
+    <div class="sc-toggle-row">
+      <div style="width:100%;">
+        <div class="sc-toggle-row__label">{{ 'user.studentConnect.myProfile.areasOfHelp' | translate }}</div>
+        <div class="sc-chip-picker">
+          @for (item of helpOptions; track item) {
+            <span class="sc-chip" [class.sc-chip--on]="p.areasOfHelp.includes(item)" (click)="toggleHelp(item)">{{ item }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-toggle-row" style="align-items:flex-start;">
+      <div style="width:100%;">
+        <div class="sc-toggle-row__label">{{ 'user.studentConnect.myProfile.mentoringType' | translate }}</div>
+        <div class="sc-toggle-row__sub">
+          {{ (chatEnabled() ? 'user.studentConnect.myProfile.mentoringTypeSubChat' : 'user.studentConnect.myProfile.mentoringTypeSubContact') | translate }}
+        </div>
+        <div class="sc-mentoring-type">
+          <label class="sc-mentoring-option" [class.sc-mentoring-option--selected]="p.mentoringType === 'free_chat'" (click)="selectMentoringType('free_chat')">
+            <span class="sc-mentoring-option__radio"></span>
+            <span class="sc-mentoring-option__text"><b>{{ 'user.studentConnect.myProfile.freeChat' | translate }}</b><span>{{ 'user.studentConnect.myProfile.freeChatHint' | translate }}</span></span>
+          </label>
+          <label class="sc-mentoring-option" [class.sc-mentoring-option--selected]="p.mentoringType === 'paid_chat'" [class.sc-mentoring-option--disabled]="!chatEnabled()" (click)="selectMentoringType('paid_chat')">
+            <span class="sc-mentoring-option__radio"></span>
+            <span class="sc-mentoring-option__text"><b>{{ 'user.studentConnect.myProfile.paidChat' | translate }}</b><span>{{ 'user.studentConnect.myProfile.paidChatHint' | translate }}</span></span>
+            @if (!chatEnabled()) { <span class="sc-mentoring-option__soon">{{ 'user.studentConnect.myProfile.comingSoon' | translate }}</span> }
+          </label>
+          <label class="sc-mentoring-option" [class.sc-mentoring-option--selected]="p.mentoringType === 'paid_call'" [class.sc-mentoring-option--disabled]="!chatEnabled()" (click)="selectMentoringType('paid_call')">
+            <span class="sc-mentoring-option__radio"></span>
+            <span class="sc-mentoring-option__text"><b>{{ 'user.studentConnect.myProfile.paidCall' | translate }}</b><span>{{ 'user.studentConnect.myProfile.paidCallHint' | translate }}</span></span>
+            @if (!chatEnabled()) { <span class="sc-mentoring-option__soon">{{ 'user.studentConnect.myProfile.comingSoon' | translate }}</span> }
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-privacy-note">
+      <i class="bi bi-shield-lock"></i>
+      {{ 'user.studentConnect.myProfile.privacyNote' | translate }}
+    </div>
+  </div>
+  }
+}

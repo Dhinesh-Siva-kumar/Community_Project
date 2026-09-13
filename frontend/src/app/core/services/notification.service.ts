@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
-import { Observable, tap, map } from 'rxjs';
+import { Observable, Subject, tap, map } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -23,6 +23,13 @@ export class NotificationService implements OnDestroy {
   notifications = signal<Notification[]>([]);
   /** Authoritative unread count — sourced from GET /notifications/unread-count, not derived from `notifications` (which is only ever one page). */
   unreadCount = signal<number>(0);
+
+  /** Student Connect chat messages ride this same socket/notification pipe
+   * (see backend student-connect.service.ts's sendChatMessage) — filtered
+   * out of the generic `notification` event here and re-published on this
+   * subject so a ChatService/component can react without opening a second
+   * socket connection. */
+  studentChatMessage$ = new Subject<Notification>();
 
   constructor() {
     this.authService.authStateChanges$.subscribe((user) => {
@@ -70,6 +77,10 @@ export class NotificationService implements OnDestroy {
       });
       this.refreshUnreadCount().subscribe({ error: () => {} });
       this.toastService.info(n.message);
+
+      if (n.type === 'STUDENT_CHAT_MESSAGE') {
+        this.studentChatMessage$.next(n);
+      }
     });
 
     this.socket.on('connect_error', (err: Error) => {

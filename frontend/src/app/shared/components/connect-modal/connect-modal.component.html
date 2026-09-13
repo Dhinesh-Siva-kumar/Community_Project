@@ -1,0 +1,41 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal cn-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="connectModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header cn-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <app-avatar-ring class="cn-modal-avatar" [initial]="targetInitial" [status]="targetVerified ? 'verified' : 'pending'" [size]="44"></app-avatar-ring>
+      <div class="au-header__text cn-modal-header-inner">
+        <h5 class="au-header__title cn-modal-title" id="connectModalTitle">{{ 'user.studentConnect.connectModal.title' | translate: { name: targetName } }}</h5>
+        <p class="au-header__sub cn-modal-subtitle">{{ targetCourse }}<span *ngIf="targetUniversity"> · {{ targetUniversity }}</span></p>
+      </div>
+      <button type="button" class="au-close cn-close-btn" (click)="requestClose()" [disabled]="sending()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body cn-modal-body">
+      <textarea class="cn-message-input" rows="4" [(ngModel)]="message" [disabled]="sending()"
+        [placeholder]="'user.studentConnect.connectModal.placeholder' | translate"></textarea>
+    </div>
+
+    <div class="au-footer cn-modal-footer">
+      <button type="button" class="au-btn cn-btn-cancel au-btn--ghost" (click)="requestClose()" [disabled]="sending()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="button" class="au-btn cn-btn-submit au-btn--primary" (click)="send()" [disabled]="sending() || !message().trim()">
+        @if (sending()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'user.studentConnect.connectModal.sending' | translate }}
+        } @else {
+          <i class="bi bi-send-fill"></i>
+          {{ 'user.studentConnect.connectModal.send' | translate }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

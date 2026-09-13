@@ -46,6 +46,11 @@ const ICONS: Record<NotificationType, string> = {
   JOB_REMOVED: 'bi-trash-fill',
   COMMUNITY_MEMBER_JOINED: 'bi-person-plus-fill',
   WELCOME: 'bi-stars',
+  STUDENT_CONNECTION_REQUEST: 'bi-person-plus-fill',
+  STUDENT_CONNECTION_ACCEPTED: 'bi-people-fill',
+  STUDENT_VERIFICATION_APPROVED: 'bi-patch-check-fill',
+  STUDENT_VERIFICATION_REJECTED: 'bi-question-circle-fill',
+  STUDENT_CHAT_MESSAGE: 'bi-chat-left-text-fill',
 };
 
 const COLORS: Record<NotificationType, string> = {
@@ -87,6 +92,11 @@ const COLORS: Record<NotificationType, string> = {
   JOB_REMOVED: '#DC2626',
   COMMUNITY_MEMBER_JOINED: '#16A34A',
   WELCOME: '#D97706',
+  STUDENT_CONNECTION_REQUEST: '#0284C7',
+  STUDENT_CONNECTION_ACCEPTED: '#16A34A',
+  STUDENT_VERIFICATION_APPROVED: '#16A34A',
+  STUDENT_VERIFICATION_REJECTED: '#7C3AED',
+  STUDENT_CHAT_MESSAGE: '#0284C7',
 };
 
 const LABELS: Record<NotificationType, string> = {
@@ -128,6 +138,11 @@ const LABELS: Record<NotificationType, string> = {
   JOB_REMOVED: 'Your job is removed by an admin',
   COMMUNITY_MEMBER_JOINED: 'Someone joins your community',
   WELCOME: 'Welcome message',
+  STUDENT_CONNECTION_REQUEST: 'A student sends you a connection request',
+  STUDENT_CONNECTION_ACCEPTED: 'A student accepts your connection request',
+  STUDENT_VERIFICATION_APPROVED: 'Your student verification is approved',
+  STUDENT_VERIFICATION_REJECTED: 'Your student verification needs more information',
+  STUDENT_CHAT_MESSAGE: 'A connection sends you a chat message',
 };
 
 export function notificationTypeLabel(type: NotificationType): string {
@@ -211,6 +226,12 @@ export function notificationRoute(
     type === 'WELCOME'
   ) {
     return { path: ['/user/profile'] };
+  }
+  if (type.startsWith('STUDENT_')) {
+    // The module's own tab strip is a plain signal, not router state (see
+    // STUDENT_CONNECT_SPEC.md §9's Angular file layout note), so this can
+    // only land on the page itself — not deep-link to a specific tab/thread.
+    return { path: ['/user/student-connect'] };
   }
   return null;
 }

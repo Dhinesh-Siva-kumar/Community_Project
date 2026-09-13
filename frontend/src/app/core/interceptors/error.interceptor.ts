@@ -33,6 +33,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      // Skip toast for "no student profile yet" — this 404 is how the
+      // Student Connect shell detects the unregistered state (see
+      // student-connect.component.ts), not a real error to surface.
+      if (error.error?.code === 'STUDENT_PROFILE_NOT_FOUND') {
+        return throwError(() => error);
+      }
+
       toastService.error(resolveMessage(error, translate));
 
       return throwError(() => error);

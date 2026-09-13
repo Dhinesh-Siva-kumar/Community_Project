@@ -220,6 +220,18 @@ $_sb-active-text:    $color-primary-dark;
     flex: 1;
   }
 
+  .nav-badge {
+    flex-shrink: 0;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    color: $color-on-primary;
+    background: $gradient-primary;
+    padding: 2px 6px;
+    border-radius: $radius-full;
+    margin-left: 6px;
+  }
+
   &:hover {
     background: $_sb-hover-bg;
     color: $_sb-hover-text;

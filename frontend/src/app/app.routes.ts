@@ -119,6 +119,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'student-connect/verification-queue',
+        loadComponent: () =>
+          import('./pages/admin/student-connect/verification-queue/verification-queue.component').then(
+            (m) => m.VerificationQueueComponent
+          ),
+      },
+      {
         path: 'user-management',
         loadComponent: () =>
           import('./pages/admin/user-management/user-management.component').then(
@@ -258,6 +265,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/user/jobs/jobs.component').then(
             (m) => m.UserJobsComponent
+          ),
+      },
+      {
+        path: 'student-connect',
+        loadComponent: () =>
+          import('./pages/user/student-connect/student-connect.component').then(
+            (m) => m.StudentConnectComponent
           ),
       },
       {

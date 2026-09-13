@@ -41,6 +41,9 @@
         <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
         @if (!sidebarCollapsed() || isMobile()) {
           <span class="nav-label">{{ item.label | translate }}</span>
+          @if (item.badge) {
+            <span class="nav-badge">{{ item.badge | translate }}</span>
+          }
         }
       </a>
     }

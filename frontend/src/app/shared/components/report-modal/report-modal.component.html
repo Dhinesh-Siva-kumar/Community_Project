@@ -1,0 +1,49 @@
+@if (open) {
+  <div class="au-backdrop" (click)="requestClose()"></div>
+  <div class="au-modal rp-modal" appScrollLock role="dialog" aria-modal="true" aria-labelledby="reportModalTitle" (click)="$event.stopPropagation()">
+
+    <div class="au-header rp-modal-header">
+      <div class="au-header__cover-shapes" aria-hidden="true">
+        <span class="shape shape--1"></span>
+        <span class="shape shape--2"></span>
+      </div>
+      <div class="au-header__icon rp-modal-icon">
+        <i class="bi bi-flag-fill"></i>
+      </div>
+      <div class="au-header__text rp-modal-header-inner">
+        <h5 class="au-header__title rp-modal-title" id="reportModalTitle">{{ 'user.studentConnect.reportModal.title' | translate }}</h5>
+        <p class="au-header__sub rp-modal-subtitle">{{ 'user.studentConnect.reportModal.subtitle' | translate }}</p>
+      </div>
+      <button type="button" class="au-close rp-close-btn" (click)="requestClose()" [disabled]="submitting()" [attr.aria-label]="'common.close' | translate">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="au-body rp-modal-body">
+      <div class="rp-reasons">
+        @for (option of reasons; track option.value) {
+          <label class="rp-reason" [class.rp-reason--selected]="selectedReason() === option.value">
+            <input type="radio" name="reportReason" [checked]="selectedReason() === option.value" (change)="selectReason(option.value)" />
+            {{ option.labelKey | translate }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="au-footer rp-modal-footer">
+      <button type="button" class="au-btn rp-btn-cancel au-btn--ghost" (click)="requestClose()" [disabled]="submitting()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="button" class="au-btn rp-btn-submit au-btn--danger" (click)="submit()" [disabled]="submitting() || !selectedReason()">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'user.studentConnect.reportModal.submitting' | translate }}
+        } @else {
+          <i class="bi bi-flag-fill"></i>
+          {{ 'user.studentConnect.reportModal.submit' | translate }}
+        }
+      </button>
+    </div>
+
+  </div>
+}

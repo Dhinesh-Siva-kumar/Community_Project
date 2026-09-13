@@ -90,6 +90,14 @@ const envSchema = z.object({
   // for browser use and won't authenticate server-to-server calls). Enable
   // the Geocoding API on this key and restrict it by server IP instead.
   GOOGLE_MAPS_GEOCODING_API_KEY: z.string().optional(),
+
+  // Student Connect & Mentor — which of the two candidate concepts is live
+  // (see STUDENT_CONNECT_SPEC.md §2). CONTACT_SHARING reveals email/phone
+  // once two students connect; IN_APP_CHAT never shares contact details and
+  // unlocks an in-app chat thread instead. Flipping this and restarting the
+  // process is the entire "hide manually if needed" mechanism — no rebuild,
+  // no migration, the frontend reads it live via GET /api/student-connect/config.
+  STUDENT_CONNECT_MODEL: z.enum(['CONTACT_SHARING', 'IN_APP_CHAT']).default('CONTACT_SHARING'),
 });
 
 let env: z.infer<typeof envSchema>;

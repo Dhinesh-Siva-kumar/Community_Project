@@ -1,0 +1,52 @@
+<div class="sc-chat-layout">
+  <div class="sc-chat-list">
+    @if (loadingThreads()) {
+      <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+    } @else {
+      @for (thread of threads(); track thread.id) {
+        <button type="button" class="sc-chat-thread-row" [class.sc-chat-thread-row--active]="thread.id === activeThreadId()" (click)="openThread(thread.id)">
+          <div class="sc-avatar">{{ (thread.firstName || '?').charAt(0).toUpperCase() }}</div>
+          <div class="sc-chat-thread-row__body">
+            <div class="sc-chat-thread-row__name">{{ thread.firstName }}</div>
+            <div class="sc-chat-thread-row__preview">{{ thread.lastMessagePreview || ('user.studentConnect.chat.noMessagesYet' | translate) }}</div>
+          </div>
+          @if (thread.unreadCount > 0) { <span class="sc-chat-unread">{{ thread.unreadCount }}</span> }
+        </button>
+      } @empty {
+        <div class="sc-empty-note">{{ 'user.studentConnect.chat.noThreads' | translate }}</div>
+      }
+    }
+  </div>
+
+  <div class="sc-chat-pane">
+    @if (!activeThread) {
+      <div class="sc-chat-empty">
+        <i class="bi bi-chat-left-text"></i>
+        <p>{{ 'user.studentConnect.chat.selectThread' | translate }}</p>
+      </div>
+    } @else {
+      <div class="sc-chat-pane__head">
+        <div class="sc-avatar">{{ (activeThread.firstName || '?').charAt(0).toUpperCase() }}</div>
+        <div><b>{{ activeThread.firstName }}</b><span>{{ activeThread.course }}</span></div>
+      </div>
+      <div class="sc-chat-messages">
+        @if (loadingMessages()) {
+          <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+        } @else {
+          @for (msg of messages(); track msg.id) {
+            <div class="sc-chat-bubble" [class.sc-chat-bubble--me]="msg.senderUserId !== activeThread.otherUserId">{{ msg.text }}</div>
+          } @empty {
+            <div class="sc-empty-note">{{ 'user.studentConnect.chat.sayHello' | translate }}</div>
+          }
+        }
+      </div>
+      <div class="sc-chat-input-row">
+        <input type="text" [ngModel]="messageText()" (ngModelChange)="messageText.set($event)"
+          [placeholder]="'user.studentConnect.chat.typeMessage' | translate" (keydown.enter)="send()" />
+        <button type="button" class="sc-btn sc-btn--primary" (click)="send()" [disabled]="sending() || !messageText().trim()">
+          {{ 'user.studentConnect.chat.send' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

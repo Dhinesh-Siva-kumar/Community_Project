@@ -1,0 +1,83 @@
+@use '../../../../../assets/styles/index' as *;
+
+.sc-gate-wrap { max-width: 640px; margin: 10px auto 0; }
+.sc-gate-card {
+  background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-lg;
+  box-shadow: $shadow-card-default;
+}
+.sc-gate-card__head {
+  background: $gradient-primary; padding: 26px 28px; position: relative; overflow: hidden;
+  border-top-left-radius: $radius-lg; border-top-right-radius: $radius-lg;
+}
+.sc-gate-card__eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #7C2D12; opacity: .8; margin-bottom: 6px; }
+.sc-gate-card__title { font-family: $font-family-header; font-size: 21px; font-weight: 700; color: #1C1917; margin: 0 0 6px; }
+.sc-gate-card__sub { font-size: 13px; color: #57534E; margin: 0; line-height: 1.5; max-width: 440px; }
+.sc-gate-card__body { padding: 26px 28px 28px; }
+
+.sc-stepper { display: flex; align-items: flex-start; margin-bottom: 26px; }
+.sc-stepper__item { display: flex; flex-direction: column; align-items: center; gap: 7px; flex-shrink: 0; width: 88px; }
+.sc-stepper__circle {
+  width: 30px; height: 30px; border-radius: $radius-full; background: $color-bg-page; border: 1.5px solid $color-border-strong;
+  color: $color-text-muted; font-family: $font-family-header; font-weight: 700; font-size: 12.5px;
+  display: flex; align-items: center; justify-content: center; transition: all .2s;
+}
+.sc-stepper__item--active .sc-stepper__circle { background: $color-bg-card; border-color: $color-primary-dark; color: $color-primary-darker; box-shadow: 0 0 0 4px rgba(251,191,36,.16); }
+.sc-stepper__item--done .sc-stepper__circle { background: $gradient-primary; border-color: transparent; color: $color-on-primary; }
+.sc-stepper__label { font-size: 10px; font-weight: 700; color: $color-text-muted; text-align: center; }
+.sc-stepper__item--active .sc-stepper__label { color: $color-text-primary; }
+.sc-stepper__line { flex: 1; height: 1.5px; background: $color-border-strong; margin-top: 15px; min-width: 10px; transition: background .25s; }
+.sc-stepper__line--done { background: $color-primary-dark; }
+
+.sc-gate-step { animation: sc-fade-up .2s ease; }
+@keyframes sc-fade-up { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.sc-gate-photo { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+.sc-gate-photo__circle {
+  width: 64px; height: 64px; border-radius: 50%; background: $color-bg-page; border: 1.5px dashed $color-border-strong;
+  display: flex; align-items: center; justify-content: center; color: $color-text-muted; flex-shrink: 0; cursor: pointer; overflow: hidden;
+}
+.sc-gate-photo__img { width: 100%; height: 100%; object-fit: cover; }
+.sc-gate-photo__text b { display: block; font-size: 13px; color: $color-text-primary; }
+.sc-gate-photo__text span { font-size: 11.5px; color: $color-text-muted; }
+
+.sc-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+@media (max-width: 560px) { .sc-form-grid { grid-template-columns: 1fr; } }
+.sc-form-field { display: flex; flex-direction: column; gap: 5px; }
+.sc-form-field--span2 { grid-column: span 2; }
+@media (max-width: 560px) { .sc-form-field--span2 { grid-column: span 1; } }
+.sc-form-field label { font-size: 11.5px; font-weight: 700; color: $color-text-body; }
+.sc-req { color: $color-danger; }
+.sc-form-field input[type='text'], .sc-form-field select, .sc-form-field textarea {
+  font-family: inherit; font-size: 13px; color: $color-text-primary; background: $color-bg-page;
+  border: 1px solid $color-border; border-radius: $radius-sm; padding: 9px 12px; outline: none;
+  &:focus { border-color: $color-primary; background: $color-bg-card; }
+}
+.sc-form-field textarea { resize: none; line-height: 1.5; }
+
+.sc-chip-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.sc-chip {
+  font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: $radius-full; border: 1.5px solid $color-border;
+  background: $color-bg-card; color: $color-text-body; cursor: pointer;
+  &--on { background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.45); color: $color-primary-darker; }
+}
+
+.sc-gate-optional { margin-top: 18px; border-top: 1px solid $color-border; padding-top: 16px; }
+.sc-gate-optional summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: $color-text-body; list-style: none; display: flex; align-items: center; gap: 6px; }
+.sc-gate-optional summary::-webkit-details-marker { display: none; }
+.sc-gate-optional[open] summary i { transform: rotate(90deg); }
+.sc-gate-optional .sc-form-grid { margin-top: 14px; }
+
+.sc-gate-privacy { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 20px; padding: 12px 14px; background: $color-bg-page; border-radius: $radius-md; font-size: 11.5px; color: $color-text-muted; line-height: 1.55; }
+
+.sc-kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin: 0 0 18px; }
+.sc-kv-grid dt { font-size: 11px; color: $color-text-muted; margin-bottom: 2px; }
+.sc-kv-grid dd { font-size: 13px; font-weight: 600; color: $color-text-primary; margin: 0; }
+
+.sc-gate-nav { display: flex; gap: 10px; margin-top: 22px; }
+.sc-btn {
+  font-family: inherit; font-weight: 700; font-size: 12.5px; border-radius: $radius-full; padding: 10px 16px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; flex: 1;
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+.sc-btn--primary { background: $gradient-primary; color: $color-on-primary; box-shadow: $shadow-primary-sm; }
+.sc-btn--outline { background: transparent; color: $color-text-body; border: 1.5px solid $color-border-strong; }

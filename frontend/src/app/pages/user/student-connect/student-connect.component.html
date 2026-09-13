@@ -1,0 +1,65 @@
+@if (!authService.isAuthenticated()) {
+  <app-guest-gate icon="bi-mortarboard" [title]="'user.studentConnect.guestGateTitle' | translate" [message]="'user.studentConnect.guestGateMessage' | translate"></app-guest-gate>
+} @else if (profileState() === 'loading') {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else if (profileState() === 'unregistered') {
+  <app-student-registration-wizard (registered)="onRegistered()"></app-student-registration-wizard>
+} @else {
+  <div class="sc-head">
+    <div>
+      <h1 class="sc-title">{{ 'user.studentConnect.title' | translate }}</h1>
+      <p class="sc-subtitle">{{ 'user.studentConnect.subtitle' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="sc-tabs">
+    <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'discover'" (click)="setTab('discover')">
+      <i class="bi bi-search"></i> {{ 'user.studentConnect.tabs.discover' | translate }}
+    </button>
+    <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'myprofile'" (click)="setTab('myprofile')">
+      <i class="bi bi-person-circle"></i> {{ 'user.studentConnect.tabs.myProfile' | translate }}
+    </button>
+    <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'requests'" (click)="setTab('requests')">
+      <i class="bi bi-envelope"></i> {{ 'user.studentConnect.tabs.requests' | translate }}
+      @if (requestsBadgeCount() > 0) { <span class="sc-tab__count">{{ requestsBadgeCount() }}</span> }
+    </button>
+    @if (chatEnabled()) {
+      <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'chat'" (click)="setTab('chat')">
+        <i class="bi bi-chat-left-text"></i> {{ 'user.studentConnect.tabs.chat' | translate }}
+      </button>
+    }
+    <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'connections'" (click)="setTab('connections')">
+      <i class="bi bi-people"></i> {{ 'user.studentConnect.tabs.connections' | translate }}
+    </button>
+    <button type="button" class="sc-tab" [class.sc-tab--active]="activeTab() === 'saved'" (click)="setTab('saved')">
+      <i class="bi bi-bookmark"></i> {{ 'user.studentConnect.tabs.saved' | translate }}
+    </button>
+  </div>
+
+  @if (viewingProfileUserId(); as userId) {
+    <app-student-profile-detail [userId]="userId" (back)="onBackFromProfile()" (openChat)="onOpenChatForUser($event)"></app-student-profile-detail>
+  } @else {
+    @switch (activeTab()) {
+      @case ('discover') {
+        <app-student-discover (viewProfile)="onViewProfile($event)"></app-student-discover>
+      }
+      @case ('myprofile') {
+        <app-student-my-profile></app-student-my-profile>
+      }
+      @case ('requests') {
+        <app-student-requests (connectionAccepted)="setTab('connections')" (pendingCountChanged)="onRequestsPendingCount($event)"></app-student-requests>
+      }
+      @case ('chat') {
+        @if (chatEnabled()) {
+          <app-student-chat [openThreadForUserId]="openThreadForUserId()"></app-student-chat>
+        }
+      }
+      @case ('connections') {
+        <app-student-connections-list mode="connections" (viewProfile)="onViewProfile($event)"></app-student-connections-list>
+      }
+      @case ('saved') {
+        <app-student-connections-list mode="saved" (viewProfile)="onViewProfile($event)"></app-student-connections-list>
+      }
+    }
+  }
+}

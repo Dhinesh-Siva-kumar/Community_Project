@@ -30,7 +30,7 @@ export const UPLOAD_SUBDIRS = [
 // Folder names a client may request via the generic /api/upload endpoint's
 // `folder` field. Anything else is rejected — prevents path traversal /
 // writing outside the uploads root via an arbitrary folder value.
-export const ALLOWED_UPLOAD_FOLDERS = ['communities'] as const;
+export const ALLOWED_UPLOAD_FOLDERS = ['communities', 'student-connect'] as const;
 export type AllowedUploadFolder = (typeof ALLOWED_UPLOAD_FOLDERS)[number];
 
 export function isAllowedUploadFolder(value: unknown): value is AllowedUploadFolder {

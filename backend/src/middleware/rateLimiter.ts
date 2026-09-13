@@ -37,3 +37,22 @@ export const discoverySearchLimiter = rateLimit({
   legacyHeaders: false,
   message: { statusCode: 429, message: 'Too many search requests, please try again later.' },
 });
+
+// Student Connect — connection requests and chat messages are the two
+// write-heavy endpoints worth a tighter cap than the general apiLimiter,
+// same reasoning as discoverySearchLimiter above.
+export const studentConnectionRequestLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { statusCode: 429, message: 'Too many connection requests, please try again later.' },
+});
+
+export const studentChatMessageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { statusCode: 429, message: 'Too many messages, please slow down.' },
+});

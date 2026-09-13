@@ -1,0 +1,126 @@
+<button type="button" class="sc-back-link" (click)="onBack()"><i class="bi bi-arrow-left"></i> {{ 'user.studentConnect.profile.backToDiscover' | translate }}</button>
+
+@if (loading()) {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else if (profile()) {
+  @if (profile(); as p) {
+  <div class="sc-profile">
+    <div class="sc-profile-card">
+      <div class="sc-profile-card__menu">
+        <button type="button" class="sc-profile-card__menu-btn" (click)="toggleMenu(); $event.stopPropagation()"><i class="bi bi-three-dots"></i></button>
+        @if (menuOpen()) {
+          <div class="sc-profile-card__menu-panel">
+            @if (!confirmingBlock()) {
+              <button type="button" class="sc-profile-card__menu-item" (click)="openReport()"><i class="bi bi-flag"></i> {{ 'user.studentConnect.profile.report' | translate }}</button>
+              <button type="button" class="sc-profile-card__menu-item sc-profile-card__menu-item--danger" (click)="askConfirmBlock()"><i class="bi bi-slash-circle"></i> {{ 'user.studentConnect.profile.block' | translate }}</button>
+            } @else {
+              <p class="sc-block-confirm-text">{{ 'user.studentConnect.profile.blockConfirm' | translate }}</p>
+              <div class="sc-block-confirm-actions">
+                <button type="button" class="sc-profile-card__menu-item" (click)="cancelBlock()">{{ 'common.cancel' | translate }}</button>
+                <button type="button" class="sc-profile-card__menu-item sc-profile-card__menu-item--danger" (click)="confirmBlock()">{{ 'user.studentConnect.profile.blockConfirmAction' | translate }}</button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="sc-profile-card__inner">
+        <div class="sc-profile-header">
+          <app-avatar-ring [initial]="initial" [status]="p.verificationStatus === 'verified' ? 'verified' : 'pending'" [size]="90"></app-avatar-ring>
+          <div class="sc-profile-header__text">
+            <span class="sc-profile-header__ref">{{ 'user.studentConnect.profile.studentId' | translate }} · {{ p.userId.slice(0, 8).toUpperCase() }}</span>
+            <h3>{{ p.firstName }}</h3>
+            <div class="sc-profile-header__meta">{{ p.course }} · {{ p.universityName }}</div>
+            <div class="sc-profile-header__meta">{{ p.cityFreeText }}<span *ngIf="p.cityFreeText && p.countryName">, </span>{{ p.countryName }}</div>
+            <span class="sc-badge" [class.sc-badge--verified]="p.verificationStatus === 'verified'">
+              <i class="bi" [class.bi-patch-check-fill]="p.verificationStatus === 'verified'" [class.bi-clock-history]="p.verificationStatus !== 'verified'"></i>
+              {{ (p.verificationStatus === 'verified' ? 'user.studentConnect.card.verified' : 'user.studentConnect.card.pending') | translate }}
+            </span>
+          </div>
+        </div>
+
+        <div class="sc-profile-block">
+          <h4>{{ 'user.studentConnect.profile.education' | translate }}</h4>
+          <dl class="sc-kv-grid">
+            <div><dt>{{ 'user.studentConnect.profile.university' | translate }}</dt><dd>{{ p.universityName || p.universityFreeText || '—' }}</dd></div>
+            <div><dt>{{ 'user.studentConnect.profile.course' | translate }}</dt><dd>{{ courseWithoutDegreePrefix }}</dd></div>
+            <div><dt>{{ 'user.studentConnect.profile.studyLevel' | translate }}</dt><dd>{{ p.studyLevel }}</dd></div>
+            <div><dt>{{ 'user.studentConnect.profile.yearOfStudy' | translate }}</dt><dd>{{ p.yearOfStudy }}</dd></div>
+          </dl>
+        </div>
+
+        <div class="sc-profile-block">
+          <h4>{{ 'user.studentConnect.profile.about' | translate }}</h4>
+          <p>{{ p.shortIntro }}</p>
+        </div>
+
+        <div class="sc-profile-block">
+          <h4>{{ 'user.studentConnect.profile.languages' | translate }}</h4>
+          <div class="sc-chip-row">
+            <span class="sc-chip" *ngFor="let lang of p.languages">{{ lang }}</span>
+          </div>
+        </div>
+
+        <div class="sc-legal-note">
+          <i class="bi bi-info-circle"></i>
+          <span>{{ 'user.studentConnect.profile.legalNote' | translate: { name: p.firstName } }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-mentor-card">
+      <div class="sc-mentor-card__inner">
+        <h4>{{ 'user.studentConnect.profile.mentorInfo' | translate }}</h4>
+
+        @if (p.mentorAvailable) {
+          <div class="sc-mentor-status"><span class="sc-dot"></span>{{ 'user.studentConnect.profile.mentorAvailableFree' | translate }}</div>
+          <div class="sc-chip-row" style="margin-bottom:16px;">
+            <span class="sc-chip" *ngFor="let item of p.areasOfHelp">{{ item }}</span>
+          </div>
+          <button type="button" class="sc-btn sc-btn--primary" (click)="openConnect()">{{ 'user.studentConnect.profile.connect' | translate }}</button>
+        } @else {
+          <p class="sc-mentor-none">{{ 'user.studentConnect.profile.mentorNotAvailable' | translate: { name: p.firstName } }}</p>
+          <button type="button" class="sc-btn sc-btn--outline" disabled>{{ 'user.studentConnect.profile.connect' | translate }}</button>
+        }
+
+        @if (chatEnabled()) {
+          @if (p.chatUnlocked) {
+            <div class="sc-contact-unlocked">
+              <div class="sc-contact-unlocked__head"><i class="bi bi-check-circle-fill"></i> {{ 'user.studentConnect.profile.chatUnlocked' | translate }}</div>
+              <button type="button" class="sc-btn sc-btn--primary" (click)="onOpenChat()"><i class="bi bi-chat-left-text"></i> {{ 'user.studentConnect.profile.openChat' | translate }}</button>
+              <p class="sc-contact-sub">{{ 'user.studentConnect.profile.chatNeverContact' | translate }}</p>
+            </div>
+          } @else {
+            <div class="sc-contact-locked">
+              <i class="bi bi-lock"></i>
+              <p>{{ 'user.studentConnect.profile.chatLocked' | translate }}</p>
+              <span>{{ 'user.studentConnect.profile.chatLockedHint' | translate: { name: p.firstName } }}</span>
+            </div>
+          }
+        } @else {
+          @if (p.isConnected) {
+            <div class="sc-contact-unlocked">
+              <div class="sc-contact-unlocked__head"><i class="bi bi-check-circle-fill"></i> {{ 'user.studentConnect.profile.contactUnlocked' | translate }}</div>
+              <div class="sc-contact-row"><i class="bi bi-envelope"></i>{{ p.email }}</div>
+              <div class="sc-contact-row"><i class="bi bi-telephone"></i>{{ p.phone }}</div>
+            </div>
+          } @else {
+            <div class="sc-contact-locked">
+              <i class="bi bi-lock"></i>
+              <p>{{ 'user.studentConnect.profile.contactLocked' | translate }}</p>
+              <span>{{ 'user.studentConnect.profile.contactLockedHint' | translate: { name: p.firstName } }}</span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <app-connect-modal [open]="connectModalOpen()" [targetUserId]="p.userId" [targetInitial]="initial" [targetName]="p.firstName"
+    [targetCourse]="p.course" [targetUniversity]="p.universityName || p.universityFreeText || ''" [targetVerified]="p.verificationStatus === 'verified'"
+    (closed)="connectModalOpen.set(false)" (sent)="onConnectSent()"></app-connect-modal>
+
+  <app-report-modal [open]="reportModalOpen()" [targetUserId]="p.userId" [targetName]="p.firstName"
+    (closed)="reportModalOpen.set(false)"></app-report-modal>
+  }
+}

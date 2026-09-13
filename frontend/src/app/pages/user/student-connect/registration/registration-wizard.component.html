@@ -1,0 +1,189 @@
+<div class="sc-gate-wrap">
+  <div class="sc-gate-card">
+    <div class="sc-gate-card__head">
+      <div class="sc-gate-card__eyebrow">
+        {{ 'user.studentConnect.registration.stepOf' | translate: { step: step(), total: 4 } }} ·
+        {{ ('user.studentConnect.registration.step' + step() + '.name') | translate }}
+      </div>
+      <h2 class="sc-gate-card__title">{{ 'user.studentConnect.registration.title' | translate }}</h2>
+      <p class="sc-gate-card__sub">{{ 'user.studentConnect.registration.subtitle' | translate }}</p>
+    </div>
+
+    <div class="sc-gate-card__body">
+      <!-- Stepper -->
+      <div class="sc-stepper">
+        @for (n of [1, 2, 3, 4]; track n) {
+          <div class="sc-stepper__item" [class.sc-stepper__item--active]="step() === n" [class.sc-stepper__item--done]="step() > n">
+            <span class="sc-stepper__circle">
+              @if (step() > n) { <i class="bi bi-check-lg"></i> } @else { {{ n }} }
+            </span>
+            <span class="sc-stepper__label">{{ ('user.studentConnect.registration.step' + n + '.name') | translate }}</span>
+          </div>
+          @if (n < 4) { <div class="sc-stepper__line" [class.sc-stepper__line--done]="step() > n"></div> }
+        }
+      </div>
+
+      <!-- Step 1: Basic Info -->
+      @if (step() === 1) {
+        <div class="sc-gate-step">
+          <div class="sc-gate-photo">
+            <label class="sc-gate-photo__circle">
+              @if (uploadingPhoto()) {
+                <span class="spinner-border spinner-border-sm"></span>
+              } @else if (photoUrl()) {
+                <img [src]="photoUrl()" alt="" class="sc-gate-photo__img" />
+              } @else {
+                <i class="bi bi-camera"></i>
+              }
+              <input type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+            </label>
+            <div class="sc-gate-photo__text">
+              <b>{{ 'user.studentConnect.registration.photoLabel' | translate }}</b>
+              <span>{{ 'user.studentConnect.registration.photoHint' | translate }}</span>
+            </div>
+          </div>
+
+          <div class="sc-form-grid">
+            <div class="sc-form-field sc-form-field--span2">
+              <label>{{ 'user.studentConnect.registration.firstName' | translate }} <span class="sc-req">*</span></label>
+              <input type="text" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)" />
+            </div>
+            <div class="sc-form-field">
+              <label>{{ 'user.studentConnect.registration.country' | translate }} <span class="sc-req">*</span></label>
+              <app-searchable-select [options]="countries()" [ngModel]="countryId()" (ngModelChange)="onCountryChange($event)"
+                [placeholder]="'user.studentConnect.registration.countryPlaceholder' | translate"></app-searchable-select>
+            </div>
+            <div class="sc-form-field">
+              <label>{{ 'user.studentConnect.registration.city' | translate }}</label>
+              <input type="text" [ngModel]="cityFreeText()" (ngModelChange)="cityFreeText.set($event)" />
+            </div>
+          </div>
+
+          <div class="sc-gate-nav">
+            <button type="button" class="sc-btn sc-btn--primary" (click)="goToStep(2)" [disabled]="!firstName().trim() || !countryId()">
+              {{ 'user.studentConnect.registration.nextEducation' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 2: Education -->
+      @if (step() === 2) {
+        <div class="sc-gate-step">
+          <div class="sc-form-grid">
+            <div class="sc-form-field sc-form-field--span2">
+              <label>{{ 'user.studentConnect.registration.university' | translate }}</label>
+              @if (countryId() && universities().length) {
+                <app-searchable-select [options]="universities()" [ngModel]="universityId()" (ngModelChange)="onUniversityChange($event)"
+                  [placeholder]="'user.studentConnect.registration.universityPlaceholder' | translate"></app-searchable-select>
+              } @else {
+                <input type="text" [ngModel]="universityFreeText()" (ngModelChange)="universityFreeText.set($event)"
+                  [placeholder]="'user.studentConnect.registration.universityFreeTextPlaceholder' | translate" />
+              }
+            </div>
+            <div class="sc-form-field">
+              <label>{{ 'user.studentConnect.registration.course' | translate }} <span class="sc-req">*</span></label>
+              <input type="text" [ngModel]="course()" (ngModelChange)="course.set($event)" />
+            </div>
+            <div class="sc-form-field">
+              <label>{{ 'user.studentConnect.registration.studyLevel' | translate }} <span class="sc-req">*</span></label>
+              <select [ngModel]="studyLevel()" (ngModelChange)="studyLevel.set($event)">
+                @for (level of studyLevels; track level) { <option [value]="level">{{ level }}</option> }
+              </select>
+            </div>
+            <div class="sc-form-field sc-form-field--span2">
+              <label>{{ 'user.studentConnect.registration.yearOfStudy' | translate }} <span class="sc-req">*</span></label>
+              <select [ngModel]="yearOfStudy()" (ngModelChange)="yearOfStudy.set($event)">
+                @for (year of yearOptions; track year) { <option [value]="year">{{ year }}</option> }
+              </select>
+            </div>
+          </div>
+
+          <div class="sc-gate-nav">
+            <button type="button" class="sc-btn sc-btn--outline" (click)="goToStep(1)">{{ 'common.back' | translate }}</button>
+            <button type="button" class="sc-btn sc-btn--primary" (click)="goToStep(3)" [disabled]="!course().trim()">
+              {{ 'user.studentConnect.registration.nextLanguages' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 3: Languages & About -->
+      @if (step() === 3) {
+        <div class="sc-gate-step">
+          <div class="sc-form-grid">
+            <div class="sc-form-field sc-form-field--span2">
+              <label>{{ 'user.studentConnect.registration.languages' | translate }} <span class="sc-req">*</span></label>
+              <div class="sc-chip-picker">
+                @for (lang of languageOptions; track lang) {
+                  <span class="sc-chip" [class.sc-chip--on]="languages().includes(lang)" (click)="toggleLanguage(lang)">{{ lang }}</span>
+                }
+              </div>
+            </div>
+            <div class="sc-form-field sc-form-field--span2">
+              <label>{{ 'user.studentConnect.registration.shortIntro' | translate }} <span class="sc-req">*</span></label>
+              <textarea rows="3" [ngModel]="shortIntro()" (ngModelChange)="shortIntro.set($event)"></textarea>
+            </div>
+          </div>
+
+          <details class="sc-gate-optional">
+            <summary><i class="bi bi-chevron-right"></i> {{ 'user.studentConnect.registration.optionalDetails' | translate }}</summary>
+            <div class="sc-form-grid">
+              <div class="sc-form-field sc-form-field--span2">
+                <label>{{ 'user.studentConnect.registration.previousCountry' | translate }}</label>
+                <app-searchable-select [options]="countries()" [ngModel]="previousCountryId()" (ngModelChange)="onPreviousCountryChange($event)"
+                  [placeholder]="'user.studentConnect.registration.countryPlaceholder' | translate"></app-searchable-select>
+              </div>
+              <div class="sc-form-field sc-form-field--span2">
+                <label>{{ 'user.studentConnect.registration.academicBackground' | translate }}</label>
+                <textarea rows="2" [ngModel]="academicBackground()" (ngModelChange)="academicBackground.set($event)"></textarea>
+              </div>
+              <div class="sc-form-field sc-form-field--span2">
+                <label>{{ 'user.studentConnect.registration.areasOfHelp' | translate }}</label>
+                <div class="sc-chip-picker">
+                  @for (item of helpOptions; track item) {
+                    <span class="sc-chip" [class.sc-chip--on]="areasOfHelp().includes(item)" (click)="toggleHelp(item)">{{ item }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <div class="sc-gate-nav">
+            <button type="button" class="sc-btn sc-btn--outline" (click)="goToStep(2)">{{ 'common.back' | translate }}</button>
+            <button type="button" class="sc-btn sc-btn--primary" (click)="goToStep(4)" [disabled]="languages().length === 0 || !shortIntro().trim()">
+              {{ 'user.studentConnect.registration.nextReview' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 4: Review & Submit -->
+      @if (step() === 4) {
+        <div class="sc-gate-step">
+          <dl class="sc-kv-grid">
+            @for (item of reviewItems(); track item.label) {
+              <div><dt>{{ item.label | translate }}</dt><dd>{{ item.value || '—' }}</dd></div>
+            }
+          </dl>
+
+          <div class="sc-gate-privacy">
+            <i class="bi bi-shield-lock"></i>
+            <span>{{ 'user.studentConnect.registration.privacyNotice' | translate }}</span>
+          </div>
+
+          <div class="sc-gate-nav">
+            <button type="button" class="sc-btn sc-btn--outline" (click)="goToStep(3)" [disabled]="submitting()">{{ 'common.back' | translate }}</button>
+            <button type="button" class="sc-btn sc-btn--primary" (click)="submit()" [disabled]="!canSubmit() || submitting()">
+              @if (submitting()) {
+                <span class="spinner-border spinner-border-sm"></span> {{ 'user.studentConnect.registration.submitting' | translate }}
+              } @else {
+                {{ 'user.studentConnect.registration.submit' | translate }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

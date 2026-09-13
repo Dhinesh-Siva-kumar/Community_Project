@@ -1,0 +1,49 @@
+@if (loading()) {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+} @else {
+  <div class="sc-req-columns">
+    <div class="sc-req-col">
+      <h3>{{ 'user.studentConnect.requests.received' | translate }}</h3>
+      @for (r of received(); track r.id) {
+        <div class="sc-req-card">
+          <div class="sc-avatar">{{ (r.firstName || '?').charAt(0).toUpperCase() }}</div>
+          <div class="sc-req-card__body">
+            <p class="sc-req-card__name">{{ r.firstName }}</p>
+            <p class="sc-req-card__meta">{{ r.course }}</p>
+            <p class="sc-req-card__msg">{{ r.message }}</p>
+            @if (r.status === 'pending') {
+              <div class="sc-req-card__actions">
+                <button type="button" class="sc-btn sc-btn--primary sc-btn--sm" (click)="accept(r.id)" [disabled]="actioningId() === r.id">{{ 'user.studentConnect.requests.accept' | translate }}</button>
+                <button type="button" class="sc-btn sc-btn--danger-outline sc-btn--sm" (click)="decline(r.id)" [disabled]="actioningId() === r.id">{{ 'user.studentConnect.requests.decline' | translate }}</button>
+              </div>
+            } @else {
+              <span class="sc-req-status sc-req-status--accepted">{{ 'user.studentConnect.requests.accepted' | translate }}</span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="sc-empty-note">{{ 'user.studentConnect.requests.noneReceived' | translate }}</div>
+      }
+    </div>
+
+    <div class="sc-req-col">
+      <h3>{{ 'user.studentConnect.requests.sent' | translate }}</h3>
+      @for (r of sent(); track r.id) {
+        <div class="sc-req-card">
+          <div class="sc-avatar">{{ (r.firstName || '?').charAt(0).toUpperCase() }}</div>
+          <div class="sc-req-card__body">
+            <p class="sc-req-card__name">{{ r.firstName }}</p>
+            <p class="sc-req-card__meta">{{ r.course }}</p>
+            @if (r.status === 'pending') {
+              <span class="sc-req-status sc-req-status--pending">{{ 'user.studentConnect.requests.pending' | translate }}</span>
+            } @else {
+              <span class="sc-req-status sc-req-status--accepted">{{ 'user.studentConnect.requests.accepted' | translate }}</span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="sc-empty-note">{{ 'user.studentConnect.requests.noneSent' | translate }}</div>
+      }
+    </div>
+  </div>
+}

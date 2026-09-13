@@ -18,6 +18,10 @@ interface NavItem {
   icon: string;
   route: string;
   sectionLabel?: string;
+  /** Small pill shown after the label (catalog key) — e.g. "NEW" on a
+   * recently-launched module. No existing precedent to copy; added for
+   * Student Connect (STUDENT_CONNECT_SPEC.md §3). */
+  badge?: string;
 }
 
 // Catalog keys, not display text — the template pipes them through
@@ -30,6 +34,7 @@ const ROUTE_TITLES: Record<string, string> = {
   events:    'nav.events',
   jobs:      'nav.jobs',
   profile:   'nav.profile',
+  'student-connect': 'nav.studentConnect',
 };
 
 @Component({
@@ -73,6 +78,7 @@ export class UserLayoutComponent {
     { label: 'nav.community', icon: 'bi-people',         route: '/user/community', sectionLabel: 'nav.section.explore' },
     { label: 'nav.business',  icon: 'bi-shop',           route: '/user/business'                                       },
     { label: 'nav.jobs',      icon: 'bi-briefcase',      route: '/user/jobs'                                           },
+    { label: 'nav.studentConnect', icon: 'bi-mortarboard', route: '/user/student-connect'                              },
     { label: 'nav.events',    icon: 'bi-calendar-event', route: '/user/events'                                         },
     this.authService.isAuthenticated()
       ? { label: 'nav.profile', icon: 'bi-person-circle',      route: '/user/profile', sectionLabel: 'nav.section.account' }

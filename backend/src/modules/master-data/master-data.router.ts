@@ -44,6 +44,33 @@ router.get('/cities', async (req: Request, res: Response, next: NextFunction) =>
   }
 });
 
+// GET /api/master-data/universities?countryId=1&regionId=5 — public, no auth
+router.get('/universities', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const countryId = Number(req.query['countryId']);
+    if (!countryId || isNaN(countryId)) {
+      res.status(400).json({ success: false, message: 'countryId query param is required' });
+      return;
+    }
+    const regionIdRaw = req.query['regionId'];
+    const regionId = regionIdRaw ? Number(regionIdRaw) : undefined;
+    const result = await masterDataService.getUniversities(countryId, regionId);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/master-data/courses — public, no auth
+router.get('/courses', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await masterDataService.getCourses();
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/master-data/interests — public, no auth
 router.get('/interests', async (_req: Request, res: Response, next: NextFunction) => {
   try {
