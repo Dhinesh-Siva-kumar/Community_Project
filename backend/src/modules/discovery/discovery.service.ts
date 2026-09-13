@@ -131,10 +131,13 @@ export async function getEventsPreview(countryId: number | undefined, limit: num
 
 export async function getCommunitiesPreview(countryId: number | undefined, limit: number) {
   const country = await resolveCountryName(countryId);
+  // Newest communities first (findAll's default sort, i.e. `sortBy` omitted,
+  // falls through to `c.created_at`) rather than by member count — a guest's
+  // preview should surface what's freshly created, not just the biggest
+  // existing communities every time.
   const result = await communitiesService.findAll({
     page: 1,
     limit,
-    sortBy: 'members',
     sortDir: 'desc',
     country,
   });
@@ -144,12 +147,14 @@ export async function getCommunitiesPreview(countryId: number | undefined, limit
 }
 
 /** Public (non-private) community ids — the pool any guest-facing preview
- * that needs to reach into a specific community (e.g. its posts) draws from. */
+ * that needs to reach into a specific community (e.g. its posts) draws from.
+ * Newest-first, same reasoning as getCommunitiesPreview above, so the guest
+ * "Community Stream" post preview also skews toward recently created
+ * communities rather than always the same top-by-members handful. */
 async function getPublicCommunityIds(country: string | undefined, limit: number): Promise<string[]> {
   const result = await communitiesService.findAll({
     page: 1,
     limit,
-    sortBy: 'members',
     sortDir: 'desc',
     country,
   });

@@ -122,7 +122,13 @@ $_sb-active-text:    $color-primary-dark;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: $z-sidebar + 1;
+  // Sits vertically centered on the header (top: header-height/2), straddling
+  // the sidebar/header boundary, so it must clear .top-header's z-index
+  // ($z-sidebar+5) or the header paints over it. Stays just above that
+  // (not pushed into the popover/tooltip/toast tiers) so it — like the
+  // header — remains under $z-modal-backdrop/$z-modal, where app dialogs
+  // (e.g. the guest "Join to continue" prompt) still render on top of it.
+  z-index: $z-sidebar + 6;
   box-shadow: $shadow-1;
   transition: left $_transition, background $_transition, border-color $_transition, color $_transition;
 
@@ -358,13 +364,20 @@ $_sb-active-text:    $color-primary-dark;
 }
 
 // ── Guest onboarding nudge — replaces .sidebar-user for a logged-out
-// viewer (see user-layout.component.html's sidebar-footer branch). Fixed
-// light-amber card, same reasoning as home dashboard's .hero: its own text
-// stays fixed-dark rather than the reactive $color-text-primary tokens,
-// which would turn near-white and vanish in dark mode against this surface.
+// viewer (see user-layout.component.html's sidebar-footer branch).
+// Background uses $color-primary-lighter — a CSS var that's already a
+// near-white cream (#FFFBEB) in light mode and a genuine dark warm-brown
+// (#241b0c) in dark mode (see styles.scss's [data-theme] blocks) — instead
+// of $gradient-card-amber's more saturated amber-100→200 fill, so the card
+// reads as a soft light tint rather than a block of yellow, and adapts to
+// dark mode for free. Icon/CTA use a light tint + border instead of a solid
+// amber-gradient fill — calmer accent language, still clearly the "action"
+// element. Text stays on explicit fixed warm-brown/near-black hex (not the
+// neutral $color-text-* tokens) for a consistent amber "brand" tone here,
+// which needs its own dark-mode pass below since it won't auto-flip.
 .sidebar-guest-card {
-  background: $gradient-card-amber;
-  border: 1px solid $color-primary-medium;
+  background: $color-primary-lighter;
+  border: 1px solid rgba(180, 83, 9, .18);
   border-radius: $radius-md;
   padding: 0.7rem 0.8rem;
   display: flex;
@@ -375,34 +388,71 @@ $_sb-active-text:    $color-primary-dark;
 .sidebar-guest-card__icon {
   width: 22px; height: 22px; border-radius: $radius-sm; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: $color-primary; color: $color-on-primary; font-size: 11px; font-weight: $font-weight-bold;
+  background: rgba(245, 158, 11, .14); border: 1px solid rgba(245, 158, 11, .4);
+  i { color: $color-amber-700; font-size: 11px; }
 }
 .sidebar-guest-card__title { font-size: 12px; font-weight: $font-weight-bold; color: #1c1917; }
 .sidebar-guest-card__text { font-size: 11px; line-height: 1.4; color: #57534e; margin: 0; }
 .sidebar-guest-card__cta {
   display: block; text-align: center; padding: 6px; border-radius: $radius-sm;
-  background: $gradient-primary; color: $color-on-primary; font-weight: $font-weight-bold;
-  font-size: 12px; text-decoration: none;
-  &:hover { box-shadow: $shadow-primary-sm; }
+  background: rgba(245, 158, 11, .12); color: $color-amber-800;
+  border: 1px solid rgba(245, 158, 11, .5);
+  font-weight: $font-weight-bold; font-size: 12px; text-decoration: none;
+  transition: background-color .18s ease, border-color .18s ease;
+  &:hover { background: rgba(245, 158, 11, .2); border-color: rgba(245, 158, 11, .7); }
+}
+
+:host-context([data-theme='dark']) .sidebar-guest-card {
+  border-color: rgba(251, 191, 36, .2);
+
+  &__icon {
+    background: rgba(251, 191, 36, .14);
+    border-color: rgba(251, 191, 36, .4);
+    i { color: $color-primary; }
+  }
+  &__title { color: $color-primary; }
+  &__text { color: #A8A29E; }
+  &__cta {
+    background: rgba(251, 191, 36, .12); color: $color-primary;
+    border-color: rgba(251, 191, 36, .45);
+    &:hover { background: rgba(251, 191, 36, .2); border-color: rgba(251, 191, 36, .65); }
+  }
 }
 
 // ── Guest header actions (Login link + Join Tamilya button) ────────────
+// Matches the landing page's own nav buttons (.lp-btn.lp-btn-ghost.lp-btn-sm
+// / .lp-btn.lp-btn-neon.lp-btn-sm in landing.component.scss) — same shape
+// (8px radius, not the app's usual 12px), Poppins header font, bold weight,
+// and hover treatment (ghost gains a visible border+tint, neon lifts). Can't
+// reuse the landing page's actual CSS custom properties directly — those
+// (--lp-border, --lp-primary-rgb, etc.) are `:host[data-theme]`-scoped to
+// the landing component itself (see ThemeService) — so this reimplements
+// the same look with this app's own global $color-*/$gradient-primary tokens.
 .header-loginLink {
-  font-size: $font-size-sm; font-weight: $font-weight-semibold; color: $color-text-body;
-  text-decoration: none; padding: 6px 12px; border-radius: $radius-md; white-space: nowrap;
-  &:hover { background: $color-bg-hover; color: $color-text-primary; }
-  @include media-sm-max { padding: 6px 8px; }
+  display: inline-flex; align-items: center;
+  font-family: $font-family-header;
+  font-size: 13px; font-weight: $font-weight-bold; color: $color-text-body;
+  text-decoration: none; white-space: nowrap;
+  padding: 8px 18px; border-radius: $radius-sm;
+  border: 1.5px solid $color-border;
+  transition: border-color $transition-base $transition-easing,
+              color $transition-base $transition-easing,
+              background $transition-base $transition-easing;
+  &:hover { border-color: $color-primary-darker; color: $color-primary-darker; background: $color-primary-light; }
+  @include media-sm-max { padding: 7px 12px; }
 }
 .header-joinBtn {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: $font-size-sm; font-weight: $font-weight-bold; text-decoration: none; white-space: nowrap;
+  font-family: $font-family-header;
+  font-size: 13px; font-weight: $font-weight-bold; text-decoration: none; white-space: nowrap;
   color: $color-on-primary; background: $gradient-primary;
-  padding: 7px 14px; border-radius: $radius-md; box-shadow: $shadow-primary-sm;
-  transition: box-shadow $transition-base $transition-easing;
-  &:hover { box-shadow: $shadow-primary-md; }
+  padding: 8px 20px; border-radius: $radius-sm; box-shadow: $shadow-primary-sm;
+  transition: transform $transition-base $transition-easing, box-shadow $transition-base $transition-easing;
+  &:hover { transform: translateY(-2px); box-shadow: $shadow-primary-md; }
+  &:active { transform: translateY(0) scale(.97); }
   // Icon drops first on narrow phones — the label ("Join Tamilya – Free")
   // is the part that actually needs to stay legible/tappable.
-  @include media-sm-max { padding: 6px 10px; i { display: none; } }
+  @include media-sm-max { padding: 7px 14px; i { display: none; } }
 }
 
 // ============================================================
@@ -426,7 +476,15 @@ $_sb-active-text:    $color-primary-dark;
 .top-header {
   position: sticky;
   top: 0;
-  z-index: $z-fixed;
+  // Needs to sit above in-page scrolling content (the dashboard hero card,
+  // at $z-sticky+10) so that content slides underneath this sticky navbar
+  // instead of over it — but deliberately NOT pushed up into the
+  // popover/tooltip/toast tiers (1060+): those are above $z-modal-backdrop/
+  // $z-modal (1040/1050), so going that high put the navbar above every
+  // modal dialog in the app (the guest "Join to continue" prompt included),
+  // which then rendered underneath it. $z-sidebar+5 clears the hero and the
+  // sidebar while staying well under the modal tier.
+  z-index: $z-sidebar + 5;
   height: $_header-height;
   background: $navbar-bg;
   backdrop-filter: $navbar-backdrop;

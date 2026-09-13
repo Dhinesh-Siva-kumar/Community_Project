@@ -40,7 +40,28 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   // overflow:hidden ancestor clips it invisible regardless of z-index.
   // Nothing in this block relies on edge-clipping (no ::before/::after
   // here), so removing it is safe.
+  //
+  // z-index here (not just position:relative) is required too: .hero__body
+  // sets its own z-index:1, which — since .hero itself had z-index:auto —
+  // was being promoted straight into the page's root stacking context at
+  // stack level 1, while `.feed-tabs` further down sits at $z-sticky (1000)
+  // in that same root context. The country dropdown's internal z-index:1050
+  // only matters *within* .hero__body's own stacking context, so the entire
+  // hero (dropdown included) was rendering underneath .feed-tabs once the
+  // page scrolled and the sticky tab bar overlapped the hero. Giving .hero
+  // itself a z-index above $z-sticky makes it (and everything nested inside,
+  // including the dropdown) win that comparison as a whole unit.
+  //
+  // Kept deliberately just above $z-sticky (not up at $z-popover/1060) —
+  // this is page content, not an actual popover, and jumping it that high
+  // put it above the app shell's own top navbar (user-layout's .top-header)
+  // and, worse, above $z-modal-backdrop/$z-modal (1040/1050): every modal
+  // dialog in the app (including the guest "Join to continue" prompt) was
+  // rendering *underneath* this hero/navbar once they were pushed up to
+  // compete with it. Staying below 1020 keeps this whole in-page chrome
+  // tier under the app's modal layer, where it belongs.
   position: relative;
+  z-index: $z-sticky + 10;
   // $gradient-card-amber is a fixed light wash (not theme-reactive, same as
   // .welcome-banner below) — its own text colors must stay fixed too rather
   // than using $color-text-primary/$color-text-muted, which flip to
@@ -86,14 +107,6 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
     flex-wrap: wrap;
   }
 
-  // ── Guest variant: "TAMILYA GLOBAL" banner ──────────────────
-  &__eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-  &__eyebrowBadge {
-    font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
-    color: #78350f; background: rgba(217,119,6,.18); padding: 2px 8px; border-radius: $radius-sm;
-  }
-  &__eyebrowText { font-size: 12px; color: #92400e; font-weight: 500; }
-
   &__title--tamil { font-family: $font-family-tamil; font-size: 1.2rem; }
 
   // ── Unified search bar: free-text search + country combobox + Search
@@ -111,10 +124,21 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   // same bug class as the guest home page's "Other" country pill earlier).
   // The search button's own right corners are rounded to match instead of
   // relying on the container clipping them.
+  //
+  // Everything below (search bar, country dropdown, results panel) is
+  // deliberately built from FIXED light colors, not the app's theme-reactive
+  // $color-* tokens — those flip to their dark-mode values independently of
+  // this card, which sits on the still-fixed-light $gradient-card-amber
+  // background above. Using the reactive tokens here previously meant this
+  // whole search surface silently turned near-black in dark mode while its
+  // amber card stayed light, so the two halves of one card looked like two
+  // different themes. Every fixed-light hex below is the exact light-mode
+  // fallback the reactive token would have resolved to, so nothing changes
+  // in light mode — this only stops dark mode from disagreeing with it.
   &__searchBar {
     margin-top: 14px; display: inline-flex; align-items: stretch; max-width: 100%;
-    background: $color-bg-card; border: 1px solid rgba(217,119,6,.3); border-radius: $radius-md;
-    box-shadow: $shadow-1;
+    background: #FFFFFF; border: 1px solid rgba(217,119,6,.3); border-radius: $radius-md;
+    box-shadow: 0 1px 2px rgba(28,25,23,.05);
     @media(max-width:640px) { display: flex; width: 100%; }
   }
   &__searchField {
@@ -123,16 +147,16 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
     i.bi-search { color: #92400e; font-size: 14px; flex-shrink: 0; }
     input {
       flex: 1; border: none; outline: none; background: transparent; font-size: 13.5px;
-      color: $color-text-primary; padding: 0 .65rem; min-width: 0;
-      &::placeholder { color: $color-text-muted; }
+      color: #1C1917; padding: 0 .65rem; min-width: 0;
+      &::placeholder { color: #78716C; }
     }
     @media(max-width:640px) { flex: 1 1 auto; }
   }
   &__searchClear {
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent;
-    color: $color-text-muted; font-size: 11px; cursor: pointer; transition: background $_t;
-    &:hover { background: $color-bg-hover; }
+    color: #78716C; font-size: 11px; cursor: pointer; transition: background $_t;
+    &:hover { background: #F5F5F4; }
   }
   &__searchDivider {
     flex-shrink: 0; width: 1px; align-self: center; height: 24px; background: rgba(217,119,6,.25);
@@ -150,8 +174,8 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
     i.bi-geo-alt { color: #92400e; font-size: 13px; flex-shrink: 0; }
     input {
       flex: 1; border: none; outline: none; background: transparent; font-size: 13.5px;
-      color: $color-text-primary; padding: 0 .5rem; min-width: 0;
-      &::placeholder { color: $color-text-muted; }
+      color: #1C1917; padding: 0 .5rem; min-width: 0;
+      &::placeholder { color: #78716C; }
     }
   }
   // Widened past the 170px trigger so full country names show without
@@ -159,88 +183,91 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &__countryDropdown {
     position: absolute; top: calc(100% + 4px); left: 0; z-index: 1050;
     width: 280px; max-width: 80vw; max-height: 260px; overflow-y: auto;
-    background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-md;
-    box-shadow: $shadow-2; padding: .35rem;
+    background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: $radius-md;
+    box-shadow: 0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.04); padding: .35rem;
   }
   &__countryOption {
     width: 100%; display: flex; align-items: center; gap: 8px; text-align: left;
     padding: .5rem .6rem; border: none; border-radius: $radius-sm; background: transparent;
-    color: $color-text-body; font-size: 13px; font-weight: 500; cursor: pointer; transition: background $_t;
-    &:hover { background: $color-bg-hover; }
-    &.active { background: $color-primary-light; color: $color-primary-darker; font-weight: 700; }
+    color: #44403C; font-size: 13px; font-weight: 500; cursor: pointer; transition: background $_t;
+    &:hover { background: #F5F5F4; }
+    &.active { background: #FEF3C7; color: $color-primary-darker; font-weight: 700; }
   }
-  &__countryEmpty { padding: .75rem .6rem; font-size: 12.5px; color: $color-text-muted; text-align: center; }
+  &__countryEmpty { padding: .75rem .6rem; font-size: 12.5px; color: #78716C; text-align: center; }
   // Light/white, not the brand gradient — a plain, low-key action that
   // doesn't compete with the page's real "Join Tamilya" CTAs. Right corners
   // rounded to match &__searchBar's own radius exactly (no overflow:hidden
   // to rely on now that it would clip the country dropdown — see above).
   &__searchBtn {
     flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; justify-content: center;
-    background: $color-bg-light; color: $color-text-primary; font-weight: $font-weight-bold;
+    background: #F5F5F4; color: #1C1917; font-weight: $font-weight-bold;
     font-size: 13px; padding: 0 22px; min-height: 46px; border: none; border-left: 1px solid rgba(217,119,6,.25);
     border-top-right-radius: $radius-md; border-bottom-right-radius: $radius-md;
-    cursor: pointer; transition: background $_t;
-    &:hover { background: $color-bg-hover; }
+    cursor: pointer; transition: background $_t, transform $_t;
+    // Was `&:hover { background: #F5F5F4; }` — identical to the resting
+    // color above, so hovering this button visibly did nothing. Now uses a
+    // slightly darker shade, plus an `:active` press state for touch (which
+    // never triggers `:hover` at all).
+    &:hover { background: #EDEDEC; }
+    &:active { background: #E5E5E4; transform: scale(.97); }
     @media(max-width:640px) { flex: 1 1 100%; }
   }
 
   // ── Search results panel ─────────────────────────────────────
-  // Fixed light-card background (not theme-reactive) — same reasoning as
-  // the rest of this guest hero: it sits on the fixed-light $gradient-card-amber
-  // banner, so its own contents stay fixed-dark too.
+  // Fixed light-card background (see the fixed-color note above &__searchBar).
   &__results {
-    margin-top: 12px; background: $color-bg-card; border: 1px solid rgba(217,119,6,.25);
+    margin-top: 12px; background: #FFFFFF; border: 1px solid rgba(217,119,6,.25);
     border-radius: $radius-md; padding: .85rem 1rem; max-height: 320px; overflow-y: auto;
   }
   &__resultsHead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
-  &__resultsSummary { font-size: 11.5px; font-weight: 600; color: $color-text-muted; margin: 0; }
+  &__resultsSummary { font-size: 11.5px; font-weight: 600; color: #78716C; margin: 0; }
   &__resultsClose {
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     width: 22px; height: 22px; border: none; border-radius: 50%; background: transparent;
-    color: $color-text-muted; font-size: 10px; cursor: pointer;
-    &:hover { background: $color-bg-hover; }
+    color: #78716C; font-size: 10px; cursor: pointer;
+    &:hover { background: #F5F5F4; }
   }
   &__noResults {
     display: flex; flex-direction: column; align-items: center; text-align: center; gap: .3rem;
-    padding: 1.1rem .5rem; color: $color-text-muted;
+    padding: 1.1rem .5rem; color: #78716C;
     i { font-size: 18px; opacity: .6; }
-    p { font-size: 12.5px; font-weight: 600; color: $color-text-body; margin: 0; }
+    p { font-size: 12.5px; font-weight: 600; color: #44403C; margin: 0; }
     span { font-size: 11.5px; }
   }
   &__resultsCategory {
     display: flex; align-items: center; gap: .4rem;
     font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-    color: $color-text-muted; margin: .55rem 0 .3rem;
+    color: #78716C; margin: .55rem 0 .3rem;
     &:first-child { margin-top: 0; }
     i { font-size: 10px; }
   }
   &__resultsCount {
     margin-left: auto; font-size: 10px; font-weight: 700; color: $color-primary-darker;
-    background: $color-primary-light; border-radius: $radius-full; padding: 1px 7px;
+    background: #FEF3C7; border-radius: $radius-full; padding: 1px 7px;
   }
   &__resultItem {
     width: 100%; display: flex; align-items: center; gap: .6rem; text-align: left;
     padding: .4rem .3rem; border: none; border-radius: $radius-sm; background: transparent;
     cursor: pointer; transition: background $_t;
-    &:hover { background: $color-bg-hover; }
+    &:hover { background: #F5F5F4; }
     &:hover .hero__resultChevron { transform: translateX(2px); color: $color-primary-darker; }
   }
   &__resultAvatar {
     width: 32px; height: 32px; border-radius: $_ri; flex-shrink: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    background: $color-primary-light; color: $color-primary-darker; font-size: 12px;
+    background: #FEF3C7; color: $color-primary-darker; font-size: 12px;
     img { width: 100%; height: 100%; object-fit: cover; }
   }
   &__resultBody { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
   &__resultTitle {
-    font-size: 12.5px; font-weight: 600; color: $color-text-primary;
+    font-size: 12.5px; font-weight: 600; color: #1C1917;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   &__resultMeta {
-    font-size: 10.5px; color: $color-text-muted;
+    font-size: 10.5px; color: #78716C;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  &__resultChevron { font-size: 10.5px; color: $color-text-muted; flex-shrink: 0; transition: transform $_t, color $_t; }
+  &__resultChevron { font-size: 10.5px; color: #78716C; flex-shrink: 0; transition: transform $_t, color $_t; }
 
   &__results--loading { display: flex; flex-direction: column; gap: .5rem; }
   &__resultSkeleton { display: flex; align-items: center; gap: .6rem; padding: .4rem .3rem; }
@@ -263,9 +290,248 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   50% { opacity: 1; }
 }
 
-.hero__body {
+// ── Guest hero overrides: centered layout + a softer, lower-saturation
+// amber wash. Scoped to `.hero--guest` only — the authenticated `.hero`
+// above (plain greeting banner, no search bar) keeps its original
+// left-aligned layout and stronger amber gradient untouched.
+.hero--guest {
+  justify-content: center;
+  padding: 2.25rem 2rem;
+  border-color: rgba(217, 119, 6, .18);
+
+  // The photo lives on its own ::before layer, NOT painted directly on this
+  // section — `.hero` (the shared base rule above) deliberately has no
+  // `overflow:hidden`, because `.hero__countryDropdown` is a descendant
+  // that pops open *below* this card and must not be clipped by it. Giving
+  // the photo its own absolutely-positioned, fully-inset layer with its
+  // OWN `overflow:hidden` + matching border-radius clips the image (and
+  // only the image) to the card's rounded shape, while the section itself —
+  // and therefore the dropdown — stays unclipped. `z-index:0` keeps it
+  // behind the real content, which already sits at z-index:1 via `.hero__body`.
   position: relative;
-  z-index: 1010;  /* above .feed-tabs (1000), below .top-header (1020) */
+  &::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    // `--hero-photo` is set inline in the template (via the `imageUrl`
+    // pipe, so it resolves correctly against the backend origin in both dev
+    // and prod). Overlay is a FLAT (non-directional) wash, not a diagonal
+    // gradient — on a card this wide and short, a diagonal gradient barely
+    // varies top-to-bottom, so its lighter stops left a visible strip of the
+    // raw photo showing at the card's top/bottom edges. A single flat color
+    // at high, uniform opacity covers the whole photo evenly instead.
+    background-image: linear-gradient(rgba(253,246,228,.65), rgba(253,246,228,.65)), var(--hero-photo);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #FDF6E4;
+  }
+
+  // Subtle entrance — the hero is a guest's first impression of the page,
+  // so its content settles in rather than popping in fully-formed (respects
+  // reduced-motion below rather than forcing it on everyone).
+  .hero__body {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    animation: heroGuestIn .5s ease-out;
+  }
+
+  // Bigger than the plain greeting banner's title — this is the page's
+  // actual landing headline for guests, not a one-line greeting. Deepened
+  // to near-black amber (vs. the base #78350f) for stronger contrast and
+  // first-impression punch against the lightened card background.
+  .hero__title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: #431407;
+    @media(max-width:640px) { font-size: 1.6rem; }
+  }
+  .hero__sub {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-top: 8px;
+    @media(max-width:640px) { font-size: 14px; }
+  }
+
+  .hero__searchBar,
+  .hero__results { width: 100%; max-width: 640px; }
+
+  @media(max-width:768px) { padding: 1.75rem 1.25rem; }
+}
+
+@keyframes heroGuestIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero--guest .hero__body { animation: none; }
+}
+
+// ── Guest hero — dark theme ──────────────────────────────────
+// The light card above (background + the fixed-hex search/dropdown/results
+// colors right below it) is deliberately NOT theme-reactive on its own —
+// see the note above &__searchBar. That only keeps it internally consistent;
+// it still needs an explicit dark counterpart so the card itself (not just
+// its children) actually changes with the theme instead of staying a bright
+// yellow card floating on an otherwise-dark page.
+//
+// A dark *tint* of the same amber (brownish-yellow) reads muddy on a dark
+// page, so this drops the amber wash entirely: a neutral dark card — the
+// same #1C1917/#221D17 surface every other card already uses in dark mode
+// (see $color-bg-card/$color-bg-light dark tokens in styles.scss) — with
+// amber kept only as an accent (border glow, title, icons), matching how
+// e.g. .platform-stats__item below pairs a neutral dark card with a
+// colored accent rather than tinting the whole card.
+//
+// `:host-context()`, not a plain `[data-theme='dark']` ancestor combinator:
+// the theme attribute lives on `<html>` (ThemeService), outside this
+// component entirely. Angular's emulated view encapsulation appends this
+// component's private _ngcontent attribute to EVERY simple selector in a
+// descendant chain, including an ancestor one — so `[data-theme='dark']
+// .hero--guest` compiles to requiring `<html>` itself to carry this
+// component's _ngcontent attribute, which it never does, silently making
+// the whole rule permanently unmatchable. :host-context() is the construct
+// Angular provides specifically for matching an ancestor outside the host.
+:host-context([data-theme='dark']) .hero--guest {
+  border-color: rgba(251, 191, 36, .18);
+
+  // Same photo, re-tinted with a flat dark wash instead of the light one
+  // above (see the flat-vs-diagonal note there — same reasoning applies
+  // here), so the background image adapts with the theme instead of
+  // staying lit for light mode only.
+  &::before {
+    background-image: linear-gradient(rgba(28,25,23,.92), rgba(28,25,23,.92)), var(--hero-photo);
+    background-color: #1C1917;
+  }
+
+  .hero__title { color: #FBBF24; }
+  .hero__sub { color: #D6D3D1; }
+
+  .hero__searchBar {
+    background: #292524; border-color: rgba(251, 191, 36, .28);
+    box-shadow: 0 1px 3px rgba(0,0,0,.35);
+  }
+  .hero__searchField i.bi-search,
+  .hero__countryPicker i.bi-geo-alt { color: #FBBF24; }
+  .hero__searchField input,
+  .hero__countryPicker input {
+    color: #F5F5F4;
+    &::placeholder { color: #A8A29E; }
+  }
+  .hero__searchClear { color: #A8A29E; &:hover { background: #332E2C; } }
+  .hero__searchDivider { background: rgba(251, 191, 36, .25); }
+  .hero__searchBtn {
+    background: #332E2C; color: #F5F5F4; border-left-color: rgba(251, 191, 36, .25);
+    &:hover { background: #3D3836; }
+    &:active { background: #443E3B; }
+  }
+
+  .hero__countryDropdown {
+    background: #292524; border-color: #3D362C;
+    box-shadow: 0 4px 16px rgba(0,0,0,.45);
+  }
+  .hero__countryOption {
+    color: #D6D3D1;
+    &:hover { background: #332E2C; }
+    &.active { background: #3D2400; color: #FBBF24; }
+  }
+  .hero__countryEmpty { color: #A8A29E; }
+
+  .hero__results { background: #292524; border-color: rgba(251, 191, 36, .2); }
+  .hero__resultsSummary,
+  .hero__noResults,
+  .hero__resultsCategory,
+  .hero__resultMeta,
+  .hero__resultChevron { color: #A8A29E; }
+  .hero__noResults p { color: #D6D3D1; }
+  .hero__resultsClose:hover,
+  .hero__resultItem:hover { background: #332E2C; }
+  .hero__resultsCount,
+  .hero__resultAvatar { background: #3D2400; color: #FBBF24; }
+  .hero__resultTitle { color: #F5F5F4; }
+}
+
+// ── Authenticated hero — background photo, left-aligned content ─────
+// Same photo + flat-wash overlay technique as .hero--guest above (its own
+// ::before layer, so the shared `.hero` no-overflow-hidden rule — needed
+// for the country dropdown on the guest variant — stays untouched here
+// too), but this keeps the original icon+greeting ROW layout instead of
+// the guest hero's centered landing-page stack. The icon swaps its solid
+// amber-gradient badge for a frosted glass one (backdrop-filter blur) so
+// it stays legible sitting directly on a busy photo instead of a flat
+// card — see the Glassmorphism guidance (10-20px blur, 15-30% white,
+// thin light border) rather than guessing the values.
+.hero--user {
+  border-color: rgba(217, 119, 6, .18);
+
+  &::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    background-image: linear-gradient(rgba(253,246,228,.72), rgba(253,246,228,.72)), var(--hero-photo);
+    background-size: cover;
+    background-position: center 38%;
+    background-repeat: no-repeat;
+    background-color: #FDF6E4;
+  }
+
+  .hero__icon {
+    background: rgba(255,255,255,.28);
+    border: 1px solid rgba(255,255,255,.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 4px 14px rgba(120,53,15,.18);
+    i { color: #78350f; }
+  }
+
+  .hero__date {
+    display: inline-block;
+    background: rgba(255,255,255,.4);
+    padding: 3px 11px;
+    border-radius: $radius-full;
+    color: #78350f;
+  }
+
+  .hero__title {
+    font-size: 1.55rem;
+    letter-spacing: -0.01em;
+    color: #431407;
+    @media(max-width:640px) { font-size: 1.25rem; }
+  }
+  // Name gets its own accent color so the greeting reads as personalized,
+  // not just a longer sentence in the same weight/color as everything else.
+  .hero__name { color: #B45309; }
+
+  .hero__sub {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #78350f;
+  }
+}
+
+:host-context([data-theme='dark']) .hero--user {
+  border-color: rgba(251, 191, 36, .18);
+
+  &::before {
+    background-image: linear-gradient(rgba(28,25,23,.88), rgba(28,25,23,.88)), var(--hero-photo);
+    background-color: #1C1917;
+  }
+
+  .hero__icon {
+    background: rgba(0,0,0,.34);
+    border-color: rgba(251,191,36,.3);
+    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+    i { color: #FBBF24; }
+  }
+
+  .hero__date { background: rgba(251,191,36,.16); color: #FBBF24; }
+  .hero__title { color: #F5F5F4; }
+  .hero__name { color: #FBBF24; }
+  .hero__sub { color: #D6D3D1; }
 }
 
 // ── Platform overview stats (guest-only) ────────────────────
@@ -282,14 +548,42 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   @media(max-width:640px) { grid-template-columns: repeat(2, 1fr); }
   @media(max-width:400px) { grid-template-columns: 1fr; }
 }
+// Each card is now a real link (routerLink to the matching Communities/
+// Jobs/Business/Events page) rather than an inert div, so it needs the
+// usual clickable-card affordances: pointer cursor, a hover/focus lift,
+// and a chevron that slides in to signal "this goes somewhere" (same
+// treatment as .hero__resultItem above). The hover accent is COLORED per
+// category — `--stat-accent`/`--stat-accent-bg` are set once per modifier
+// class below (same hue as that card's own icon), so hovering "Jobs" glows
+// teal, "Events" glows violet, etc., instead of every card hovering the
+// same flat neutral/amber regardless of category.
 .platform-stats__item {
   display: flex; align-items: center; gap: .6rem;
-  padding: .6rem .85rem; border-radius: $_ri; border: 1px solid $color-border; background: $color-bg-card;
-  box-shadow: $shadow-1;
+  padding: .7rem .9rem; border-radius: $_ri; border: 1px solid $color-border; background: $color-bg-card;
+  box-shadow: $shadow-1; text-decoration: none; color: inherit; cursor: pointer;
+  transition: transform $_t, box-shadow $_t, border-color $_t;
+
+  &--countries    { --stat-accent: #{$color-primary-darker}; }
+  &--communities  { --stat-accent: #{$color-success-text}; }
+  &--jobs         { --stat-accent: #{$teal-600}; }
+  &--business     { --stat-accent: #{$color-warning-text}; }
+  &--events       { --stat-accent: #{$color-badge-violet-text}; }
+
+  &:hover, &:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: $shadow-2;
+    border-color: var(--stat-accent);
+  }
+  &:focus-visible { outline: 2px solid var(--stat-accent); outline-offset: 2px; }
+  &:hover .platform-stats__val,
+  &:focus-visible .platform-stats__val { color: var(--stat-accent); }
+  &:hover .platform-stats__arrow,
+  &:focus-visible .platform-stats__arrow { opacity: 1; transform: translateX(0); color: var(--stat-accent); }
 }
 .platform-stats__icon {
   width: 34px; height: 34px; border-radius: $radius-lg; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
+  transition: transform $_t;
   i { font-size: .9rem; }
   &--countries { background: $color-primary-light; i { color: $color-primary-darker; } }
   &--communities { background: $color-success-light; i { color: $color-success-text; } }
@@ -297,12 +591,21 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   &--business { background: $color-warning-light; i { color: $color-warning-text; } }
   &--events { background: $color-badge-violet-bg; i { color: $color-badge-violet-text; } }
 }
-.platform-stats__body { display: flex; flex-direction: column; min-width: 0; }
+.platform-stats__item:hover .platform-stats__icon,
+.platform-stats__item:focus-visible .platform-stats__icon { transform: scale(1.08); }
+.platform-stats__body { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
 .platform-stats__val {
   font-family: $font-family-header; font-size: 1.1rem; font-weight: 800;
   color: $color-text-primary; font-variant-numeric: tabular-nums; line-height: 1.1;
+  transition: color $_t;
 }
 .platform-stats__lbl { font-size: 10.5px; font-weight: 600; color: $color-text-muted; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+// Hidden by default and nudged left — slides into view on hover/focus
+// (see .platform-stats__item above) instead of always taking up space.
+.platform-stats__arrow {
+  font-size: 12px; color: $color-text-muted; flex-shrink: 0;
+  opacity: 0; transform: translateX(-4px); transition: opacity $_t, transform $_t, color $_t;
+}
 
 // ── Welcome banner (post-registration, one-time) ────────────
 // Reuses the app's own tokens: hero-style corner glow + top accent bar
@@ -513,6 +816,70 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
            padding:8px 20px; border-radius:20px; font-size:13px; font-weight:700; text-decoration:none; }
 }
 
+// End-of-preview CTA — appears after a guest's fixed post preview (see
+// loadGuestData → getPostsPreview limit:8; guests never paginate past it).
+// Same icon/title/text/button anatomy as .feed-empty above. Background uses
+// $color-primary-lighter — unlike $gradient-card-amber (amber-100→200, a
+// noticeably saturated "yellow" fill) this token is a CSS var that's
+// already near-white (#FFFBEB) in light mode and a genuine dark warm-brown
+// (#241b0c) in dark mode (see styles.scss's [data-theme] blocks), so the
+// card is both lighter AND theme-correct for free. Icon/button switch from
+// a solid amber-gradient fill to a light tint + border treatment instead —
+// calmer than a loud solid chip, still clearly the "accent" element on the
+// card. Title/text keep an explicit dark-mode pass since they're deliberately
+// fixed warm-brown hex (not the neutral $color-text-* tokens) for a
+// consistent amber "brand" tone against this card specifically.
+.feed-endcap {
+  text-align: center;
+  padding: 1.75rem 1.5rem;
+  border-radius: $_r;
+  background: $color-primary-lighter;
+  border: 1px solid rgba(180, 83, 9, .18);
+
+  &__icon {
+    width: 44px; height: 44px; margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, .12);
+    border: 1px solid rgba(245, 158, 11, .35);
+    i { color: $color-amber-700; font-size: 18px; }
+  }
+  &__title {
+    font-family: $font-family-header; font-size: 14.5px; font-weight: 800;
+    color: #78350f; margin: 0 0 6px;
+  }
+  &__text {
+    font-size: 12.5px; color: #92400e; margin: 0 auto 16px; line-height: 1.55;
+    max-width: 360px;
+  }
+  &__btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(245, 158, 11, .12); color: $color-amber-800;
+    border: 1px solid rgba(245, 158, 11, .5);
+    padding: 8px 21px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    text-decoration: none;
+    transition: transform .18s ease, background-color .18s ease, border-color .18s ease;
+    &:hover { transform: translateY(-1px); background: rgba(245, 158, 11, .2); border-color: rgba(245, 158, 11, .7); }
+  }
+}
+
+:host-context([data-theme='dark']) .feed-endcap {
+  border-color: rgba(251, 191, 36, .2);
+
+  &__icon {
+    background: rgba(251, 191, 36, .14);
+    border-color: rgba(251, 191, 36, .38);
+    i { color: $color-primary; }
+  }
+  &__title { color: $color-primary; }
+  &__text { color: #D6D3D1; }
+  &__btn {
+    background: rgba(251, 191, 36, .12); color: $color-primary;
+    border-color: rgba(251, 191, 36, .45);
+    &:hover { background: rgba(251, 191, 36, .2); border-color: rgba(251, 191, 36, .65); }
+  }
+}
+
 // Quick Actions — shown inside the empty feed state for a new/inactive
 // user, same icon-chip language as .rail-stat (colored circle + label).
 .quick-actions {
@@ -665,7 +1032,7 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   display:flex; align-items:center; justify-content:center; gap:6px;
   flex:1 1 0;
   padding:7px 10px;
-  border:1px solid rgba(203,213,225,.9);
+  border:1px solid rgba(203,213,225,.2);
   background:$color-bg-light;
   border-radius:10px;
   font-size:12.5px; font-weight:600; color:$color-stone-600; cursor:pointer;
@@ -1039,6 +1406,7 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
 .stream-card .post { margin:0 1.25rem; border-left:none; border-right:none; border-radius:0; border-top:none; @media(max-width:480px) { margin-left:1rem; margin-right:1rem; } }
 .stream-card .post:last-child { margin-bottom:1.125rem; }
 .stream-card .sk-post { margin:1.125rem 1.25rem 0; @media(max-width:480px) { margin-left:1rem; margin-right:1rem; } }
+.stream-card .feed-endcap { margin:1rem 1.25rem 1.125rem; @media(max-width:480px) { margin-left:1rem; margin-right:1rem; } }
 
 // Independent scroll region for the post list — composer + tabs above stay
 // put (not inside this container) while the feed itself scrolls, matching
@@ -1195,15 +1563,35 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
 
 // ── Upcoming events widget (list style, real date badge) ───────
 .event-list { display:flex; flex-direction:column; gap:.6rem; }
+// `--event-img` is set inline per-row in the template (via the `imageUrl`
+// pipe) from that event's own cover photo, when it has one. A light wash
+// sits on top of it — same idea as the guest hero's background photo —
+// instead of the flat neutral-gray card. Events with no image simply have
+// `--event-img` unset, which makes this whole multi-layer background-image
+// invalid and fall back to `none` (standard CSS var() behavior), so
+// `background-color: $color-bg-light` shows through unchanged — the exact
+// look this replaces. No pseudo-element needed here (unlike the guest hero):
+// nothing inside `.event-row` overflows it, so `overflow:hidden` directly
+// on the row itself safely clips the photo to its border-radius.
 .event-row {
+  position: relative; overflow: hidden;
   display:flex; align-items:flex-start; gap:.75rem;
-  padding:.65rem; border-radius:$_ri; border:1px solid $color-border; background:$color-bg-light;
+  padding:.65rem; border-radius:$_ri; border:1px solid $color-border; background-color:$color-bg-light;
+  background-image: linear-gradient(rgba(255,255,255,.80), rgba(255,255,255,.80)), var(--event-img);
+  background-size: cover; background-position: center; background-repeat: no-repeat;
   text-decoration:none; color:inherit; transition:border-color $_t;
   &:hover { border-color:$color-primary-medium; }
 
   // Guest events are a <button> (opens the auth-prompt gate) rather than an
   // <a> to a guarded route — reset button chrome back to .event-row's look.
-  &--button { width:100%; text-align:left; background:$color-bg-light; border:1px solid $color-border; font:inherit; cursor:pointer; }
+  &--button { width:100%; text-align:left; border:1px solid $color-border; font:inherit; cursor:pointer; }
+}
+// Same photo, re-tinted with a dark wash instead of the light one above —
+// see the guest hero's identical `:host-context()` note for why a plain
+// `[data-theme='dark']` ancestor selector doesn't work here under Angular's
+// emulated view encapsulation.
+:host-context([data-theme='dark']) .event-row {
+  background-image: linear-gradient(rgba(28,25,23,.80), rgba(28,25,23,.80)), var(--event-img);
 }
 .event-row__body { min-width:0; flex:1; }
 .event-row__badge {

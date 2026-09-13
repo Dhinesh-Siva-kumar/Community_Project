@@ -18,15 +18,19 @@
   <!-- ══════════════ Full-width top section: greeting/hero + welcome + activity/search ══════════════ -->
   @if (authService.isAuthenticated()) {
     <!-- Hero — now spans the full page width (both the feed and rail
-         columns below), not just the main column. -->
-    <section class="hero">
+         columns below), not just the main column. Same background photo
+         treatment as the guest hero below (shared --hero-photo var + the
+         .hero--user overlay/glass-icon styling), but keeps its original
+         left-aligned icon+text row instead of the guest hero's centered
+         landing-page layout. -->
+    <section class="hero hero--user" [style.--hero-photo]="'url(' + (guestHeroImage | imageUrl) + ')'">
       <div class="hero__icon" aria-hidden="true">
         <i class="bi" [ngClass]="greetingIcon()"></i>
       </div>
 
       <div class="hero__body">
         <span class="hero__date">{{ today() | date:'EEEE, MMMM d' }}</span>
-        <h1 class="hero__title">{{ greeting() }}, {{ firstName() }}!</h1>
+        <h1 class="hero__title">{{ greeting() }}, <span class="hero__name">{{ firstName() }}</span>!</h1>
         <p class="hero__sub">{{ 'user.dashboard.hereSWhatSHappening' | translate }}</p>
       </div>
     </section>
@@ -35,13 +39,9 @@
          card as the registered .hero above (see .hero SCSS comment on
          why its text colors stay fixed rather than theme-reactive). Full
          page width, same as the registered hero above. -->
-    <section class="hero hero--guest">
+    <section class="hero hero--guest" [style.--hero-photo]="'url(' + (guestHeroImage | imageUrl) + ')'">
       <div class="hero__body">
-        <div class="hero__eyebrow">
-          <span class="hero__eyebrowBadge">{{ 'home.guestHero.badge' | translate }}</span>
-          <span class="hero__eyebrowText">{{ 'home.guestHero.subtitle' | translate }}</span>
-        </div>
-        <h1 class="hero__title hero__title--tamil">உலகம் முழுவதும் தமிழர்களை இணைக்கும் தளம்</h1>
+        <h1 class="hero__title" [class.hero__title--tamil]="language.currentLang() === 'ta'">{{ 'home.guestHero.title' | translate }}</h1>
         <p class="hero__sub">{{ 'home.guestHero.tagline' | translate }}</p>
 
         <!-- Unified search bar — free-text search + the country combobox
@@ -204,41 +204,51 @@
          below). "Countries" counts distinct countries with at least one
          active/approved community, business, job or event. -->
     <div class="platform-stats">
-      <div class="platform-stats__item">
+      <a class="platform-stats__item platform-stats__item--countries" routerLink="/user/community"
+         [attr.aria-label]="(platformStats()?.countries ?? 0) + ' ' + ('home.stats.countries' | translate)">
         <span class="platform-stats__icon platform-stats__icon--countries"><i class="bi bi-globe2"></i></span>
         <span class="platform-stats__body">
           <span class="platform-stats__val">{{ platformStats()?.countries ?? 0 }}</span>
           <span class="platform-stats__lbl">{{ 'home.stats.countries' | translate }}</span>
         </span>
-      </div>
-      <div class="platform-stats__item">
+        <i class="bi bi-chevron-right platform-stats__arrow" aria-hidden="true"></i>
+      </a>
+      <a class="platform-stats__item platform-stats__item--communities" routerLink="/user/community"
+         [attr.aria-label]="(platformStats()?.communities ?? 0) + ' ' + ('home.stats.communities' | translate)">
         <span class="platform-stats__icon platform-stats__icon--communities"><i class="bi bi-people-fill"></i></span>
         <span class="platform-stats__body">
           <span class="platform-stats__val">{{ platformStats()?.communities ?? 0 }}</span>
           <span class="platform-stats__lbl">{{ 'home.stats.communities' | translate }}</span>
         </span>
-      </div>
-      <div class="platform-stats__item">
+        <i class="bi bi-chevron-right platform-stats__arrow" aria-hidden="true"></i>
+      </a>
+      <a class="platform-stats__item platform-stats__item--jobs" routerLink="/user/jobs"
+         [attr.aria-label]="(platformStats()?.jobs ?? 0) + ' ' + ('home.stats.jobs' | translate)">
         <span class="platform-stats__icon platform-stats__icon--jobs"><i class="bi bi-briefcase-fill"></i></span>
         <span class="platform-stats__body">
           <span class="platform-stats__val">{{ platformStats()?.jobs ?? 0 }}</span>
           <span class="platform-stats__lbl">{{ 'home.stats.jobs' | translate }}</span>
         </span>
-      </div>
-      <div class="platform-stats__item">
+        <i class="bi bi-chevron-right platform-stats__arrow" aria-hidden="true"></i>
+      </a>
+      <a class="platform-stats__item platform-stats__item--business" routerLink="/user/business"
+         [attr.aria-label]="(platformStats()?.businesses ?? 0) + ' ' + ('home.stats.business' | translate)">
         <span class="platform-stats__icon platform-stats__icon--business"><i class="bi bi-shop"></i></span>
         <span class="platform-stats__body">
           <span class="platform-stats__val">{{ platformStats()?.businesses ?? 0 }}</span>
           <span class="platform-stats__lbl">{{ 'home.stats.business' | translate }}</span>
         </span>
-      </div>
-      <div class="platform-stats__item">
+        <i class="bi bi-chevron-right platform-stats__arrow" aria-hidden="true"></i>
+      </a>
+      <a class="platform-stats__item platform-stats__item--events" routerLink="/user/events"
+         [attr.aria-label]="(platformStats()?.events ?? 0) + ' ' + ('home.stats.events' | translate)">
         <span class="platform-stats__icon platform-stats__icon--events"><i class="bi bi-calendar-event"></i></span>
         <span class="platform-stats__body">
           <span class="platform-stats__val">{{ platformStats()?.events ?? 0 }}</span>
           <span class="platform-stats__lbl">{{ 'home.stats.events' | translate }}</span>
         </span>
-      </div>
+        <i class="bi bi-chevron-right platform-stats__arrow" aria-hidden="true"></i>
+      </a>
     </div>
   }
 
@@ -586,6 +596,20 @@
               </div>
             </article>
           }
+
+          <!-- End-of-preview CTA — guests only ever get a fixed 8-post
+               preview (see loadGuestData → getPostsPreview limit:8), no
+               pagination, so this always lands right after the last post
+               rather than needing scroll/intersection detection. -->
+          <div class="feed-endcap">
+            <div class="feed-endcap__icon"><i class="bi bi-unlock-fill"></i></div>
+            <h4 class="feed-endcap__title">{{ 'home.post.endOfFeedTitle' | translate }}</h4>
+            <p class="feed-endcap__text">{{ 'home.post.endOfFeedText' | translate }}</p>
+            <a routerLink="/auth/register" class="feed-endcap__btn">
+              <i class="bi bi-rocket-takeoff-fill"></i>
+              {{ 'home.post.endOfFeedButton' | translate }}
+            </a>
+          </div>
         }
       }
       </div>
@@ -772,7 +796,8 @@
           } @else {
             <div class="event-list">
               @for (event of upcomingEvents(); track event.id) {
-                <a [routerLink]="['/user/events', event.id]" class="event-row">
+                <a [routerLink]="['/user/events', event.id]" class="event-row"
+                   [style.--event-img]="event.images?.length ? 'url(' + (event.images[0] | imageUrl) + ')' : null">
                   <app-event-date-badge [date]="event.eventDate" [time]="event.eventTime" />
                   <div class="event-row__body">
                     @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }
@@ -795,7 +820,8 @@
           } @else {
             <div class="event-list">
               @for (event of guestEvents(); track event.id) {
-                <button type="button" class="event-row event-row--button" (click)="promptAuth()">
+                <button type="button" class="event-row event-row--button" (click)="promptAuth()"
+                        [style.--event-img]="event.coverImage ? 'url(' + (event.coverImage | imageUrl) + ')' : null">
                   <app-event-date-badge [date]="event.eventDate" />
                   <div class="event-row__body">
                     @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }

@@ -112,8 +112,13 @@ interface AnimatedStat {
   styleUrls: ['./user-dashboard.component.scss'],
 })
 export class UserDashboardComponent implements OnInit, OnDestroy {
+  // Guest hero background photo — resolved through the `imageUrl` pipe in
+  // the template (same as any backend-uploaded image) since it needs the
+  // backend origin prepended in dev but not in prod (same-origin there).
+  readonly guestHeroImage = '/uploads/worldimages.png';
+
   private translate = inject(TranslateService);
-  private language = inject(LanguageService);
+  language = inject(LanguageService);
   private relativeTime  = inject(RelativeTimeService);
   authService = inject(AuthService);
   private userService = inject(UserService);
@@ -639,31 +644,31 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     const countryId = this.selectedCountryId() ?? undefined;
 
     this.loadingPosts.set(true);
-    this.discoveryService.getPostsPreview({ countryId, limit: 6 }).subscribe({
+    this.discoveryService.getPostsPreview({ countryId, limit: 8 }).subscribe({
       next: (res) => { this.guestPosts.set(res.data); this.loadingPosts.set(false); },
       error: () => this.loadingPosts.set(false),
     });
 
     this.loadingJobs.set(true);
-    this.discoveryService.getJobsPreview({ countryId, limit: 3 }).subscribe({
+    this.discoveryService.getJobsPreview({ countryId, limit: 4 }).subscribe({
       next: (res) => { this.guestJobs.set(res.data); this.loadingJobs.set(false); },
       error: () => this.loadingJobs.set(false),
     });
 
     this.loadingUpcomingEvents.set(true);
-    this.discoveryService.getEventsPreview({ countryId, limit: 3 }).subscribe({
+    this.discoveryService.getEventsPreview({ countryId, limit: 4 }).subscribe({
       next: (res) => { this.guestEvents.set(res.data); this.loadingUpcomingEvents.set(false); },
       error: () => this.loadingUpcomingEvents.set(false),
     });
 
     this.loadingSuggestedCommunities.set(true);
-    this.discoveryService.getCommunitiesPreview({ countryId, limit: 3 }).subscribe({
+    this.discoveryService.getCommunitiesPreview({ countryId, limit: 4 }).subscribe({
       next: (res) => { this.guestCommunities.set(res.data); this.loadingSuggestedCommunities.set(false); },
       error: () => this.loadingSuggestedCommunities.set(false),
     });
 
     this.loadingFeaturedBusinesses.set(true);
-    this.discoveryService.getBusinessesPreview({ countryId, limit: 3 }).subscribe({
+    this.discoveryService.getBusinessesPreview({ countryId, limit: 4 }).subscribe({
       next: (res) => { this.guestBusinesses.set(res.data); this.loadingFeaturedBusinesses.set(false); },
       error: () => this.loadingFeaturedBusinesses.set(false),
     });

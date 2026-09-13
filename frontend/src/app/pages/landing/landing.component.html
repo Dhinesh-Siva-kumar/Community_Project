@@ -14,7 +14,7 @@
     <li><a href="landing#home" [class.active]="activeSection === 'home'" (click)="setActive('home')">{{ 'landing.nav_home' | translate }}</a></li>
     <li><a href="landing#features" [class.active]="activeSection === 'features'" (click)="setActive('features')">{{ 'landing.nav_features' | translate }}</a></li>
     <li><a href="landing#communities" [class.active]="activeSection === 'communities'" (click)="setActive('communities')">{{ 'landing.nav_communities' | translate }}</a></li>
-    <li><a href="landing#how-it-works" [class.active]="activeSection === 'how-it-works'" (click)="setActive('how-it-works')">{{ 'landing.nav_how_it_works' | translate }}</a></li>
+    <li><a routerLink="/home">{{ 'landing.nav_explore' | translate }}</a></li>
     <li><a href="landing#testimonials" [class.active]="activeSection === 'testimonials'" (click)="setActive('testimonials')">{{ 'landing.nav_reviews' | translate }}</a></li>
     <li><a href="landing#about" [class.active]="activeSection === 'about'" (click)="setActive('about')">{{ 'landing.nav_about' | translate }}</a></li>
     <li><a href="landing#contact" [class.active]="activeSection === 'contact'" (click)="setActive('contact')">{{ 'landing.nav_contact' | translate }}</a></li>
@@ -26,7 +26,6 @@
     <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="(currentTheme === 'dark' ? 'common.switchToLight' : 'common.switchToDark') | translate">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
     </button>
-    <a routerLink="/home" class="lp-btn lp-btn-ghost lp-btn-sm">{{ 'landing.nav_explore' | translate }}</a>
     <a routerLink="/auth/login" class="lp-btn lp-btn-ghost lp-btn-sm">{{ 'landing.nav_login' | translate }}</a>
     <a routerLink="/auth/register" class="lp-btn lp-btn-neon lp-btn-sm">{{ 'landing.nav_get_started' | translate }}</a>
   </div>
@@ -41,11 +40,10 @@
   <a href="landing#home" (click)="closeMobile()"><i class="bi bi-house-fill"></i> {{ 'landing.nav_home' | translate }}</a>
   <a href="landing#features" (click)="closeMobile()"><i class="bi bi-stars"></i> {{ 'landing.nav_features' | translate }}</a>
   <a href="landing#communities" (click)="closeMobile()"><i class="bi bi-people-fill"></i> {{ 'landing.nav_communities' | translate }}</a>
-  <a href="landing#how-it-works" (click)="closeMobile()"><i class="bi bi-rocket-takeoff-fill"></i> {{ 'landing.nav_how_it_works' | translate }}</a>
+  <a routerLink="/home" (click)="closeMobile()"><i class="bi bi-compass-fill"></i> {{ 'landing.nav_explore' | translate }}</a>
   <a href="landing#testimonials" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> {{ 'landing.nav_reviews' | translate }}</a>
   <a href="landing#about" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> {{ 'landing.nav_about' | translate }}</a>
   <a href="landing#contact" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> {{ 'landing.nav_contact' | translate }}</a>
-  <a routerLink="/home" (click)="closeMobile()"><i class="bi bi-compass-fill"></i> {{ 'landing.nav_explore' | translate }}</a>
   <div class="lp-mobile-actions">
     <!-- Language toggle (mobile) -->
     <app-language-toggle [block]="true"></app-language-toggle>
@@ -111,9 +109,8 @@
         <a routerLink="/auth/register" class="lp-hbtn lp-hbtn-primary">
           <i class="bi bi-people-fill"></i> {{ 'landing.hero_join_community' | translate }}
         </a>
-        <a href="landing#how-it-works" class="lp-hbtn lp-hbtn-outline"
-           (click)="setActive('how-it-works')">
-          {{ 'landing.hero_how_it_works' | translate }} <i class="bi bi-play-fill"></i>
+        <a routerLink="/home" class="lp-hbtn lp-hbtn-outline">
+          {{ 'landing.nav_explore' | translate }} <i class="bi bi-compass-fill"></i>
         </a>
       </div>
     </div>

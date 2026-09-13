@@ -394,10 +394,10 @@
       "loginButton": "Log In"
     },
     "guestHero": {
-      "badge": "Tamilya Global",
-      "subtitle": "Worldwide Diaspora Network",
+      "title": "Connecting Tamils Around the World",
       "tagline": "Your Tamil Community, Wherever You Are",
-      "joinButton": "Join Tamilya"
+      "joinButton": "Join Tamilya – Free",
+      "orExplore": "or explore without an account"
     },
     "explore": {
       "allCountries": "All Locations"
@@ -411,7 +411,10 @@
     },
     "post": {
       "signInToReply": "Sign in to reply",
-      "signInToApply": "Sign in to Apply"
+      "signInToApply": "View Details",
+      "endOfFeedTitle": "You've reached the end of the free preview",
+      "endOfFeedText": "Join Tamilya to unlock the full community feed, connect with your people, and never miss a post.",
+      "endOfFeedButton": "Join Tamilya – It's Free"
     },
     "footer": {
       "rights": "All rights reserved."
@@ -2030,7 +2033,7 @@
       "online": "Online",
       "join": "Join",
       "applyNow": "Apply Now",
-      "enquire": "Enquire",
+      "enquire": "View Business",
       "stat": {
         "communities": "Communities",
         "posts": "Posts",

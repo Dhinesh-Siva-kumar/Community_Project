@@ -266,9 +266,19 @@ export async function findAll(params: {
   }
 
   // ── Country exact-match filter ─────────────────────────────
+  // Global communities (is_global=true) are exempt — they exist precisely
+  // so a community isn't tied to one country, so a country filter must
+  // never exclude them. Without this OR, picking any specific country
+  // filtered out every global community (and, via getPublicCommunityIds
+  // in discovery.service.ts, every post inside them too), even though
+  // "global" is defined as the opposite of country-restricted.
   if (country) {
-    query.where('c.country', country);
-    countQuery.where('country', country);
+    query.where(function () {
+      this.where('c.country', country).orWhere('c.is_global', true);
+    });
+    countQuery.where(function () {
+      this.where('country', country).orWhere('is_global', true);
+    });
   }
 
   // ── Category filter via interest_master JOIN ───────────────
