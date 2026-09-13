@@ -28,6 +28,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ThemeService } from '../../../core/services/theme.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { LanguageToggleComponent } from '../../../shared/components/language-toggle/language-toggle.component';
+import { environment } from '../../../../environments/environment';
 import { getPhoneRule } from '../../../shared/utils/phone';
 import { computePasswordStrength } from '../../../shared/utils/password-strength';
 import {
@@ -72,6 +73,7 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   otpError             = signal(false);
   showPassword         = signal(false);
   devOtp               = signal<string | null>(null);
+  protected readonly isProduction = environment.production;
   otpCountdown         = signal('5:00');
   resendCooldown       = signal(0);
   tooManyAttemptsAlert = signal(false);

@@ -22,6 +22,7 @@ const envSchema = z.object({
   OTP_TOKEN_EXPIRES_IN: z.string().default('10m'),
   OTP_EXPIRES_MINUTES: z.coerce.number().default(5),
   OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
+  OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().default(30),
 
   // CORS / URLs
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
@@ -70,10 +71,12 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
   ADMIN_EMAIL: z.string().optional(),
 
-  // Twilio (optional)
+  // Twilio (optional). TWILIO_SMS_FROM is a separate, SMS-capable Twilio
+  // number used as an SMS fallback when the WhatsApp send fails.
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_WHATSAPP_FROM: z.string().optional(),
+  TWILIO_SMS_FROM: z.string().optional(),
 
   // OpenAI (optional)
   OPENAI_API_KEY: z.string().optional(),

@@ -3,7 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
-import { sendOtp, deliverOtp, verifyOtp, getUserIdByPhone } from '../../services/otp.service';
+import { requestOtpDelivery, verifyOtp, getUserIdByPhone, isOtpVerified, clearOtp } from '../../services/otp.service';
 import { logAudit } from '../../services/audit.service';
 import * as notificationsService from '../notifications/notifications.service';
 import { env } from '../../config/env';
@@ -121,6 +121,10 @@ export async function register(dto: RegisterDtoType) {
   if (dto.phone_no) {
     const existingPhone = await db('users').where({ phone_no: dto.phone_no }).first();
     if (existingPhone) throw new AppError(409, 'Mobile number already registered with another account', 'MOBILE_NUMBER_ALREADY_REGISTERED');
+
+    if (!isOtpVerified(dto.phone_no)) {
+      throw new AppError(400, 'Please verify your mobile number with the OTP before registering.', 'PHONE_NOT_VERIFIED');
+    }
   }
 
   const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -142,6 +146,8 @@ export async function register(dto: RegisterDtoType) {
   const tokens = generateTokenPair(toJwtPayload(user as UserRow));
 
   await db('users').where({ id: (user as UserRow).id }).update({ refresh_token: tokens.refreshToken, last_active_at: db.fn.now() });
+
+  if (dto.phone_no) clearOtp(dto.phone_no);
 
   // Enrol the new user in any active default communities they qualify for
   await autoJoinDefaultCommunities((user as UserRow).id, countryName);
@@ -269,15 +275,14 @@ export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise
 
   if (!user) throw new AppError(404, 'User not found. Please check your details and try again.', 'USER_FOUND_CHECK_DETAILS');
 
-  const otp = sendOtp(dto.phoneNumber, user.id);
-  await deliverOtp(dto.phoneNumber, otp);
+  const otp = await requestOtpDelivery(dto.phoneNumber, user.id);
 
   const result: { success: boolean; message: string; devOtp?: string } = {
     success: true,
     message: 'OTP sent successfully',
   };
 
-  if (env.NODE_ENV !== 'production') {
+  if (env.NODE_ENV === 'development') {
     result.devOtp = otp;
   }
 
@@ -288,8 +293,6 @@ export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise
 // resetPasswordVerify
 // ---------------------------------------------------------------------------
 export async function resetPasswordVerify(dto: ResetPasswordDtoType): Promise<{ success: boolean; message: string }> {
-  // Retrieve userId before verifyOtp — verifyOtp deletes the store entry on
-  // success, so getUserIdByPhone would return null if called afterwards.
   const userId = getUserIdByPhone(dto.phoneNumber);
   if (!userId) throw new AppError(400, 'OTP session expired. Please request a new OTP.', 'OTP_SESSION_EXPIRED_REQUEST');
 
@@ -301,7 +304,7 @@ export async function resetPasswordVerify(dto: ResetPasswordDtoType): Promise<{ 
   const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
   await db('users').where({ id: userId }).update({ password: hashedPassword });
 
-  // verifyOtp already cleared the store entry on success; no need to clearOtp here.
+  clearOtp(dto.phoneNumber);
 
   await logAudit(userId, 'PASSWORD_RESET', { selfService: true }, 'users', userId);
 

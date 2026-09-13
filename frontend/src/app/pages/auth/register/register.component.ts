@@ -75,6 +75,7 @@ export class RegisterComponent {
   showPassword        = signal(false);
   usernameChecking    = signal(false);
   devOtp              = signal<string | null>(null);
+  protected readonly isProduction = environment.production;
   otpCountdown        = signal('5:00');
   resendCooldown      = signal(0);
   tooManyAttemptsAlert = signal(false);
