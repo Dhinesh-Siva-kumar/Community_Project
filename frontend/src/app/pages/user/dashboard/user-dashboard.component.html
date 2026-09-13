@@ -649,7 +649,7 @@
                 </div>
                 <div class="job-row__action">
                   <span class="job-row__time">{{ getTimeAgo(job.createdAt) }}</span>
-                  <a [routerLink]="['/user/jobs']" [queryParams]="{ id: job.id }" class="job-row__apply">{{ 'user.dashboard.applyNow' | translate }}</a>
+                  <a [routerLink]="['/user/jobs']" [queryParams]="{ id: job.id }" class="job-row__apply">{{ 'user.dashboard.viewJobDetails' | translate }}</a>
                 </div>
               </div>
             }
