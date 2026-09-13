@@ -23,7 +23,7 @@
          .hero--user overlay/glass-icon styling), but keeps its original
          left-aligned icon+text row instead of the guest hero's centered
          landing-page layout. -->
-    <section class="hero hero--user" [style.--hero-photo]="'url(' + (guestHeroImage | imageUrl) + ')'">
+    <section class="hero hero--user" [style.--hero-photo]="'url(' + guestHeroImage + ')'">
       <div class="hero__icon" aria-hidden="true">
         <i class="bi" [ngClass]="greetingIcon()"></i>
       </div>
@@ -39,7 +39,7 @@
          card as the registered .hero above (see .hero SCSS comment on
          why its text colors stay fixed rather than theme-reactive). Full
          page width, same as the registered hero above. -->
-    <section class="hero hero--guest" [style.--hero-photo]="'url(' + (guestHeroImage | imageUrl) + ')'">
+    <section class="hero hero--guest" [style.--hero-photo]="'url(' + guestHeroImage + ')'">
       <div class="hero__body">
         <h1 class="hero__title" [class.hero__title--tamil]="language.currentLang() === 'ta'">{{ 'home.guestHero.title' | translate }}</h1>
         <p class="hero__sub">{{ 'home.guestHero.tagline' | translate }}</p>

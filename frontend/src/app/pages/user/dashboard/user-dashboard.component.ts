@@ -112,10 +112,13 @@ interface AnimatedStat {
   styleUrls: ['./user-dashboard.component.scss'],
 })
 export class UserDashboardComponent implements OnInit, OnDestroy {
-  // Guest hero background photo — resolved through the `imageUrl` pipe in
-  // the template (same as any backend-uploaded image) since it needs the
-  // backend origin prepended in dev but not in prod (same-origin there).
-  readonly guestHeroImage = '/uploads/worldimages.png';
+  // Hero background photo — a bundled frontend asset (public/assets/), not
+  // a backend upload, so it's referenced directly in the template WITHOUT
+  // the `imageUrl` pipe: that pipe prepends the backend origin to any
+  // relative path, which is correct for actual /uploads/* files but would
+  // wrongly point this at the backend's origin in dev (it only exists on
+  // the Angular dev server / same-origin prod build).
+  readonly guestHeroImage = '/assets/worldimages.png';
 
   private translate = inject(TranslateService);
   language = inject(LanguageService);
