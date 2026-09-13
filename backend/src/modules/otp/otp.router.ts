@@ -28,7 +28,7 @@ router.post('/send-otp', async (req: Request, res: Response, next: NextFunction)
     const otp = await otpService.requestOtpDelivery(mobile);
 
     const response: Record<string, unknown> = { success: true, message: 'OTP sent' };
-    if (env.NODE_ENV === 'development') {
+    if (env.NODE_ENV === 'development' || !otpService.isDeliveryConfigured()) {
       response['devOtp'] = otp;
     }
 

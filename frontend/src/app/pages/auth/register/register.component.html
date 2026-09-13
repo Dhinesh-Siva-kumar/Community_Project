@@ -403,7 +403,7 @@
                   </p>
                 </div>
               </div>
-              @if (!isProduction && devOtp()) {
+              @if (devOtp()) {
                 <div class="dev-otp-card">
                   <span class="dev-otp-label"><i class="bi bi-terminal"></i> {{ 'auth.register.devOtpLabel' | translate }}</span>
                   <span class="dev-otp-value">{{ devOtp() }}</span>

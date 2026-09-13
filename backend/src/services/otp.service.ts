@@ -42,27 +42,28 @@ export function sendOtp(phone: string, userId?: string): string {
   return generateOtp(phone, userId);
 }
 
+/** True once real delivery (WhatsApp and/or SMS via Twilio) is configured. */
+export function isDeliveryConfigured(): boolean {
+  const hasWhatsApp = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_WHATSAPP_FROM);
+  const hasSms = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_SMS_FROM);
+  return hasWhatsApp || hasSms;
+}
+
 /**
  * Delivers the OTP to the recipient via WhatsApp (Twilio), falling back to a
  * plain SMS (also Twilio) if the WhatsApp send fails and an SMS sender is
  * configured. Logs to the console instead when no Twilio credentials are
- * configured at all (local dev). This is the single swap point for the
- * delivery channel.
+ * configured at all, so the flow still works (with the code surfaced via
+ * `devOtp`, see otp.router.ts/auth.service.ts) even before Twilio is set up.
+ * This is the single swap point for the delivery channel.
  */
 export async function deliverOtp(mobile: string, otp: string): Promise<void> {
   const hasWhatsApp = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_WHATSAPP_FROM);
   const hasSms = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_SMS_FROM);
 
   if (!hasWhatsApp && !hasSms) {
-    if (env.NODE_ENV === 'development') {
-      console.log(`[OTP] ${mobile} → ${otp}`);
-      return;
-    }
-    throw new AppError(
-      500,
-      'OTP delivery is not configured for this environment.',
-      'OTP_DELIVERY_NOT_CONFIGURED',
-    );
+    console.log(`[OTP] ${mobile} → ${otp}`);
+    return;
   }
 
   const smsBody = t('otp.text', { otp, minutes: env.OTP_EXPIRES_MINUTES });

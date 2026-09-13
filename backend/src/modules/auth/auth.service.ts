@@ -3,7 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../../services/token.service';
-import { requestOtpDelivery, verifyOtp, getUserIdByPhone, isOtpVerified, clearOtp } from '../../services/otp.service';
+import { requestOtpDelivery, verifyOtp, getUserIdByPhone, isOtpVerified, clearOtp, isDeliveryConfigured } from '../../services/otp.service';
 import { logAudit } from '../../services/audit.service';
 import * as notificationsService from '../notifications/notifications.service';
 import { env } from '../../config/env';
@@ -282,7 +282,7 @@ export async function forgotPasswordSendOtp(dto: ForgotPasswordDtoType): Promise
     message: 'OTP sent successfully',
   };
 
-  if (env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development' || !isDeliveryConfigured()) {
     result.devOtp = otp;
   }
 
