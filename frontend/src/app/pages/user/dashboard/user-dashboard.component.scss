@@ -263,6 +263,11 @@ $_r: 16px; $_ri: 10px; $_t: 0.2s ease;
   50% { opacity: 1; }
 }
 
+.hero__body {
+  position: relative;
+  z-index: 1010;  /* above .feed-tabs (1000), below .top-header (1020) */
+}
+
 // ── Platform overview stats (guest-only) ────────────────────
 // Full-width row directly below the hero, showing platform-wide totals
 // from DiscoveryService.getPlatformStats(). Icon color-per-category scheme
