@@ -1,10 +1,3 @@
-@if (!authService.isAuthenticated()) {
-  <app-guest-gate
-    icon="bi-shop"
-    [title]="'user.business.guestGateTitle' | translate"
-    [message]="'user.business.guestGateMessage' | translate">
-  </app-guest-gate>
-} @else {
 <!-- ==================== HEAD (replicated from the User Community List page's
      header — title/subtitle left, tabs + view toggle + search right).
      Hidden in Detail view — matching the Admin Business page, where the
@@ -29,6 +22,7 @@
             [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
             <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> {{ 'common.all' | translate }}
           </button>
+          @if (authService.isAuthenticated()) {
           <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
             [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
             <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
@@ -36,6 +30,7 @@
               <span class="biz-tab-count">{{ myPendingBusinessCount() }}</span>
             }
           </button>
+          }
         </div>
       </div>
 
@@ -74,6 +69,22 @@
   </div>
   <!-- Search now lives in the filter card below (matching the Admin Business
        list page, where search is part of .jb-filter-panel, not the header). -->
+
+  <!-- ── GUEST COUNTRY PICKER — logged-in users can narrow by country from
+       Advanced Filters; a guest gets it right on the page instead. ── -->
+  @if (!authService.isAuthenticated()) {
+    <div class="jb-guest-country">
+      <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+      <span class="jb-guest-country__label">{{ 'user.community.browseByCountry' | translate }}</span>
+      <app-searchable-select
+        class="jb-guest-country__select"
+        [options]="geoCountryOptions()"
+        [ngModel]="filterCountryIds()[0] ?? null"
+        (ngModelChange)="onFilterCountryIdsChange($event ? [$event] : [])"
+        [placeholder]="'user.business.filter.allCountries' | translate">
+      </app-searchable-select>
+    </div>
+  }
 }
 
 <!-- ==================== BUSINESS LIST VIEW (default) ==================== -->
@@ -259,16 +270,20 @@
 
           <!-- Id-based location, from the geography master data. Country is
                multi-select; State and City only appear once it's narrowed to
-               a single country, since they belong to one. -->
-          <div class="jb-adv-subfield">
-            <label class="jb-adv-label">{{ 'user.business.filter.countries' | translate }}</label>
-            <app-chip-multi-select
-              [options]="geoCountryOptions()"
-              [ngModel]="filterCountryIds()"
-              (ngModelChange)="onFilterCountryIdsChange($event)"
-              [ngModelOptions]="{ standalone: true }"
-              [placeholder]="'user.business.filter.allCountries' | translate"></app-chip-multi-select>
-          </div>
+               a single country, since they belong to one. Shown here only
+               for logged-in users — a guest sets it via the on-page
+               browse-by-country bar above instead. -->
+          @if (authService.isAuthenticated()) {
+            <div class="jb-adv-subfield">
+              <label class="jb-adv-label">{{ 'user.business.filter.countries' | translate }}</label>
+              <app-chip-multi-select
+                [options]="geoCountryOptions()"
+                [ngModel]="filterCountryIds()"
+                (ngModelChange)="onFilterCountryIdsChange($event)"
+                [ngModelOptions]="{ standalone: true }"
+                [placeholder]="'user.business.filter.allCountries' | translate"></app-chip-multi-select>
+            </div>
+          }
 
           @if (singleSelectedCountryId()) {
             <div class="jb-adv-subfield">
@@ -731,4 +746,3 @@
   (closed)="closeDeleteModal()"
   (deleted)="onBusinessDeleted($event)">
 </app-business-delete-modal>
-}

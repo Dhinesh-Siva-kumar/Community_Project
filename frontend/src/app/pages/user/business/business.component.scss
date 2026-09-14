@@ -509,6 +509,33 @@ $accents: (
   &--sm { padding: 8px 16px; font-size: $font-size-xs; }
 }
 
+// ── Guest country picker — same look as the Community page's
+// .uc-guest-country, shown on-page instead of buried in Advanced Filters. ──
+.jb-guest-country {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: $spacing-md;
+  padding: 10px 16px;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  border: 1px solid $color-border;
+
+  i.bi-geo-alt-fill { color: $color-primary; font-size: 14px; flex-shrink: 0; }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-body;
+    white-space: nowrap;
+  }
+
+  &__select {
+    width: 220px;
+    max-width: 100%;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // FILTER PANEL — replicated verbatim from the Admin Business list
 // page's .jb-filter-panel (search + collapsible Advanced Filters +

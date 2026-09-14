@@ -23,7 +23,6 @@ import { environment } from '../../../../environments/environment';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
-import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members' | 'about';
 
@@ -31,7 +30,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, GuestGateComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -294,12 +293,6 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    // Guests never load any data here — the template renders a "please
-    // register or log in" gate instead of the real community for them (see
-    // GuestGateComponent). Only reachable at all via /user/community/:id;
-    // the /admin/community/:id route is already behind adminGuard.
-    if (!this.authService.isAuthenticated()) return;
-
     this.initForms();
 
     // Under OnPush, this component only re-renders when something it owns
@@ -320,6 +313,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.pendingSharedPostId = this.parseSharedPostId(this.route.snapshot.fragment);
         this.loadCommunity();
         this.loadPosts();
+
+        // "My Posts" tab badge and the member list are both account-scoped —
+        // nothing to load for a guest (the Members tab and "My Posts" tab
+        // stay hidden for them — see template).
+        if (!this.authService.isAuthenticated()) return;
+
         // The "My Posts" tab badge reads this list, so it has to be fetched
         // with the page instead of lazily on first tab click — otherwise the
         // count only appears once the user has already opened the tab. Reset
@@ -1255,6 +1254,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   openJoinModal(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.joinModalOpen.set(true);
   }
 

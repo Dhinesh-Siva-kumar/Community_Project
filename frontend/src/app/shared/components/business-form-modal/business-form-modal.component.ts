@@ -2,6 +2,7 @@ import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmi
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, Observable, map } from 'rxjs';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { BusinessService } from '../../../core/services/business.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -59,6 +60,7 @@ function atLeastOneContactValidator(group: AbstractControl): ValidationErrors | 
 export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   private svc               = inject(BusinessService);
   private authService       = inject(AuthService);
+  private router            = inject(Router);
   private toast             = inject(ToastService);
   private translate         = inject(TranslateService);
   private geographyService  = inject(GeographyService);
@@ -76,6 +78,8 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
    * Authorization stays entirely server-side.
    */
   @Input() isAdmin = false;
+
+  isGuest = computed(() => !this.authService.isAuthenticated());
 
   @Output() closed = new EventEmitter<void>();
   /** Emitted after a successful create/update; the host is responsible for updating its own list state. */
@@ -843,6 +847,14 @@ export class BusinessFormModalComponent implements OnChanges, OnDestroy {
   }
 
   submitBusiness(): void {
+    // Guests get the full form for engagement, but the button reads
+    // "Register to Continue" — send them to sign up instead of saving.
+    if (this.isGuest()) {
+      this.closed.emit();
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+
     this.businessSubmitAttempted.set(true);
     this.businessForm.markAllAsTouched();
     // Logo is optional — no logoPreview() check here anymore.

@@ -26,7 +26,6 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe } from '@ngx-translate/core';
-import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -46,7 +45,7 @@ const BUSINESS_PAGE_SIZE = 20;
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe, GuestGateComponent],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -329,9 +328,7 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
       // view (which flips currentView back to 'list' via popstate) silently
       // overwrote the "Pending Approval" tab's list with the full "All"
       // businesses fetch, since this effect fires on any currentView change.
-      // Guests never fetch here at all — see ngOnInit()'s early return; this
-      // effect runs regardless of ngOnInit, so it needs its own guard too.
-      if (this.authService.isAuthenticated() && this.currentView() === 'list' && this.pageTab() === 'all') {
+      if (this.currentView() === 'list' && this.pageTab() === 'all') {
         this.loadNearbyBusinesses();
       }
     });
@@ -384,15 +381,9 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   }
 
   ngOnInit(): void {
-    // Guests never load any data here — the template renders a "please
-    // register or log in" gate instead of the real directory for them (see
-    // GuestGateComponent). The constructor's effect() has its own matching
-    // guard, since it fires independently of ngOnInit.
-    if (!this.authService.isAuthenticated()) return;
-
-    // Default the country filter to the signed-in user's own country —
-    // other countries' businesses only show once the user explicitly
-    // picks one in the filter. Set before the first fetch so it's already
+    // Default the country filter to the signed-in user's own country (null
+    // for a guest — they simply see worldwide listings until they pick a
+    // country themselves). Set before the first fetch so it's already
     // applied (the constructor's effect() won't actually fetch until
     // geoLoading resolves, so there's no extra/duplicate request).
     // The constructor's effect() is the single trigger for the first fetch —
@@ -402,7 +393,11 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
     this.loadCategories();
     this.loadCountries();
     this.loadGeoCountries();
-    this.loadMyPendingBusinessCount();
+
+    // "Pending Approval" count is account-scoped — nothing to load for a guest.
+    if (this.authService.isAuthenticated()) {
+      this.loadMyPendingBusinessCount();
+    }
 
     // Deep-link support — e.g. the Profile page's "My Businesses" tab
     // navigates here with ?businessId=xxx to jump straight to that
@@ -1012,7 +1007,9 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   }
 
   // ── Add/Edit Business modal — the form lives in app-business-form-modal;
-  // this page only opens/closes it and applies the result to its own lists. ──
+  // this page only opens/closes it and applies the result to its own lists.
+  // Guests see the full form too — the modal redirects them to registration
+  // only when they actually try to submit. ──
   openAddBusiness(): void {
     this.editBusinessId.set(null);
     this.showBusinessModal.set(true);

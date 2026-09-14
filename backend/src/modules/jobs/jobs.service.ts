@@ -406,6 +406,29 @@ export async function findAll(
     const scope = await getViewerScope(viewerId);
     applyJobVisibilityRestriction(query, 'j.', viewerId, scope);
     applyJobVisibilityRestriction(countQuery, 'j.', viewerId, scope);
+  } else if (!skipActiveFilter && !viewerId) {
+    // Guest — no profile country to fall back on, so only WORLDWIDE jobs are
+    // visible by default; picking a country (params.country) additionally
+    // reveals that country's COUNTRY-scoped jobs.
+    const selectedCountry = params.country;
+    query.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('j.visibility_type', 'WORLDWIDE');
+      if (selectedCountry) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('j.visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(j.country) = LOWER(?)', [selectedCountry]);
+        });
+      }
+    });
+    countQuery.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('visibility_type', 'WORLDWIDE');
+      if (selectedCountry) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(country) = LOWER(?)', [selectedCountry]);
+        });
+      }
+    });
   }
 
   // ── Sorting ──────────────────────────────────────────────────
@@ -432,20 +455,33 @@ export async function findAll(
     countQuery.count({ total: '*' }),
   ]);
 
-  const data = (jobs as Array<Record<string, unknown>>).map((j) =>
-    shapeJob(j, {
+  const data = (jobs as Array<Record<string, unknown>>).map((j) => {
+    const shaped = shapeJob(j, {
       id: j['uid'], userName: j['user_name'],
       displayName: j['display_name'], avatar: j['avatar'],
-    })
-  );
+    });
+    return viewerId ? shaped : sanitizeJobForGuest(shaped);
+  });
 
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
+}
+
+// Guests never get contact details — poster's phone/email or the job's own
+// contact fields — only registered users can reach out about a posting.
+function sanitizeJobForGuest<T extends Record<string, unknown>>(job: T): T {
+  const user = job['user'] as Record<string, unknown> | undefined;
+  return {
+    ...job,
+    contactEmail: null,
+    contactPhone: null,
+    user: user ? { ...user, email: undefined } : user,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
 // findOne
 // ─────────────────────────────────────────────────────────────
-export async function findOne(id: string) {
+export async function findOne(id: string, viewerId?: string) {
   const job = await db('jobs as j')
     .join('users as u', 'j.user_id', 'u.id')
     .where('j.id', id)
@@ -455,10 +491,11 @@ export async function findOne(id: string) {
   if (!job) throw new AppError(404, 'Job not found', 'JOB_FOUND');
 
   const jb = job as Record<string, unknown>;
-  return shapeJob(jb, {
+  const shaped = shapeJob(jb, {
     id: jb['uid'], userName: jb['user_name'],
     displayName: jb['display_name'], email: jb['user_email'], avatar: jb['avatar'],
   });
+  return viewerId ? shaped : sanitizeJobForGuest(shaped);
 }
 
 // ─────────────────────────────────────────────────────────────

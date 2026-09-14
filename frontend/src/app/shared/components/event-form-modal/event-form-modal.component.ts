@@ -2,6 +2,7 @@ import { Component, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmi
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Subject, takeUntil, Observable, map } from 'rxjs';
+import { Router } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { GeographyService } from '../../../core/services/geography.service';
@@ -115,6 +116,7 @@ const COUNTRY_DEFAULT_TIMEZONE: Record<string, string> = {
 export class EventFormModalComponent implements OnChanges, OnDestroy {
   private eventService      = inject(EventService);
   private authService       = inject(AuthService);
+  private router            = inject(Router);
   private geographyService  = inject(GeographyService);
   private toast             = inject(ToastService);
   private fb                = inject(FormBuilder);
@@ -233,6 +235,7 @@ export class EventFormModalComponent implements OnChanges, OnDestroy {
   imageUploadError = signal<string | null>(null);
 
   private userPincode = computed(() => this.authService.currentUser()?.pincode ?? '');
+  isGuest = computed(() => !this.authService.isAuthenticated());
 
   eventForm!: FormGroup;
 
@@ -654,6 +657,14 @@ export class EventFormModalComponent implements OnChanges, OnDestroy {
   }
 
   submitEvent(): void {
+    // Guests get the full form for engagement, but the button reads
+    // "Register to Continue" — send them to sign up instead of saving.
+    if (this.isGuest()) {
+      this.closed.emit();
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+
     // Belt-and-suspenders against a double-submit — the Save button's
     // [disabled]="submitting()" binding already prevents a second click in
     // practice, but this makes it impossible to re-enter the method itself.

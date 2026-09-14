@@ -361,6 +361,16 @@ export async function findAll(params: {
     const userCountry = await getUserCountry(userId);
     applyNonAdminVisibilityRestriction(query, 'c.', userId, userCountry);
     applyNonAdminVisibilityRestriction(countQuery, '', userId, userCountry);
+  } else if (!skipActiveFilter && !userId) {
+    // Guest (no account at all, so no country/membership to scope by) —
+    // only ever show official Hub communities or is_global ones, never a
+    // private or individual-interest community.
+    query.where(function () {
+      this.where('c.community_type', 'HUB').orWhere('c.is_global', true);
+    });
+    countQuery.where(function () {
+      this.where('community_type', 'HUB').orWhere('is_global', true);
+    });
   }
 
   // ── Sort — most fields map to a plain column; members/posts/visibility
@@ -589,6 +599,16 @@ export async function findOne(id: string, isAdmin = false, currentUserId?: strin
 
   if (!community) throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
 
+  // Guests (no account) only ever get official Hub / global communities —
+  // a private or individual-interest community's real content stays hidden,
+  // same restriction findAll() applies to the list.
+  if (!currentUserId) {
+    const c = community as Record<string, unknown>;
+    if (c['community_type'] !== 'HUB' && !c['is_global']) {
+      throw new AppError(404, 'Community not found', 'COMMUNITY_FOUND');
+    }
+  }
+
   const counts = await db('community_members').where({ community_id: id }).count({ total: '*' }).first();
   const postCountQuery = db('posts').where({ community_id: id });
   if (!isAdmin) postCountQuery.where({ status: 'APPROVED' });
@@ -611,7 +631,8 @@ export async function findOne(id: string, isAdmin = false, currentUserId?: strin
       id: (community as Record<string, unknown>)['creator_id'],
       userName: (community as Record<string, unknown>)['creator_user_name'],
       displayName: (community as Record<string, unknown>)['creator_display_name'],
-      email: (community as Record<string, unknown>)['creator_email'],
+      // Personal contact info — never returned to a guest.
+      email: currentUserId ? (community as Record<string, unknown>)['creator_email'] : undefined,
     },
     is_joined: !!membership,
     _count: {

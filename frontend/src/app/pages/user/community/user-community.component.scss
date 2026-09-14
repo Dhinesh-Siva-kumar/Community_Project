@@ -1515,6 +1515,33 @@ $_chip-location-bg:    var(--cd-f0fdfa, #f0fdfa); $_chip-location-text:    var(-
 // mirroring the equivalent additions on the Business list page.
 // ═══════════════════════════════════════════════════════════════
 
+// Guest-only country picker — sits between the head row and the rest of
+// the page (see the @if in the template right after .uc-head).
+.uc-guest-country {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: $spacing-lg;
+  padding: 10px 16px;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  border: 1px solid $color-border;
+
+  i.bi-geo-alt-fill { color: $color-primary; font-size: 14px; flex-shrink: 0; }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-body;
+    white-space: nowrap;
+  }
+
+  &__select {
+    width: 220px;
+    max-width: 100%;
+  }
+}
+
 .uc-add-btn {
   display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px;
   border-radius: $radius-md; border: none; cursor: pointer; white-space: nowrap;

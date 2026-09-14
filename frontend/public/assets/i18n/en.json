@@ -13,6 +13,7 @@
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
+    "registerToContinue": "Register to Continue",
     "search": "Search",
     "filter": "Filter",
     "filters": "Filters",
@@ -2367,7 +2368,9 @@
       "summary": "{{count}} communities · {{members}} members",
       "guestGateTitle": "You're not registered or logged in",
       "guestGateMessage": "Register or log in to browse communities and join in.",
-      "endOfList": "You’ve reached the end — {{count}} communities total."
+      "endOfList": "You’ve reached the end — {{count}} communities total.",
+      "browseByCountry": "Browse by country",
+      "allCountries": "All countries (worldwide)"
     },
     "business": {
       "allCountries": "All Countries",

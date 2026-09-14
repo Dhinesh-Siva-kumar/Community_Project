@@ -1,11 +1,4 @@
 <div class="edp-page">
-@if (!authService.isAuthenticated()) {
-  <app-guest-gate
-    icon="bi-calendar-event"
-    [title]="'user.events.guestGateTitle' | translate"
-    [message]="'user.events.guestGateMessage' | translate">
-  </app-guest-gate>
-} @else {
 
   <!-- Same breadcrumb pattern as the Business page's detail view — a link
        back to the list, plus the current record's name once it's loaded. -->
@@ -330,5 +323,4 @@
         (deleted)="onEventDeleted()"></app-event-delete-modal>
     }
   }
-}
 </div>

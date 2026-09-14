@@ -290,6 +290,29 @@ export async function findAll(
     const scope = await getViewerScope(viewerId);
     applyBusinessVisibilityRestriction(query, 'b.', viewerId, scope);
     applyBusinessVisibilityRestriction(countQuery, 'b.', viewerId, scope);
+  } else if (!skipActiveFilter && !viewerId) {
+    // Guest — no profile country to fall back on, so only WORLDWIDE listings
+    // are visible by default; picking a country (params.country) additionally
+    // reveals that country's COUNTRY-scoped listings.
+    const selectedCountry = params.country;
+    query.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('b.visibility_type', 'WORLDWIDE');
+      if (selectedCountry) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('b.visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(b.country) = LOWER(?)', [selectedCountry]);
+        });
+      }
+    });
+    countQuery.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('visibility_type', 'WORLDWIDE');
+      if (selectedCountry) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(country) = LOWER(?)', [selectedCountry]);
+        });
+      }
+    });
   }
 
   const sortColumn = sortBy === 'name' ? 'b.name' : 'b.created_at';
@@ -325,7 +348,7 @@ export async function findAll(
   return { data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) };
 }
 
-export async function findOne(id: string) {
+export async function findOne(id: string, viewerId?: string) {
   const business = await db('businesses as b')
     .join('users as u', 'b.user_id', 'u.id')
     .join('business_categories as bc', 'b.category_id', 'bc.id')
@@ -370,7 +393,15 @@ export async function findOne(id: string) {
     stateName:    b['geo_state_name'],
     cityName:     b['geo_city_name'],
     stateChain,
-    user: { id: b['uid'], userName: b['user_name'], displayName: b['display_name'], email: b['user_email'], avatar: b['avatar'] },
+    // The business's own phone/whatsapp/email (spread via ...b above) are the
+    // owner's published contact channels for customers — always public, same
+    // as any directory listing. Only the owner's personal account email
+    // (a separate field, from the users table) is guest-hidden.
+    user: {
+      id: b['uid'], userName: b['user_name'], displayName: b['display_name'],
+      email: viewerId ? b['user_email'] : undefined,
+      avatar: b['avatar'],
+    },
     category: { id: b['cat_id'], name: b['cat_name'], icon: b['cat_icon'] },
   };
 }

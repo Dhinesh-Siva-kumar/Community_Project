@@ -23,7 +23,6 @@ import { EventDateBadgeComponent } from '../../../shared/components/event-date-b
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil, eventModeCategorySummary as eventModeCategorySummaryUtil } from '../../../shared/utils/event-location';
 import { formatEventTimeRange as formatEventTimeRangeUtil, eventCardDateTimeLabel as eventCardDateTimeLabelUtil } from '../../../shared/utils/event-date-format';
-import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type ModeFilter = 'all' | 'Offline' | 'Online' | 'Hybrid';
 /** '' = All Events. Drives the quick filter in the search card — defaults to 'upcoming'. */
@@ -32,7 +31,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe, GuestGateComponent],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -237,11 +236,6 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   imageViewerInitialIndex = signal(0);
 
   ngOnInit(): void {
-    // Guests never load any data here — the template renders a "please
-    // register or log in" gate instead of the real events list for them
-    // (see GuestGateComponent).
-    if (!this.authService.isAuthenticated()) return;
-
     this.restoreFiltersFromQueryParams();
     this.loadEvents();
     this.loadCountries();
@@ -261,7 +255,12 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
         });
       }
     });
-    this.loadMyPendingEventsCount();
+
+    // "Pending Approval" count is account-scoped — nothing to load for a
+    // guest, and the "Pending" tab itself is hidden for them (see template).
+    if (this.authService.isAuthenticated()) {
+      this.loadMyPendingEventsCount();
+    }
   }
 
   ngOnDestroy(): void {
@@ -813,6 +812,8 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   }
 
   // ── add / edit modal (form owned by app-event-form-modal) ──
+  // Guests see the full form too — the modal redirects them to registration
+  // only when they actually try to submit.
   openAddModal(): void {
     this.editingId.set(null);
     this.showAddModal.set(true);

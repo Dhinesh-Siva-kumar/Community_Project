@@ -26,7 +26,6 @@ import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
 import { JobFormModalComponent } from '../../../shared/components/job-form-modal/job-form-modal.component';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
-import { GuestGateComponent } from '../../../shared/components/guest-gate/guest-gate.component';
 
 type JobSharePlatform = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'email' | 'pinterest';
 
@@ -52,7 +51,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
     CommonModule, FormsModule, DatePipe,
     SearchableSelectComponent, ImageUrlPipe, ImageViewerComponent,
     ImageErrorHandlerDirective, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe,
-    JobFormModalComponent, GuestGateComponent],
+    JobFormModalComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -368,20 +367,18 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
 
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
-    // Guests never load any data here — the template renders a "please
-    // register or log in" gate instead of the real job board for them (see
-    // GuestGateComponent). Loading jobs would otherwise hit the authenticated
-    // /api/jobs endpoint and get force-redirected to /auth/login on the 401.
-    if (!this.authService.isAuthenticated()) return;
-
-    // Default the Location filter to the viewer's own country — Country
-    // Based jobs from other countries are invisible to them anyway (see
-    // job-visibility.service.ts), so pre-filtering to "my country" starts
-    // the list on jobs they can actually apply to. They can still widen it.
+    // Default the Location filter to the viewer's own country (null for a
+    // guest — they simply see worldwide jobs until they pick a country
+    // themselves — see job-visibility.service.ts).
     this.filterCountry.set(this.getDefaultCountry());
     this.loadJobs(1);
     this.loadCountries();
-    this.loadMyPendingJobsCount();
+
+    // "Pending Approval" count is account-scoped — nothing to load for a
+    // guest, and the "Pending" tab itself is hidden for them (see template).
+    if (this.authService.isAuthenticated()) {
+      this.loadMyPendingJobsCount();
+    }
 
     // Deep-link support — e.g. the Profile page's "My Jobs" tab navigates
     // here with ?jobId=xxx to expand and scroll straight to that job's card.
@@ -749,6 +746,8 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   }
 
   // ─── Add/Edit Job modal ───────────────────────────────────────
+  // Guests see the full form too — the modal redirects them to registration
+  // only when they actually try to submit.
   openAddModal(): void {
     this.editJobId.set(null);
     this.showAddModal.set(true);

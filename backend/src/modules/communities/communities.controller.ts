@@ -23,12 +23,12 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListCommunitiesQueryDto.parse(req.query);
-    const isAdmin = req.user!.role === 'ADMIN';
+    const isAdmin = req.user?.role === 'ADMIN';
     const result = await communitiesService.findAll({
       ...query,
       skipActiveFilter: isAdmin,
       isAdmin,
-      userId: req.user!.sub,
+      userId: req.user?.sub,
     });
     res.json(result);
   } catch (err) { next(err); }
@@ -36,8 +36,8 @@ export async function findAll(req: Request, res: Response, next: NextFunction): 
 
 export async function getAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await communitiesService.getAnalytics({ skipActiveFilter, userId: req.user!.sub });
+    const skipActiveFilter = req.user?.role === 'ADMIN';
+    const result = await communitiesService.getAnalytics({ skipActiveFilter, userId: req.user?.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
