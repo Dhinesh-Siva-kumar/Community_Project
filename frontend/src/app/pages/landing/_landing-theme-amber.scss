@@ -114,3 +114,16 @@
 
 :host[data-theme="dark"][data-brand="amber"]  { @include amber-dark; }
 :host[data-theme="light"][data-brand="amber"] { @include amber-light; }
+
+// `<app-language-toggle>` (the EN/தமிழ் pill) reads --lang-toggle-* custom
+// properties, falling back to the app's global tokens (also amber) when
+// unset — which happened to already match this theme, but wasn't actually
+// wired to --lp-primary. Make it explicit so it stays correct if either
+// value ever changes independently.
+:host[data-brand="amber"] {
+  --lang-toggle-color: var(--lp-muted);
+  --lang-toggle-border: var(--lp-border);
+  --lang-toggle-hover-bg: var(--lp-surface-hover);
+  --lang-toggle-active-bg: var(--lp-primary);
+  --lang-toggle-active-color: #1C1917;
+}

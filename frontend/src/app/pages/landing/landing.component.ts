@@ -89,7 +89,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   /** Swatch + label shown in the brand-picker dropdown, in display order. */
   protected readonly brandOptions: { value: LandingBrand; label: string; swatch: string }[] = [
     { value: 'amber',  label: 'Amber (App Default)', swatch: '#FBBF24' },
-    { value: 'violet', label: 'Violet',               swatch: '#6C5CE7' },
+    { value: 'violet', label: 'Violet',               swatch: '#7A1CAC' },
     { value: 'teal',   label: 'Teal',                 swatch: '#005461' },
     { value: 'navy',   label: 'Navy Sky',              swatch: '#0F4C75' },
     { value: 'royal',  label: 'Royal Blue',            swatch: '#050C9C' },

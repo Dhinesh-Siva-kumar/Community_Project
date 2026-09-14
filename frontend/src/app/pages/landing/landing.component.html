@@ -6,7 +6,30 @@
 <!-- ═══ 1. NAVBAR ═══ -->
 <nav class="lp-nav" [class.scrolled]="navScrolled">
   <a class="lp-logo" routerLink="/landing">
-    <img src="logo.svg" alt="Tamilya" class="lp-logo-img" />
+    <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-logo-img">
+      <defs>
+        <linearGradient id="tc-grad-nav" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--lp-primary)"/>
+          <stop offset="100%" stop-color="var(--lp-violet)"/>
+        </linearGradient>
+      </defs>
+      <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-nav)"/>
+      <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+      <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+        <line x1="20" y1="20" x2="10" y2="11"/>
+        <line x1="20" y1="20" x2="30" y2="11"/>
+        <line x1="20" y1="20" x2="10" y2="29"/>
+        <line x1="20" y1="20" x2="30" y2="29"/>
+      </g>
+      <g fill="rgba(255,255,255,0.82)">
+        <circle cx="10" cy="11" r="3.2"/>
+        <circle cx="30" cy="11" r="3.2"/>
+        <circle cx="10" cy="29" r="3.2"/>
+        <circle cx="30" cy="29" r="3.2"/>
+      </g>
+      <circle cx="20" cy="20" r="6" fill="white"/>
+      <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+    </svg>
     <span class="lp-logo-text">{{ applicationName }}</span>
   </a>
 
@@ -34,7 +57,7 @@
         title="Preview a color theme"
         aria-label="Preview a color theme"
       >
-        <span class="lp-brand-btn-dot" [style.background]="currentBrandOption().swatch"></span>
+        <i class="bi bi-palette-fill" [style.color]="currentBrandOption().swatch"></i>
       </button>
       @if (brandMenuOpen()) {
         <div class="lp-brand-menu" (click)="$event.stopPropagation()">
@@ -999,7 +1022,30 @@
           <div class="lp-app-screen">
             <div class="lp-app-notch"></div>
             <div class="lp-app-logo-wrap">
-              <img src="logo.svg" alt="Tamilya" class="lp-app-logo-img" />
+              <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-app-logo-img">
+                <defs>
+                  <linearGradient id="tc-grad-app" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="var(--lp-primary)"/>
+                    <stop offset="100%" stop-color="var(--lp-violet)"/>
+                  </linearGradient>
+                </defs>
+                <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-app)"/>
+                <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+                <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+                  <line x1="20" y1="20" x2="10" y2="11"/>
+                  <line x1="20" y1="20" x2="30" y2="11"/>
+                  <line x1="20" y1="20" x2="10" y2="29"/>
+                  <line x1="20" y1="20" x2="30" y2="29"/>
+                </g>
+                <g fill="rgba(255,255,255,0.82)">
+                  <circle cx="10" cy="11" r="3.2"/>
+                  <circle cx="30" cy="11" r="3.2"/>
+                  <circle cx="10" cy="29" r="3.2"/>
+                  <circle cx="30" cy="29" r="3.2"/>
+                </g>
+                <circle cx="20" cy="20" r="6" fill="white"/>
+                <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+              </svg>
             </div>
             <div class="lp-app-dot-row">
               <span></span><span></span><span></span>
@@ -1052,7 +1098,30 @@
       <!-- Brand -->
       <div class="lp-footer-brand">
         <a routerLink="/landing" class="lp-logo">
-          <img src="logo.svg" alt="Tamilya" class="lp-logo-img" />
+          <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-logo-img">
+            <defs>
+              <linearGradient id="tc-grad-footer" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--lp-primary)"/>
+                <stop offset="100%" stop-color="var(--lp-violet)"/>
+              </linearGradient>
+            </defs>
+            <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-footer)"/>
+            <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+            <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="10" y2="11"/>
+              <line x1="20" y1="20" x2="30" y2="11"/>
+              <line x1="20" y1="20" x2="10" y2="29"/>
+              <line x1="20" y1="20" x2="30" y2="29"/>
+            </g>
+            <g fill="rgba(255,255,255,0.82)">
+              <circle cx="10" cy="11" r="3.2"/>
+              <circle cx="30" cy="11" r="3.2"/>
+              <circle cx="10" cy="29" r="3.2"/>
+              <circle cx="30" cy="29" r="3.2"/>
+            </g>
+            <circle cx="20" cy="20" r="6" fill="white"/>
+            <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+          </svg>
           <span class="lp-logo-text">{{ applicationName }}</span>
         </a>
         <p class="lp-footer-desc">{{ 'landing.footer_desc' | translate }}</p>

@@ -111,3 +111,28 @@
 
 :host[data-theme="dark"][data-brand="navy"]  { @include navy-dark; }
 :host[data-theme="light"][data-brand="navy"] { @include navy-light; }
+
+// `<app-language-toggle>` (the EN/தமிழ் pill) reads --lang-toggle-* custom
+// properties, otherwise falling back to the app's global (amber) tokens —
+// wire it to this theme instead. --lp-primary is a medium-to-dark blue in
+// both modes here, so white active-pill text works in both.
+:host[data-brand="navy"] {
+  --lang-toggle-color: var(--lp-muted);
+  --lang-toggle-border: var(--lp-border);
+  --lang-toggle-hover-bg: var(--lp-surface-hover);
+  --lang-toggle-active-bg: var(--lp-primary);
+  --lang-toggle-active-color: #FFFFFF;
+}
+
+// .lp-cp-badge / .lp-cp-label / .lp-cp-icon (contact section) sit on
+// .lp-contact-panel, a fixed-dark "inverse" gradient independent of the
+// site's own light/dark mode, and read their color from var(--lp-primary).
+// In light mode here --lp-primary (#0F4C75) is literally one of the
+// panel's own gradient stops, making that text/icon disappear. Override
+// with a light sky blue that reads reliably against the panel in both
+// modes.
+:host[data-brand="navy"] .lp-cp-badge,
+:host[data-brand="navy"] .lp-cp-label,
+:host[data-brand="navy"] .lp-cp-icon {
+  color: #A8D4F5;
+}

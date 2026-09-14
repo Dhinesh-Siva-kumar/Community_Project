@@ -354,6 +354,7 @@
   border: 1px solid var(--lp-border);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all .3s $easing-standard;
+  i { font-size: 1rem; transition: color .3s $easing-standard; }
   &:hover {
     border-color: rgba(var(--lp-primary-rgb), .35);
     transform: scale(1.08);
@@ -363,12 +364,6 @@
     box-shadow: 0 0 0 3px rgba(var(--lp-primary-rgb), .12);
   }
 }
-.lp-brand-btn-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--lp-surface), 0 0 0 3px var(--lp-border);
-  flex-shrink: 0;
-}
-
 .lp-brand-menu {
   position: absolute; top: calc(100% + 8px); right: 0;
   min-width: 200px; z-index: 200;
@@ -539,8 +534,13 @@
   justify-content: center;
   gap: 0;
   position: relative;
+  // Both axes must be an explicit non-visible value together — if one of
+  // overflow-x/overflow-y is hidden and the other stays "visible", the
+  // spec forces the visible one to compute as "auto" instead, which is
+  // what was producing a phantom scrollbar nested inside the hero once
+  // .lp-hero-bg-gradient's negative inset made it taller than this section.
   overflow-x: hidden;
-  overflow-y: visible;
+  overflow-y: hidden;
 }
 
 // ── World map image background ──
@@ -581,21 +581,34 @@
 // var(--lp-bg). No full-section gradient wash.
 .lp-hero-bg-gradient {
   position: absolute;
-  inset: 0;
+  inset: -8%;
   z-index: 0;
   pointer-events: none;
+  filter: blur(56px);
+  animation: heroGlowPulse 7s ease-in-out infinite;
+}
+
+@keyframes heroGlowPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .86; transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-bg-gradient { animation: none; }
 }
 
 :host[data-theme="light"] .lp-hero-bg-gradient {
   background:
-    radial-gradient(circle at 88% 8%,  rgba(var(--lp-primary-rgb), 0.22) 0%, transparent 55%),
-    radial-gradient(circle at 8%  95%, rgba(var(--lp-pink-rgb),    0.20) 0%, transparent 55%);
+    radial-gradient(circle at 88% 8%,  rgba(var(--lp-primary-rgb), 0.60) 0%, transparent 46%),
+    radial-gradient(circle at 8%  95%, rgba(var(--lp-pink-rgb),    0.55) 0%, transparent 46%),
+    radial-gradient(circle at 50% 38%, rgba(var(--lp-violet-rgb),  0.34) 0%, transparent 42%);
 }
 
 :host[data-theme="dark"] .lp-hero-bg-gradient {
   background:
-    radial-gradient(circle at 88% 8%,  rgba(var(--lp-primary-rgb), 0.20) 0%, transparent 55%),
-    radial-gradient(circle at 8%  95%, rgba(var(--lp-pink-rgb),    0.18) 0%, transparent 55%);
+    radial-gradient(circle at 88% 8%,  rgba(var(--lp-primary-rgb), 0.65) 0%, transparent 46%),
+    radial-gradient(circle at 8%  95%, rgba(var(--lp-pink-rgb),    0.60) 0%, transparent 46%),
+    radial-gradient(circle at 50% 38%, rgba(var(--lp-violet-rgb),  0.40) 0%, transparent 42%);
 }
 
 // ============================================================
@@ -708,8 +721,11 @@
   background-clip: text;
 }
 
+// Was `var(--lp-bg3) → var(--lp-primary)` — bg3 is a background-tier token,
+// not a text color, and reads too dim/low-contrast against the dark hero
+// background. Use the same bright primary→pink accent pair as light mode.
 :host[data-theme="dark"] .lp-hero-h1-accent {
-  background: linear-gradient(135deg, var(--lp-bg3) 0%, var(--lp-primary) 100%);
+  background: linear-gradient(135deg, var(--lp-primary-hover) 0%, var(--lp-pink) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1224,14 +1240,14 @@
   animation-delay: 1.3s;
 
   .lp-fp-icon {
-    background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
-    box-shadow: 0 4px 16px rgba(124,58,237,.42);
+    background: linear-gradient(135deg, var(--lp-violet) 0%, var(--lp-primary) 100%);
+    box-shadow: 0 4px 16px rgba(var(--lp-primary-rgb),.42);
   }
-  .lp-fp-stat { color: #6D28D9; }
+  .lp-fp-stat { color: var(--lp-primary-hover); }
 }
 :host[data-theme="dark"] .lp-fp-events {
-  .lp-fp-icon { background: linear-gradient(135deg, #C4B5FD 0%, #8B5CF6 100%); box-shadow: 0 4px 16px rgba(139,92,246,.50); }
-  .lp-fp-stat { color: #A78BFA; }
+  .lp-fp-icon { background: linear-gradient(135deg, var(--lp-violet) 0%, var(--lp-primary) 100%); box-shadow: 0 4px 16px rgba(var(--lp-primary-rgb),.50); }
+  .lp-fp-stat { color: var(--lp-violet); }
 }
 
 // ── Support — Sky Blue  ──────────────────────────────────────
@@ -1565,8 +1581,8 @@
 .lp-bento-card[data-color="primary"] .lp-mini-tag { background: rgba(var(--lp-primary-rgb), .12); color: var(--lp-violet); border: 1px solid rgba(var(--lp-primary-rgb), .28); }
 .lp-bento-card[data-color="violet"]  .lp-mini-tag { background: rgba(var(--lp-violet-rgb),.10); color: var(--lp-violet); border: 1px solid rgba(var(--lp-violet-rgb),.24); }
 .lp-bento-card[data-color="green"]   .lp-mini-tag { background: rgba(22, 163, 74,.10); color: #0F5C33; border: 1px solid rgba(22, 163, 74,.24); }
-.lp-bento-card[data-color="yellow"]  .lp-mini-tag { background: rgba(var(--lp-yellow-rgb), .10); color: var(--lp-yellow-label); border: 1px solid rgba(var(--lp-yellow-rgb), .22); }
-.lp-bento-card[data-color="pink"]    .lp-mini-tag { background: rgba(var(--lp-pink-rgb), .08);  color: var(--lp-pink-label); border: 1px solid rgba(var(--lp-pink-rgb), .22); }
+.lp-bento-card[data-color="yellow"]  .lp-mini-tag { background: rgba(var(--lp-yellow-rgb), .10); color: var(--lp-yellow); border: 1px solid rgba(var(--lp-yellow-rgb), .22); }
+.lp-bento-card[data-color="pink"]    .lp-mini-tag { background: rgba(var(--lp-pink-rgb), .08);  color: var(--lp-pink); border: 1px solid rgba(var(--lp-pink-rgb), .22); }
 .lp-bento-card[data-color="accent"]  .lp-mini-tag { background: rgba(var(--lp-pink-rgb), .10); color: var(--lp-violet); border: 1px solid rgba(var(--lp-pink-rgb), .22); }
 
 // About Us — "Why We Built" card chips (light mode)
@@ -1839,7 +1855,7 @@
 
   &--chat  { background: linear-gradient(135deg, var(--lp-primary), var(--lp-pink)); box-shadow: 0 4px 14px rgba(var(--lp-primary-rgb), .40); }
   &--help  { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
-  &--guide { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
+  &--guide { background: linear-gradient(135deg, var(--lp-violet), var(--lp-primary)); box-shadow: 0 4px 14px rgba(var(--lp-primary-rgb),.38); }
 }
 
 @media (max-width: 768px) {
@@ -1942,7 +1958,7 @@
   flex-shrink: 0;
 
   &--primary { background: linear-gradient(135deg, var(--lp-primary), var(--lp-pink)); }
-  &--member  { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
+  &--member  { background: linear-gradient(135deg, var(--lp-violet), var(--lp-primary)); }
 }
 
 // ── Chat content ──
@@ -2426,7 +2442,7 @@
   &[data-color="primary"] { background: rgba(var(--lp-primary-rgb), .14); color: var(--lp-primary-hover); border: 1px solid rgba(var(--lp-primary-rgb), .28); }
   &[data-color="violet"]  { background: rgba(var(--lp-violet-rgb),.10); color: var(--lp-violet); border: 1px solid rgba(var(--lp-violet-rgb),.22); }
   &[data-color="green"]   { background: rgba(22, 163, 74,.10); color: #0F5C33; border: 1px solid rgba(22, 163, 74,.22); }
-  &[data-color="pink"]    { background: rgba(var(--lp-pink-rgb), .08);  color: var(--lp-pink-label); border: 1px solid rgba(var(--lp-pink-rgb), .20); }
+  &[data-color="pink"]    { background: rgba(var(--lp-pink-rgb), .08);  color: var(--lp-pink); border: 1px solid rgba(var(--lp-pink-rgb), .20); }
   &[data-color="accent"]  { background: rgba(var(--lp-pink-rgb), .10); color: var(--lp-violet); border: 1px solid rgba(var(--lp-pink-rgb), .22); }
 }
 
@@ -3647,7 +3663,7 @@ textarea.lp-form-control {
   }
   .neon-pill-pink {
     background: rgba(var(--lp-pink-rgb), .12);
-    color: var(--lp-pink-label);
+    color: var(--lp-pink);
     border: 1px solid rgba(var(--lp-pink-rgb), .32);
   }
 
