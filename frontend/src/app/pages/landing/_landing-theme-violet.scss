@@ -1,0 +1,122 @@
+// ============================================================
+// LANDING BRAND THEME — VIOLET (default / client A)
+// Defines the --lp-* custom-property palette this page's SCSS consumes.
+// Scoped to :host[data-brand="violet"] AND the un-annotated :host (so it
+// stays the fallback whenever data-brand hasn't been set yet, e.g. before
+// the brand-switch JS runs on first paint).
+// See _landing-theme-teal.scss for client B's palette — same token names,
+// different values, so nothing outside these two files needs to change to
+// switch brands.
+// ============================================================
+
+@mixin violet-dark {
+  --lp-bg:             #110F1A;
+  --lp-bg2:            #1A1726;
+  --lp-bg3:            #241E4A;          // inverse-band deep-violet, third bg tier
+  --lp-surface:        #1A1726;
+  --lp-surface-hover:  #221D33;
+  --lp-border:         #2D2942;
+  --lp-border-hover:   rgba(123, 108, 240, .35);
+  --lp-text:           #F3F1FB;
+  --lp-text2:          #D6D2E8;
+  --lp-muted:          #A9A5BC;
+  --lp-primary:        #6C5CE7;
+  --lp-primary-rgb:    108, 92, 231;
+  --lp-primary-hover:  #7B6CF0;
+  --lp-primary-soft:   #2A2352;
+  --lp-violet:         #7B6CF0;          // primary-hover shade, used as 2nd purple accent
+  --lp-violet-rgb:     123, 108, 240;
+  --lp-pink:           #14B8A6;          // repurposed slot → secondary teal
+  --lp-pink-rgb:       20, 184, 166;
+  --lp-pink-label:     #06302B;          // text-on-teal-swatch contrast
+  --lp-pink-hover:     #5EE0CF;          // deeper/lighter secondary shade — gradient 2nd stops, secondary-as-text
+  --lp-green:          #34D27B;          // success
+  --lp-green-rgb:      52, 210, 123;
+  --lp-yellow:         #F5C84C;          // accent (badges/highlights only, never body text)
+  --lp-yellow-rgb:     245, 200, 76;
+  --lp-yellow-label:   #3A2A00;          // text-on-accent-swatch contrast
+  --lp-yellow-hover:   #D9A62E;          // darker accent shade — gradient 2nd stops
+  --lp-accent:         #6C5CE7;
+  --lp-accent-rgb:     108, 92, 231;
+  --lp-danger:         #D93A33;
+  --lp-danger-rgb:     217, 58, 51;
+  --lp-grad-primary:   linear-gradient(135deg, #6C5CE7, #14B8A6);
+  --lp-nav-bg:         rgba(17, 15, 26, 0.92);
+  --lp-nav-border:     rgba(108, 92, 231, 0.16);
+  --lp-inverse-bg:     #241E4A;
+  --lp-inverse-bg-2:   #1F1B3A;
+  --lp-footer-bg:      #0B0912;
+  --lp-footer-text:    #A9A5BC;
+  --lp-shadow:         0 8px 32px rgba(0,0,0,0.50);
+
+  --lp-cta-gradient: linear-gradient(160deg, #1F1B3A, #2A2352, #1F1B3A);
+
+  // ── Form-specific tokens — dedicated for input fields (avoids ultra-transparent --lp-surface) ──
+  --lp-input-bg:            #1A1726;
+  --lp-input-bg-hover:      #241F38;
+  --lp-input-border:        rgba(255,255,255,.14);
+  --lp-input-border-hover:  rgba(255,255,255,.26);
+  --lp-input-text:          #F3F1FB;
+  --lp-input-placeholder:   #7A7592;
+  --lp-form-card-bg:        #1A1726;
+  --lp-form-title-border:   rgba(255,255,255,.10);
+}
+
+@mixin violet-light {
+  --lp-bg:             #FAF9FF;
+  --lp-bg2:            #EEEBFF;          // primary-soft — tinted section bands
+  --lp-bg3:            #DCD5FB;
+  --lp-surface:        #FFFFFF;
+  --lp-surface-hover:  #F7F5FF;
+  --lp-border:         #E7E5EE;
+  --lp-border-hover:   rgba(108, 92, 231, .35);
+  --lp-text:           #1F1F29;
+  --lp-text2:          #46465A;
+  --lp-muted:          #686875;
+  --lp-primary:        #6C5CE7;
+  --lp-primary-rgb:    108, 92, 231;
+  --lp-primary-hover:  #5B4BD6;
+  --lp-primary-soft:   #EEEBFF;
+  --lp-violet:         #5B4BD6;          // primary-hover shade, used as 2nd purple accent
+  --lp-violet-rgb:     91, 75, 214;
+  --lp-pink:           #14B8A6;          // repurposed slot → secondary teal
+  --lp-pink-rgb:       20, 184, 166;
+  --lp-pink-label:     #06302B;
+  --lp-pink-hover:     #0F766E;          // deeper secondary shade — gradient 2nd stops, secondary-as-text
+  --lp-green:          #16A34A;          // success
+  --lp-green-rgb:      22, 163, 74;
+  --lp-yellow:         #F5C84C;          // accent (badges/highlights only, never body text)
+  --lp-yellow-rgb:     245, 200, 76;
+  --lp-yellow-label:   #3A2A00;
+  --lp-yellow-hover:   #D9A62E;          // darker accent shade — gradient 2nd stops
+  --lp-accent:         #6C5CE7;
+  --lp-accent-rgb:     108, 92, 231;
+  --lp-danger:         #DC2626;
+  --lp-danger-rgb:     220, 38, 38;
+  --lp-grad-primary:   linear-gradient(135deg, #6C5CE7, #14B8A6);
+  --lp-nav-bg:         rgba(255,255,255,0.95);
+  --lp-nav-border:     rgba(108, 92, 231, 0.14);
+  --lp-inverse-bg:     #1F1B3A;
+  --lp-inverse-bg-2:   #241E4A;
+  --lp-footer-bg:      #1F1B3A;
+  --lp-footer-text:    #A79FD9;
+  --lp-shadow:         0 8px 32px rgba(108, 92, 231, 0.14);
+
+  --lp-cta-gradient: linear-gradient(160deg, #1F1B3A, #2A2352, #1F1B3A);
+
+  // ── Form-specific tokens ──
+  --lp-input-bg:            #FFFFFF;
+  --lp-input-bg-hover:      #F7F5FF;
+  --lp-input-border:        rgba(108, 92, 231, .22);
+  --lp-input-border-hover:  rgba(108, 92, 231, .45);
+  --lp-input-text:          #1F1F29;
+  --lp-input-placeholder:   #9C99AC;
+  --lp-form-card-bg:        #FFFFFF;
+  --lp-form-title-border:   #E7E5EE;
+}
+
+:host[data-theme="dark"],
+:host[data-theme="dark"][data-brand="violet"] { @include violet-dark; }
+
+:host[data-theme="light"],
+:host[data-theme="light"][data-brand="violet"] { @include violet-light; }

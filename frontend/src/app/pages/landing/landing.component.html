@@ -23,6 +23,36 @@
   <div class="lp-nav-right">
     <!-- Language toggle pill -->
     <app-language-toggle></app-language-toggle>
+    <!-- Brand-palette preview switch — internal only, for showing several
+         client color directions on the same build. See landing.component.ts
+         `brand`/`brandOptions` and _landing-theme-{violet,teal,navy,royal}.scss. -->
+    <div class="lp-brand-picker">
+      <button
+        class="lp-brand-btn"
+        (click)="toggleBrandMenu(); $event.stopPropagation()"
+        [attr.aria-expanded]="brandMenuOpen()"
+        title="Preview a color theme"
+        aria-label="Preview a color theme"
+      >
+        <span class="lp-brand-btn-dot" [style.background]="currentBrandOption().swatch"></span>
+      </button>
+      @if (brandMenuOpen()) {
+        <div class="lp-brand-menu" (click)="$event.stopPropagation()">
+          @for (o of brandOptions; track o.value) {
+            <button
+              type="button"
+              class="lp-brand-menu-item"
+              [class.active]="brand() === o.value"
+              (click)="setBrand(o.value)"
+            >
+              <span class="lp-brand-menu-dot" [style.background]="o.swatch"></span>
+              <span>{{ o.label }}</span>
+              @if (brand() === o.value) { <i class="bi bi-check2"></i> }
+            </button>
+          }
+        </div>
+      }
+    </div>
     <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="(currentTheme === 'dark' ? 'common.switchToLight' : 'common.switchToDark') | translate">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
     </button>
@@ -47,6 +77,20 @@
   <div class="lp-mobile-actions">
     <!-- Language toggle (mobile) -->
     <app-language-toggle [block]="true"></app-language-toggle>
+    <div class="lp-brand-picker-mobile">
+      @for (o of brandOptions; track o.value) {
+        <button
+          type="button"
+          class="lp-brand-menu-item"
+          [class.active]="brand() === o.value"
+          (click)="setBrand(o.value)"
+        >
+          <span class="lp-brand-menu-dot" [style.background]="o.swatch"></span>
+          <span>{{ o.label }}</span>
+          @if (brand() === o.value) { <i class="bi bi-check2"></i> }
+        </button>
+      }
+    </div>
     <button class="lp-theme-btn lp-theme-btn-wide" (click)="toggleTheme()">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
       <span>{{ currentTheme === 'dark' ? ('landing.mobile_light_mode' | translate) : ('landing.mobile_dark_mode' | translate) }}</span>
