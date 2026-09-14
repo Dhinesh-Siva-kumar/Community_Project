@@ -1,0 +1,176 @@
+// ============================================================
+// LANDING BRAND THEME — VIOLET (default / client A)
+// Defines the --lp-* custom-property palette this page's SCSS consumes.
+// Scoped to :host[data-brand="violet"] AND the un-annotated :host (so it
+// stays the fallback whenever data-brand hasn't been set yet, e.g. before
+// the brand-switch JS runs on first paint).
+// See _landing-theme-teal.scss for client B's palette — same token names,
+// different values, so nothing outside these two files needs to change to
+// switch brands.
+//
+// Design approach — violet primary, every icon/badge bright and colorful:
+//   • --lp-primary anchors the brand as violet (#7A1CAC), and
+//     --lp-grad-primary / --lp-cta-gradient (buttons, headline accent, hero
+//     backdrop bloom, CTA panels) stay a pure plum → purple → light-orchid
+//     sweep — those hardcoded gradient stops are independent of the token
+//     values below, so they don't shift when the icon palette does.
+//   • The SIX card/icon "variety" slots that color every feature/trust/
+//     testimonial/timeline badge — primary (violet), --lp-violet (purple),
+//     --lp-pink (pink), --lp-accent (orange), --lp-yellow (gold),
+//     --lp-green (green) — use standard, widely-recognized vivid UI colors
+//     (the kind any colorful category/label system uses — Trello, Slack,
+//     Notion), not a specific app's exact brand-gradient hex values, so
+//     every icon pops without reading as a copy of any one product. No
+//     blue/cyan.
+//   • Structural chrome (page/section backgrounds, surfaces, borders, body
+//     text) uses a light/dark scale warmed with a faint violet tint
+//     instead of stark black/white, so it doesn't feel empty.
+// ============================================================
+
+@mixin violet-dark {
+  --lp-bg:             #120A1A;
+  --lp-bg2:            #1C1024;
+  --lp-bg3:            #2A1638;
+  --lp-surface:        #1C1024;
+  --lp-surface-hover:  #241430;
+  --lp-border:         rgba(173, 73, 225, .16);
+  --lp-border-hover:   rgba(173, 73, 225, .34);
+  --lp-text:           #FFFFFF;
+  --lp-text2:          #E4D9EE;
+  --lp-muted:          #B09DC4;
+  --lp-primary:        #7A1CAC;
+  --lp-primary-rgb:    122, 28, 172;
+  --lp-primary-hover:  #AD49E1;
+  --lp-primary-soft:   #2A1338;
+  --lp-violet:         #A855F7;          // bright purple — icon/badge "variety" slot
+  --lp-violet-rgb:     168, 85, 247;
+  --lp-pink:           #EC4899;          // bright pink — icon/badge "variety" slot
+  --lp-pink-rgb:       236, 72, 153;
+  --lp-pink-label:     #FFFFFF;
+  --lp-pink-hover:     #F472B6;
+  --lp-green:          #22C55E;          // bright green — card/icon "variety" slot
+  --lp-green-rgb:      34, 197, 94;
+  --lp-yellow:         #FACC15;          // bright gold — card/icon "variety" slot
+  --lp-yellow-rgb:     250, 204, 21;
+  --lp-yellow-label:   #3A2A00;
+  --lp-yellow-hover:   #EAB308;
+  --lp-accent:         #F97316;          // bright orange — card/icon "variety" slot
+  --lp-accent-rgb:     249, 115, 22;
+  --lp-danger:         #D93A33;
+  --lp-danger-rgb:     217, 58, 51;
+  --lp-grad-primary:   linear-gradient(135deg, #4A0F6B 0%, #9B1FB8 55%, #D98FEE 100%);
+  --lp-nav-bg:         rgba(18, 10, 26, 0.92);
+  --lp-nav-border:     rgba(173, 73, 225, 0.14);
+  --lp-inverse-bg:     #2A1638;
+  --lp-inverse-bg-2:   #1C1024;
+  --lp-footer-bg:      #0B0610;
+  --lp-footer-text:    #B09DC4;
+  --lp-shadow:         0 8px 32px rgba(0,0,0,0.50);
+
+  // Kept clearly darker than --lp-primary (#7A1CAC) throughout — this panel
+  // is a fixed dark "inverse" band regardless of site theme, and text/badges
+  // placed on it (e.g. .lp-cp-badge) read using var(--lp-primary); a lighter
+  // mid-stop here was landing almost exactly on that color, making such
+  // text nearly invisible wherever the two overlapped.
+  --lp-cta-gradient: linear-gradient(160deg, #2E073F, #3D0F52, #2E073F);
+
+  // ── Form-specific tokens — dedicated for input fields (avoids ultra-transparent --lp-surface) ──
+  --lp-input-bg:            #1C1024;
+  --lp-input-bg-hover:      #241430;
+  --lp-input-border:        rgba(255,255,255,.14);
+  --lp-input-border-hover:  rgba(255,255,255,.26);
+  --lp-input-text:          #FFFFFF;
+  --lp-input-placeholder:   #8E7A9E;
+  --lp-form-card-bg:        #1C1024;
+  --lp-form-title-border:   rgba(255,255,255,.10);
+}
+
+@mixin violet-light {
+  --lp-bg:             #FCF8FE;
+  --lp-bg2:            #F3E8FA;
+  --lp-bg3:            #E7CFF3;
+  --lp-surface:        #FFFFFF;
+  --lp-surface-hover:  #F8F0FC;
+  --lp-border:         #EBDCF5;
+  --lp-border-hover:   rgba(122, 28, 172, .35);
+  --lp-text:           #22052E;
+  --lp-text2:          #4A2A5C;
+  --lp-muted:          #7A6485;
+  --lp-primary:        #7A1CAC;
+  --lp-primary-rgb:    122, 28, 172;
+  --lp-primary-hover:  #650F94;
+  --lp-primary-soft:   #F3E8FA;
+  --lp-violet:         #9333EA;          // bright purple (deeper, for contrast on white) — icon/badge "variety" slot
+  --lp-violet-rgb:     147, 51, 234;
+  --lp-pink:           #DB2777;          // bright pink (deeper, for contrast on white) — icon/badge "variety" slot
+  --lp-pink-rgb:       219, 39, 119;
+  --lp-pink-label:     #FFFFFF;
+  --lp-pink-hover:     #BE185D;
+  --lp-green:          #16A34A;          // bright green (deeper, for contrast on white) — card/icon "variety" slot
+  --lp-green-rgb:      22, 163, 74;
+  --lp-yellow:         #CA8A04;          // bright gold (deeper, for contrast on white) — card/icon "variety" slot
+  --lp-yellow-rgb:     202, 138, 4;
+  --lp-yellow-label:   #FFFFFF;
+  --lp-yellow-hover:   #A16207;
+  --lp-accent:         #EA580C;          // bright orange (deeper, for contrast on white) — card/icon "variety" slot
+  --lp-accent-rgb:     234, 88, 12;
+  --lp-danger:         #DC2626;
+  --lp-danger-rgb:     220, 38, 38;
+  --lp-grad-primary:   linear-gradient(135deg, #4A0F6B 0%, #8A1AA0 55%, #C13FD6 100%);
+  --lp-nav-bg:         rgba(255,255,255,0.95);
+  --lp-nav-border:     rgba(122, 28, 172, 0.14);
+  --lp-inverse-bg:     #22052E;
+  --lp-inverse-bg-2:   #2A1638;
+  --lp-footer-bg:      #22052E;
+  --lp-footer-text:    #C9A6DC;
+  --lp-shadow:         0 8px 32px rgba(122, 28, 172, 0.14);
+
+  --lp-cta-gradient: linear-gradient(160deg, #2E073F, #3D0F52, #2E073F);
+
+  // ── Form-specific tokens ──
+  --lp-input-bg:            #FFFFFF;
+  --lp-input-bg-hover:      #F8F0FC;
+  --lp-input-border:        rgba(122, 28, 172, .22);
+  --lp-input-border-hover:  rgba(122, 28, 172, .45);
+  --lp-input-text:          #22052E;
+  --lp-input-placeholder:   #9C87A8;
+  --lp-form-card-bg:        #FFFFFF;
+  --lp-form-title-border:   #EBDCF5;
+}
+
+:host[data-theme="dark"],
+:host[data-theme="dark"][data-brand="violet"] { @include violet-dark; }
+
+:host[data-theme="light"],
+:host[data-theme="light"][data-brand="violet"] { @include violet-light; }
+
+// .lp-cp-badge / .lp-cp-label / .lp-cp-icon (contact section) sit on
+// .lp-contact-panel, which is a fixed-dark "inverse" background regardless
+// of the site's own light/dark mode, and read their color from
+// var(--lp-primary) — for this theme that's a fairly dark, saturated
+// purple, too close in luminance to its own always-dark panel to read
+// reliably. Override with a lighter lavender, scoped to this brand only so
+// the other four themes (whose primaries are naturally bright) are
+// untouched.
+:host[data-brand="violet"] .lp-cp-badge,
+:host[data-brand="violet"] .lp-cp-label,
+:host[data-brand="violet"] .lp-cp-icon {
+  color: #D9A6F0;
+}
+
+// `<app-language-toggle>` (the EN/தமிழ் pill) reads its colors from
+// --lang-toggle-* custom properties, falling back to the app's global
+// design tokens (amber) when a page doesn't set them — which this page
+// never did, so the pill stayed amber-branded no matter which brand here
+// was active. Wire it to this theme's own tokens; --lang-toggle-active-color
+// is a flat white rather than var(--lp-...) since --lp-primary here is a
+// dark, saturated purple that needs light text on top of it (unlike
+// amber's bright gold, which is why the component's own built-in fallback
+// — dark ink — stays correct for that theme and is left alone).
+:host[data-brand="violet"] {
+  --lang-toggle-color: var(--lp-muted);
+  --lang-toggle-border: var(--lp-border);
+  --lang-toggle-hover-bg: var(--lp-surface-hover);
+  --lang-toggle-active-bg: var(--lp-primary);
+  --lang-toggle-active-color: #FFFFFF;
+}

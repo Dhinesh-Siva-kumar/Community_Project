@@ -1,0 +1,129 @@
+// ============================================================
+// LANDING BRAND THEME — AMBER (our actual whole-app default)
+// Matches the app-wide $color-* design system used everywhere else in
+// this app (see assets/styles/_colors.scss: $color-primary #FBBF24,
+// $color-saffron #F97316, $color-dark-deep #0C0A09, etc.) — this is the
+// real Tamilya brand, not a client preview. Same --lp-* token set as the
+// other _landing-theme-*.scss files — see _landing-theme-violet.scss for
+// how the switch works.
+// ============================================================
+
+@mixin amber-dark {
+  --lp-bg:             #0C0A09;
+  --lp-bg2:            #1C1917;
+  --lp-bg3:            #292524;
+  --lp-surface:        rgba(255,255,255,0.04);
+  --lp-surface-hover:  rgba(255,255,255,0.07);
+  --lp-border:         rgba(255,255,255,0.08);
+  --lp-border-hover:   rgba(255,255,255,0.14);
+  --lp-text:           #FFFFFF;
+  --lp-text2:          #E2E8F0;
+  --lp-muted:          #A8A29E;
+  --lp-primary:        #FBBF24;
+  --lp-primary-rgb:    251, 191, 36;
+  --lp-primary-hover:  #FCD34D;
+  --lp-primary-soft:   #292524;
+  --lp-violet:         #F59E0B;          // amber-500, 2nd accent slot
+  --lp-violet-rgb:     245, 158, 11;
+  --lp-pink:           #F97316;          // saffron — secondary
+  --lp-pink-rgb:       249, 115, 22;
+  --lp-pink-label:     #1C1917;
+  --lp-pink-hover:     #FDBA74;          // deeper/lighter secondary shade — gradient 2nd stops, secondary-as-text
+  --lp-green:          #34D27B;
+  --lp-green-rgb:      52, 210, 123;
+  --lp-yellow:         #FBBF24;          // accent (badges/highlights only, never body text)
+  --lp-yellow-rgb:     251, 191, 36;
+  --lp-yellow-label:   #1C1917;
+  --lp-yellow-hover:   #D97706;          // darker accent shade — gradient 2nd stops
+  --lp-accent:         #FBBF24;
+  --lp-accent-rgb:     251, 191, 36;
+  --lp-danger:         #DC2626;
+  --lp-danger-rgb:     220, 38, 38;
+  --lp-grad-primary:   linear-gradient(135deg, #FBBF24, #F97316);
+  --lp-nav-bg:         rgba(12, 8, 2, 0.92);
+  --lp-nav-border:     rgba(251, 191, 36, 0.12);
+  --lp-inverse-bg:     #1C0A00;
+  --lp-inverse-bg-2:   #3D2400;
+  --lp-footer-bg:      #050200;
+  --lp-footer-text:    #A89684;
+  --lp-shadow:         0 8px 32px rgba(0,0,0,0.50);
+
+  --lp-cta-gradient: linear-gradient(160deg, #1C0A00, #3D2400, #1C0A00);
+
+  --lp-input-bg:            #292524;
+  --lp-input-bg-hover:      #3C3432;
+  --lp-input-border:        rgba(255,255,255,.16);
+  --lp-input-border-hover:  rgba(255,255,255,.30);
+  --lp-input-text:          #F5F5F4;
+  --lp-input-placeholder:   #A8A29E;
+  --lp-form-card-bg:        #1C1917;
+  --lp-form-title-border:   rgba(255,255,255,.10);
+}
+
+@mixin amber-light {
+  --lp-bg:             #FFFBEB;
+  --lp-bg2:            #FEF3C7;
+  --lp-bg3:            #FDE68A;
+  --lp-surface:        rgba(255,255,255,0.92);
+  --lp-surface-hover:  rgba(255,255,255,0.98);
+  --lp-border:         rgba(251, 191, 36, 0.18);
+  --lp-border-hover:   rgba(251, 191, 36, 0.38);
+  --lp-text:           #1C1917;
+  --lp-text2:          #44403C;
+  --lp-muted:          #78716C;
+  --lp-primary:        #FBBF24;
+  --lp-primary-rgb:    251, 191, 36;
+  --lp-primary-hover:  #F59E0B;
+  --lp-primary-soft:   #FEF3C7;
+  --lp-violet:         #D97706;          // amber-600, 2nd accent slot
+  --lp-violet-rgb:     217, 119, 6;
+  --lp-pink:           #F97316;          // saffron — secondary
+  --lp-pink-rgb:       249, 115, 22;
+  --lp-pink-label:     #1C1917;
+  --lp-pink-hover:     #C2410C;          // deeper/lighter secondary shade — gradient 2nd stops, secondary-as-text
+  --lp-green:          #16A34A;
+  --lp-green-rgb:      22, 163, 74;
+  --lp-yellow:         #FBBF24;          // accent (badges/highlights only, never body text)
+  --lp-yellow-rgb:     251, 191, 36;
+  --lp-yellow-label:   #1C1917;
+  --lp-yellow-hover:   #D97706;          // darker accent shade — gradient 2nd stops
+  --lp-accent:         #F59E0B;
+  --lp-accent-rgb:     245, 158, 11;
+  --lp-danger:         #DC2626;
+  --lp-danger-rgb:     220, 38, 38;
+  --lp-grad-primary:   linear-gradient(135deg, #FBBF24, #F97316);
+  --lp-nav-bg:         rgba(255,255,255,0.95);
+  --lp-nav-border:     rgba(251, 191, 36, 0.14);
+  --lp-inverse-bg:     #1C0A00;
+  --lp-inverse-bg-2:   #3D2400;
+  --lp-footer-bg:      #1C1917;
+  --lp-footer-text:    #A89684;
+  --lp-shadow:         0 8px 32px rgba(251, 191, 36, 0.14);
+
+  --lp-cta-gradient: linear-gradient(160deg, #1C0A00, #3D2400, #1C0A00);
+
+  --lp-input-bg:            #FFFFFF;
+  --lp-input-bg-hover:      #FAFAF9;
+  --lp-input-border:        rgba(251,191,36,.28);
+  --lp-input-border-hover:  rgba(251,191,36,.55);
+  --lp-input-text:          #1C1917;
+  --lp-input-placeholder:   #9CA3AF;
+  --lp-form-card-bg:        #FFFFFF;
+  --lp-form-title-border:   #E7E5E4;
+}
+
+:host[data-theme="dark"][data-brand="amber"]  { @include amber-dark; }
+:host[data-theme="light"][data-brand="amber"] { @include amber-light; }
+
+// `<app-language-toggle>` (the EN/தமிழ் pill) reads --lang-toggle-* custom
+// properties, falling back to the app's global tokens (also amber) when
+// unset — which happened to already match this theme, but wasn't actually
+// wired to --lp-primary. Make it explicit so it stays correct if either
+// value ever changes independently.
+:host[data-brand="amber"] {
+  --lang-toggle-color: var(--lp-muted);
+  --lang-toggle-border: var(--lp-border);
+  --lang-toggle-hover-bg: var(--lp-surface-hover);
+  --lang-toggle-active-bg: var(--lp-primary);
+  --lang-toggle-active-color: #1C1917;
+}

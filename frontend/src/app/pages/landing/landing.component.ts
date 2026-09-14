@@ -1,6 +1,6 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit, ViewChild,
-  Inject, PLATFORM_ID, ElementRef, HostBinding, HostListener, NgZone
+  Inject, PLATFORM_ID, ElementRef, HostBinding, HostListener, NgZone, signal, computed
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -10,6 +10,9 @@ import { ThemeService } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
 import { LanguageToggleComponent } from '../../shared/components/language-toggle/language-toggle.component';
 import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select/searchable-select.component';
+
+/** Keep in sync with LandingComponent.BRAND_KEYS below. */
+type LandingBrand = 'amber' | 'violet' | 'teal' | 'navy' | 'royal';
 
 /** One entry of the animated `landing.aboutStats` counter deck. */
 interface AboutStat {
@@ -42,7 +45,15 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     private languageService: LanguageService,
     private translate: TranslateService,
     private themeService: ThemeService,
-  ) {}
+  ) {
+    // `this.platformId` above is a constructor parameter property, assigned
+    // inside this constructor body — reading it from a field initializer
+    // (which can run before this body under useDefineForClassFields) would
+    // see it as unset and always take the non-browser fallback. Setting the
+    // signal here instead, once platformId is guaranteed assigned, is what
+    // makes the stored 'landing-brand' preference actually get picked up.
+    this.brand.set(this.loadInitialBrand());
+  }
 
   // ── Theme — delegates to the shared ThemeService (see theme.service.ts);
   // this page still binds its own host attribute since landing.component.scss's
@@ -58,6 +69,69 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
+  }
+
+  // ── Brand palette — a separate switchable dimension from light/dark,
+  // used to preview several color directions on the same running build.
+  // Persisted independently of ThemeService's own light/dark preference;
+  // see _landing-theme-{amber,violet,teal,navy,royal}.scss for the actual
+  // --lp-* token values each one resolves to. 'amber' is our real, live
+  // app-wide brand color ($color-primary etc. in assets/styles/_colors.scss)
+  // and is the default whenever nothing is stored yet; the rest are
+  // alternate/client preview directions. Add a new palette by:
+  // (1) adding a key here + to BRAND_KEYS, (2) adding an entry to
+  // brandOptions with its swatch/label, (3) writing a new
+  // _landing-theme-<key>.scss following the existing ones, (4) @use-ing it
+  // at the top of landing.component.scss. Nothing else needs to change. ──
+  static readonly BRAND_KEYS = ['amber', 'violet', 'teal', 'navy', 'royal'] as const;
+  private static readonly BRAND_STORAGE_KEY = 'landing-brand';
+
+  /** Swatch + label shown in the brand-picker dropdown, in display order. */
+  protected readonly brandOptions: { value: LandingBrand; label: string; swatch: string }[] = [
+    { value: 'amber',  label: 'Amber (App Default)', swatch: '#FBBF24' },
+    { value: 'violet', label: 'Violet',               swatch: '#7A1CAC' },
+    { value: 'teal',   label: 'Teal',                 swatch: '#005461' },
+    { value: 'navy',   label: 'Navy Sky',              swatch: '#0F4C75' },
+    { value: 'royal',  label: 'Royal Blue',            swatch: '#050C9C' },
+  ];
+
+  protected brand = signal<LandingBrand>('amber');
+  protected brandMenuOpen = signal(false);
+  protected currentBrandOption = computed(() =>
+    this.brandOptions.find(o => o.value === this.brand()) ?? this.brandOptions[0]
+  );
+
+  @HostBinding('attr.data-brand')
+  get brandAttr(): string { return this.brand(); }
+
+  /** Closes the brand-picker dropdown on any click outside it — the button
+   * and menu itself both stopPropagation() in the template, so only a
+   * genuine outside click reaches here. */
+  @HostListener('document:click')
+  onDocumentClickCloseBrandMenu(): void {
+    if (this.brandMenuOpen()) this.brandMenuOpen.set(false);
+  }
+
+  private loadInitialBrand(): LandingBrand {
+    if (isPlatformBrowser(this.platformId)) {
+      const saved = localStorage.getItem(LandingComponent.BRAND_STORAGE_KEY);
+      if ((LandingComponent.BRAND_KEYS as readonly string[]).includes(saved ?? '')) {
+        return saved as LandingBrand;
+      }
+    }
+    return 'amber';
+  }
+
+  toggleBrandMenu(): void {
+    this.brandMenuOpen.update(v => !v);
+  }
+
+  setBrand(brand: LandingBrand): void {
+    this.brand.set(brand);
+    this.brandMenuOpen.set(false);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(LandingComponent.BRAND_STORAGE_KEY, brand);
+    }
   }
 
   // ── Navbar ──

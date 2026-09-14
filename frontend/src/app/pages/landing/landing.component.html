@@ -6,7 +6,30 @@
 <!-- ═══ 1. NAVBAR ═══ -->
 <nav class="lp-nav" [class.scrolled]="navScrolled">
   <a class="lp-logo" routerLink="/landing">
-    <img src="logo.svg" alt="Tamilya" class="lp-logo-img" />
+    <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-logo-img">
+      <defs>
+        <linearGradient id="tc-grad-nav" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--lp-primary)"/>
+          <stop offset="100%" stop-color="var(--lp-violet)"/>
+        </linearGradient>
+      </defs>
+      <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-nav)"/>
+      <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+      <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+        <line x1="20" y1="20" x2="10" y2="11"/>
+        <line x1="20" y1="20" x2="30" y2="11"/>
+        <line x1="20" y1="20" x2="10" y2="29"/>
+        <line x1="20" y1="20" x2="30" y2="29"/>
+      </g>
+      <g fill="rgba(255,255,255,0.82)">
+        <circle cx="10" cy="11" r="3.2"/>
+        <circle cx="30" cy="11" r="3.2"/>
+        <circle cx="10" cy="29" r="3.2"/>
+        <circle cx="30" cy="29" r="3.2"/>
+      </g>
+      <circle cx="20" cy="20" r="6" fill="white"/>
+      <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+    </svg>
     <span class="lp-logo-text">{{ applicationName }}</span>
   </a>
 
@@ -23,6 +46,36 @@
   <div class="lp-nav-right">
     <!-- Language toggle pill -->
     <app-language-toggle></app-language-toggle>
+    <!-- Brand-palette preview switch — internal only, for showing several
+         client color directions on the same build. See landing.component.ts
+         `brand`/`brandOptions` and _landing-theme-{violet,teal,navy,royal}.scss. -->
+    <div class="lp-brand-picker">
+      <button
+        class="lp-brand-btn"
+        (click)="toggleBrandMenu(); $event.stopPropagation()"
+        [attr.aria-expanded]="brandMenuOpen()"
+        title="Preview a color theme"
+        aria-label="Preview a color theme"
+      >
+        <i class="bi bi-palette-fill" [style.color]="currentBrandOption().swatch"></i>
+      </button>
+      @if (brandMenuOpen()) {
+        <div class="lp-brand-menu" (click)="$event.stopPropagation()">
+          @for (o of brandOptions; track o.value) {
+            <button
+              type="button"
+              class="lp-brand-menu-item"
+              [class.active]="brand() === o.value"
+              (click)="setBrand(o.value)"
+            >
+              <span class="lp-brand-menu-dot" [style.background]="o.swatch"></span>
+              <span>{{ o.label }}</span>
+              @if (brand() === o.value) { <i class="bi bi-check2"></i> }
+            </button>
+          }
+        </div>
+      }
+    </div>
     <button class="lp-theme-btn" (click)="toggleTheme()" [attr.aria-label]="(currentTheme === 'dark' ? 'common.switchToLight' : 'common.switchToDark') | translate">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
     </button>
@@ -47,6 +100,20 @@
   <div class="lp-mobile-actions">
     <!-- Language toggle (mobile) -->
     <app-language-toggle [block]="true"></app-language-toggle>
+    <div class="lp-brand-picker-mobile">
+      @for (o of brandOptions; track o.value) {
+        <button
+          type="button"
+          class="lp-brand-menu-item"
+          [class.active]="brand() === o.value"
+          (click)="setBrand(o.value)"
+        >
+          <span class="lp-brand-menu-dot" [style.background]="o.swatch"></span>
+          <span>{{ o.label }}</span>
+          @if (brand() === o.value) { <i class="bi bi-check2"></i> }
+        </button>
+      }
+    </div>
     <button class="lp-theme-btn lp-theme-btn-wide" (click)="toggleTheme()">
       <i class="bi" [ngClass]="currentTheme === 'dark' ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
       <span>{{ currentTheme === 'dark' ? ('landing.mobile_light_mode' | translate) : ('landing.mobile_dark_mode' | translate) }}</span>
@@ -955,7 +1022,30 @@
           <div class="lp-app-screen">
             <div class="lp-app-notch"></div>
             <div class="lp-app-logo-wrap">
-              <img src="logo.svg" alt="Tamilya" class="lp-app-logo-img" />
+              <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-app-logo-img">
+                <defs>
+                  <linearGradient id="tc-grad-app" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="var(--lp-primary)"/>
+                    <stop offset="100%" stop-color="var(--lp-violet)"/>
+                  </linearGradient>
+                </defs>
+                <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-app)"/>
+                <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+                <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+                  <line x1="20" y1="20" x2="10" y2="11"/>
+                  <line x1="20" y1="20" x2="30" y2="11"/>
+                  <line x1="20" y1="20" x2="10" y2="29"/>
+                  <line x1="20" y1="20" x2="30" y2="29"/>
+                </g>
+                <g fill="rgba(255,255,255,0.82)">
+                  <circle cx="10" cy="11" r="3.2"/>
+                  <circle cx="30" cy="11" r="3.2"/>
+                  <circle cx="10" cy="29" r="3.2"/>
+                  <circle cx="30" cy="29" r="3.2"/>
+                </g>
+                <circle cx="20" cy="20" r="6" fill="white"/>
+                <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+              </svg>
             </div>
             <div class="lp-app-dot-row">
               <span></span><span></span><span></span>
@@ -1008,7 +1098,30 @@
       <!-- Brand -->
       <div class="lp-footer-brand">
         <a routerLink="/landing" class="lp-logo">
-          <img src="logo.svg" alt="Tamilya" class="lp-logo-img" />
+          <svg viewBox="0 0 40 40" fill="none" role="img" aria-label="Tamilya" class="lp-logo-img">
+            <defs>
+              <linearGradient id="tc-grad-footer" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--lp-primary)"/>
+                <stop offset="100%" stop-color="var(--lp-violet)"/>
+              </linearGradient>
+            </defs>
+            <rect width="40" height="40" rx="10" ry="10" fill="url(#tc-grad-footer)"/>
+            <rect width="40" height="20" rx="10" ry="10" fill="rgba(255,255,255,0.10)"/>
+            <g stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="10" y2="11"/>
+              <line x1="20" y1="20" x2="30" y2="11"/>
+              <line x1="20" y1="20" x2="10" y2="29"/>
+              <line x1="20" y1="20" x2="30" y2="29"/>
+            </g>
+            <g fill="rgba(255,255,255,0.82)">
+              <circle cx="10" cy="11" r="3.2"/>
+              <circle cx="30" cy="11" r="3.2"/>
+              <circle cx="10" cy="29" r="3.2"/>
+              <circle cx="30" cy="29" r="3.2"/>
+            </g>
+            <circle cx="20" cy="20" r="6" fill="white"/>
+            <text x="20" y="24" text-anchor="middle" font-family="'Arial Black', Arial, sans-serif" font-size="9" font-weight="900" fill="var(--lp-primary)" letter-spacing="-0.5">T</text>
+          </svg>
           <span class="lp-logo-text">{{ applicationName }}</span>
         </a>
         <p class="lp-footer-desc">{{ 'landing.footer_desc' | translate }}</p>
