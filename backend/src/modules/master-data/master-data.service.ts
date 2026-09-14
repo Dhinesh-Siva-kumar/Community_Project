@@ -73,6 +73,50 @@ export async function getCities(stateId: number) {
   }
 }
 
+export async function getUniversities(countryId: number, regionId?: number) {
+  try {
+    const query = db('master_universities')
+      .where({ country_id: countryId })
+      .orderBy('name', 'asc')
+      .select('id', 'name', 'country_id', 'region_id', 'city_id');
+    if (regionId) query.andWhere({ region_id: regionId });
+    const rows = await query;
+
+    return {
+      success: true,
+      count: rows.length,
+      data: (rows as Array<Record<string, unknown>>).map((r) => ({
+        id: r['id'],
+        name: r['name'],
+        countryId: r['country_id'],
+        regionId: r['region_id'],
+        cityId: r['city_id'],
+      })),
+    };
+  } catch (err) {
+    console.error('[MasterData] Error fetching universities:', err);
+    throw new Error('Error fetching university data');
+  }
+}
+
+export async function getCourses() {
+  try {
+    const rows = await db('master_courses').orderBy('name', 'asc').select('id', 'name');
+
+    return {
+      success: true,
+      count: rows.length,
+      data: (rows as Array<Record<string, unknown>>).map((r) => ({
+        id: r['id'],
+        name: r['name'],
+      })),
+    };
+  } catch (err) {
+    console.error('[MasterData] Error fetching courses:', err);
+    throw new Error('Error fetching course data');
+  }
+}
+
 export async function getInterests() {
   try {
     const rows = await db('interest_master')

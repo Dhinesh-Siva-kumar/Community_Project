@@ -420,7 +420,10 @@
       <button type="button" class="au-btn au-btn--primary cm-btn-submit"
         [disabled]="submitting()"
         (click)="submitBusiness()">
-        @if (submitting()) {
+        @if (isGuest()) {
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          {{ 'common.registerToContinue' | translate }}
+        } @else if (submitting()) {
           <span class="spinner-border spinner-border-sm me-1"></span>
           {{ editingBusiness() ? 'Saving...' : 'Creating...' }}
         } @else {

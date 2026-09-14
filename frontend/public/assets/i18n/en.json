@@ -9,9 +9,11 @@
     "close": "Close",
     "confirm": "Confirm",
     "back": "Back",
+    "backToTop": "Back to top",
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
+    "registerToContinue": "Register to Continue",
     "search": "Search",
     "filter": "Filter",
     "filters": "Filters",
@@ -25,6 +27,7 @@
     "noData": "No data available",
     "retry": "Retry",
     "viewAll": "View all",
+    "overview": "Overview",
     "viewMore": "View more",
     "showMore": "Show more",
     "showLess": "Show less",
@@ -305,11 +308,20 @@
       "account": "ACCOUNT"
     },
     "dashboard": "Dashboard",
+    "home": "Home",
+    "guestPortal": "Guest Discovery Portal",
     "community": "Community",
     "business": "Business",
     "jobs": "Jobs",
+    "studentConnect": "Student Connect",
+    "studentVerification": "Student Verification",
+    "new": "NEW",
     "events": "Events",
     "profile": "Profile",
+    "signIn": "Sign In",
+    "welcomeToTamilya": "Welcome to Tamilya",
+    "welcomeToTamilyaText": "Sign in or create a free account to join conversations, connect with businesses, and find jobs.",
+    "getStarted": "Get Started",
     "userManagement": "User Management",
     "approval": "Approval",
     "analytics": "Analytics",
@@ -327,6 +339,91 @@
     "accountOptions": "User account options",
     "platform": "Platform",
     "pendingApprovals": "Pending approvals"
+  },
+  "home": {
+    "header": {
+      "login": "Log In",
+      "joinFree": "Join Tamilya – Free",
+      "dashboard": "Dashboard"
+    },
+    "hero": {
+      "englishTagline": "Your Tamil Community, Wherever You Are",
+      "selectCountryLabel": "Choose your country",
+      "selectCountryPlaceholder": "Select your country",
+      "searchPlaceholder": "Search jobs, businesses, events, communities…"
+    },
+    "search": {
+      "noResults": "No results found.",
+      "noResultsHint": "Try a different keyword or country.",
+      "searching": "Searching…",
+      "resultsFor": "results for \"{{query}}\"",
+      "clear": "Clear search",
+      "members": "members",
+      "categoryJobs": "Jobs",
+      "categoryBusinesses": "Businesses",
+      "categoryEvents": "Events",
+      "categoryCommunities": "Communities"
+    },
+    "jobs": {
+      "title": "Latest Jobs",
+      "viewAll": "View All Jobs",
+      "empty": "No jobs to show yet.",
+      "remote": "Remote"
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "viewAll": "View All Events",
+      "empty": "No upcoming events to show yet."
+    },
+    "businesses": {
+      "title": "Featured Businesses",
+      "viewAll": "Explore Businesses",
+      "empty": "No businesses to show yet."
+    },
+    "communities": {
+      "title": "Community Highlights",
+      "exploreJoin": "Explore & Join",
+      "empty": "No communities to show yet.",
+      "viewActivityFeed": "View your full activity feed"
+    },
+    "joinCta": {
+      "title": "Join Tamilya – Free",
+      "subtitle": "Create an account to unlock full details, personalised recommendations, and the ability to post and connect.",
+      "primaryButton": "Join Tamilya – Free",
+      "secondaryButton": "Log In"
+    },
+    "authPrompt": {
+      "title": "Join Tamilya to continue",
+      "message": "Create a free account to unlock this and connect with the Tamil community.",
+      "joinButton": "Join Tamilya – Free",
+      "loginButton": "Log In"
+    },
+    "guestHero": {
+      "title": "Connecting Tamils Around the World",
+      "tagline": "Your Tamil Community, Wherever You Are",
+      "joinButton": "Join Tamilya – Free",
+      "orExplore": "or explore without an account"
+    },
+    "explore": {
+      "allCountries": "All Locations"
+    },
+    "stats": {
+      "countries": "Countries",
+      "communities": "Communities",
+      "jobs": "Jobs",
+      "business": "Businesses",
+      "events": "Events"
+    },
+    "post": {
+      "signInToReply": "Sign in to reply",
+      "signInToApply": "View Details",
+      "endOfFeedTitle": "You've reached the end of the free preview",
+      "endOfFeedText": "Join Tamilya to unlock the full community feed, connect with your people, and never miss a post.",
+      "endOfFeedButton": "Join Tamilya – It's Free"
+    },
+    "footer": {
+      "rights": "All rights reserved."
+    }
   },
   "validation": {
     "required": "This field is required.",
@@ -451,6 +548,7 @@
     "nav_reviews": "Reviews",
     "nav_about": "About",
     "nav_contact": "Contact",
+    "nav_explore": "Explore Tamilya",
     "nav_login": "Log In",
     "nav_get_started": "Get Started",
     "mobile_light_mode": "Light Mode",
@@ -562,27 +660,67 @@
     "testi_pill": "Real Stories",
     "testi_title_pre": "Real",
     "testi_title_accent": "Stories",
-    "testi_sub": "Hear how Tamil people connect, support each other, and build opportunities through TamilConnect (Illustrative Member Story)",
+    "testi_sub": "Hear how Tamil people connect, support each other, and build opportunities through Tamilya (Illustrative Member Story)",
     "about_pill": "About Us",
     "about_title1": "Our Mission is",
     "about_title2": "Your Community",
     "about_sub": "Connecting, supporting, and empowering Tamils living across the globe.",
     "about_mission_title": "Why We Built This",
-    "about_mission_text": "TamilConnect was born from a simple truth — Tamils abroad often feel alone. We built this platform so that wherever you go in the world, your Tamil community is already there waiting for you. Whether you are a student, a worker, a professional, or a business owner, you never have to face a new country alone. TamilConnect exists to connect, support, and empower Tamils living across the globe. Tamils from both Tamil Nadu and Sri Lanka are equally welcome here — TamilConnect belongs to all of us.",
-    "about_mission_closing": "For every Tamil living abroad — TamilConnect is your digital family.",
+    "about_mission_text": "Tamilya was born from a simple truth — Tamils abroad often feel alone. We built this platform so that wherever you go in the world, your Tamil community is already there waiting for you. Whether you are a student, a worker, a professional, or a business owner, you never have to face a new country alone. Tamilya exists to connect, support, and empower Tamils living across the globe. Tamils from both Tamil Nadu and Sri Lanka are equally welcome here — Tamilya belongs to all of us.",
+    "about_mission_closing": "For every Tamil living abroad — Tamilya is your digital family.",
     "about_location": "Available Worldwide",
     "about_join_now": "Join Now",
     "about_log_in": "Log In",
     "trust_badge": "Trust & Safety",
     "trust_title": "Your Safety Comes First.",
-    "trust_sub": "TamilConnect is built to help members connect, communicate, and support each other in a secure and trusted environment.",
-    "trust_tagline": "Connect with confidence. Your safety and privacy are always protected on TamilConnect.",
+    "trust_sub": "Tamilya is built to help members connect, communicate, and support each other in a secure and trusted environment.",
+    "trust_tagline": "Connect with confidence. Your safety and privacy are always protected on Tamilya.",
     "emergency_title": "Need Emergency Help Abroad?",
     "emergency_text": "Facing a legal problem, medical emergency, or been cheated in a foreign country? Connect instantly with verified Tamil community members who can guide and support you — in any country, at any time.",
     "emergency_btn": "Get Help Now",
     "first30_pill": "Quick Start Guide",
     "first30_title": "Your First 30 Days in Any New Country",
-    "first30_sub": "No matter which country you move to — here is how TamilConnect helps from day one.",
+    "first30_sub": "No matter which country you move to — here is how Tamilya helps from day one.",
+    "discover_pill": "Explore More",
+    "discover_title": "There's More to Discover",
+    "discover_sub": "From jobs to the business directory — explore everything Tamilya has to offer.",
+    "discoverCards": [
+      {
+        "icon": "bi-briefcase-fill",
+        "color": "green",
+        "fragment": "opportunities",
+        "title": "Jobs Available Now",
+        "blurb": "Fresh openings and gigs shared by the community."
+      },
+      {
+        "icon": "bi-chat-dots-fill",
+        "color": "green",
+        "fragment": "ask",
+        "title": "Community Q&A",
+        "blurb": "Real questions, answered by real Tamils abroad."
+      },
+      {
+        "icon": "bi-map-fill",
+        "color": "yellow",
+        "fragment": "first30",
+        "title": "Quick Start Guide",
+        "blurb": "A simple roadmap for settling in fast."
+      },
+      {
+        "icon": "bi-journal-richtext",
+        "color": "violet",
+        "fragment": "blog",
+        "title": "Blog & Updates",
+        "blurb": "Guides and stories from the community."
+      },
+      {
+        "icon": "bi-shop",
+        "color": "primary",
+        "fragment": "business-directory",
+        "title": "Tamil Business Directory",
+        "blurb": "Discover Tamil-owned businesses near you."
+      }
+    ],
     "opportunities_pill": "Jobs Available Now",
     "opportunities_heading": "Opportunities Available Today",
     "opportunities_sub": "Browse job types shared directly by Tamils — find the right opportunity for you.",
@@ -620,7 +758,7 @@
     ],
     "waitlist_pill": "Early Access",
     "waitlist_title": "Join Before We Launch — Be an Early Member",
-    "waitlist_text": "Sign up now and be among the first Tamil community members on TamilConnect.",
+    "waitlist_text": "Sign up now and be among the first Tamil community members on Tamilya.",
     "waitlist_benefits_heading": "What you get by joining before launch:",
     "waitlistBenefits": [
       {
@@ -652,6 +790,12 @@
         "label": "Mobile App — First to Download",
         "desc": "First to download when we launch",
         "color": "pink"
+      },
+      {
+        "icon": "bi-megaphone-fill",
+        "label": "Help Shape What's Next",
+        "desc": "Your feedback shapes new features early",
+        "color": "accent"
       }
     ],
     "waitlist_email_placeholder": "Enter your email address",
@@ -775,19 +919,19 @@
     ],
     "appbanner_pill": "Coming Soon",
     "appbanner_title": "Mobile App — Coming Soon",
-    "appbanner_text": "TamilConnect on iOS & Android — your community always in your hands.",
+    "appbanner_text": "Tamilya on iOS & Android — your community always in your hands.",
     "appbanner_ios": "App Store",
     "appbanner_android": "Google Play",
     "appbanner_waitlist_cta": "Be the first to use the app when we launch — Join the Waitlist above",
     "blog_pill": "Blog & Updates",
     "blog_title1": "Latest from",
-    "blog_title2": "TamilConnect",
+    "blog_title2": "Tamilya",
     "blog_sub": "Tips, guides, community updates, and opportunities for Tamils living around the world.",
     "blog_read_more": "Read More",
     "contact_pill": "Contact Us",
     "contact_title1": "We're Here",
     "contact_title2": "For You",
-    "contact_sub": "Have a question or need help settling in? The TamilConnect team is ready to support you wherever you are.",
+    "contact_sub": "Have a question or need help settling in? The Tamilya team is ready to support you wherever you are.",
     "contact_badge": "Every question answered. Every Tamil supported.",
     "contact_panel_title": "We're here to help every Tamil abroad.",
     "contact_panel_desc": "Whether you have a question about the platform, need support, or want to provide feedback, our team is always available.",
@@ -819,8 +963,8 @@
     "cta_badge": "Wherever you are in the world, your Tamil community is with you.",
     "cta_title1": "You're Not Alone",
     "cta_title2": "Abroad",
-    "cta_desc": "Millions of Tamils live across the world. Whether you are studying, working, running a business, or starting a new life in another country, TamilConnect helps you connect with people who understand your journey.",
-    "cta_join_free": "Join TamilConnect Free",
+    "cta_desc": "Millions of Tamils live across the world. Whether you are studying, working, running a business, or starting a new life in another country, Tamilya helps you connect with people who understand your journey.",
+    "cta_join_free": "Join Tamilya Free",
     "cta_already_member": "Already a member? Log in",
     "cta_network_text": "Connect with Tamils across 40+ countries and build your network today.",
     "cta_trust1": "40+ Countries",
@@ -1038,7 +1182,7 @@
         "location": "Manchester, UK",
         "category": "Housing & Jobs",
         "initial": "M",
-        "quote": "When I first moved to the UK, I didn't know anyone and felt completely alone. Through TamilConnect, I connected with other Tamils living in Manchester. They helped me find accommodation, guided me through local procedures, and even shared job opportunities. What could have taken months became much easier because of the community.",
+        "quote": "When I first moved to the UK, I didn't know anyone and felt completely alone. Through Tamilya, I connected with other Tamils living in Manchester. They helped me find accommodation, guided me through local procedures, and even shared job opportunities. What could have taken months became much easier because of the community.",
         "color": "primary",
         "rating": 5
       },
@@ -1056,7 +1200,7 @@
         "location": "Toronto, Canada",
         "category": "Community Networking",
         "initial": "A",
-        "quote": "Moving to Canada was exciting but overwhelming. I didn't know where to start. Through TamilConnect, I connected with Tamils in Toronto, attended community events, and built real friendships within weeks. Settling into a new country became so much easier.",
+        "quote": "Moving to Canada was exciting but overwhelming. I didn't know where to start. Through Tamilya, I connected with Tamils in Toronto, attended community events, and built real friendships within weeks. Settling into a new country became so much easier.",
         "color": "green",
         "rating": 5
       },
@@ -1728,6 +1872,8 @@
       "unread": "Unread"
     },
     "communityDetail": {
+      "guestGateTitle": "You're not registered or logged in",
+      "guestGateMessage": "Register or log in to view this community's posts and members.",
       "whatSMind": "What's on your mind?",
       "writeComment": "Write a comment...",
       "describeWhatNeedHelp": "Describe what you need help with...",
@@ -1874,6 +2020,199 @@
     }
   },
   "user": {
+    "studentConnect": {
+      "title": "Student Connect & Mentor",
+      "subtitle": "Find a verified Tamil student who's already studying where you want to go.",
+      "guestGateTitle": "Student Connect & Mentor",
+      "guestGateMessage": "Register or log in to search for and connect with verified students already studying at your target university.",
+      "tabs": {
+        "discover": "Discover",
+        "myProfile": "My Profile",
+        "requests": "Requests",
+        "chat": "Chat",
+        "connections": "Connections",
+        "saved": "Saved"
+      },
+      "card": {
+        "verified": "Verified",
+        "pending": "Pending",
+        "locationUnknown": "Location not provided",
+        "mentorAvailable": "Mentor Available",
+        "notTakingRequests": "Not taking requests",
+        "viewProfile": "View Profile"
+      },
+      "registration": {
+        "title": "Register as a Student",
+        "subtitle": "Create your student profile to unlock search, connections and mentoring — approval usually takes 1–2 business days.",
+        "stepOf": "Step {{step}} of {{total}}",
+        "step1": { "name": "Basic Info" },
+        "step2": { "name": "Education" },
+        "step3": { "name": "Languages" },
+        "step4": { "name": "Review" },
+        "photoLabel": "Profile photo",
+        "photoHint": "Optional, but verified students with a photo get 3× more connection requests.",
+        "photoUploadFailed": "Couldn't upload your photo — please try again.",
+        "firstName": "First name",
+        "country": "Country",
+        "countryPlaceholder": "Select a country",
+        "city": "City",
+        "university": "University",
+        "universityPlaceholder": "Select a university",
+        "universityFreeTextPlaceholder": "Select a country first, or type your university name",
+        "course": "Course / Programme",
+        "studyLevel": "Study level",
+        "yearOfStudy": "Year of study",
+        "languages": "Languages",
+        "shortIntro": "Short introduction",
+        "optionalDetails": "Optional details",
+        "previousCountry": "Previous country",
+        "academicBackground": "Academic / professional background",
+        "areasOfHelp": "Areas you could help with (if you'd like to mentor later)",
+        "nextEducation": "Next: Education",
+        "nextLanguages": "Next: Languages",
+        "nextReview": "Next: Review",
+        "privacyNotice": "Only your first name, country/city, university, course and areas of help are ever shown publicly. Your student ID, verification documents and contact details are never visible to other members.",
+        "submit": "Submit for Verification",
+        "submitting": "Submitting...",
+        "toastSubmitted": "Profile submitted — pending verification",
+        "toastFailed": "Couldn't submit your profile — please try again.",
+        "review": {
+          "name": "Name",
+          "country": "Country",
+          "city": "City",
+          "university": "University",
+          "course": "Course",
+          "studyLevel": "Study level / Year",
+          "languages": "Languages"
+        }
+      },
+      "discover": {
+        "searchPlaceholder": "Search by name, university or course",
+        "advancedFilters": "Advanced Filters",
+        "active": "Active",
+        "clearAll": "Clear all",
+        "removeFilter": "Remove filter",
+        "location": "Location",
+        "allCountries": "All countries",
+        "studyLevel": "Study Level",
+        "language": "Language",
+        "verifiedStudent": "Verified Student",
+        "verifiedOnly": "Verified only",
+        "mentorAvailable": "Mentor Available",
+        "availableNow": "Available now",
+        "mentoringType": "Mentoring Type",
+        "freeChat": "Free chat",
+        "noResults": "No students match these filters — try adjusting Advanced Filters.",
+        "loadMore": "Load more",
+        "loadFailed": "Couldn't load results — please try again.",
+        "saveFailed": "Couldn't update saved — please try again."
+      },
+      "profile": {
+        "backToDiscover": "Back to Discover",
+        "studentId": "Student ID",
+        "education": "Education",
+        "university": "University",
+        "course": "Course",
+        "studyLevel": "Study level",
+        "yearOfStudy": "Year of study",
+        "about": "About",
+        "languages": "Languages",
+        "legalNote": "{{name}} is sharing personal experience, not professional advice — this isn't a guarantee of admission, visa, or job outcomes.",
+        "mentorInfo": "Mentor information",
+        "mentorAvailableFree": "Mentor Available · Free chat",
+        "mentorNotAvailable": "{{name}} isn't taking new mentoring requests right now.",
+        "connect": "Connect",
+        "report": "Report",
+        "block": "Block",
+        "blockConfirm": "Block this student? They will no longer be able to message or view your profile.",
+        "blockConfirmAction": "Confirm Block",
+        "blockedToast": "Student blocked",
+        "blockFailedToast": "Couldn't block this user — please try again.",
+        "loadFailed": "Couldn't load this profile.",
+        "contactLocked": "Contact details are hidden",
+        "contactLockedHint": "Only your country, university and course are shown until {{name}} accepts a connection request.",
+        "contactUnlocked": "Connected — contact details unlocked",
+        "chatLocked": "Chat is locked",
+        "chatLockedHint": "Chat unlocks once {{name}} accepts a connection request. Contact details are never shared, even after connecting.",
+        "chatUnlocked": "Connected — chat unlocked",
+        "openChat": "Open Chat",
+        "chatNeverContact": "Contact details are never shared — the whole conversation stays inside Tamilya."
+      },
+      "myProfile": {
+        "verificationPending": "Verification pending",
+        "verificationPendingHint": "An admin reviews new student profiles before the Verified Student badge is shown — you can still browse and connect while this is in progress.",
+        "stepSubmitted": "Profile submitted",
+        "stepReview": "Under admin review",
+        "stepBadge": "Verified Student badge",
+        "mentorAvailable": "Mentor Available",
+        "mentorAvailableHint": "Show up in mentor search and receive connection requests",
+        "areasOfHelp": "Areas of Help",
+        "mentoringType": "Mentoring type",
+        "mentoringTypeSubChat": "Paid consultations are possible here because conversations stay inside Tamilya — enables commission and dispute protection.",
+        "mentoringTypeSubContact": "Free in this release — paid consultations are on the roadmap.",
+        "freeChat": "Free chat",
+        "freeChatHint": "No cost — always available",
+        "paidChat": "Paid chat",
+        "paidChatHint": "Set your own price per conversation",
+        "paidCall": "Paid call · 30 min",
+        "paidCallHint": "e.g. £15 per consultation",
+        "comingSoon": "Coming soon",
+        "privacyNote": "Only your first name, university, course and areas of help are shown publicly. Your contact details are never shared automatically.",
+        "updateFailed": "Couldn't save your changes — please try again."
+      },
+      "requests": {
+        "received": "Received",
+        "sent": "Sent",
+        "accept": "Accept",
+        "decline": "Decline",
+        "accepted": "Accepted",
+        "pending": "Pending",
+        "noneReceived": "No connection requests received yet.",
+        "noneSent": "No connection requests sent yet — find a student in Discover.",
+        "acceptedToast": "You're now connected",
+        "declinedToast": "Request declined",
+        "actionFailed": "Couldn't complete that action — please try again."
+      },
+      "chat": {
+        "noThreads": "No connections yet — accept a request to start chatting.",
+        "noMessagesYet": "No messages yet",
+        "selectThread": "Select a connection to open the conversation.",
+        "sayHello": "Say hello — no messages yet.",
+        "typeMessage": "Type a message",
+        "send": "Send",
+        "sendFailed": "Couldn't send your message — please try again."
+      },
+      "connections": {
+        "connected": "Connected",
+        "remove": "Remove",
+        "noneConnections": "No connections yet.",
+        "noneSaved": "Nothing saved yet — bookmark a profile from Discover.",
+        "removeFailed": "Couldn't update saved — please try again."
+      },
+      "connectModal": {
+        "title": "Connect with {{name}}",
+        "placeholder": "Write a short message introducing yourself",
+        "send": "Send Request",
+        "sending": "Sending...",
+        "toastSent": "Connection request sent",
+        "toastFailed": "Couldn't send your request — please try again."
+      },
+      "reportModal": {
+        "title": "Report this profile",
+        "subtitle": "Our admin team reviews every report.",
+        "reasons": {
+          "spam": "Spam",
+          "harassment": "Harassment",
+          "misleading": "Misleading information",
+          "fakeProfile": "Fake profile",
+          "other": "Other"
+        },
+        "submit": "Submit Report",
+        "submitting": "Submitting...",
+        "toastSubmitted": "Report submitted — our admin team will review it",
+        "toastFailed": "Couldn't submit your report — please try again."
+      }
+    },
     "dashboard": {
       "writeComment": "Write a comment...",
       "dismissWelcomeMessage": "Dismiss welcome message",
@@ -1922,8 +2261,23 @@
         "failedUpdateLike": "Failed to update like",
         "failedAddComment": "Failed to add comment",
         "shareLinkCopied": "Share link copied.",
-        "failedCopyShareLink": "Failed to copy share link."
+        "failedCopyShareLink": "Failed to copy share link.",
+        "joinedCommunity": "You joined the community.",
+        "failedJoinCommunity": "Failed to join community."
       },
+      "recentJobs": "Latest Opportunities",
+      "recentJobsHint": "Direct referrals and diaspora-friendly roles",
+      "communityStream": "Community Stream",
+      "suggestedCommunities": "Communities",
+      "suggestedCommunitiesHint": "Suggested for you",
+      "viewAllCommunities": "View All Communities",
+      "featuredBusinesses": "Featured Businesses",
+      "featuredBusinessesHint": "Verified diaspora directory",
+      "exploreVerifiedDirectory": "Explore Verified Directory",
+      "online": "Online",
+      "join": "Join",
+      "viewJobDetails": "View Details",
+      "enquire": "View Business",
       "stat": {
         "communities": "Communities",
         "posts": "Posts",
@@ -1960,7 +2314,7 @@
       "progressIntermediate": "Intermediate",
       "progressGettingThere": "Getting there",
       "progressJustStarted": "Just started",
-      "welcomeBanner": "Welcome to TamilConnect, {{name}}!",
+      "welcomeBanner": "Welcome to Tamilya, {{name}}!",
       "finishToStandOut": "{{strength}} — finish these to stand out:"
     },
     "community": {
@@ -2012,7 +2366,11 @@
       },
       "loadingMoreCommunities": "Loading more communities…",
       "summary": "{{count}} communities · {{members}} members",
-      "endOfList": "You’ve reached the end — {{count}} communities total."
+      "guestGateTitle": "You're not registered or logged in",
+      "guestGateMessage": "Register or log in to browse communities and join in.",
+      "endOfList": "You’ve reached the end — {{count}} communities total.",
+      "browseByCountry": "Browse by country",
+      "allCountries": "All countries (worldwide)"
     },
     "business": {
       "allCountries": "All Countries",
@@ -2043,6 +2401,8 @@
       "nextImage": "Next image",
       "previewImage": "Preview image",
       "businessDirectory": "Business Directory",
+      "guestGateTitle": "You're not registered or logged in",
+      "guestGateMessage": "Register or log in to browse the business directory and view contact details.",
       "businessList": "Business List",
       "categoryView": "Category View",
       "addBusiness": "Add Business",
@@ -2160,6 +2520,8 @@
       "deleteEvent": "Delete event",
       "eventMode": "Event mode",
       "events": "Events",
+      "guestGateTitle": "You're not registered or logged in",
+      "guestGateMessage": "Register or log in to browse events and RSVP.",
       "breadcrumb": "breadcrumb",
       "addEvent": "Add Event",
       "clearAll": "Clear All",
@@ -2307,6 +2669,8 @@
       "endTime": "End time",
       "logoPreview": "Logo preview",
       "jobBoard": "Job Board",
+      "guestGateTitle": "You're not registered or logged in",
+      "guestGateMessage": "Register or log in to browse the job board and apply to listings.",
       "postJob": "Post a Job",
       "type": "Type",
       "mode": "Mode",
@@ -2622,6 +2986,19 @@
     }
   },
   "admin": {
+    "studentVerification": {
+      "title": "Student Verification",
+      "subtitle": "Review and approve pending Student Connect profiles.",
+      "submittedAt": "submitted",
+      "approve": "Approve",
+      "reject": "Reject",
+      "confirmReject": "Confirm Reject",
+      "rejectReasonPlaceholder": "What information is needed?",
+      "approvedToast": "Verification approved",
+      "rejectedToast": "Marked as needing more information",
+      "actionFailed": "Couldn't complete that action — please try again.",
+      "empty": "Nothing waiting for review."
+    },
     "dashboard": {
       "fromDate": "From date",
       "date": "To date",
@@ -4063,7 +4440,7 @@
     "POST_REJECTED": "Your post has been rejected.",
     "POST_REMOVED": "Your post was removed by an administrator.",
     "ACCOUNT_DEACTIVATED": "Your account has been deactivated by an administrator.",
-    "WELCOME": "Welcome to TamilConnect! Complete your profile and join a community to get started."
+    "WELCOME": "Welcome to Tamilya! Complete your profile and join a community to get started."
   },
   "currency": {
     "INR": "₹ INR — Indian Rupee",

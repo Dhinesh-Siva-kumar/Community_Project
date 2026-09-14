@@ -423,6 +423,51 @@ const eventCategories: Array<{ name: string; icon: string; display_order: number
   { name: 'Workshop', icon: 'bi-laptop',       display_order: 9004, is_active: false, description: 'Legacy category retained for existing events; not offered for new events.' },
 ];
 
+// Starter set for the Student Connect module's University/Course pickers —
+// a handful of well-known universities per supported country, not an
+// exhaustive list. Admin can add more via master_universities/master_courses
+// directly (no dedicated admin CRUD UI yet — see STUDENT_CONNECT_SPEC.md
+// §10). Country coverage matches the registration wizard's country list.
+const studentUniversities: Array<{ name: string; iso2: string }> = [
+  { name: 'Technical University of Munich', iso2: 'DE' },
+  { name: 'Ludwig Maximilian University of Munich', iso2: 'DE' },
+  { name: 'RWTH Aachen University', iso2: 'DE' },
+  { name: 'University of Stuttgart', iso2: 'DE' },
+  { name: 'University of Manchester', iso2: 'GB' },
+  { name: 'Coventry University', iso2: 'GB' },
+  { name: 'University of Birmingham', iso2: 'GB' },
+  { name: 'University College London', iso2: 'GB' },
+  { name: 'University College Dublin', iso2: 'IE' },
+  { name: 'Trinity College Dublin', iso2: 'IE' },
+  { name: 'Dublin City University', iso2: 'IE' },
+  { name: 'University of Toronto', iso2: 'CA' },
+  { name: 'University of British Columbia', iso2: 'CA' },
+  { name: 'McGill University', iso2: 'CA' },
+  { name: 'University of Melbourne', iso2: 'AU' },
+  { name: 'University of Sydney', iso2: 'AU' },
+  { name: 'Monash University', iso2: 'AU' },
+  { name: 'University of Auckland', iso2: 'NZ' },
+  { name: 'Victoria University of Wellington', iso2: 'NZ' },
+  { name: 'Arizona State University', iso2: 'US' },
+  { name: 'Northeastern University', iso2: 'US' },
+  { name: 'University of Texas at Dallas', iso2: 'US' },
+];
+
+const studentCourses = [
+  { name: 'Computer Science' },
+  { name: 'Data Science' },
+  { name: 'Information Technology' },
+  { name: 'Electrical Engineering' },
+  { name: 'Mechanical Engineering' },
+  { name: 'Civil Engineering' },
+  { name: 'Business Analytics' },
+  { name: 'International Business' },
+  { name: 'Finance' },
+  { name: 'Public Health' },
+  { name: 'Biotechnology' },
+  { name: 'Architecture' },
+];
+
 export async function seed(knex: Knex): Promise<void> {
   // ------------------------------------------------------------------
   // Countries
@@ -500,6 +545,34 @@ export async function seed(knex: Knex): Promise<void> {
       .ignore();
   }
   console.log(`Seeded ${eventCategories.length} event categories.`);
+
+  // ------------------------------------------------------------------
+  // Student Connect — master_universities / master_courses starter data
+  // ------------------------------------------------------------------
+  console.log('Seeding master_universities...');
+  const countryRows = await knex('master_countries')
+    .whereIn('iso2', [...new Set(studentUniversities.map((u) => u.iso2))])
+    .select('id', 'iso2');
+  const countryIdByIso: Record<string, number> = {};
+  (countryRows as Array<{ id: number; iso2: string }>).forEach((c) => { countryIdByIso[c.iso2] = c.id; });
+
+  let universitySeedCount = 0;
+  for (const u of studentUniversities) {
+    const countryId = countryIdByIso[u.iso2];
+    if (!countryId) continue;
+    await knex('master_universities')
+      .insert({ name: u.name, country_id: countryId })
+      .onConflict(['name', 'country_id'])
+      .ignore();
+    universitySeedCount += 1;
+  }
+  console.log(`Seeded ${universitySeedCount} universities.`);
+
+  console.log('Seeding master_courses...');
+  for (const c of studentCourses) {
+    await knex('master_courses').insert(c).onConflict('name').ignore();
+  }
+  console.log(`Seeded ${studentCourses.length} courses.`);
 
   // // ------------------------------------------------------------------
   // // Jobs (sample listings — skipped if any jobs already exist, so this

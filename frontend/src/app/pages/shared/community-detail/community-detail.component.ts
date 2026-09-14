@@ -41,7 +41,7 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private communityService = inject(CommunityService);
   private postService = inject(PostService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
@@ -313,6 +313,12 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
         this.pendingSharedPostId = this.parseSharedPostId(this.route.snapshot.fragment);
         this.loadCommunity();
         this.loadPosts();
+
+        // "My Posts" tab badge and the member list are both account-scoped —
+        // nothing to load for a guest (the Members tab and "My Posts" tab
+        // stay hidden for them — see template).
+        if (!this.authService.isAuthenticated()) return;
+
         // The "My Posts" tab badge reads this list, so it has to be fetched
         // with the page instead of lazily on first tab click — otherwise the
         // count only appears once the user has already opened the tab. Reset
@@ -1248,6 +1254,10 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   }
 
   openJoinModal(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.joinModalOpen.set(true);
   }
 

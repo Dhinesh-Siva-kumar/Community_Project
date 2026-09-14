@@ -69,7 +69,7 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   private translate = inject(TranslateService);
   private language = inject(LanguageService);
   private jobService        = inject(JobService);
-  private authService       = inject(AuthService);
+  authService               = inject(AuthService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
@@ -367,14 +367,18 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
 
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
-    // Default the Location filter to the viewer's own country — Country
-    // Based jobs from other countries are invisible to them anyway (see
-    // job-visibility.service.ts), so pre-filtering to "my country" starts
-    // the list on jobs they can actually apply to. They can still widen it.
+    // Default the Location filter to the viewer's own country (null for a
+    // guest — they simply see worldwide jobs until they pick a country
+    // themselves — see job-visibility.service.ts).
     this.filterCountry.set(this.getDefaultCountry());
     this.loadJobs(1);
     this.loadCountries();
-    this.loadMyPendingJobsCount();
+
+    // "Pending Approval" count is account-scoped — nothing to load for a
+    // guest, and the "Pending" tab itself is hidden for them (see template).
+    if (this.authService.isAuthenticated()) {
+      this.loadMyPendingJobsCount();
+    }
 
     // Deep-link support — e.g. the Profile page's "My Jobs" tab navigates
     // here with ?jobId=xxx to expand and scroll straight to that job's card.
@@ -742,6 +746,8 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   }
 
   // ─── Add/Edit Job modal ───────────────────────────────────────
+  // Guests see the full form too — the modal redirects them to registration
+  // only when they actually try to submit.
   openAddModal(): void {
     this.editJobId.set(null);
     this.showAddModal.set(true);

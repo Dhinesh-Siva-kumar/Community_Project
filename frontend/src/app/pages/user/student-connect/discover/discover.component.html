@@ -1,0 +1,113 @@
+<div class="sc-filter-panel">
+  <div class="sc-filter-row">
+    <div class="sc-search-wrap">
+      <i class="bi bi-search sc-search-wrap__icon"></i>
+      <input type="search" [ngModel]="searchQuery()" (ngModelChange)="onSearchInput($event)"
+        [placeholder]="'user.studentConnect.discover.searchPlaceholder' | translate" autocomplete="off" />
+    </div>
+    <button type="button" class="sc-advanced-toggle" [class.sc-advanced-toggle--open]="showAdvancedFilters()" (click)="toggleAdvancedFilters()">
+      <i class="bi bi-sliders"></i>
+      {{ 'user.studentConnect.discover.advancedFilters' | translate }}
+      @if (activeFilterChips().length > 0) { <span class="sc-advanced-count">{{ activeFilterChips().length }}</span> }
+    </button>
+  </div>
+
+  @if (activeFilterChips().length > 0) {
+    <div class="sc-active-chips">
+      <span class="sc-active-chips__label">{{ 'user.studentConnect.discover.active' | translate }}</span>
+      @for (chip of activeFilterChips(); track chip.key) {
+        <span class="sc-active-chip">
+          {{ chip.label }}
+          <button type="button" class="sc-active-chip__remove" (click)="removeFilter(chip.key)" [attr.aria-label]="'user.studentConnect.discover.removeFilter' | translate">
+            <i class="bi bi-x"></i>
+          </button>
+        </span>
+      }
+      <button type="button" class="sc-clear-all" (click)="clearAllFilters()">{{ 'user.studentConnect.discover.clearAll' | translate }}</button>
+    </div>
+  }
+</div>
+
+@if (showAdvancedFilters()) {
+  <div class="sc-adv-backdrop" (click)="closeAdvancedFilters()"></div>
+  <aside class="sc-adv-drawer">
+    <div class="sc-adv-drawer__head">
+      <h3><i class="bi bi-sliders"></i> {{ 'user.studentConnect.discover.advancedFilters' | translate }}</h3>
+      <button type="button" class="sc-adv-drawer__close" (click)="closeAdvancedFilters()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="sc-adv-drawer__body">
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-geo-alt"></i> {{ 'user.studentConnect.discover.location' | translate }}</label>
+        <app-searchable-select [options]="countries()" [ngModel]="countryId()" (ngModelChange)="onCountryChange($event)"
+          [placeholder]="'user.studentConnect.discover.allCountries' | translate"></app-searchable-select>
+      </div>
+
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-mortarboard"></i> {{ 'user.studentConnect.discover.studyLevel' | translate }}</label>
+        <div class="sc-chip-group">
+          <button type="button" class="sc-chip" [class.sc-chip--active]="studyLevel() === ''" (click)="setStudyLevel('')">{{ 'common.any' | translate }}</button>
+          @for (level of studyLevels; track level) {
+            <button type="button" class="sc-chip" [class.sc-chip--active]="studyLevel() === level" (click)="setStudyLevel(level)">{{ level }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-translate"></i> {{ 'user.studentConnect.discover.language' | translate }}</label>
+        <div class="sc-chip-group">
+          <button type="button" class="sc-chip" [class.sc-chip--active]="language() === ''" (click)="setLanguage('')">{{ 'common.any' | translate }}</button>
+          @for (lang of languageOptions; track lang) {
+            <button type="button" class="sc-chip" [class.sc-chip--active]="language() === lang" (click)="setLanguage(lang)">{{ lang }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-patch-check"></i> {{ 'user.studentConnect.discover.verifiedStudent' | translate }}</label>
+        <div class="sc-chip-group">
+          <button type="button" class="sc-chip" [class.sc-chip--active]="!verifiedOnly()" (click)="verifiedOnly() && toggleVerifiedOnly()">{{ 'common.any' | translate }}</button>
+          <button type="button" class="sc-chip" [class.sc-chip--active]="verifiedOnly()" (click)="!verifiedOnly() && toggleVerifiedOnly()">{{ 'user.studentConnect.discover.verifiedOnly' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-people"></i> {{ 'user.studentConnect.discover.mentorAvailable' | translate }}</label>
+        <div class="sc-chip-group">
+          <button type="button" class="sc-chip" [class.sc-chip--active]="!mentorOnly()" (click)="mentorOnly() && toggleMentorOnly()">{{ 'common.any' | translate }}</button>
+          <button type="button" class="sc-chip" [class.sc-chip--active]="mentorOnly()" (click)="!mentorOnly() && toggleMentorOnly()">{{ 'user.studentConnect.discover.availableNow' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="sc-adv-field">
+        <label class="sc-adv-label"><i class="bi bi-chat-dots"></i> {{ 'user.studentConnect.discover.mentoringType' | translate }}</label>
+        <div class="sc-chip-group">
+          <button type="button" class="sc-chip" [class.sc-chip--active]="!freeOnly()" (click)="freeOnly() && toggleFreeOnly()">{{ 'common.any' | translate }}</button>
+          <button type="button" class="sc-chip" [class.sc-chip--active]="freeOnly()" (click)="!freeOnly() && toggleFreeOnly()">{{ 'user.studentConnect.discover.freeChat' | translate }}</button>
+        </div>
+      </div>
+    </div>
+    <div class="sc-adv-drawer__foot">
+      <button type="button" class="sc-clear-all" (click)="clearAllFilters()"><i class="bi bi-x-circle"></i> {{ 'user.studentConnect.discover.clearAll' | translate }}</button>
+    </div>
+  </aside>
+}
+
+<div class="sc-result-grid">
+  @for (profile of results(); track profile.userId) {
+    <app-student-card [profile]="profile" (viewProfile)="onViewProfile($event)" (toggleSave)="onToggleSave($event)"></app-student-card>
+  } @empty {
+    @if (!loading()) {
+      <div class="sc-empty-note">{{ 'user.studentConnect.discover.noResults' | translate }}</div>
+    }
+  }
+</div>
+
+@if (loading()) {
+  <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
+}
+
+@if (page() < totalPages() && !loading()) {
+  <div class="sc-load-more">
+    <button type="button" class="sc-btn sc-btn--outline" (click)="loadMore()">{{ 'user.studentConnect.discover.loadMore' | translate }}</button>
+  </div>
+}

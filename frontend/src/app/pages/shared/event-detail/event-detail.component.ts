@@ -32,7 +32,7 @@ import { isHttpUrl } from '../../../shared/validators/url.validator';
 })
 export class EventDetailComponent implements OnInit, OnDestroy {
   private eventService = inject(EventService);
-  private authService  = inject(AuthService);
+  authService           = inject(AuthService);
   private toast        = inject(ToastService);
   private translate     = inject(TranslateService);
   private route  = inject(ActivatedRoute);

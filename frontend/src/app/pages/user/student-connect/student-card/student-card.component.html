@@ -1,0 +1,37 @@
+<article class="s-card" (click)="onView()">
+  <div class="s-card__head">
+    <div class="s-avatar">{{ initial }}</div>
+    <div class="s-card__id">
+      <p class="s-card__name">{{ profile.firstName }}</p>
+      <p class="s-card__course">{{ profile.course }}</p>
+    </div>
+    <span class="s-card__verifyDot" [class.s-card__verifyDot--verified]="profile.verificationStatus === 'verified'"
+      [attr.title]="(profile.verificationStatus === 'verified' ? 'user.studentConnect.card.verified' : 'user.studentConnect.card.pending') | translate"></span>
+  </div>
+
+  <div class="s-card__rule"></div>
+
+  <div class="s-card__facts">
+    <span>{{ locationLabel || ('user.studentConnect.card.locationUnknown' | translate) }}</span>
+    <span class="s-card__facts-muted">{{ profile.universityName }}</span>
+  </div>
+
+  <div class="s-card__langs">
+    <span *ngFor="let lang of profile.languages">{{ lang }}</span>
+  </div>
+
+  @if (profile.mentorAvailable) {
+    <div class="s-mentor"><span class="s-mentor__dot"></span>{{ 'user.studentConnect.card.mentorAvailable' | translate }}</div>
+  } @else {
+    <div class="s-mentor s-mentor--off"><span class="s-mentor__dot"></span>{{ 'user.studentConnect.card.notTakingRequests' | translate }}</div>
+  }
+
+  <div class="s-card__footRow">
+    <button type="button" class="s-card__cta" (click)="onView(); $event.stopPropagation()">
+      {{ 'user.studentConnect.card.viewProfile' | translate }} <i class="bi bi-arrow-right"></i>
+    </button>
+    <button type="button" class="s-card__save" [class.s-card__save--on]="profile.isSaved" (click)="onSave($event)" aria-label="Save">
+      <i class="bi" [class.bi-bookmark-fill]="profile.isSaved" [class.bi-bookmark]="!profile.isSaved"></i>
+    </button>
+  </div>
+</article>

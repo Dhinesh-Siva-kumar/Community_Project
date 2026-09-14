@@ -1,0 +1,31 @@
+@use '../../../../../assets/styles/index' as *;
+
+.sc-loading { display: flex; justify-content: center; padding: 20px; color: $color-primary-dark; }
+.sc-empty-note { font-size: 12.5px; color: $color-text-muted; padding: 20px; text-align: center; }
+
+.sc-chat-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; height: 560px; }
+@media (max-width: 760px) { .sc-chat-layout { grid-template-columns: 1fr; height: auto; } }
+
+.sc-chat-list { background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-lg; box-shadow: $shadow-card-default; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.sc-chat-thread-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: $radius-md; border: none; background: none; cursor: pointer; text-align: left; width: 100%; }
+.sc-chat-thread-row:hover { background: $color-bg-hover; }
+.sc-chat-thread-row--active { background: rgba(251,191,36,.1); }
+.sc-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: $font-family-header; font-weight: 700; font-size: 13px; color: $color-on-primary; background: $gradient-primary; }
+.sc-chat-thread-row__body { min-width: 0; flex: 1; }
+.sc-chat-thread-row__name { font-size: 12.5px; font-weight: 700; color: $color-text-primary; }
+.sc-chat-thread-row__preview { font-size: 11px; color: $color-text-muted; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-chat-unread { flex-shrink: 0; min-width: 18px; height: 18px; padding: 0 5px; border-radius: $radius-full; background: $gradient-primary; color: $color-on-primary; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+.sc-chat-pane { background: $color-bg-card; border: 1px solid $color-border; border-radius: $radius-lg; box-shadow: $shadow-card-default; display: flex; flex-direction: column; overflow: hidden; }
+.sc-chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: $color-text-muted; font-size: 12.5px; text-align: center; padding: 20px; i { font-size: 22px; } }
+.sc-chat-pane__head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid $color-border; flex-shrink: 0; }
+.sc-chat-pane__head b { font-size: 13px; color: $color-text-primary; display: block; }
+.sc-chat-pane__head span { font-size: 11px; color: $color-text-muted; }
+.sc-chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.sc-chat-bubble { max-width: 72%; padding: 9px 13px; border-radius: $radius-md; font-size: 12.5px; line-height: 1.5; align-self: flex-start; background: $color-bg-page; color: $color-text-body; }
+.sc-chat-bubble--me { align-self: flex-end; background: $gradient-primary; color: $color-on-primary; }
+.sc-chat-input-row { display: flex; gap: 10px; padding: 12px 14px; border-top: 1px solid $color-border; flex-shrink: 0; }
+.sc-chat-input-row input { flex: 1; font-family: inherit; font-size: 13px; color: $color-text-primary; background: $color-bg-page; border: 1px solid $color-border; border-radius: $radius-full; padding: 9px 16px; outline: none; &:focus { border-color: $color-primary; background: $color-bg-card; } }
+
+.sc-btn { font-family: inherit; font-weight: 700; font-size: 12.5px; border-radius: $radius-full; padding: 9px 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; flex-shrink: 0; &:disabled { opacity: .55; cursor: not-allowed; } }
+.sc-btn--primary { background: $gradient-primary; color: $color-on-primary; box-shadow: $shadow-primary-sm; }

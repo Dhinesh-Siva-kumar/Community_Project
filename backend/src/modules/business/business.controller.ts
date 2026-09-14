@@ -102,8 +102,8 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function findAll(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query = ListBusinessQueryDto.parse(req.query);
-    const skipActiveFilter = req.user!.role === 'ADMIN';
-    const result = await businessService.findAll({ ...query, skipActiveFilter, viewerId: req.user!.sub });
+    const skipActiveFilter = req.user?.role === 'ADMIN';
+    const result = await businessService.findAll({ ...query, skipActiveFilter, viewerId: req.user?.sub });
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -156,7 +156,7 @@ export async function requestMoreInfo(req: Request, res: Response, next: NextFun
 
 export async function findOne(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await businessService.findOne(req.params['id'] as string);
+    const result = await businessService.findOne(req.params['id'] as string, req.user?.sub);
     res.json(result);
   } catch (err) { next(err); }
 }

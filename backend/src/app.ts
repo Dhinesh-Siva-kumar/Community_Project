@@ -23,11 +23,13 @@ import notificationsRouter from './modules/notifications/notifications.router';
 import auditRouter from './modules/audit/audit.router';
 import masterDataRouter from './modules/master-data/master-data.router';
 import geographyRouter from './modules/geography/geography.router';
+import discoveryRouter from './modules/discovery/discovery.router';
 import uploadRouter from './modules/upload/upload.router';
 import otpRouter from './modules/otp/otp.router';
 import shareRouter from './modules/share/share.router';
 import reportsRouter from './modules/reports/reports.router';
 import analyticsRouter from './modules/analytics/analytics.router';
+import studentConnectRouter from './modules/student-connect/student-connect.router';
 
 const app = express();
 
@@ -108,9 +110,11 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/audit-logs', auditRouter);
 app.use('/api/master-data', masterDataRouter);
 app.use('/api/geography', geographyRouter);
+app.use('/api/discovery', discoveryRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/student-connect', studentConnectRouter);
 // OTP standalone endpoints were at /api/send-otp and /api/verify-otp in NestJS
 app.use('/api', otpRouter);
 app.use('/share', shareRouter);

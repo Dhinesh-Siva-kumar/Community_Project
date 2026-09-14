@@ -22,6 +22,7 @@ const envSchema = z.object({
   OTP_TOKEN_EXPIRES_IN: z.string().default('10m'),
   OTP_EXPIRES_MINUTES: z.coerce.number().default(5),
   OTP_MAX_ATTEMPTS: z.coerce.number().default(5),
+  OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().default(30),
 
   // CORS / URLs
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
@@ -70,10 +71,12 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
   ADMIN_EMAIL: z.string().optional(),
 
-  // Twilio (optional)
+  // Twilio (optional). TWILIO_SMS_FROM is a separate, SMS-capable Twilio
+  // number used as an SMS fallback when the WhatsApp send fails.
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_WHATSAPP_FROM: z.string().optional(),
+  TWILIO_SMS_FROM: z.string().optional(),
 
   // OpenAI (optional)
   OPENAI_API_KEY: z.string().optional(),
@@ -87,6 +90,14 @@ const envSchema = z.object({
   // for browser use and won't authenticate server-to-server calls). Enable
   // the Geocoding API on this key and restrict it by server IP instead.
   GOOGLE_MAPS_GEOCODING_API_KEY: z.string().optional(),
+
+  // Student Connect & Mentor — which of the two candidate concepts is live
+  // (see STUDENT_CONNECT_SPEC.md §2). CONTACT_SHARING reveals email/phone
+  // once two students connect; IN_APP_CHAT never shares contact details and
+  // unlocks an in-app chat thread instead. Flipping this and restarting the
+  // process is the entire "hide manually if needed" mechanism — no rebuild,
+  // no migration, the frontend reads it live via GET /api/student-connect/config.
+  STUDENT_CONNECT_MODEL: z.enum(['CONTACT_SHARING', 'IN_APP_CHAT']).default('CONTACT_SHARING'),
 });
 
 let env: z.infer<typeof envSchema>;

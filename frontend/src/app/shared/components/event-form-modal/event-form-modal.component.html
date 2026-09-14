@@ -558,7 +558,10 @@
         [disabled]="submitting()"
         (click)="submitEvent()"
       >
-        @if (submitting()) {
+        @if (isGuest()) {
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          {{ 'common.registerToContinue' | translate }}
+        } @else if (submitting()) {
           <span class="spinner-border spinner-border-sm me-1"></span>
           {{ editingEvent() ? 'Updating...' : 'Creating...' }}
         } @else {

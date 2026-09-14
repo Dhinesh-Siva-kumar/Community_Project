@@ -65,18 +65,27 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   mobileOpen = false;
   activeSection = 'home';
 
+  // "Back to top" — appears once the page has been scrolled down far enough
+  // that jumping back up manually would be tedious.
+  showScrollTop = false;
+
   @HostListener('window:scroll')
   onScroll(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.navScrolled = window.scrollY > 40;
+      this.showScrollTop = window.scrollY > 600;
     }
+  }
+
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   toggleMobile(): void { this.mobileOpen = !this.mobileOpen; }
   closeMobile(): void { this.mobileOpen = false; }
   setActive(s: string): void { this.activeSection = s; }
 
-  applicationName = 'TamilConnect';
+  applicationName = 'Tamilya';
 
   // ── Communities Showcase (proper nouns — not translated) ──
   @ViewChild('commScroll') commScrollRef!: ElementRef<HTMLElement>;
@@ -149,7 +158,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   // ── Observers & lifecycle ──
   private sectionObserver!: IntersectionObserver;
   private revealObserver!: IntersectionObserver;
-  private readonly sectionIds = ['home', 'features', 'communities', 'how-it-works', 'testimonials', 'about', 'blog', 'contact'];
+  private readonly sectionIds = ['home', 'features', 'communities', 'how-it-works', 'testimonials', 'about', 'contact'];
 
   ngOnInit(): void {
     this.themeService.applyDefaultIfUnset('light');

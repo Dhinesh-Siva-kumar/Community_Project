@@ -1,3 +1,4 @@
+import type { Knex } from 'knex';
 import db from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { deleteUploadedFiles } from '../../services/upload-storage.service';
@@ -313,6 +314,28 @@ export async function findAll(params: ListEventsQueryDtoType & { skipActiveFilte
     const scope = await getViewerScope(viewerId);
     applyEventVisibilityRestriction(query, 'e.', viewerId, scope);
     applyEventVisibilityRestriction(countQuery, 'e.', viewerId, scope);
+  } else if (!skipActiveFilter && !viewerId) {
+    // Guest — no profile country to fall back on, so only WORLDWIDE events
+    // are visible by default; picking a country (the `country` filter
+    // above) additionally reveals that country's COUNTRY-scoped events.
+    query.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('e.visibility_type', 'WORLDWIDE');
+      if (country) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('e.visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(e.country) = LOWER(?)', [country]);
+        });
+      }
+    });
+    countQuery.andWhere(function (this: Knex.QueryBuilder) {
+      this.where('visibility_type', 'WORLDWIDE');
+      if (country) {
+        this.orWhere(function (this: Knex.QueryBuilder) {
+          this.where('visibility_type', 'COUNTRY')
+            .andWhereRaw('LOWER(country) = LOWER(?)', [country]);
+        });
+      }
+    });
   }
 
   // 'near' sorts offline/hybrid events in nearPincode to the top (event date
@@ -405,6 +428,10 @@ export async function findOne(id: string, viewerId?: string, viewerRole?: string
     // Same 404 shape as "not found" — a hidden event shouldn't leak its
     // existence to a viewer who isn't allowed to see it.
     if (!visible) throw new AppError(404, 'Event not found', 'EVENT_FOUND');
+  } else if (!viewerId && e['visibility_type'] !== 'WORLDWIDE') {
+    // Guest — no profile/selected country to check a COUNTRY-scoped event
+    // against, so only WORLDWIDE events are visible without logging in.
+    throw new AppError(404, 'Event not found', 'EVENT_FOUND');
   }
 
   return {
@@ -434,7 +461,11 @@ export async function findOne(id: string, viewerId?: string, viewerRole?: string
     rejectionReason: e['rejection_reason'] ?? null,
     createdAt: e['created_at'],
     updatedAt: e['updated_at'],
-    user: { id: e['uid'], userName: e['user_name'], displayName: e['display_name'], email: e['user_email'], avatar: e['avatar'] },
+    user: {
+      id: e['uid'], userName: e['user_name'], displayName: e['display_name'],
+      email: viewerId ? e['user_email'] : undefined,
+      avatar: e['avatar'],
+    },
   };
 }
 
@@ -483,7 +514,13 @@ export async function findRelated(id: string, viewerId?: string, limit = 6) {
     // Respects Country/Worldwide visibility exactly like the main listing —
     // an Online Worldwide event can suggest related events from any
     // country; a Country Based one (Online or not) only from its own.
-    if (viewerId && scope) applyEventVisibilityRestriction(qb, 'e.', viewerId, scope);
+    if (viewerId && scope) {
+      applyEventVisibilityRestriction(qb, 'e.', viewerId, scope);
+    } else if (!viewerId) {
+      // Guest — no profile/selected country to check against, so only
+      // WORLDWIDE events are suggested.
+      qb.andWhere('e.visibility_type', 'WORLDWIDE');
+    }
     return qb;
   };
 

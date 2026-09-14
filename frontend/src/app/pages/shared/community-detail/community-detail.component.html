@@ -416,7 +416,7 @@
           </button>
         }
 
-        @if (!isAdmin()) {
+        @if (!isAdmin() && authService.isAuthenticated()) {
           <button class="cd-tab-btn cd-tab-btn--myposts" role="tab" [class.cd-tab-btn--active]="displayTab() === 'myposts'"
             (click)="setTab('myposts')" [attr.aria-selected]="displayTab() === 'myposts'">
             <i class="bi bi-file-post"></i>
@@ -436,11 +436,13 @@
 
           @if (moreTabsMenuOpen()) {
             <div class="cd-post-menu cd-tabs-more-menu" role="menu">
-              <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'members'"
-                (click)="setTab('members'); closeMoreTabsMenu()">
-                <i class="bi bi-people"></i>Members
-                @if (memberCount() > 0) { <span class="cd-tabs-more-badge">{{ memberCount() }}</span> }
-              </button>
+              @if (authService.isAuthenticated()) {
+                <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'members'"
+                  (click)="setTab('members'); closeMoreTabsMenu()">
+                  <i class="bi bi-people"></i>Members
+                  @if (memberCount() > 0) { <span class="cd-tabs-more-badge">{{ memberCount() }}</span> }
+                </button>
+              }
               <button class="cd-post-menu-item" role="menuitem" [class.cd-post-menu-item--active]="displayTab() === 'about'"
                 (click)="setTab('about'); closeMoreTabsMenu()">
                 <i class="bi bi-info-circle"></i>{{ 'shared.communityDetail.about' | translate }}
@@ -2524,5 +2526,4 @@
       </div>
     }
   }
-
 }

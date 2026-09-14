@@ -111,6 +111,33 @@
 // Still used by the empty-state "Create Event" CTA.
 .ev-add-btn  { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: $radius-md; border: none; background: linear-gradient(135deg, $color-primary, $color-saffron); color: $color-on-primary; font-size: $font-size-sm; font-weight: $font-weight-bold; cursor: pointer; box-shadow: 0 4px 14px rgba(251,191,36,0.35); white-space: nowrap; @include transition-short(all); &:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(251,191,36,0.45); } &--sm { padding: 8px 16px; font-size: $font-size-xs; } }
 
+// ── Guest country picker — same look as the Community page's
+// .uc-guest-country, shown on-page instead of buried in Advanced Filters. ──
+.jb-guest-country {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: $spacing-md;
+  padding: 10px 16px;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  border: 1px solid $color-border;
+
+  i.bi-geo-alt-fill { color: $color-primary; font-size: 14px; flex-shrink: 0; }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-body;
+    white-space: nowrap;
+  }
+
+  &__select {
+    width: 220px;
+    max-width: 100%;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SEARCH CARD — replicated verbatim from the Business page's
 // .jb-filter-panel (search + sort + collapsible Advanced Filters +

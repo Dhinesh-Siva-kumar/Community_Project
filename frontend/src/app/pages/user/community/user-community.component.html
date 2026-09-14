@@ -105,6 +105,23 @@
   </div>
 </div>
 
+<!-- ── GUEST COUNTRY PICKER — logged-in users are already scoped to their
+     own profile country automatically; a guest has none, so this lets them
+     narrow the (otherwise global-communities-only) list to a country. ── -->
+@if (!authService.isAuthenticated()) {
+  <div class="uc-guest-country">
+    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+    <span class="uc-guest-country__label">{{ 'user.community.browseByCountry' | translate }}</span>
+    <app-searchable-select
+      class="uc-guest-country__select"
+      [options]="countryOptions()"
+      [ngModel]="guestCountry()"
+      (ngModelChange)="onGuestCountryChange($event)"
+      [placeholder]="'user.community.allCountries' | translate">
+    </app-searchable-select>
+  </div>
+}
+
 <!-- ── SUGGESTED FOR YOU ────────────────────────────────────── -->
 @if (activeTab() === 'all' && !searchTerm() && suggestedCommunities().length > 1) {
   <section class="uc-spotlight" [attr.aria-label]="'user.community.suggestedCommunities' | translate">

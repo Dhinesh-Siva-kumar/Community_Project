@@ -2,6 +2,7 @@ import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, injec
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
+import { Router } from '@angular/router';
 import { CommunityService } from '../../../core/services/community.service';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -62,6 +63,7 @@ export class CommunityFormModalComponent implements OnChanges {
   private communityService = inject(CommunityService);
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
+  private router = inject(Router);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
@@ -83,6 +85,7 @@ export class CommunityFormModalComponent implements OnChanges {
   private suppressTypeSideEffects = false;
 
   isAdminUser = computed(() => this.authService.currentUser()?.role === 'ADMIN');
+  isGuest = computed(() => !this.authService.isAuthenticated());
   isEditing = computed(() => !!this.editingCommunity());
   modalTitle = computed(() => this.isEditing() ? 'components.communityForm.editTitle' : 'components.communityForm.createTitle');
 
@@ -287,6 +290,14 @@ export class CommunityFormModalComponent implements OnChanges {
   }
 
   submitForm(): void {
+    // Guests get the full form for engagement, but the button reads
+    // "Register to Continue" — send them to sign up instead of saving.
+    if (this.isGuest()) {
+      this.closed.emit();
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+
     this.formSubmitAttempted.set(true);
     this.communityForm.markAllAsTouched();
     this.hubCountryConflict.set(null);

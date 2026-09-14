@@ -190,7 +190,10 @@ export type NotificationType =
   // Phase 3: engagement
   | 'COMMUNITY_MEMBER_JOINED'
   // Phase 4
-  | 'WELCOME';
+  | 'WELCOME'
+  // Student Connect & Mentor
+  | 'STUDENT_CONNECTION_REQUEST' | 'STUDENT_CONNECTION_ACCEPTED'
+  | 'STUDENT_VERIFICATION_APPROVED' | 'STUDENT_VERIFICATION_REJECTED' | 'STUDENT_CHAT_MESSAGE';
 
 export const ALL_NOTIFICATION_TYPES: NotificationType[] = [
   'POST_APPROVED', 'POST_REJECTED', 'POST_PENDING',
@@ -205,6 +208,8 @@ export const ALL_NOTIFICATION_TYPES: NotificationType[] = [
   'TRUST_REVOKED', 'ACCOUNT_DEACTIVATED', 'PASSWORD_RESET_BY_ADMIN',
   'POST_REMOVED', 'COMMUNITY_REMOVED', 'BUSINESS_REMOVED', 'EVENT_REMOVED', 'JOB_REMOVED',
   'COMMUNITY_MEMBER_JOINED', 'WELCOME',
+  'STUDENT_CONNECTION_REQUEST', 'STUDENT_CONNECTION_ACCEPTED',
+  'STUDENT_VERIFICATION_APPROVED', 'STUDENT_VERIFICATION_REJECTED', 'STUDENT_CHAT_MESSAGE',
 ];
 
 export interface NotificationPreferences {
@@ -661,4 +666,199 @@ export interface ChartData {
   businessTotal:   number;
   jobActive:       number;
   jobTotal:        number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Discovery previews — the reduced, guest-safe shapes served by
+// GET /api/discovery/*. Deliberately distinct from Job/Business/Event/
+// Community above so a preview card can never accidentally bind to a field
+// the backend doesn't actually send (e.g. contact info, full description).
+// ─────────────────────────────────────────────────────────────
+export interface JobPreview {
+  id: string;
+  title: string;
+  companyName?: string;
+  companyLogo?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  workMode?: string;
+  jobType?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryType?: string;
+  salaryHidden?: boolean;
+  isRemote?: boolean;
+  createdAt: string;
+  user: { displayName?: string; avatar?: string } | null;
+}
+
+export interface BusinessPreview {
+  id: string;
+  name: string;
+  category: { id: string; name: string; icon?: string } | null;
+  city?: string;
+  state?: string;
+  country?: string;
+  logo?: string;
+  description?: string | null;
+  createdAt: string;
+}
+
+export interface EventPreview {
+  id: string;
+  title: string;
+  eventDate: string;
+  eventMode?: 'Offline' | 'Online' | 'Hybrid';
+  eventCategory?: string;
+  country?: string;
+  coverImage?: string | null;
+  createdAt: string;
+}
+
+export interface CommunityPreview {
+  id: string;
+  name: string;
+  description?: string | null;
+  image?: string;
+  country?: string;
+  categoryName?: string | null;
+  memberCount: number;
+}
+
+export interface PostPreview {
+  id: string;
+  content?: string;
+  image?: string | null;
+  type?: 'GENERAL' | 'HELP' | 'EMERGENCY' | 'ENQUIRY';
+  createdAt: string;
+  community: { id: string; name: string; image?: string } | null;
+  user: { displayName?: string; avatar?: string } | null;
+  likeCount: number;
+  commentCount: number;
+}
+
+export interface DiscoverySearchResult {
+  query: string;
+  jobs: JobPreview[];
+  businesses: BusinessPreview[];
+  events: EventPreview[];
+  communities: CommunityPreview[];
+}
+
+export interface DiscoveryPlatformStats {
+  countries: number;
+  communities: number;
+  jobs: number;
+  businesses: number;
+  events: number;
+}
+
+// ============================================================
+// Student Connect & Mentor (see STUDENT_CONNECT_SPEC.md)
+// ============================================================
+export type StudentConnectModel = 'CONTACT_SHARING' | 'IN_APP_CHAT';
+
+export interface StudentConnectConfig {
+  model: StudentConnectModel;
+  chatEnabled: boolean;
+  paidMentoringSelectable: boolean;
+}
+
+export type StudyLevel = "Bachelor's" | "Master's" | 'PhD' | 'Diploma';
+export type MentoringType = 'free_chat' | 'paid_chat' | 'paid_call';
+export type VerificationStatus = 'pending' | 'verified';
+export type StudentReportReason = 'spam' | 'harassment' | 'misleading' | 'fake_profile' | 'other';
+
+export interface StudentProfile {
+  id: string;
+  userId: string;
+  firstName: string;
+  photoUrl?: string | null;
+  countryId: number;
+  regionId?: number | null;
+  cityId?: number | null;
+  cityFreeText?: string | null;
+  universityId?: number | null;
+  universityFreeText?: string | null;
+  course: string;
+  studyLevel: StudyLevel;
+  yearOfStudy: string;
+  languages: string[];
+  shortIntro: string;
+  previousCountryId?: number | null;
+  academicBackground?: string | null;
+  areasOfHelp: string[];
+  mentorAvailable: boolean;
+  mentoringType: MentoringType;
+  consultationPrice?: number | null;
+  verificationStatus: VerificationStatus;
+  verificationMethod?: string | null;
+  lastRejectionReason?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Search-result / directory shape — adds derived fields the profile row
+ * itself doesn't carry (joined display names, viewer-relative state). */
+export interface StudentDirectoryEntry extends StudentProfile {
+  universityName?: string | null;
+  countryName?: string | null;
+  isConnected: boolean;
+  isSaved: boolean;
+}
+
+/** Public profile view shape — email/phone only ever present under the
+ * Contact Sharing model once connected; chatUnlocked only under In-App Chat. */
+export interface StudentPublicProfile extends StudentDirectoryEntry {
+  email?: string;
+  phone?: string;
+  chatUnlocked?: boolean;
+}
+
+export interface StudentConnectionRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+  respondedAt?: string | null;
+  firstName?: string;
+  course?: string;
+}
+
+export interface StudentConnection {
+  id: string;
+  userAId: string;
+  userBId: string;
+  connectedAt: string;
+  otherUserId?: string;
+  firstName?: string | null;
+  course?: string | null;
+}
+
+export interface StudentReport {
+  id: string;
+  status: string;
+}
+
+export interface StudentChatThread {
+  id: string;
+  otherUserId: string;
+  firstName: string | null;
+  course: string | null;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+}
+
+export interface StudentChatMessage {
+  id: string;
+  threadId: string;
+  senderUserId: string;
+  text: string;
+  createdAt: string;
+  readAt?: string | null;
 }

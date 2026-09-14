@@ -182,6 +182,16 @@ export async function findAll(params: ListPostsQueryDtoType & { isAdmin?: boolea
     const userCountry = await getUserCountry(currentUserId);
     applyNonAdminVisibilityRestriction(query, 'c.', currentUserId, userCountry);
     applyNonAdminVisibilityRestriction(countQuery, 'c.', currentUserId, userCountry);
+  } else if (!isAdmin && !currentUserId) {
+    // Guest — no account, so no country/membership to scope by; posts are
+    // visible only from official Hub / is_global communities, mirroring
+    // communities.service.ts's own guest restriction.
+    query.where(function () {
+      this.where('c.community_type', 'HUB').orWhere('c.is_global', true);
+    });
+    countQuery.where(function () {
+      this.where('c.community_type', 'HUB').orWhere('c.is_global', true);
+    });
   }
 
   const [posts, [{ total }]] = await Promise.all([

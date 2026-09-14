@@ -42,7 +42,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
 export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   private translate = inject(TranslateService);
   private eventService = inject(EventService);
-  private authService  = inject(AuthService);
+  authService          = inject(AuthService);
   private layoutService = inject(LayoutService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
@@ -255,7 +255,12 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
         });
       }
     });
-    this.loadMyPendingEventsCount();
+
+    // "Pending Approval" count is account-scoped — nothing to load for a
+    // guest, and the "Pending" tab itself is hidden for them (see template).
+    if (this.authService.isAuthenticated()) {
+      this.loadMyPendingEventsCount();
+    }
   }
 
   ngOnDestroy(): void {
@@ -807,6 +812,8 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   }
 
   // ── add / edit modal (form owned by app-event-form-modal) ──
+  // Guests see the full form too — the modal redirects them to registration
+  // only when they actually try to submit.
   openAddModal(): void {
     this.editingId.set(null);
     this.showAddModal.set(true);

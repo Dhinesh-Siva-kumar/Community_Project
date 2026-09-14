@@ -2,33 +2,33 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as otpService from '../../services/otp.service';
 import { checkPhoneExists } from '../auth/auth.service';
 import { env } from '../../config/env';
+import { AppError } from '../../middleware/errorHandler';
+import { otpLimiter } from '../../middleware/rateLimiter';
+import { SendOtpDto, VerifyOtpDto } from './otp.dto';
 
 const router = Router();
+
+router.use(otpLimiter);
 
 // POST /api/send-otp
 router.post('/send-otp', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { mobile } = req.body as { mobile?: string };
-    if (!mobile) {
-      res.status(400).json({ success: false, message: 'mobile is required' });
-      return;
-    }
+    const { mobile } = SendOtpDto.parse(req.body);
 
     // Reject if the number is already tied to an existing account
     const alreadyRegistered = await checkPhoneExists(mobile);
     if (alreadyRegistered) {
-      res.status(409).json({
-        success: false,
-        message: 'This mobile number is already registered with another account.',
-      });
-      return;
+      throw new AppError(
+        409,
+        'This mobile number is already registered with another account.',
+        'MOBILE_NUMBER_ALREADY_REGISTERED',
+      );
     }
 
-    const otp = otpService.sendOtp(mobile);
-    await otpService.deliverOtp(mobile, otp);
+    const otp = await otpService.requestOtpDelivery(mobile);
 
     const response: Record<string, unknown> = { success: true, message: 'OTP sent' };
-    if (env.NODE_ENV !== 'production') {
+    if (env.NODE_ENV === 'development' || !otpService.isDeliveryConfigured()) {
       response['devOtp'] = otp;
     }
 
@@ -41,15 +41,10 @@ router.post('/send-otp', async (req: Request, res: Response, next: NextFunction)
 // POST /api/verify-otp
 router.post('/verify-otp', (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { mobile, otp } = req.body as { mobile?: string; otp?: string };
-    if (!mobile || !otp) {
-      res.status(400).json({ success: false, message: 'mobile and otp are required' });
-      return;
-    }
+    const { mobile, otp } = VerifyOtpDto.parse(req.body);
     const result = otpService.verifyOtp(mobile, otp);
     if (!result.success) {
-      res.status(400).json(result);
-      return;
+      throw new AppError(400, result.message, 'OTP_VERIFICATION_FAILED');
     }
     res.json(result);
   } catch (err) {

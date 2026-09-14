@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { userGuard } from './core/guards/user.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { noAdminGuard } from './core/guards/no-admin.guard';
 import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -24,6 +25,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/landing/landing.component').then(
             (m) => m.LandingComponent
+          ),
+      },
+      {
+        path: 'home',
+        loadComponent: () =>
+          import('./pages/home/home.component').then(
+            (m) => m.HomeComponent
+          ),
+      },
+      {
+        path: 'discover/:topic',
+        loadComponent: () =>
+          import('./pages/discover/discover.component').then(
+            (m) => m.DiscoverComponent
           ),
       },
       {
@@ -104,6 +119,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'student-connect/verification-queue',
+        loadComponent: () =>
+          import('./pages/admin/student-connect/verification-queue/verification-queue.component').then(
+            (m) => m.VerificationQueueComponent
+          ),
+      },
+      {
         path: 'user-management',
         loadComponent: () =>
           import('./pages/admin/user-management/user-management.component').then(
@@ -173,25 +195,32 @@ export const routes: Routes = [
   },
 
   // User routes
+  //
+  // No userGuard at this level: jobs/events/business/community pages stay
+  // reachable for a guest — they just render a "please register or log in"
+  // gate instead of any real content (see GuestGateComponent). Only profile
+  // and notifications — inherently account-bound — keep userGuard below.
   {
     path: 'user',
     loadComponent: () =>
       import('./layouts/user-layout/user-layout.component').then(
         (m) => m.UserLayoutComponent
       ),
-    canActivate: [userGuard],
+    canActivate: [noAdminGuard],
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: '/home',
         pathMatch: 'full',
       },
+      // The dashboard page's content (stats, post feed, jobs/communities/
+      // business widgets) is now embedded directly inside HomeComponent's
+      // registered-user view (see pages/home/home.component.html) — nothing
+      // is exclusive to this URL anymore, so it just forwards there.
       {
         path: 'dashboard',
-        loadComponent: () =>
-          import('./pages/user/dashboard/user-dashboard.component').then(
-            (m) => m.UserDashboardComponent
-          ),
+        redirectTo: '/home',
+        pathMatch: 'full',
       },
       {
         path: 'community',
@@ -239,7 +268,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'student-connect',
+        loadComponent: () =>
+          import('./pages/user/student-connect/student-connect.component').then(
+            (m) => m.StudentConnectComponent
+          ),
+      },
+      {
         path: 'profile',
+        canActivate: [userGuard],
         loadComponent: () =>
           import('./pages/user/profile/profile.component').then(
             (m) => m.UserProfileComponent
@@ -247,6 +284,7 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
+        canActivate: [userGuard],
         loadComponent: () =>
           import('./pages/shared/notifications/notifications.component').then(
             (m) => m.NotificationsComponent

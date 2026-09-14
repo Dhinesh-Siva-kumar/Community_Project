@@ -22,11 +22,13 @@
           [attr.aria-selected]="pageTab() === 'all'" (click)="setPageTab('all')">
           <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> {{ 'common.all' | translate }}
         </button>
-        <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
-          [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
-          <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
-          @if (myPendingJobsCount()) { <span class="biz-tab-count">{{ myPendingJobsCount() }}</span> }
-        </button>
+        @if (authService.isAuthenticated()) {
+          <button #tabBtn role="tab" type="button" class="biz-tab" [class.active]="pageTab() === 'pending'"
+            [attr.aria-selected]="pageTab() === 'pending'" (click)="setPageTab('pending')">
+            <i class="bi bi-hourglass-split" aria-hidden="true"></i> Pending Approval
+            @if (myPendingJobsCount()) { <span class="biz-tab-count">{{ myPendingJobsCount() }}</span> }
+          </button>
+        }
       </div>
     </div>
 
@@ -50,6 +52,24 @@
     </button>
   </div>
 </div>
+
+<!-- ── GUEST COUNTRY PICKER — logged-in users are already scoped to their
+     own profile country automatically; a guest has none, so this lets them
+     narrow the (otherwise worldwide) job list to a country, right on the
+     page instead of inside Advanced Filters. ── -->
+@if (!authService.isAuthenticated()) {
+  <div class="jb-guest-country">
+    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+    <span class="jb-guest-country__label">{{ 'user.community.browseByCountry' | translate }}</span>
+    <app-searchable-select
+      class="jb-guest-country__select"
+      [options]="countryOptions()"
+      [ngModel]="filterCountry()"
+      (ngModelChange)="onFilterCountryChange($event)"
+      [placeholder]="'user.jobs.country' | translate">
+    </app-searchable-select>
+  </div>
+}
 
 <!-- ═══════════════════════════════════════════════════════════
      FILTER PANEL — only for the public "All" browse; the
@@ -172,17 +192,22 @@
     <div class="jb-adv-drawer__body">
       <div class="jb-advanced-grid">
 
-        <!-- Location: Country / State / City -->
+        <!-- Location: Country / State / City — Country itself is shown
+             on-page (guest browse-by-country bar above) instead of here,
+             once the viewer is a guest; logged-in users keep the full
+             cascade here since their own country is the default. -->
         <div class="jb-adv-field jb-adv-field--wide">
           <label class="jb-adv-label"><i class="bi bi-geo-alt"></i> {{ 'user.jobs.location' | translate }}</label>
           <div class="jb-location-row">
-            <app-searchable-select
-              [options]="countryOptions()"
-              [ngModel]="filterCountry()"
-              (ngModelChange)="onFilterCountryChange($event)"
-              [placeholder]="'user.jobs.country' | translate"
-              [searchPlaceholder]="'components.search.countries' | translate">
-            </app-searchable-select>
+            @if (authService.isAuthenticated()) {
+              <app-searchable-select
+                [options]="countryOptions()"
+                [ngModel]="filterCountry()"
+                (ngModelChange)="onFilterCountryChange($event)"
+                [placeholder]="'user.jobs.country' | translate"
+                [searchPlaceholder]="'components.search.countries' | translate">
+              </app-searchable-select>
+            }
             <app-searchable-select
               [options]="filterStateOptions()"
               [ngModel]="filterState()"

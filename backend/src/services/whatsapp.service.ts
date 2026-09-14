@@ -34,5 +34,27 @@ export async function sendWhatsAppMessage(
     console.log('[WhatsAppService] Message sent:', msg.sid);
   } catch (err) {
     console.error('[WhatsAppService] Failed to send message:', err);
+    throw err;
+  }
+}
+
+/** Plain SMS via Twilio — used as a fallback when a WhatsApp send fails. */
+export async function sendSmsMessage(to: string, body: string): Promise<void> {
+  const c = getClient();
+  if (!c || !env.TWILIO_SMS_FROM) {
+    console.warn('[WhatsAppService] Twilio SMS not configured — skipping SMS message.');
+    return;
+  }
+
+  try {
+    const msg = await c.messages.create({
+      from: env.TWILIO_SMS_FROM,
+      to,
+      body,
+    });
+    console.log('[WhatsAppService] SMS sent:', msg.sid);
+  } catch (err) {
+    console.error('[WhatsAppService] Failed to send SMS:', err);
+    throw err;
   }
 }

@@ -7,8 +7,10 @@ import {
   AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { Subject, takeUntil, Observable, map } from 'rxjs';
+import { Router } from '@angular/router';
 
 import { JobService } from '../../../core/services/job.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { GeographyService } from '../../../core/services/geography.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -120,6 +122,8 @@ function postalCodeValidator(regex: string | null): ValidatorFn {
 })
 export class JobFormModalComponent implements OnChanges, OnDestroy {
   private jobService        = inject(JobService);
+  private authService       = inject(AuthService);
+  private router            = inject(Router);
   private masterDataService = inject(MasterDataService);
   private geographyService  = inject(GeographyService);
   private toast             = inject(ToastService);
@@ -128,6 +132,8 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   private unsavedChanges    = inject(UnsavedChangesService);
   private el                = inject(ElementRef);
   private destroy$          = new Subject<void>();
+
+  isGuest = computed(() => !this.authService.isAuthenticated());
 
   @Input() open = false;
   @Input() editJobId: string | null = null;
@@ -832,6 +838,14 @@ export class JobFormModalComponent implements OnChanges, OnDestroy {
   }
 
   submitJob(): void {
+    // Guests get the full form for engagement, but the button reads
+    // "Register to Continue" — send them to sign up instead of saving.
+    if (this.isGuest()) {
+      this.closed.emit();
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+
     this.jobSubmitAttempted.set(true);
     this.jobForm.markAllAsTouched();
     if (this.jobForm.invalid) {

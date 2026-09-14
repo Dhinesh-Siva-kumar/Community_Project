@@ -1,0 +1,25 @@
+@use '../../../../../assets/styles/index' as *;
+
+.asv-head { margin-bottom: 20px; }
+.asv-title { font-family: $font-family-header; font-size: 22px; font-weight: 700; color: $color-text-primary; margin: 0 0 4px; }
+.asv-subtitle { font-size: 13px; color: $color-text-muted; margin: 0; }
+
+.asv-loading { display: flex; justify-content: center; padding: 40px; color: $color-primary-dark; }
+.asv-empty { font-size: 12.5px; color: $color-text-muted; padding: 30px; text-align: center; border: 1px dashed $color-border-strong; border-radius: $radius-md; }
+
+.asv-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid $color-border; border-radius: $radius-md; margin-bottom: 10px; background: $color-bg-card; box-shadow: $shadow-card-default; flex-wrap: wrap; }
+.asv-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: $font-family-header; font-weight: 700; font-size: 14px; color: $color-on-primary; background: $gradient-primary; }
+.asv-row__body { flex: 1; min-width: 200px; }
+.asv-row__name { font-size: 13px; font-weight: 700; color: $color-text-primary; }
+.asv-row__display { font-weight: 500; color: $color-text-muted; }
+.asv-row__meta { font-size: 11.5px; color: $color-text-muted; }
+.asv-row__actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.asv-reject-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1 1 100%; }
+.asv-reject-form input { flex: 1; min-width: 200px; font-family: inherit; font-size: 13px; color: $color-text-primary; background: $color-bg-page; border: 1px solid $color-border; border-radius: $radius-sm; padding: 8px 12px; outline: none; &:focus { border-color: $color-primary; } }
+
+.asv-btn { font-family: inherit; font-weight: 700; font-size: 12px; border-radius: $radius-full; padding: 8px 16px; cursor: pointer; border: none; &:disabled { opacity: .55; cursor: not-allowed; } }
+.asv-btn--primary { background: $gradient-primary; color: $color-on-primary; }
+.asv-btn--outline { background: transparent; color: $color-text-body; border: 1.5px solid $color-border-strong; }
+.asv-btn--danger { background: $color-danger; color: #fff; }
+.asv-btn--danger-outline { background: transparent; color: $color-danger; border: 1.5px solid rgba(220,38,38,.35); }

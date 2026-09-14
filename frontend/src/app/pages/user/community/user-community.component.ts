@@ -1,13 +1,16 @@
 import { Component, OnInit, OnDestroy, ElementRef, HostListener, inject, signal, computed, viewChild, viewChildren, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Community, Post, PaginatedResponse, CommunityAnalyticsCounts } from '../../../core/models';
+import { Community, Post, PaginatedResponse, CommunityAnalyticsCounts, Country } from '../../../core/models';
+import { MasterDataService } from '../../../core/services/master-data.service';
 import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
+import { SelectOption, SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { CommunityFormModalComponent } from '../../../shared/components/community-form-modal/community-form-modal.component';
 import { CommunityDeleteModalComponent } from '../../../shared/components/community-delete-modal/community-delete-modal.component';
 import { CommunityJoinModalComponent } from '../../../shared/components/community-join-modal/community-join-modal.component';
@@ -30,16 +33,27 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [PostVideoComponent, CommonModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, FormsModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, SearchableSelectComponent],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
 export class UserCommunityComponent implements OnInit, OnDestroy {
   private communityService = inject(CommunityService);
   private postService       = inject(PostService);
-  private authService       = inject(AuthService);
+  authService               = inject(AuthService);
   private toast             = inject(ToastService);
   private router            = inject(Router);
+  private masterDataService = inject(MasterDataService);
+
+  // ── Guest-only country picker — logged-in users are already scoped to
+  // their own profile country automatically (see communities.service.ts's
+  // applyNonAdminVisibilityRestriction); a guest has no profile country, so
+  // this lets them pick one instead of only ever seeing global communities.
+  countries     = signal<Country[]>([]);
+  guestCountry  = signal('');
+  countryOptions = computed<SelectOption[]>(() =>
+    this.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
+  );
 
   // ── Spotlight rail — arrow-button navigation ────────────────
   // A signal-based viewChild query (not @ViewChild) so it re-resolves
@@ -118,12 +132,21 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   myPendingCount   = signal(0);
 
   // ── Filter-tab definitions (segmented control) ──────────────
-  pageTabs = computed<FilterTab[]>(() => [
-    { id: 'all',      label: 'user.community.tab.all',      icon: 'bi-grid-3x3-gap', badge: this.overallStats()?.total || undefined },
-    { id: 'joined',   label: 'user.community.tab.joined',   icon: 'bi-person-check', badge: this.joinedTotalCount() || undefined },
-    { id: 'trending', label: 'user.community.tab.trending', icon: 'bi-lightning-fill' },
-    { id: 'pending',  label: 'user.community.tab.pending', icon: 'bi-hourglass-split', badge: this.myPendingCount() || undefined },
-  ]);
+  pageTabs = computed<FilterTab[]>(() => {
+    const tabs: FilterTab[] = [
+      { id: 'all',      label: 'user.community.tab.all',      icon: 'bi-grid-3x3-gap', badge: this.overallStats()?.total || undefined },
+    ];
+    // "Joined" and "Pending Approval" are inherently account-scoped — hidden
+    // from guests rather than shown empty/misleading.
+    if (this.authService.isAuthenticated()) {
+      tabs.push({ id: 'joined', label: 'user.community.tab.joined', icon: 'bi-person-check', badge: this.joinedTotalCount() || undefined });
+    }
+    tabs.push({ id: 'trending', label: 'user.community.tab.trending', icon: 'bi-lightning-fill' });
+    if (this.authService.isAuthenticated()) {
+      tabs.push({ id: 'pending', label: 'user.community.tab.pending', icon: 'bi-hourglass-split', badge: this.myPendingCount() || undefined });
+    }
+    return tabs;
+  });
 
   // ── Joined community ID tracker ───────────────────────────
   joinedCommunityIds = signal<Set<string>>(new Set());
@@ -258,11 +281,31 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadCommunities();
-    this.loadSuggestedCommunities();
     this.loadPopularPosts();
     this.loadOverallStats();
+
+    // Guests can browse the public directory above, but "suggested for
+    // you"/"joined"/"pending" are all account-scoped — nothing to load.
+    if (!this.authService.isAuthenticated()) {
+      this.loadCountries();
+      return;
+    }
+
+    this.loadSuggestedCommunities();
     this.loadJoinedTotalCount();
     this.loadMyPendingCount();
+  }
+
+  private loadCountries(): void {
+    this.masterDataService.getCountries().subscribe({
+      next: (data) => this.countries.set(data),
+      error: () => {},
+    });
+  }
+
+  onGuestCountryChange(countryName: any): void {
+    this.guestCountry.set(countryName ?? '');
+    this.loadCommunities();
   }
 
   /** Country + interests + popularity ranked list — see suggestedCommunities above. */
@@ -289,6 +332,11 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
       limit: this.pageSize(),
     };
     if (this.activeTab() === 'joined') params['joined'] = true;
+    // Guests have no profile country to scope by automatically, so their own
+    // country picker (guest-only — see template) drives this instead.
+    if (!this.authService.isAuthenticated() && this.guestCountry()) {
+      params['country'] = this.guestCountry();
+    }
     return params;
   }
 
@@ -449,6 +497,10 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   // ── Community actions ──────────────────────────────────────
   openJoinModal(event: Event, community: Community): void {
     event.stopPropagation();
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/register'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.communityToJoin.set(community);
     this.showJoinModal.set(true);
   }
@@ -611,6 +663,8 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
     return !!this.authService.currentUser() && this.authService.currentUser()?.id === community.createdById;
   }
 
+  // Guests see the full form too — app-community-form-modal redirects them
+  // to registration only when they actually try to submit.
   openAddCommunity(): void {
     this.editCommunityId.set(null);
     this.showCommunityModal.set(true);
