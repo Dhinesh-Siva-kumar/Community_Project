@@ -7,11 +7,10 @@
 
   <ul class="lp-nav-links">
     <li><a [routerLink]="['/landing']" [fragment]="'home'">{{ 'landing.nav_home' | translate }}</a></li>
-    <li><a [routerLink]="['/landing']" [fragment]="'features'">{{ 'landing.nav_features' | translate }}</a></li>
-    <li><a [routerLink]="['/landing']" [fragment]="'communities'">{{ 'landing.nav_communities' | translate }}</a></li>
+    <li><a [routerLink]="['/landing']" [fragment]="'categories'">{{ 'landing.nav_categories' | translate }}</a></li>
     <li><a [routerLink]="['/landing']" [fragment]="'how-it-works'">{{ 'landing.nav_how_it_works' | translate }}</a></li>
-    <li><a [routerLink]="['/landing']" [fragment]="'testimonials'">{{ 'landing.nav_reviews' | translate }}</a></li>
     <li><a [routerLink]="['/landing']" [fragment]="'about'">{{ 'landing.nav_about' | translate }}</a></li>
+    <li><a [routerLink]="['/landing']" [fragment]="'explore-more'">{{ 'landing.discover_pill' | translate }}</a></li>
     <li><a [routerLink]="['/landing']" [fragment]="'contact'">{{ 'landing.nav_contact' | translate }}</a></li>
   </ul>
 
@@ -32,11 +31,10 @@
 <!-- Mobile Menu -->
 <div class="lp-mobile" [class.open]="mobileOpen">
   <a [routerLink]="['/landing']" [fragment]="'home'" (click)="closeMobile()"><i class="bi bi-house-fill"></i> {{ 'landing.nav_home' | translate }}</a>
-  <a [routerLink]="['/landing']" [fragment]="'features'" (click)="closeMobile()"><i class="bi bi-stars"></i> {{ 'landing.nav_features' | translate }}</a>
-  <a [routerLink]="['/landing']" [fragment]="'communities'" (click)="closeMobile()"><i class="bi bi-people-fill"></i> {{ 'landing.nav_communities' | translate }}</a>
+  <a [routerLink]="['/landing']" [fragment]="'categories'" (click)="closeMobile()"><i class="bi bi-grid-3x3-gap-fill"></i> {{ 'landing.nav_categories' | translate }}</a>
   <a [routerLink]="['/landing']" [fragment]="'how-it-works'" (click)="closeMobile()"><i class="bi bi-compass-fill"></i> {{ 'landing.nav_how_it_works' | translate }}</a>
-  <a [routerLink]="['/landing']" [fragment]="'testimonials'" (click)="closeMobile()"><i class="bi bi-chat-quote-fill"></i> {{ 'landing.nav_reviews' | translate }}</a>
   <a [routerLink]="['/landing']" [fragment]="'about'" (click)="closeMobile()"><i class="bi bi-info-circle-fill"></i> {{ 'landing.nav_about' | translate }}</a>
+  <a [routerLink]="['/landing']" [fragment]="'explore-more'" (click)="closeMobile()"><i class="bi bi-signpost-split-fill"></i> {{ 'landing.discover_pill' | translate }}</a>
   <a [routerLink]="['/landing']" [fragment]="'contact'" (click)="closeMobile()"><i class="bi bi-envelope-fill"></i> {{ 'landing.nav_contact' | translate }}</a>
   <div class="lp-mobile-actions">
     <app-language-toggle [block]="true"></app-language-toggle>
@@ -198,6 +196,280 @@
       </div>
     </section>
   }
+
+  @case ('everyone') {
+    <section class="lp-section lp-who-section">
+      <div class="lp-wrap">
+        <div class="lp-sec-head rv">
+          <span class="lp-pill neon-pill"><i class="bi bi-people-fill"></i> {{ 'landing.who_pill' | translate }}</span>
+          <h2 class="lp-sec-title">{{ 'landing.who_title' | translate }}</h2>
+          <p class="lp-sec-sub">{{ 'landing.who_sub' | translate }}</p>
+        </div>
+
+        <div class="lp-who-grid rv">
+          @for (audience of ('landing.whoIsThisFor' | translate); track $index; let i = $index) {
+            <div class="lp-who-card glass-card" [attr.data-color]="audience.color" [style.transition-delay]="(i * 0.08) + 's'">
+              <div class="lp-who-icon" [attr.data-color]="audience.color">
+                <i class="bi" [ngClass]="audience.icon"></i>
+              </div>
+              <h3 class="lp-who-title">{{ audience.title }}</h3>
+              <p class="lp-who-desc">{{ audience.desc }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  @case ('features') {
+    <section class="lp-section lp-section-mesh" id="features">
+      <div class="lp-wrap">
+        <div class="lp-sec-head rv">
+          <span class="lp-pill neon-pill"><i class="bi bi-stars"></i> {{ 'landing.feat_pill' | translate }}</span>
+          <h2 class="lp-sec-title">{{ 'landing.feat_title1' | translate }}<br/><span class="neon-text">{{ 'landing.feat_title2' | translate }}</span></h2>
+          <p class="lp-sec-sub">{{ 'landing.feat_sub' | translate }}</p>
+        </div>
+
+        <div class="lp-bento">
+          @for (f of ('landing.features' | translate); track $index; let i = $index) {
+            <div class="lp-bento-card glass-card rv"
+                 [attr.data-color]="f.color"
+                 [style.transition-delay]="(i * 0.06) + 's'">
+
+              <!-- Card content -->
+              <div class="lp-bento-body">
+                <div class="lp-bento-header">
+                  <div class="lp-bento-icon" [attr.data-color]="f.color">
+                    <i class="bi" [ngClass]="f.icon"></i>
+                  </div>
+                </div>
+
+                <h3>{{ f.title }}</h3>
+                <p>{{ f.desc }}</p>
+
+                <div class="lp-bento-tags">
+                  @for (tag of f.tags; track tag) {
+                    <span class="lp-mini-tag">{{ tag }}</span>
+                  }
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  @case ('communities') {
+    <section class="lp-section lp-communities-section" id="communities">
+      <div class="lp-wrap">
+
+        <!-- Section header -->
+        <div class="lp-sec-head rv">
+          <span class="lp-pill neon-pill-violet"><i class="bi bi-globe2"></i> {{ 'landing.comm_pill' | translate }}</span>
+          <h2 class="lp-sec-title">{{ 'landing.comm_title1' | translate }} <span class="neon-violet">{{ 'landing.comm_title2' | translate }}</span></h2>
+          <p class="lp-sec-sub">{{ 'landing.comm_sub' | translate }}</p>
+        </div>
+
+        <!-- ── Feature highlights: Group Chat · Local Help · Guidance ── -->
+        <div class="lp-comm-features rv">
+
+          <div class="lp-comm-feat-card glass-card">
+            <div class="lp-comm-feat-icon lp-comm-feat-icon--chat">
+              <i class="bi bi-chat-dots-fill"></i>
+            </div>
+            <h4>{{ 'landing.comm_group_chat_title' | translate }}</h4>
+            <p>{{ 'landing.comm_group_chat_desc' | translate }}</p>
+          </div>
+
+          <div class="lp-comm-feat-card glass-card">
+            <div class="lp-comm-feat-icon lp-comm-feat-icon--help">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <h4>{{ 'landing.comm_local_help_title' | translate }}</h4>
+            <p>{{ 'landing.comm_local_help_desc' | translate }}</p>
+          </div>
+
+          <div class="lp-comm-feat-card glass-card">
+            <div class="lp-comm-feat-icon lp-comm-feat-icon--guide">
+              <i class="bi bi-lightbulb-fill"></i>
+            </div>
+            <h4>{{ 'landing.comm_guidance_title' | translate }}</h4>
+            <p>{{ 'landing.comm_guidance_desc' | translate }}</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="lp-comm-scroll-wrap">
+        <button class="lp-comm-arrow lp-comm-arrow-left" (click)="scrollCommunities('left')" [attr.aria-label]="'common.scrollLeft' | translate">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="lp-comm-scroll rv" #commScroll>
+          <div class="lp-comm-track">
+            @for (c of communities; track c.name; let i = $index) {
+              <div class="lp-comm-card glass-card" [attr.data-color]="c.color">
+
+              <!-- Flag badge — centered at top -->
+                <div class="lp-comm-flag-wrap">
+                  <img
+                    class="lp-comm-flag-img"
+                    [src]="'https://flagcdn.com/w80/' + c.code + '.png'"
+                    [srcset]="'https://flagcdn.com/w160/' + c.code + '.png 2x'"
+                    [alt]="c.country + ' flag'"
+                    loading="lazy"
+                    width="80"
+                    height="60"
+                  />
+                </div>
+
+                <!-- Country name -->
+                <span class="lp-comm-country">{{ c.country }}</span>
+
+                <!-- Community name -->
+                <h4>{{ c.name }}</h4>
+
+                <!-- Bottom: status + members -->
+                <!-- <div class="lp-comm-bottom">
+                  <span class="lp-comm-status">
+                    <span class="lp-comm-dot"></span>
+                    {{ 'landing.comm_active' | translate }}
+                  </span>
+                  <span class="lp-comm-members">
+                    <i class="bi bi-people-fill"></i> {{ c.members | number }}
+                  </span>
+                </div> -->
+
+              </div>
+            }
+          </div>
+        </div>
+
+        <button class="lp-comm-arrow lp-comm-arrow-right" (click)="scrollCommunities('right')" [attr.aria-label]="'common.scrollRight' | translate">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- ── Chat Demo Widget ── -->
+      <!-- <div class="lp-wrap">
+        <div class="lp-comm-chat-demo glass-card rv"> -->
+
+          <!-- Header -->
+          <!-- <div class="lp-chat-header">
+            <img class="lp-chat-flag"
+                 src="https://flagcdn.com/w40/gb.png"
+                 srcset="https://flagcdn.com/w80/gb.png 2x"
+                 [alt]="'common.ukFlag' | translate" width="40" height="30" />
+            <div class="lp-chat-header-info">
+              <span class="lp-chat-community-name">{{ 'landing.comm_chat_community_name' | translate }}</span>
+              <span class="lp-chat-online-status">
+                <span class="lp-chat-dot"></span> {{ 'landing.comm_chat_active_status' | translate }}
+              </span>
+            </div>
+            <i class="bi bi-chat-dots-fill lp-chat-header-icon"></i>
+          </div> -->
+
+          <!-- Messages -->
+          <!-- <div class="lp-chat-messages"> -->
+
+            <!-- Murugan's question -->
+            <!-- <div class="lp-chat-msg lp-chat-msg--sent">
+              <div class="lp-chat-avatar lp-chat-avatar--primary">M</div>
+              <div class="lp-chat-content">
+                <span class="lp-chat-name">{{ 'landing.comm_chat_sender_name' | translate }}
+                  <span class="lp-chat-badge lp-chat-badge--online">{{ 'landing.comm_chat_online_badge' | translate }}</span>
+                </span>
+                <div class="lp-chat-bubble">
+                  {{ 'landing.comm_chat_murugan_msg' | translate }}
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Community reply -->
+            <!-- <div class="lp-chat-msg lp-chat-msg--received">
+              <div class="lp-chat-avatar lp-chat-avatar--member">C</div>
+              <div class="lp-chat-content lp-chat-content--right">
+                <span class="lp-chat-name lp-chat-name--right">{{ 'landing.comm_chat_member_name' | translate }}</span>
+                <div class="lp-chat-bubble lp-chat-bubble--reply">
+                  {{ 'landing.comm_chat_reply_msg' | translate }}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div> -->
+
+      <div class="lp-comm-browse">
+        <a routerLink="/communities" class="lp-btn lp-btn-neon lp-btn-shimmer">
+          <i class="bi bi-grid-3x3-gap-fill"></i> {{ 'landing.comm_browse_all' | translate }}
+        </a>
+      </div>
+    </section>
+  }
+
+  @case ('testimonials') {
+    <section class="lp-section lp-testi-section lp-section-mesh" id="testimonials">
+      <div class="lp-wrap">
+        <div class="lp-sec-head rv">
+          <span class="lp-pill neon-pill-pink"><i class="bi bi-chat-quote-fill"></i> {{ 'landing.testi_pill' | translate }}</span>
+          <h2 class="lp-sec-title">{{ 'landing.testi_title_pre' | translate }} <span class="neon-pink">{{ 'landing.testi_title_accent' | translate }}</span></h2>
+          <p class="lp-sec-sub">{{ 'landing.testi_sub' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="lp-testi-scroll-wrap">
+
+        <button class="lp-testi-arrow lp-testi-arrow-left" (click)="scrollTestimonials('left')" [attr.aria-label]="'common.scrollLeft' | translate">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="lp-testi-scroll rv" #testiScroll>
+          <div class="lp-testi-track">
+          @for (tst of ('landing.testimonials' | translate); track $index) {
+            <div class="lp-testi-card glass-card">
+
+              <!-- Category tag + quote icon -->
+              <div class="lp-testi-top">
+                <span class="lp-testi-category" [attr.data-color]="tst.color">
+                  {{ tst.category }}
+                </span>
+                <i class="bi bi-quote lp-testi-quote-icon"></i>
+              </div>
+
+              <!-- Story quote -->
+              <blockquote>"{{ tst.quote }}"</blockquote>
+
+              <!-- Author -->
+              <div class="lp-testi-author">
+                <div class="lp-testi-avatar" [attr.data-color]="tst.color">
+                  <span>{{ tst.initial }}</span>
+                </div>
+                <div>
+                  <div class="lp-testi-name">{{ tst.name }}</div>
+                  <div class="lp-testi-location">
+                    <i class="bi bi-geo-alt-fill"></i> {{ tst.location }}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      </div>
+
+        <button class="lp-testi-arrow lp-testi-arrow-right" (click)="scrollTestimonials('right')" [attr.aria-label]="'common.scrollRight' | translate">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+
+      </div>
+
+    </section>
+  }
 }
 
 <div class="lp-section-divider"></div>
@@ -228,7 +500,7 @@
       <div class="lp-fcol">
         <h4>{{ 'landing.footer_platform' | translate }}</h4>
         <ul>
-          <li><a [routerLink]="['/landing']" [fragment]="'communities'">{{ 'landing.footer_platform_communities' | translate }}</a></li>
+          <li><a routerLink="/discover/communities">{{ 'landing.footer_platform_communities' | translate }}</a></li>
           <li><a routerLink="/auth/login">{{ 'landing.footer_platform_jobs' | translate }}</a></li>
           <li><a routerLink="/auth/login">{{ 'landing.footer_platform_students' | translate }}</a></li>
           <li><a routerLink="/auth/login">{{ 'landing.footer_platform_help' | translate }}</a></li>
@@ -251,7 +523,7 @@
           <li><a routerLink="/auth/login">{{ 'landing.footer_comm_uae' | translate }}</a></li>
           <li><a routerLink="/auth/login">{{ 'landing.footer_comm_nz' | translate }}</a></li>
           <li><a routerLink="/auth/login">{{ 'landing.footer_comm_ie' | translate }}</a></li>
-          <li><a [routerLink]="['/landing']" [fragment]="'communities'">{{ 'landing.footer_comm_all' | translate }}</a></li>
+          <li><a routerLink="/discover/communities">{{ 'landing.footer_comm_all' | translate }}</a></li>
         </ul>
       </div>
 

@@ -178,26 +178,31 @@
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-// ── Section pills ──
+// ── Section pills — soft gradient tint + subtle glow + inner sheen, so
+// every section opener feels like a small piece of jewelry, not a flat tag ──
 .neon-pill {
-  background: rgba(var(--lp-primary-rgb), .10);
+  background: linear-gradient(135deg, rgba(var(--lp-primary-rgb), .16), rgba(var(--lp-primary-rgb), .06));
   color: var(--lp-primary);
-  border: 1px solid rgba(var(--lp-primary-rgb), .25);
+  border: 1px solid rgba(var(--lp-primary-rgb), .30);
+  box-shadow: 0 2px 10px rgba(var(--lp-primary-rgb), .16), 0 1px 0 rgba(255,255,255,.5) inset;
 }
 .neon-pill-violet {
-  background: rgba(var(--lp-violet-rgb), .10);
+  background: linear-gradient(135deg, rgba(var(--lp-violet-rgb), .16), rgba(var(--lp-violet-rgb), .06));
   color: var(--lp-violet);
-  border: 1px solid rgba(var(--lp-violet-rgb), .25);
+  border: 1px solid rgba(var(--lp-violet-rgb), .30);
+  box-shadow: 0 2px 10px rgba(var(--lp-violet-rgb), .16), 0 1px 0 rgba(255,255,255,.5) inset;
 }
 .neon-pill-green {
-  background: rgba(var(--lp-green-rgb), .10);
+  background: linear-gradient(135deg, rgba(var(--lp-green-rgb), .16), rgba(var(--lp-green-rgb), .06));
   color: var(--lp-green);
-  border: 1px solid rgba(var(--lp-green-rgb), .25);
+  border: 1px solid rgba(var(--lp-green-rgb), .30);
+  box-shadow: 0 2px 10px rgba(var(--lp-green-rgb), .16), 0 1px 0 rgba(255,255,255,.5) inset;
 }
 .neon-pill-pink {
-  background: rgba(var(--lp-pink-rgb), .10);
+  background: linear-gradient(135deg, rgba(var(--lp-pink-rgb), .16), rgba(var(--lp-pink-rgb), .06));
   color: var(--lp-pink);
-  border: 1px solid rgba(var(--lp-pink-rgb), .25);
+  border: 1px solid rgba(var(--lp-pink-rgb), .30);
+  box-shadow: 0 2px 10px rgba(var(--lp-pink-rgb), .16), 0 1px 0 rgba(255,255,255,.5) inset;
 }
 
 
@@ -213,6 +218,9 @@
   transition: all .3s $easing-standard;
   white-space: nowrap; line-height: 1.3;
   position: relative; overflow: hidden;
+
+  i { transition: transform .3s $easing-standard; }
+  &:hover i { transform: translateX(2px); }
 }
 
 .lp-btn-neon {
@@ -221,8 +229,9 @@
   box-shadow: 0 4px 16px rgba($primary, 0.35);
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba($primary, 0.4);
+    box-shadow: 0 10px 28px rgba($primary, 0.42);
     color: #fff;
+    i { transform: translateX(2px) scale(1.1); }
   }
 }
 
@@ -256,11 +265,16 @@
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
   color: var(--lp-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
   &:hover {
     background: var(--lp-surface-hover);
-    border-color: rgba(var(--lp-primary-rgb), .20);
+    border-color: rgba(var(--lp-primary-rgb), .35);
     transform: translateY(-2px);
-    color: var(--lp-text);
+    color: var(--lp-primary);
+    box-shadow: 0 8px 22px rgba(var(--lp-primary-rgb), .14);
+    i { transform: translateX(2px); color: var(--lp-primary); }
   }
 }
 
@@ -309,6 +323,14 @@
   line-height: 1.1;
   margin-bottom: 14px;
   letter-spacing: -.5px;
+}
+
+// Forces a heading onto a single line — scales down more aggressively
+// with viewport width (instead of wrapping) so longer titles like
+// "Your Journey in Four Simple Steps" never break across two lines.
+.lp-sec-title--oneline {
+  white-space: nowrap;
+  font-size: clamp(1.1rem, 4.6vw, 3rem);
 }
 .lp-sec-sub {
   font-size: 1rem; color: var(--lp-muted);
@@ -780,13 +802,18 @@
 
 .lp-hero-motto-text {
   font-family: $font-family-header;
-  font-size: clamp(.88rem, 1.55vw, 1.05rem);
+  font-size: clamp(.98rem, 1.75vw, 1.18rem);
   font-weight: 700;
-  color: #d97706;
+  // amber-800 — dark enough for 4.5:1+ contrast against the light theme's
+  // pale amber/cream hero background (--lp-bg: #FFFBEB); the previous
+  // amber-600 (#d97706) measured ~3:1 there and was barely legible.
+  color: #92400e;
   white-space: nowrap;
   letter-spacing: .2px;
 }
 
+// Dark theme's hero background is a warm near-black, so the brighter
+// amber-400 already has plenty of contrast — no change needed there.
 :host[data-theme="dark"] .lp-hero-motto-text { color: #fbbf24; }
 
 // ── Tagline — kept for any legacy usage ──
@@ -936,19 +963,51 @@
   }
 }
 
-// ── Outline: frosted ghost — present, not competing ──
+// ── Outline: "Explore Tamilya" — a warm, inviting glass button that
+// idly glows amber-saffron to draw the eye, then sweeps + spins its
+// compass icon on hover. Stays lighter than the primary CTA so it never
+// competes, but no longer reads as skippable. ──
 .lp-hbtn-outline {
-  background: rgba(255,255,255,.15);
+  background: linear-gradient(135deg, rgba(255,255,255,.24), rgba(255,255,255,.10));
   color: #ffffff;
-  border-color: rgba(255,255,255,.70);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  &:hover {
-    background: rgba(255,255,255,.28);
-    border-color: rgba(255,255,255,.92);
-    color: #ffffff;
-    transform: translateY(-2px);
+  border-color: rgba(251,191,36,.60);
+  backdrop-filter: blur(10px) saturate(1.5);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: 0 0 0 0 rgba(251,191,36,0), 0 4px 18px rgba(0,0,0,.14);
+  animation: exploreGlow 2.8s ease-in-out infinite;
+
+  i { transition: transform .45s $easing-standard; }
+
+  &::after {
+    content: '';
+    position: absolute; top: 0; left: -60%;
+    width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+    transform: skewX(-20deg);
+    pointer-events: none;
   }
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
+    border-color: rgba(251,191,36,.95);
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(251,191,36,.32), 0 4px 18px rgba(0,0,0,.16);
+    animation-play-state: paused;
+
+    &::after { animation: hbtnShimmer .9s $easing-standard; }
+    i { transform: rotate(55deg) scale(1.15); }
+  }
+}
+
+@keyframes exploreGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0), 0 4px 18px rgba(0,0,0,.14); }
+  50%      { box-shadow: 0 0 0 7px rgba(251,191,36,.16), 0 4px 18px rgba(0,0,0,.14); }
+}
+
+@keyframes hbtnShimmer {
+  from { left: -60%; }
+  to   { left: 130%; }
 }
 
 // ── Dark theme overrides ──
@@ -970,15 +1029,15 @@
 }
 
 :host[data-theme="dark"] .lp-hbtn-outline {
-  background: rgba(255,255,255,.08);
+  background: linear-gradient(135deg, rgba(251,191,36,.16), rgba(255,255,255,.06));
   color: #ffffff;
-  border-color: rgba(255,255,255,.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(251,191,36,.45);
+
   &:hover {
-    background: rgba(255,255,255,.16);
-    border-color: rgba(255,255,255,.75);
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, rgba(251,191,36,.26), rgba(255,255,255,.10));
+    border-color: rgba(251,191,36,.85);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(251,191,36,.35);
   }
 }
 
@@ -1122,38 +1181,44 @@
   align-items: center;
   gap: 9px;
 
-  // ── Glassmorphism shell ──
-  background: rgba(255,255,255,.82);
-  backdrop-filter: blur(24px) saturate(1.8);
-  -webkit-backdrop-filter: blur(24px) saturate(1.8);
-  border: 1px solid rgba(255,255,255,.75);
+  // ── Glassmorphism shell — warmed with a faint saffron halo so the
+  // whole orbiting cluster feels like one premium, tinted family ──
+  background: rgba(255,255,255,.84);
+  backdrop-filter: blur(26px) saturate(2);
+  -webkit-backdrop-filter: blur(26px) saturate(2);
+  border: 1px solid rgba(255,255,255,.80);
   border-radius: 14px;
   padding: 8px 14px 8px 8px;
 
-  // ── Layered shadow system: depth + soft lift ──
+  // ── Layered shadow system: depth + soft lift + warm ambient glow ──
   box-shadow:
     0 2px 4px  rgba(0,0,0,.04),
     0 8px 24px rgba(0,0,0,.10),
     0 20px 48px rgba(0,0,0,.06),
+    0 0 0 1px rgba(251,191,36,.05),
+    0 10px 30px rgba(251,191,36,.10),
     0 1px 0 rgba(255,255,255,.90) inset;
 
   white-space: nowrap;
   cursor: default;
   pointer-events: none;
   animation: pillFloat 4s ease-in-out infinite;
+  transition: box-shadow .4s ease;
 }
 
 // ── Dark theme base ──
 :host[data-theme="dark"] .lp-feature-pill {
-  background: rgba(20,12,2,.78);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border-color: rgba(255,255,255,.12);
+  background: rgba(20,12,2,.80);
+  backdrop-filter: blur(30px) saturate(1.8);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  border-color: rgba(251,191,36,.18);
   box-shadow:
     0 2px 4px  rgba(0,0,0,.20),
     0 8px 24px rgba(0,0,0,.40),
     0 20px 48px rgba(0,0,0,.25),
-    0 1px 0 rgba(255,255,255,.06) inset;
+    0 0 0 1px rgba(251,191,36,.08),
+    0 10px 30px rgba(251,191,36,.14),
+    0 1px 0 rgba(255,255,255,.08) inset;
 }
 
 // ── Icon container — gradient fill, white icon ──
@@ -1339,7 +1404,7 @@
   .lp-hero-h1-sub       { font-size: clamp(.82rem, 1.8vw, .98rem); }
   .lp-hero-eyebrow      { font-size: .72rem; margin-bottom: 14px; }
   .lp-hero-motto        { max-width: 420px; margin: 14px 0 10px; }
-  .lp-hero-motto-text   { font-size: .9rem; }
+  .lp-hero-motto-text   { font-size: 1rem; }
   .lp-hero-badge        { margin-bottom: 14px; }
   .lp-hero-orbit-system { width: calc(100% - 24px); height: 214px; margin-top: 18px; }
   .lp-hero-content      { width: min(290px, 90%); }
@@ -1367,7 +1432,7 @@
   .lp-hero-h1-sub       { font-size: clamp(.82rem, 2.4vw, .98rem); }
   .lp-hero-eyebrow      { font-size: .70rem; padding: 5px 13px; margin-bottom: 12px; }
   .lp-hero-motto        { max-width: 100%; gap: 10px; margin: 12px 0 10px; }
-  .lp-hero-motto-text   { font-size: .84rem; white-space: normal; text-align: center; }
+  .lp-hero-motto-text   { font-size: .92rem; white-space: normal; text-align: center; }
   .lp-hero-motto-line   { display: none; }
   .lp-hero-orbit-system { margin-top: 24px; height: auto;
                           width: calc(100% - 24px); overflow: hidden; }
@@ -1473,100 +1538,6 @@
 }
 
 
-// ============================================================
-// 4. FEATURES — CARD GRID
-// 3×3 uniform grid | gradient icons | colored accents | watermark
-// ============================================================
-.lp-bento {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.lp-bento-card {
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 280px;
-  cursor: default;
-  transition: transform .30s $easing-standard,
-              box-shadow .30s $easing-standard;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-  &[data-color="primary"]:hover { box-shadow: 0 12px 36px rgba(251,191,36,.18); }
-  &[data-color="violet"]:hover  { box-shadow: 0 12px 36px rgba(139,92,246,.16); }
-  &[data-color="green"]:hover   { box-shadow: 0 12px 36px rgba(16,185,129,.16); }
-  &[data-color="yellow"]:hover  { box-shadow: 0 12px 36px rgba(251,191,36,.14); }
-  &[data-color="pink"]:hover    { box-shadow: 0 12px 36px rgba(244,63,94,.16); }
-  &[data-color="accent"]:hover  { box-shadow: 0 12px 36px rgba(249,115,22,.16); }
-}
-
-// ── Card content wrapper ──
-.lp-bento-body {
-  position: relative;
-  z-index: 1;
-  padding: 26px 22px 22px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-// ── Header: gradient circle icon only ──
-.lp-bento-header {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-// ── Gradient circle icon ──
-.lp-bento-icon {
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-  color: #ffffff;
-  border: none;
-
-  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
-  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
-  &[data-color="green"]   { background: linear-gradient(135deg, #34D399 0%, #059669 100%); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
-  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%); box-shadow: 0 4px 14px rgba(245,158,11,.40); color: #1c1917; }
-  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185 0%, #E11D48 100%); box-shadow: 0 4px 14px rgba(225,29,72,.38); }
-  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C 0%, #EA580C 100%); box-shadow: 0 4px 14px rgba(234,88,12,.38); }
-}
-
-// ── Title ──
-.lp-bento-card h3 {
-  font-family: $font-family-header;
-  font-size: 1.05rem;
-  font-weight: $font-weight-extrabold;
-  color: var(--lp-text);
-  margin-bottom: 10px;
-  line-height: 1.3;
-}
-
-// ── Description — grows to push tags to bottom ──
-.lp-bento-card p {
-  font-size: .84rem;
-  color: var(--lp-text2);
-  line-height: 1.72;
-  margin-bottom: 0;
-  font-weight: $font-weight-normal;
-  flex: 1;
-}
-
-// ── Tag chips — colored per card accent ──
-.lp-bento-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 18px;
-}
 
 .lp-mini-tag {
   font-size: .72rem;
@@ -1577,14 +1548,6 @@
   transition: opacity .2s;
 }
 
-// Per-color tag styles
-.lp-bento-card[data-color="primary"] .lp-mini-tag { background: rgba(251,191,36,.12); color: #B45309; border: 1px solid rgba(251,191,36,.28); }
-.lp-bento-card[data-color="violet"]  .lp-mini-tag { background: rgba(139,92,246,.10); color: #6D28D9; border: 1px solid rgba(139,92,246,.24); }
-.lp-bento-card[data-color="green"]   .lp-mini-tag { background: rgba(16,185,129,.10); color: #065F46; border: 1px solid rgba(16,185,129,.24); }
-.lp-bento-card[data-color="yellow"]  .lp-mini-tag { background: rgba(245,158,11,.10); color: #92400E; border: 1px solid rgba(245,158,11,.22); }
-.lp-bento-card[data-color="pink"]    .lp-mini-tag { background: rgba(244,63,94,.08);  color: #BE123C; border: 1px solid rgba(244,63,94,.22); }
-.lp-bento-card[data-color="accent"]  .lp-mini-tag { background: rgba(249,115,22,.10); color: #C2410C; border: 1px solid rgba(249,115,22,.22); }
-
 // About Us — "Why We Built" card chips (light mode)
 .lp-about-chips .lp-mini-tag {
   background: rgba(251,191,36,.12);
@@ -1594,12 +1557,6 @@
 
 // Dark mode tag text adjustments
 :host[data-theme="dark"] {
-  .lp-bento-card[data-color="primary"] .lp-mini-tag { color: #FBBF24; background: rgba(251,191,36,.12); }
-  .lp-bento-card[data-color="violet"]  .lp-mini-tag { color: #A78BFA; background: rgba(139,92,246,.14); }
-  .lp-bento-card[data-color="green"]   .lp-mini-tag { color: #34D399; background: rgba(16,185,129,.12); }
-  .lp-bento-card[data-color="yellow"]  .lp-mini-tag { color: #FCD34D; background: rgba(245,158,11,.12); }
-  .lp-bento-card[data-color="pink"]    .lp-mini-tag { color: #FB7185; background: rgba(244,63,94,.12); }
-  .lp-bento-card[data-color="accent"]  .lp-mini-tag { color: #FB923C; background: rgba(249,115,22,.12); }
 
   // About Us — "Why We Built" card chips (dark mode)
   .lp-about-chips .lp-mini-tag {
@@ -1609,439 +1566,8 @@
   }
 }
 
-// Light mode: icon bg overrides (stronger fills on white cards)
-:host[data-theme="light"] .lp-bento-icon {
-  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); }
-  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
-  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); }
-  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); }
-  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); }
-  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); }
-}
-
-// Responsive: 2 columns on medium screens
-@media (max-width: 1100px) {
-  .lp-bento { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-  .lp-bento { grid-template-columns: 1fr; gap: 14px; }
-  .lp-bento-card { min-height: auto; }
-}
-
-// ============================================================
-// 5. COMMUNITIES — Horizontal Scroll
-// ============================================================
-.lp-communities-section {
-  background: var(--lp-bg);
-}
-
-// ── Scroll wrapper with arrows ──
-.lp-comm-scroll-wrap {
-  position: relative;
-}
-
-.lp-comm-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--lp-border);
-  background: var(--lp-surface);
-  backdrop-filter: blur(8px);
-  color: var(--lp-text);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all .25s $easing-standard;
-  z-index: 3;
-
-  &:hover {
-    background: var(--lp-primary);
-    color: #fff;
-    border-color: var(--lp-primary);
-    box-shadow: 0 4px 16px rgba(var(--lp-primary-rgb), .35);
-    transform: translateY(-50%) scale(1.08);
-  }
-  &:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-}
-.lp-comm-arrow-left  { left: 12px; }
-.lp-comm-arrow-right { right: 12px; }
-
-.lp-comm-scroll {
-  overflow-x: auto;
-  padding: 16px 5% 20px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  // Fade-out mask on both edges
-  mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
-  &::-webkit-scrollbar { display: none; }
-}
-
-// ── Browse All Communities button ──
-.lp-comm-browse {
-  display: flex;
-  justify-content: center;
-  margin-top: 28px;
-  padding-bottom: 8px;
-}
-.lp-comm-track {
-  display: flex; gap: 16px;
-  width: max-content;
-  padding: 4px;
-}
-
-.lp-comm-card {
-  width: 220px;
-  padding: 20px 18px 16px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-  text-align: center;
-  transition: transform .25s $easing-standard, box-shadow .25s $easing-standard;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-
-  &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.18); }
-  &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); }
-  &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); }
-  &[data-color="pink"]:hover    { box-shadow: 0 10px 28px rgba(244,63,94,.16);  }
-  &[data-color="yellow"]:hover  { box-shadow: 0 10px 28px rgba(251,191,36,.14); }
-  &[data-color="accent"]:hover  { box-shadow: 0 10px 28px rgba(249,115,22,.16); }
-}
-
-// ── Flag badge — centered at card top ──
-.lp-comm-flag-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.lp-comm-flag-img {
-  width: 72px;
-  height: 54px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 2px solid rgba(0,0,0,.08);
-  box-shadow:
-    0 4px 16px rgba(0,0,0,.12),
-    0 1px 4px  rgba(0,0,0,.08);
-  display: block;
-  flex-shrink: 0;
-}
-
-:host[data-theme="light"] .lp-comm-flag-img {
-  border-color: #E7E5E4;
-  box-shadow:
-    0 4px 16px rgba(28,25,23,.12),
-    0 1px 4px  rgba(28,25,23,.06);
-}
-
-:host[data-theme="dark"] .lp-comm-flag-img {
-  border-color: rgba(255,255,255,.12);
-}
-
-// ── Country name ──
-.lp-comm-country {
-  font-size: .70rem;
-  font-weight: $font-weight-extrabold;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--lp-muted);
-  display: block;
-}
-
-// ── Community name ──
-.lp-comm-card h4 {
-  font-family: $font-family-header;
-  font-size: .92rem;
-  font-weight: $font-weight-extrabold;
-  color: var(--lp-text);
-  margin: 0;
-  line-height: 1.35;
-}
-
-// ── Bottom row: active badge + member count ──
-.lp-comm-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--lp-border);
-}
-
-// ── Active badge ──
-.lp-comm-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: .72rem;
-  font-weight: $font-weight-semibold;
-  color: #059669;
-}
-
-.lp-comm-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10B981;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(16,185,129,.20);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-// ── Member count ──
-.lp-comm-members {
-  font-size: .75rem;
-  font-weight: $font-weight-semibold;
-  color: var(--lp-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  i { font-size: .80rem; color: var(--lp-primary); }
-}
 
 
-// ============================================================
-// COMMUNITY FEATURE HIGHLIGHTS — 3-column strip
-// ============================================================
-.lp-comm-features {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 40px;
-}
-
-.lp-comm-feat-card {
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  h4 {
-    font-family: $font-family-header;
-    font-size: 1rem;
-    font-weight: $font-weight-extrabold;
-    color: var(--lp-text);
-    margin: 0;
-  }
-
-  p {
-    font-size: .84rem;
-    color: var(--lp-text2);
-    line-height: 1.72;
-    margin: 0;
-  }
-}
-
-// Icon circles per feature
-.lp-comm-feat-icon {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
-  color: #ffffff;
-  flex-shrink: 0;
-
-  &--chat  { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
-  &--help  { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
-  &--guide { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
-}
-
-@media (max-width: 768px) {
-  .lp-comm-features { grid-template-columns: 1fr; }
-}
-
-// ============================================================
-// COMMUNITY CHAT DEMO WIDGET
-// ============================================================
-.lp-comm-chat-demo {
-  max-width: 660px;
-  margin: 36px auto 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-// ── Chat header ──
-.lp-chat-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--lp-border);
-  background: var(--lp-surface);
-}
-
-.lp-chat-flag {
-  width: 40px; height: 30px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1.5px solid rgba(0,0,0,.08);
-  flex-shrink: 0;
-}
-
-.lp-chat-header-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.lp-chat-community-name {
-  font-family: $font-family-header;
-  font-size: .92rem;
-  font-weight: $font-weight-extrabold;
-  color: var(--lp-text);
-  line-height: 1;
-}
-
-.lp-chat-online-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: .72rem;
-  font-weight: $font-weight-semibold;
-  color: #059669;
-}
-
-.lp-chat-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #10B981;
-  flex-shrink: 0;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.lp-chat-header-icon {
-  font-size: 1.2rem;
-  color: var(--lp-primary);
-  flex-shrink: 0;
-}
-
-// ── Messages area ──
-.lp-chat-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-}
-
-.lp-chat-msg {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-
-  &--received {
-    flex-direction: row-reverse;
-  }
-}
-
-// ── Avatar circles ──
-.lp-chat-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: $font-family-header;
-  font-size: .82rem;
-  font-weight: 900;
-  color: #ffffff;
-  flex-shrink: 0;
-
-  &--primary { background: linear-gradient(135deg, #FBBF24, #F97316); }
-  &--member  { background: linear-gradient(135deg, #A78BFA, #7C3AED); }
-}
-
-// ── Chat content ──
-.lp-chat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-width: 75%;
-
-  &--right {
-    align-items: flex-end;
-  }
-}
-
-.lp-chat-name {
-  font-size: .72rem;
-  font-weight: $font-weight-extrabold;
-  color: var(--lp-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  &--right { justify-content: flex-end; }
-}
-
-.lp-chat-badge {
-  font-size: .68rem;
-  font-weight: $font-weight-semibold;
-  padding: 1px 7px;
-  border-radius: $radius-full;
-
-  &--online {
-    background: rgba(16,185,129,.12);
-    color: #059669;
-  }
-}
-
-// ── Bubbles ──
-.lp-chat-bubble {
-  padding: 12px 16px;
-  border-radius: 4px 16px 16px 16px;
-  font-size: .86rem;
-  line-height: 1.65;
-  color: var(--lp-text);
-  background: rgba(251,191,36,.10);
-  border: 1px solid rgba(251,191,36,.20);
-
-  &--reply {
-    border-radius: 16px 4px 16px 16px;
-    background: var(--lp-surface);
-    border-color: var(--lp-border);
-  }
-}
-
-:host[data-theme="dark"] .lp-chat-bubble {
-  background: rgba(251,191,36,.08);
-  border-color: rgba(251,191,36,.16);
-
-  &--reply {
-    background: rgba(255,255,255,.05);
-    border-color: rgba(255,255,255,.10);
-  }
-}
-
-// ── Footer hint ──
-.lp-chat-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-top: 1px solid var(--lp-border);
-  font-size: .76rem;
-  color: var(--lp-muted);
-  font-style: italic;
-
-  i { font-size: .80rem; color: var(--lp-primary); flex-shrink: 0; }
-}
-
-:host[data-theme="light"] {
-  .lp-chat-header { background: #FAFAF9; border-color: #E7E5E4; }
-  .lp-chat-footer { border-color: #E7E5E4; }
-  .lp-comm-chat-demo { border-color: #E7E5E4; }
-}
 // 6. HOW IT WORKS — VERTICAL TIMELINE
 // ============================================================
 .lp-timeline-section {
@@ -2050,73 +1576,147 @@
 
 .lp-timeline {
   position: relative;
-  max-width: 800px; margin: 0 auto;
-  padding: 20px 0;
+  max-width: 780px; margin: 0 auto;
+  padding: 8px 0;
 }
 
-.lp-timeline-line {
+// ── Center path — one straight rail down the middle, steps alternating
+// left/right across it (1 left, 2 right, 3 left, 4 right). The rail
+// carries the 4-step color story top to bottom. ──
+.lp-tl-list {
+  position: relative;
+}
+
+.lp-tl-track {
   position: absolute;
   left: 50%;
-  top: 0; bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg,
-    transparent,
-    rgba(var(--lp-primary-rgb), .2) 10%,
-    rgba(var(--lp-primary-rgb), .2) 90%,
-    transparent
-  );
+  top: 22px; bottom: 22px;
+  width: 3px;
+  border-radius: 3px;
   transform: translateX(-50%);
+  background: linear-gradient(180deg, #FBBF24 0%, #A78BFA 36%, #34D399 64%, #FB7185 100%);
+  opacity: .45;
+  z-index: 0;
 }
 
 .lp-tl-item {
-  display: flex; align-items: center;
-  gap: 30px; margin-bottom: 28px;
   position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
 
+  // Only the card is a flowed flex child (the dot is absolutely centered
+  // on the rail below) — flex-start naturally pins it flush left, and
+  // row-reverse pins it flush right, on either side of the center line.
   &.lp-tl-right {
     flex-direction: row-reverse;
   }
+
+  &:last-child { margin-bottom: 0; }
 }
 
+// ── Path count — a medium, gradient-filled marker centered on the rail ──
 .lp-tl-dot {
   position: absolute;
   left: 50%; transform: translateX(-50%);
-  width: 46px; height: 46px;
+  width: 42px; height: 42px;
+  flex-shrink: 0;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: $font-family-header;
-  font-size: .85rem; font-weight: 900; color: #fff;
-  z-index: 3;
+  font-size: .80rem; font-weight: 900; color: #fff;
   border: 3px solid var(--lp-bg);
+  z-index: 2;
+  transition: transform .3s $easing-standard;
 
-  &[data-color="primary"] { background: var(--lp-primary); box-shadow: 0 0 20px rgba(var(--lp-primary-rgb), .35); }
-  &[data-color="violet"]  { background: var(--lp-violet);  box-shadow: 0 0 20px rgba(var(--lp-violet-rgb), .35); }
-  &[data-color="green"]   { background: var(--lp-green); color: #0f0f1a; box-shadow: 0 0 20px rgba(var(--lp-green-rgb), .35); }
-  &[data-color="pink"]    { background: var(--lp-pink);    box-shadow: 0 0 20px rgba(var(--lp-pink-rgb), .35); }
-  &[data-color="yellow"]  { background: var(--lp-yellow); color: #0f0f1a; box-shadow: 0 0 20px rgba(var(--lp-yellow-rgb), .35); }
-  &[data-color="accent"]  { background: var(--lp-accent);  box-shadow: 0 0 20px rgba(var(--lp-accent-rgb), .35); }
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 0 0 4px rgba(251,191,36,.16), 0 4px 14px rgba(251,191,36,.42); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 0 0 4px rgba(139,92,246,.16), 0 4px 14px rgba(124,58,237,.40); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 0 0 4px rgba(16,185,129,.16), 0 4px 14px rgba(5,150,105,.40); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 0 0 4px rgba(244,63,94,.16), 0 4px 14px rgba(225,29,72,.40); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 0 0 4px rgba(251,191,36,.16), 0 4px 14px rgba(245,158,11,.40); color: #1c1917; }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); box-shadow: 0 0 0 4px rgba(249,115,22,.16), 0 4px 14px rgba(234,88,12,.40); }
+
+  .lp-tl-item:hover & { transform: translateX(-50%) scale(1.08); }
 
   span { line-height: 1; }
 }
 
+// ── Path card — kept short: icon beside the text (not stacked above it),
+// description capped to 2 lines, tight padding so it never reads as a
+// lengthy block on either side of the path ──
 .lp-tl-card {
-  width: calc(50% - 50px);
-  padding: 24px 22px;
+  width: calc(50% - 42px);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  &[data-color="primary"]:hover { box-shadow: 0 8px 22px rgba(251,191,36,.18); border-color: rgba(251,191,36,.35); }
+  &[data-color="violet"]:hover  { box-shadow: 0 8px 22px rgba(139,92,246,.16); border-color: rgba(139,92,246,.35); }
+  &[data-color="green"]:hover   { box-shadow: 0 8px 22px rgba(16,185,129,.16); border-color: rgba(16,185,129,.35); }
+  &[data-color="pink"]:hover    { box-shadow: 0 8px 22px rgba(244,63,94,.16);  border-color: rgba(244,63,94,.35); }
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(var(--lp-primary-rgb), .10);
   }
+}
+
+.lp-tl-body {
+  flex: 1;
+  min-width: 0;
 
   h3 {
     font-family: $font-family-header;
-    font-size: 1.08rem; font-weight: $font-weight-extrabold;
-    color: var(--lp-text); margin-bottom: 8px;
+    font-size: .92rem; font-weight: $font-weight-extrabold;
+    color: var(--lp-text); margin-bottom: 3px;
+    line-height: 1.25;
   }
   p {
-    font-size: .88rem; color: var(--lp-text2);
-    line-height: 1.75; font-weight: $font-weight-normal; margin: 0;
+    font-size: .78rem; color: var(--lp-text2);
+    line-height: 1.5; font-weight: $font-weight-normal; margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
+}
+
+// ── Icon badge inside the card — what this step is about, at a glance ──
+.lp-tl-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+  color: #ffffff;
+
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 3px 10px rgba(251,191,36,.36); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 3px 10px rgba(124,58,237,.32); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 3px 10px rgba(5,150,105,.32); }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 3px 10px rgba(225,29,72,.32); }
+}
+
+// ── Mobile: alternation doesn't fit narrow screens — collapse to a
+// left-rail stack, dot back in normal flow beside its card ──
+@media (max-width: 640px) {
+  .lp-tl-track { left: 20px; transform: none; }
+
+  .lp-tl-item {
+    flex-direction: row !important;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .lp-tl-dot {
+    position: relative;
+    left: auto; transform: none;
+    width: 40px; height: 40px; font-size: .76rem;
+  }
+  .lp-tl-item:hover .lp-tl-dot { transform: none; }
+
+  .lp-tl-card { width: 100%; }
 }
 
 
@@ -2215,54 +1815,6 @@
   border-top: 1px solid var(--lp-border);
 }
 
-// ── Header ──
-.lp-trust-head {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.lp-trust-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: .72rem;
-  font-weight: $font-weight-extrabold;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 6px 16px;
-  border-radius: $radius-full;
-  background: rgba(16,185,129,.10);
-  color: #059669;
-  border: 1px solid rgba(16,185,129,.25);
-  margin-bottom: 14px;
-
-  i { font-size: .78rem; }
-}
-
-:host[data-theme="dark"] .lp-trust-badge {
-  background: rgba(16,185,129,.12);
-  color: #34D399;
-  border-color: rgba(16,185,129,.28);
-}
-
-.lp-trust-title {
-  font-family: $font-family-header;
-  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
-  font-weight: 900;
-  color: var(--lp-text);
-  margin: 0 0 10px;
-  letter-spacing: -.3px;
-}
-
-.lp-trust-sub {
-  font-size: .95rem;
-  color: var(--lp-muted);
-  line-height: 1.75;
-  max-width: 600px;
-  margin: 0 auto;
-  font-weight: $font-weight-normal;
-}
-
 // ── 4-column card grid ──
 .lp-trust-grid {
   display: grid;
@@ -2278,17 +1830,29 @@
   .lp-trust-grid { grid-template-columns: 1fr; }
 }
 
-// ── Trust card ──
+// ── Trust card — a security-toned palette (verified=green, block=red,
+// privacy=blue, spam=teal) instead of the generic rainbow used on other
+// card decks, so this section visually reads as "trust & safety" ──
 .lp-trust-card {
-  padding: 24px 20px;
+  padding: 26px 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: transform .28s $easing-standard, box-shadow .28s $easing-standard;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  // Colored top accent bar — a quiet signal of which safeguard this is,
+  // consistent with the accent bar used on the Main Categories cards
+  &::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    opacity: .8;
+  }
 
   h4 {
     font-family: $font-family-header;
-    font-size: .95rem;
+    font-size: .98rem;
     font-weight: $font-weight-extrabold;
     color: var(--lp-text);
     margin: 0;
@@ -2296,7 +1860,7 @@
   }
 
   p {
-    font-size: .82rem;
+    font-size: .84rem;
     color: var(--lp-text2);
     line-height: 1.70;
     margin: 0;
@@ -2304,27 +1868,35 @@
   }
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
   }
-  &[data-color="primary"]:hover { box-shadow: 0 8px 28px rgba(251,191,36,.14); }
-  &[data-color="pink"]:hover    { box-shadow: 0 8px 28px rgba(244,63,94,.14); }
-  &[data-color="violet"]:hover  { box-shadow: 0 8px 28px rgba(139,92,246,.14); }
-  &[data-color="green"]:hover   { box-shadow: 0 8px 28px rgba(16,185,129,.14); }
+  &[data-color="green"]:hover  { box-shadow: 0 10px 28px rgba(16,185,129,.18); border-color: rgba(16,185,129,.35); }
+  &[data-color="pink"]:hover   { box-shadow: 0 10px 28px rgba(244,63,94,.18);  border-color: rgba(244,63,94,.35); }
+  &[data-color="blue"]:hover   { box-shadow: 0 10px 28px rgba(37,99,235,.16);  border-color: rgba(37,99,235,.35); }
+  &[data-color="teal"]:hover   { box-shadow: 0 10px 28px rgba(13,148,136,.16); border-color: rgba(13,148,136,.35); }
+
+  &[data-color="green"]::after { background: linear-gradient(90deg, #34D399, #059669); }
+  &[data-color="pink"]::after  { background: linear-gradient(90deg, #FB7185, #E11D48); }
+  &[data-color="blue"]::after  { background: linear-gradient(90deg, #60A5FA, #2563EB); }
+  &[data-color="teal"]::after  { background: linear-gradient(90deg, #2DD4BF, #0D9488); }
 }
 
 // ── Gradient circle icon ──
 .lp-trust-icon {
-  width: 50px; height: 50px;
+  width: 52px; height: 52px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: #ffffff;
   flex-shrink: 0;
+  transition: transform .3s $easing-standard;
 
-  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
-  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(225,29,72,.38); }
-  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
-  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  .lp-trust-card:hover & { transform: scale(1.08) rotate(-4deg); }
+
+  &[data-color="green"] { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
+  &[data-color="pink"]  { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(225,29,72,.38); }
+  &[data-color="blue"]  { background: linear-gradient(135deg, #60A5FA, #2563EB); box-shadow: 0 4px 14px rgba(37,99,235,.36); }
+  &[data-color="teal"]  { background: linear-gradient(135deg, #2DD4BF, #0D9488); box-shadow: 0 4px 14px rgba(13,148,136,.36); }
 }
 
 // ── Closing tagline ──
@@ -2343,177 +1915,6 @@
 }
 
 :host[data-theme="dark"] .lp-trust-tagline i { color: #34D399; }
-// ============================================================
-.lp-testi-section {
-  background: var(--lp-bg);
-  overflow: hidden;
-}
-
-// ── Scroll wrapper + arrows ──
-.lp-testi-scroll-wrap {
-  position: relative;
-}
-
-.lp-testi-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--lp-border);
-  background: var(--lp-surface);
-  backdrop-filter: blur(8px);
-  color: var(--lp-text);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all .25s $easing-standard;
-  z-index: 3;
-
-  &:hover {
-    background: var(--lp-primary);
-    color: #1c1917;
-    border-color: var(--lp-primary);
-    box-shadow: 0 4px 16px rgba(var(--lp-primary-rgb), .35);
-    transform: translateY(-50%) scale(1.08);
-  }
-  &:active { transform: translateY(-50%) scale(0.95); }
-}
-.lp-testi-arrow-left  { left: 12px; }
-.lp-testi-arrow-right { right: 12px; }
-
-// ── Horizontal scroll — same pattern as communities ──
-.lp-testi-scroll {
-  overflow-x: auto;
-  padding: 0 5% 20px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
-  &::-webkit-scrollbar { display: none; }
-}
-
-.lp-testi-track {
-  display: flex;
-  gap: 16px;
-  width: max-content;
-  padding: 4px;
-}
-
-// ── Card — fixed width, snaps ──
-.lp-testi-card {
-  min-width: 360px;
-  max-width: 420px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  padding: 28px 24px;
-  display: flex;
-  flex-direction: column;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 28px rgba(var(--lp-primary-rgb), .08);
-  }
-}
-
-@media (max-width: 520px) {
-  .lp-testi-card { min-width: calc(100vw - 64px); }
-}
-
-// ── Top row: category tag (left) + quote icon (right) ──
-.lp-testi-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-// ── Category tag pill ──
-.lp-testi-category {
-  font-size: .68rem;
-  font-weight: 800;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  border-radius: $radius-full;
-
-  &[data-color="primary"] { background: rgba(251,191,36,.14); color: #92400E; border: 1px solid rgba(251,191,36,.28); }
-  &[data-color="violet"]  { background: rgba(139,92,246,.10); color: #6D28D9; border: 1px solid rgba(139,92,246,.22); }
-  &[data-color="green"]   { background: rgba(16,185,129,.10); color: #065F46; border: 1px solid rgba(16,185,129,.22); }
-  &[data-color="pink"]    { background: rgba(244,63,94,.08);  color: #BE123C; border: 1px solid rgba(244,63,94,.20); }
-  &[data-color="accent"]  { background: rgba(249,115,22,.10); color: #C2410C; border: 1px solid rgba(249,115,22,.22); }
-}
-
-:host[data-theme="dark"] {
-  .lp-testi-category[data-color="primary"] { color: #FBBF24; background: rgba(251,191,36,.12); }
-  .lp-testi-category[data-color="violet"]  { color: #A78BFA; background: rgba(139,92,246,.14); }
-  .lp-testi-category[data-color="green"]   { color: #34D399; background: rgba(16,185,129,.12); }
-  .lp-testi-category[data-color="pink"]    { color: #FB7185; background: rgba(244,63,94,.12); }
-}
-
-// ── Large quote icon ──
-.lp-testi-quote-icon {
-  font-size: 2rem;
-  color: rgba(var(--lp-primary-rgb), .14);
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-// ── Story quote — grows to fill card, pushing author to bottom ──
-.lp-testi-card blockquote {
-  font-size: .92rem;
-  color: var(--lp-text2);
-  line-height: 1.82;
-  font-style: italic;
-  margin: 0 0 24px;
-  font-weight: $font-weight-normal;
-  flex: 1;
-}
-
-// ── Author row ──
-.lp-testi-author {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--lp-border);
-}
-
-// ── Avatar circle ──
-.lp-testi-avatar {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: $font-family-header;
-  font-size: 1.05rem; font-weight: 900;
-  flex-shrink: 0;
-
-  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); span { color: #1c1917; } }
-  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); span { color: #fff; } }
-  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); span { color: #fff; } }
-  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); span { color: #fff; } }
-  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); span { color: #fff; } }
-}
-
-.lp-testi-name {
-  font-size: .92rem;
-  font-weight: $font-weight-extrabold;
-  color: var(--lp-text);
-  line-height: 1.2;
-}
-
-// ── Location line ──
-.lp-testi-location {
-  font-size: .76rem;
-  color: var(--lp-muted);
-  font-weight: $font-weight-semibold;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-  i { font-size: .72rem; color: var(--lp-primary); }
-}
-
 
 // ============================================================
 // 8. ABOUT — Split layout (Mission+Stats left, Why-cards right)
@@ -2542,15 +1943,43 @@
 
 .lp-about-mission {
   padding: 36px 32px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  // Soft amber wash + oversized quote mark — gives the card a focal point
+  // instead of just being a block of text
+  &::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: radial-gradient(ellipse 120% 60% at 100% 0%, rgba(var(--lp-primary-rgb), .08), transparent 60%);
+    pointer-events: none;
+  }
+  &::after {
+    content: '\201C';
+    position: absolute; top: -6px; right: 20px;
+    font-family: $font-family-header;
+    font-size: 5.5rem; line-height: 1;
+    color: rgba(var(--lp-primary-rgb), .10);
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(var(--lp-primary-rgb), .12);
+    border-color: rgba(var(--lp-primary-rgb), .30);
+  }
 
   h3 {
     font-family: $font-family-header;
     font-size: 1.35rem; font-weight: 900;
     color: var(--lp-text); margin-bottom: 14px;
+    position: relative; z-index: 1;
   }
   p {
     font-size: .95rem; color: var(--lp-text2);
     line-height: 1.8; font-weight: $font-weight-normal; margin-bottom: 20px;
+    position: relative; z-index: 1;
   }
 }
 
@@ -2562,13 +1991,16 @@
   font-style: italic;
   margin-bottom: 20px !important;
   margin-top: -8px !important;
+  position: relative; z-index: 1;
 }
 .lp-about-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin-bottom: 22px;
+  position: relative; z-index: 1;
 }
 .lp-about-contact {
   display: flex; flex-direction: column; gap: 8px;
+  position: relative; z-index: 1;
   div {
     font-size: .88rem; color: var(--lp-muted); font-weight: $font-weight-medium;
     display: flex; align-items: center; gap: 8px;
@@ -2583,6 +2015,13 @@
 }
 .lp-about-stat-card {
   padding: 24px 18px; text-align: center;
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(var(--lp-primary-rgb), .14);
+    border-color: rgba(var(--lp-primary-rgb), .30);
+  }
 }
 .lp-stat-val {
   font-family: $font-family-header;
@@ -3453,8 +2892,6 @@ textarea.lp-form-control {
   .lp-hero { min-height: auto; padding-bottom: 80px; }
   .lp-hero-h1 { font-size: clamp(2.4rem, 4.6vw, 3.8rem); }
 
-  .lp-bento { grid-template-columns: 1fr 1fr; }
-  .lp-bento-card.lp-bento-featured { grid-column: span 2; }
 
   .lp-about-split { grid-template-columns: 1fr; }
 
@@ -3473,17 +2910,7 @@ textarea.lp-form-control {
   .lp-hero { padding: 76px 5% 60px; }
   .lp-hero-h1 { font-size: clamp(2rem, 6.5vw, 2.8rem); }
 
-  .lp-bento { grid-template-columns: 1fr; }
-  .lp-bento-card.lp-bento-featured { grid-column: span 1; }
-
-  .lp-testi-card { min-width: 280px; }
   .lp-why-grid { grid-template-columns: 1fr; }
-
-  // Timeline stacks vertically
-  .lp-timeline-line { left: 45px; }
-  .lp-tl-item { flex-direction: row !important; gap: 20px; padding-left: 24px; }
-  .lp-tl-dot { position: relative; left: auto; transform: none; flex-shrink: 0; width: 40px; height: 40px; font-size: .75rem; }
-  .lp-tl-card { width: 100%; text-align: left !important; }
 
   .lp-about-stats { grid-template-columns: 1fr 1fr; }
 
@@ -3530,12 +2957,6 @@ textarea.lp-form-control {
   .lp-float-right { right: 16px; bottom: 20px; }
   .lp-float-btn { width: 42px; height: 42px; font-size: 1.05rem; }
 
-  .lp-comm-arrow { display: none; }
-  .lp-comm-scroll {
-    padding: 16px 16px 16px;
-    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-  }
 }
 
 
@@ -3551,9 +2972,10 @@ textarea.lp-form-control {
   --lp-muted: #57534E;
 
   // ── Fix 3: Alternating section backgrounds ──
-  // Cream sections: Features (#features), Testimonials, Blog
-  // White sections: Communities, How-It-Works, About, Contact
-  .lp-communities-section,
+  // White sections: Country Preview, How-It-Works, About, Contact — Country
+  // Preview sits right after "Why Tamilya" which keeps --lp-bg's cream/amber
+  // tint, so it needs to break to white or the two read as one long block.
+  .lp-country-section,
   .lp-timeline-section,
   .lp-about-section,
   .lp-contact-section { background: #FFFFFF; }
@@ -3683,24 +3105,28 @@ textarea.lp-form-control {
 
   // ── Fix 10: Section pills — higher opacity + readable text ──
   .neon-pill {
-    background: rgba(251,191,36,.16);
+    background: linear-gradient(135deg, rgba(251,191,36,.20), rgba(251,191,36,.10));
     color: #92400E;
     border: 1px solid rgba(251,191,36,.42);
+    box-shadow: 0 2px 10px rgba(251,191,36,.18), 0 1px 0 rgba(255,255,255,.6) inset;
   }
   .neon-pill-violet {
-    background: rgba(217,119,6,.12);
+    background: linear-gradient(135deg, rgba(217,119,6,.16), rgba(217,119,6,.08));
     color: #92400E;
     border: 1px solid rgba(217,119,6,.36);
+    box-shadow: 0 2px 10px rgba(217,119,6,.14), 0 1px 0 rgba(255,255,255,.6) inset;
   }
   .neon-pill-green {
-    background: rgba(5,150,105,.10);
+    background: linear-gradient(135deg, rgba(5,150,105,.14), rgba(5,150,105,.06));
     color: #065F46;
     border: 1px solid rgba(5,150,105,.32);
+    box-shadow: 0 2px 10px rgba(5,150,105,.12), 0 1px 0 rgba(255,255,255,.6) inset;
   }
   .neon-pill-pink {
-    background: rgba(249,115,22,.12);
+    background: linear-gradient(135deg, rgba(249,115,22,.16), rgba(249,115,22,.08));
     color: #C2410C;
     border: 1px solid rgba(249,115,22,.32);
+    box-shadow: 0 2px 10px rgba(249,115,22,.14), 0 1px 0 rgba(255,255,255,.6) inset;
   }
 
   // ── Fix 7: Section mesh overlays — visible radial decoration ──
@@ -3711,37 +3137,13 @@ textarea.lp-form-control {
   }
 
 
-  // ── Community cards — white + amber hover ──
-  .lp-comm-card {
-    background: #FFFFFF !important;
-    border: 1.5px solid #E7E5E4;
-    box-shadow: 0 2px 10px rgba(28,25,23,.06);
-
-    &:hover {
-      border-color: rgba(251,191,36,.55) !important;
-    }
-  }
-
-  .lp-comm-bottom {
-    border-color: #E7E5E4;
-  }
-
-  // ── Fix 9: Timeline center line — amber amber amber ──
-  .lp-timeline-line {
-    background: linear-gradient(180deg,
-      transparent,
-      rgba(251,191,36,.50) 10%,
-      rgba(251,191,36,.50) 90%,
-      transparent
-    );
-    width: 2.5px;
+  // ── Fix 9: Timeline path — the 4-color gradient carries its own
+  // contrast, just needs a touch more opacity on the light background ──
+  .lp-tl-track {
+    opacity: .7;
   }
 
   .lp-tl-dot { border-color: #FFFFFF; }
-
-  .lp-tl-card:hover {
-    box-shadow: 0 6px 20px rgba(251,191,36,.14);
-  }
 
   // ── Fix 16: Section dividers — single clean amber line ──
   .lp-section-divider,
@@ -3905,16 +3307,6 @@ textarea.lp-form-control {
     font-size: .70rem;
   }
 
-  // ── 8. Bento grid cards ──
-  .lp-bento-card h3 {
-    font-size: .87rem;
-    letter-spacing: 0;
-    line-height: 1.45;
-  }
-  .lp-bento-card p {
-    font-size: .79rem;
-    line-height: 1.75;
-  }
   .lp-mini-tag {
     font-size: .61rem;
     padding: 3px 7px;
@@ -3922,12 +3314,6 @@ textarea.lp-form-control {
     line-height: 1.5;
   }
 
-  // ── 9. Communities section ──
-  .lp-comm-feat-card h4 {
-    font-size: .95rem;
-    letter-spacing: 0;
-  }
-  .lp-comm-feat-card p { font-size: .83rem; }
 
   // ── 10. Timeline / How It Works ──
   .lp-tl-card h3 {
@@ -3940,26 +3326,8 @@ textarea.lp-form-control {
     line-height: 1.75;
   }
 
-  // ── 11. Testimonial category badge ──
-  // Tamil has no uppercase/lowercase — remove text-transform & large tracking
-  .lp-testi-category {
-    text-transform: none;
-    letter-spacing: .2px;
-    font-size: .62rem;
-    padding: 4px 10px;
-  }
 
   // ── 12. Trust & Safety section ──
-  .lp-trust-badge {
-    text-transform: none;
-    letter-spacing: .2px;
-    font-size: .70rem;
-  }
-  .lp-trust-title {
-    letter-spacing: 0;
-    font-size: clamp(1.25rem, 2.8vw, 1.75rem);
-  }
-  .lp-trust-sub   { font-size: .87rem; line-height: 1.8; }
   .lp-trust-card h4 {
     letter-spacing: 0;
     font-size: .93rem;
@@ -4055,78 +3423,111 @@ textarea.lp-form-control {
 // ============================================================
 // CHANGE 4 — EMERGENCY HELP HIGHLIGHT BOX
 // ============================================================
+// ── Emergency Help card — its own full-width row below the About split,
+// icon + text + button in a horizontal bar (stacks on mobile). ──
 .lp-emergency-box {
-  margin: 48px 0 32px;
-  border-radius: 20px;
-  background: linear-gradient(135deg,
-    rgba(var(--lp-pink-rgb), .12) 0%,
-    rgba(var(--lp-primary-rgb), .10) 100%);
-  border: 1.5px solid rgba(var(--lp-pink-rgb), .30);
-  padding: 0;
-  overflow: hidden;
-}
-
-.lp-emergency-inner {
+  margin: 40px 0 8px;
+  padding: 28px 32px;
   display: flex;
   align-items: center;
-  gap: 28px;
-  padding: 32px 36px;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(var(--lp-pink-rgb), .30);
+  background: linear-gradient(120deg,
+    rgba(var(--lp-pink-rgb), .10) 0%,
+    var(--lp-surface) 60%);
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  &::before {
+    content: '';
+    position: absolute; top: -60%; right: -8%;
+    width: 40%; height: 220%;
+    background: radial-gradient(circle, rgba(var(--lp-pink-rgb), .14), transparent 70%);
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(var(--lp-pink-rgb), .16);
+    border-color: rgba(var(--lp-pink-rgb), .48);
+    // Re-assert the gradient — .glass-card's own :hover rule would
+    // otherwise swap it for a flat surface color on hover.
+    background: linear-gradient(120deg,
+      rgba(var(--lp-pink-rgb), .14) 0%,
+      var(--lp-surface-hover) 60%);
+  }
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    padding: 24px 20px;
-    gap: 18px;
+    padding: 24px 22px;
+    gap: 16px;
   }
 }
 
 .lp-emergency-icon {
+  position: relative;
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: rgba(var(--lp-pink-rgb), .18);
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FB7185, #E11D48);
+  box-shadow: 0 4px 14px rgba(225,29,72,.38);
   display: flex;
   align-items: center;
   justify-content: center;
 
   i {
-    font-size: 1.8rem;
-    color: var(--lp-pink);
-  }
-
-  @media (max-width: 768px) {
-    width: 52px; height: 52px;
-    i { font-size: 1.5rem; }
+    font-size: 1.5rem;
+    color: #ffffff;
   }
 }
 
 .lp-emergency-content {
+  position: relative;
   flex: 1;
+  min-width: 0;
 
   h3 {
     font-family: $font-family-header;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 900;
     color: var(--lp-text);
-    margin: 0 0 10px;
+    margin: 0 0 6px;
     line-height: 1.3;
   }
   p {
-    font-size: .93rem;
+    font-size: .90rem;
     color: var(--lp-text2);
-    line-height: 1.75;
+    line-height: 1.7;
     margin: 0;
   }
 }
 
 .lp-emergency-btn {
+  position: relative;
   flex-shrink: 0;
   white-space: nowrap;
 
   @media (max-width: 768px) {
     width: 100%;
     justify-content: center;
+  }
+}
+
+// ── Emergency button — a dedicated pink/red gradient so it reads as
+// urgent, distinct from the amber "Join Now" primary CTA ──
+.lp-btn-emergency {
+  background: linear-gradient(135deg, #FB7185 0%, #E11D48 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(225,29,72,.35);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(225,29,72,.42);
+    color: #fff;
+    i { transform: translateX(2px) scale(1.1); }
   }
 }
 
@@ -4759,13 +4160,32 @@ textarea.lp-form-control {
     transition: opacity .3s $easing-standard;
     z-index: 0;
   }
+  // Colored top accent bar — same quiet "which topic is this" signal used
+  // on the Main Categories and Trust & Safety cards, for visual consistency
+  &::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity .3s $easing-standard;
+  }
   &:hover::before { opacity: .06; }
+  &:hover::after  { opacity: 1; }
   &:hover { transform: translateY(-6px); }
 
   &[data-color="primary"]:hover { box-shadow: 0 12px 32px rgba(251,191,36,.22); border-color: rgba(251,191,36,.35); }
   &[data-color="green"]:hover   { box-shadow: 0 12px 32px rgba(16,185,129,.18);  border-color: rgba(16,185,129,.35); }
   &[data-color="violet"]:hover  { box-shadow: 0 12px 32px rgba(139,92,246,.18);  border-color: rgba(139,92,246,.35); }
   &[data-color="yellow"]:hover  { box-shadow: 0 12px 32px rgba(251,191,36,.16);  border-color: rgba(251,191,36,.30); }
+  &[data-color="pink"]:hover    { box-shadow: 0 12px 32px rgba(244,63,94,.18);   border-color: rgba(244,63,94,.35); }
+  &[data-color="accent"]:hover  { box-shadow: 0 12px 32px rgba(249,115,22,.18);  border-color: rgba(249,115,22,.35); }
+
+  &[data-color="primary"]::after { background: linear-gradient(90deg, #FBBF24, #F97316); }
+  &[data-color="green"]::after   { background: linear-gradient(90deg, #34D399, #059669); }
+  &[data-color="violet"]::after  { background: linear-gradient(90deg, #A78BFA, #7C3AED); }
+  &[data-color="yellow"]::after  { background: linear-gradient(90deg, #FCD34D, #F59E0B); }
+  &[data-color="pink"]::after    { background: linear-gradient(90deg, #FB7185, #E11D48); }
+  &[data-color="accent"]::after  { background: linear-gradient(90deg, #FB923C, #EA580C); }
 
   & > * { position: relative; z-index: 1; }
 }
@@ -4782,10 +4202,16 @@ textarea.lp-form-control {
 
   .lp-discover-card:hover & { transform: scale(1.1) rotate(-5deg); }
 
+  // Every data-color the discoverCards deck actually uses must have a
+  // variant here — a missing one silently renders a white icon on no
+  // background, i.e. an invisible icon. primary/green/violet/yellow/
+  // pink/accent now all covered (pink & accent were missing before).
   &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 16px rgba(251,191,36,.40); }
   &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 16px rgba(5,150,105,.38); }
   &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 16px rgba(124,58,237,.38); }
   &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 4px 16px rgba(245,158,11,.40); color: #1c1917; }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 16px rgba(225,29,72,.38); }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); box-shadow: 0 4px 16px rgba(234,88,12,.38); }
 }
 
 .lp-discover-label {
@@ -4822,74 +4248,412 @@ textarea.lp-form-control {
 
 
 // ============================================================
-// WHO IS THIS PLATFORM FOR SECTION
+// WHY TAMILYA — 4 short benefits as a borderless divided strip,
+// deliberately NOT another card grid so it reads as a quick, calm
+// "why choose us" beat rather than one more boxed section.
 // ============================================================
-.lp-who-section {
+.lp-why-section {
   background: var(--lp-bg);
+  // Inherits .lp-section's standard 48px vertical padding — this now
+  // sits between two full sections, so it needs the same breathing
+  // room as everything else on the page, not the tighter spacing it
+  // had when it was a quick "beat" wedged before the contact form.
 }
 
-.lp-who-grid {
+.lp-why-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
 
-  @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  @media (max-width: 640px)  { grid-template-columns: 1fr; gap: 14px; }
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
 }
 
-.lp-who-card {
-  padding: 28px 24px;
+.lp-why-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 14px;
-  min-height: 180px;
-  transition: transform .30s $easing-standard, box-shadow .30s $easing-standard;
+  gap: 6px;
+  padding: 10px 24px;
+  position: relative;
 
-  &:hover { transform: translateY(-4px); }
-  &[data-color="primary"]:hover { box-shadow: 0 10px 28px rgba(251,191,36,.18); }
-  &[data-color="green"]:hover   { box-shadow: 0 10px 28px rgba(16,185,129,.16); }
-  &[data-color="violet"]:hover  { box-shadow: 0 10px 28px rgba(139,92,246,.16); }
-  &[data-color="pink"]:hover    { box-shadow: 0 10px 28px rgba(236,72,153,.16); }
-  &[data-color="yellow"]:hover  { box-shadow: 0 10px 28px rgba(251,191,36,.16); }
-  &[data-color="accent"]:hover  { box-shadow: 0 10px 28px rgba(251,113,133,.16); }
+  // Thin divider between items — the only "structure" this section has
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 14%; bottom: 14%; right: 0;
+    width: 1px;
+    background: var(--lp-border);
+  }
+
+  @media (max-width: 900px) {
+    padding: 18px 14px;
+
+    // Dividers only make sense between horizontally adjacent items —
+    // at 2 columns that's just the left/right pair, not every card
+    &:not(:last-child)::after { display: none; }
+    &:nth-child(odd)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 14%; bottom: 14%; right: 0;
+      width: 1px;
+      background: var(--lp-border);
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px 8px;
+    &::after { display: none !important; }
+  }
+
+  h3 {
+    font-family: $font-family-header;
+    font-size: .96rem;
+    font-weight: $font-weight-extrabold;
+    color: var(--lp-text);
+    margin: 8px 0 0;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: .80rem;
+    color: var(--lp-muted);
+    line-height: 1.55;
+    margin: 0;
+    font-weight: $font-weight-normal;
+  }
 }
 
-.lp-who-icon {
-  width: 52px; height: 52px;
-  border-radius: $radius-md;
+// Named lp-why-benefit-icon (not lp-why-icon) — the disabled legacy
+// "Why Join Today" section below already owns .lp-why-icon; reusing it
+// would silently collide since both are plain single-class selectors.
+.lp-why-benefit-icon {
+  font-size: 1.7rem;
+  line-height: 1;
+  transition: transform .3s $easing-standard;
+
+  &[data-color="primary"] { color: var(--lp-primary); }
+  &[data-color="green"]   { color: var(--lp-green); }
+  &[data-color="violet"]  { color: var(--lp-violet); }
+  &[data-color="pink"]    { color: var(--lp-pink); }
+
+  .lp-why-item:hover & { transform: scale(1.15) translateY(-2px); }
+}
+
+
+// ============================================================
+// COUNTRY PREVIEW — a single-row carousel of small flag cards.
+// Each card's hover glow uses that country's own flag color (--flag-color,
+// set inline per card) instead of one flat site accent, so the strip
+// itself hints at "many different countries" before you've read a word.
+// ============================================================
+.lp-country-section {
+  background: var(--lp-bg);
+}
+
+.lp-country-scroll-wrap {
+  position: relative;
+}
+
+// Same pattern as the Country Communities carousel on /discover
+// (.lp-comm-arrow / .lp-comm-scroll): the arrow sits inside its own
+// padding gutter, never on top of a card — the scroll container's 5%
+// side padding (below) is what actually reserves that gap, so the
+// first/last card always starts clear of the button.
+.lp-country-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--lp-text);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem;
+  cursor: pointer;
+  z-index: 3;
+  transition: all .25s $easing-standard;
+
+  @media (max-width: 520px) { display: none; }
+
+  &:hover {
+    background: var(--lp-violet);
+    color: #fff;
+    border-color: var(--lp-violet);
+    box-shadow: 0 4px 16px rgba(var(--lp-violet-rgb), .35);
+    transform: translateY(-50%) scale(1.08);
+  }
+  &:active { transform: translateY(-50%) scale(.95); }
+}
+.lp-country-arrow-left  { left: 12px; }
+.lp-country-arrow-right { right: 12px; }
+
+.lp-country-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  // 5% side padding — same as .lp-comm-scroll — is what actually gives
+  // the first/last card its clearance from the arrow sitting at 12px.
+  padding: 10px 5% 14px;
+  mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent);
+  &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 520px) {
+    padding: 10px 16px 14px;
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+  }
+}
+
+.lp-country-track {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+}
+
+// ── Small card — flag + name only, nothing else ──
+.lp-country-card {
+  width: 132px;
+  flex-shrink: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform .3s $easing-standard, box-shadow .3s $easing-standard, border-color .3s $easing-standard;
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: var(--flag-color, var(--lp-violet));
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--flag-color, var(--lp-violet)) 30%, transparent);
+  }
+}
+
+.lp-country-flag-wrap {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.lp-country-flag {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  // No hover transform on the flag itself — only the card as a whole
+  // lifts on hover, so the flag image never scales or shifts.
+}
+
+.lp-country-name {
+  font-family: $font-family-header;
+  font-size: .82rem;
+  font-weight: $font-weight-extrabold;
+  color: var(--lp-text);
+  line-height: 1.3;
+}
+
+.lp-country-cta-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+
+// ============================================================
+// MAIN CATEGORIES — whole-app module overview, right after hero
+// ============================================================
+.lp-categories-section {
+  background: var(--lp-bg);
+}
+
+.lp-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; gap: 12px; }
+}
+
+// Medium, inviting "module" card — icon + always-visible CTA affordance so
+// it reads as clickable even on touch (no hover), with richer motion on
+// hover/focus for desktop to make it feel worth clicking.
+.lp-cat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px 18px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: $radius-lg;
+  transition: transform .28s $easing-standard, box-shadow .28s $easing-standard, border-color .25s $easing-standard;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: var(--lp-grad-primary);
+    opacity: 0;
+    transition: opacity .3s $easing-standard;
+    z-index: 0;
+  }
+  // Colored top accent bar — a flash of personality per category, always on.
+  &::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    z-index: 1;
+    transform: scaleX(.32);
+    transform-origin: left;
+    transition: transform .35s $easing-standard;
+  }
+  &:hover::before { opacity: .07; }
+  &:hover::after  { transform: scaleX(1); }
+  &:hover { transform: translateY(-6px); }
+  &:active { transform: translateY(-2px) scale(.98); }
+  &:focus-visible { outline: 2px solid var(--lp-primary); outline-offset: 2px; }
+
+  &[data-color="primary"] { &::after { background: linear-gradient(90deg, #FBBF24, #F97316); } &:hover { box-shadow: 0 14px 32px rgba(251,191,36,.24); border-color: rgba(251,191,36,.40); } }
+  &[data-color="green"]   { &::after { background: linear-gradient(90deg, #34D399, #059669); } &:hover { box-shadow: 0 14px 32px rgba(16,185,129,.20);  border-color: rgba(16,185,129,.40); } }
+  &[data-color="violet"]  { &::after { background: linear-gradient(90deg, #A78BFA, #7C3AED); } &:hover { box-shadow: 0 14px 32px rgba(139,92,246,.20);  border-color: rgba(139,92,246,.40); } }
+  &[data-color="yellow"]  { &::after { background: linear-gradient(90deg, #FCD34D, #F59E0B); } &:hover { box-shadow: 0 14px 32px rgba(251,191,36,.18);  border-color: rgba(251,191,36,.36); } }
+  &[data-color="pink"]    { &::after { background: linear-gradient(90deg, #FB7185, #E11D48); } &:hover { box-shadow: 0 14px 32px rgba(244,63,94,.20);   border-color: rgba(244,63,94,.38); } }
+  &[data-color="accent"]  { &::after { background: linear-gradient(90deg, #FB923C, #EA580C); } &:hover { box-shadow: 0 14px 32px rgba(249,115,22,.20);  border-color: rgba(249,115,22,.38); } }
+
+  & > * { position: relative; z-index: 1; }
+}
+
+.lp-cat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-cat-icon {
+  width: 50px; height: 50px;
+  border-radius: 15px;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.3rem;
   flex-shrink: 0;
   color: #ffffff;
   transition: transform .3s $easing-standard;
 
-  .lp-who-card:hover & { transform: scale(1.1) rotate(-4deg); }
+  .lp-cat-card:hover & { transform: scale(1.1) rotate(-6deg); }
 
-  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 4px 14px rgba(251,191,36,.40); }
-  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 4px 14px rgba(5,150,105,.38); }
-  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 4px 14px rgba(124,58,237,.38); }
-  &[data-color="pink"]    { background: linear-gradient(135deg, #F472B6, #EC4899); box-shadow: 0 4px 14px rgba(236,72,153,.38); }
-  &[data-color="yellow"]  { background: linear-gradient(135deg, #FDE047, #FBBF24); box-shadow: 0 4px 14px rgba(251,191,36,.38); }
-  &[data-color="accent"]  { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 14px rgba(251,113,133,.38); }
+  &[data-color="primary"] { background: linear-gradient(135deg, #FBBF24, #F97316); box-shadow: 0 6px 16px rgba(251,191,36,.38); }
+  &[data-color="green"]   { background: linear-gradient(135deg, #34D399, #059669); box-shadow: 0 6px 16px rgba(5,150,105,.35); }
+  &[data-color="violet"]  { background: linear-gradient(135deg, #A78BFA, #7C3AED); box-shadow: 0 6px 16px rgba(124,58,237,.35); }
+  &[data-color="yellow"]  { background: linear-gradient(135deg, #FCD34D, #F59E0B); box-shadow: 0 6px 16px rgba(245,158,11,.38); color: #1c1917; }
+  &[data-color="pink"]    { background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 6px 16px rgba(225,29,72,.35); }
+  &[data-color="accent"]  { background: linear-gradient(135deg, #FB923C, #EA580C); box-shadow: 0 6px 16px rgba(234,88,12,.35); }
 }
 
-.lp-who-title {
+// Circular arrow affordance — visible at rest (so it works without hover
+// on touch devices), fills solid and slides on hover for desktop delight.
+.lp-cat-arrow {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: .85rem;
+  transition: transform .3s $easing-standard, background .25s $easing-standard, color .25s $easing-standard;
+
+  .lp-cat-card:hover & { transform: translateX(3px); }
+
+  &[data-color="primary"] { background: rgba(251,191,36,.14); color: #B45309; }
+  &[data-color="green"]   { background: rgba(16,185,129,.14); color: #065F46; }
+  &[data-color="violet"]  { background: rgba(139,92,246,.14); color: #6D28D9; }
+  &[data-color="yellow"]  { background: rgba(251,191,36,.14); color: #92400E; }
+  &[data-color="pink"]    { background: rgba(244,63,94,.12);  color: #BE123C; }
+  &[data-color="accent"]  { background: rgba(249,115,22,.14); color: #C2410C; }
+}
+
+.lp-cat-card[data-color="primary"]:hover .lp-cat-arrow { background: #F97316; color: #fff; }
+.lp-cat-card[data-color="green"]:hover   .lp-cat-arrow { background: #059669; color: #fff; }
+.lp-cat-card[data-color="violet"]:hover  .lp-cat-arrow { background: #7C3AED; color: #fff; }
+.lp-cat-card[data-color="yellow"]:hover  .lp-cat-arrow { background: #F59E0B; color: #1c1917; }
+.lp-cat-card[data-color="pink"]:hover    .lp-cat-arrow { background: #E11D48; color: #fff; }
+.lp-cat-card[data-color="accent"]:hover  .lp-cat-arrow { background: #EA580C; color: #fff; }
+
+.lp-cat-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lp-cat-title {
   font-family: $font-family-header;
-  font-size: .95rem;
+  font-size: 1.08rem;
   font-weight: $font-weight-extrabold;
   color: var(--lp-text);
   line-height: 1.3;
-  margin: 0;
+  display: block;
 }
 
-.lp-who-desc {
+.lp-cat-desc {
   font-size: .82rem;
-  color: var(--lp-text-muted);
+  font-weight: $font-weight-normal;
+  color: var(--lp-muted);
   line-height: 1.5;
-  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
+
+// Persistent micro-CTA — always visible so the card reads as an invitation,
+// not just decoration; brightens and underlines on hover.
+.lp-cat-cta {
+  font-size: .70rem;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+
+  &::after {
+    content: '\2192';
+    transition: transform .25s $easing-standard;
+  }
+  .lp-cat-card:hover &::after { transform: translateX(3px); }
+
+  &[data-color="primary"] { color: #D97706; }
+  &[data-color="green"]   { color: #059669; }
+  &[data-color="violet"]  { color: #7C3AED; }
+  &[data-color="yellow"]  { color: #B45309; }
+  &[data-color="pink"]    { color: #E11D48; }
+  &[data-color="accent"]  { color: #EA580C; }
+}
+
+:host[data-theme="dark"] {
+  .lp-cat-cta[data-color="primary"] { color: #FBBF24; }
+  .lp-cat-cta[data-color="green"]   { color: #34D399; }
+  .lp-cat-cta[data-color="violet"]  { color: #A78BFA; }
+  .lp-cat-cta[data-color="yellow"]  { color: #FCD34D; }
+  .lp-cat-cta[data-color="pink"]    { color: #FB7185; }
+  .lp-cat-cta[data-color="accent"]  { color: #FB923C; }
+}
+
+:host[data-theme="light"] {
+  .lp-categories-section { background: #FFFFFF; }
+  .lp-cat-card { border-color: rgba(28,25,23,.08); }
+}
+
 
 
 // ============================================================

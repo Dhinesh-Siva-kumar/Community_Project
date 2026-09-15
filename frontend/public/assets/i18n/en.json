@@ -542,10 +542,8 @@
   },
   "landing": {
     "nav_home": "Home",
-    "nav_features": "Features",
-    "nav_communities": "Communities",
+    "nav_categories": "Categories",
     "nav_how_it_works": "How It Works",
-    "nav_reviews": "Reviews",
     "nav_about": "About",
     "nav_contact": "Contact",
     "nav_explore": "Explore Tamilya",
@@ -577,6 +575,55 @@
     "trust_secure": "Secure & Private",
     "trust_free": "Free for everyone",
     "trust_worldwide": "Available worldwide",
+    "categories_pill": "Explore Everything",
+    "categories_title1": "Everything In",
+    "categories_title2": "One App",
+    "categories_sub": "Jump straight to what you need — browse as a guest, join free anytime.",
+    "categories_cta": "Explore now",
+    "mainCategories": [
+      {
+        "icon": "bi-people-fill",
+        "color": "violet",
+        "link": "/user/community",
+        "title": "Communities",
+        "desc": "Meet Tamils in your city and country."
+      },
+      {
+        "icon": "bi-briefcase-fill",
+        "color": "green",
+        "link": "/user/jobs",
+        "title": "Jobs",
+        "desc": "Find job openings shared by the community."
+      },
+      {
+        "icon": "bi-calendar-event-fill",
+        "color": "pink",
+        "link": "/user/events",
+        "title": "Events",
+        "desc": "Discover meetups and gatherings near you."
+      },
+      {
+        "icon": "bi-shop",
+        "color": "primary",
+        "link": "/user/business",
+        "title": "Businesses",
+        "desc": "Explore Tamil-owned shops and services."
+      },
+      {
+        "icon": "bi-mortarboard-fill",
+        "color": "accent",
+        "link": "/user/student-connect",
+        "title": "Students",
+        "desc": "Guidance and support for students abroad."
+      },
+      {
+        "icon": "bi-question-circle-fill",
+        "color": "yellow",
+        "link": "/user/community",
+        "title": "Help",
+        "desc": "Ask a question and get real answers fast."
+      }
+    ],
     "who_pill": "For Everyone",
     "who_title": "Who Is This Platform For?",
     "who_sub": "No matter your background or profession — if you are Tamil and living abroad, this platform is for you.",
@@ -672,7 +719,8 @@
     "about_join_now": "Join Now",
     "about_log_in": "Log In",
     "trust_badge": "Trust & Safety",
-    "trust_title": "Your Safety Comes First.",
+    "trust_title1": "Your Safety Comes",
+    "trust_title2": "First.",
     "trust_sub": "Tamilya is built to help members connect, communicate, and support each other in a secure and trusted environment.",
     "trust_tagline": "Connect with confidence. Your safety and privacy are always protected on Tamilya.",
     "emergency_title": "Need Emergency Help Abroad?",
@@ -682,8 +730,9 @@
     "first30_title": "Your First 30 Days in Any New Country",
     "first30_sub": "No matter which country you move to — here is how Tamilya helps from day one.",
     "discover_pill": "Explore More",
-    "discover_title": "There's More to Discover",
-    "discover_sub": "From jobs to the business directory — explore everything Tamilya has to offer.",
+    "discover_title1": "There's More to",
+    "discover_title2": "Discover",
+    "discover_sub": "Jobs, guidance, community stories, and more — everything Tamilya has to offer.",
     "discoverCards": [
       {
         "icon": "bi-briefcase-fill",
@@ -719,8 +768,70 @@
         "fragment": "business-directory",
         "title": "Tamil Business Directory",
         "blurb": "Discover Tamil-owned businesses near you."
+      },
+      {
+        "icon": "bi-people-fill",
+        "color": "primary",
+        "fragment": "everyone",
+        "title": "Who It's For",
+        "blurb": "Students, professionals, families — see if this platform fits you."
+      },
+      {
+        "icon": "bi-stars",
+        "color": "primary",
+        "fragment": "features",
+        "title": "Platform Features",
+        "blurb": "Everything you need abroad, all in one place."
+      },
+      {
+        "icon": "bi-globe2",
+        "color": "violet",
+        "fragment": "communities",
+        "title": "Country Communities",
+        "blurb": "Find your Tamil community wherever you live."
+      },
+      {
+        "icon": "bi-chat-quote-fill",
+        "color": "pink",
+        "fragment": "testimonials",
+        "title": "Real Stories",
+        "blurb": "Hear how Tamils abroad connect and support each other."
       }
     ],
+    "why_pill": "Why Us",
+    "why_title1": "Why",
+    "why_title2": "Tamilya?",
+    "whyBenefits": [
+      {
+        "icon": "bi-heart-fill",
+        "color": "primary",
+        "title": "Made For Tamils",
+        "desc": "Built by Tamils who understand life abroad."
+      },
+      {
+        "icon": "bi-gift-fill",
+        "color": "green",
+        "title": "Join Free",
+        "desc": "Sign up in minutes — no fees, ever."
+      },
+      {
+        "icon": "bi-globe2",
+        "color": "violet",
+        "title": "Worldwide Network",
+        "desc": "Tamils connected across every country."
+      },
+      {
+        "icon": "bi-headset",
+        "color": "pink",
+        "title": "Real Human Support",
+        "desc": "Genuine people ready to help, anytime."
+      }
+    ],
+    "country_pill": "Global Community",
+    "country_title1": "Find Your",
+    "country_title2": "Country",
+    "country_sub": "Thousands of Tamils are already connected abroad — find your country and join them.",
+    "country_cta": "View All Countries",
     "opportunities_pill": "Jobs Available Now",
     "opportunities_heading": "Opportunities Available Today",
     "opportunities_sub": "Browse job types shared directly by Tamils — find the right opportunity for you.",
@@ -1153,24 +1264,28 @@
     "steps": [
       {
         "num": "01",
+        "icon": "bi-person-plus-fill",
         "title": "Sign Up",
         "desc": "Create your profile easily by adding your name, country, city, and profession or field of study. It's completely free.",
         "color": "primary"
       },
       {
         "num": "02",
+        "icon": "bi-geo-alt-fill",
         "title": "Choose Your Country",
         "desc": "Join the Tamil community in the country where you live and connect with local members.",
         "color": "violet"
       },
       {
         "num": "03",
+        "icon": "bi-life-preserver",
         "title": "Get Help or Offer Support",
         "desc": "Find jobs, get legal help, share items, or support others — everything your community needs, all in one place.",
         "color": "green"
       },
       {
         "num": "04",
+        "icon": "bi-people-fill",
         "title": "Grow Your Network",
         "desc": "Make new friends, join events, and build meaningful connections with the Tamil community wherever you are.",
         "color": "pink"
@@ -1251,7 +1366,7 @@
         "icon": "bi-patch-check-fill",
         "title": "Verified Profiles",
         "desc": "Members can verify their profiles to build trust within the community. Verified users receive a badge, helping others connect with genuine and reliable people.",
-        "color": "primary"
+        "color": "green"
       },
       {
         "icon": "bi-shield-fill-x",
@@ -1263,13 +1378,13 @@
         "icon": "bi-lock-fill",
         "title": "Privacy First",
         "desc": "Personal information is protected and only shared according to your privacy settings. You have full control over what others can see.",
-        "color": "violet"
+        "color": "blue"
       },
       {
         "icon": "bi-funnel-fill",
         "title": "Spam Detection",
         "desc": "Suspicious activities, fake accounts, and spam messages are automatically detected and removed to keep the platform safe and trustworthy.",
-        "color": "green"
+        "color": "teal"
       }
     ],
     "footerMetrics": [

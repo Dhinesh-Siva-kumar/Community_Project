@@ -1,6 +1,6 @@
 import {
-  Component, OnInit, OnDestroy, AfterViewInit, ViewChild,
-  Inject, PLATFORM_ID, ElementRef, HostBinding, HostListener, NgZone
+  Component, OnInit, OnDestroy, AfterViewInit,
+  Inject, PLATFORM_ID, ElementRef, HostBinding, HostListener, NgZone, ViewChild
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -87,44 +87,29 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   applicationName = 'Tamilya';
 
-  // ── Communities Showcase (proper nouns — not translated) ──
-  @ViewChild('commScroll') commScrollRef!: ElementRef<HTMLElement>;
-  @ViewChild('testiScroll') testiScrollRef!: ElementRef<HTMLElement>;
+  // ── Country Preview (proper nouns — not translated). Same countries as
+  // the fuller Country Communities list on /discover — kept to the 8
+  // largest communities here since this is just a teaser. `accent` is each
+  // country's signature flag color, used for a flag-colored hover glow. ──
+  @ViewChild('countryScroll') countryScrollRef!: ElementRef<HTMLElement>;
 
-  communities = [
-    { code: 'gb', country: 'United Kingdom',  name: 'UK Tamils Community',          members: 3240, color: 'primary' },
-    { code: 'de', country: 'Germany',          name: 'Germany Tamils Community',     members: 2180, color: 'violet' },
-    { code: 'fr', country: 'France',           name: 'France Tamils Community',      members: 1450, color: 'pink'   },
-    { code: 'ca', country: 'Canada',           name: 'Canada Tamils Community',      members: 2890, color: 'green'  },
-    { code: 'au', country: 'Australia',        name: 'Australia Tamils Community',   members: 2640, color: 'yellow' },
-    { code: 'ch', country: 'Switzerland',      name: 'Switzerland Tamils Community', members: 980,  color: 'accent' },
-    { code: 'nl', country: 'Netherlands',      name: 'Netherlands Tamils Community', members: 1230, color: 'primary'},
-    { code: 'no', country: 'Norway',           name: 'Norway Tamils Community',      members: 760,  color: 'violet' },
-    { code: 'se', country: 'Sweden',           name: 'Sweden Tamils Community',      members: 1120, color: 'green'  },
-    { code: 'dk', country: 'Denmark',          name: 'Denmark Tamils Community',     members: 890,  color: 'pink'   },
-    { code: 'it', country: 'Italy',            name: 'Italy Tamils Community',       members: 1680, color: 'yellow' },
-    { code: 'be', country: 'Belgium',          name: 'Belgium Tamils Community',     members: 720,  color: 'accent' },
-    { code: 'at', country: 'Austria',          name: 'Austria Tamils Community',     members: 560,  color: 'primary'},
-    { code: 'sg', country: 'Singapore',        name: 'Singapore Tamils Community',   members: 4120, color: 'violet' },
-    { code: 'us', country: 'United States',    name: 'USA Tamils Community',         members: 5380, color: 'green'  },
-    { code: 'nz', country: 'New Zealand',      name: 'New Zealand Tamils Community', members: 890,  color: 'pink'   },
-    { code: 'ie', country: 'Ireland',          name: 'Ireland Tamils Community',     members: 670,  color: 'accent' },
-    { code: 'es', country: 'Spain',            name: 'Spain Tamils Community',       members: 540,  color: 'yellow' },
-    { code: 'pt', country: 'Portugal',         name: 'Portugal Tamils Community',    members: 420,  color: 'primary'},
-    { code: 'fi', country: 'Finland',          name: 'Finland Tamils Community',     members: 380,  color: 'violet' },
+  countryPreview = [
+    { code: 'us', name: 'United States',  accent: '#3C3B6E' },
+    { code: 'sg', name: 'Singapore',      accent: '#EF3340' },
+    { code: 'gb', name: 'United Kingdom', accent: '#C8102E' },
+    { code: 'ca', name: 'Canada',         accent: '#FF0000' },
+    { code: 'au', name: 'Australia',      accent: '#00247D' },
+    { code: 'de', name: 'Germany',        accent: '#DD0000' },
+    { code: 'it', name: 'Italy',          accent: '#008C45' },
+    { code: 'fr', name: 'France',         accent: '#0055A4' },
+    { code: 'nl', name: 'Netherlands',    accent: '#21468B' },
+    { code: 'se', name: 'Sweden',         accent: '#006AA7' },
   ];
 
-  scrollCommunities(direction: 'left' | 'right'): void {
-    const el = this.commScrollRef?.nativeElement;
+  scrollCountries(direction: 'left' | 'right'): void {
+    const el = this.countryScrollRef?.nativeElement;
     if (!el) return;
-    const scrollAmount = 280;
-    el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-  }
-
-  scrollTestimonials(direction: 'left' | 'right'): void {
-    const el = this.testiScrollRef?.nativeElement;
-    if (!el) return;
-    const scrollAmount = 400;
+    const scrollAmount = 260;
     el.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
   }
 
@@ -158,7 +143,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   // ── Observers & lifecycle ──
   private sectionObserver!: IntersectionObserver;
   private revealObserver!: IntersectionObserver;
-  private readonly sectionIds = ['home', 'features', 'communities', 'how-it-works', 'testimonials', 'about', 'contact'];
+  private readonly sectionIds = ['home', 'categories', 'how-it-works', 'about', 'explore-more', 'contact'];
 
   ngOnInit(): void {
     this.themeService.applyDefaultIfUnset('light');
