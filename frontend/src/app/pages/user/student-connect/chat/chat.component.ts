@@ -1,12 +1,16 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { StudentConnectService } from '../../../../core/services/student-connect.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { StudentChatThread, StudentChatMessage } from '../../../../core/models';
+import { LanguageService } from '../../../../core/services/language.service';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../../shared/components/inline-spinner/inline-spinner.component';
 
 /**
  * Chat tab (STUDENT_CONNECT_SPEC.md §5.6) — Model B only, never rendered
@@ -17,7 +21,7 @@ import { StudentChatThread, StudentChatMessage } from '../../../../core/models';
 @Component({
   selector: 'app-student-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
 })
@@ -25,6 +29,8 @@ export class StudentChatComponent implements OnInit, OnDestroy, OnChanges {
   private studentConnectService = inject(StudentConnectService);
   private notificationService = inject(NotificationService);
   private toast = inject(ToastService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   /** Set by the shell when arriving via a profile's "Open Chat" button. */
   @Input() openThreadForUserId: string | null = null;
@@ -37,7 +43,68 @@ export class StudentChatComponent implements OnInit, OnDestroy, OnChanges {
   messageText = signal('');
   sending = signal(false);
 
+  isTranslatingThreads = signal(false);
+  private translatedThreadPreviews = signal<Map<string, string>>(new Map());
+  isTranslatingMessages = signal(false);
+  private translatedMessages = signal<Map<string, string>>(new Map());
+
   private chatEventSub?: Subscription;
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const threads = this.threads();
+      if (!isTamil || threads.length === 0) {
+        this.translatedThreadPreviews.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      for (const t of threads) {
+        if (t.lastMessagePreview) fields[t.id] = t.lastMessagePreview;
+      }
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingThreads.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingThreads.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedThreadPreviews.set(new Map(Object.entries(translated)));
+        });
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const messages = this.messages();
+      if (!isTamil || messages.length === 0) {
+        this.translatedMessages.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      for (const m of messages) {
+        if (m.text) fields[m.id] = m.text;
+      }
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingMessages.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingMessages.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedMessages.set(new Map(Object.entries(translated)));
+        });
+    });
+  }
+
+  displayThreadPreview(thread: StudentChatThread): string | undefined {
+    return this.translatedThreadPreviews().get(thread.id) ?? thread.lastMessagePreview ?? undefined;
+  }
+
+  displayMessageText(message: StudentChatMessage): string {
+    return this.translatedMessages().get(message.id) ?? message.text;
+  }
 
   get activeThread(): StudentChatThread | undefined {
     return this.threads().find((t) => t.id === this.activeThreadId());

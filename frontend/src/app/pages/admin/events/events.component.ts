@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,10 @@ import { EventFormModalComponent } from '../../../shared/components/event-form-m
 import { EventCategoryManagerComponent } from '../../../shared/components/event-category-manager/event-category-manager.component';
 import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil, eventModeCategorySummary as eventModeCategorySummaryUtil } from '../../../shared/utils/event-location';
@@ -31,7 +35,7 @@ type EventSortField = 'name' | 'eventDate' | 'joined' | 'category' | 'mode' | 'l
 @Component({
   selector: 'app-admin-events',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, DatePipe, RouterLink, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, SortBarComponent, EventFormModalComponent, EventCategoryManagerComponent, EventDateBadgeComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, DatePipe, RouterLink, ImageErrorHandlerDirective, ScrollLockDirective, SearchableSelectComponent, SortBarComponent, EventFormModalComponent, EventCategoryManagerComponent, EventDateBadgeComponent, ImageUrlPipe, TranslatePipe, EnumLabelPipe, InlineSpinnerComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -46,6 +50,8 @@ export class AdminEventsComponent implements OnInit, OnDestroy, CanComponentDeac
   private toast = inject(ToastService);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   @ViewChild('eventFormModal') eventFormModal?: EventFormModalComponent;
 
@@ -56,6 +62,56 @@ export class AdminEventsComponent implements OnInit, OnDestroy, CanComponentDeac
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);
+  }
+
+  // ── Dynamic content translation (Tamil) — event titles/descriptions ──
+  isTranslatingEvents = signal(false);
+  private translatedEventFields = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const events = this.events();
+      if (!isTamil || events.length === 0) {
+        this.translatedEventFields.set(new Map());
+        return;
+      }
+      this.translateVisibleEvents(events, version);
+    });
+  }
+
+  private translateVisibleEvents(events: AppEvent[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const evt of events) {
+      if (evt.title) fields[`${evt.id}:title`] = evt.title;
+      if (evt.description) fields[`${evt.id}:description`] = evt.description;
+      if (evt.rejectionReason) fields[`${evt.id}:reason`] = evt.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingEvents.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingEvents.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedEventFields.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `evt.title` directly. */
+  displayEventTitle(evt: AppEvent): string {
+    return this.translatedEventFields().get(`${evt.id}:title`) ?? evt.title;
+  }
+
+  /** Read path templates use instead of `evt.description` directly. */
+  displayEventDescription(evt: AppEvent): string | undefined {
+    return this.translatedEventFields().get(`${evt.id}:description`) ?? evt.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `evt.rejectionReason` directly. */
+  displayEventRejectionReason(evt: AppEvent): string | undefined {
+    return this.translatedEventFields().get(`${evt.id}:reason`) ?? evt.rejectionReason ?? undefined;
   }
 
   events     = signal<AppEvent[]>([]);

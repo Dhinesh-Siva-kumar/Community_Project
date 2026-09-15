@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -13,6 +13,10 @@ import { ImageViewerComponent } from '../../../shared/components/image-viewer/im
 import { EventFormModalComponent } from '../../../shared/components/event-form-modal/event-form-modal.component';
 import { EventDeleteModalComponent } from '../../../shared/components/event-delete-modal/event-delete-modal.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 import { formatEventAddress as formatEventAddressUtil, eventLocationSummary as eventLocationSummaryUtil } from '../../../shared/utils/event-location';
 import { formatEventTimeRange as formatEventTimeRangeUtil } from '../../../shared/utils/event-date-format';
 import { isHttpUrl } from '../../../shared/validators/url.validator';
@@ -26,7 +30,7 @@ import { isHttpUrl } from '../../../shared/validators/url.validator';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, ImageUrlPipe, EventDateBadgeComponent, QrCodeComponent, ImageViewerComponent, EventFormModalComponent, EventDeleteModalComponent, TranslatePipe],
+  imports: [CommonModule, DatePipe, RouterLink, ImageUrlPipe, EventDateBadgeComponent, QrCodeComponent, ImageViewerComponent, EventFormModalComponent, EventDeleteModalComponent, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './event-detail.component.html',
   styleUrls: ['./event-detail.component.scss'],
 })
@@ -38,6 +42,8 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   loading        = signal(true);
   notFound       = signal(false);
@@ -47,6 +53,44 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   // Full list (not active-only) — this event's own category may be
   // disabled/legacy and must still resolve to the correct icon.
   categories     = signal<EventCategory[]>([]);
+
+  // ── Dynamic content translation (Tamil) ──────────────────────
+  isTranslatingEvent = signal(false);
+  private translatedEventFields = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const evt = this.event();
+      if (!isTamil || !evt) {
+        this.translatedEventFields.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      if (evt.title) fields['title'] = evt.title;
+      if (evt.description) fields['description'] = evt.description;
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingEvent.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingEvent.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedEventFields.set(new Map(Object.entries(translated)));
+        });
+    });
+  }
+
+  /** Read path templates use instead of `evt.title` directly. */
+  displayEventTitle(evt: AppEvent): string {
+    return this.translatedEventFields().get('title') ?? evt.title;
+  }
+
+  /** Read path templates use instead of `evt.description` directly. */
+  displayEventDescription(evt: AppEvent): string | undefined {
+    return this.translatedEventFields().get('description') ?? evt.description ?? undefined;
+  }
 
   isAdmin   = computed(() => this.authService.currentUser()?.role === 'ADMIN');
   /** Where the back link and related-event clicks go, depending on which console this page was reached from. */

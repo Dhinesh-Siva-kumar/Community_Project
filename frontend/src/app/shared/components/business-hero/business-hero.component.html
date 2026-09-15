@@ -62,7 +62,12 @@
         }
 
         @if (showReason()) {
-          <p class="bh__reason"><i class="bi bi-exclamation-circle-fill"></i>{{ biz.rejectionReason }}</p>
+          <p class="bh__reason">
+            <i class="bi bi-exclamation-circle-fill"></i>{{ displayRejectionReason() }}
+            @if (language.isTamil() && isTranslatingReason()) {
+              <app-inline-spinner [label]="'common.translating' | translate" />
+            }
+          </p>
         }
       </div>
     </div>

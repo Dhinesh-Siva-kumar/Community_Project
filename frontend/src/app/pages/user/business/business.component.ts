@@ -26,6 +26,10 @@ import { BusinessDeleteModalComponent } from '../../../shared/components/busines
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 
 type ViewState = 'categories' | 'list' | 'detail';
 
@@ -45,7 +49,7 @@ const BUSINESS_PAGE_SIZE = 20;
 @Component({
   selector: 'app-user-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, SearchableSelectComponent, ImageUrlPipe, InfiniteScrollDirective, ScrollLockDirective, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, BusinessDeleteModalComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -61,6 +65,8 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   private route             = inject(ActivatedRoute);
   private router            = inject(Router);
   private geographyService  = inject(GeographyService);
+  language                  = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   @ViewChild('bizFormModal') bizFormModal?: BusinessFormModalComponent;
 
@@ -102,6 +108,10 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   // pagination which shows one page at a time.
   allFilteredBusinesses = signal<Business[]>([]);
   visibleBusinesses     = computed(() => this.allFilteredBusinesses());
+
+  // ── Dynamic content translation (Tamil) — business descriptions ──
+  isTranslatingDescriptions = signal(false);
+  private translatedDescriptions = signal<Map<string, string>>(new Map());
   /** Set by loadMoreBusinesses so the next fetch appends instead of replacing. */
   private appendNextLoad = false;
   selectedCategory = signal<BusinessCategory | null>(null);
@@ -331,6 +341,17 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
       if (this.currentView() === 'list' && this.pageTab() === 'all') {
         this.loadNearbyBusinesses();
       }
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const list = [...this.businesses(), ...this.allFilteredBusinesses()];
+      if (!isTamil || list.length === 0) {
+        this.translatedDescriptions.set(new Map());
+        return;
+      }
+      this.translateVisibleDescriptions(list, version);
     });
 
     // Restart the lazy-loaded category batch whenever the search/sort
@@ -985,6 +1006,33 @@ export class UserBusinessComponent implements OnInit, OnDestroy, CanComponentDea
   getLocationDisplay(biz: Business): string {
     const b = biz as any;
     return [b.city, b.state].filter((v: any) => !!v).join(', ') || biz.address || '';
+  }
+
+  private translateVisibleDescriptions(businesses: Business[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const biz of businesses) {
+      if (biz.description) fields[`${biz.id}:description`] = biz.description;
+      if (biz.rejectionReason) fields[`${biz.id}:reason`] = biz.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingDescriptions.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingDescriptions.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedDescriptions.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `biz.description` directly. */
+  displayBusinessDescription(biz: Business): string | undefined {
+    return this.translatedDescriptions().get(`${biz.id}:description`) ?? biz.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `biz.rejectionReason` directly. */
+  displayBusinessRejectionReason(biz: Business): string | undefined {
+    return this.translatedDescriptions().get(`${biz.id}:reason`) ?? biz.rejectionReason ?? undefined;
   }
 
   formatDate(dateStr: string | undefined): string {

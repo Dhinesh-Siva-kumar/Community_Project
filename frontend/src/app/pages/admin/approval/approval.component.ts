@@ -1,8 +1,12 @@
-import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, forkJoin, EMPTY } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
 import { CommunityService, PendingCommunitiesQueryParams } from '../../../core/services/community.service';
 import { BusinessService, PendingBusinessQueryParams } from '../../../core/services/business.service';
 import { JobService, PendingJobsQueryParams } from '../../../core/services/job.service';
@@ -49,7 +53,7 @@ const ENTITY_TABS: EntityTab[] = [
 @Component({
   selector: 'app-approval',
   standalone: true,
-  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, QrCodeComponent, TranslatePipe],
+  imports: [PostVideoComponent, DateInputComponent, CommonModule, DatePipe, FormsModule, SearchableSelectComponent, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, QrCodeComponent, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './approval.component.html',
   styleUrls: ['./approval.component.scss'],
 })
@@ -63,6 +67,8 @@ export class ApprovalComponent implements OnInit {
   private toast             = inject(ToastService);
   private translate         = inject(TranslateService);
   private route              = inject(ActivatedRoute);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   readonly entityTabs = ENTITY_TABS;
   activeEntity = signal<EntityKey>('posts');
@@ -159,6 +165,90 @@ export class ApprovalComponent implements OnInit {
       this.showHeaderFab.set(window.scrollY >= 120);
       this.scrollTicking = false;
     });
+  }
+
+  // ── Dynamic content translation (Tamil) ──────────────────────
+  // Names ("name"/"title" of a community/business/job/event) are proper
+  // nouns and stay untranslated, except for jobs/events where "title" is a
+  // headline rather than a name — same rule this app applies elsewhere.
+  isTranslatingItems = signal(false);
+  private translatedItemFields = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const items = this.items();
+      const entity = this.activeEntity();
+      if (!isTamil || items.length === 0) {
+        this.translatedItemFields.set(new Map());
+        return;
+      }
+
+      const fields: Record<string, string> = {};
+      for (const item of items) {
+        if (entity === 'posts') {
+          const content = item['content'] as string | undefined;
+          if (content) fields[`${item.id}:content`] = content;
+        } else {
+          const description = item['description'] as string | undefined;
+          if (description) fields[`${item.id}:description`] = description;
+          if (entity === 'jobs' || entity === 'events') {
+            const title = item['title'] as string | undefined;
+            if (title) fields[`${item.id}:title`] = title;
+          }
+          if (entity === 'community') {
+            const rules = item['rules'] as string[] | undefined;
+            if (Array.isArray(rules) && rules.length) fields[`${item.id}:rules`] = rules.join(', ');
+          }
+        }
+        const rejectionReason = item['rejectionReason'] as string | undefined;
+        if (rejectionReason) fields[`${item.id}:rejectionReason`] = rejectionReason;
+      }
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingItems.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingItems.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedItemFields.set(new Map(Object.entries(translated)));
+        });
+    });
+  }
+
+  /** Read path templates use instead of `itemName()`'s raw computation. */
+  displayItemName(item: PendingItem): string {
+    const entity = this.activeEntity();
+    if (entity === 'posts') {
+      const content = (this.translatedItemFields().get(`${item.id}:content`) ?? (item['content'] as string | undefined))?.trim();
+      if (!content) return `${item['type'] ?? 'General'} post`;
+      return content.length > 60 ? content.slice(0, 60) + '…' : content;
+    }
+    if (entity === 'jobs' || entity === 'events') {
+      return this.translatedItemFields().get(`${item.id}:title`) ?? item['title'] ?? item['name'] ?? '—';
+    }
+    return this.itemName(item);
+  }
+
+  /** Read path templates use instead of `itemDescription()`'s raw field. */
+  displayItemDescription(item: PendingItem): string {
+    if (this.activeEntity() === 'posts') {
+      return this.translatedItemFields().get(`${item.id}:content`) ?? (item['content'] ?? '');
+    }
+    return this.translatedItemFields().get(`${item.id}:description`) ?? (item['description'] ?? '');
+  }
+
+  /** Read path templates use instead of `item['rejectionReason']` directly. */
+  displayRejectionReason(item: PendingItem): string | undefined {
+    return this.translatedItemFields().get(`${item.id}:rejectionReason`) ?? item['rejectionReason'] ?? undefined;
+  }
+
+  /** Read path for the community "Rules" detail-section field. */
+  private displayRules(item: PendingItem): string {
+    const rules = item['rules'] as string[] | undefined;
+    if (!Array.isArray(rules) || rules.length === 0) return '—';
+    return this.translatedItemFields().get(`${item.id}:rules`) ?? rules.join(', ');
   }
 
   ngOnInit(): void {
@@ -822,7 +912,7 @@ export class ApprovalComponent implements OnInit {
             { label: 'admin.approval.label.mode', value: this.fmtList((item['community_modes'] as string[] | undefined)?.map((m) => this.t(m === 'HELP' ? 'components.communityForm.mode.help' : m === 'EMERGENCY' ? 'components.communityForm.mode.emergency' : 'components.communityForm.mode.enquire'))) },
           ]},
           { title: 'admin.approval.section.rules', icon: 'bi-list-check', fields: [
-            { label: 'admin.approval.label.communityRules', value: this.fmtList(item['rules']) },
+            { label: 'admin.approval.label.communityRules', value: this.displayRules(item) },
           ]},
         ];
 

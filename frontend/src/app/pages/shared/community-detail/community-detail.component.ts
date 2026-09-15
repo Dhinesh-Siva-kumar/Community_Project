@@ -1,11 +1,15 @@
-import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, EnvironmentInjector, HostListener, OnDestroy, OnInit, computed, createComponent, inject, signal } from '@angular/core';
+import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, EnvironmentInjector, HostListener, OnDestroy, OnInit, computed, createComponent, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { CommunityService } from '../../../core/services/community.service';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
 import { Community, CommunityMember, Post, Comment, PostType } from '../../../core/models';
 import { AnimateOnScrollDirective } from '../../../shared/directives/animate-on-scroll.directive';
 import { ImageErrorHandlerDirective } from '../../../shared/directives/image-error-handler.directive';
@@ -30,7 +34,7 @@ type TabType = 'posts' | 'myposts' | 'help' | 'emergency' | 'enquire' | 'members
   selector: 'app-community-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AnimateOnScrollDirective, ImageErrorHandlerDirective, ImageUrlPipe, FileUploadComponent, VideoUploadComponent, PostVideoComponent, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './community-detail.component.html',
   styleUrls: ['./community-detail.component.scss'],
 })
@@ -46,6 +50,8 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private appRef = inject(ApplicationRef);
   private environmentInjector = inject(EnvironmentInjector);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   protected categoryIcon(name?: string | null): string {
     return getCategoryIcon(name);
@@ -98,6 +104,163 @@ export class CommunityDetailComponent implements OnInit, OnDestroy {
   pendingDeleteCommentId = signal<string | null>(null);
   deletingCommentId = signal<string | null>(null);
   likingPost = signal<string | null>(null);
+
+  // ── Dynamic content translation (Tamil) ────────────────────
+  isTranslatingPosts = signal(false);
+  isTranslatingComments = signal(false);
+  isTranslatingDescription = signal(false);
+  isTranslatingRules = signal(false);
+  private translatedPostContent = signal<Map<string, string>>(new Map());
+  private translatedCommentContent = signal<Map<string, string>>(new Map());
+  private translatedDescription = signal<string | null>(null);
+  private translatedCommunityReason = signal<string | null>(null);
+  private translatedRules = signal<Map<number, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const posts = [...this.posts(), ...this.myPostsInCommunity()];
+      if (!isTamil || posts.length === 0) {
+        this.translatedPostContent.set(new Map());
+        return;
+      }
+      this.translateVisiblePosts(posts, version);
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const comments = Array.from(this.postComments().values()).flat();
+      if (!isTamil || comments.length === 0) {
+        this.translatedCommentContent.set(new Map());
+        return;
+      }
+      this.translateVisibleComments(comments, version);
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const description = this.community()?.description;
+      if (!isTamil || !description) {
+        this.translatedDescription.set(null);
+        return;
+      }
+      this.translateDescription(description, version);
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const reason = this.community()?.rejectionReason;
+      if (!isTamil || !reason) {
+        this.translatedCommunityReason.set(null);
+        return;
+      }
+      this.translationService.translateFields({ reason }, 'ta')
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedCommunityReason.set(translated['reason'] ?? reason);
+        });
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const rules = this.community()?.rules ?? [];
+      if (!isTamil || rules.length === 0) {
+        this.translatedRules.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      rules.forEach((rule, index) => { if (rule) fields[String(index)] = rule; });
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingRules.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingRules.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          const map = new Map<number, string>();
+          for (const [key, value] of Object.entries(translated)) map.set(Number(key), value);
+          this.translatedRules.set(map);
+        });
+    });
+  }
+
+  /** Read path templates use instead of a raw `rules[index]`. */
+  displayRule(rule: string, index: number): string {
+    return this.translatedRules().get(index) ?? rule;
+  }
+
+  private translateVisiblePosts(posts: Post[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const post of posts) {
+      if (post.content) fields[post.id] = post.content;
+      if (post.rejectionReason) fields[`${post.id}:reason`] = post.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingPosts.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingPosts.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedPostContent.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `post.rejectionReason` directly. */
+  displayPostRejectionReason(post: Post): string | undefined {
+    return this.translatedPostContent().get(`${post.id}:reason`) ?? post.rejectionReason ?? undefined;
+  }
+
+  private translateVisibleComments(comments: Comment[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const comment of comments) {
+      if (comment.content) fields[comment.id] = comment.content;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingComments.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingComments.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedCommentContent.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  private translateDescription(description: string, requestVersion: number): void {
+    this.isTranslatingDescription.set(true);
+    this.translationService.translateFields({ description }, 'ta')
+      .pipe(finalize(() => this.isTranslatingDescription.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedDescription.set(translated['description'] ?? description);
+      });
+  }
+
+  /** Read path templates use instead of `post.content` directly. */
+  displayPostContent(post: Post): string {
+    return this.translatedPostContent().get(post.id) ?? post.content ?? '';
+  }
+
+  /** Read path templates use instead of `comment.content` directly. */
+  displayCommentContent(comment: Comment): string {
+    return this.translatedCommentContent().get(comment.id) ?? comment.content;
+  }
+
+  /** Read path templates use instead of `community()!.description` directly. */
+  displayCommunityDescription(): string | undefined {
+    return this.translatedDescription() ?? this.community()?.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `community()!.rejectionReason` directly. */
+  displayCommunityRejectionReason(): string | undefined {
+    return this.translatedCommunityReason() ?? this.community()?.rejectionReason ?? undefined;
+  }
 
   // Join / Leave — the confirmation popups live in app-community-join-modal
   // / app-community-leave-modal; this component only opens/closes them and

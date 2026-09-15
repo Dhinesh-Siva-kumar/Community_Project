@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -24,6 +24,9 @@ import { DateInputComponent } from '../../../shared/components/date-input/date-i
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
 import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 
 // Remembers the last page viewed across navigations (e.g. list → detail → back).
 const PAGE_STORAGE_KEY = 'admin-community:page';
@@ -57,7 +60,7 @@ function minLengthTrimmed(min: number) {
 @Component({
   selector: 'app-admin-community',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, CheckboxGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe, ScrollLockDirective],
+  imports: [DateInputComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, SearchableSelectComponent, MultiSelectComponent, RadioGroupComponent, CheckboxGroupComponent, ToggleComponent, ImageUrlPipe, FileUploadComponent, CommunityRulesInputComponent, SortBarComponent, TranslatePipe, ScrollLockDirective, InlineSpinnerComponent],
   templateUrl: './admin-community.component.html',
   styleUrls: ['./admin-community.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -67,7 +70,8 @@ function minLengthTrimmed(min: number) {
 })
 export class AdminCommunityComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
-  private language = inject(LanguageService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
   private communityService = inject(CommunityService);
   private router = inject(Router);
   private apiService = inject(ApiService);
@@ -76,6 +80,44 @@ export class AdminCommunityComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+
+  // ── Dynamic content translation (Tamil) — community descriptions ──
+  isTranslatingDescriptions = signal(false);
+  private translatedDescriptions = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const communities = this.filteredCommunities();
+      if (!isTamil || communities.length === 0) {
+        this.translatedDescriptions.set(new Map());
+        return;
+      }
+      this.translateVisibleDescriptions(communities, version);
+    });
+  }
+
+  private translateVisibleDescriptions(communities: Community[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const community of communities) {
+      if (community.description) fields[community.id] = community.description;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingDescriptions.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingDescriptions.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedDescriptions.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `community.description` directly. */
+  displayCommunityDescription(community: Community): string | undefined {
+    return this.translatedDescriptions().get(community.id) ?? community.description ?? undefined;
+  }
 
   ngOnDestroy(): void {
     this.layoutService.forceSidebarCollapsed.set(false);

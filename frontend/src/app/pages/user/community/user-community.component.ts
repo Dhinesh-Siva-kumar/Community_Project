@@ -19,6 +19,10 @@ import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.dire
 import { TranslatePipe } from '@ngx-translate/core';
 import { getCategoryIcon } from '../../../shared/utils/category-icons';
 import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 
 export type CommunityTab = 'all' | 'joined' | 'trending' | 'pending';
 export type CommunityViewMode = 'grid' | 'list';
@@ -33,7 +37,7 @@ interface FilterTab {
 @Component({
   selector: 'app-user-community',
   standalone: true,
-  imports: [PostVideoComponent, CommonModule, FormsModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, SearchableSelectComponent],
+  imports: [PostVideoComponent, CommonModule, FormsModule, ImageUrlPipe, ImageErrorHandlerDirective, CommunityFormModalComponent, CommunityDeleteModalComponent, CommunityJoinModalComponent, CommunityLeaveModalComponent, ScrollLockDirective, TranslatePipe, SearchableSelectComponent, InlineSpinnerComponent],
   templateUrl: './user-community.component.html',
   styleUrls: ['./user-community.component.scss'],
 })
@@ -44,6 +48,8 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   private toast             = inject(ToastService);
   private router            = inject(Router);
   private masterDataService = inject(MasterDataService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   // ── Guest-only country picker — logged-in users are already scoped to
   // their own profile country automatically (see communities.service.ts's
@@ -203,7 +209,22 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
   lightboxImages  = signal<string[]>([]);
   activeImageIndex = signal(0);
 
+  // ── Dynamic content translation (Tamil) — community descriptions ──
+  isTranslatingDescriptions = signal(false);
+  private translatedDescriptions = signal<Map<string, string>>(new Map());
+
   constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const communities = [...this.filteredCommunities(), ...this.suggestedCommunities()];
+      if (!isTamil || communities.length === 0) {
+        this.translatedDescriptions.set(new Map());
+        return;
+      }
+      this.translateVisibleDescriptions(communities, version);
+    });
+
     // Re-check the arrows' enabled/disabled state whenever the rail element
     // (re)appears in the DOM — covers first load, re-entering this page
     // after navigating into a community and back (a fresh component
@@ -266,6 +287,33 @@ export class UserCommunityComponent implements OnInit, OnDestroy {
 
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private translateVisibleDescriptions(communities: Community[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const community of communities) {
+      if (community.description) fields[`${community.id}:description`] = community.description;
+      if (community.rejectionReason) fields[`${community.id}:reason`] = community.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingDescriptions.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingDescriptions.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedDescriptions.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `community.description` directly. */
+  displayCommunityDescription(community: Community): string | undefined {
+    return this.translatedDescriptions().get(`${community.id}:description`) ?? community.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `community.rejectionReason` directly. */
+  displayCommunityRejectionReason(community: Community): string | undefined {
+    return this.translatedDescriptions().get(`${community.id}:reason`) ?? community.rejectionReason ?? undefined;
   }
 
   private updateTabIndicator(): void {

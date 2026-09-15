@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed
+  Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed, effect
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -21,6 +21,9 @@ import { SortBarComponent, SortField, SortChange, SortDir } from '../../../share
 import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
@@ -48,7 +51,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
     CommonModule, FormsModule, DatePipe, RouterLink,
     SearchableSelectComponent, ImageErrorHandlerDirective, ImageUrlPipe, ImageViewerComponent,
     SortBarComponent, ScrollLockDirective, TranslatePipe, EnumLabelPipe,
-    JobFormModalComponent],
+    JobFormModalComponent, InlineSpinnerComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -64,12 +67,64 @@ export class AdminJobsComponent implements OnInit, OnDestroy, CanComponentDeacti
   }
 
   private translate = inject(TranslateService);
-  private language = inject(LanguageService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
   private jobService        = inject(JobService);
   private layoutService     = inject(LayoutService);
   private toast             = inject(ToastService);
   private masterDataService = inject(MasterDataService);
   private destroy$          = new Subject<void>();
+
+  // ── Dynamic content translation (Tamil) — job titles/descriptions ──
+  isTranslatingJobs = signal(false);
+  private translatedJobFields = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const jobs = this.jobs();
+      if (!isTamil || jobs.length === 0) {
+        this.translatedJobFields.set(new Map());
+        return;
+      }
+      this.translateVisibleJobs(jobs, version);
+    });
+  }
+
+  private translateVisibleJobs(jobs: Job[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const job of jobs) {
+      if (job.title) fields[`${job.id}:title`] = job.title;
+      if (job.description) {
+        fields[`${job.id}:description`] = job.description;
+      } else {
+        const legacy = job as unknown as Record<string, string | undefined>;
+        for (const field of ['responsibilities', 'qualifications', 'requirements', 'benefits']) {
+          if (legacy[field]) fields[`${job.id}:${field}`] = legacy[field]!;
+        }
+      }
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingJobs.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingJobs.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedJobFields.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `job.title` directly. */
+  displayJobTitle(job: Job): string {
+    return this.translatedJobFields().get(`${job.id}:title`) ?? job.title;
+  }
+
+  /** Read path templates use instead of `job.description` directly. */
+  displayJobDescription(job: Job): string | undefined {
+    return this.translatedJobFields().get(`${job.id}:description`) ?? job.description ?? undefined;
+  }
 
   // ─── Data ───────────────────────────────────────────────────
   jobs          = signal<Job[]>([]);

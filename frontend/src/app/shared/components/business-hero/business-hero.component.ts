@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { finalize } from 'rxjs/operators';
 
 import type { Business } from '../../../core/models';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
+import { InlineSpinnerComponent } from '../inline-spinner/inline-spinner.component';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 type HeroStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'REJECTED' | 'NEEDS_INFO';
 
@@ -24,7 +28,7 @@ type HeroStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'REJECTED' | 'NEEDS_INFO';
 @Component({
   selector: 'app-business-hero',
   standalone: true,
-  imports: [CommonModule, RouterLink, ImageUrlPipe, TranslatePipe],
+  imports: [CommonModule, RouterLink, ImageUrlPipe, TranslatePipe, InlineSpinnerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './business-hero.component.html',
   styleUrls: ['./business-hero.component.scss'],
@@ -43,6 +47,35 @@ export class BusinessHeroComponent {
   readonly logoClick = output<void>();
   readonly edit = output<MouseEvent>();
   readonly delete = output<MouseEvent>();
+
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
+
+  isTranslatingReason = signal(false);
+  private translatedReason = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const reason = this.business().rejectionReason;
+      if (!isTamil || !reason) {
+        this.translatedReason.set(null);
+        return;
+      }
+      this.isTranslatingReason.set(true);
+      this.translationService.translateFields({ reason }, 'ta')
+        .pipe(finalize(() => this.isTranslatingReason.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedReason.set(translated['reason'] ?? reason);
+        });
+    });
+  }
+
+  displayRejectionReason(): string | undefined {
+    return this.translatedReason() ?? this.business().rejectionReason ?? undefined;
+  }
 
   protected status = computed<HeroStatus>(() => {
     const b = this.business();

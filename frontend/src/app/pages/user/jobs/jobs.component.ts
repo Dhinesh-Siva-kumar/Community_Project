@@ -21,6 +21,9 @@ import { formatCompensation } from '../../../shared/utils/job-compensation';
 import { to12h } from '../../../shared/utils/opening-hours';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 import { enumLabelKey, enumSelectOptions } from '../../../shared/constants/enum-labels';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { environment } from '../../../../environments/environment';
@@ -51,7 +54,7 @@ const CONFIRM_CLOSE_DELAY_MS = 900;
     CommonModule, FormsModule, DatePipe,
     SearchableSelectComponent, ImageUrlPipe, ImageViewerComponent,
     ImageErrorHandlerDirective, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe,
-    JobFormModalComponent],
+    JobFormModalComponent, InlineSpinnerComponent],
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -67,7 +70,8 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   }
 
   private translate = inject(TranslateService);
-  private language = inject(LanguageService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
   private jobService        = inject(JobService);
   authService               = inject(AuthService);
   private layoutService     = inject(LayoutService);
@@ -96,12 +100,70 @@ export class UserJobsComponent implements OnInit, OnDestroy, CanComponentDeactiv
   tabIndicatorWidth = signal(0);
   tabIndicatorReady = signal(false);
 
+  // ── Dynamic content translation (Tamil) — job titles/descriptions ──
+  isTranslatingJobs = signal(false);
+  private translatedJobFields = signal<Map<string, string>>(new Map());
+
   constructor() {
     effect(() => {
       this.tabButtons();
       this.pageTab();
       this.updateTabIndicator();
     });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const jobs = this.jobs();
+      if (!isTamil || jobs.length === 0) {
+        this.translatedJobFields.set(new Map());
+        return;
+      }
+      this.translateVisibleJobs(jobs, version);
+    });
+  }
+
+  private translateVisibleJobs(jobs: Job[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const job of jobs) {
+      if (job.title) fields[`${job.id}:title`] = job.title;
+      // description is the unified current field; legacy records that
+      // predate it only ever populated the older sub-fields, so those are
+      // translated instead — only when there's no description to fall back to.
+      if (job.description) {
+        fields[`${job.id}:description`] = job.description;
+      } else {
+        const legacy = job as unknown as Record<string, string | undefined>;
+        for (const field of ['responsibilities', 'qualifications', 'requirements', 'benefits']) {
+          if (legacy[field]) fields[`${job.id}:${field}`] = legacy[field]!;
+        }
+      }
+      if (job.rejectionReason) fields[`${job.id}:reason`] = job.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingJobs.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingJobs.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedJobFields.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `job.title` directly. */
+  displayJobTitle(job: Job): string {
+    return this.translatedJobFields().get(`${job.id}:title`) ?? job.title;
+  }
+
+  /** Read path templates use instead of `job.description` directly. */
+  displayJobDescription(job: Job): string | undefined {
+    return this.translatedJobFields().get(`${job.id}:description`) ?? job.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `job.rejectionReason` directly. */
+  displayJobRejectionReason(job: Job): string | undefined {
+    return this.translatedJobFields().get(`${job.id}:reason`) ?? job.rejectionReason ?? undefined;
   }
 
   @HostListener('window:resize')

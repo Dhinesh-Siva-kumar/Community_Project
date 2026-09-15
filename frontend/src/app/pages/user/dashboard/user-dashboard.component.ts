@@ -1,9 +1,11 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, finalize } from 'rxjs/operators';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { CommunityService } from '../../../core/services/community.service';
@@ -107,7 +109,7 @@ interface AnimatedStat {
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [PostVideoComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventDateBadgeComponent, TranslatePipe],
+  imports: [PostVideoComponent, CommonModule, RouterLink, FormsModule, ReactiveFormsModule, DatePipe, ImageUrlPipe, ImageErrorHandlerDirective, ScrollLockDirective, ProfileTabsComponent, EventDateBadgeComponent, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './user-dashboard.component.html',
   styleUrls: ['./user-dashboard.component.scss'],
 })
@@ -138,6 +140,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   authPromptService = inject(AuthPromptService);
   private countryPreferenceService = inject(CountryPreferenceService);
   private geographyService = inject(GeographyService);
+  private translationService = inject(TranslationService);
 
   // Loading states
   loading = signal(true);
@@ -352,6 +355,134 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   // only shows All/Popular/Help Requests/Emergency (Enquire posts are a
   // registered-member feature).
   guestTabs: ProfileTab[] = this.tabs.filter((t) => t.id !== 'ENQUIRY');
+
+  // ── Dynamic content translation (Tamil) ────────────────────
+  isTranslatingPosts = signal(false);
+  isTranslatingComments = signal(false);
+  isTranslatingJobs = signal(false);
+  isTranslatingEvents = signal(false);
+  private translatedPostContent = signal<Map<string, string>>(new Map());
+  private translatedCommentContent = signal<Map<string, string>>(new Map());
+  private translatedJobTitles = signal<Map<string, string>>(new Map());
+  private translatedEventTitles = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const posts: { id: string; content?: string }[] = [...this.allPosts(), ...this.guestPosts()];
+      if (!isTamil || posts.length === 0) {
+        this.translatedPostContent.set(new Map());
+        return;
+      }
+      this.translateVisiblePosts(posts, version);
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const comments = Array.from(this.postComments().values()).flat();
+      if (!isTamil || comments.length === 0) {
+        this.translatedCommentContent.set(new Map());
+        return;
+      }
+      this.translateVisibleComments(comments, version);
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const jobs: { id: string; title?: string }[] = [...this.recentJobs(), ...this.guestJobs()];
+      if (!isTamil || jobs.length === 0) {
+        this.translatedJobTitles.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      for (const job of jobs) if (job.title) fields[job.id] = job.title;
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingJobs.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingJobs.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedJobTitles.set(new Map(Object.entries(translated)));
+        });
+    });
+
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const events: { id: string; title?: string }[] = [...this.upcomingEvents(), ...this.guestEvents()];
+      if (!isTamil || events.length === 0) {
+        this.translatedEventTitles.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      for (const evt of events) if (evt.title) fields[evt.id] = evt.title;
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingEvents.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingEvents.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedEventTitles.set(new Map(Object.entries(translated)));
+        });
+    });
+  }
+
+  /** Read path templates use instead of `job.title` directly. */
+  displayJobTitle(job: { id: string; title?: string }): string {
+    return this.translatedJobTitles().get(job.id) ?? job.title ?? '';
+  }
+
+  /** Read path templates use instead of `event.title` directly. */
+  displayEventTitle(event: { id: string; title?: string }): string {
+    return this.translatedEventTitles().get(event.id) ?? event.title ?? '';
+  }
+
+  private translateVisiblePosts(posts: { id: string; content?: string }[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const post of posts) {
+      if (post.content) fields[post.id] = post.content;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingPosts.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingPosts.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedPostContent.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  private translateVisibleComments(comments: Comment[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const comment of comments) {
+      if (comment.content) fields[comment.id] = comment.content;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingComments.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingComments.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedCommentContent.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `post.content` directly. */
+  displayPostContent(post: { id: string; content?: string }): string {
+    return this.translatedPostContent().get(post.id) ?? post.content ?? '';
+  }
+
+  /** Read path templates use instead of `comment.content` directly. */
+  displayCommentContent(comment: Comment): string {
+    return this.translatedCommentContent().get(comment.id) ?? comment.content;
+  }
 
   ngOnInit(): void {
     if (this.authService.isAuthenticated()) {

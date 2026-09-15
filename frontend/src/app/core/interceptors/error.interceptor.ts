@@ -40,6 +40,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      // Skip toast for translation failures — TranslationService already
+      // falls back to showing the original English text, so surfacing a
+      // toast on top would be noise for something the user can't act on.
+      if (req.url.includes('/translation')) {
+        return throwError(() => error);
+      }
+
       toastService.error(resolveMessage(error, translate));
 
       return throwError(() => error);

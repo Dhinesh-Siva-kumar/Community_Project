@@ -10,7 +10,12 @@
           <div class="sc-req-card__body">
             <p class="sc-req-card__name">{{ r.firstName }}</p>
             <p class="sc-req-card__meta">{{ r.course }}</p>
-            <p class="sc-req-card__msg">{{ r.message }}</p>
+            <p class="sc-req-card__msg">
+              {{ displayMessage(r) }}
+              @if (language.isTamil() && isTranslatingMessages()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
+              }
+            </p>
             @if (r.status === 'pending') {
               <div class="sc-req-card__actions">
                 <button type="button" class="sc-btn sc-btn--primary sc-btn--sm" (click)="accept(r.id)" [disabled]="actioningId() === r.id">{{ 'user.studentConnect.requests.accept' | translate }}</button>

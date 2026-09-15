@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -12,18 +12,22 @@ import { DateInputComponent } from '../../../shared/components/date-input/date-i
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from '../../../core/services/language.service';
 import { RelativeTimeService } from '../../../core/services/relative-time.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, FormsModule, RouterLink, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, FormsModule, RouterLink, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   private relativeTime  = inject(RelativeTimeService);
   private translate = inject(TranslateService);
-  private language = inject(LanguageService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
   private userService = inject(UserService);
   private postService = inject(PostService);
   private authService = inject(AuthService);
@@ -90,6 +94,48 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const types = new Set(activity.map(a => a.type));
     return Array.from(types).sort();
   });
+
+  // ── Dynamic content translation (Tamil) — recent-activity feed ──
+  // Backend composes these as plain English sentences mixing static
+  // phrasing with embedded names (see users.service.ts's `activity` map) —
+  // no i18n keys to hook into, so this goes through the same OpenAI path
+  // as free-text content elsewhere. Keyed by the message text itself since
+  // activity items carry no stable id.
+  isTranslatingActivity = signal(false);
+  private translatedActivity = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const items = this.paginatedActivity();
+      if (!isTamil || items.length === 0) {
+        this.translatedActivity.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      items.forEach((item, index) => { if (item.message) fields[String(index)] = item.message; });
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingActivity.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingActivity.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          const map = new Map<string, string>();
+          items.forEach((item, index) => {
+            const value = translated[String(index)];
+            if (value) map.set(item.message, value);
+          });
+          this.translatedActivity.set(map);
+        });
+    });
+  }
+
+  /** Read path templates use instead of `item.message` directly. */
+  displayActivityMessage(item: { message: string }): string {
+    return this.translatedActivity().get(item.message) ?? item.message;
+  }
 
   // Helper to generate page numbers for pagination
   getPageNumbers(): number[] {

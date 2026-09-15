@@ -30,6 +30,7 @@ import shareRouter from './modules/share/share.router';
 import reportsRouter from './modules/reports/reports.router';
 import analyticsRouter from './modules/analytics/analytics.router';
 import studentConnectRouter from './modules/student-connect/student-connect.router';
+import translationRouter from './modules/translation/translation.router';
 
 const app = express();
 
@@ -115,6 +116,7 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/student-connect', studentConnectRouter);
+app.use('/api/translation', translationRouter);
 // OTP standalone endpoints were at /api/send-otp and /api/verify-otp in NestJS
 app.use('/api', otpRouter);
 app.use('/share', shareRouter);

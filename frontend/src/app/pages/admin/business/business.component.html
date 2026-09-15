@@ -945,7 +945,14 @@
                   }
                 </div>
               }
-              @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
+              @if (biz.description) {
+                <p class="bl-card__desc">
+                  {{ displayBusinessDescription(biz) }}
+                  @if (language.isTamil() && isTranslatingDescriptions()) {
+                    <app-inline-spinner [label]="'common.translating' | translate" />
+                  }
+                </p>
+              }
               <div class="bl-card__meta">
                 @if (!selectedCategory() && biz.category?.name) {
                   <span class="bl-card__meta-item"><i class="bi bi-tags-fill"></i>{{ biz.category?.name }}</span>

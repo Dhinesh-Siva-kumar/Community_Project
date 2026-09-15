@@ -518,16 +518,19 @@
             @if (job.description) {
               <div class="jbd-description-block">
                 <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, 'description')">
-                  @if (isTextLong(job.description) && !isFieldExpanded(job.id, 'description')) {
-                    <p class="jbd-description__text">{{ getShortText(job.description) }}</p>
+                  @if (isTextLong(displayJobDescription(job)) && !isFieldExpanded(job.id, 'description')) {
+                    <p class="jbd-description__text">{{ getShortText(displayJobDescription(job)!) }}</p>
                   } @else {
-                    <p class="jbd-description__text">{{ job.description }}</p>
+                    <p class="jbd-description__text">{{ displayJobDescription(job) }}</p>
                   }
                 </div>
-                @if (isTextLong(job.description)) {
+                @if (isTextLong(displayJobDescription(job))) {
                   <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, 'description', $event)">
                     @if (isFieldExpanded(job.id, 'description')) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
                   </button>
+                }
+                @if (language.isTamil() && isTranslatingJobs()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
                 }
               </div>
             }
@@ -697,7 +700,12 @@
                 </p>
               }
               <div class="jb-card__title-row">
-                <h3 class="jb-card__title">{{ job.title }}</h3>
+                <h3 class="jb-card__title">
+                  {{ displayJobTitle(job) }}
+                  @if (language.isTamil() && isTranslatingJobs()) {
+                    <app-inline-spinner [label]="'common.translating' | translate" />
+                  }
+                </h3>
                 <span class="jbd-status-badge" [class.jbd-status-badge--active]="job.isActive" [class.jbd-status-badge--closed]="!job.isActive">
                   <i class="bi bi-circle-fill"></i>{{ job.isActive ? 'Active' : 'Inactive' }}
                 </span>
@@ -905,7 +913,7 @@
                   </div>
                 </td>
                 <td class="um-td">
-                  <div class="jb-table-title">{{ job.title }}</div>
+                  <div class="jb-table-title">{{ displayJobTitle(job) }}</div>
                   @if (job.companyName) { <div class="jb-table-sub">{{ job.companyName }}</div> }
                 </td>
                 <td class="um-td">{{ getLocationDisplay(job) || '—' }}</td>
@@ -1066,7 +1074,7 @@
         }
       </div>
       <div class="au-header__text cm-modal-header-inner">
-        <h4 class="au-header__title cm-modal-title" id="adminJbDetailTitle">{{ job.title }}</h4>
+        <h4 class="au-header__title cm-modal-title" id="adminJbDetailTitle">{{ displayJobTitle(job) }}</h4>
         @if (job.companyName) { <p class="au-header__sub cm-modal-subtitle"><i class="bi bi-building"></i> {{ job.companyName }}</p> }
       </div>
       <button type="button" class="au-close cm-close-btn" (click)="closeDetail()"><i class="bi bi-x-lg"></i></button>

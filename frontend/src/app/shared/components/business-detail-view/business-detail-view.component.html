@@ -29,7 +29,12 @@
       @if (biz.description) {
         <div class="bdv-block">
           <h4 class="bdv-block__title">{{ 'components.businessDetail.about' | translate }}</h4>
-          <div class="bdv-about">{{ biz.description }}</div>
+          <div class="bdv-about">
+            {{ displayDescription() }}
+            @if (language.isTamil() && isTranslatingDescription()) {
+              <app-inline-spinner [label]="'common.translating' | translate" />
+            }
+          </div>
         </div>
       }
 

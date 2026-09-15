@@ -1,12 +1,16 @@
-import { Component, Input, Output, EventEmitter, OnChanges, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
+import { finalize } from 'rxjs/operators';
 import { StudentConnectService } from '../../../../core/services/student-connect.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { StudentPublicProfile } from '../../../../core/models';
 import { AvatarRingComponent } from '../../../../shared/components/avatar-ring/avatar-ring.component';
 import { ConnectModalComponent } from '../../../../shared/components/connect-modal/connect-modal.component';
 import { ReportModalComponent } from '../../../../shared/components/report-modal/report-modal.component';
+import { LanguageService } from '../../../../core/services/language.service';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../../shared/components/inline-spinner/inline-spinner.component';
 
 /**
  * Profile detail (STUDENT_CONNECT_SPEC.md §5.3) — a "drill-in" shown by the
@@ -16,13 +20,15 @@ import { ReportModalComponent } from '../../../../shared/components/report-modal
 @Component({
   selector: 'app-student-profile-detail',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, AvatarRingComponent, ConnectModalComponent, ReportModalComponent],
+  imports: [CommonModule, TranslatePipe, AvatarRingComponent, ConnectModalComponent, ReportModalComponent, InlineSpinnerComponent],
   templateUrl: './profile-detail.component.html',
   styleUrls: ['./profile-detail.component.scss'],
 })
 export class StudentProfileDetailComponent implements OnChanges {
   private studentConnectService = inject(StudentConnectService);
   private toast = inject(ToastService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   @Input({ required: true }) userId!: string;
 
@@ -39,6 +45,32 @@ export class StudentProfileDetailComponent implements OnChanges {
   confirmingBlock = signal(false);
   reportModalOpen = signal(false);
   connectModalOpen = signal(false);
+
+  isTranslatingIntro = signal(false);
+  private translatedIntro = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const shortIntro = this.profile()?.shortIntro;
+      if (!isTamil || !shortIntro) {
+        this.translatedIntro.set(null);
+        return;
+      }
+      this.isTranslatingIntro.set(true);
+      this.translationService.translateFields({ shortIntro }, 'ta')
+        .pipe(finalize(() => this.isTranslatingIntro.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedIntro.set(translated['shortIntro'] ?? shortIntro);
+        });
+    });
+  }
+
+  displayShortIntro(): string | undefined {
+    return this.translatedIntro() ?? this.profile()?.shortIntro ?? undefined;
+  }
 
   ngOnChanges(): void {
     if (this.userId) this.load();

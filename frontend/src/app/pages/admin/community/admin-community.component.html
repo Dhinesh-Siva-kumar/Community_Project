@@ -404,7 +404,12 @@
               <a [routerLink]="['/admin/community', community.id]" class="cc-name">
                 {{ community.name }}
               </a>
-              <p class="cc-desc">{{ truncate(community.description, 110) }}</p>
+              <p class="cc-desc">
+                {{ truncate(displayCommunityDescription(community), 110) }}
+                @if (language.isTamil() && isTranslatingDescriptions()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
+                }
+              </p>
 
               <!-- Stats -->
               <div class="cc-stats">

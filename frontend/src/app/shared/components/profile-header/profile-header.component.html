@@ -49,7 +49,12 @@
         </div>
 
         @if (u.bio) {
-          <p class="header-bio">{{ u.bio }}</p>
+          <p class="header-bio">
+            {{ displayBio() }}
+            @if (language.isTamil() && isTranslatingBio()) {
+              <app-inline-spinner [label]="'common.translating' | translate" />
+            }
+          </p>
         }
       </div>
     </div>

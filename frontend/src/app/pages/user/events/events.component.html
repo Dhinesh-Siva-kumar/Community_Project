@@ -445,15 +445,18 @@
             }
           </div>
 
-          <h3 class="ev-card__title"><a [routerLink]="['/user/events', evt.id]" [queryParams]="currentFilterQueryParams()" (click)="$event.stopPropagation()">{{ evt.title }}</a></h3>
+          <h3 class="ev-card__title"><a [routerLink]="['/user/events', evt.id]" [queryParams]="currentFilterQueryParams()" (click)="$event.stopPropagation()">{{ displayEventTitle(evt) }}</a></h3>
 
           @if (evt.description) {
-            <p class="ev-card__description" [class.ev-card__description--expanded]="expandedDescriptions().has(evt.id)">{{ evt.description }}</p>
+            <p class="ev-card__description" [class.ev-card__description--expanded]="expandedDescriptions().has(evt.id)">{{ displayEventDescription(evt) }}</p>
             @if (evt.description.length > 180) {
               <button type="button" class="ev-card__read-more" (click)="toggleDescription(evt.id, $event)">
                 {{ expandedDescriptions().has(evt.id) ? 'Show less' : 'Read more' }}
               </button>
             }
+          }
+          @if (language.isTamil() && isTranslatingEvents()) {
+            <app-inline-spinner [label]="'common.translating' | translate" />
           }
 
           <!-- Quick facts — "Thu · 24 Sep · 6:00 AM" as one line (never
@@ -473,12 +476,12 @@
           @if (evt.status === 'REJECTED' && evt.rejectionReason) {
             <p class="ev-card__reject-note">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>{{ 'user.events.rejected' | translate }}</strong> {{ evt.rejectionReason }}</span>
+              <span><strong>{{ 'user.events.rejected' | translate }}</strong> {{ displayEventRejectionReason(evt) }}</span>
             </p>
           } @else if (evt.status === 'NEEDS_INFO' && evt.rejectionReason) {
             <p class="ev-card__reject-note">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>{{ 'common.needsMoreInfo' | translate }}:</strong> {{ evt.rejectionReason }}</span>
+              <span><strong>{{ 'common.needsMoreInfo' | translate }}:</strong> {{ displayEventRejectionReason(evt) }}</span>
             </p>
           }
 

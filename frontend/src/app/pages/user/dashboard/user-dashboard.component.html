@@ -426,11 +426,14 @@
             <hr class="post__divider" />
 
             <p class="post__body">
-              {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-              @if (shouldTruncatePost(post.content)) {
+              {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+              @if (shouldTruncatePost(displayPostContent(post))) {
                 <button type="button" class="post__toggle" (click)="togglePostExpanded(post.id)">
                   {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                 </button>
+              }
+              @if (language.isTamil() && isTranslatingPosts()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
               }
             </p>
 
@@ -499,12 +502,15 @@
                             }
                             <span class="comment__time">{{ getTimeAgo(comment.createdAt) }}</span>
                           </div>
-                          <p>{{ comment.content }}</p>
+                          <p>{{ displayCommentContent(comment) }}</p>
                         </div>
                       </div>
                     }
                     @if (getComments(post.id).length === 0) {
                       <p class="comments__empty">{{ 'user.dashboard.noCommentsYetFirst' | translate }}</p>
+                    }
+                    @if (language.isTamil() && isTranslatingComments()) {
+                      <div class="comments__loading"><app-inline-spinner [label]="'common.translating' | translate" /></div>
                     }
                   </div>
                   <form class="comment-form" [formGroup]="getCommentForm(post.id)" (ngSubmit)="submitComment(post.id)">
@@ -569,11 +575,14 @@
               <hr class="post__divider" />
 
               <p class="post__body">
-                {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-                @if (shouldTruncatePost(post.content)) {
+                {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+                @if (shouldTruncatePost(displayPostContent(post))) {
                   <button type="button" class="post__toggle" (click)="togglePostExpanded(post.id)">
                     {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                   </button>
+                }
+                @if (language.isTamil() && isTranslatingPosts()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
                 }
               </p>
 
@@ -635,7 +644,7 @@
                 </div>
                 <div class="job-row__body">
                   <div class="job-row__titleLine">
-                    <h4>{{ job.title }}</h4>
+                    <h4>{{ displayJobTitle(job) }}</h4>
                     @if (job.workMode) { <span class="job-row__badge">{{ job.workMode }}</span> }
                     <span class="job-row__company">{{ job.companyName }}</span>
                   </div>
@@ -675,7 +684,7 @@
                   </div>
                   <div class="job-row__body">
                     <div class="job-row__titleLine">
-                      <h4>{{ job.title }}</h4>
+                      <h4>{{ displayJobTitle(job) }}</h4>
                       @if (job.workMode) { <span class="job-row__badge">{{ job.workMode }}</span> }
                       <span class="job-row__company">{{ job.companyName }}</span>
                     </div>
@@ -801,7 +810,7 @@
                   <app-event-date-badge [date]="event.eventDate" [time]="event.eventTime" />
                   <div class="event-row__body">
                     @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }
-                    <h4 class="event-row__title">{{ event.title }}</h4>
+                    <h4 class="event-row__title">{{ displayEventTitle(event) }}</h4>
                     <p class="event-row__location">
                       <i class="bi bi-geo-alt"></i>
                       {{ event.eventMode === 'Online' ? ('user.dashboard.online' | translate) : (event.location || event.address || event.country) }}
@@ -825,7 +834,7 @@
                   <app-event-date-badge [date]="event.eventDate" />
                   <div class="event-row__body">
                     @if (event.eventCategory) { <span class="event-row__badge">{{ event.eventCategory }}</span> }
-                    <h4 class="event-row__title">{{ event.title }}</h4>
+                    <h4 class="event-row__title">{{ displayEventTitle(event) }}</h4>
                     <p class="event-row__location">
                       <i class="bi bi-geo-alt"></i>
                       {{ event.eventMode === 'Online' ? ('user.dashboard.online' | translate) : event.country }}

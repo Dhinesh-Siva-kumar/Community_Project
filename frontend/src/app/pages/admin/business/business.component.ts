@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, HostListener, ViewChild, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
@@ -26,6 +26,10 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { DAY_KEYS, DAY_SHORT_KEYS, currentDayKey, currentHHmm } from '../../../shared/utils/opening-hours';
 import { CanComponentDeactivate } from '../../../core/guards/unsaved-changes.guard';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 
 // Remembers the last selected category view mode (grid/list) across navigations.
 const CAT_VIEW_STORAGE_KEY = 'admin-business:viewMode';
@@ -52,7 +56,7 @@ interface BusinessNavState {
 @Component({
   selector: 'app-admin-business',
   standalone: true,
-  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ImageErrorHandlerDirective, TruncatedDirective, ScrollLockDirective, ImageUrlPipe, SortBarComponent, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, ToggleComponent, TranslatePipe],
+  imports: [DateInputComponent, CommonModule, ReactiveFormsModule, FormsModule, RouterLink, SearchableSelectComponent, ImageErrorHandlerDirective, TruncatedDirective, ScrollLockDirective, ImageUrlPipe, SortBarComponent, BusinessFormModalComponent, BusinessHeroComponent, BusinessDetailViewComponent, OpeningHoursSummaryComponent, ChipMultiSelectComponent, RadioGroupComponent, ToggleComponent, TranslatePipe, InlineSpinnerComponent],
   templateUrl: './business.component.html',
   styleUrls: ['./business.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -69,12 +73,52 @@ export class AdminBusinessComponent implements OnInit, OnDestroy, CanComponentDe
   private geographyService  = inject(GeographyService);
   private fb                = inject(FormBuilder);
   private destroy$          = new Subject<void>();
+  language                  = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   @ViewChild('bizFormModal') bizFormModal?: BusinessFormModalComponent;
 
   /** Backs the `canDeactivate` route guard — the Add/Edit Business modal is the only unsaved-changes risk on this page. */
   hasUnsavedChanges(): boolean {
     return !!this.bizFormModal?.isDirty();
+  }
+
+  // ── Dynamic content translation (Tamil) — business descriptions ──
+  isTranslatingDescriptions = signal(false);
+  private translatedDescriptions = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const businesses = this.businesses();
+      if (!isTamil || businesses.length === 0) {
+        this.translatedDescriptions.set(new Map());
+        return;
+      }
+      this.translateVisibleDescriptions(businesses, version);
+    });
+  }
+
+  private translateVisibleDescriptions(businesses: Business[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const biz of businesses) {
+      if (biz.description) fields[biz.id] = biz.description;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingDescriptions.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingDescriptions.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedDescriptions.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `biz.description` directly. */
+  displayBusinessDescription(biz: Business): string | undefined {
+    return this.translatedDescriptions().get(biz.id) ?? biz.description ?? undefined;
   }
 
   // ── Countries for filter dropdown ──────────────────────────

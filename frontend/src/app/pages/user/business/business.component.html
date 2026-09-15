@@ -514,9 +514,16 @@
                 }
               </div>
             }
-            @if (biz.description) { <p class="bl-card__desc">{{ biz.description }}</p> }
+            @if (biz.description) {
+              <p class="bl-card__desc">
+                {{ displayBusinessDescription(biz) }}
+                @if (language.isTamil() && isTranslatingDescriptions()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
+                }
+              </p>
+            }
             @if ((biz.status === 'REJECTED' || biz.status === 'NEEDS_INFO') && biz.rejectionReason) {
-              <p class="bl-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ biz.rejectionReason }}</p>
+              <p class="bl-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ displayBusinessRejectionReason(biz) }}</p>
             }
             <div class="bl-card__meta">
               @if (biz.address || $any(biz).city || $any(biz).state) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,6 +28,9 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { PostVideoComponent } from '../../../shared/components/post-video/post-video.component';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { finalize } from 'rxjs/operators';
 
 /** Country-aware postal code validator — mirrors business-form-modal.component.ts's. */
 function postalCodeValidator(regex: string | null): ValidatorFn {
@@ -66,6 +69,41 @@ export class UserProfileComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private geographyService = inject(GeographyService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
+
+  isTranslatingReasons = signal(false);
+  private translatedReasons = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const posts = this.myPosts();
+      const events = this.myEvents();
+      if (!isTamil || (posts.length === 0 && events.length === 0)) {
+        this.translatedReasons.set(new Map());
+        return;
+      }
+      const fields: Record<string, string> = {};
+      for (const post of posts) if (post.rejectionReason) fields[post.id] = post.rejectionReason;
+      for (const evt of events) if (evt.rejectionReason) fields[evt.id] = evt.rejectionReason;
+      if (Object.keys(fields).length === 0) return;
+
+      this.isTranslatingReasons.set(true);
+      this.translationService.translateFields(fields, 'ta')
+        .pipe(finalize(() => this.isTranslatingReasons.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedReasons.set(new Map(Object.entries(translated)));
+        });
+    });
+  }
+
+  /** Read path templates use instead of a raw `post.rejectionReason`/`event.rejectionReason`. */
+  displayRejectionReason(item: { id: string; rejectionReason?: string | null }): string | undefined {
+    return this.translatedReasons().get(item.id) ?? item.rejectionReason ?? undefined;
+  }
 
   user = signal<User | null>(null);
   loading = signal(true);

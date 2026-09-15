@@ -8,7 +8,7 @@
           <div class="sc-avatar">{{ (thread.firstName || '?').charAt(0).toUpperCase() }}</div>
           <div class="sc-chat-thread-row__body">
             <div class="sc-chat-thread-row__name">{{ thread.firstName }}</div>
-            <div class="sc-chat-thread-row__preview">{{ thread.lastMessagePreview || ('user.studentConnect.chat.noMessagesYet' | translate) }}</div>
+            <div class="sc-chat-thread-row__preview">{{ displayThreadPreview(thread) || ('user.studentConnect.chat.noMessagesYet' | translate) }}</div>
           </div>
           @if (thread.unreadCount > 0) { <span class="sc-chat-unread">{{ thread.unreadCount }}</span> }
         </button>
@@ -34,9 +34,12 @@
           <div class="sc-loading"><span class="spinner-border spinner-border-sm"></span></div>
         } @else {
           @for (msg of messages(); track msg.id) {
-            <div class="sc-chat-bubble" [class.sc-chat-bubble--me]="msg.senderUserId !== activeThread.otherUserId">{{ msg.text }}</div>
+            <div class="sc-chat-bubble" [class.sc-chat-bubble--me]="msg.senderUserId !== activeThread.otherUserId">{{ displayMessageText(msg) }}</div>
           } @empty {
             <div class="sc-empty-note">{{ 'user.studentConnect.chat.sayHello' | translate }}</div>
+          }
+          @if (language.isTamil() && isTranslatingMessages()) {
+            <div class="sc-loading"><app-inline-spinner [label]="'common.translating' | translate" /></div>
           }
         }
       </div>

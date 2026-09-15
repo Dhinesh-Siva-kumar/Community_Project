@@ -91,7 +91,12 @@
         }
       </div>
 
-      <h1 class="edp-title">{{ evt.title }}</h1>
+      <h1 class="edp-title">
+        {{ displayEventTitle(evt) }}
+        @if (language.isTamil() && isTranslatingEvent()) {
+          <app-inline-spinner [label]="'common.translating' | translate" />
+        }
+      </h1>
 
       @if (evt.user?.displayName) {
         <p class="edp-organizer"><i class="bi bi-person-circle"></i> {{ 'user.events.hostedBy' | translate }} <strong>{{ evt.user?.displayName }}</strong></p>
@@ -206,7 +211,7 @@
               <span class="edp-section__badge edp-section__badge--info"><i class="bi bi-card-text"></i></span>
               <span class="edp-section__heading">{{ 'user.events.description' | translate }}</span>
             </h3>
-            <p class="edp-description">{{ evt.description }}</p>
+            <p class="edp-description">{{ displayEventDescription(evt) }}</p>
           </section>
         }
 

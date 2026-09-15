@@ -56,3 +56,16 @@ export const studentChatMessageLimiter = rateLimit({
   legacyHeaders: false,
   message: { statusCode: 429, message: 'Too many messages, please slow down.' },
 });
+
+// Each OpenAI call costs real money and this endpoint sits behind
+// `authenticate`, so key by user id (falling back to IP for the rare case
+// req.user is unset) rather than the shared apiLimiter's per-IP bucket —
+// 20/min is enough for one bulk-translate call per visible page section.
+export const translationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.sub ?? req.ip ?? 'unknown',
+  message: { statusCode: 429, message: 'Too many translation requests, please try again later.' },
+});

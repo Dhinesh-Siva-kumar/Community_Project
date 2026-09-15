@@ -380,7 +380,12 @@
                 </div>
               </div>
 
-              <p class="uc-g-desc">{{ community.description }}</p>
+              <p class="uc-g-desc">
+                {{ displayCommunityDescription(community) }}
+                @if (language.isTamil() && isTranslatingDescriptions()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
+                }
+              </p>
 
               <div class="uc-g-foot">
                 <div class="uc-g-stats">
@@ -429,7 +434,7 @@
               @if ((community.status === 'REJECTED' || community.status === 'NEEDS_INFO') && community.rejectionReason) {
                 <p class="uc-g-rejection-reason" [class.uc-g-rejection-reason--needs-info]="community.status === 'NEEDS_INFO'">
                   <i class="bi" [class.bi-exclamation-circle-fill]="community.status === 'REJECTED'" [class.bi-question-circle-fill]="community.status === 'NEEDS_INFO'" aria-hidden="true"></i>
-                  {{ community.rejectionReason }}
+                  {{ displayCommunityRejectionReason(community) }}
                 </p>
               }
             </div>
@@ -470,7 +475,12 @@
                   <span class="uc-l-owner-badge uc-l-owner-badge--needs-info" [title]="community.rejectionReason || 'Needs more information'"><i class="bi bi-question-circle-fill" aria-hidden="true"></i>{{ 'common.needsMoreInfo' | translate }}</span>
                 }
               </div>
-              <div class="uc-l-desc">{{ community.description }}</div>
+              <div class="uc-l-desc">
+                {{ displayCommunityDescription(community) }}
+                @if (language.isTamil() && isTranslatingDescriptions()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
+                }
+              </div>
               <div class="uc-l-chips">
                 <span class="uc-chip uc-chip--sm uc-chip--members">
                   <i class="bi bi-people-fill" aria-hidden="true"></i>{{ community._count?.members ?? 0 }}
@@ -488,7 +498,7 @@
               @if ((community.status === 'REJECTED' || community.status === 'NEEDS_INFO') && community.rejectionReason) {
                 <p class="uc-g-rejection-reason" [class.uc-g-rejection-reason--needs-info]="community.status === 'NEEDS_INFO'">
                   <i class="bi" [class.bi-exclamation-circle-fill]="community.status === 'REJECTED'" [class.bi-question-circle-fill]="community.status === 'NEEDS_INFO'" aria-hidden="true"></i>
-                  {{ community.rejectionReason }}
+                  {{ displayCommunityRejectionReason(community) }}
                 </p>
               }
             </div>

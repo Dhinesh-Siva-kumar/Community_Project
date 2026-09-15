@@ -409,7 +409,12 @@
 
     <!-- Title + type badges -->
     <div class="jb-card__title-row">
-      <h3 class="jb-card__title">{{ job.title }}</h3>
+      <h3 class="jb-card__title">
+        {{ displayJobTitle(job) }}
+        @if (language.isTamil() && isTranslatingJobs()) {
+          <app-inline-spinner [label]="'common.translating' | translate" />
+        }
+      </h3>
       <div class="jb-card__badges">
         @if (job.status === 'PENDING') {
           <span class="jb-badge jb-badge--pending"><i class="bi bi-hourglass-split"></i> {{ 'user.jobs.pendingApproval' | translate }}</span>
@@ -427,7 +432,7 @@
       </div>
     </div>
     @if ((job.status === 'REJECTED' || job.status === 'NEEDS_INFO') && job.rejectionReason) {
-      <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+      <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ displayJobRejectionReason(job) }}</p>
     }
 
     <!-- Meta chips row -->
@@ -704,16 +709,19 @@
                         @if (job.description) {
                           <div class="jbd-description-block">
                             <div class="jbd-description" [class.jbd-description--expanded]="isFieldExpanded(job.id, 'description')">
-                              @if (isTextLong(job.description) && !isFieldExpanded(job.id, 'description')) {
-                                <p class="jbd-description__text">{{ getShortText(job.description) }}</p>
+                              @if (isTextLong(displayJobDescription(job)) && !isFieldExpanded(job.id, 'description')) {
+                                <p class="jbd-description__text">{{ getShortText(displayJobDescription(job)!) }}</p>
                               } @else {
-                                <p class="jbd-description__text">{{ job.description }}</p>
+                                <p class="jbd-description__text">{{ displayJobDescription(job) }}</p>
                               }
                             </div>
-                            @if (isTextLong(job.description)) {
+                            @if (isTextLong(displayJobDescription(job))) {
                               <button class="jbd-show-more-btn" (click)="toggleTextField(job.id, 'description', $event)">
                                 @if (isFieldExpanded(job.id, 'description')) { <i class="bi bi-chevron-up"></i> Show Less } @else { <i class="bi bi-chevron-down"></i> Show More }
                               </button>
+                            }
+                            @if (language.isTamil() && isTranslatingJobs()) {
+                              <app-inline-spinner [label]="'common.translating' | translate" />
                             }
                           </div>
                         }
@@ -981,7 +989,12 @@
               }
             </div>
 
-            <h3 class="jbg-title">{{ job.title }}</h3>
+            <h3 class="jbg-title">
+              {{ displayJobTitle(job) }}
+              @if (language.isTamil() && isTranslatingJobs()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
+              }
+            </h3>
             @if (job.companyName) {
               <span class="jbg-company"><i class="bi bi-building"></i>{{ job.companyName }}</span>
             }
@@ -996,10 +1009,10 @@
             </div>
 
             @if (job.description) {
-              <p class="jbg-desc">{{ job.description }}</p>
+              <p class="jbg-desc">{{ displayJobDescription(job) }}</p>
             }
             @if ((job.status === 'REJECTED' || job.status === 'NEEDS_INFO') && job.rejectionReason) {
-              <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ job.rejectionReason }}</p>
+              <p class="jb-card__rejection-reason"><i class="bi bi-exclamation-circle-fill"></i> {{ displayJobRejectionReason(job) }}</p>
             }
 
             <div class="jbg-foot">

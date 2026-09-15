@@ -155,7 +155,7 @@
           @for (item of items(); track item.id) {
             <tr class="um-row" role="button" tabindex="0"
               (click)="viewItem(item)" (keydown.enter)="viewItem(item)"
-              [attr.aria-label]="'View ' + itemName(item)">
+              [attr.aria-label]="'View ' + displayItemName(item)">
               <td class="um-td" (click)="$event.stopPropagation()">
                 @if (!isNeedsInfo(item)) {
                   <input type="checkbox" class="form-check-input" [checked]="isSelected(item.id)" [disabled]="bulkProcessing()" (change)="toggleSelect(item.id)" />
@@ -169,7 +169,7 @@
                     <div class="um-avatar um-avatar--initials"><i class="bi {{ currentTab().icon }}"></i></div>
                   }
                   <div class="um-user-info">
-                    <span class="um-user-name">{{ itemName(item) }}</span>
+                    <span class="um-user-name">{{ displayItemName(item) }}</span>
                   </div>
                 </div>
               </td>
@@ -272,7 +272,7 @@
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          {{ 'admin.approval.sureWantApprove' | translate }} <strong>{{ itemName(item) }}</strong>? {{ approveVisibilityMessage(item) }}
+          {{ 'admin.approval.sureWantApprove' | translate }} <strong>{{ displayItemName(item) }}</strong>? {{ approveVisibilityMessage(item) }}
         </p>
       </div>
       <div class="pa-confirm-footer">
@@ -298,7 +298,7 @@
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ itemName(item) }}</strong>?
+          {{ 'admin.approval.sureWantReject' | translate }} <strong>{{ displayItemName(item) }}</strong>?
           {{ rejectWarningKey() | translate }}
         </p>
         <textarea class="pa-reason-input" rows="3" maxlength="500" [attr.required]="rejectReasonRequired() ? true : null"
@@ -332,7 +332,7 @@
       </div>
       <div class="pa-confirm-body">
         <p class="pa-confirm-desc">
-          {{ 'admin.approval.sureWantRequestMoreInfo' | translate }} <strong>{{ itemName(item) }}</strong>?
+          {{ 'admin.approval.sureWantRequestMoreInfo' | translate }} <strong>{{ displayItemName(item) }}</strong>?
           {{ 'admin.approval.theseWillNeedMoreInfo' | translate }}
         </p>
         <textarea class="pa-reason-input" rows="3" maxlength="500" required [placeholder]="'admin.approval.reasonRequiredShownSubmitter' | translate"
@@ -465,7 +465,12 @@
               <div class="pa-view-avatar pa-view-avatar--initials"><i class="bi {{ currentTab().icon }}"></i></div>
             }
             <div class="flex-grow-1">
-              <p class="pa-view-item-name">{{ itemName(vi) }}</p>
+              <p class="pa-view-item-name">
+                {{ displayItemName(vi) }}
+                @if (language.isTamil() && isTranslatingItems()) {
+                  <app-inline-spinner [label]="'common.translating' | translate" />
+                }
+              </p>
               <p class="pa-view-item-meta">
                 by {{ itemSubmitter(vi)?.displayName ?? itemSubmitter(vi)?.userName ?? 'Unknown' }}
                 · {{ vi['createdAt'] | date:'medium' }}
@@ -476,23 +481,28 @@
           @if (vi['status'] === 'REJECTED' && vi['rejectionReason']) {
             <div class="pa-view-rejection">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>{{ 'common.rejected' | translate }}</strong> — {{ vi['rejectionReason'] }}</span>
+              <span><strong>{{ 'common.rejected' | translate }}</strong> — {{ displayRejectionReason(vi) }}</span>
             </div>
           } @else if (vi['status'] === 'NEEDS_INFO' && vi['rejectionReason']) {
             <div class="pa-view-rejection pa-view-rejection--needs-info">
               <i class="bi bi-question-circle-fill"></i>
-              <span><strong>{{ 'common.needsMoreInfo' | translate }}</strong> — {{ vi['rejectionReason'] }}</span>
+              <span><strong>{{ 'common.needsMoreInfo' | translate }}</strong> — {{ displayRejectionReason(vi) }}</span>
             </div>
           }
         </div>
 
-        @if (itemDescription(vi)) {
+        @if (displayItemDescription(vi)) {
           <div class="pa-view-section">
             <div class="pa-view-section-header">
               <span class="pa-view-section-badge"><i class="bi bi-file-text"></i></span>
               <span class="pa-view-section-title">{{ 'admin.approval.description' | translate }}</span>
             </div>
-            <p class="pa-view-content">{{ itemDescription(vi) }}</p>
+            <p class="pa-view-content">
+              {{ displayItemDescription(vi) }}
+              @if (language.isTamil() && isTranslatingItems()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
+              }
+            </p>
           </div>
         }
 

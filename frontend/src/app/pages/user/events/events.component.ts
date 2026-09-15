@@ -17,6 +17,10 @@ import { EventFormModalComponent } from '../../../shared/components/event-form-m
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { ScrollLockDirective } from '../../../shared/directives/scroll-lock.directive';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../shared/components/inline-spinner/inline-spinner.component';
+import { finalize } from 'rxjs/operators';
 import { EnumLabelPipe } from '../../../shared/pipes/enum-label.pipe';
 import { EVENT_CATEGORY_GRADIENT, eventCategoryGradient } from '../../../shared/constants/event-categories';
 import { EventDateBadgeComponent } from '../../../shared/components/event-date-badge/event-date-badge.component';
@@ -31,7 +35,7 @@ type StatusFilter = 'upcoming' | 'completed' | '';
 @Component({
   selector: 'app-user-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink, ImageViewerComponent, ImageUrlPipe, SearchableSelectComponent, DateInputComponent, EventFormModalComponent, EventDateBadgeComponent, InfiniteScrollDirective, ScrollLockDirective, TranslatePipe, EnumLabelPipe, InlineSpinnerComponent],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss'],
   // Pushes the page's own content left (see :host in the scss) while the
@@ -49,6 +53,8 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   private router = inject(Router);
   private geographyService = inject(GeographyService);
   private destroy$ = new Subject<void>();
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   @ViewChild('eventFormModal') eventFormModal?: EventFormModalComponent;
 
@@ -78,6 +84,10 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
   tabIndicatorWidth = signal(0);
   tabIndicatorReady = signal(false);
 
+  // ── Dynamic content translation (Tamil) — event titles/descriptions ──
+  isTranslatingEvents = signal(false);
+  private translatedEventFields = signal<Map<string, string>>(new Map());
+
   constructor() {
     effect(() => {
       this.tabButtons();
@@ -85,6 +95,49 @@ export class UserEventsComponent implements OnInit, OnDestroy, CanComponentDeact
       this.updateTabIndicator();
     });
 
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const events = this.events();
+      if (!isTamil || events.length === 0) {
+        this.translatedEventFields.set(new Map());
+        return;
+      }
+      this.translateVisibleEvents(events, version);
+    });
+  }
+
+  private translateVisibleEvents(events: AppEvent[], requestVersion: number): void {
+    const fields: Record<string, string> = {};
+    for (const evt of events) {
+      if (evt.title) fields[`${evt.id}:title`] = evt.title;
+      if (evt.description) fields[`${evt.id}:description`] = evt.description;
+      if (evt.rejectionReason) fields[`${evt.id}:reason`] = evt.rejectionReason;
+    }
+    if (Object.keys(fields).length === 0) return;
+
+    this.isTranslatingEvents.set(true);
+    this.translationService.translateFields(fields, 'ta')
+      .pipe(finalize(() => this.isTranslatingEvents.set(false)))
+      .subscribe((translated) => {
+        if (this.language.languageVersion() !== requestVersion) return;
+        this.translatedEventFields.set(new Map(Object.entries(translated)));
+      });
+  }
+
+  /** Read path templates use instead of `evt.title` directly. */
+  displayEventTitle(evt: AppEvent): string {
+    return this.translatedEventFields().get(`${evt.id}:title`) ?? evt.title;
+  }
+
+  /** Read path templates use instead of `evt.description` directly. */
+  displayEventDescription(evt: AppEvent): string | undefined {
+    return this.translatedEventFields().get(`${evt.id}:description`) ?? evt.description ?? undefined;
+  }
+
+  /** Read path templates use instead of `evt.rejectionReason` directly. */
+  displayEventRejectionReason(evt: AppEvent): string | undefined {
+    return this.translatedEventFields().get(`${evt.id}:reason`) ?? evt.rejectionReason ?? undefined;
   }
 
   @HostListener('window:resize')

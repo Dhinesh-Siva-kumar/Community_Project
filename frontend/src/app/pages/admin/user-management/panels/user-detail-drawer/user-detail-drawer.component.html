@@ -212,7 +212,12 @@
         @if (u.bio) {
           <div class="ud-bio-card">
             <i class="bi bi-quote ud-bio-card__icon"></i>
-            <p class="ud-bio-card__text">{{ u.bio }}</p>
+            <p class="ud-bio-card__text">
+              {{ displayBio() }}
+              @if (language.isTamil() && isTranslatingBio()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
+              }
+            </p>
           </div>
         }
 

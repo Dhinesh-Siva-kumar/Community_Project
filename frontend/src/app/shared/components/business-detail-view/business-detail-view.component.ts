@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { finalize } from 'rxjs/operators';
 
 import type { Business } from '../../../core/models';
 import { ImageUrlPipe } from '../../pipes/image-url.pipe';
 import { OpeningHoursDisplayComponent } from '../opening-hours-display/opening-hours-display.component';
+import { InlineSpinnerComponent } from '../inline-spinner/inline-spinner.component';
+import { LanguageService } from '../../../core/services/language.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { DAY_KEYS, isOpenNow } from '../../utils/opening-hours';
 
 /** One of the three image categories, as rendered by the template. */
@@ -35,7 +39,7 @@ interface GallerySection {
 @Component({
   selector: 'app-business-detail-view',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ImageUrlPipe, OpeningHoursDisplayComponent],
+  imports: [CommonModule, TranslatePipe, ImageUrlPipe, OpeningHoursDisplayComponent, InlineSpinnerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './business-detail-view.component.html',
   styleUrls: ['./business-detail-view.component.scss'],
@@ -44,11 +48,40 @@ export class BusinessDetailViewComponent {
 
   private sanitizer = inject(DomSanitizer);
   private translate = inject(TranslateService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
 
   readonly business = input.required<Business>();
 
   /** Opens the host page's lightbox on the clicked image. */
   readonly imagePreview = output<{ images: string[]; index: number }>();
+
+  isTranslatingDescription = signal(false);
+  private translatedDescription = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const description = this.business().description;
+      if (!isTamil || !description) {
+        this.translatedDescription.set(null);
+        return;
+      }
+      this.isTranslatingDescription.set(true);
+      this.translationService.translateFields({ description }, 'ta')
+        .pipe(finalize(() => this.isTranslatingDescription.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedDescription.set(translated['description'] ?? description);
+        });
+    });
+  }
+
+  /** Read path the template uses instead of `business().description` directly. */
+  displayDescription(): string | undefined {
+    return this.translatedDescription() ?? this.business().description ?? undefined;
+  }
 
   protected hasContact = computed(() => {
     const b = this.business();

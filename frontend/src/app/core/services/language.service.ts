@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, switchMap } from 'rxjs';
+import { TranslationService } from './translation.service';
 
 export type Lang = 'en' | 'ta';
 
@@ -41,11 +42,20 @@ export function readStoredLang(): Lang {
 export class LanguageService {
   private translate = inject(TranslateService);
   private platformId = inject(PLATFORM_ID);
+  private translationService = inject(TranslationService);
 
   private readonly lang = signal<Lang>(readStoredLang());
 
   readonly currentLang = this.lang.asReadonly();
   readonly isTamil = computed(() => this.lang() === 'ta');
+
+  /**
+   * Bumped on every setLanguage() call. Dynamic-content components depend on
+   * this inside an `effect()` to know when to (re)translate — a monotonic
+   * counter is a clean dependency even across rapid EN→TA→EN toggling, where
+   * `isTamil()` alone could read the same value across two separate switches.
+   */
+  readonly languageVersion = signal(0);
 
   /**
    * Runs once from the app initializer. Loads the fallback catalog before the
@@ -66,6 +76,8 @@ export class LanguageService {
     this.lang.set(lang);
     this.translate.use(lang);
     this.applyDocumentLang(lang);
+    this.translationService.clearCache();
+    this.languageVersion.update((v) => v + 1);
 
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(STORAGE_KEY, lang);

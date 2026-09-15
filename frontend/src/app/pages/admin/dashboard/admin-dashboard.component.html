@@ -402,7 +402,12 @@
                 <i class="bi" [class]="activityIcon(item.type)" [style.color]="activityColor(item.type)"></i>
               </div>
               <div class="activity-content">
-                <p class="activity-message">{{ item.message }}</p>
+                <p class="activity-message">
+                  {{ displayActivityMessage(item) }}
+                  @if (language.isTamil() && isTranslatingActivity()) {
+                    <app-inline-spinner [label]="'common.translating' | translate" />
+                  }
+                </p>
                 <span class="activity-time">{{ getTimeAgo(item.createdAt) }}</span>
               </div>
               <span class="activity-badge" [style.background]="'color-mix(in srgb, ' + activityColor(item.type) + ' 14%, transparent)'" [style.color]="activityColor(item.type)" [style.border-color]="'color-mix(in srgb, ' + activityColor(item.type) + ' 33%, transparent)'">

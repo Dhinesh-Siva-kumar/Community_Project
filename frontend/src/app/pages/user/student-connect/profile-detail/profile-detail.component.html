@@ -51,7 +51,12 @@
 
         <div class="sc-profile-block">
           <h4>{{ 'user.studentConnect.profile.about' | translate }}</h4>
-          <p>{{ p.shortIntro }}</p>
+          <p>
+            {{ displayShortIntro() }}
+            @if (language.isTamil() && isTranslatingIntro()) {
+              <app-inline-spinner [label]="'common.translating' | translate" />
+            }
+          </p>
         </div>
 
         <div class="sc-profile-block">

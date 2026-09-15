@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule, DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { UserService } from '../../../../../core/services/user.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { UserDetail, User, AuditLog, AuditLogResponse } from '../../../../../core/models';
@@ -8,6 +9,9 @@ import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EnumLabelPipe } from '../../../../../shared/pipes/enum-label.pipe';
 import { ScrollLockDirective } from '../../../../../shared/directives/scroll-lock.directive';
+import { LanguageService } from '../../../../../core/services/language.service';
+import { TranslationService } from '../../../../../core/services/translation.service';
+import { InlineSpinnerComponent } from '../../../../../shared/components/inline-spinner/inline-spinner.component';
 
 type DrawerTab = 'overview' | 'activity' | 'actions';
 
@@ -29,7 +33,7 @@ const ACTION_ICONS: Record<string, string> = {
 @Component({
   selector: 'app-user-detail-drawer',
   standalone: true,
-  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe, TranslatePipe, EnumLabelPipe, ScrollLockDirective],
+  imports: [CommonModule, DatePipe, SlicePipe, FormsModule, ImageUrlPipe, TranslatePipe, EnumLabelPipe, ScrollLockDirective, InlineSpinnerComponent],
   templateUrl: './user-detail-drawer.component.html',
   styleUrls: ['./user-detail-drawer.component.scss'],
 })
@@ -42,6 +46,34 @@ export class UserDetailDrawerComponent implements OnInit {
 
   private userService = inject(UserService);
   private toast       = inject(ToastService);
+  language = inject(LanguageService);
+  private translationService = inject(TranslationService);
+
+  isTranslatingBio = signal(false);
+  private translatedBio = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const version = this.language.languageVersion();
+      const isTamil = this.language.isTamil();
+      const bio = this.user()?.bio;
+      if (!isTamil || !bio) {
+        this.translatedBio.set(null);
+        return;
+      }
+      this.isTranslatingBio.set(true);
+      this.translationService.translateFields({ bio }, 'ta')
+        .pipe(finalize(() => this.isTranslatingBio.set(false)))
+        .subscribe((translated) => {
+          if (this.language.languageVersion() !== version) return;
+          this.translatedBio.set(translated['bio'] ?? bio);
+        });
+    });
+  }
+
+  displayBio(): string | undefined {
+    return this.translatedBio() ?? this.user()?.bio ?? undefined;
+  }
 
   user      = signal<UserDetail | null>(null);
   loading   = signal(true);

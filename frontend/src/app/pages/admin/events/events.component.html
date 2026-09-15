@@ -439,10 +439,13 @@
             }
           </div>
 
-          <h3 class="ev-card__title"><a [routerLink]="['/admin/events', evt.id]" (click)="$event.stopPropagation()">{{ evt.title }}</a></h3>
+          <h3 class="ev-card__title"><a [routerLink]="['/admin/events', evt.id]" (click)="$event.stopPropagation()">{{ displayEventTitle(evt) }}</a></h3>
 
           @if (evt.description) {
-            <p class="ev-card__description">{{ evt.description }}</p>
+            <p class="ev-card__description">{{ displayEventDescription(evt) }}</p>
+          }
+          @if (language.isTamil() && isTranslatingEvents()) {
+            <app-inline-spinner [label]="'common.translating' | translate" />
           }
 
           <!-- Quick facts — "Thu · 24 Sep · 6:00 AM" as one line (never
@@ -462,7 +465,7 @@
           @if (evt.status === 'REJECTED' && evt.rejectionReason) {
             <p class="ev-card__reject-note">
               <i class="bi bi-exclamation-circle-fill"></i>
-              <span><strong>{{ 'admin.events.rejected' | translate }}</strong> {{ evt.rejectionReason }}</span>
+              <span><strong>{{ 'admin.events.rejected' | translate }}</strong> {{ displayEventRejectionReason(evt) }}</span>
             </p>
           }
 

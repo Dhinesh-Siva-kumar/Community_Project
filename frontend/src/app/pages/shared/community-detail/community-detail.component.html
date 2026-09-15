@@ -321,7 +321,12 @@
           </div>
 
           @if (community()!.description) {
-            <p class="cd-community-desc">{{ community()!.description }}</p>
+            <p class="cd-community-desc">
+              {{ displayCommunityDescription() }}
+              @if (language.isTamil() && isTranslatingDescription()) {
+                <app-inline-spinner [label]="'common.translating' | translate" />
+              }
+            </p>
           }
 
           <!-- Hero Footer: meta chips + join/leave action -->
@@ -556,11 +561,14 @@
 
                   <hr class="post-divider" />
                   <p class="post-content post-content--compact mb-3">
-                    {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-                    @if (shouldTruncatePost(post.content)) {
+                    {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+                    @if (shouldTruncatePost(displayPostContent(post))) {
                       <button type="button" class="post-content-toggle" (click)="togglePostExpanded(post.id)">
                         {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                       </button>
+                    }
+                    @if (language.isTamil() && isTranslatingPosts()) {
+                      <app-inline-spinner [label]="'common.translating' | translate" />
                     }
                   </p>
 
@@ -651,7 +659,7 @@
                                       }
                                     }
                                   </div>
-                                  <p class="mb-0 small">{{ comment.content }}</p>
+                                  <p class="mb-0 small">{{ displayCommentContent(comment) }}</p>
                                 </div>
                               </div>
                             </div>
@@ -887,7 +895,7 @@
                   </p>
                   @if ((getApprovalStatus()?.cls === 'cd-status-rejected' || getApprovalStatus()?.cls === 'cd-status-needs-info') && community()!.rejectionReason) {
                     <div class="mp-reason" [class.mp-reason--needs-info]="getApprovalStatus()?.cls === 'cd-status-needs-info'">
-                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                      <i class="bi bi-info-circle-fill"></i>{{ displayCommunityRejectionReason() }}
                     </div>
                   }
                 </div>
@@ -981,11 +989,14 @@
                   </div>
                   <hr class="post-divider" />
                   <p class="post-content post-content--compact mb-3">
-                    {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-                    @if (shouldTruncatePost(post.content)) {
+                    {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+                    @if (shouldTruncatePost(displayPostContent(post))) {
                       <button type="button" class="post-content-toggle" (click)="togglePostExpanded(post.id)">
                         {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                       </button>
+                    }
+                    @if (language.isTamil() && isTranslatingPosts()) {
+                      <app-inline-spinner [label]="'common.translating' | translate" />
                     }
                   </p>
                   @if (post.video) {
@@ -1061,7 +1072,7 @@
                                       }
                                     }
                                   </div>
-                                  <p class="mb-0 small">{{ comment.content }}</p>
+                                  <p class="mb-0 small">{{ displayCommentContent(comment) }}</p>
                                 </div>
                               </div>
                             </div>
@@ -1209,7 +1220,7 @@
                   </p>
                   @if ((getApprovalStatus()?.cls === 'cd-status-rejected' || getApprovalStatus()?.cls === 'cd-status-needs-info') && community()!.rejectionReason) {
                     <div class="mp-reason" [class.mp-reason--needs-info]="getApprovalStatus()?.cls === 'cd-status-needs-info'">
-                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                      <i class="bi bi-info-circle-fill"></i>{{ displayCommunityRejectionReason() }}
                     </div>
                   }
                 </div>
@@ -1302,11 +1313,14 @@
                   </div>
                   <hr class="post-divider" />
                   <p class="post-content post-content--compact mb-3">
-                    {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-                    @if (shouldTruncatePost(post.content)) {
+                    {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+                    @if (shouldTruncatePost(displayPostContent(post))) {
                       <button type="button" class="post-content-toggle" (click)="togglePostExpanded(post.id)">
                         {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                       </button>
+                    }
+                    @if (language.isTamil() && isTranslatingPosts()) {
+                      <app-inline-spinner [label]="'common.translating' | translate" />
                     }
                   </p>
                   @if (post.video) {
@@ -1382,7 +1396,7 @@
                                       }
                                     }
                                   </div>
-                                  <p class="mb-0 small">{{ comment.content }}</p>
+                                  <p class="mb-0 small">{{ displayCommentContent(comment) }}</p>
                                 </div>
                               </div>
                             </div>
@@ -1530,7 +1544,7 @@
                   </p>
                   @if ((getApprovalStatus()?.cls === 'cd-status-rejected' || getApprovalStatus()?.cls === 'cd-status-needs-info') && community()!.rejectionReason) {
                     <div class="mp-reason" [class.mp-reason--needs-info]="getApprovalStatus()?.cls === 'cd-status-needs-info'">
-                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                      <i class="bi bi-info-circle-fill"></i>{{ displayCommunityRejectionReason() }}
                     </div>
                   }
                 </div>
@@ -1623,11 +1637,14 @@
                   </div>
                   <hr class="post-divider" />
                   <p class="post-content post-content--compact mb-3">
-                    {{ isPostExpanded(post.id) ? post.content : getPostPreview(post.content) }}
-                    @if (shouldTruncatePost(post.content)) {
+                    {{ isPostExpanded(post.id) ? displayPostContent(post) : getPostPreview(displayPostContent(post)) }}
+                    @if (shouldTruncatePost(displayPostContent(post))) {
                       <button type="button" class="post-content-toggle" (click)="togglePostExpanded(post.id)">
                         {{ isPostExpanded(post.id) ? 'Show less' : 'Show more...' }}
                       </button>
+                    }
+                    @if (language.isTamil() && isTranslatingPosts()) {
+                      <app-inline-spinner [label]="'common.translating' | translate" />
                     }
                   </p>
                   @if (post.video) {
@@ -1703,7 +1720,7 @@
                                       }
                                     }
                                   </div>
-                                  <p class="mb-0 small">{{ comment.content }}</p>
+                                  <p class="mb-0 small">{{ displayCommentContent(comment) }}</p>
                                 </div>
                               </div>
                             </div>
@@ -1863,7 +1880,7 @@
                   </p>
                   @if ((getApprovalStatus()?.cls === 'cd-status-rejected' || getApprovalStatus()?.cls === 'cd-status-needs-info') && community()!.rejectionReason) {
                     <div class="mp-reason" [class.mp-reason--needs-info]="getApprovalStatus()?.cls === 'cd-status-needs-info'">
-                      <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                      <i class="bi bi-info-circle-fill"></i>{{ displayCommunityRejectionReason() }}
                     </div>
                   }
                 </div>
@@ -2091,7 +2108,12 @@
                   <div class="cd-info-icon"><i class="bi bi-card-text"></i></div>
                   <div class="cd-info-content">
                     <span class="cd-info-label">{{ 'shared.communityDetail.description' | translate }}</span>
-                    <p class="cd-info-value">{{ community()!.description || 'No description provided.' }}</p>
+                    <p class="cd-info-value">
+                    {{ displayCommunityDescription() || 'No description provided.' }}
+                    @if (language.isTamil() && isTranslatingDescription()) {
+                      <app-inline-spinner [label]="'common.translating' | translate" />
+                    }
+                  </p>
                   </div>
                 </div>
 
@@ -2103,9 +2125,12 @@
                       <span class="cd-info-label">{{ 'shared.communityDetail.communityRules' | translate }}</span>
                       <ol class="cd-rules-list">
                         @for (rule of community()!.rules; track $index) {
-                          <li>{{ rule }}</li>
+                          <li>{{ displayRule(rule, $index) }}</li>
                         }
                       </ol>
+                      @if (language.isTamil() && isTranslatingRules()) {
+                        <app-inline-spinner [label]="'common.translating' | translate" />
+                      }
                     </div>
                   </div>
                 }
@@ -2162,7 +2187,7 @@
                       }
                       @if ((approval.cls === 'cd-status-rejected' || approval.cls === 'cd-status-needs-info') && community()!.rejectionReason) {
                         <div class="mp-reason mt-2" [class.mp-reason--needs-info]="approval.cls === 'cd-status-needs-info'">
-                          <i class="bi bi-info-circle-fill"></i>{{ community()!.rejectionReason }}
+                          <i class="bi bi-info-circle-fill"></i>{{ displayCommunityRejectionReason() }}
                         </div>
                       }
                     </div>
@@ -2378,7 +2403,7 @@
                   </div>
 
                   <hr class="post-divider" />
-                  <p class="post-content mb-0">{{ post.content }}</p>
+                  <p class="post-content mb-0">{{ displayPostContent(post) }}</p>
 
                   <!-- Same grid + lightbox the community feed uses, so an author
                        reviewing their own post sees exactly what they submitted. -->
@@ -2400,7 +2425,7 @@
 
                   @if ((post.status === 'REJECTED' || post.status === 'NEEDS_INFO') && post.rejectionReason) {
                     <div class="mp-reason mt-2" [class.mp-reason--needs-info]="post.status === 'NEEDS_INFO'">
-                      <i class="bi bi-info-circle-fill"></i>{{ post.rejectionReason }}
+                      <i class="bi bi-info-circle-fill"></i>{{ displayPostRejectionReason(post) }}
                     </div>
                   }
 
